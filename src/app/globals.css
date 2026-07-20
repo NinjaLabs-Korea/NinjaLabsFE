@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  /* palette */
+  --color-page: #FBFBFE;            /* app background */
+  --color-surface: #FFFFFF;         /* cards */
+  --color-surface-subtle: #F5F6FB;  /* future steps, empty panels */
+  --color-ink: #111A2E;             /* headings/primary text */
+  --color-ink-secondary: #4F5D77;   /* nav, rich body */
+  --color-ink-muted: #77839C;       /* metadata, excerpts */
+  --color-ink-placeholder: #9CA3AF;
+  --color-ink-notice: #263450;      /* NFT notice body text (11-signup-wallet) */
+  --color-primary: #4D3DFF;         /* CTAs, eyebrows, active chips */
+  --color-primary-strong: #3D2ED9;  /* outline actions, badge text */
+  --color-primary-soft: #EEEFFF;    /* badge/pill/callout fill */
+  --color-primary-soft-border: #DFDDFF;
+  --color-primary-outline: #C3BEFF;
+  --color-border: #E3E7F1;
+  --color-border-dashed: #D1D7E6;
+  --color-success-soft: #E4F8F1;  --color-success: #0B7A5B;
+  --color-danger-soft: #FDECEC;   --color-danger: #B42323;
+  --color-warning-soft: #FEF3E2;  --color-warning: #A66A00;
+  /* inverse surface roles */
+  --color-inverse-surface: #0B1322;        /* footer */
+  --color-on-inverse: #FFFFFF;
+  --color-on-inverse-secondary: #B7B2CE;   /* footer links */
+  --color-on-inverse-muted: #566180;       /* copyright */
+  /* hero/nft gradient stops */
+  --color-hero-from: #0C1528; --color-hero-via: #1D2B60; --color-hero-to: #4D3DFF;
+  --color-glow: #7B6CFF; --color-accent-soft: #9A90FF; --color-nft-deep: #2E22AB;
+  /* type scale (paired leading) */
+  --text-xs: 0.75rem;   --text-xs--line-height: 1.125rem;   /* 12/18 */
+  --text-sm: 0.875rem;  --text-sm--line-height: 1.25rem;    /* 14/20 */
+  --text-base: 1rem;    --text-base--line-height: 1.5rem;   /* 16/24 */
+  --text-lg: 1.125rem;  --text-lg--line-height: 1.75rem;   /* 18/28 */
+  --text-xl: 1.25rem;   --text-xl--line-height: 1.875rem;   /* 20/30 brand */
+  --text-2xl: 1.5rem;   --text-2xl--line-height: 1.725rem;  /* 24/27.6 H2 */
+  --text-4xl: 2.25rem;  --text-4xl--line-height: 2.5875rem; /* 36/41.4 */
+  --text-5xl: 3rem;     --text-5xl--line-height: 3.45rem;   /* 48/55.2 H1 */
+  --text-hero: 3.75rem; --text-hero--line-height: 3.9375rem;/* 60/63 */
+  /* radius */
+  --radius-card: 1.25rem;   /* 20 */
+  --radius-panel: 1.75rem;  /* 28 */
+  --radius-tile: 0.875rem;  /* 14 */
+  --radius-control: 0.625rem; /* 10 */
+  --radius-logo: 0.5rem;    /* 8 */
+  /* shadows */
+  --shadow-card: 0 1px 2px rgba(17,26,46,.06), 0 1px 3px rgba(17,26,46,.05);
+  --shadow-frame: 0 14px 36px rgba(33,24,125,.12);
+  --shadow-nft: 0 10px 28px rgba(77,61,255,.28);
+  --shadow-tile-text: 0 1px 4px rgba(0,0,0,.30); /* NFT tile-title legibility (01-landing) */
+  /* container */
+  --container-content: 75rem; /* 1200 */
+}
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-space-grotesk);
+}
