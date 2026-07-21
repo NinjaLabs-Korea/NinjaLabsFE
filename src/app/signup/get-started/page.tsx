@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 
+import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
 import { Badge } from "@/components/ui/Badge";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { signup } from "@/lib/signup";
@@ -27,8 +27,9 @@ export default function SignupGetStartedPage() {
           <p className="mt-3 text-base text-ink-muted">{signup.completion.subtitle}</p>
           <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {signup.completion.actions.map((action) => (
-              <Link
+              <CompleteSignupLink
                 className="flex min-h-[230px] flex-col rounded-card border border-border bg-surface p-5 shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                external={action.icon === "↗"}
                 href={action.href}
                 key={action.title}
               >
@@ -37,7 +38,7 @@ export default function SignupGetStartedPage() {
                     alt=""
                     className="h-12 w-12 rounded-logo"
                     height={48}
-                    src="/figma/ninja-labs-mascot.svg"
+                    src="/figma/ninja-labs-mascot.png"
                     width={48}
                   />
                 ) : (
@@ -49,16 +50,18 @@ export default function SignupGetStartedPage() {
                   {action.title}
                 </h2>
                 <p className="mt-2 text-sm text-ink-muted">{action.description}</p>
-              </Link>
+              </CompleteSignupLink>
             ))}
           </div>
-          <Link
+          <CompleteSignupLink
             className="mt-6 block text-center text-sm font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             href="/"
           >
             Skip and go to main
-          </Link>
-          <p className="mt-5 text-center text-xs text-ink-muted">{signup.completion.footnote}</p>
+          </CompleteSignupLink>
+          <p className="mt-5 text-center text-xs text-ink-muted">
+            This completion screen is navigation-only and does not save onboarding progress.
+          </p>
         </section>
       </div>
     </section>

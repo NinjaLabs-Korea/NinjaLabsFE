@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { AuthArea } from "@/components/layout/AuthArea";
 import { NavLinks } from "@/components/layout/NavLinks";
 
 const navigation = [
@@ -15,7 +16,7 @@ export function Header() {
       <div className="mx-auto grid h-full max-w-content grid-cols-[1fr_auto_1fr] items-center px-6">
         <Link className="flex items-center gap-2 justify-self-start" href="/" aria-label="Ninja Labs home">
           <Image
-            src="/figma/ninja-labs-mascot.svg"
+            src="/figma/ninja-labs-mascot.png"
             alt=""
             width={28}
             height={28}
@@ -29,18 +30,7 @@ export function Header() {
         </nav>
 
         <div className="col-start-3 flex items-center gap-2 justify-self-end">
-          <Link
-            className="hidden rounded-control px-[21px] py-3 text-sm leading-[21px] font-semibold text-ink-secondary md:inline-block"
-            href="/bounties"
-          >
-            Browse
-          </Link>
-          <Link
-            className="rounded-control bg-primary px-[21px] py-3 text-sm leading-[21px] font-semibold text-on-inverse"
-            href="/signup"
-          >
-            Get Started
-          </Link>
+          <AuthArea variant="desktop" />
 
           <details className="relative md:hidden">
             <summary className="flex cursor-pointer list-none items-center rounded-control px-3 py-3 text-sm leading-[21px] font-semibold text-ink-secondary [&::-webkit-details-marker]:hidden">
@@ -57,6 +47,7 @@ export function Header() {
               >
                 Browse
               </Link>
+              <AuthArea variant="mobile" />
             </nav>
           </details>
         </div>

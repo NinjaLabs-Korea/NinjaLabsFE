@@ -20,7 +20,7 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-2">
               <Image
-                src="/figma/ninja-labs-mascot.svg"
+                src="/figma/ninja-labs-mascot.png"
                 alt=""
                 width={28}
                 height={28}

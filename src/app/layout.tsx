@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { FoundationProvider } from "@/components/auth/FoundationProvider";
+import { previewUser } from "@/lib/mocks/fixtures";
+import { composeFoundationRuntime } from "@/lib/runtime/config";
 import "./globals.css";
 
 const inter = Inter({
@@ -27,6 +30,8 @@ export const metadata: Metadata = {
     // Image intentionally omitted until a brand asset is available.
   },
 };
+const { foundationConfig } = composeFoundationRuntime(previewUser);
+
 
 export default function RootLayout({
   children,
@@ -45,9 +50,11 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <Header />
-        <main className="flex-1" id="main-content">{children}</main>
-        <Footer />
+        <FoundationProvider config={foundationConfig}>
+          <Header />
+          <main className="flex-1" id="main-content">{children}</main>
+          <Footer />
+        </FoundationProvider>
       </body>
     </html>
   );

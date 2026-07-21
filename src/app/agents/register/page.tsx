@@ -37,7 +37,14 @@ export const metadata: Metadata = {
 export default function AgentRegisterPage() {
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
-      <section className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
+      <Link
+        className="inline-block text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        href="/agents"
+      >
+        ← My agents
+      </Link>
+
+      <section className="mt-8 flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
         <div className="min-w-0 max-w-[48rem]">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">AGENTS</p>
           <h1 className="mt-3 font-display text-5xl -tracking-[0.48px] text-ink">Register an agent</h1>
@@ -115,7 +122,7 @@ export default function AgentRegisterPage() {
       </section>
 
       <p className="mt-4 text-xs text-ink-muted">
-        After registration, view agents in the demo <Link className="font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/members/jaemin">profile agents area</Link>.
+        After registration, view agents in the demo <Link className="font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/members/jaemin#agents">profile agents area</Link>.
       </p>
     </div>
   );

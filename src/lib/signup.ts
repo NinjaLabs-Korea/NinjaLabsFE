@@ -1,30 +1,39 @@
-export type SignupStep = 1 | 2 | 3 | 4;
-
 export const signup = {
   badges: {
-    login: "SIGN-UP FLOW (login in progress)",
     wallet: "NFT minted at sign-up",
     profile: "All fields required / no skip",
     completion: "SIGN-UP FLOW",
   },
   login: {
-    title: "Sign in to start",
-    description: "Create your Ninja Labs account with Google.",
-    turnstile: "Bot check passes before Google OAuth starts",
-    edgeCases: ["Google login declined or failed", "Retry after clearing the error"],
+    mock: {
+      badge: "SIGN-UP FLOW · SESSION PREVIEW",
+      title: "Preview the Ninja Labs sign-in flow",
+      description:
+        "Explore this step with a local session preview. It does not contact Google or create an account.",
+      disclosure:
+        "Mock mode is local and test only. This preview does not contact Google or create an account.",
+      statusTitle: "Preview status",
+      edgeCases: [
+        "Selecting the button starts a local session preview only",
+        "Google authentication is not invoked",
+      ],
+    },
+    api: {
+      badge: "SIGN-UP FLOW · BACKEND PENDING",
+      title: "Google sign-in is unavailable",
+      description:
+        "Google sign-in is unavailable pending backend integration. This frontend does not create accounts.",
+      disclosure:
+        "API mode has no Google sign-in or account-creation integration in this frontend.",
+      statusTitle: "Integration status",
+      edgeCases: [
+        "Google sign-in remains unavailable until backend integration is complete",
+        "No account is created from this page",
+      ],
+    },
   },
   wallet: {
     title: "Connect your wallet",
-    description: "Connect an Injective wallet to receive your Ninja NFT.",
-    notice: "Your Ninja NFT is minted immediately after wallet connection.",
-    reassurance: "Minting failure does not block signup and can retry from account.",
-    details: [
-      ["Recipient", "inj1…"],
-      ["Standard", "CW-721 Nestable"],
-      ["Minter", "AWS KMS platform master wallet"],
-      ["Cost and limit", "~$0.0003 platform-paid · one user, one wallet, one Ninja NFT"],
-      ["Failure path", "Mint failure does not block signup; retry from account."],
-    ],
   },
   profile: {
     title: "Set up your profile",
@@ -40,7 +49,6 @@ export const signup = {
   completion: {
     title: "What would you like to do?",
     subtitle: "All skippable and revisitable from main navigation.",
-    footnote: "onboarding_completed_at is set when onboarding is complete.",
     actions: [
       {
         title: "Browse active bounties",
@@ -51,7 +59,7 @@ export const signup = {
       {
         title: "Try Injective in the Playground",
         description: "Explore Injective before choosing your next bounty.",
-        href: "#",
+        href: "https://playground.injective.network",
         icon: "↗",
       },
       {
