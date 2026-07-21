@@ -64,7 +64,13 @@ export default function Home() {
 
           <div className="rounded-card border border-on-inverse/12 bg-on-inverse/6 p-[21px] shadow-card backdrop-blur-[4px]">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 shrink-0 rounded-tile bg-[linear-gradient(135deg,var(--color-nft-deep)_0%,var(--color-hero-to)_55%,var(--color-accent-soft)_100%)]" />
+              <Image
+                src="/figma/ninja-labs-mascot.png"
+                alt=""
+                width={48}
+                height={48}
+                className="h-12 w-12 shrink-0 rounded-tile"
+              />
               <div>
                 <p className="text-base font-semibold text-on-inverse">{hero.portfolio.handle}</p>
                 <p className="text-sm text-on-inverse/50">
