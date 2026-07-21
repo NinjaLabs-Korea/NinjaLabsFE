@@ -23,12 +23,50 @@ Pages are ported 1:1 from the Figma design file below. Read this whole file befo
 - `npm run build` — production build; **must pass before any work is considered done**
 - `npm run lint` — ESLint
 
+## Git flow
+
+- Default branch: `main` (remote `origin`). `main` must always build (`npm run build` + `npm run lint` green); never commit broken work to it.
+- Direct commits to `main` are for the solo-maintainer fast path only (docs, small fixes). Any multi-commit feature, risky refactor, or collaborative work goes through a branch + PR.
+- Branch names: `<type>/<kebab-slug>` — types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test` (e.g. `feat/bounty-detail`, `fix/header-nav-active`).
+- Commit messages: Conventional Commits, matching the existing history — `<type>(<scope>): <summary>` with lowercase imperative summary, no trailing period (e.g. `feat(admin): session-local interactive admin managers`). Scope is optional for `docs`/`chore`.
+- One logical change per commit; never mix a feature with unrelated formatting or lockfile churn.
+- PRs target `main`, are squash-merged, and the squash title must itself be a valid Conventional Commit line. Delete the branch after merge.
+- Never force-push `main`. Force-push (`--force-with-lease` only) is allowed solely on your own feature branches.
+- Never rewrite published history, revert/stash/delete others' work, or push without the build and lint passing locally.
+- `package-lock.json` changes only appear in commits that intentionally change dependencies (`chore(deps): ...`).
+
+## Team agent workflow (Landing / Bounties / Admin owners)
+
+This file is the tool-agnostic agent entrypoint: Claude Code loads it via `CLAUDE.md` (`@AGENTS.md`); Cursor/Codex/Copilot read `AGENTS.md` natively. Do not create per-tool rule files — extend this one.
+Figma MCP is preconfigured in `.mcp.json` (remote `https://mcp.figma.com/mcp`); each teammate authenticates with their own Figma account on first use.
+
+### Ownership map (work only in your lane by default)
+
+|Owner|Routes|Owned code|
+|---|---|---|
+|Landing|`/`, `/notices*`, `/members*`, `/hall-of-fame`, `/signup/*`|`src/lib/{landing,notices,members,hall-of-fame,signup}.ts`, `components/{notices,members,signup}/`, `cards/{NewsCard,NoticeRow,MemberCard}`|
+|Bounties|`/bounties*`, `/applications`, `/agents*`|`src/lib/bounties.ts`, `components/{bounties,account}/`, `cards/BountyCard`|
+|Admin|`/admin/*`|`src/lib/admin.ts`, `components/admin/`|
+
+### Shared surfaces — coordinate before changing
+
+`src/app/globals.css` (`@theme` tokens), `src/lib/types.ts`, `src/lib/{foundation,contracts,runtime,mocks}/`, `components/{layout,ui,auth,wallet}/`, `src/app/layout.tsx`, `package.json` + lockfile, and the three contract docs (`AGENTS.md`, `docs/design.md`, `README.md`). Announce the change in the PR description; keep it in its own commit so other lanes can rebase cleanly.
+
+### Session rules
+
+- Start every agent session by pointing it at the task's Figma node (table above) and `docs/design.md`; follow the recipes there instead of inventing variants.
+- One branch per lane task (`feat/<lane>-<slug>`); never let an agent commit another lane's files as drive-by changes.
+- Doc-sync duty: adding a component updates the inventory in this file; adding a visual pattern updates `docs/design.md`; resolving/creating a design gap updates `docs/figma/design-gaps.md` — in the same PR.
+- Before ending a session: `npm run lint` + `npm run build` (+ `npm run test:unit` when touching foundation/auth/wallet/admin logic).
+- Agent runtime state (`.gjc/`, `artifacts/`) is gitignored — never commit it; never commit `.env.local`.
+
 ## Styling rules
 
 - **Tailwind utility classes only.** No CSS Modules, no styled-components, no `style={}` props, no new `.css` files.
 - The single CSS file is `src/app/globals.css`. Design tokens live there in the Tailwind v4 `@theme` block
   (`--color-*`, `--font-*`, `--radius-*`, ...) and are consumed as utilities (`bg-surface`, `text-accent`, ...).
 - New color/spacing/typography values from Figma go into `@theme` as tokens first — never hardcode hex values in components.
+- **`docs/design.md` is the design-system contract** — token semantics, radius/typography roles, and copy-paste recipes (buttons, cards, badges, focus ring, empty states). Follow its recipes instead of inventing variants; new patterns get added there in the same PR.
 
 ## Folder structure
 
