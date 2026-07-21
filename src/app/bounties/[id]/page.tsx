@@ -23,9 +23,12 @@ export async function generateMetadata({ params }: BountyDetailPageProps): Promi
     return { title: "Not found — Ninja Labs" };
   }
 
+  const title = `${bounty.applicationRequired && bounty.applicationTitle ? bounty.applicationTitle : bounty.title} — Ninja Labs`;
+
   return {
-    title: `${bounty.applicationRequired && bounty.applicationTitle ? bounty.applicationTitle : bounty.title} — Ninja Labs`,
+    title,
     description: bounty.summary,
+    openGraph: { title, description: bounty.summary, url: `/bounties/${bounty.slug}` },
   };
 }
 

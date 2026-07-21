@@ -23,6 +23,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${profile.handle} — Ninja Labs`,
     description: profile.bio,
+    openGraph: {
+      title: `${profile.handle} — Ninja Labs`,
+      description: profile.bio,
+      url: `/members/${id}`,
+    },
   };
 }
 

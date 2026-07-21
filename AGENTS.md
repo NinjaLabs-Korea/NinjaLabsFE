@@ -108,6 +108,7 @@ public/
 - Bounty deadlines: `deadline` is the list label (`D-7`), `deadlineDetail` the full timestamp shown on detail (19:1480 vs 19:1739).
 - Figma raster exports render **empty** via the export API (recorded as `figma-render-empty` in `src/lib/assets.ts`); covers/thumbnails use the design-native gradient placeholder. The two SVGs and one user-supplied mascot PNG in `public/figma/` are the available assets; the mascot PNG is not a Figma export.
 - Every user-visible route has metadata (`metadata` or variant-aware `generateMetadata`); the landing page inherits root-layout metadata and `/admin` (redirect-only) is exempt; app-level states: branded `not-found.tsx`/`error.tsx`/`global-error.tsx`, `loading.tsx` skeletons on the 3 dynamic routes, skip-to-content link, `icon.png` favicon (scaffold favicon.ico removed).
+- SEO surface: `metadataBase` from the validated runtime origin, root openGraph/twitter cards, per-detail og title/url overrides, code-generated 1200×630 `src/app/opengraph-image.tsx` (ImageResponse; inlines hero-gradient token hex values because Satori cannot read CSS vars), `src/app/sitemap.ts` (registry-derived URLs), and `src/app/robots.ts` (disallows `/admin`, `/applications`, `/agents$`).
 - Design-required gaps (auth states, form errors, confirmations, pagination, real assets) are tracked in `docs/figma/design-gaps.md` + the FigJam board linked there.
 
 ## Definition of done

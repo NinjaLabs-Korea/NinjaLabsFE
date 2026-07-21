@@ -24,6 +24,11 @@ export async function generateMetadata({ params }: NoticeDetailPageProps): Promi
   return {
     title: `${notice.title} — Ninja Labs`,
     description: notice.excerpt,
+    openGraph: {
+      title: `${notice.title} — Ninja Labs`,
+      description: notice.excerpt,
+      url: `/notices/${notice.slug}`,
+    },
   };
 }
 

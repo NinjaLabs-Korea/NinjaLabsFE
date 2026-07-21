@@ -4,7 +4,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { FoundationProvider } from "@/components/auth/FoundationProvider";
 import { previewUser } from "@/lib/mocks/fixtures";
-import { composeFoundationRuntime } from "@/lib/runtime/config";
+import { composeFoundationRuntime, loadRuntimeConfig } from "@/lib/runtime/config";
 import "./globals.css";
 
 const inter = Inter({
@@ -18,6 +18,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(loadRuntimeConfig().origin),
   title: "Ninja Labs — Build. Complete. Own your track record.",
   description:
     "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT — together they become a portfolio you truly own.",
@@ -27,7 +28,14 @@ export const metadata: Metadata = {
       "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT — together they become a portfolio you truly own.",
     siteName: "Ninja Labs",
     type: "website",
-    // Image intentionally omitted until a brand asset is available.
+    locale: "en_US",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ninja Labs — Build. Complete. Own your track record.",
+    description:
+      "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT — together they become a portfolio you truly own.",
   },
 };
 const { foundationConfig } = composeFoundationRuntime(previewUser);
