@@ -27,6 +27,8 @@ export type AdminBounty = {
   tags: Array<"Dev" | "Design" | "Content" | "Other">;
   description: string;
   submissionGuide: string;
+  deliverables: string[];
+  reviewProcess: string;
 };
 
 export type AdminHighlight = {
@@ -111,13 +113,15 @@ export function getAdminBounties(): AdminBounty[] {
       slug: bounty.slug,
       title: bounty.title,
       sponsor: bounty.sponsor,
-      reward: bounty.reward,
+      reward: { ...bounty.reward },
       intakeEnabled: overlay.intakeEnabled,
       status: overlay.status ?? bounty.status,
       deadline: overlay.deadline,
       tags: bounty.slug === "iasset-price-widget" ? [bounty.category, "Other"] : [bounty.category],
       description: bounty.descriptionMarkdown ?? bounty.summary,
-      submissionGuide: bounty.reviewProcess ?? "Follow the bounty requirements and submit the requested deliverables.",
+      submissionGuide: bounty.submissionGuideMarkdown ?? "",
+      deliverables: [...(bounty.deliverables ?? [])],
+      reviewProcess: bounty.reviewProcess ?? "",
     };
   });
 }
