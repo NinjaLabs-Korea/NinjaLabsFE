@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/Badge";
+import { Markdown } from "@/components/ui/Markdown";
 import { getNotice, getNotices } from "@/lib/notices";
 
 type NoticeDetailPageProps = {
@@ -34,8 +35,6 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
     notFound();
   }
 
-  const paragraphs = notice.bodyMarkdown.split("\n\n").filter(Boolean);
-
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="flex items-center justify-between gap-4">
@@ -61,10 +60,8 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
 
       <div className="mt-8 grid gap-8 md:grid-cols-4">
         <article className="rounded-card border border-border bg-surface p-5 shadow-card md:col-span-3">
-          <div className="space-y-5 text-base text-ink-secondary">
-            {paragraphs.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
+          <div className="text-base text-ink-secondary">
+            <Markdown>{notice.bodyMarkdown}</Markdown>
           </div>
           {notice.externalUrl ? (
             <div className="mt-6 rounded-tile border border-border bg-primary-soft p-5">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/Badge";
+import { Markdown } from "@/components/ui/Markdown";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { bounties, getBounty } from "@/lib/bounties";
 
@@ -73,19 +74,31 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
         <div className="space-y-6 lg:col-span-2">
           <article className="rounded-card border border-border bg-surface p-5 shadow-card">
             <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">Description</h2>
-            <p className="mt-4 text-base text-ink-secondary">
-              {bounty.applicationRequired && bounty.applicationDescription
-                ? bounty.applicationDescription
-                : (bounty.descriptionMarkdown ?? bounty.summary)}
-            </p>
-            {!bounty.applicationRequired ? (
-              <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                <MetaCell label="Deliverable">
-                  {deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)}
-                </MetaCell>
-                <MetaCell label="Deadline">{bounty.deadlineDetail ?? bounty.deadline}</MetaCell>
-                <MetaCell label="Review">{bounty.reviewProcess ?? ""}</MetaCell>
+            {bounty.applicationRequired && bounty.applicationDescription ? (
+              <p className="mt-4 text-base text-ink-secondary">{bounty.applicationDescription}</p>
+            ) : (
+              <div className="mt-4">
+                <Markdown>{bounty.descriptionMarkdown ?? bounty.summary}</Markdown>
               </div>
+            )}
+            {!bounty.applicationRequired ? (
+              <>
+                <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                  <MetaCell label="Deliverable">
+                    {deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)}
+                  </MetaCell>
+                  <MetaCell label="Deadline">{bounty.deadlineDetail ?? bounty.deadline}</MetaCell>
+                  <MetaCell label="Review">{bounty.reviewProcess ?? ""}</MetaCell>
+                </div>
+                {bounty.submissionGuideMarkdown ? (
+                  <>
+                    <h3 className="mt-8 font-display text-lg font-bold text-ink">Submission guide</h3>
+                    <div className="mt-3">
+                      <Markdown>{bounty.submissionGuideMarkdown}</Markdown>
+                    </div>
+                  </>
+                ) : null}
+              </>
             ) : null}
           </article>
 

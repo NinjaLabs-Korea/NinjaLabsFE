@@ -14,7 +14,10 @@ export type Bounty = {
   // 19:1480 shows D-7 label; 19:1739 shows full UTC deadline
   deadlineDetail?: string;
   coverImage: string;
+  /** Markdown (rendered by ui/Markdown): supported subset is p/a/strong/em/ul/ol/li/h2/h3/code/pre/blockquote/br/del — tables, images, and task lists are unsupported by design. */
   descriptionMarkdown?: string;
+  /** Markdown; same ui/Markdown subset as descriptionMarkdown. Renders a "Submission guide" section on non-application bounty detail. */
+  submissionGuideMarkdown?: string;
   deliverables?: string[];
   reviewProcess?: string;
   submissionMode?: 'direct' | 'agent';
@@ -30,6 +33,7 @@ export type Notice = {
   slug: string;
   title: string;
   excerpt: string;
+  /** Markdown; same ui/Markdown subset as Bounty.descriptionMarkdown. */
   bodyMarkdown: string;
   category: 'Ninja Labs' | 'Injective ecosystem' | 'Events';
   publishedAt: string;
