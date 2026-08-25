@@ -45,6 +45,7 @@ export type FoundationConfig =
     }
   | {
       mode: "api";
+      apiUrl: string;
     };
 
 export type FoundationRuntimeComposition = {
@@ -241,7 +242,7 @@ export function composeFoundationRuntime(
     foundationConfig:
       config.runtimeMode === "mock"
         ? { mode: "mock", previewUser, mockSeed: config.mockSeed! }
-        : { mode: "api" },
+        : { mode: "api", apiUrl: config.apiUrl! },
     wallet: config.wallet ? { ...config.wallet } : null,
   };
 }

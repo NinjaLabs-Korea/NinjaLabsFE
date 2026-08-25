@@ -8,7 +8,7 @@ export type ApiAvailable<T> = {
 
 export type ApiUnavailable = {
   status: "unavailable";
-  reason: "api-mode-placeholder";
+  reason: "api-mode-placeholder" | "network-error";
 };
 
 export type ApiResult<T> = ApiAvailable<T> | ApiUnavailable;

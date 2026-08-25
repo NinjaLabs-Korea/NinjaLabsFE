@@ -3,11 +3,9 @@
 import { createContext, useContext, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
-import {
-  createSessionPreviewAuthAdapter,
-  createUnavailableAuthAdapter,
-} from "@/lib/foundation/auth-adapter";
-import { createUnavailableApiClient } from "@/lib/foundation/api-client";
+import { createSessionPreviewAuthAdapter } from "@/lib/foundation/auth-adapter";
+import { createApiApiClient } from "@/lib/api/api-client";
+import { createApiAuthAdapter } from "@/lib/api/auth-adapter";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 
 export type { FoundationConfig } from "@/lib/runtime/config";
@@ -22,12 +20,19 @@ type FoundationContextValue = {
 const FoundationContext = createContext<FoundationContextValue | null>(null);
 
 function createFoundationContextValue(config: FoundationConfig): FoundationContextValue {
+  if (config.mode === "mock") {
+    return {
+      adapter: createSessionPreviewAuthAdapter(config.previewUser),
+      apiClient: createMockApiClient(config.mockSeed),
+      mode: config.mode,
+    };
+  }
+
+  // api 모드 — BE(NinjaLabsBE)에 실제 연결. 어댑터와 클라이언트가 토큰 저장소를 공유한다.
+  const adapter = createApiAuthAdapter(config.apiUrl);
   return {
-    adapter:
-      config.mode === "mock"
-        ? createSessionPreviewAuthAdapter(config.previewUser)
-        : createUnavailableAuthAdapter(),
-    apiClient: config.mode === "mock" ? createMockApiClient(config.mockSeed) : createUnavailableApiClient(),
+    adapter,
+    apiClient: createApiApiClient(adapter.http),
     mode: config.mode,
   };
 }

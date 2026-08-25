@@ -19,11 +19,11 @@ export function AgentsView() {
   const apiClient = useFoundationApiClient();
   const { data: agents, unavailable } = useAccountQuery(apiClient.getAgents);
 
-  if (mode === "api" || unavailable) {
+  if (unavailable) {
     return (
       <div className="rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center">
-        <p className="text-sm font-semibold text-ink">Agents are unavailable in API mode.</p>
-        <p className="mt-1 text-sm text-ink-muted">Connect an account service to manage your agents.</p>
+        <p className="text-sm font-semibold text-ink">Agents are temporarily unavailable.</p>
+        <p className="mt-1 text-sm text-ink-muted">We couldn’t reach the server. Please try again shortly.</p>
       </div>
     );
   }

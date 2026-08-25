@@ -5,7 +5,7 @@ export type ApplicationStatus = "open" | "under_review" | "approved" | "submitte
 export type AccountApplication = {
   bountySlug: string;
   bountyTitle: string;
-  category: "Dev" | "Design" | "Content";
+  category: "Dev" | "Design" | "Content" | "Other";
   appliedAt: string;
   note: string;
   status: ApplicationStatus;

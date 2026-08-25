@@ -87,13 +87,13 @@ describe("GoogleLoginButton", () => {
     fireEvent.click(screen.getByRole("button", { name: "Preview failed sign-in" }));
 
     expect(
-      (screen.getByRole("button", { name: "Starting mock sign-in…" }) as HTMLButtonElement).disabled,
+      (screen.getByRole("button", { name: "Starting Google sign-in…" }) as HTMLButtonElement).disabled,
     ).toBe(true);
     await screen.findByRole("alert");
 
-    expect(screen.getByRole("button", { name: "Retry mock sign-in" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Retry Google sign-in" })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Retry mock sign-in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Retry Google sign-in" }));
 
     await waitFor(() => expect(screen.getByText("signed-in")).toBeTruthy());
     expect(screen.queryByRole("alert")).toBeNull();
