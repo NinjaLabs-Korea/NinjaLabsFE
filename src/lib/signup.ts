@@ -19,16 +19,16 @@ export const signup = {
       ],
     },
     api: {
-      badge: "SIGN-UP FLOW · BACKEND PENDING",
-      title: "Google sign-in is unavailable",
+      badge: "SIGN-UP FLOW",
+      title: "Sign in to Ninja Labs",
       description:
-        "Google sign-in is unavailable pending backend integration. This frontend does not create accounts.",
+        "Continue with Google to create your account. You will be redirected to Google and back here once you approve.",
       disclosure:
-        "API mode has no Google sign-in or account-creation integration in this frontend.",
-      statusTitle: "Integration status",
+        "Signing in creates or restores your Ninja Labs account. We only receive your Google email — no password is shared.",
+      statusTitle: "How it works",
       edgeCases: [
-        "Google sign-in remains unavailable until backend integration is complete",
-        "No account is created from this page",
+        "You are redirected to Google's consent screen and back after approval",
+        "A new account starts at onboarding step 1; returning users resume their session",
       ],
     },
   },
