@@ -4,8 +4,9 @@
 
 - `FoundationProvider` is the runtime boundary for auth state. In **mock mode**, it uses deterministic fixtures and an in-memory session preview that resets on reload. Mock mode is local/test only.
 - In **API mode**, the auth adapter and account/application/agent client are backed by the real backend (NinjaLabsBE, see its `docs/api-contract.md`). Sign-in redirects to the backend's `/auth/google`; the OAuth callback returns to the app with `#accessToken=..&refreshToken=..` (URL fragment, never sent to servers), which `src/lib/api/http.ts` captures into `localStorage`. Requests send `Authorization: Bearer`; a 401 triggers one refresh-rotation retry (`POST /auth/refresh`), and a failed refresh clears the session.
-- The Google button performs real Google OAuth in API mode (full-page redirect via the backend). In mock mode it still signs into the local preview only and then advances to the `/signup/wallet` step. `CompleteSignupLink` only navigates; it does not sign a user in.
-- RainbowKit supports browser wallet **connection only**. Connecting or disconnecting a wallet does not authenticate a user, create or link an account, sign a message or transaction, or make a backend request.
+- The Google button performs real Google OAuth in API mode (full-page redirect via the backend). On callback, `/auth/me.onboardingStep` routes an incomplete account to wallet, profile, or completion. Mock mode still signs into the local preview and advances to `/signup/wallet`.
+- In API mode RainbowKit connects an Injective EVM wallet, requests a backend nonce challenge, signs it with EIP-191 `personal_sign`, and verifies it through `/wallets/verify`. The backend stores the corresponding `inj1` address and queues the parent NFT mint. Connection alone never authenticates the user; wallet verification remains optional.
+- The profile form persists nickname, bio, and tags through `/users/me/profile`; the completion screen calls `/users/me/complete-onboarding`. Public profile routes load `/users/:nickname` in API mode.
 - Owner agent keys are masked fixture values only. The UI never displays a usable or unmasked key.
 - Owner/account and admin interactions are preview state, not authorization controls or durable persistence. `/admin/*` remains publicly reachable and its admin labeling is decorative.
 
@@ -48,7 +49,7 @@ Status of the original gate items (✅ = delivered by the NinjaLabsBE integratio
 3. CSRF protections for cookie-authenticated state changes.
 4. Trusted-edge rate limiting and Turnstile enforcement where abuse protection is required.
 5. Backend-owned identity, authorization, and admin access enforcement; decorative frontend state is insufficient.
-6. Wallet signature challenge, verification, nonce/replay protection, and explicit account-linking policy; wallet connection alone is insufficient.
+6. ✅ Wallet signature challenge, EIP-191 verification, nonce/replay protection, `inj1` normalization, and account linking.
 7. Reviewed agent API contracts covering registration, authentication/authorization, key issuance and rotation, submission/status behavior, validation, and error semantics.
 
 These are deferred requirements, not implementation promises made by the current frontend.
@@ -63,4 +64,4 @@ npm run lint
 npm run build
 ```
 
-Also manually verify the relevant boundary: the mock SPA signs in only to memory and resets on reload; API mode remains unavailable with no network traffic; wallet connect/disconnect does not change auth state; agent API-key displays stay masked; and desktop/mobile account disclosure remains consistent with the mock session.
+Also manually verify the relevant boundary: the mock SPA signs in only to memory and resets on reload; API OAuth resumes at the correct onboarding step; wallet rejection leaves the account unlinked; a successful signature advances to profile; agent API-key displays stay masked; and desktop/mobile account disclosure remains consistent.

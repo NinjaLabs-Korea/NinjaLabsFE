@@ -1,4 +1,5 @@
 import type { Member, Profile } from "./types";
+import { loadRuntimeConfig } from "./runtime/config";
 
 export const PROFILE_EMPTY_ID = "sora";
 
@@ -33,3 +34,89 @@ export const profiles: Record<string, Profile> = {
 
 export function getMembers() { return members.filter((member) => member.isMember); }
 export function getProfile(slug: string) { return profiles[slug]; }
+
+type PublicProfileResponse = {
+  nickname: string;
+  bio: string;
+  created_at: string;
+  tags: string[];
+  completedBounties: Array<{
+    title: string;
+    category: string;
+    completed_at: string;
+    rewards: Array<{ amount: string; symbol: string }>;
+  }>;
+  agents: Array<{
+    name: string;
+    status: string;
+    wallet_address: string;
+    completed_bounties: unknown[];
+  }>;
+};
+
+const categoryMap = {
+  DEV: "Dev",
+  DESIGN: "Design",
+  CONTENT: "Content",
+} as const;
+
+function toProfile(data: PublicProfileResponse): Profile {
+  const completions = data.completedBounties.flatMap((completion) => {
+    const category = categoryMap[completion.category as keyof typeof categoryMap];
+    if (!category) return [];
+    const reward = completion.rewards[0];
+    const currency: "USDC" | "INJ" = reward?.symbol === "USDC" ? "USDC" : "INJ";
+    const decimals = currency === "USDC" ? 6 : 18;
+    return [{
+      title: completion.title,
+      category,
+      completedAt: new Date(completion.completed_at).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      reward: {
+        amount: reward ? Number(reward.amount) / 10 ** decimals : 0,
+        currency,
+      },
+    }];
+  });
+
+  return {
+    slug: data.nickname,
+    handle: data.nickname,
+    initials: data.nickname.slice(0, 2).toUpperCase(),
+    bio: data.bio,
+    skills: data.tags.flatMap((tag) => {
+      const category = categoryMap[tag as keyof typeof categoryMap];
+      return category ? [category] : [];
+    }),
+    joinedAt: new Date(data.created_at).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+    }),
+    completions,
+    childNfts: completions.map(({ title }) => ({ title })),
+    agents: data.agents.map((agent) => ({
+      name: agent.name,
+      wallet: agent.wallet_address,
+      verified: agent.status === "ACTIVE",
+      completedBounties: agent.completed_bounties.length,
+    })),
+  };
+}
+
+export async function getRuntimeProfile(slug: string): Promise<Profile | undefined> {
+  const config = loadRuntimeConfig();
+  if (config.runtimeMode === "mock") return getProfile(slug);
+
+  try {
+    const response = await fetch(
+      `${config.apiUrl!.replace(/\/$/, "")}/users/${encodeURIComponent(slug)}`,
+    );
+    if (!response.ok) return undefined;
+    return toProfile((await response.json()) as PublicProfileResponse);
+  } catch {
+    return undefined;
+  }
+}

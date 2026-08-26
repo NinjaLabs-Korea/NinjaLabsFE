@@ -9,12 +9,15 @@ import { signup } from "@/lib/signup";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { composeFoundationRuntime } from "@/lib/runtime/config";
 
-const { wallet: walletConnectionConfig } = composeFoundationRuntime(previewUser);
+const { foundationConfig, wallet: walletConnectionConfig } = composeFoundationRuntime(previewUser);
+const isApiMode = foundationConfig.mode === "api";
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
 export const metadata: Metadata = {
   title: "Connect wallet — Ninja Labs",
-  description: "Preview an Injective wallet connection without authentication or account changes.",
+  description: isApiMode
+    ? "Connect and verify an Injective wallet."
+    : "Preview an Injective wallet connection.",
 };
 
 export default function SignupWalletPage() {
@@ -22,7 +25,11 @@ export default function SignupWalletPage() {
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="mx-auto max-w-[1024px]">
         <div className="flex justify-end">
-          <Badge variant="danger">SIGN-UP FLOW (wallet preview)</Badge>
+          <Badge variant="danger">
+            {walletConnectionConfig
+              ? isApiMode ? "SIGN-UP FLOW" : "SIGN-UP FLOW (wallet preview)"
+              : "WALLET UNAVAILABLE"}
+          </Badge>
         </div>
         <div className="mt-8">
           <StepIndicator current={2} />
@@ -33,8 +40,9 @@ export default function SignupWalletPage() {
               {signup.wallet.title}
             </h1>
             <p className="mt-3 text-base text-ink-muted">
-              Connect an Injective wallet in this session preview. It does not authenticate you,
-              create an account session, or change sign-up.
+              {isApiMode
+                ? "Connect your Injective EVM wallet, then sign a gas-free message to prove ownership."
+                : "Connect an Injective EVM wallet in this local session preview."}
             </p>
             <div className="mt-5 [&_button]:w-full">
               {walletConnectionConfig ? (
@@ -62,10 +70,13 @@ export default function SignupWalletPage() {
               )}
             </div>
             <div className="mt-5 rounded-tile border border-border bg-primary-soft p-4">
-              <Badge variant="primary-soft">Connection-only preview</Badge>
+              <Badge variant="primary-soft">
+                {isApiMode ? "Gas-free verification" : "Connection-only preview"}
+              </Badge>
               <p className="mt-2 text-sm text-ink-notice">
-                No signature, account linking, NFT minting, or backend request occurs in this
-                preview.
+                {isApiMode
+                  ? "The signature does not submit a transaction. A verified wallet is linked to your account and queues your Ninja NFT mint."
+                  : "Mock mode does not sign, link an account, or call the backend."}
               </p>
             </div>
             <Link
@@ -75,21 +86,20 @@ export default function SignupWalletPage() {
               Connect later
             </Link>
             <p className="mt-4 text-sm text-ink-muted">
-              Connecting or disconnecting does not affect authentication or sign-up. You can
-              continue without a wallet.
+              Wallet verification is optional. You can continue now and connect one later.
             </p>
           </article>
           <aside className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] lg:col-span-2">
             <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">
-              Connection preview
+              What happens
             </h2>
             <dl className="mt-5 space-y-4">
               {[
-                ["Scope", "Browser wallet connection only"],
-                ["Authentication", "No authentication or account session"],
-                ["Signing", "No transaction or message signature"],
-                ["Account linking", "No account or wallet linkage"],
-                ["Backend", "No backend request or NFT minting"],
+                ["Connection", "MetaMask or another EVM wallet"],
+                ["Signing", "EIP-191 personal_sign ownership proof"],
+                ["Gas", "No transaction and no gas fee"],
+                ["Account linking", "Verified wallet saved to your account"],
+                ["NFT", "Parent Ninja NFT mint is queued"],
               ].map(([term, detail]) => (
                 <div key={term}>
                   <dt className="text-sm font-semibold text-ink">{term}</dt>

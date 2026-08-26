@@ -2,7 +2,7 @@
 
 Ninja Labs frontend — a builder community & bounty marketplace for the Injective ecosystem. Every completed bounty mints an on-chain NFT that builds a portfolio the builder owns.
 
-Ported 1:1 from the team Figma file (25 screens: 21 designed + 4 FE-state pages captured back). The current foundation is a **frontend-only runtime preview**: `FoundationProvider` supplies an in-memory mock session only in local/test mock mode; API mode is explicitly unavailable and makes no backend fetch. It does not provide production authentication, durable state, wallet verification, or usable API keys. Wallet connection never authenticates an account. See [`docs/auth-api-contract.md`](docs/auth-api-contract.md) for the binding runtime boundary, environment contract, and deferred production-security gate.
+Ported from the team Figma file with explicit mock and API runtime modes. Mock mode remains an in-memory local/test preview; API mode integrates NinjaLabsBE Google OAuth, rotating JWT sessions, onboarding persistence, EVM wallet ownership verification, owner data, and public profiles. Wallet verification links an account but never replaces user authentication. See [`docs/auth-api-contract.md`](docs/auth-api-contract.md) for the binding runtime and security contract.
 
 ## Stack
 
@@ -31,7 +31,7 @@ npm run dev      # http://localhost:3000
 src/app/          routes (public: /, /bounties, /notices, /members, /hall-of-fame, /signup/*,
                   /agents/register · admin: /admin/*) + 404/error/loading states
 src/components/   layout (shell and mobile account disclosure) · auth (FoundationProvider/runtime auth) ·
-                  wallet (connection only) · account (applications/agents) · ui (primitives) · cards · filter islands · admin
+                  wallet (connection + verification) · signup (profile/completion persistence) · account · ui · cards · admin
 src/lib/          typed public registries plus contracts, deterministic mocks, and unavailable API/auth adapters
 public/figma/     assets exported from Figma
 docs/figma/       screen recon, frozen design contracts (screen-matrix.md), design-gaps.md
@@ -47,7 +47,7 @@ Roles are split into **Landing / Bounties / Admin**. Gaps below are distilled fr
 ### Landing (`/`, `/notices`, `/members`, `/hall-of-fame`, `/signup/*`)
 
 - Real auth for the signup flow *(blocked on backend)* — Google login is a mock-session preview; wallet connect never authenticates.
-- Signup profile validation *(blocked on design/backend)* — "duplicate nickname check" is static copy, `Next` is a plain `Link`, no error visuals.
+- Real-time nickname availability feedback remains open; submit-time validation and backend conflict handling are implemented.
 - Pagination / load-more on notices list *(blocked on design)* — fixed 4-row set, no paging affordance drawn.
 - Real assets *(blocked on assets)* — 44px signup mascot raster, member/HoF photos, partner wall, notice thumbnails (currently gradient/initials fallbacks).
 
@@ -68,7 +68,7 @@ Roles are split into **Landing / Bounties / Admin**. Gaps below are distilled fr
 
 ### Cross-cutting (whoever touches it first coordinates)
 
-- Backend API + durable state — API mode is deliberately unavailable (`docs/auth-api-contract.md` is the binding contract).
+- Admin authorization/persistence and remaining public registries still need backend integration (`docs/auth-api-contract.md` is the binding contract).
 - Logged-in header states reflect the mock-session preview only; real session wiring is backend scope.
 - Submit feedback outside admin (public Apply, agent register) still has no toast/feedback path.
 

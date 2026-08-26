@@ -12,5 +12,17 @@ export function createUnavailableApiClient(): ApiClient {
     getAccount: async () => unavailable(),
     getApplications: async () => unavailable(),
     getAgents: async () => unavailable(),
+    createWalletChallenge: async () => {
+      throw new Error("Wallet API is unavailable.");
+    },
+    verifyWallet: async () => {
+      throw new Error("Wallet API is unavailable.");
+    },
+    completeProfile: async () => {
+      throw new Error("Profile API is unavailable.");
+    },
+    completeOnboarding: async () => {
+      throw new Error("Onboarding API is unavailable.");
+    },
   };
 }

@@ -104,5 +104,29 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
         return networkUnavailable<readonly AccountAgent[]>();
       }
     },
+
+    createWalletChallenge: (address) =>
+      http.fetchJson<{ message: string }>("/wallets/challenge", {
+        method: "POST",
+        body: { address },
+      }),
+
+    verifyWallet: async (address, signature, publicKey) => {
+      await http.fetchJson("/wallets/verify", {
+        method: "POST",
+        body: { address, signature, ...(publicKey ? { publicKey } : {}) },
+      });
+    },
+
+    completeProfile: async ({ nickname, bio, tags }) => {
+      await http.fetchJson("/users/me/profile", {
+        method: "POST",
+        body: { nickname, bio, tags },
+      });
+    },
+
+    completeOnboarding: async () => {
+      await http.fetchJson("/users/me/complete-onboarding", { method: "POST" });
+    },
   };
 }

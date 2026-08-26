@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
+import { CompleteOnboarding } from "@/components/signup/CompleteOnboarding";
 import { Badge } from "@/components/ui/Badge";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { signup } from "@/lib/signup";
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 export default function SignupGetStartedPage() {
   return (
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
+      <CompleteOnboarding />
       <div className="mx-auto max-w-[896px]">
         <div className="flex justify-end">
           <Badge variant="danger">{signup.badges.completion}</Badge>
@@ -60,7 +62,7 @@ export default function SignupGetStartedPage() {
             Skip and go to main
           </CompleteSignupLink>
           <p className="mt-5 text-center text-xs text-ink-muted">
-            This completion screen is navigation-only and does not save onboarding progress.
+            Your onboarding progress is saved. You can update your wallet and profile later.
           </p>
         </section>
       </div>

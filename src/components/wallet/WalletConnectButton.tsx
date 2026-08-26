@@ -1,12 +1,18 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import {
   useAccount,
   useConnect,
   useDisconnect,
+  useSignMessage,
   useSwitchChain,
 } from "wagmi";
+import {
+  useFoundationApiClient,
+  useFoundationMode,
+} from "@/components/auth/FoundationProvider";
 
 type WalletConnectButtonProps = {
   chainId: number;
@@ -21,6 +27,10 @@ export function WalletConnectButton({
   chainId,
   disabled = false,
 }: WalletConnectButtonProps) {
+  const router = useRouter();
+  const apiClient = useFoundationApiClient();
+  const mode = useFoundationMode();
+  const [verificationState, setVerificationState] = useState<"idle" | "pending" | "error">("idle");
   const hasInjectedWallet = useSyncExternalStore(
     () => () => undefined,
     () => "ethereum" in window,
@@ -29,6 +39,7 @@ export function WalletConnectButton({
   const { address, chainId: connectedChainId, isConnected } = useAccount();
   const { connect, connectors, error, isPending } = useConnect();
   const { disconnect } = useDisconnect();
+  const { signMessageAsync } = useSignMessage();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
   const isWrongNetwork = isConnected && connectedChainId !== chainId;
   const injectedConnector = connectors.find(
@@ -45,6 +56,20 @@ export function WalletConnectButton({
   const unavailable = !connector;
   const buttonClassName =
     "inline-flex min-h-11 items-center justify-center rounded-control border px-4 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60";
+
+  const verifyConnectedWallet = async () => {
+    if (!address) return;
+    setVerificationState("pending");
+    try {
+      const challenge = await apiClient.createWalletChallenge(address);
+      const signature = await signMessageAsync({ message: challenge.message });
+      await apiClient.verifyWallet(address, signature);
+      setVerificationState("idle");
+      router.push("/signup/profile");
+    } catch {
+      setVerificationState("error");
+    }
+  };
 
   if (isWrongNetwork) {
     return (
@@ -65,6 +90,34 @@ export function WalletConnectButton({
   }
 
   if (isConnected && address) {
+    if (mode === "api") {
+      return (
+        <div className="flex flex-col items-start gap-2">
+          <button
+            type="button"
+            className={`${buttonClassName} border-primary bg-primary text-on-inverse hover:bg-primary-strong`}
+            disabled={disabled || verificationState === "pending"}
+            onClick={() => void verifyConnectedWallet()}
+          >
+            {verificationState === "pending" ? "Waiting for signature…" : "Verify wallet"}
+          </button>
+          <button
+            type="button"
+            className="text-xs font-semibold text-ink-muted hover:text-ink"
+            disabled={verificationState === "pending"}
+            onClick={() => disconnect()}
+          >
+            Disconnect {formatAddress(address)}
+          </button>
+          {verificationState === "error" ? (
+            <p className="text-xs text-danger" role="alert">
+              Wallet verification failed. Check the signature request and try again.
+            </p>
+          ) : null}
+        </div>
+      );
+    }
+
     return (
       <button
         type="button"

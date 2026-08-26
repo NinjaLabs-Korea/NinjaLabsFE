@@ -6,6 +6,8 @@ export type ClientUser = {
   initials: string;
   profileSlug: string;
   walletAddress?: string;
+  onboardingStep?: number;
+  onboardingCompleted?: boolean;
 };
 
 export type SignedOutAuthSnapshot = {

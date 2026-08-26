@@ -17,4 +17,12 @@ export type ApiClient = {
   getAccount: (auth: AuthSnapshot) => Promise<ApiResult<Account | null>>;
   getApplications: (auth: AuthSnapshot) => Promise<ApiResult<readonly AccountApplication[]>>;
   getAgents: (auth: AuthSnapshot) => Promise<ApiResult<readonly AccountAgent[]>>;
+  createWalletChallenge: (address: string) => Promise<{ message: string }>;
+  verifyWallet: (address: string, signature: string, publicKey?: string) => Promise<void>;
+  completeProfile: (input: {
+    nickname: string;
+    bio: string;
+    tags: readonly string[];
+  }) => Promise<void>;
+  completeOnboarding: () => Promise<void>;
 };

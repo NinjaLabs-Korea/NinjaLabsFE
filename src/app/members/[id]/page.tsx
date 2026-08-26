@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { getProfile, profiles } from "@/lib/members";
+import { getRuntimeProfile, profiles } from "@/lib/members";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -14,7 +14,7 @@ export function generateStaticParams() {
 }
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const profile = getProfile(id);
+  const profile = await getRuntimeProfile(id);
 
   if (!profile) {
     return { title: "Not found — Ninja Labs" };
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function MemberProfilePage({ params }: PageProps) {
   const { id } = await params;
-  const profile = getProfile(id);
+  const profile = await getRuntimeProfile(id);
   if (!profile) notFound();
   const completed = profile.completions.length > 0;
 

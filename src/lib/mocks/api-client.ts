@@ -30,5 +30,9 @@ export function createMockApiClient(seed = "default"): ApiClient {
 
       return { status: "available", data: getMockFixtureSnapshot(fixtureSnapshot).agents };
     },
+    createWalletChallenge: async (address) => ({ message: `Preview challenge for ${address}` }),
+    verifyWallet: async () => undefined,
+    completeProfile: async () => undefined,
+    completeOnboarding: async () => undefined,
   };
 }

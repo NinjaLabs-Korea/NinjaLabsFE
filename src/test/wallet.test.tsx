@@ -4,7 +4,12 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
+import { FoundationProvider } from "@/components/auth/FoundationProvider";
 import { createSessionPreviewAuthAdapter } from "@/lib/foundation/auth-adapter";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
 
 const wagmi = vi.hoisted(() => ({
   account: {
@@ -19,6 +24,7 @@ const wagmi = vi.hoisted(() => ({
   disconnect: vi.fn(),
   switchChain: vi.fn(),
   isSwitching: false,
+  signMessage: vi.fn(),
   createConfig: vi.fn((config) => config),
   providerConfig: vi.fn(),
 }));
@@ -45,6 +51,7 @@ vi.mock("wagmi", () => ({
     isPending: wagmi.isConnecting,
   }),
   useDisconnect: () => ({ disconnect: wagmi.disconnect }),
+  useSignMessage: () => ({ signMessageAsync: wagmi.signMessage }),
   useSwitchChain: () => ({
     switchChain: wagmi.switchChain,
     isPending: wagmi.isSwitching,
@@ -92,6 +99,20 @@ vi.mock("@rainbow-me/rainbowkit/wallets", () => ({
 
 const injectedConnector = { type: "injected" };
 const walletConnectConnector = { type: "walletConnect" };
+const previewUser = {
+  id: "demo-user",
+  handle: "demo",
+  initials: "DU",
+  profileSlug: "demo",
+};
+
+function renderWalletButton() {
+  return render(
+    <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
+      <WalletConnectButton chainId={1439} />
+    </FoundationProvider>,
+  );
+}
 
 function setInjectedWallet(available: boolean) {
   if (available) {
@@ -224,7 +245,7 @@ describe("WalletConnectButton", () => {
     const beforeWalletAction = auth.getSnapshot();
     setInjectedWallet(true);
 
-    render(<WalletConnectButton chainId={1439} />);
+    renderWalletButton();
     fireEvent.click(screen.getByRole("button", { name: "Connect wallet" }));
 
     expect(wagmi.connect).toHaveBeenCalledWith({ connector: injectedConnector });
@@ -233,7 +254,7 @@ describe("WalletConnectButton", () => {
   });
 
   it("falls back to WalletConnect when no injected wallet is available", () => {
-    render(<WalletConnectButton chainId={1439} />);
+    renderWalletButton();
     fireEvent.click(screen.getByRole("button", { name: "Connect wallet" }));
 
     expect(wagmi.connect).toHaveBeenCalledWith({ connector: walletConnectConnector });
@@ -246,7 +267,7 @@ describe("WalletConnectButton", () => {
       isConnected: true,
     };
 
-    render(<WalletConnectButton chainId={1439} />);
+    renderWalletButton();
     const button = screen.getByRole("button", {
       name: "Disconnect wallet 0x1234…cdef",
     });
@@ -263,7 +284,7 @@ describe("WalletConnectButton", () => {
       isConnected: true,
     };
 
-    render(<WalletConnectButton chainId={1439} />);
+    renderWalletButton();
     fireEvent.click(
       screen.getByRole("button", { name: "Switch to Injective EVM" }),
     );
@@ -277,7 +298,7 @@ describe("WalletConnectButton", () => {
   it("shows a stable connector error message", () => {
     wagmi.connectError = new Error("Connector rejected request");
 
-    render(<WalletConnectButton chainId={1439} />);
+    renderWalletButton();
 
     expect(screen.getByRole("alert").textContent).toBe(
       "Unable to connect your wallet. Try again.",
@@ -287,7 +308,7 @@ describe("WalletConnectButton", () => {
   it("reports an unavailable state when no compatible connector exists", () => {
     wagmi.connectors = [];
 
-    render(<WalletConnectButton chainId={1439} />);
+    renderWalletButton();
 
     expect(
       (screen.getByRole("button", { name: "Wallet unavailable" }) as HTMLButtonElement)

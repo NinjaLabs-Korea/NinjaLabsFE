@@ -22,6 +22,8 @@ export function toClientUser(me: MeResponse): ClientUser {
     handle: me.nickname,
     initials: me.nickname.slice(0, 2).toUpperCase(),
     profileSlug: me.nickname,
+    onboardingStep: me.onboardingStep,
+    onboardingCompleted: me.onboardingCompleted,
     ...(me.wallet ? { walletAddress: me.wallet.address } : {}),
   };
 }

@@ -9,6 +9,7 @@ import {
 } from "@/components/auth/FoundationProvider";
 import { AuthArea } from "@/components/layout/AuthArea";
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
+import { getOnboardingPath } from "@/lib/api/auth-adapter";
 
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: ComponentProps<"a">) => (
@@ -98,5 +99,16 @@ describe("GoogleLoginButton", () => {
     await waitFor(() => expect(screen.getByText("signed-in")).toBeTruthy());
     expect(screen.queryByRole("alert")).toBeNull();
     expect(routerPush).toHaveBeenCalledWith("/signup/wallet");
+  });
+});
+
+describe("API onboarding routing", () => {
+  it("maps incomplete users to the first unfinished signup screen", () => {
+    expect(getOnboardingPath({ ...previewUser, onboardingStep: 2 })).toBe("/signup/wallet");
+    expect(getOnboardingPath({ ...previewUser, onboardingStep: 3 })).toBe("/signup/profile");
+    expect(getOnboardingPath({ ...previewUser, onboardingStep: 4 })).toBe("/signup/get-started");
+    expect(
+      getOnboardingPath({ ...previewUser, onboardingStep: 4, onboardingCompleted: true }),
+    ).toBeNull();
   });
 });
