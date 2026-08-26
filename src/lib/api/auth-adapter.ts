@@ -10,6 +10,15 @@ export function getOnboardingPath(user: AuthSnapshot["user"]): string | null {
   return "/signup/get-started";
 }
 
+export function shouldRedirectToOnboarding(
+  user: AuthSnapshot["user"],
+  pathname: string,
+): string | null {
+  const onboardingPath = getOnboardingPath(user);
+  if (!onboardingPath || pathname.startsWith("/signup/")) return null;
+  return onboardingPath;
+}
+
 /**
  * api 모드 실제 인증 어댑터 (BE: 구글 OAuth → 자체 JWT 세션)
  *
@@ -37,10 +46,12 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
   }
 
   if (typeof window !== "undefined") {
-    const returnedFromOauth = captureTokensFromLocation();
+    captureTokensFromLocation();
     void restoreSession().then((restored) => {
-      if (!returnedFromOauth) return;
-      const onboardingPath = getOnboardingPath(restored.user);
+      const onboardingPath = shouldRedirectToOnboarding(
+        restored.user,
+        window.location.pathname,
+      );
       if (onboardingPath) window.location.replace(onboardingPath);
     });
   }

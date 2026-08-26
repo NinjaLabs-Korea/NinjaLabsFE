@@ -5,13 +5,11 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { getRuntimeProfile, profiles } from "@/lib/members";
+import { getRuntimeProfile } from "@/lib/members";
 
 type PageProps = { params: Promise<{ id: string }> };
 
-export function generateStaticParams() {
-  return Object.keys(profiles).map((id) => ({ id }));
-}
+export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
   const profile = await getRuntimeProfile(id);

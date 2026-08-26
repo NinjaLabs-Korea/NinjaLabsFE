@@ -9,7 +9,7 @@ import {
 } from "@/components/auth/FoundationProvider";
 import { AuthArea } from "@/components/layout/AuthArea";
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
-import { getOnboardingPath } from "@/lib/api/auth-adapter";
+import { getOnboardingPath, shouldRedirectToOnboarding } from "@/lib/api/auth-adapter";
 
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: ComponentProps<"a">) => (
@@ -110,5 +110,14 @@ describe("API onboarding routing", () => {
     expect(
       getOnboardingPath({ ...previewUser, onboardingStep: 4, onboardingCompleted: true }),
     ).toBeNull();
+  });
+
+  it("recovers incomplete sessions outside signup without trapping later signup steps", () => {
+    const incomplete = { ...previewUser, onboardingStep: 1 };
+    expect(shouldRedirectToOnboarding(incomplete, "/")).toBe("/signup/wallet");
+    expect(shouldRedirectToOnboarding(incomplete, "/members/demo-user")).toBe(
+      "/signup/wallet",
+    );
+    expect(shouldRedirectToOnboarding(incomplete, "/signup/profile")).toBeNull();
   });
 });

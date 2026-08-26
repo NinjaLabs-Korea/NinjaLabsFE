@@ -113,6 +113,7 @@ export async function getRuntimeProfile(slug: string): Promise<Profile | undefin
   try {
     const response = await fetch(
       `${config.apiUrl!.replace(/\/$/, "")}/users/${encodeURIComponent(slug)}`,
+      { cache: "no-store" },
     );
     if (!response.ok) return undefined;
     return toProfile((await response.json()) as PublicProfileResponse);

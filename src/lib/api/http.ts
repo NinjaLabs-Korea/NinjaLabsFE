@@ -85,6 +85,7 @@ export function createApiHttp(apiUrl: string): ApiHttp {
     const { accessToken } = getTokens();
     return fetch(`${base}${path}`, {
       method: init?.method ?? "GET",
+      cache: "no-store",
       headers: {
         ...(init?.body !== undefined ? { "content-type": "application/json" } : {}),
         ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
@@ -101,6 +102,7 @@ export function createApiHttp(apiUrl: string): ApiHttp {
         if (!refreshToken) return false;
         const res = await fetch(`${base}/auth/refresh`, {
           method: "POST",
+          cache: "no-store",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ refreshToken }),
         });
@@ -143,6 +145,7 @@ export function createApiHttp(apiUrl: string): ApiHttp {
       // 서버 세션 폐기는 best-effort — 실패해도 로컬 로그아웃은 완료된 상태
       await fetch(`${base}/auth/logout`, {
         method: "POST",
+        cache: "no-store",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ refreshToken }),
       }).catch(() => {});
