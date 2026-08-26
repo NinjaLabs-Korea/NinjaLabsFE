@@ -91,9 +91,10 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     },
     signIn: async () => {
       const traceId = getOnboardingTraceId();
-      const params = traceId ? `?trace=${encodeURIComponent(traceId)}` : "";
-      onboardingLog("oauth.redirect.started");
-      window.location.assign(`${apiUrl.replace(/\/$/, "")}/auth/google${params}`);
+      const params = new URLSearchParams({ returnTo: window.location.origin });
+      if (traceId) params.set("trace", traceId);
+      onboardingLog("oauth.redirect.started", { returnOrigin: window.location.origin });
+      window.location.assign(`${apiUrl.replace(/\/$/, "")}/auth/google?${params}`);
       // 페이지가 구글로 떠나므로 이 Promise는 결과를 낼 필요가 없다
       return new Promise<AuthSnapshot>(() => {});
     },
