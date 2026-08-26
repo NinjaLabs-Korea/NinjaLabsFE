@@ -9,6 +9,8 @@
  *   어떤 저장소/네트워크 접근도 하지 않는다.
  */
 
+import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
+
 const ACCESS_KEY = "ninja.accessToken";
 const REFRESH_KEY = "ninja.refreshToken";
 
@@ -83,12 +85,14 @@ export function createApiHttp(apiUrl: string): ApiHttp {
 
   async function rawFetch(path: string, init?: { method?: string; body?: unknown }) {
     const { accessToken } = getTokens();
+    const traceId = getOnboardingTraceId();
     return fetch(`${base}${path}`, {
       method: init?.method ?? "GET",
       cache: "no-store",
       headers: {
         ...(init?.body !== undefined ? { "content-type": "application/json" } : {}),
         ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
+        ...(traceId ? { "x-onboarding-trace-id": traceId } : {}),
       },
       body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
     });
@@ -99,21 +103,32 @@ export function createApiHttp(apiUrl: string): ApiHttp {
     refreshing ??= (async () => {
       try {
         const { refreshToken } = getTokens();
-        if (!refreshToken) return false;
+        if (!refreshToken) {
+          onboardingLog("http.refresh.skipped", { reason: "NO_REFRESH_TOKEN" });
+          return false;
+        }
+        onboardingLog("http.refresh.requested");
+        const traceId = getOnboardingTraceId();
         const res = await fetch(`${base}/auth/refresh`, {
           method: "POST",
           cache: "no-store",
-          headers: { "content-type": "application/json" },
+          headers: {
+            "content-type": "application/json",
+            ...(traceId ? { "x-onboarding-trace-id": traceId } : {}),
+          },
           body: JSON.stringify({ refreshToken }),
         });
         if (!res.ok) {
+          onboardingLog("http.refresh.failed", { status: res.status });
           clearTokens();
           return false;
         }
         const body = (await res.json()) as { accessToken: string; refreshToken: string };
         setTokens(body.accessToken, body.refreshToken);
+        onboardingLog("http.refresh.succeeded", { status: res.status });
         return true;
       } catch {
+        onboardingLog("http.refresh.failed", { status: 0, reason: "NETWORK_ERROR" });
         return false;
       } finally {
         refreshing = null;
@@ -126,9 +141,12 @@ export function createApiHttp(apiUrl: string): ApiHttp {
     hasSession: () => getTokens().refreshToken !== null,
 
     fetchJson: async <T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> => {
+      onboardingLog("http.request.started", { method: init?.method ?? "GET", path });
       let res = await rawFetch(path, init);
+      onboardingLog("http.response.received", { path, status: res.status, attempt: 1 });
       if (res.status === 401 && (await refreshSession())) {
         res = await rawFetch(path, init);
+        onboardingLog("http.response.received", { path, status: res.status, attempt: 2 });
       }
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { message?: string } | null;
@@ -141,14 +159,24 @@ export function createApiHttp(apiUrl: string): ApiHttp {
     signOutRemote: async () => {
       const { refreshToken } = getTokens();
       clearTokens();
-      if (!refreshToken) return;
+      if (!refreshToken) {
+        onboardingLog("session.logout.local-only");
+        return;
+      }
+      onboardingLog("session.logout.requested");
+      const traceId = getOnboardingTraceId();
       // 서버 세션 폐기는 best-effort — 실패해도 로컬 로그아웃은 완료된 상태
       await fetch(`${base}/auth/logout`, {
         method: "POST",
         cache: "no-store",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          ...(traceId ? { "x-onboarding-trace-id": traceId } : {}),
+        },
         body: JSON.stringify({ refreshToken }),
-      }).catch(() => {});
+      })
+        .then((response) => onboardingLog("session.logout.completed", { status: response.status }))
+        .catch(() => onboardingLog("session.logout.failed", { reason: "NETWORK_ERROR" }));
     },
   };
 }

@@ -13,6 +13,11 @@ import {
   useFoundationApiClient,
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
+import {
+  maskWalletAddress,
+  onboardingErrorDetails,
+  onboardingLog,
+} from "@/lib/onboarding-log";
 
 type WalletConnectButtonProps = {
   chainId: number;
@@ -58,15 +63,29 @@ export function WalletConnectButton({
     "inline-flex min-h-11 items-center justify-center rounded-control border px-4 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60";
 
   const verifyConnectedWallet = async () => {
-    if (!address) return;
+    if (!address) {
+      onboardingLog("wallet.verify.skipped", { reason: "NO_CONNECTED_ADDRESS" });
+      return;
+    }
     setVerificationState("pending");
+    const wallet = maskWalletAddress(address);
+    onboardingLog("wallet.challenge.started", { wallet, chainId: connectedChainId });
     try {
       const challenge = await apiClient.createWalletChallenge(address);
+      onboardingLog("wallet.challenge.succeeded", { wallet });
+      onboardingLog("wallet.signature.requested", { wallet, signatureType: "EIP191" });
       const signature = await signMessageAsync({ message: challenge.message });
+      onboardingLog("wallet.signature.received", { wallet });
+      onboardingLog("wallet.verify.started", { wallet });
       await apiClient.verifyWallet(address, signature);
+      onboardingLog("wallet.verify.succeeded", { wallet, targetPath: "/signup/profile" });
       setVerificationState("idle");
       router.push("/signup/profile");
-    } catch {
+    } catch (caught) {
+      onboardingLog("wallet.verify.failed", {
+        wallet,
+        ...onboardingErrorDetails(caught),
+      });
       setVerificationState("error");
     }
   };
@@ -78,7 +97,13 @@ export function WalletConnectButton({
           type="button"
           className={`${buttonClassName} border-warning-soft bg-warning-soft text-warning`}
           disabled={disabled || isSwitching}
-          onClick={() => switchChain({ chainId })}
+          onClick={() => {
+            onboardingLog("wallet.network-switch.requested", {
+              fromChainId: connectedChainId,
+              toChainId: chainId,
+            });
+            switchChain({ chainId });
+          }}
         >
           {isSwitching ? "Switching network…" : "Switch to Injective EVM"}
         </button>
@@ -105,7 +130,12 @@ export function WalletConnectButton({
             type="button"
             className="text-xs font-semibold text-ink-muted hover:text-ink"
             disabled={verificationState === "pending"}
-            onClick={() => disconnect()}
+            onClick={() => {
+              onboardingLog("wallet.disconnect.clicked", {
+                wallet: maskWalletAddress(address),
+              });
+              disconnect();
+            }}
           >
             Disconnect {formatAddress(address)}
           </button>
@@ -123,7 +153,12 @@ export function WalletConnectButton({
         type="button"
         className={`${buttonClassName} border-primary-soft-border bg-primary-soft text-primary-strong`}
         disabled={disabled}
-        onClick={() => disconnect()}
+        onClick={() => {
+          onboardingLog("wallet.disconnect.clicked", {
+            wallet: maskWalletAddress(address),
+          });
+          disconnect();
+        }}
         aria-label={`Disconnect wallet ${formatAddress(address)}`}
       >
         {formatAddress(address)}
@@ -154,7 +189,13 @@ export function WalletConnectButton({
         type="button"
         className={`${buttonClassName} border-primary bg-primary text-on-inverse hover:bg-primary-strong`}
         disabled={disabled || isPending}
-        onClick={() => connect({ connector })}
+        onClick={() => {
+          onboardingLog("wallet.connect.clicked", {
+            connectorType: connector.type,
+            targetChainId: chainId,
+          });
+          connect({ connector });
+        }}
       >
         {isPending ? "Connecting wallet…" : "Connect wallet"}
       </button>

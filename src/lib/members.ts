@@ -1,5 +1,6 @@
 import type { Member, Profile } from "./types";
 import { loadRuntimeConfig } from "./runtime/config";
+import { onboardingLog } from "./onboarding-log";
 
 export const PROFILE_EMPTY_ID = "sora";
 
@@ -108,16 +109,25 @@ function toProfile(data: PublicProfileResponse): Profile {
 
 export async function getRuntimeProfile(slug: string): Promise<Profile | undefined> {
   const config = loadRuntimeConfig();
-  if (config.runtimeMode === "mock") return getProfile(slug);
+  if (config.runtimeMode === "mock") {
+    onboardingLog("public-profile.mock.resolved", { slug, found: Boolean(getProfile(slug)) });
+    return getProfile(slug);
+  }
 
   try {
+    onboardingLog("public-profile.fetch.started", { slug });
     const response = await fetch(
       `${config.apiUrl!.replace(/\/$/, "")}/users/${encodeURIComponent(slug)}`,
       { cache: "no-store" },
     );
+    onboardingLog("public-profile.fetch.completed", { slug, status: response.status });
     if (!response.ok) return undefined;
     return toProfile((await response.json()) as PublicProfileResponse);
-  } catch {
+  } catch (caught) {
+    onboardingLog("public-profile.fetch.failed", {
+      slug,
+      errorName: caught instanceof Error ? caught.name : "UnknownError",
+    });
     return undefined;
   }
 }

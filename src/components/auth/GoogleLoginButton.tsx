@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthActions, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { simulateMockSignInFailure } from "@/lib/foundation/auth-adapter";
+import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
 
 type LoginState = "idle" | "pending" | "error";
 
@@ -17,6 +18,7 @@ export function GoogleLoginButton() {
   const failed = loginState === "error";
 
   const handleSignIn = async (simulateFailure = false) => {
+    onboardingLog("oauth.button.clicked", { mode, simulateFailure });
     setLoginState("pending");
 
     try {
@@ -30,9 +32,11 @@ export function GoogleLoginButton() {
       setLoginState("idle");
 
       if (!simulateFailure && isMock) {
+        onboardingLog("onboarding.mock.redirect", { targetPath: "/signup/wallet" });
         router.push("/signup/wallet");
       }
-    } catch {
+    } catch (error) {
+      onboardingLog("oauth.button.failed", onboardingErrorDetails(error));
       setLoginState("error");
     }
   };

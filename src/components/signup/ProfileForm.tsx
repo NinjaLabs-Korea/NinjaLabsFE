@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useFoundationApiClient, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { signup } from "@/lib/signup";
+import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
 
 const fieldTags = [
   { label: "Dev", value: "DEV" },
@@ -29,15 +30,27 @@ export function ProfileForm() {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!nickname.trim() || !bio.trim() || tags.length === 0) {
+      onboardingLog("profile.validation.failed", {
+        nicknameLength: nickname.trim().length,
+        bioLength: bio.trim().length,
+        tagCount: tags.length,
+      });
       setState("error");
       return;
     }
 
     setState("pending");
+    onboardingLog("profile.save.started", {
+      nicknameLength: nickname.trim().length,
+      bioLength: bio.trim().length,
+      tagCount: tags.length,
+    });
     try {
       await apiClient.completeProfile({ nickname: nickname.trim(), bio: bio.trim(), tags });
+      onboardingLog("profile.save.succeeded", { targetPath: "/signup/get-started" });
       window.location.assign("/signup/get-started");
-    } catch {
+    } catch (error) {
+      onboardingLog("profile.save.failed", onboardingErrorDetails(error));
       setState("error");
     }
   };

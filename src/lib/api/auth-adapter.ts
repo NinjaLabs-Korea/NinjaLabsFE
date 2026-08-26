@@ -1,6 +1,7 @@
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
 import { captureTokensFromLocation, createApiHttp, type ApiHttp } from "@/lib/api/http";
 import { fetchMe, toClientUser } from "@/lib/api/me";
+import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
 
 export function getOnboardingPath(user: AuthSnapshot["user"]): string | null {
   if (!user || user.onboardingCompleted) return null;
@@ -39,20 +40,45 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
   };
 
   async function restoreSession(): Promise<AuthSnapshot> {
+    onboardingLog("session.restore.started", {
+      path: typeof window === "undefined" ? "server" : window.location.pathname,
+      hasSession: http.hasSession(),
+    });
     const me = await fetchMe(http);
-    return setSnapshot(
+    const restored = setSnapshot(
       me ? { status: "signed-in", user: toClientUser(me) } : { status: "signed-out", user: null },
     );
+    onboardingLog("session.restore.completed", {
+      status: restored.status,
+      userId: restored.user?.id,
+      onboardingStep: restored.user?.onboardingStep,
+      onboardingCompleted: restored.user?.onboardingCompleted,
+    });
+    return restored;
   }
 
   if (typeof window !== "undefined") {
-    captureTokensFromLocation();
+    onboardingLog("auth.adapter.initialized", {
+      path: window.location.pathname,
+      hasHash: Boolean(window.location.hash),
+    });
+    const captured = captureTokensFromLocation();
+    onboardingLog("oauth.tokens.captured", { captured });
     void restoreSession().then((restored) => {
       const onboardingPath = shouldRedirectToOnboarding(
         restored.user,
         window.location.pathname,
       );
-      if (onboardingPath) window.location.replace(onboardingPath);
+      onboardingLog("onboarding.redirect.evaluated", {
+        currentPath: window.location.pathname,
+        targetPath: onboardingPath,
+        onboardingStep: restored.user?.onboardingStep,
+        onboardingCompleted: restored.user?.onboardingCompleted,
+      });
+      if (onboardingPath) {
+        onboardingLog("onboarding.redirect.started", { targetPath: onboardingPath });
+        window.location.replace(onboardingPath);
+      }
     });
   }
 
@@ -64,12 +90,17 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       return () => listeners.delete(listener);
     },
     signIn: async () => {
-      window.location.assign(`${apiUrl.replace(/\/$/, "")}/auth/google`);
+      const traceId = getOnboardingTraceId();
+      const params = traceId ? `?trace=${encodeURIComponent(traceId)}` : "";
+      onboardingLog("oauth.redirect.started");
+      window.location.assign(`${apiUrl.replace(/\/$/, "")}/auth/google${params}`);
       // 페이지가 구글로 떠나므로 이 Promise는 결과를 낼 필요가 없다
       return new Promise<AuthSnapshot>(() => {});
     },
     signOut: async () => {
+      onboardingLog("session.signout.started");
       await http.signOutRemote();
+      onboardingLog("session.signout.completed");
       return setSnapshot({ status: "signed-out", user: null });
     },
   };
