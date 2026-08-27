@@ -30,6 +30,17 @@ export function createMockApiClient(seed = "default"): ApiClient {
 
       return { status: "available", data: getMockFixtureSnapshot(fixtureSnapshot).agents };
     },
+    registerAgent: async ({ walletAddress }) => ({
+      agentId: "00000000-0000-4000-8000-000000000001",
+      status: "PENDING_VERIFICATION",
+      verificationMessage: `Preview agent registration for ${walletAddress}`,
+    }),
+    verifyAgent: async (agentId) => ({
+      agentId,
+      status: "ACTIVE",
+      apiKey: "nj_preview_key_not_for_production",
+      expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+    }),
     createWalletChallenge: async (address) => ({ message: `Preview challenge for ${address}` }),
     verifyWallet: async () => undefined,
     completeProfile: async () => undefined,

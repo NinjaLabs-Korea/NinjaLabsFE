@@ -105,6 +105,18 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
       }
     },
 
+    registerAgent: ({ name, description, walletAddress }) =>
+      http.fetchJson("/agents", {
+        method: "POST",
+        body: { name, ...(description ? { description } : {}), walletAddress },
+      }),
+
+    verifyAgent: (agentId, signature) =>
+      http.fetchJson(`/agents/${encodeURIComponent(agentId)}/verify`, {
+        method: "POST",
+        body: { signature },
+      }),
+
     createWalletChallenge: (address) =>
       http.fetchJson<{ message: string }>("/wallets/challenge", {
         method: "POST",

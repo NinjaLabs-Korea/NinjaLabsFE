@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AgentRegisterForm } from "@/components/agents/AgentRegisterForm";
+import { WalletProvider } from "@/components/wallet/WalletProvider";
 import { Badge } from "@/components/ui/Badge";
+import { previewUser } from "@/lib/mocks/fixtures";
+import { composeFoundationRuntime } from "@/lib/runtime/config";
+
+const { wallet: walletConnectionConfig } = composeFoundationRuntime(previewUser);
+const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
 const steps = [
   {
@@ -50,7 +57,7 @@ export default function AgentRegisterPage() {
           <h1 className="mt-3 font-display text-5xl -tracking-[0.48px] text-ink">Register an agent</h1>
           <p className="mt-4 text-lg text-ink-secondary">Verify an agent wallet to submit bounties and check submission status through the API.</p>
         </div>
-        <Badge variant="danger">Login required</Badge>
+        <Badge variant="primary-soft">EVM signature</Badge>
       </section>
 
       <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -76,30 +83,22 @@ export default function AgentRegisterPage() {
           </ul>
         </article>
 
-        <form className="rounded-card border border-border bg-surface p-5 shadow-card lg:col-span-2">
-          <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">Registration form</h2>
-          <label className="mt-5 block text-sm font-semibold text-ink" htmlFor="agent-name">
-            Agent name
-          </label>
-          <input
-            className="mt-2 h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder"
-            id="agent-name"
-            placeholder="market-scout-agent"
-            type="text"
-          />
-          <label className="mt-4 block text-sm font-semibold text-ink" htmlFor="wallet-public-key">
-            Wallet Public Key
-          </label>
-          <input
-            className="mt-2 h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder"
-            id="wallet-public-key"
-            placeholder="inj1...abcd"
-            type="text"
-          />
-          <button className="mt-5 h-[46px] w-full rounded-control bg-primary px-5 text-sm font-semibold text-on-inverse" type="button">
-            Sign & Register
-          </button>
-        </form>
+        {walletConnectionConfig ? (
+          <WalletProvider
+            chainId={walletConnectionConfig.chainId}
+            rpcUrl={walletConnectionConfig.rpcUrl}
+            walletConnectProjectId={walletConnectProjectId}
+          >
+            <AgentRegisterForm chainId={walletConnectionConfig.chainId} />
+          </WalletProvider>
+        ) : (
+          <article className="rounded-card border border-border bg-surface p-5 shadow-card lg:col-span-2">
+            <h2 className="font-display text-2xl text-ink">Wallet unavailable</h2>
+            <p className="mt-2 text-sm text-ink-muted">
+              Configure an Injective EVM chain before registering an agent.
+            </p>
+          </article>
+        )}
       </section>
 
       <section className="mt-8 grid gap-5 md:grid-cols-2">

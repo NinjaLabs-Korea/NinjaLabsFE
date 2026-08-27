@@ -12,6 +12,12 @@ export function createUnavailableApiClient(): ApiClient {
     getAccount: async () => unavailable(),
     getApplications: async () => unavailable(),
     getAgents: async () => unavailable(),
+    registerAgent: async () => {
+      throw new Error("Agent API is unavailable.");
+    },
+    verifyAgent: async () => {
+      throw new Error("Agent API is unavailable.");
+    },
     createWalletChallenge: async () => {
       throw new Error("Wallet API is unavailable.");
     },
