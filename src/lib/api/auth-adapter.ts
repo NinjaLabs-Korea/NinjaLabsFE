@@ -57,7 +57,10 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     return restored;
   }
 
-  if (typeof window !== "undefined") {
+  let initialized = false;
+  const initialize = () => {
+    if (initialized || typeof window === "undefined") return;
+    initialized = true;
     onboardingLog("auth.adapter.initialized", {
       path: window.location.pathname,
       hasHash: Boolean(window.location.hash),
@@ -80,9 +83,10 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
         window.location.replace(onboardingPath);
       }
     });
-  }
+  };
 
   return {
+    initialize,
     http,
     getSnapshot: () => snapshot,
     subscribe: (listener) => {

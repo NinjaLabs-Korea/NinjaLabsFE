@@ -23,6 +23,7 @@ export type SignedInAuthSnapshot = {
 export type AuthSnapshot = SignedOutAuthSnapshot | SignedInAuthSnapshot;
 
 export type AuthAdapter = {
+  initialize?: () => void;
   getSnapshot: () => AuthSnapshot;
   subscribe: (listener: () => void) => () => void;
   signIn: () => Promise<AuthSnapshot>;

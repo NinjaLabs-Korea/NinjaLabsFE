@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
 import { createSessionPreviewAuthAdapter } from "@/lib/foundation/auth-adapter";
@@ -45,6 +52,10 @@ export function FoundationProvider({
   config: FoundationConfig;
 }>) {
   const [value] = useState(() => createFoundationContextValue(config));
+
+  useEffect(() => {
+    value.adapter.initialize?.();
+  }, [value]);
 
   return <FoundationContext.Provider value={value}>{children}</FoundationContext.Provider>;
 }

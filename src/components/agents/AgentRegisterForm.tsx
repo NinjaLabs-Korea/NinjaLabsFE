@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore, type FormEvent } from "react";
+import Link from "next/link";
 import {
   useAccount,
   useConnect,
@@ -8,11 +9,13 @@ import {
   useSignMessage,
   useSwitchChain,
 } from "wagmi";
+import { useAccountQuery } from "@/components/account/useAccountQuery";
 import {
   useAuthSnapshot,
   useFoundationApiClient,
 } from "@/components/auth/FoundationProvider";
 import type { AgentVerification } from "@/lib/contracts/api";
+import { ApiHttpError } from "@/lib/api/http";
 import {
   maskWalletAddress,
   onboardingErrorDetails,
@@ -29,6 +32,7 @@ function shortAddress(address: string): string {
 export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const auth = useAuthSnapshot();
   const apiClient = useFoundationApiClient();
+  const { data: agents, loading: agentsLoading } = useAccountQuery(apiClient.getAgents);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [submissionState, setSubmissionState] = useState<SubmissionState>("idle");
@@ -49,10 +53,20 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const isWrongNetwork = isConnected && connectedChainId !== chainId;
   const ownerWallet = auth.user?.walletAddress?.toLowerCase();
   const isOwnerWallet = Boolean(address && ownerWallet === address.toLowerCase());
+  const existingAgent = address
+    ? agents?.find((agent) => agent.walletAddress.toLowerCase() === address.toLowerCase())
+    : undefined;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (auth.status !== "signed-in" || !address || isWrongNetwork || isOwnerWallet || !name.trim()) {
+    if (
+      auth.status !== "signed-in" ||
+      !address ||
+      isWrongNetwork ||
+      isOwnerWallet ||
+      existingAgent?.verified ||
+      !name.trim()
+    ) {
       return;
     }
 
@@ -93,7 +107,11 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         wallet: address ? maskWalletAddress(address) : null,
         ...onboardingErrorDetails(caught),
       });
-      setErrorMessage("Agent registration failed. Check the wallet signature and try again.");
+      setErrorMessage(
+        caught instanceof ApiHttpError && caught.code === "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED"
+          ? "This wallet is already registered. View it in My agents."
+          : "Agent registration failed. Check the wallet signature and try again.",
+      );
     } finally {
       setSubmissionState("idle");
     }
@@ -173,6 +191,21 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
           This is your personal onboarding wallet. Switch MetaMask to a dedicated agent account.
         </p>
       ) : null}
+      {existingAgent?.verified ? (
+        <div className="mt-3 rounded-tile border border-success-soft bg-success-soft p-3" role="status">
+          <p className="text-sm font-semibold text-success">
+            This wallet is already registered as {existingAgent.name}.
+          </p>
+          <Link className="mt-2 inline-block text-xs font-semibold text-primary-strong" href="/agents">
+            View my agents
+          </Link>
+        </div>
+      ) : null}
+      {existingAgent && !existingAgent.verified ? (
+        <p className="mt-3 text-sm text-warning" role="status">
+          This agent is pending verification. Sign again to finish registration.
+        </p>
+      ) : null}
       {errorMessage ? <p className="mt-3 text-sm text-danger" role="alert">{errorMessage}</p> : null}
 
       {!isConnected ? (
@@ -197,7 +230,13 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         <button
           className="mt-5 h-[46px] w-full rounded-control bg-primary px-5 text-sm font-semibold text-on-inverse disabled:opacity-60"
           disabled={
-            auth.status !== "signed-in" || isBusy || isOwnerWallet || !name.trim() || Boolean(verification)
+            auth.status !== "signed-in" ||
+            agentsLoading ||
+            isBusy ||
+            isOwnerWallet ||
+            existingAgent?.verified ||
+            !name.trim() ||
+            Boolean(verification)
           }
           type="submit"
         >

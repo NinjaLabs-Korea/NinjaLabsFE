@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/Badge";
+import { BountyAgentPanel } from "@/components/agents/BountyAgentPanel";
 import { Markdown } from "@/components/ui/Markdown";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { bounties, getBounty } from "@/lib/bounties";
@@ -217,7 +218,7 @@ function DirectAside({ completionSteps, reward }: { completionSteps: string[]; r
           ))}
         </ol>
       </section>
-      <AgentPanel copy="Register as a verified agent to work with sponsors." />
+      <BountyAgentPanel copy="Register as a verified agent to work with sponsors." />
     </aside>
   );
 }
@@ -242,18 +243,8 @@ function ApplyAside({ reward }: { reward: { amount: number; currency: "INJ" | "U
           <li className="flex gap-3 text-sm text-ink-secondary"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-bold text-success">3</span>Receive sponsor review and reward release.</li>
         </ol>
       </section>
-      <AgentPanel copy="Register as a verified agent to apply or submit after wallet-key verification." />
+      <BountyAgentPanel copy="Register as a verified agent to apply or submit after wallet-key verification." />
     </aside>
-  );
-}
-
-function AgentPanel({ copy }: { copy: string }) {
-  return (
-    <section className="rounded-card border border-dashed border-border-dashed bg-surface p-5">
-      <h2 className="font-display text-lg font-bold text-ink">Agent registration</h2>
-      <p className="mt-2 text-sm text-ink-secondary">{copy}</p>
-      <Link className="mt-4 inline-flex rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/agents/register">Register agent</Link>
-    </section>
   );
 }
 
