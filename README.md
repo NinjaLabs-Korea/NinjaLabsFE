@@ -2,7 +2,7 @@
 
 Ninja Labs frontend — a builder community & bounty marketplace for the Injective ecosystem. Every completed bounty mints an on-chain NFT that builds a portfolio the builder owns.
 
-Ported from the team Figma file with explicit mock and API runtime modes. Mock mode remains an in-memory local/test preview; API mode integrates NinjaLabsBE Google OAuth, rotating JWT sessions, onboarding persistence, EVM wallet ownership verification, owner data, and public profiles. Wallet verification links an account but never replaces user authentication. See [`docs/auth-api-contract.md`](docs/auth-api-contract.md) for the binding runtime and security contract.
+Ported from the team Figma file with explicit mock and API runtime modes. Mock mode is local/test-only; production API mode integrates NinjaLabsBE authentication, onboarding, wallets, agents, bounties, applications/submissions, members, notices, Hall of Fame, and admin management. See [`docs/auth-api-contract.md`](docs/auth-api-contract.md).
 
 ## Stack
 
@@ -32,7 +32,7 @@ src/app/          routes (public: /, /bounties, /notices, /members, /hall-of-fam
                   /agents/register · admin: /admin/*) + 404/error/loading states
 src/components/   layout (shell and mobile account disclosure) · auth (FoundationProvider/runtime auth) ·
                   wallet (connection + verification) · signup (profile/completion persistence) · account · ui · cards · admin
-src/lib/          typed public registries plus contracts, deterministic mocks, and unavailable API/auth adapters
+src/lib/          typed contracts, local/test fixtures, and backend API adapters
 public/figma/     assets exported from Figma
 docs/figma/       screen recon, frozen design contracts (screen-matrix.md), design-gaps.md
 ```
@@ -46,31 +46,27 @@ Roles are split into **Landing / Bounties / Admin**. Gaps below are distilled fr
 
 ### Landing (`/`, `/notices`, `/members`, `/hall-of-fame`, `/signup/*`)
 
-- Real auth for the signup flow *(blocked on backend)* — Google login is a mock-session preview; wallet connect never authenticates.
+- Public landing, members/profiles, notices, and Hall of Fame data come from the backend in API mode.
 - Real-time nickname availability feedback remains open; submit-time validation and backend conflict handling are implemented.
 - Pagination / load-more on notices list *(blocked on design)* — fixed 4-row set, no paging affordance drawn.
 - Real assets *(blocked on assets)* — 44px signup mascot raster, member/HoF photos, partner wall, notice thumbnails (currently gradient/initials fallbacks).
 
 ### Bounties (`/bounties*`, `/applications`, `/agents`, `/agents/register`)
 
-- Apply submission feedback *(blocked on backend)* — no acknowledgement UI after Apply; `ApplyStatusFlow` lifecycle is display-only.
-- Agent Sign & Register — signing/verification is mock-only; verification-failure UI not drawn *(blocked on design)*; agent keys are masked fixtures with no real issuance.
-- `/applications` · `/agents` run on the mock-session preview only — need real owner data once backend lands.
+- Apply/Submit, Agent Sign & Register, `/applications`, and `/agents` use authenticated backend APIs in production.
 - Pagination / load-more on bounty list *(blocked on design)* — fixed 9-card set.
 - Real bounty cover images *(blocked on assets)* — all 9 covers render the design-native gradient placeholder.
 
 ### Admin (`/admin/*`)
 
-- Access gating *(blocked on backend + design)* — `/admin/*` is publicly reachable; "ADMIN ONLY" badge is decorative; login-wall/forbidden states undesigned.
-- Persistence — every manager (users, bounties, hall-of-fame, notices) is session-local demo state; Create/Save/Remove/Assign must be wired to a real API.
+- Data and mutations are protected by backend AdminGuard; non-admin requests cannot read or change admin records.
+- Users, bounties, Hall of Fame, and notices persist through the admin API in production.
 - Table pagination *(blocked on design)* — users/bounties recons explicitly leave it unspecified.
 - General column sorting *(blocked on design)* — only HoF display-order re-sort is shipped.
 
 ### Cross-cutting (whoever touches it first coordinates)
 
-- Admin authorization/persistence and remaining public registries still need backend integration (`docs/auth-api-contract.md` is the binding contract).
-- Logged-in header states reflect the mock-session preview only; real session wiring is backend scope.
-- Submit feedback outside admin (public Apply, agent register) still has no toast/feedback path.
+- Production content must be created through an `is_admin` account; an empty database intentionally renders empty public collections rather than fixture data.
 
 ## Design source
 

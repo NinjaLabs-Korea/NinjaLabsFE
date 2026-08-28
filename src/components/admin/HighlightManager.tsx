@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
 import type { AdminHighlight } from "@/lib/admin";
+import { useFoundationApiClient, useFoundationMode } from "@/components/auth/FoundationProvider";
 
 const highlightColumns = [
   { id: "type", label: "Type", widthClass: "w-[22%]" },
@@ -21,15 +22,23 @@ type HighlightManagerProps = {
 };
 
 export function HighlightManager({ highlights }: HighlightManagerProps) {
+  const api = useFoundationApiClient();
+  const foundationMode = useFoundationMode();
   const [records, setRecords] = useState(() => sortHighlights(highlights));
   const [mode, setMode] = useState<"create" | string>("create");
   const [type, setType] = useState<AdminHighlight["type"]>("Milestone");
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [link, setLink] = useState("");
   const [order, setOrder] = useState(0);
   const formRef = useRef<HTMLElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (foundationMode !== "api") return;
+    api.getAdminHighlights().then((items) => setRecords(sortHighlights(items))).catch(() => pushAdminToast({ variant: "danger", title: "Highlights unavailable", description: "Could not load highlights." }));
+  }, [api, foundationMode]);
 
   const isEditing = mode !== "create";
 
@@ -37,6 +46,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     setMode("create");
     setType("Milestone");
     setTitle("");
+    setDescription("");
     setImage(null);
     setLink("");
     setOrder(0);
@@ -51,6 +61,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     setMode(highlight.id);
     setType(highlight.type);
     setTitle(highlight.title);
+    setDescription(highlight.description ?? "");
     setImage(highlight.image);
     setLink(highlight.link ?? "");
     setOrder(highlight.order);
@@ -61,20 +72,38 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     setImage(event.target.files?.[0]?.name ?? null);
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const record: AdminHighlight = {
       id: isEditing ? mode : `highlight-${Date.now()}`,
       type,
       title,
+      description,
       image,
       order,
+      published: true,
       ...(link ? { link } : {}),
     };
 
-    setRecords((current) => sortHighlights(isEditing ? current.map((item) => (item.id === mode ? record : item)) : [...current, record]));
-    pushAdminToast({ variant: "success", title: isEditing ? "Highlight updated" : "Highlight added", description: `"${title}" — session preview, resets on reload.` });
-    resetForm();
+    try {
+      await api.saveAdminHighlight(record, !isEditing);
+      setRecords(sortHighlights(await api.getAdminHighlights()));
+      pushAdminToast({ variant: "success", title: isEditing ? "Highlight updated" : "Highlight added", description: `"${title}" was saved.` });
+      resetForm();
+    } catch {
+      pushAdminToast({ variant: "danger", title: "Save failed", description: "The highlight was not saved." });
+    }
+  }
+
+  async function handleDelete(highlight: AdminHighlight) {
+    if (!window.confirm(`Delete ${highlight.title}?`)) return;
+    try {
+      await api.deleteAdminHighlight(highlight.id);
+      setRecords((current) => current.filter((item) => item.id !== highlight.id));
+      pushAdminToast({ variant: "success", title: "Highlight deleted", description: highlight.title });
+    } catch {
+      pushAdminToast({ variant: "danger", title: "Delete failed", description: "The highlight was not deleted." });
+    }
   }
 
   return (
@@ -96,7 +125,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
                 <td className="px-5 py-4 text-sm text-ink-secondary">{highlight.order}</td>
                 <td className="px-5 py-4 text-sm text-ink-secondary">{highlight.link ?? "–"}</td>
                 <td className="px-5 py-4">
-                  <button className="h-11 rounded-control border border-primary-outline bg-surface px-4 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => handleEdit(highlight)} type="button">Edit</button>
+                  <div className="flex gap-2"><button className="h-11 rounded-control border border-primary-outline bg-surface px-3 text-sm font-semibold text-primary-strong" onClick={() => handleEdit(highlight)} type="button">Edit</button><button className="h-11 rounded-control border border-danger px-3 text-sm font-semibold text-danger" onClick={() => handleDelete(highlight)} type="button">Delete</button></div>
                 </td>
               </tr>
             ))}
@@ -116,6 +145,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
               </div>
             </div>
             <label className="text-sm font-semibold text-ink">Title<input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => setTitle(event.target.value)} placeholder="Highlight title" value={title} /></label>
+            <label className="text-sm font-semibold text-ink md:col-span-2">Description<textarea className="mt-2 min-h-24 w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary" onChange={(event) => setDescription(event.target.value)} required value={description} /></label>
             <div className="text-sm font-semibold text-ink">Image
               <button className="mt-2 flex h-[46px] w-full items-center rounded-control border border-border px-4 text-left text-sm font-normal text-ink-placeholder hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => imageInputRef.current?.click()} type="button">{image ?? "Upload image"}</button>
               <input className="sr-only" onChange={handleImageChange} ref={imageInputRef} type="file" />
@@ -124,7 +154,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
             <label className="text-sm font-semibold text-ink">Display order<input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => setOrder(Number(event.target.value))} placeholder="0" type="number" value={order} /></label>
           </div>
           <button className="mt-5 h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" type="submit">Save</button>
-          <p className="mt-3 text-xs text-ink-muted">Session preview — changes are local to this tab and reset on reload.</p>
+          <p className="mt-3 text-xs text-ink-muted">Changes are saved to the platform immediately.</p>
         </form>
       </section>
     </>

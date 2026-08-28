@@ -122,11 +122,7 @@ with `font-display` title, `text-ink-muted` copy, and one CTA using the recipes 
 
 **Feedback:** modals via `ui/Modal` (native `<dialog>`), destructive confirms via `ui/ConfirmDialog` (`destructive` = solid `bg-danger`), toasts via `ui/Toast` (danger = `role="alert"`, persistent; others auto-dismiss). Admin pages push through `admin/AdminToastHost` (`pushAdminToast`).
 
-**Session-preview disclosure (admin):** every session-local Create/Save form ends with
-
-```
-<p class="mt-3 text-xs text-ink-muted">Session preview — changes are local to this tab and reset on reload.</p>
-```
+**Admin persistence disclosure:** API-mode Create/Save forms state that changes are saved immediately. Destructive actions require confirmation and failures surface a danger toast.
 
 ## Per-area checklist before PR
 

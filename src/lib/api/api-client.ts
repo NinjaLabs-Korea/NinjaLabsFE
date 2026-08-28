@@ -2,6 +2,7 @@ import type { Account, AccountAgent, AccountApplication } from "@/lib/contracts/
 import type { ApiClient, ApiResult } from "@/lib/contracts/api";
 import type { ApiHttp } from "@/lib/api/http";
 import { fetchMe, toClientUser } from "@/lib/api/me";
+import { createAdminApi } from "@/lib/api/admin";
 
 /** BE GET /applications/me 행 */
 type ApplicationRow = {
@@ -28,6 +29,11 @@ type AgentRow = {
   key_prefix: string | null;
   key_status: string | null;
   key_expires_at: string | null;
+};
+
+type SubmissionRow = {
+  status: "SUBMITTED" | "RESUBMITTED" | "IN_REVIEW" | "REVISION_REQUESTED" | "APPROVED" | "REJECTED";
+  bounty_id: string;
 };
 
 const CATEGORY_LABEL = {
@@ -82,13 +88,25 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
     getApplications: async (auth) => {
       if (auth.status !== "signed-in") return { status: "available", data: [] };
       try {
-        const rows = await http.fetchJson<ApplicationRow[]>("/applications/me");
+        const [rows, submissions] = await Promise.all([
+          http.fetchJson<ApplicationRow[]>("/applications/me"),
+          http.fetchJson<SubmissionRow[]>("/submissions/me"),
+        ]);
+        const submissionsByBounty = new Map(submissions.map((submission) => [submission.bounty_id, submission]));
         return {
           status: "available",
           // 철회·반려 건은 FE 진행 단계 모델에 없으므로 목록에서 제외
           data: rows
             .filter((row) => row.status === "PENDING" || row.status === "APPROVED")
-            .map(toApplication),
+            .map((row) => {
+              const application = toApplication(row);
+              const submission = submissionsByBounty.get(row.bounty_id);
+              if (!submission) return application;
+              return {
+                ...application,
+                status: submission.status === "APPROVED" ? "completed" as const : "submitted" as const,
+              };
+            }),
         };
       } catch {
         return networkUnavailable<readonly AccountApplication[]>();
@@ -104,6 +122,18 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
         return networkUnavailable<readonly AccountAgent[]>();
       }
     },
+
+    applyToBounty: (bountyId, input) =>
+      http.fetchJson(`/bounties/${encodeURIComponent(bountyId)}/applications`, {
+        method: "POST",
+        body: input,
+      }),
+
+    submitBounty: (bountyId, input) =>
+      http.fetchJson(`/bounties/${encodeURIComponent(bountyId)}/submissions`, {
+        method: "POST",
+        body: input,
+      }),
 
     registerAgent: ({ name, description, walletAddress }) =>
       http.fetchJson("/agents", {
@@ -140,5 +170,6 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
     completeOnboarding: async () => {
       await http.fetchJson("/users/me/complete-onboarding", { method: "POST" });
     },
+    ...createAdminApi(http),
   };
 }

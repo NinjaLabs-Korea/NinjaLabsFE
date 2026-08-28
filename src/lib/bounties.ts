@@ -1,4 +1,6 @@
 import type { Bounty } from "./types";
+import { fetchPublicJson } from "./api/public";
+import { loadRuntimeConfig } from "./runtime/config";
 
 export const bounties: Bounty[] = [
   {
@@ -33,3 +35,75 @@ export const bounties: Bounty[] = [
 export function getBounties(): Bounty[] { return bounties; }
 export function getBounty(slug: string): Bounty | undefined { return bounties.find((bounty) => bounty.slug === slug); }
 export function getActiveBounties(): Bounty[] { return bounties.filter((bounty) => bounty.status === "active"); }
+
+type BountyRewardRow = { symbol: string; amount: string; tokenType: string };
+type BountyListRow = {
+  id: string;
+  title: string;
+  summary: string;
+  sponsor_name: string;
+  category: string;
+  status: string;
+  application_required: boolean;
+  application_deadline: string | null;
+  submission_deadline: string;
+  rewards: BountyRewardRow[];
+};
+type BountyDetailRow = BountyListRow & {
+  description: string;
+  requirements: string;
+  evaluation_criteria: string;
+};
+type BountyListResponse = { items: BountyListRow[] };
+
+const categoryLabels = { DEV: "Dev", DESIGN: "Design", CONTENT: "Content", OTHER: "Other" } as const;
+
+function dateLabel(value: string): string {
+  const deadline = new Date(value);
+  const days = Math.ceil((deadline.getTime() - Date.now()) / 86_400_000);
+  return days > 0 ? `D-${days}` : "Closed";
+}
+
+function toBounty(row: BountyListRow | BountyDetailRow): Bounty {
+  const reward = row.rewards[0];
+  const detail = "description" in row ? row : null;
+  return {
+    slug: row.id,
+    title: row.title,
+    summary: row.summary,
+    category: categoryLabels[row.category as keyof typeof categoryLabels] ?? "Other",
+    status: row.status === "OPEN" ? "active" : "closed",
+    reward: {
+      amount: reward ? Number(reward.amount) / 10 ** (reward.symbol === "USDC" ? 6 : 18) : 0,
+      currency: reward?.symbol === "USDC" ? "USDC" : "INJ",
+    },
+    sponsor: row.sponsor_name,
+    deadline: row.status === "OPEN" ? dateLabel(row.submission_deadline) : "Closed",
+    deadlineDetail: new Date(row.submission_deadline).toLocaleString("en-US", { timeZone: "UTC", timeZoneName: "short" }),
+    coverImage: "",
+    descriptionMarkdown: detail?.description ?? row.summary,
+    submissionGuideMarkdown: detail?.requirements,
+    deliverables: detail?.requirements ? detail.requirements.split("\n").filter(Boolean) : [],
+    reviewProcess: detail?.evaluation_criteria ?? "Sponsor review",
+    submissionMode: "direct",
+    completionSteps: ["Complete the work", "Submit the result URL", "Receive sponsor approval"],
+    applicationRequired: row.application_required,
+    applicationTitle: row.application_required ? row.title : undefined,
+    applicationDescription: row.application_required ? row.summary : undefined,
+  };
+}
+
+export async function getRuntimeBounties(): Promise<Bounty[]> {
+  if (loadRuntimeConfig().runtimeMode === "mock") return getBounties();
+  const response = await fetchPublicJson<BountyListResponse>("/bounties?page=1&pageSize=50");
+  return response.items.map(toBounty);
+}
+
+export async function getRuntimeBounty(id: string): Promise<Bounty | undefined> {
+  if (loadRuntimeConfig().runtimeMode === "mock") return getBounty(id);
+  try {
+    return toBounty(await fetchPublicJson<BountyDetailRow>(`/bounties/${encodeURIComponent(id)}`));
+  } catch {
+    return undefined;
+  }
+}

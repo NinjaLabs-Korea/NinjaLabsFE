@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { NoticeFilters } from "@/components/notices/NoticeFilters";
 import { Badge } from "@/components/ui/Badge";
-import { getNotices } from "@/lib/notices";
+import { getRuntimeNotices } from "@/lib/notices";
 
 
 export const metadata: Metadata = {
@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   description: "A builder community and bounty marketplace for the Injective ecosystem.",
 };
 
-export default function NoticesPage() {
-  const notices = getNotices();
+export default async function NoticesPage() {
+  const notices = await getRuntimeNotices();
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">

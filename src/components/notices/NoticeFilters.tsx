@@ -8,7 +8,7 @@ import type { Notice } from "@/lib/types";
 
 type NoticeFiltersProps = { notices: Notice[] };
 type CategoryFilter = "All" | Notice["category"];
-const categories: Notice["category"][] = ["Ninja Labs", "Injective ecosystem", "Events"];
+const categories: Notice["category"][] = ["Ninja Labs", "Injective ecosystem", "Events", "Recruitment", "Other"];
 
 export function NoticeFilters({ notices }: NoticeFiltersProps) {
   const [category, setCategory] = useState<CategoryFilter>("All");

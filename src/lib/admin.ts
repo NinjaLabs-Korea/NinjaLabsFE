@@ -22,7 +22,7 @@ export type AdminBounty = {
   sponsor: string;
   reward: { amount: number; currency: "INJ" | "USDC" };
   intakeEnabled: boolean;
-  status: "active" | "reviewing" | "closed";
+  status: "draft" | "funding" | "active" | "reviewing" | "closed";
   deadline: string;
   tags: Array<"Dev" | "Design" | "Content" | "Other">;
   description: string;
@@ -38,12 +38,14 @@ export type AdminHighlight = {
   order: number;
   link?: string;
   image: string | null;
+  description?: string;
+  published?: boolean;
 };
 
 export type AdminPost = {
   slug: string;
   title: string;
-  category: "Ninja Labs" | "Injective ecosystem" | "Events";
+  category: "Ninja Labs" | "Injective ecosystem" | "Events" | "Recruitment" | "Other";
   status: "draft" | "published";
   publishedAt: string | null;
   bodyMarkdown: string;

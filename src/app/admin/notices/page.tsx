@@ -4,6 +4,7 @@ import { AdminTabs } from "@/components/admin/AdminTabs";
 import { PostManager } from "@/components/admin/PostManager";
 import { Badge } from "@/components/ui/Badge";
 import { getAdminPosts } from "@/lib/admin";
+import { loadRuntimeConfig } from "@/lib/runtime/config";
 
 export const metadata: Metadata = {
   title: "Admin · Notices — Ninja Labs",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default function AdminNoticesPage() {
-  const posts = getAdminPosts();
+  const posts = loadRuntimeConfig().runtimeMode === "mock" ? getAdminPosts() : [];
 
   return (
     <section className="relative mx-auto max-w-content px-6 py-16 pb-20">

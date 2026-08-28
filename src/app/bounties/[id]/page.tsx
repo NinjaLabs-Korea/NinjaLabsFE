@@ -5,20 +5,18 @@ import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/Badge";
 import { BountyAgentPanel } from "@/components/agents/BountyAgentPanel";
+import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import { Markdown } from "@/components/ui/Markdown";
 import { RewardPill } from "@/components/ui/RewardPill";
-import { bounties, getBounty } from "@/lib/bounties";
+import { getRuntimeBounty } from "@/lib/bounties";
 
 type BountyDetailPageProps = {
   params: Promise<{ id: string }>;
 };
 
-export function generateStaticParams() {
-  return bounties.map(({ slug }) => ({ id: slug }));
-}
 export async function generateMetadata({ params }: BountyDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const bounty = getBounty(id);
+  const bounty = await getRuntimeBounty(id);
 
   if (!bounty) {
     return { title: "Not found — Ninja Labs" };
@@ -35,7 +33,7 @@ export async function generateMetadata({ params }: BountyDetailPageProps): Promi
 
 export default async function BountyDetailPage({ params }: BountyDetailPageProps) {
   const { id } = await params;
-  const bounty = getBounty(id);
+  const bounty = await getRuntimeBounty(id);
 
   if (!bounty) {
     notFound();
@@ -106,7 +104,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             ) : null}
           </article>
 
-          {bounty.applicationRequired ? <ApplyPanel /> : <DirectSubmitPanel />}
+          <BountyActionPanel bountyId={bounty.slug} applicationRequired={Boolean(bounty.applicationRequired)} />
         </div>
 
         {bounty.applicationRequired ? <ApplyAside reward={bounty.reward} /> : <DirectAside completionSteps={completionSteps} reward={bounty.reward} />}
@@ -118,81 +116,6 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
         </p>
       ) : null}
     </div>
-  );
-}
-
-function DirectSubmitPanel() {
-  return (
-    <section className="rounded-card border border-border bg-surface p-5 shadow-card">
-      <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">Submit your work</h2>
-      <p className="mt-2 text-sm text-danger">Sign in first</p>
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-        <input
-          className="h-[46px] min-w-0 flex-1 rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder"
-          disabled
-          placeholder="Completed-work URL"
-          type="url"
-        />
-        <button className="h-[46px] rounded-control bg-primary px-5 text-sm font-semibold text-on-inverse opacity-50" disabled type="button">
-          Submit
-        </button>
-      </div>
-      <div className="mt-4 rounded-tile border border-dashed border-border-dashed p-4 text-sm text-ink-secondary">
-        Agent registration is available for verified agents.
-      </div>
-    </section>
-  );
-}
-
-function ApplyPanel() {
-  return (
-    <>
-      <section className="rounded-card border border-border bg-surface p-5 shadow-card">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">Apply for this bounty</h2>
-          <span className="rounded-full bg-danger-soft px-3 py-1 font-display text-xs font-bold -tracking-[0.24px] text-danger">LOGIN REQUIRED</span>
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-2 text-sm font-semibold text-ink">
-            Relevant work link
-            <input className="h-[46px] rounded-control border border-border bg-surface px-3 text-sm font-normal text-ink placeholder:text-ink-placeholder" placeholder="Audit report or GitHub profile" type="url" />
-          </label>
-          <label className="flex flex-col gap-2 text-sm font-semibold text-ink">
-            Availability
-            <input className="h-[46px] rounded-control border border-border bg-surface px-3 text-sm font-normal text-ink placeholder:text-ink-placeholder" placeholder="Can deliver by July 20" type="text" />
-          </label>
-        </div>
-        <label className="mt-3 flex flex-col gap-2 text-sm font-semibold text-ink">
-          Application note
-          <textarea className="min-h-24 rounded-control border border-border bg-surface px-3 py-3 text-sm font-normal text-ink placeholder:text-ink-placeholder" placeholder="Summarize your audit approach and relevant Injective or CosmWasm experience." />
-        </label>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" type="button">Apply</button>
-          <Link className="rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/bounties/apply">View intake rules</Link>
-          <button aria-disabled="true" className="rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong opacity-50" disabled type="button">Submit (after approval)</button>
-        </div>
-      </section>
-      <ApplyStatusFlow />
-    </>
-  );
-}
-
-function ApplyStatusFlow() {
-  const statuses = ["Open", "Under review", "Approved", "Submitted", "Completed"];
-
-  return (
-    <section className="rounded-card border border-border bg-surface p-5 shadow-card">
-      <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">Apply-type status</h2>
-      <ol className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-        {statuses.map((status, index) => (
-          <li className="flex items-center gap-2" key={status}>
-            <span className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${index === 0 ? "bg-primary text-on-inverse" : "bg-surface-subtle text-ink-muted"}`}>{index + 1}</span>
-            <span className={`text-sm font-semibold ${index === 0 ? "text-ink" : "text-ink-muted"}`}>{status}</span>
-            {index < statuses.length - 1 ? <span aria-hidden="true" className="hidden h-px w-5 bg-primary-outline sm:block" /> : null}
-          </li>
-        ))}
-      </ol>
-    </section>
   );
 }
 

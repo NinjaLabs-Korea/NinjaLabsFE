@@ -1,6 +1,7 @@
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { createMockFixtures, getMockFixtureSnapshot, type MockAccountFixtures } from "@/lib/mocks/fixtures";
+import { getAdminBounties, getAdminHighlights, getAdminPosts, getAdminUsers } from "@/lib/admin";
 
 function isFixtureOwner(auth: AuthSnapshot, fixtures: MockAccountFixtures): boolean {
   return auth.status === "signed-in" && auth.user.id === fixtures.account.user.id;
@@ -30,6 +31,8 @@ export function createMockApiClient(seed = "default"): ApiClient {
 
       return { status: "available", data: getMockFixtureSnapshot(fixtureSnapshot).agents };
     },
+    applyToBounty: async () => ({ id: "preview-application", status: "PENDING" }),
+    submitBounty: async () => ({ id: "preview-submission", revisionNo: 1, status: "SUBMITTED" }),
     registerAgent: async ({ walletAddress }) => ({
       agentId: "00000000-0000-4000-8000-000000000001",
       status: "PENDING_VERIFICATION",
@@ -45,5 +48,17 @@ export function createMockApiClient(seed = "default"): ApiClient {
     verifyWallet: async () => undefined,
     completeProfile: async () => undefined,
     completeOnboarding: async () => undefined,
+    getAdminUsers: async () => getAdminUsers(),
+    setAdminMember: async () => undefined,
+    getAdminBounties: async () => getAdminBounties(),
+    saveAdminBounty: async (bounty) => ({ id: bounty.slug }),
+    transitionAdminBounty: async () => undefined,
+    deleteAdminBounty: async () => undefined,
+    getAdminPosts: async () => getAdminPosts(),
+    saveAdminPost: async (post) => ({ id: post.slug }),
+    deleteAdminPost: async () => undefined,
+    getAdminHighlights: async () => getAdminHighlights(),
+    saveAdminHighlight: async (highlight) => ({ id: highlight.id }),
+    deleteAdminHighlight: async () => undefined,
   };
 }

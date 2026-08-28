@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { Badge } from "@/components/ui/Badge";
 import type { AdminPost } from "@/lib/admin";
+import { useFoundationApiClient, useFoundationMode } from "@/components/auth/FoundationProvider";
 
 const postColumns = [
   { id: "title", label: "Title", widthClass: "w-[35%]" },
@@ -15,7 +16,7 @@ const postColumns = [
   { id: "action", label: "Action", widthClass: "w-[14%]" },
 ];
 
-const categories: AdminPost["category"][] = ["Ninja Labs", "Injective ecosystem", "Events"];
+const categories: AdminPost["category"][] = ["Ninja Labs", "Injective ecosystem", "Events", "Recruitment", "Other"];
 const statuses = ["Draft", "Published"];
 
 type PostForm = Pick<AdminPost, "title" | "category" | "thumbnail" | "externalUrl" | "bodyMarkdown" | "status">;
@@ -29,21 +30,18 @@ const emptyForm: PostForm = {
   status: "draft",
 };
 
-function formatToday() {
-  const today = new Date();
-  return `${String(today.getMonth() + 1).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
-}
-
-function toSlug(title: string) {
-  const slug = title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  return slug || `post-${Date.now()}`;
-}
-
 export function PostManager({ posts }: { posts: AdminPost[] }) {
+  const api = useFoundationApiClient();
+  const foundationMode = useFoundationMode();
   const [records, setRecords] = useState(posts);
   const [mode, setMode] = useState<"create" | string>("create");
   const [form, setForm] = useState<PostForm>(emptyForm);
   const formRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (foundationMode !== "api") return;
+    api.getAdminPosts().then(setRecords).catch(() => pushAdminToast({ variant: "danger", title: "Notices unavailable", description: "Could not load admin notices." }));
+  }, [api, foundationMode]);
 
   const updateForm = <K extends keyof PostForm>(key: K, value: PostForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -68,20 +66,27 @@ export function PostManager({ posts }: { posts: AdminPost[] }) {
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const savePost = () => {
-    const publishedAt = form.status === "published" ? formatToday() : null;
-
-    if (mode === "create") {
-      const baseSlug = toSlug(form.title);
-      const slug = records.some((post) => post.slug === baseSlug) ? `${baseSlug}-${records.length + 1}` : baseSlug;
-      setRecords((current) => [...current, { ...form, slug, publishedAt }]);
-      pushAdminToast({ variant: "success", title: "Post created", description: `"${form.title}" — session preview, resets on reload.` });
+  const savePost = async () => {
+    const post: AdminPost = { ...form, slug: mode === "create" ? "" : mode, publishedAt: null };
+    try {
+      await api.saveAdminPost(post, mode === "create");
+      setRecords(await api.getAdminPosts());
+      pushAdminToast({ variant: "success", title: mode === "create" ? "Post created" : "Post updated", description: `"${form.title}" was saved.` });
       startNew();
-      return;
+    } catch {
+      pushAdminToast({ variant: "danger", title: "Save failed", description: "The notice was not saved." });
     }
+  };
 
-    setRecords((current) => current.map((post) => post.slug === mode ? { ...post, ...form, publishedAt } : post));
-    pushAdminToast({ variant: "success", title: "Post updated", description: `"${form.title}" — session preview, resets on reload.` });
+  const deletePost = async (post: AdminPost) => {
+    if (!window.confirm(`Delete ${post.title}?`)) return;
+    try {
+      await api.deleteAdminPost(post.slug);
+      setRecords((current) => current.filter((item) => item.slug !== post.slug));
+      pushAdminToast({ variant: "success", title: "Post deleted", description: post.title });
+    } catch {
+      pushAdminToast({ variant: "danger", title: "Delete failed", description: "The notice was not deleted." });
+    }
   };
 
   const isEditing = mode !== "create";
@@ -104,7 +109,7 @@ export function PostManager({ posts }: { posts: AdminPost[] }) {
             <td className="px-5 py-4 text-sm text-ink-secondary">{post.category}</td>
             <td className="px-5 py-4"><Badge variant={post.status === "published" ? "success" : "warning"}>{post.status === "published" ? "Published" : "Draft"}</Badge></td>
             <td className="px-5 py-4 text-sm text-ink-secondary">{post.publishedAt ?? "–"}</td>
-            <td className="px-5 py-4"><button className="h-11 rounded-control border border-primary-outline bg-surface px-4 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => editPost(post)} type="button">Edit</button></td>
+            <td className="px-5 py-4"><div className="flex gap-2"><button className="h-11 rounded-control border border-primary-outline bg-surface px-3 text-sm font-semibold text-primary-strong" onClick={() => editPost(post)} type="button">Edit</button><button className="h-11 rounded-control border border-danger px-3 text-sm font-semibold text-danger" onClick={() => deletePost(post)} type="button">Delete</button></div></td>
           </tr>
         ))}
       </AdminTable>
@@ -127,7 +132,7 @@ export function PostManager({ posts }: { posts: AdminPost[] }) {
           </label>
         </div>
         <button className="mt-5 h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={savePost} type="button">Save</button>
-        <p className="mt-3 text-xs text-ink-muted">Session preview — changes are local to this tab and reset on reload.</p>
+        <p className="mt-3 text-xs text-ink-muted">Changes are saved to the platform immediately.</p>
       </section>
     </div>
   );
