@@ -21,6 +21,8 @@ export type AdminBounty = {
   title: string;
   sponsor: string;
   reward: { amount: number; currency: "INJ" | "USDC" };
+  rewardContractAddress?: string;
+  rewardChainId?: number;
   intakeEnabled: boolean;
   status: "draft" | "funding" | "active" | "reviewing" | "closed";
   deadline: string;

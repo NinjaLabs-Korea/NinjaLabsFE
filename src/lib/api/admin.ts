@@ -12,7 +12,7 @@ const highlightLabel = { MILESTONE: "Milestone", FEATURED_BOUNTY: "Featured boun
 const highlightCode = { Milestone: "MILESTONE", "Featured bounty": "FEATURED_BOUNTY", Partnership: "PARTNERSHIP" } as const;
 
 type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: keyof typeof roleLabel | null; member_display_order: number | null; created_at: string; wallet_address: string | null };
-type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: keyof typeof categoryLabel; status: string; application_required: boolean; submission_deadline: string; rewards: Array<{ symbol: string; amount: string }> };
+type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: keyof typeof categoryLabel; status: string; application_required: boolean; submission_deadline: string; rewards: Array<{ symbol: string; amount: string; tokenContractAddress?: string | null; evmChainId?: number | null }> };
 type NoticeRow = { id: string; title: string; body: string; category: keyof typeof noticeLabel; status: string; published_at: string | null; thumbnail_url: string | null; external_url: string | null };
 type HighlightRow = { id: string; type: string; title: string; description: string; image_url: string | null; link_url: string | null; display_order: number; is_published: boolean };
 
@@ -48,6 +48,8 @@ export function createAdminApi(http: ApiHttp) {
       return rows.map((row) => ({
         slug: row.id, title: row.title, sponsor: row.sponsor_name,
         reward: { amount: Number(row.rewards[0]?.amount ?? 0) / 10 ** (row.rewards[0]?.symbol === "USDC" ? 6 : 18), currency: row.rewards[0]?.symbol === "USDC" ? "USDC" : "INJ" },
+        ...(row.rewards[0]?.tokenContractAddress ? { rewardContractAddress: row.rewards[0].tokenContractAddress } : {}),
+        ...(row.rewards[0]?.evmChainId ? { rewardChainId: row.rewards[0].evmChainId } : {}),
         intakeEnabled: row.application_required, status: bountyStatus(row.status),
         deadline: row.submission_deadline, tags: [categoryLabel[row.category]],
         description: row.description || row.summary, submissionGuide: row.requirements,
@@ -64,7 +66,7 @@ export function createAdminApi(http: ApiHttp) {
         applicationRequired: bounty.intakeEnabled, maxWinners: 1,
         submissionDeadline: bounty.deadline,
         ...(create && bounty.reward.amount > 0 ? { reward: {
-          tokenType: "NATIVE",
+          tokenType: bounty.reward.currency === "USDC" ? "ERC20" : "NATIVE",
           ...(bounty.reward.currency === "INJ" ? { tokenDenom: "inj" } : {}),
           displaySymbol: bounty.reward.currency,
           amount: parseUnits(String(bounty.reward.amount), bounty.reward.currency === "USDC" ? 6 : 18).toString(),
