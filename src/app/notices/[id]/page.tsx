@@ -4,18 +4,15 @@ import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/Badge";
 import { Markdown } from "@/components/ui/Markdown";
-import { getNotice, getNotices } from "@/lib/notices";
+import { getRuntimeNotice } from "@/lib/notices";
 
 type NoticeDetailPageProps = {
   params: Promise<{ id: string }>;
 };
 
-export function generateStaticParams() {
-  return getNotices().map(({ slug }) => ({ id: slug }));
-}
 export async function generateMetadata({ params }: NoticeDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const notice = getNotice(id);
+  const notice = await getRuntimeNotice(id);
 
   if (!notice) {
     return { title: "Not found — Ninja Labs" };
@@ -34,7 +31,7 @@ export async function generateMetadata({ params }: NoticeDetailPageProps): Promi
 
 export default async function NoticeDetailPage({ params }: NoticeDetailPageProps) {
   const { id } = await params;
-  const notice = getNotice(id);
+  const notice = await getRuntimeNotice(id);
 
   if (!notice) {
     notFound();

@@ -12,6 +12,8 @@ export function createUnavailableApiClient(): ApiClient {
     getAccount: async () => unavailable(),
     getApplications: async () => unavailable(),
     getAgents: async () => unavailable(),
+    applyToBounty: async () => { throw new Error("Bounty application API is unavailable."); },
+    submitBounty: async () => { throw new Error("Bounty submission API is unavailable."); },
     registerAgent: async () => {
       throw new Error("Agent API is unavailable.");
     },
@@ -30,5 +32,17 @@ export function createUnavailableApiClient(): ApiClient {
     completeOnboarding: async () => {
       throw new Error("Onboarding API is unavailable.");
     },
+    getAdminUsers: async () => [],
+    setAdminMember: async () => { throw new Error("Admin API is unavailable."); },
+    getAdminBounties: async () => [],
+    saveAdminBounty: async () => { throw new Error("Admin API is unavailable."); },
+    transitionAdminBounty: async () => { throw new Error("Admin API is unavailable."); },
+    deleteAdminBounty: async () => { throw new Error("Admin API is unavailable."); },
+    getAdminPosts: async () => [],
+    saveAdminPost: async () => { throw new Error("Admin API is unavailable."); },
+    deleteAdminPost: async () => { throw new Error("Admin API is unavailable."); },
+    getAdminHighlights: async () => [],
+    saveAdminHighlight: async () => { throw new Error("Admin API is unavailable."); },
+    deleteAdminHighlight: async () => { throw new Error("Admin API is unavailable."); },
   };
 }

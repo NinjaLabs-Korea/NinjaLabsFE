@@ -1,4 +1,6 @@
 import type { Notice } from "@/lib/types";
+import { fetchPublicJson } from "@/lib/api/public";
+import { loadRuntimeConfig } from "@/lib/runtime/config";
 
 export const notices: Notice[] = [
   {
@@ -56,4 +58,53 @@ export function getNotices() {
 
 export function getNotice(slug: string) {
   return notices.find((notice) => notice.slug === slug);
+}
+
+type NoticeRow = {
+  id: string;
+  title: string;
+  summary: string | null;
+  body?: string;
+  category: string;
+  thumbnail_url: string | null;
+  external_url: string | null;
+  published_at: string;
+};
+type NoticeListResponse = { items: NoticeRow[] };
+
+const categoryLabels = {
+  NINJALABS: "Ninja Labs",
+  INJECTIVE_ECOSYSTEM: "Injective ecosystem",
+  EVENT: "Events",
+  RECRUITMENT: "Recruitment",
+  OTHER: "Other",
+} as const;
+
+function toNotice(row: NoticeRow): Notice {
+  return {
+    slug: row.id,
+    title: row.title,
+    excerpt: row.summary ?? "",
+    bodyMarkdown: row.body ?? row.summary ?? "",
+    category: categoryLabels[row.category as keyof typeof categoryLabels] ?? "Other",
+    publishedAt: new Date(row.published_at).toLocaleDateString("en-CA").replaceAll("-", "."),
+    thumbnail: row.thumbnail_url ?? "",
+    coverImage: row.thumbnail_url ?? undefined,
+    externalUrl: row.external_url ?? undefined,
+  };
+}
+
+export async function getRuntimeNotices(): Promise<Notice[]> {
+  if (loadRuntimeConfig().runtimeMode === "mock") return getNotices();
+  const response = await fetchPublicJson<NoticeListResponse>("/notices?page=1&pageSize=50");
+  return response.items.map(toNotice);
+}
+
+export async function getRuntimeNotice(id: string): Promise<Notice | undefined> {
+  if (loadRuntimeConfig().runtimeMode === "mock") return getNotice(id);
+  try {
+    return toNotice(await fetchPublicJson<NoticeRow>(`/notices/${encodeURIComponent(id)}`));
+  } catch {
+    return undefined;
+  }
 }

@@ -58,9 +58,9 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
       </button>
 
       <ConfirmDialog
-        calloutText="Session preview — applies only to this tab and resets on reload."
+        calloutText="This immediately updates the public member directory."
         confirmLabel="Remove member"
-        description={<>Hides {user.nickname}&apos;s card from the <b>Members</b> directory in this session preview. The public directory is unchanged and the assignment can be restored with Undo.</>}
+        description={<>Hides {user.nickname}&apos;s card from the public <b>Members</b> directory. Their account and profile are preserved.</>}
         destructive
         eyebrow="Remove member"
         onCancel={() => setRemoveOpen(false)}
@@ -72,7 +72,7 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
       <Modal labelledBy={assignTitleId} onClose={() => setAssignOpen(false)} open={assignOpen}>
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">Member role</p>
         <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink" id={assignTitleId}>Assign member role</h2>
-        <p className="mt-2 text-sm text-ink-muted">Marks <b>{user.nickname}</b> as a member in this session preview — the public directory is unchanged and resets on reload.</p>
+        <p className="mt-2 text-sm text-ink-muted">Marks <b>{user.nickname}</b> as a public member with the selected role and order.</p>
         <div className="mt-4 flex flex-wrap gap-2" aria-label="Member role">
           {roles.map((item) => (
             <button

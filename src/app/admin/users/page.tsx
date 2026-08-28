@@ -4,13 +4,14 @@ import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { UserDirectory } from "@/components/admin/UserDirectory";
 import { Badge } from "@/components/ui/Badge";
 import { getAdminUsers } from "@/lib/admin";
+import { loadRuntimeConfig } from "@/lib/runtime/config";
 export const metadata: Metadata = {
   title: "Admin · Users — Ninja Labs",
   description: "Manage user access, wallet connections, and member roles.",
 };
 
 export default function AdminUsersPage() {
-  const users = getAdminUsers();
+  const users = loadRuntimeConfig().runtimeMode === "mock" ? getAdminUsers() : [];
 
   return (
     <section className="mx-auto max-w-content px-6 py-16 pb-20">

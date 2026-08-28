@@ -1,5 +1,6 @@
 import type { Account, AccountAgent, AccountApplication } from "@/lib/contracts/account";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
+import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
 
 export type ApiAvailable<T> = {
   status: "available";
@@ -30,6 +31,13 @@ export type ApiClient = {
   getAccount: (auth: AuthSnapshot) => Promise<ApiResult<Account | null>>;
   getApplications: (auth: AuthSnapshot) => Promise<ApiResult<readonly AccountApplication[]>>;
   getAgents: (auth: AuthSnapshot) => Promise<ApiResult<readonly AccountAgent[]>>;
+  applyToBounty: (bountyId: string, input: { message: string; portfolioUrl?: string }) => Promise<{ id: string; status: string }>;
+  submitBounty: (bountyId: string, input: {
+    submissionUrl: string;
+    description: string;
+    repositoryUrl?: string;
+    commitSha?: string;
+  }) => Promise<{ id: string; revisionNo: number; status: string }>;
   registerAgent: (input: {
     name: string;
     description?: string;
@@ -44,4 +52,16 @@ export type ApiClient = {
     tags: readonly string[];
   }) => Promise<void>;
   completeOnboarding: () => Promise<void>;
+  getAdminUsers: (query?: string) => Promise<AdminUser[]>;
+  setAdminMember: (userId: string, input: { isMember: boolean; role?: string; displayOrder?: number }) => Promise<void>;
+  getAdminBounties: () => Promise<AdminBounty[]>;
+  saveAdminBounty: (bounty: AdminBounty, create: boolean) => Promise<{ id: string }>;
+  transitionAdminBounty: (bountyId: string, to: string) => Promise<void>;
+  deleteAdminBounty: (bountyId: string) => Promise<void>;
+  getAdminPosts: () => Promise<AdminPost[]>;
+  saveAdminPost: (post: AdminPost, create: boolean) => Promise<{ id: string }>;
+  deleteAdminPost: (noticeId: string) => Promise<void>;
+  getAdminHighlights: () => Promise<AdminHighlight[]>;
+  saveAdminHighlight: (highlight: AdminHighlight, create: boolean) => Promise<{ id: string }>;
+  deleteAdminHighlight: (highlightId: string) => Promise<void>;
 };

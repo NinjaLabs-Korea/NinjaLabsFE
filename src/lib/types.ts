@@ -1,6 +1,6 @@
 export type Reward = { amount: number; currency: 'INJ' | 'USDC' };
 
-export type BountyCategory = 'Dev' | 'Design' | 'Content';
+export type BountyCategory = 'Dev' | 'Design' | 'Content' | 'Other';
 
 export type Bounty = {
   slug: string;
@@ -35,7 +35,7 @@ export type Notice = {
   excerpt: string;
   /** Markdown; same ui/Markdown subset as Bounty.descriptionMarkdown. */
   bodyMarkdown: string;
-  category: 'Ninja Labs' | 'Injective ecosystem' | 'Events';
+  category: 'Ninja Labs' | 'Injective ecosystem' | 'Events' | 'Recruitment' | 'Other';
   publishedAt: string;
   thumbnail: string;
   coverImage?: string;

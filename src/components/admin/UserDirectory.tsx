@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { UserActions } from "@/components/admin/UserActions";
 import { Badge } from "@/components/ui/Badge";
 import type { AdminUser } from "@/lib/admin";
+import { useFoundationApiClient, useFoundationMode } from "@/components/auth/FoundationProvider";
 
 const columns = [
   { id: "nickname", label: "Nickname", widthClass: "w-[157px]" },
@@ -18,6 +19,8 @@ const columns = [
 ];
 
 export function UserDirectory({ users }: { users: AdminUser[] }) {
+  const api = useFoundationApiClient();
+  const foundationMode = useFoundationMode();
   const [query, setQuery] = useState("");
   const [directoryUsers, setDirectoryUsers] = useState(users);
   const normalizedQuery = query.toLowerCase();
@@ -25,7 +28,13 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
     user.nickname.toLowerCase().includes(normalizedQuery) || user.email.toLowerCase().includes(normalizedQuery)
   ));
 
-  function restoreMember(user: AdminUser) {
+  useEffect(() => {
+    if (foundationMode !== "api") return;
+    api.getAdminUsers().then(setDirectoryUsers).catch(() => pushAdminToast({ variant: "danger", title: "Users unavailable", description: "Could not load the admin user directory." }));
+  }, [api, foundationMode]);
+
+  async function restoreMember(user: AdminUser) {
+    await api.setAdminMember(user.slug, { isMember: user.isMember, ...(user.memberRole ? { role: user.memberRole } : {}), ...(user.memberDisplayOrder !== null ? { displayOrder: user.memberDisplayOrder } : {}) });
     setDirectoryUsers((currentUsers) => currentUsers.map((currentUser) => (
       currentUser.slug === user.slug
         ? {
@@ -39,11 +48,17 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
     pushAdminToast({
       variant: "success",
       title: "Member restored",
-      description: `${user.nickname} was restored in this session preview — the public directory is unchanged.`,
+      description: `${user.nickname} was restored.`,
     });
   }
 
-  function handleRemove(user: AdminUser) {
+  async function handleRemove(user: AdminUser) {
+    try {
+      await api.setAdminMember(user.slug, { isMember: false });
+    } catch {
+      pushAdminToast({ variant: "danger", title: "Update failed", description: "The member assignment was not changed." });
+      return;
+    }
     setDirectoryUsers((currentUsers) => currentUsers.map((currentUser) => (
       currentUser.slug === user.slug
         ? { ...currentUser, isMember: false, memberRole: null, memberDisplayOrder: null }
@@ -52,17 +67,23 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
     pushAdminToast({
       variant: "info",
       title: "Member removed",
-      description: `${user.nickname} was removed in this session preview — the public directory is unchanged.`,
+      description: `${user.nickname} was removed from the public member directory.`,
       actionLabel: "Undo",
       onAction: () => restoreMember(user),
     });
   }
 
-  function handleAssign(
+  async function handleAssign(
     user: AdminUser,
     role: NonNullable<AdminUser["memberRole"]>,
     displayOrder: number | null,
   ) {
+    try {
+      await api.setAdminMember(user.slug, { isMember: true, role, ...(displayOrder !== null ? { displayOrder } : {}) });
+    } catch {
+      pushAdminToast({ variant: "danger", title: "Update failed", description: "The member role was not changed." });
+      return;
+    }
     setDirectoryUsers((currentUsers) => currentUsers.map((currentUser) => (
       currentUser.slug === user.slug
         ? { ...currentUser, isMember: true, memberRole: role, memberDisplayOrder: displayOrder }
@@ -71,7 +92,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
     pushAdminToast({
       variant: "success",
       title: "Member role assigned",
-      description: `${user.nickname} was assigned in this session preview — the public directory is unchanged.`,
+      description: `${user.nickname} is now visible in the public member directory.`,
     });
   }
 
@@ -114,7 +135,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
               </tr>
             ))}
           </AdminTable>
-          <p className="mt-3 text-xs text-ink-muted">Session preview — changes are local to this tab and reset on reload.</p>
+          <p className="mt-3 text-xs text-ink-muted">Changes are saved to the platform immediately.</p>
         </div>
       ) : (
         <div className="mt-6 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center">

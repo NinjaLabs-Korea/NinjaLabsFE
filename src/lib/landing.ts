@@ -1,18 +1,21 @@
 import type { Bounty, NoticePreview } from './types';
+import { getRuntimeBounties } from './bounties';
+import { getRuntimeNotices } from './notices';
+import { getRuntimeHallOfFame } from './hall-of-fame';
 
 type LandingData = {
   hero: {
-    eyebrow: 'Built on Injective';
+    eyebrow: string;
     title: string;
     description: string;
-    primaryCta: { label: 'Get Started'; href: string };
-    secondaryCta: { label: 'Browse Bounties'; href: '/bounties' };
-    stats: Array<{ value: '128' | '412' | '10+'; label: string }>;
+    primaryCta: { label: string; href: string };
+    secondaryCta: { label: string; href: string };
+    stats: Array<{ value: string; label: string }>;
     portfolio: {
-      handle: 'ninja.inj';
-      memberSince: 2026;
+      handle: string;
+      memberSince: number;
       completed: string[];
-      totalCompleted: 5;
+      totalCompleted: number;
     };
   };
   bounties: Bounty[];
@@ -115,3 +118,26 @@ export const landing: LandingData = {
     },
   ],
 };
+
+export async function getRuntimeLanding(): Promise<LandingData> {
+  const [bounties, notices, hall] = await Promise.all([
+    getRuntimeBounties(),
+    getRuntimeNotices(),
+    getRuntimeHallOfFame(),
+  ]);
+  const completed = bounties.filter((bounty) => bounty.status === 'closed').slice(0, 5);
+  return {
+    hero: {
+      ...landing.hero,
+      stats: hall.stats,
+      portfolio: {
+        handle: 'Ninja Labs',
+        memberSince: 2026,
+        completed: completed.map((bounty) => bounty.title),
+        totalCompleted: Number(hall.stats[0]?.value ?? 0),
+      },
+    },
+    bounties: bounties.filter((bounty) => bounty.status === 'active').slice(0, 4),
+    news: notices.slice(0, 3),
+  };
+}

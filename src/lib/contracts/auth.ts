@@ -8,6 +8,7 @@ export type ClientUser = {
   walletAddress?: string;
   onboardingStep?: number;
   onboardingCompleted?: boolean;
+  isAdmin?: boolean;
 };
 
 export type SignedOutAuthSnapshot = {

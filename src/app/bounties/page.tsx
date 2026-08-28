@@ -4,14 +4,15 @@ import Link from "next/link";
 import { BountyFilters } from "@/components/bounties/BountyFilters";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { getBounties } from "@/lib/bounties";
+import { getRuntimeBounties } from "@/lib/bounties";
 
 export const metadata: Metadata = {
   title: "Bounties — Ninja Labs",
   description: "Find paid work from Injective ecosystem sponsors, ship useful pieces, and collect on-chain proof for your Ninja portfolio.",
 };
 
-export default function BountiesPage() {
+export default async function BountiesPage() {
+  const bounties = await getRuntimeBounties();
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <section>
@@ -33,7 +34,7 @@ export default function BountiesPage() {
       </section>
 
       <section className="mt-8" aria-label="Bounty filters and results">
-        <BountyFilters bounties={getBounties()} />
+        <BountyFilters bounties={bounties} />
       </section>
 
       <p className="mt-8 text-sm text-ink-muted">

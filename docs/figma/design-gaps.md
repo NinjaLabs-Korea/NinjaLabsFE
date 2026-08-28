@@ -14,14 +14,14 @@ Created 2026-07-19 via Figma MCP (`generate_diagram`, team "Alex kim's team" —
 |---|---|---|
 | Logged-in header states | **Implemented** — `FoundationProvider` supplies the mock preview locally and restores the NinjaLabsBE JWT session in API mode. | `src/components/auth/FoundationProvider.tsx`, `src/lib/api/auth-adapter.ts`, `src/components/layout/AuthArea.tsx`, `src/components/layout/UserMenu.tsx` |
 | Admin access gating | **Blocked on backend** — `/admin/*` is publicly reachable; "ADMIN ONLY" badge is decorative. Needs login-wall/forbidden state design + auth backend. | `docs/figma/recon/18-admin-users.md` §Shell (badge only, no gate UI); `src/app/admin/users/page.tsx` (no guard) |
-| Frontend/mock foundation boundary | **Implemented with explicit modes** — local/test mock mode remains deterministic and memory-only; API mode uses NinjaLabsBE for OAuth, onboarding, owner data, wallet verification, and public profiles. Admin mutations remain session-local. | `docs/auth-api-contract.md`; `src/lib/api/*`, `src/components/auth/FoundationProvider.tsx`, `src/components/wallet/WalletConnectButton.tsx` |
+| Frontend/mock foundation boundary | **Implemented with explicit modes** — local/test mock mode remains deterministic; API mode uses NinjaLabsBE for OAuth, onboarding, wallets, owner/public marketplace data, and AdminGuard-protected mutations. | `docs/auth-api-contract.md`; `src/lib/api/*`, `src/components/auth/FoundationProvider.tsx` |
 
 ## Forms — blocked on design
 
 | Item | Notes | Evidence |
 |---|---|---|
 | Validation error visuals | **Partially implemented** — the profile form enforces required fields/tags, reports save or nickname-conflict failure, and the wallet step reports connection/signature failure. Real-time nickname availability remains open. | `src/components/signup/ProfileForm.tsx`, `src/components/wallet/WalletConnectButton.tsx`; real-time check design intent in `docs/figma/recon/12-signup-profile.md` |
-| Submit feedback | **Partially FE shipped** — `ui/Toast` (4 variants, captured as `28 Toasts (FE)`); admin toasts live for Remove/Assign/Undo AND Create/Save on the bounty/highlight/post managers (session-local). Public Apply and agent Sign & Register feedback remain backend scope. The drawn `ApplyStatusFlow` lifecycle is unchanged. | `docs/figma/recon/15v-bounty-detail-apply.md` §Components (ApplyStatusFlow drawn) + §Interactions (no acknowledgement UI), `docs/figma/recon/21-admin-notices.md` §Interactions (Save persists Draft/Publish — no feedback state drawn), `docs/figma/recon/17-agent-register.md` §Interactions (verification failure requires retry — no failure UI drawn) |
+| Submit feedback | **Implemented** — public bounty Apply/Submit and admin mutations display success or failure feedback; agent registration reports signing/API failures. | `src/components/bounties/BountyActionPanel.tsx`, `src/components/admin/*Manager.tsx`, `src/components/agents/AgentRegistrationForm.tsx` |
 | Confirmation dialogs | **Approved implementation divergence** — `ui/ConfirmDialog` + admin Remove wiring live (session-preview copy); captured as `26 Modal - Confirm (FE)`. | User-approved execution of the pending plan and reviewed live screenshots (2026-07-20); `src/components/ui/ConfirmDialog.tsx`, `src/components/admin/UserActions.tsx` |
 
 ## Data UX — blocked on design

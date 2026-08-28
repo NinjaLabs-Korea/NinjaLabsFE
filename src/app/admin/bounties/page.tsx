@@ -3,6 +3,7 @@ import { BountyManager } from "@/components/admin/BountyManager";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { getAdminBounties } from "@/lib/admin";
+import { loadRuntimeConfig } from "@/lib/runtime/config";
 
 export const metadata: Metadata = {
   title: "Admin · Bounties — Ninja Labs",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default function AdminBountiesPage() {
-  const bounties = getAdminBounties();
+  const bounties = loadRuntimeConfig().runtimeMode === "mock" ? getAdminBounties() : [];
 
   return (
     <section className="mx-auto max-w-content px-6 py-16 pb-20">

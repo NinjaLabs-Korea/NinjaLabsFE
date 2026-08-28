@@ -24,6 +24,7 @@ export function toClientUser(me: MeResponse): ClientUser {
     profileSlug: me.nickname,
     onboardingStep: me.onboardingStep,
     onboardingCompleted: me.onboardingCompleted,
+    isAdmin: me.isAdmin,
     ...(me.wallet ? { walletAddress: me.wallet.address } : {}),
   };
 }

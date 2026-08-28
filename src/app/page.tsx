@@ -5,12 +5,12 @@ import { BountyCard } from "@/components/cards/BountyCard";
 import { NewsCard } from "@/components/cards/NewsCard";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { landing as landingData } from "@/lib/landing";
+import { getRuntimeLanding } from "@/lib/landing";
 
 const trackRecord = "Own your track record.";
 
-export default function Home() {
-  const { hero, bounties, news } = landingData;
+export default async function Home() {
+  const { hero, bounties, news } = await getRuntimeLanding();
   const heroTitle = hero.title.replace(` ${trackRecord}`, "");
 
   return (

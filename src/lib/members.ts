@@ -1,6 +1,7 @@
 import type { Member, Profile } from "./types";
 import { loadRuntimeConfig } from "./runtime/config";
 import { onboardingLog } from "./onboarding-log";
+import { fetchPublicJson } from "./api/public";
 
 export const PROFILE_EMPTY_ID = "sora";
 
@@ -36,6 +37,31 @@ export const profiles: Record<string, Profile> = {
 export function getMembers() { return members.filter((member) => member.isMember); }
 export function getProfile(slug: string) { return profiles[slug]; }
 
+type MemberRow = {
+  id: string;
+  nickname: string;
+  bio: string;
+  member_role: "CORE" | "DEV" | "DESIGN" | "OPS";
+  links: Array<{ type: string; url: string }>;
+};
+
+const memberRoleLabels = { CORE: "Core", DEV: "Dev", DESIGN: "Design", OPS: "Ops" } as const;
+
+export async function getRuntimeMembers(): Promise<Member[]> {
+  if (loadRuntimeConfig().runtimeMode === "mock") return getMembers();
+  const rows = await fetchPublicJson<MemberRow[]>("/members");
+  return rows.map((row) => ({
+    slug: row.nickname,
+    name: row.nickname,
+    initials: row.nickname.slice(0, 2).toUpperCase(),
+    role: memberRoleLabels[row.member_role] ?? "Core",
+    title: "Ninja Labs member",
+    bio: row.bio || "Building in the Injective ecosystem.",
+    isMember: true,
+    links: { profile: `/members/${row.nickname}` },
+  }));
+}
+
 type PublicProfileResponse = {
   nickname: string;
   bio: string;
@@ -59,6 +85,7 @@ const categoryMap = {
   DEV: "Dev",
   DESIGN: "Design",
   CONTENT: "Content",
+  OTHER: "Other",
 } as const;
 
 function toProfile(data: PublicProfileResponse): Profile {

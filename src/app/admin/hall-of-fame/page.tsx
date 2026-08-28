@@ -4,6 +4,8 @@ import { HighlightManager } from "@/components/admin/HighlightManager";
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { getAdminHighlights } from "@/lib/admin";
+import { loadRuntimeConfig } from "@/lib/runtime/config";
+import { getRuntimeHallOfFame } from "@/lib/hall-of-fame";
 
 
 export const metadata: Metadata = {
@@ -11,8 +13,9 @@ export const metadata: Metadata = {
   description: "Curate the milestones and highlights that celebrate the Ninja Labs community.",
 };
 
-export default function AdminHallOfFamePage() {
-  const highlights = getAdminHighlights();
+export default async function AdminHallOfFamePage() {
+  const highlights = loadRuntimeConfig().runtimeMode === "mock" ? getAdminHighlights() : [];
+  const hall = await getRuntimeHallOfFame();
 
   return (
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
@@ -41,11 +44,7 @@ export default function AdminHallOfFamePage() {
             <Badge variant="neutral">auto-aggregated / read-only</Badge>
           </div>
           <div className="mt-6 grid gap-5 md:grid-cols-3">
-            {[
-              ["128", "Bounties run"],
-              ["412", "Builders onboarded"],
-              ["$—", "Rewards paid"],
-            ].map(([value, label]) => (
+            {hall.stats.map(({ value, label }) => (
               <article key={label} className="rounded-card border border-primary-soft-border bg-primary-soft p-5">
                 <p className="font-display text-4xl font-bold text-primary">{value}</p>
                 <p className="mt-2 text-sm text-ink-muted">{label}</p>

@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import type { AdminBounty } from "@/lib/admin";
+import { useFoundationApiClient, useFoundationMode } from "@/components/auth/FoundationProvider";
 
 const columns = [
   { id: "title", label: "Title", widthClass: "w-[244px]" },
@@ -19,7 +20,7 @@ const columns = [
 ];
 
 const tags = ["Dev", "Design", "Content", "Other"] as const;
-const statusVariants = { active: "success", reviewing: "warning", closed: "danger" } as const;
+const statusVariants = { draft: "neutral", funding: "warning", active: "success", reviewing: "warning", closed: "danger" } as const;
 
 type FormValues = {
   title: string;
@@ -49,32 +50,21 @@ const emptyForm = (): FormValues => ({
   reviewProcess: "",
 });
 
-function slugify(title: string) {
-  return title.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || `bounty-${Date.now()}`;
-}
-
-function createUniqueSlug(title: string, records: AdminBounty[]) {
-  const baseSlug = slugify(title);
-  const existingSlugs = new Set(records.map(({ slug }) => slug));
-  let slug = baseSlug;
-  let suffix = 2;
-
-  while (existingSlugs.has(slug)) {
-    slug = `${baseSlug}-${suffix}`;
-    suffix += 1;
-  }
-
-  return slug;
-}
-
 type Mode = { kind: "create" } | { kind: "edit"; slug: string };
 
 export function BountyManager({ bounties, children, tabs }: { bounties: AdminBounty[]; children: ReactNode; tabs: ReactNode }) {
+  const api = useFoundationApiClient();
+  const foundationMode = useFoundationMode();
   const [records, setRecords] = useState(bounties);
   const [mode, setMode] = useState<Mode>({ kind: "create" });
   const [form, setForm] = useState<FormValues>(emptyForm);
   const formRef = useRef<HTMLElement>(null);
   const editing = mode.kind === "edit";
+
+  useEffect(() => {
+    if (foundationMode !== "api") return;
+    api.getAdminBounties().then(setRecords).catch(() => pushAdminToast({ variant: "danger", title: "Bounties unavailable", description: "Could not load admin bounties." }));
+  }, [api, foundationMode]);
 
   const updateForm = <Key extends keyof FormValues>(key: Key, value: FormValues[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -91,7 +81,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     setForm({
       title: bounty.title,
       sponsor: bounty.sponsor,
-      deadline: bounty.deadline,
+      deadline: bounty.deadline.slice(0, 16),
       amount: String(bounty.reward.amount),
       currency: bounty.reward.currency,
       intake: bounty.intakeEnabled ? "ON" : "OFF",
@@ -111,27 +101,52 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     }));
   };
 
-  const save = (event: FormEvent<HTMLFormElement>) => {
+  const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const bounty = {
+    const bounty: AdminBounty = {
+      slug: mode.kind === "edit" ? mode.slug : "",
       title: form.title,
       sponsor: form.sponsor,
       reward: { amount: Number(form.amount) || 0, currency: form.currency },
       intakeEnabled: form.intake === "ON",
-      deadline: form.deadline,
+      deadline: new Date(form.deadline).toISOString(),
       tags: form.tags,
       description: form.description,
       submissionGuide: form.submissionGuide,
       deliverables: form.deliverables.split("\n").map((line) => line.trim()).filter(Boolean),
       reviewProcess: form.reviewProcess,
+      status: mode.kind === "edit" ? records.find((record) => record.slug === mode.slug)?.status ?? "draft" : Number(form.amount) > 0 ? "funding" : "draft",
     };
 
-    if (mode.kind === "edit") {
-      setRecords((current) => current.map((record) => record.slug === mode.slug ? { ...record, ...bounty } : record));
-      pushAdminToast({ variant: "success", title: "Bounty updated", description: `"${form.title}" — session preview, resets on reload.` });
-    } else {
-      setRecords((current) => [...current, { ...bounty, slug: createUniqueSlug(form.title, current), status: "active" }]);
-      pushAdminToast({ variant: "success", title: "Bounty created", description: `"${form.title}" — session preview, resets on reload.` });
+    try {
+      await api.saveAdminBounty(bounty, mode.kind === "create");
+      setRecords(await api.getAdminBounties());
+      pushAdminToast({ variant: "success", title: mode.kind === "edit" ? "Bounty updated" : "Bounty created", description: `"${form.title}" was saved.` });
+      startCreate();
+    } catch {
+      pushAdminToast({ variant: "danger", title: "Save failed", description: "The bounty was not saved. Check the fields and your admin permissions." });
+    }
+  };
+
+  const transition = async (bounty: AdminBounty) => {
+    const to = bounty.status === "active" ? "SUBMISSION_CLOSED" : "OPEN";
+    try {
+      await api.transitionAdminBounty(bounty.slug, to);
+      setRecords(await api.getAdminBounties());
+      pushAdminToast({ variant: "success", title: "Status updated", description: `${bounty.title} is now ${to.toLowerCase().replaceAll("_", " ")}.` });
+    } catch {
+      pushAdminToast({ variant: "danger", title: "Transition failed", description: "This status transition is not currently allowed." });
+    }
+  };
+
+  const remove = async (bounty: AdminBounty) => {
+    if (!window.confirm(`Delete ${bounty.title}?`)) return;
+    try {
+      await api.deleteAdminBounty(bounty.slug);
+      setRecords((current) => current.filter((item) => item.slug !== bounty.slug));
+      pushAdminToast({ variant: "success", title: "Bounty deleted", description: bounty.title });
+    } catch {
+      pushAdminToast({ variant: "danger", title: "Delete failed", description: "The bounty was not deleted." });
     }
   };
 
@@ -156,7 +171,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <td className="px-5 py-4 text-sm text-ink-secondary">{bounty.intakeEnabled ? "ON" : "OFF"}</td>
               <td className="px-5 py-4"><Badge variant={statusVariants[bounty.status]}>{bounty.status[0].toUpperCase() + bounty.status.slice(1)}</Badge></td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{bounty.deadline}</td>
-              <td className="px-5 py-4"><button className="rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => startEdit(bounty)} type="button">Edit</button></td>
+              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">Edit</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? "Close" : "Open"}</button> : null}<button className="rounded-control border border-danger px-3 py-2 text-sm font-semibold text-danger" onClick={() => remove(bounty)} type="button">Delete</button></div></td>
             </tr>
           ))}
         </AdminTable>
@@ -174,7 +189,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("sponsor", event.target.value)} placeholder="Sponsor name" type="text" value={form.sponsor} />
             </label>
             <label className="block text-sm font-semibold text-ink">Deadline
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("deadline", event.target.value)} placeholder="MM.DD.YYYY" type="text" value={form.deadline} />
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("deadline", event.target.value)} required type="datetime-local" value={form.deadline} />
             </label>
             <div>
               <p className="text-sm font-semibold text-ink">Reward</p>
@@ -202,14 +217,14 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
             </label>
             <label className="block text-sm font-semibold text-ink">Deliverables
               <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("deliverables", event.target.value)} placeholder="One deliverable per line" value={form.deliverables} />
-              <p className="mt-2 text-xs text-ink-muted">One item per line mirrors the public detail meta-row shape in this session preview only.</p>
+              <p className="mt-2 text-xs text-ink-muted">One item per line; saved as the public requirements list.</p>
             </label>
             <label className="block text-sm font-semibold text-ink">Review process
               <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("reviewProcess", event.target.value)} placeholder="Ninja Labs triage plus sponsor approval" type="text" value={form.reviewProcess} />
             </label>
           </div>
           <button className="mt-5 h-[45px] rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" type="submit">{editing ? "Save" : "Create"}</button>
-          <p className="mt-3 text-xs text-ink-muted">Session preview — changes are local to this tab and reset on reload.</p>
+          <p className="mt-3 text-xs text-ink-muted">Changes are saved to the platform immediately.</p>
         </form>
       </section>
     </>

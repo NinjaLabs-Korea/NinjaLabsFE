@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      // Demo-only surfaces: public-chrome admin preview and owner-private session views.
+      // Admin and owner-private account surfaces must not be indexed.
       disallow: ["/admin", "/applications", "/agents$"],
     },
     sitemap: `${origin}/sitemap.xml`,

@@ -13,7 +13,7 @@ type BountyFiltersProps = {
   bounties: Bounty[];
 };
 
-const categoryFilters: CategoryFilter[] = ["Dev", "Design", "Content"];
+const categoryFilters: CategoryFilter[] = ["Dev", "Design", "Content", "Other"];
 const statusFilters: StatusFilter[] = ["Active", "Closed"];
 
 export function BountyFilters({ bounties }: BountyFiltersProps) {
