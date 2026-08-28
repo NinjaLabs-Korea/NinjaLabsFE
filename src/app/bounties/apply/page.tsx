@@ -20,6 +20,9 @@ export default async function BountyApplyPage() {
   const applicationBounty = bounties.find(
     (bounty) => bounty.status === "active" && bounty.applicationRequired,
   );
+  const directBounty = bounties.find(
+    (bounty) => bounty.status === "active" && !bounty.applicationRequired,
+  );
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
@@ -44,9 +47,9 @@ export default async function BountyApplyPage() {
           </div>
           <Link
             className="mt-5 inline-flex w-fit rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            href="/bounties/iasset-price-widget"
+            href={directBounty ? `/bounties/${directBounty.slug}` : "/bounties"}
           >
-            View detail example
+            {directBounty ? "View direct bounty" : "Browse open bounties"}
           </Link>
         </article>
 
