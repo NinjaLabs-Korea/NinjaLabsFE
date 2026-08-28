@@ -167,7 +167,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
             <tr className="border-t border-border" key={bounty.slug}>
               <td className="px-5 py-4 text-sm font-semibold text-ink">{bounty.title}</td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{bounty.sponsor}</td>
-              <td className="px-5 py-4"><RewardPill reward={bounty.reward} /></td>
+              <td className="px-5 py-4"><RewardPill reward={bounty.reward} />{bounty.rewardContractAddress ? <p className="mt-1 text-xs text-ink-muted" title={bounty.rewardContractAddress}>EVM {bounty.rewardChainId} · {bounty.rewardContractAddress.slice(0, 6)}…{bounty.rewardContractAddress.slice(-4)}</p> : null}</td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{bounty.intakeEnabled ? "ON" : "OFF"}</td>
               <td className="px-5 py-4"><Badge variant={statusVariants[bounty.status]}>{bounty.status[0].toUpperCase() + bounty.status.slice(1)}</Badge></td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{bounty.deadline}</td>
