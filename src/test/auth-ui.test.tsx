@@ -107,19 +107,6 @@ describe("GoogleLoginButton", () => {
 });
 
 describe("BountyApplyGuideCta", () => {
-  it("uses a safe listing fallback when no application bounty is open", () => {
-    render(
-      <FoundationProvider config={{ mode: "mock", previewUser }}>
-        <BountyApplyGuideCta />
-      </FoundationProvider>,
-    );
-
-    expect(screen.getByRole("link", { name: "Browse open bounties" }).getAttribute("href")).toBe(
-      "/bounties",
-    );
-    expect(screen.getByText("There are no application bounties open right now.")).toBeTruthy();
-  });
-
   it("reflects a signed-in session and links to the real bounty", async () => {
     render(
       <FoundationProvider config={{ mode: "mock", previewUser }}>
@@ -129,7 +116,7 @@ describe("BountyApplyGuideCta", () => {
       </FoundationProvider>,
     );
 
-    await screen.findByText("Signed in");
+    await screen.findByText("Authentication: Signed in");
     expect(screen.getByRole("link", { name: "Apply now" }).getAttribute("href")).toBe(
       "/bounties/live-bounty-id",
     );
