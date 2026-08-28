@@ -9,6 +9,10 @@ import {
 } from "@/components/auth/FoundationProvider";
 import { AuthArea } from "@/components/layout/AuthArea";
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
+import {
+  BountyApplyAuthBadge,
+  BountyApplyGuideCta,
+} from "@/components/bounties/BountyApplyGuideCta";
 import { getOnboardingPath, shouldRedirectToOnboarding } from "@/lib/api/auth-adapter";
 
 vi.mock("next/link", () => ({
@@ -99,6 +103,36 @@ describe("GoogleLoginButton", () => {
     await waitFor(() => expect(screen.getByText("signed-in")).toBeTruthy());
     expect(screen.queryByRole("alert")).toBeNull();
     expect(routerPush).toHaveBeenCalledWith("/signup/wallet");
+  });
+});
+
+describe("BountyApplyGuideCta", () => {
+  it("uses a safe listing fallback when no application bounty is open", () => {
+    render(
+      <FoundationProvider config={{ mode: "mock", previewUser }}>
+        <BountyApplyGuideCta />
+      </FoundationProvider>,
+    );
+
+    expect(screen.getByRole("link", { name: "Browse open bounties" }).getAttribute("href")).toBe(
+      "/bounties",
+    );
+    expect(screen.getByText("There are no application bounties open right now.")).toBeTruthy();
+  });
+
+  it("reflects a signed-in session and links to the real bounty", async () => {
+    render(
+      <FoundationProvider config={{ mode: "mock", previewUser }}>
+        <SignInOnMount />
+        <BountyApplyAuthBadge />
+        <BountyApplyGuideCta bountyHref="/bounties/live-bounty-id" />
+      </FoundationProvider>,
+    );
+
+    await screen.findByText("Signed in");
+    expect(screen.getByRole("link", { name: "Apply now" }).getAttribute("href")).toBe(
+      "/bounties/live-bounty-id",
+    );
   });
 });
 

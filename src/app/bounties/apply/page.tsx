@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import {
+  BountyApplyAuthBadge,
+  BountyApplyGuideCta,
+} from "@/components/bounties/BountyApplyGuideCta";
 import { Badge } from "@/components/ui/Badge";
+import { getRuntimeBounties } from "@/lib/bounties";
 
 const statuses = ["Open", "Under review", "Approved", "Submitted", "Completed"];
 
@@ -10,7 +15,12 @@ export const metadata: Metadata = {
   description: "Some bounties accept work directly. Others require sponsor approval before you can submit.",
 };
 
-export default function BountyApplyPage() {
+export default async function BountyApplyPage() {
+  const bounties = await getRuntimeBounties();
+  const applicationBounty = bounties.find(
+    (bounty) => bounty.status === "active" && bounty.applicationRequired,
+  );
+
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <section className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
@@ -21,7 +31,7 @@ export default function BountyApplyPage() {
             Some bounties accept work directly. Others require sponsor approval before you can submit.
           </p>
         </div>
-        <Badge variant="danger">Login required</Badge>
+        <BountyApplyAuthBadge />
       </section>
 
       <section className="mt-8 grid gap-5 md:grid-cols-2">
@@ -47,12 +57,9 @@ export default function BountyApplyPage() {
           <div className="mt-5 rounded-tile bg-primary-soft p-4 text-sm text-ink-secondary">
             [Apply] → application form → sponsor review → after approval, [Submit] enabled
           </div>
-          <Link
-            className="mt-5 inline-flex w-fit rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            href="/bounties/contract-security-audit"
-          >
-            Apply after login
-          </Link>
+          <BountyApplyGuideCta
+            bountyHref={applicationBounty ? `/bounties/${applicationBounty.slug}` : undefined}
+          />
         </article>
       </section>
 
