@@ -23,6 +23,7 @@ export default async function BountyApplyPage() {
   const directBounty = bounties.find(
     (bounty) => bounty.status === "active" && !bounty.applicationRequired,
   );
+  const hasOpenBounty = Boolean(applicationBounty || directBounty);
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
@@ -45,12 +46,16 @@ export default async function BountyApplyPage() {
           <div className="mt-5 rounded-tile bg-primary-soft p-4 text-sm text-ink-secondary">
             [Submit] button shown directly → same as Bounty Detail
           </div>
-          <Link
-            className="mt-5 inline-flex w-fit rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            href={directBounty ? `/bounties/${directBounty.slug}` : "/bounties"}
-          >
-            {directBounty ? "View direct bounty" : "Browse open bounties"}
-          </Link>
+          {directBounty ? (
+            <Link
+              className="mt-5 inline-flex w-fit rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              href={`/bounties/${directBounty.slug}`}
+            >
+              View direct bounty
+            </Link>
+          ) : hasOpenBounty ? (
+            <p className="mt-5 text-sm text-ink-muted">No submit-type bounties are open right now.</p>
+          ) : null}
         </article>
 
         <article className="flex min-h-full flex-col rounded-card border border-border bg-surface p-5 shadow-card">
@@ -60,11 +65,28 @@ export default async function BountyApplyPage() {
           <div className="mt-5 rounded-tile bg-primary-soft p-4 text-sm text-ink-secondary">
             [Apply] → application form → sponsor review → after approval, [Submit] enabled
           </div>
-          <BountyApplyGuideCta
-            bountyHref={applicationBounty ? `/bounties/${applicationBounty.slug}` : undefined}
-          />
+          {applicationBounty ? (
+            <BountyApplyGuideCta bountyHref={`/bounties/${applicationBounty.slug}`} />
+          ) : hasOpenBounty ? (
+            <p className="mt-5 text-sm text-ink-muted">No apply-type bounties are open right now.</p>
+          ) : null}
         </article>
       </section>
+
+      {!hasOpenBounty ? (
+        <section className="mt-6 flex flex-col items-start justify-between gap-4 rounded-card border border-border bg-surface p-5 shadow-card sm:flex-row sm:items-center">
+          <div>
+            <h2 className="font-display text-xl font-bold text-ink">No open bounties right now</h2>
+            <p className="mt-1 text-sm text-ink-muted">New sponsor opportunities will appear in the bounty marketplace.</p>
+          </div>
+          <Link
+            className="inline-flex shrink-0 rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            href="/bounties"
+          >
+            Browse all bounties
+          </Link>
+        </section>
+      ) : null}
 
       <section className="mt-8 rounded-card border border-border bg-surface p-5 shadow-card">
         <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">Application status</h2>
