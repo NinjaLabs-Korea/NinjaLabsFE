@@ -47,37 +47,62 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
 
   return (
     <>
-      <div className="rounded-card border border-border bg-surface px-5 py-7 shadow-card sm:flex sm:items-center sm:justify-between sm:gap-5">
-        <div className="flex flex-wrap gap-2">
-          <button
-            className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            onClick={resetFilters}
-            type="button"
-          >
-            <Badge variant={category === "All" && status === "All" ? "selected" : "primary-soft"}>All</Badge>
-          </button>
-          {categoryFilters.map((item) => (
-            <button
-              className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              key={item}
-              onClick={() => setCategory(item)}
-              type="button"
-            >
-              <Badge variant={category === item ? "selected" : "primary-soft"}>{item}</Badge>
-            </button>
-          ))}
-          {statusFilters.map((item) => (
-            <button
-              className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              key={item}
-              onClick={() => setStatus(item)}
-              type="button"
-            >
-              <Badge variant={status === item ? "selected" : item === "Active" ? "success" : "danger"}>{item}</Badge>
-            </button>
-          ))}
+      <div className="rounded-card border border-border bg-surface px-5 py-7 shadow-card sm:flex sm:items-start sm:justify-between sm:gap-8">
+        <div className="space-y-4">
+          <div aria-label="Category" className="flex flex-col gap-2 sm:flex-row sm:items-center" role="group">
+            <span className="shrink-0 text-xs font-bold uppercase tracking-[0.72px] text-ink-muted sm:w-20">
+              Category
+            </span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                aria-pressed={category === "All"}
+                className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                onClick={() => setCategory("All")}
+                type="button"
+              >
+                <Badge variant={category === "All" ? "selected" : "primary-soft"}>All</Badge>
+              </button>
+              {categoryFilters.map((item) => (
+                <button
+                  aria-pressed={category === item}
+                  className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  key={item}
+                  onClick={() => setCategory(item)}
+                  type="button"
+                >
+                  <Badge variant={category === item ? "selected" : "primary-soft"}>{item}</Badge>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div aria-label="Status" className="flex flex-col gap-2 sm:flex-row sm:items-center" role="group">
+            <span className="shrink-0 text-xs font-bold uppercase tracking-[0.72px] text-ink-muted sm:w-20">
+              Status
+            </span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                aria-pressed={status === "All"}
+                className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                onClick={() => setStatus("All")}
+                type="button"
+              >
+                <Badge variant={status === "All" ? "selected" : "primary-soft"}>All</Badge>
+              </button>
+              {statusFilters.map((item) => (
+                <button
+                  aria-pressed={status === item}
+                  className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  key={item}
+                  onClick={() => setStatus(item)}
+                  type="button"
+                >
+                  <Badge variant={status === item ? "selected" : item === "Active" ? "success" : "danger"}>{item}</Badge>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        <label className="mt-4 block sm:mt-0 sm:w-80">
+        <label className="mt-5 block sm:mt-0 sm:w-80">
           <span className="sr-only">Search bounties</span>
           <input
             className="h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
