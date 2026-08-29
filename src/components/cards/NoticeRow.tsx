@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { Badge } from "@/components/ui/Badge";
 import type { Notice } from "@/lib/types";
@@ -13,7 +14,9 @@ export function NoticeRow({ notice }: NoticeRowProps) {
       className="block overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:flex"
       href={`/notices/${notice.slug}`}
     >
-      <div className="aspect-video shrink-0 bg-gradient-to-br from-primary-soft-border to-surface-subtle md:h-[133.5px] md:w-56 md:aspect-auto" />
+      <div className="relative aspect-video shrink-0 overflow-hidden bg-gradient-to-br from-primary-soft-border to-surface-subtle md:h-[133.5px] md:w-56 md:aspect-auto">
+        {notice.thumbnail ? <Image alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 224px" src={notice.thumbnail} /> : null}
+      </div>
       <div className="min-w-0 flex-1 p-5">
         <div className="flex items-center justify-between gap-3">
           <Badge>{notice.category}</Badge>

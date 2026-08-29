@@ -42,7 +42,7 @@ export type Notice = {
   externalUrl?: string;
   related?: { label: string; href: string }[];
 };
-export type NoticePreview = Pick<Notice, "slug" | "title" | "excerpt" | "category" | "publishedAt">;
+export type NoticePreview = Pick<Notice, "slug" | "title" | "excerpt" | "category" | "publishedAt" | "thumbnail">;
 
 export type Member = {
   slug: string;
@@ -57,11 +57,22 @@ export type Member = {
 };
 
 export type Completion = {
+  bountySlug?: string;
   title: string;
   category: BountyCategory;
   completedAt: string;
   reward: Reward;
   childNft?: { tokenId: string };
+};
+
+export type ProfileNft = {
+  id: string;
+  type: 'parent' | 'completion';
+  title: string;
+  status: 'PENDING' | 'MINTING' | 'MINTED' | 'ATTACHING' | 'ATTACHED' | 'FAILED';
+  contractAddress: string;
+  tokenId: string | null;
+  mintTxHash: string | null;
 };
 
 export type Agent = {
@@ -79,6 +90,6 @@ export type Profile = {
   skills: BountyCategory[];
   joinedAt: string;
   completions: Completion[];
-  childNfts: { title: string }[];
+  nfts: ProfileNft[];
   agents: Agent[];
 };

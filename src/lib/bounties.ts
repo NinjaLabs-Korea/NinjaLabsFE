@@ -45,6 +45,8 @@ type BountyListRow = {
   category: string;
   status: string;
   application_required: boolean;
+  submission_mode: "DIRECT" | "AGENT";
+  cover_image_url: string | null;
   application_deadline: string | null;
   submission_deadline: string;
   rewards: BountyRewardRow[];
@@ -80,12 +82,12 @@ function toBounty(row: BountyListRow | BountyDetailRow): Bounty {
     sponsor: row.sponsor_name,
     deadline: row.status === "OPEN" ? dateLabel(row.submission_deadline) : "Closed",
     deadlineDetail: new Date(row.submission_deadline).toLocaleString("en-US", { timeZone: "UTC", timeZoneName: "short" }),
-    coverImage: "",
+    coverImage: row.cover_image_url ?? "",
     descriptionMarkdown: detail?.description ?? row.summary,
     submissionGuideMarkdown: detail?.requirements,
     deliverables: detail?.requirements ? detail.requirements.split("\n").filter(Boolean) : [],
     reviewProcess: detail?.evaluation_criteria ?? "Sponsor review",
-    submissionMode: "direct",
+    submissionMode: row.submission_mode === "AGENT" ? "agent" : "direct",
     completionSteps: ["Complete the work", "Submit the result URL", "Receive sponsor approval"],
     applicationRequired: row.application_required,
     applicationTitle: row.application_required ? row.title : undefined,

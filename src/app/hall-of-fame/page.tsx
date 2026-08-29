@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -38,7 +39,7 @@ export default async function HallOfFamePage() {
       <section className="py-14">
         <SectionHeader eyebrow="Featured" heading="Highlights" action={{ label: "Read notices", href: "/notices" }} />
         <div className="mt-6 grid gap-5 md:grid-cols-3">
-          {hallOfFame.highlights.map((highlight) => <Link href={highlight.href} key={highlight.title} className="overflow-hidden rounded-card border border-border bg-surface shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><div className="aspect-[16/9] bg-gradient-to-br from-primary-soft-border to-surface-subtle" /><div className="p-5"><Badge variant={highlightVariants[highlight.category]}>{highlight.category}</Badge><h3 className="mt-3 font-display text-lg font-bold text-ink">{highlight.title}</h3><p className="mt-2 text-sm text-ink-muted">{highlight.body}</p></div></Link>)}
+          {hallOfFame.highlights.map((highlight) => <Link href={highlight.href} key={highlight.title} className="overflow-hidden rounded-card border border-border bg-surface shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><div className="relative aspect-[16/9] bg-gradient-to-br from-primary-soft-border to-surface-subtle">{highlight.image ? <Image alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 370px" src={highlight.image} /> : null}</div><div className="p-5"><Badge variant={highlightVariants[highlight.category]}>{highlight.category}</Badge><h3 className="mt-3 font-display text-lg font-bold text-ink">{highlight.title}</h3><p className="mt-2 text-sm text-ink-muted">{highlight.body}</p></div></Link>)}
         </div>
       </section>
 

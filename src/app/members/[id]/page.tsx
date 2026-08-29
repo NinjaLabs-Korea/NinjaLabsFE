@@ -34,6 +34,8 @@ export default async function MemberProfilePage({ params }: PageProps) {
   const profile = await getRuntimeProfile(id);
   if (!profile) notFound();
   const completed = profile.completions.length > 0;
+  const parentNft = profile.nfts.find((nft) => nft.type === "parent");
+  const completionNfts = profile.nfts.filter((nft) => nft.type === "completion");
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
@@ -58,27 +60,27 @@ export default async function MemberProfilePage({ params }: PageProps) {
           <div className="lg:col-span-2">
             <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary-outline">Portfolio</p>
             <h2 className="mt-2 font-display text-4xl">{completed ? "Proof of work, on-chain." : "The first proof starts here."}</h2>
-            <p className="mt-4 text-base text-on-inverse/70">{completed ? "Every completed bounty mints a collectible record of work." : "Complete a bounty to add a permanent record of work to this portfolio."}</p>
+            <p className="mt-4 text-base text-on-inverse/70">{completed ? "Approved work is shown with its current on-chain mint status." : "Complete a bounty to add a permanent record of work to this portfolio."}</p>
           </div>
           <div className="rounded-card border border-on-inverse/15 bg-on-inverse/10 p-5 backdrop-blur-sm lg:col-span-3">
             <div className="flex items-center gap-3">
               <div className="flex size-12 items-center justify-center rounded-full bg-primary-soft-border font-display text-sm text-primary">N</div>
-              <div><p className="font-semibold">Ninja NFT</p><p className="text-sm text-on-inverse/60">{profile.handle}</p></div>
+              <div><p className="font-semibold">Ninja NFT</p><p className="text-sm text-on-inverse/60">{parentNft ? `Parent NFT · ${parentNft.status}` : `${profile.handle} · parent NFT pending`}</p></div>
             </div>
-            {completed ? (
+            {completionNfts.length ? (
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {profile.childNfts.map((nft) => <div key={nft.title} className="aspect-square rounded-[14px] bg-[linear-gradient(135deg,var(--color-primary-strong)_0%,var(--color-primary)_55%,var(--color-primary-outline)_100%)] p-3 shadow-nft"><span className="text-sm font-semibold">{nft.title}</span></div>)}
+                {completionNfts.map((nft) => <div key={nft.id} className="flex aspect-square flex-col rounded-[14px] bg-[linear-gradient(135deg,var(--color-primary-strong)_0%,var(--color-primary)_55%,var(--color-primary-outline)_100%)] p-3 shadow-nft"><span className="text-sm font-semibold">{nft.title}</span><span className="mt-auto text-xs text-on-inverse/70">{nft.status}</span>{nft.tokenId ? <span className="mt-1 truncate text-xs text-on-inverse/60" title={nft.tokenId}>Token {nft.tokenId}</span> : null}{nft.mintTxHash ? <span className="mt-1 truncate text-xs text-on-inverse/60" title={nft.mintTxHash}>Tx {nft.mintTxHash}</span> : null}</div>)}
                 <div className="flex aspect-square items-center justify-center rounded-[14px] border border-dashed border-on-inverse/30 text-sm text-on-inverse/70">+ next</div>
               </div>
             ) : (
               <div className="mt-5 flex min-h-72 flex-col items-center justify-center rounded-card border border-dashed border-on-inverse/25 bg-on-inverse/5 p-6 text-center">
                 <div className="flex size-14 items-center justify-center rounded-[14px] bg-on-inverse/10 font-display text-xl">N</div>
                 <h3 className="mt-4 font-display text-xl font-bold">No bounty NFTs yet</h3>
-                <p className="mt-2 max-w-sm text-sm text-on-inverse/70">Complete a bounty to add your first proof.</p>
+                <p className="mt-2 max-w-sm text-sm text-on-inverse/70">{completed ? "Approved work appears here after payout and minting begins." : "Complete a bounty to add your first proof."}</p>
                 <Link className="mt-5 rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-outline" href="/bounties">Browse active bounties</Link>
               </div>
             )}
-            <p className="mt-4 text-sm text-on-inverse/60">{completed ? `${profile.completions.length} bounties completed` : "0 bounties completed · ready for the first proof"}</p>
+            <p className="mt-4 text-sm text-on-inverse/60">{completionNfts.length ? `${completionNfts.length} on-chain bounty NFT${completionNfts.length === 1 ? "" : "s"}` : "No on-chain bounty NFTs recorded"}</p>
           </div>
         </div>
       </section>
@@ -87,10 +89,9 @@ export default async function MemberProfilePage({ params }: PageProps) {
         <SectionHeader eyebrow="Bounty history" heading="Completed bounties" action={!completed ? { label: "View filled profile", href: "/members/jaemin" } : undefined} />
         {completed ? (
           <div className="mt-6 grid gap-5 md:grid-cols-3">
-            {profile.completions.slice(0, 3).map((completion, index) => {
-              const bountySlugs = ["iasset-price-widget", "wallet-onboarding-states", "hydro-liquidity-explainer"];
+            {profile.completions.slice(0, 3).map((completion) => {
               return (
-                <Link className="rounded-card border border-border bg-surface p-5 shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`/bounties/${bountySlugs[index]}`} key={completion.title}>
+                <Link className="rounded-card border border-border bg-surface p-5 shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={completion.bountySlug ? `/bounties/${completion.bountySlug}` : "/bounties"} key={completion.title}>
                   <Badge>{completion.category}</Badge><h3 className="mt-3 font-display text-lg font-bold text-ink">{completion.title}</h3><p className="mt-2 text-sm text-ink-muted">Completed {completion.completedAt}</p><div className="mt-4"><RewardPill reward={completion.reward} /></div>
                 </Link>
               );

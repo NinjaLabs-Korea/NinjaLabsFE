@@ -7,8 +7,10 @@
 - The Google button performs real Google OAuth in API mode (full-page redirect via the backend). On callback, `/auth/me.onboardingStep` routes an incomplete account to wallet, profile, or completion. Mock mode still signs into the local preview and advances to `/signup/wallet`.
 - In API mode RainbowKit connects an Injective EVM wallet, requests a backend nonce challenge, signs it with EIP-191 `personal_sign`, and verifies it through `/wallets/verify`. The backend stores the corresponding `inj1` address and queues the parent NFT mint. Connection alone never authenticates the user; wallet verification remains optional.
 - The profile form persists nickname, bio, and tags through `/users/me/profile`; the completion screen calls `/users/me/complete-onboarding`. Public profile routes load `/users/:nickname` in API mode.
-- Owner agent keys are masked fixture values only. The UI never displays a usable or unmasked key.
-- Owner/account and admin interactions are preview state, not authorization controls or durable persistence. `/admin/*` remains publicly reachable and its admin labeling is decorative.
+- Agent verification returns the usable API key once; the registration UI shows it only in that response. Later owner views receive and display only the masked prefix.
+- Owner/account and admin interactions use durable backend APIs. Backend `AdminGuard` enforces admin reads and mutations; frontend route visibility is not treated as authorization.
+- Admin image fields upload validated JPEG/PNG/WebP files to `/admin/media`; the returned immutable `/media/:id` URL is stored on the related bounty, notice, or highlight.
+- Production bounty mode is backend-owned. `DIRECT` accepts the signed-in user endpoints, while `AGENT` accepts API-key-authenticated `/agent-api/v1/bounties/:id/applications|submissions` calls.
 
 ### RainbowKit CSS exception
 
@@ -48,9 +50,9 @@ Status of the original gate items (✅ = delivered by the NinjaLabsBE integratio
 2. ⏳ HttpOnly, Secure session cookies (superseded by the bearer-token contract above unless revisited).
 3. CSRF protections for cookie-authenticated state changes.
 4. Trusted-edge rate limiting and Turnstile enforcement where abuse protection is required.
-5. Backend-owned identity, authorization, and admin access enforcement; decorative frontend state is insufficient.
+5. ✅ Backend-owned identity, authorization, and AdminGuard enforcement. A frontend login wall remains defense-in-depth UX, not the security boundary.
 6. ✅ Wallet signature challenge, EIP-191 verification, nonce/replay protection, `inj1` normalization, and account linking.
-7. Reviewed agent API contracts covering registration, authentication/authorization, key issuance and rotation, submission/status behavior, validation, and error semantics.
+7. ✅ Agent API-key authentication plus agent-owned application and submission endpoints. Key rotation/revocation UX remains follow-up scope.
 
 These are deferred requirements, not implementation promises made by the current frontend.
 

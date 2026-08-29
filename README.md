@@ -22,7 +22,7 @@ npm run dev      # http://localhost:3000
 - `npm run test:unit` — focused foundation unit tests
 - `npm run build` — production build (all routes statically generated)
 - `npm run lint` — ESLint
-- Browser-check the mock SPA, API isolation (unavailable with no fetch), wallet connect/disconnect without auth changes, masked agent-key display, and mobile account disclosure after relevant changes.
+- Browser-check the local mock SPA, API authentication/onboarding, wallet verification, agent registration, masked agent-key display, and mobile account disclosure after relevant changes.
 - Using an AI agent? `.mcp.json` preconfigures the Figma remote MCP; `AGENTS.md` §Team agent workflow holds the lane ownership map and session rules.
 
 ## Layout
@@ -49,18 +49,18 @@ Roles are split into **Landing / Bounties / Admin**. Gaps below are distilled fr
 - Public landing, members/profiles, notices, and Hall of Fame data come from the backend in API mode.
 - Real-time nickname availability feedback remains open; submit-time validation and backend conflict handling are implemented.
 - Pagination / load-more on notices list *(blocked on design)* — fixed 4-row set, no paging affordance drawn.
-- Real assets *(blocked on assets)* — 44px signup mascot raster, member/HoF photos, partner wall, notice thumbnails (currently gradient/initials fallbacks).
+- Admin-uploaded notice and Hall of Fame images persist through the backend; missing records still use gradient/initials fallbacks. Member photos and the partner wall remain asset/content work.
 
 ### Bounties (`/bounties*`, `/applications`, `/agents`, `/agents/register`)
 
 - Apply/Submit, Agent Sign & Register, `/applications`, and `/agents` use authenticated backend APIs in production.
 - Pagination / load-more on bounty list *(blocked on design)* — fixed 9-card set.
-- Real bounty cover images *(blocked on assets)* — all 9 covers render the design-native gradient placeholder.
+- Bounty submission mode (`direct` or agent API) and admin-uploaded cover images are backend-owned in production; records without a cover use the design-native gradient fallback.
 
 ### Admin (`/admin/*`)
 
 - Data and mutations are protected by backend AdminGuard; non-admin requests cannot read or change admin records.
-- Users, bounties, Hall of Fame, and notices persist through the admin API in production.
+- Users, bounties, Hall of Fame, notices, and their uploaded images persist through the admin API in production.
 - Table pagination *(blocked on design)* — users/bounties recons explicitly leave it unspecified.
 - General column sorting *(blocked on design)* — only HoF display-order re-sort is shipped.
 

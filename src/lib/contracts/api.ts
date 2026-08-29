@@ -52,6 +52,7 @@ export type ApiClient = {
     tags: readonly string[];
   }) => Promise<void>;
   completeOnboarding: () => Promise<void>;
+  uploadAdminMedia: (file: File) => Promise<{ id: string; url: string }>;
   getAdminUsers: (query?: string) => Promise<AdminUser[]>;
   setAdminMember: (userId: string, input: { isMember: boolean; role?: string; displayOrder?: number }) => Promise<void>;
   getAdminBounties: () => Promise<AdminBounty[]>;

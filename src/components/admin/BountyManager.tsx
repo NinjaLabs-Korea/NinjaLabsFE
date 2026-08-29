@@ -29,6 +29,8 @@ type FormValues = {
   amount: string;
   currency: "INJ" | "USDC";
   intake: "OFF" | "ON";
+  submissionMode: "Direct" | "Agent";
+  coverImage: string | null;
   tags: AdminBounty["tags"];
   description: string;
   submissionGuide: string;
@@ -43,6 +45,8 @@ const emptyForm = (): FormValues => ({
   amount: "",
   currency: "INJ",
   intake: "OFF",
+  submissionMode: "Direct",
+  coverImage: null,
   tags: ["Dev"],
   description: "",
   submissionGuide: "",
@@ -58,6 +62,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const [records, setRecords] = useState(bounties);
   const [mode, setMode] = useState<Mode>({ kind: "create" });
   const [form, setForm] = useState<FormValues>(emptyForm);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const editing = mode.kind === "edit";
 
@@ -73,6 +78,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const startCreate = () => {
     setMode({ kind: "create" });
     setForm(emptyForm());
+    setCoverFile(null);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -85,12 +91,15 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       amount: String(bounty.reward.amount),
       currency: bounty.reward.currency,
       intake: bounty.intakeEnabled ? "ON" : "OFF",
+      submissionMode: bounty.submissionMode === "agent" ? "Agent" : "Direct",
+      coverImage: bounty.coverImage,
       tags: bounty.tags,
       description: bounty.description,
       submissionGuide: bounty.submissionGuide,
       deliverables: bounty.deliverables.join("\n"),
       reviewProcess: bounty.reviewProcess,
     });
+    setCoverFile(null);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -103,22 +112,24 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const bounty: AdminBounty = {
-      slug: mode.kind === "edit" ? mode.slug : "",
-      title: form.title,
-      sponsor: form.sponsor,
-      reward: { amount: Number(form.amount) || 0, currency: form.currency },
-      intakeEnabled: form.intake === "ON",
-      deadline: new Date(form.deadline).toISOString(),
-      tags: form.tags,
-      description: form.description,
-      submissionGuide: form.submissionGuide,
-      deliverables: form.deliverables.split("\n").map((line) => line.trim()).filter(Boolean),
-      reviewProcess: form.reviewProcess,
-      status: mode.kind === "edit" ? records.find((record) => record.slug === mode.slug)?.status ?? "draft" : Number(form.amount) > 0 ? "funding" : "draft",
-    };
-
     try {
+      const coverImage = coverFile ? (await api.uploadAdminMedia(coverFile)).url : form.coverImage;
+      const bounty: AdminBounty = {
+        slug: mode.kind === "edit" ? mode.slug : "",
+        title: form.title,
+        sponsor: form.sponsor,
+        reward: { amount: Number(form.amount) || 0, currency: form.currency },
+        intakeEnabled: form.intake === "ON",
+        submissionMode: form.submissionMode === "Agent" ? "agent" : "direct",
+        coverImage,
+        deadline: new Date(form.deadline).toISOString(),
+        tags: form.tags,
+        description: form.description,
+        submissionGuide: form.submissionGuide,
+        deliverables: form.deliverables.split("\n").map((line) => line.trim()).filter(Boolean),
+        reviewProcess: form.reviewProcess,
+        status: mode.kind === "edit" ? records.find((record) => record.slug === mode.slug)?.status ?? "draft" : Number(form.amount) > 0 ? "funding" : "draft",
+      };
       await api.saveAdminBounty(bounty, mode.kind === "create");
       setRecords(await api.getAdminBounties());
       pushAdminToast({ variant: "success", title: mode.kind === "edit" ? "Bounty updated" : "Bounty created", description: `"${form.title}" was saved.` });
@@ -168,7 +179,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <td className="px-5 py-4 text-sm font-semibold text-ink">{bounty.title}</td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{bounty.sponsor}</td>
               <td className="px-5 py-4"><RewardPill reward={bounty.reward} />{bounty.rewardContractAddress ? <p className="mt-1 text-xs text-ink-muted" title={bounty.rewardContractAddress}>EVM {bounty.rewardChainId} · {bounty.rewardContractAddress.slice(0, 6)}…{bounty.rewardContractAddress.slice(-4)}</p> : null}</td>
-              <td className="px-5 py-4 text-sm text-ink-secondary">{bounty.intakeEnabled ? "ON" : "OFF"}</td>
+              <td className="px-5 py-4 text-sm text-ink-secondary">{bounty.intakeEnabled ? "ON" : "OFF"}<p className="mt-1 text-xs text-ink-muted">{bounty.submissionMode === "agent" ? "Agent" : "Direct"}</p></td>
               <td className="px-5 py-4"><Badge variant={statusVariants[bounty.status]}>{bounty.status[0].toUpperCase() + bounty.status.slice(1)}</Badge></td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{bounty.deadline}</td>
               <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">Edit</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? "Close" : "Open"}</button> : null}<button className="rounded-control border border-danger px-3 py-2 text-sm font-semibold text-danger" onClick={() => remove(bounty)} type="button">Delete</button></div></td>
@@ -203,6 +214,15 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <div className="mt-2 w-fit"><AdminSelect label="Intake" onChange={(value) => updateForm("intake", value as FormValues["intake"])} options={["OFF", "ON"]} value={form.intake} /></div>
               <p className="mt-2 text-xs text-ink-muted">Allow submissions from the public bounty page.</p>
             </div>
+            <div>
+              <p className="text-sm font-semibold text-ink">Submission mode</p>
+              <div className="mt-2 w-fit"><AdminSelect label="Submission mode" onChange={(value) => updateForm("submissionMode", value as FormValues["submissionMode"])} options={["Direct", "Agent"]} value={form.submissionMode} /></div>
+              <p className="mt-2 text-xs text-ink-muted">Agent mode accepts applications and submissions through the agent API key.</p>
+            </div>
+            <label className="block text-sm font-semibold text-ink">Cover image
+              <input accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-sm font-normal text-ink-secondary file:mr-3 file:rounded-control file:border file:border-primary-outline file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-strong" onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)} type="file" />
+              <span className="mt-2 block text-xs font-normal text-ink-muted">{coverFile?.name ?? form.coverImage ?? "JPEG, PNG, or WebP up to 5 MB"}</span>
+            </label>
             <div>
               <p className="text-sm font-semibold text-ink">Tags</p>
               <div className="mt-2 flex flex-wrap gap-2">
