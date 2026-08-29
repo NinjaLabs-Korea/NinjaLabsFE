@@ -12,7 +12,7 @@ const highlightLabel = { MILESTONE: "Milestone", FEATURED_BOUNTY: "Featured boun
 const highlightCode = { Milestone: "MILESTONE", "Featured bounty": "FEATURED_BOUNTY", Partnership: "PARTNERSHIP" } as const;
 
 type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: keyof typeof roleLabel | null; member_display_order: number | null; created_at: string; wallet_address: string | null };
-type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: keyof typeof categoryLabel; status: string; application_required: boolean; submission_deadline: string; rewards: Array<{ symbol: string; amount: string; tokenContractAddress?: string | null; evmChainId?: number | null }> };
+type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: keyof typeof categoryLabel; status: string; application_required: boolean; submission_mode: "DIRECT" | "AGENT"; cover_image_url: string | null; submission_deadline: string; rewards: Array<{ symbol: string; amount: string; tokenContractAddress?: string | null; evmChainId?: number | null }> };
 type NoticeRow = { id: string; title: string; body: string; category: keyof typeof noticeLabel; status: string; published_at: string | null; thumbnail_url: string | null; external_url: string | null };
 type HighlightRow = { id: string; type: string; title: string; description: string; image_url: string | null; link_url: string | null; display_order: number; is_published: boolean };
 
@@ -26,6 +26,11 @@ const bountyStatus = (status: string): AdminBounty["status"] => {
 
 export function createAdminApi(http: ApiHttp) {
   return {
+    uploadAdminMedia: async (file: File): Promise<{ id: string; url: string }> => {
+      const form = new FormData();
+      form.set("file", file);
+      return http.fetchForm("/admin/media", form);
+    },
     getAdminUsers: async (query = ""): Promise<AdminUser[]> => {
       const rows = await http.fetchJson<UserRow[]>(`/admin/users?q=${encodeURIComponent(query)}`);
       return rows.map((row) => ({
@@ -51,6 +56,8 @@ export function createAdminApi(http: ApiHttp) {
         ...(row.rewards[0]?.tokenContractAddress ? { rewardContractAddress: row.rewards[0].tokenContractAddress } : {}),
         ...(row.rewards[0]?.evmChainId ? { rewardChainId: row.rewards[0].evmChainId } : {}),
         intakeEnabled: row.application_required, status: bountyStatus(row.status),
+        submissionMode: row.submission_mode === "AGENT" ? "agent" : "direct",
+        coverImage: row.cover_image_url,
         deadline: row.submission_deadline, tags: [categoryLabel[row.category]],
         description: row.description || row.summary, submissionGuide: row.requirements,
         deliverables: row.requirements.split("\n").filter(Boolean), reviewProcess: row.evaluation_criteria,
@@ -64,6 +71,8 @@ export function createAdminApi(http: ApiHttp) {
         evaluationCriteria: bounty.reviewProcess,
         category: categoryCode[bounty.tags[0] ?? "Other"],
         applicationRequired: bounty.intakeEnabled, maxWinners: 1,
+        submissionMode: bounty.submissionMode === "agent" ? "AGENT" : "DIRECT",
+        coverImageUrl: bounty.coverImage,
         submissionDeadline: bounty.deadline,
         ...(create && bounty.reward.amount > 0 ? { reward: {
           tokenType: bounty.reward.currency === "USDC" ? "ERC20" : "NATIVE",

@@ -75,6 +75,7 @@ export class ApiHttpError extends Error {
 export type ApiHttp = {
   /** 인증 헤더를 붙여 요청. 401이면 refresh 회전 후 1회 재시도. */
   fetchJson: <T>(path: string, init?: { method?: string; body?: unknown }) => Promise<T>;
+  fetchForm: <T>(path: string, form: FormData) => Promise<T>;
   hasSession: () => boolean;
   signOutRemote: () => Promise<void>;
 };
@@ -95,6 +96,20 @@ export function createApiHttp(apiUrl: string): ApiHttp {
         ...(traceId ? { "x-onboarding-trace-id": traceId } : {}),
       },
       body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
+    });
+  }
+
+  async function rawFormFetch(path: string, form: FormData) {
+    const { accessToken } = getTokens();
+    const traceId = getOnboardingTraceId();
+    return fetch(`${base}${path}`, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
+        ...(traceId ? { "x-onboarding-trace-id": traceId } : {}),
+      },
+      body: form,
     });
   }
 
@@ -153,6 +168,21 @@ export function createApiHttp(apiUrl: string): ApiHttp {
         throw new ApiHttpError(res.status, body?.message ?? "UNKNOWN_ERROR");
       }
       if (res.status === 204) return undefined as T;
+      return (await res.json()) as T;
+    },
+
+    fetchForm: async <T>(path: string, form: FormData): Promise<T> => {
+      onboardingLog("http.request.started", { method: "POST", path });
+      let res = await rawFormFetch(path, form);
+      onboardingLog("http.response.received", { path, status: res.status, attempt: 1 });
+      if (res.status === 401 && (await refreshSession())) {
+        res = await rawFormFetch(path, form);
+        onboardingLog("http.response.received", { path, status: res.status, attempt: 2 });
+      }
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { message?: string } | null;
+        throw new ApiHttpError(res.status, body?.message ?? "UNKNOWN_ERROR");
+      }
       return (await res.json()) as T;
     },
 

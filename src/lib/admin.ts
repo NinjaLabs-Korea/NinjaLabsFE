@@ -24,6 +24,8 @@ export type AdminBounty = {
   rewardContractAddress?: string;
   rewardChainId?: number;
   intakeEnabled: boolean;
+  submissionMode: "direct" | "agent";
+  coverImage: string | null;
   status: "draft" | "funding" | "active" | "reviewing" | "closed";
   deadline: string;
   tags: Array<"Dev" | "Design" | "Content" | "Other">;
@@ -119,6 +121,8 @@ export function getAdminBounties(): AdminBounty[] {
       sponsor: bounty.sponsor,
       reward: { ...bounty.reward },
       intakeEnabled: overlay.intakeEnabled,
+      submissionMode: bounty.submissionMode ?? "direct",
+      coverImage: bounty.coverImage || null,
       status: overlay.status ?? bounty.status,
       deadline: overlay.deadline,
       tags: bounty.slug === "iasset-price-widget" ? [bounty.category, "Other"] : [bounty.category],

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/Badge";
@@ -58,7 +59,9 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
         <p className="mt-5 text-lg text-ink-muted">{notice.excerpt}</p>
       </section>
 
-      <div className="mt-8 aspect-video rounded-card bg-gradient-to-br from-primary-soft-border to-surface-subtle" />
+      <div className="relative mt-8 aspect-video overflow-hidden rounded-card bg-gradient-to-br from-primary-soft-border to-surface-subtle">
+        {notice.coverImage ? <Image alt="" className="object-cover" fill priority sizes="(max-width: 1200px) 100vw, 1152px" src={notice.coverImage} /> : null}
+      </div>
 
       <div className="mt-8 grid gap-8 md:grid-cols-4">
         <article className="rounded-card border border-border bg-surface p-5 shadow-card md:col-span-3">

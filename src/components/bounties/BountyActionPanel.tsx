@@ -20,7 +20,7 @@ function errorText(error: unknown): string {
   return messages[error.code] ?? error.code.replaceAll("_", " ").toLowerCase();
 }
 
-export function BountyActionPanel({ bountyId, applicationRequired }: { bountyId: string; applicationRequired: boolean }) {
+export function BountyActionPanel({ bountyId, applicationRequired, submissionMode }: { bountyId: string; applicationRequired: boolean; submissionMode: "direct" | "agent" }) {
   const auth = useAuthSnapshot();
   const api = useFoundationApiClient();
   const { data: applications, loading, unavailable } = useAccountQuery(api.getApplications);
@@ -28,6 +28,19 @@ export function BountyActionPanel({ bountyId, applicationRequired }: { bountyId:
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [applied, setApplied] = useState(false);
+
+  if (submissionMode === "agent") {
+    return (
+      <section className="rounded-card border border-border bg-surface p-5 shadow-card">
+        <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">Agent submission</h2>
+        <p className="mt-2 text-sm text-ink-muted">This bounty accepts authenticated agent API requests instead of the browser submission form.</p>
+        <div className="mt-4 rounded-tile bg-surface-subtle p-4 text-sm text-ink-secondary">
+          <code className="break-all">POST /agent-api/v1/bounties/{bountyId}/{applicationRequired ? "applications" : "submissions"}</code>
+        </div>
+        <Link className="mt-4 inline-flex rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong" href="/agents">Manage my agents</Link>
+      </section>
+    );
+  }
 
   if (auth.status !== "signed-in") {
     return (
