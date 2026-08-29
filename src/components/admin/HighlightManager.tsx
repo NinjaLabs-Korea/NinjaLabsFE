@@ -30,6 +30,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [link, setLink] = useState("");
   const [order, setOrder] = useState(0);
   const formRef = useRef<HTMLElement>(null);
@@ -48,6 +49,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     setTitle("");
     setDescription("");
     setImage(null);
+    setImageFile(null);
     setLink("");
     setOrder(0);
   }
@@ -63,29 +65,30 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     setTitle(highlight.title);
     setDescription(highlight.description ?? "");
     setImage(highlight.image);
+    setImageFile(null);
     setLink(highlight.link ?? "");
     setOrder(highlight.order);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   }
 
   function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
-    setImage(event.target.files?.[0]?.name ?? null);
+    setImageFile(event.target.files?.[0] ?? null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const record: AdminHighlight = {
-      id: isEditing ? mode : `highlight-${Date.now()}`,
-      type,
-      title,
-      description,
-      image,
-      order,
-      published: true,
-      ...(link ? { link } : {}),
-    };
-
     try {
+      const uploadedImage = imageFile ? (await api.uploadAdminMedia(imageFile)).url : image;
+      const record: AdminHighlight = {
+        id: isEditing ? mode : `highlight-${Date.now()}`,
+        type,
+        title,
+        description,
+        image: uploadedImage,
+        order,
+        published: true,
+        ...(link ? { link } : {}),
+      };
       await api.saveAdminHighlight(record, !isEditing);
       setRecords(sortHighlights(await api.getAdminHighlights()));
       pushAdminToast({ variant: "success", title: isEditing ? "Highlight updated" : "Highlight added", description: `"${title}" was saved.` });
@@ -148,7 +151,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
             <label className="text-sm font-semibold text-ink md:col-span-2">Description<textarea className="mt-2 min-h-24 w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary" onChange={(event) => setDescription(event.target.value)} required value={description} /></label>
             <div className="text-sm font-semibold text-ink">Image
               <button className="mt-2 flex h-[46px] w-full items-center rounded-control border border-border px-4 text-left text-sm font-normal text-ink-placeholder hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => imageInputRef.current?.click()} type="button">{image ?? "Upload image"}</button>
-              <input className="sr-only" onChange={handleImageChange} ref={imageInputRef} type="file" />
+              <input accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleImageChange} ref={imageInputRef} type="file" />
+              <span className="mt-2 block text-xs font-normal text-ink-muted">{imageFile?.name ?? image ?? "JPEG, PNG, or WebP up to 5 MB"}</span>
             </div>
             <label className="text-sm font-semibold text-ink">Link <span className="font-normal text-ink-muted">(optional)</span><input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => setLink(event.target.value)} placeholder="https://" value={link} /></label>
             <label className="text-sm font-semibold text-ink">Display order<input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => setOrder(Number(event.target.value))} placeholder="0" type="number" value={order} /></label>

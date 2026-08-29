@@ -33,6 +33,7 @@ export function createUnavailableApiClient(): ApiClient {
       throw new Error("Onboarding API is unavailable.");
     },
     getAdminUsers: async () => [],
+    uploadAdminMedia: async () => { throw new Error("Admin media API is unavailable."); },
     setAdminMember: async () => { throw new Error("Admin API is unavailable."); },
     getAdminBounties: async () => [],
     saveAdminBounty: async () => { throw new Error("Admin API is unavailable."); },

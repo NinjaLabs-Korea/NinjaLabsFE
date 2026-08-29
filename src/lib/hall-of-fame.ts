@@ -32,7 +32,7 @@ type StatsRow = { completedBounties: number; builders: number; completionNfts: n
 
 export type RuntimeHallOfFame = {
   stats: Array<{ value: string; label: string }>;
-  highlights: Array<{ category: "Milestone" | "Featured bounty" | "Partnership"; title: string; body: string; href: string }>;
+  highlights: Array<{ category: "Milestone" | "Featured bounty" | "Partnership"; title: string; body: string; href: string; image: string | null }>;
   milestones: Array<{ title: string; date: string; description: string }>;
 };
 
@@ -40,7 +40,7 @@ export async function getRuntimeHallOfFame(): Promise<RuntimeHallOfFame> {
   if (loadRuntimeConfig().runtimeMode === "mock") {
     return {
       stats: [...hallOfFame.stats],
-      highlights: hallOfFame.highlights.map((item) => ({ ...item, href: "/notices" })),
+      highlights: hallOfFame.highlights.map((item) => ({ ...item, href: "/notices", image: null })),
       milestones: [...hallOfFame.milestones],
     };
   }
@@ -61,6 +61,7 @@ export async function getRuntimeHallOfFame(): Promise<RuntimeHallOfFame> {
       title: row.title,
       body: row.description,
       href: row.link_url ?? "/notices",
+      image: row.image_url,
     })),
     milestones: rows.filter((row) => row.type === "MILESTONE").map((row) => ({
       title: row.title,

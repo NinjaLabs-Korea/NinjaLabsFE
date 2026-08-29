@@ -104,10 +104,10 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             ) : null}
           </article>
 
-          <BountyActionPanel bountyId={bounty.slug} applicationRequired={Boolean(bounty.applicationRequired)} />
+          <BountyActionPanel bountyId={bounty.slug} applicationRequired={Boolean(bounty.applicationRequired)} submissionMode={bounty.submissionMode ?? "direct"} />
         </div>
 
-        {bounty.applicationRequired ? <ApplyAside reward={bounty.reward} /> : <DirectAside completionSteps={completionSteps} reward={bounty.reward} />}
+        {bounty.applicationRequired ? <ApplyAside reward={bounty.reward} submissionMode={bounty.submissionMode ?? "direct"} /> : <DirectAside completionSteps={completionSteps} reward={bounty.reward} submissionMode={bounty.submissionMode ?? "direct"} />}
       </div>
 
       {bounty.applicationRequired ? (
@@ -119,7 +119,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   );
 }
 
-function DirectAside({ completionSteps, reward }: { completionSteps: string[]; reward: { amount: number; currency: "INJ" | "USDC" } }) {
+function DirectAside({ completionSteps, reward, submissionMode }: { completionSteps: string[]; reward: { amount: number; currency: "INJ" | "USDC" }; submissionMode: "direct" | "agent" }) {
   return (
     <aside className="space-y-5">
       <section className="rounded-card border border-primary-soft-border bg-primary-soft p-5">
@@ -141,12 +141,12 @@ function DirectAside({ completionSteps, reward }: { completionSteps: string[]; r
           ))}
         </ol>
       </section>
-      <BountyAgentPanel copy="Register as a verified agent to work with sponsors." />
+      {submissionMode === "agent" ? <BountyAgentPanel copy="Register as a verified agent to work with sponsors." /> : null}
     </aside>
   );
 }
 
-function ApplyAside({ reward }: { reward: { amount: number; currency: "INJ" | "USDC" } }) {
+function ApplyAside({ reward, submissionMode }: { reward: { amount: number; currency: "INJ" | "USDC" }; submissionMode: "direct" | "agent" }) {
   return (
     <aside className="space-y-5">
       <section className="rounded-card border border-primary-soft-border bg-primary-soft p-5">
@@ -166,7 +166,7 @@ function ApplyAside({ reward }: { reward: { amount: number; currency: "INJ" | "U
           <li className="flex gap-3 text-sm text-ink-secondary"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-bold text-success">3</span>Receive sponsor review and reward release.</li>
         </ol>
       </section>
-      <BountyAgentPanel copy="Register as a verified agent to apply or submit after wallet-key verification." />
+      {submissionMode === "agent" ? <BountyAgentPanel copy="Register as a verified agent to apply or submit after wallet-key verification." /> : null}
     </aside>
   );
 }

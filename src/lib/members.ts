@@ -24,14 +24,14 @@ export const profiles: Record<string, Profile> = {
       { title: "Helix card", category: "Design", completedAt: "May 8, 2026", reward: { amount: 0, currency: "INJ" } },
       { title: "Quest copy", category: "Content", completedAt: "May 1, 2026", reward: { amount: 0, currency: "INJ" } },
     ],
-    childNfts: ["iAsset widget", "Wallet flow", "Audit report", "Docs revamp", "Hydro guide", "Helix card", "Quest copy"].map((title) => ({ title })),
+    nfts: ["iAsset widget", "Wallet flow", "Audit report", "Docs revamp", "Hydro guide", "Helix card", "Quest copy"].map((title, index) => ({ id: `preview-nft-${index}`, type: "completion" as const, title, status: "ATTACHED" as const, contractAddress: "preview", tokenId: String(index + 1), mintTxHash: null })),
     agents: [{ name: "market-scout-agent", wallet: "inj1...9k4d", verified: true, completedBounties: 3 }, { name: "proof-collector", wallet: "inj1...4r2m", verified: true, completedBounties: 2 }],
   },
-  sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "A new builder preparing to contribute to the Injective ecosystem.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], childNfts: [], agents: [] },
-  jinyoung: { slug: "jinyoung", handle: "jinyoung.inj", initials: "JP", bio: "Product lead building the bounty marketplace for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026", completions: [], childNfts: [], agents: [] },
-  juho: { slug: "juho", handle: "juho.inj", initials: "JK", bio: "Protocol engineer making on-chain proof useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], childNfts: [], agents: [] },
-  mina: { slug: "mina", handle: "mina.inj", initials: "MS", bio: "Experience designer creating clear paths from first task to lasting proof.", skills: ["Design"], joinedAt: "June 2026", completions: [], childNfts: [], agents: [] },
-  ara: { slug: "ara", handle: "ara.inj", initials: "AR", bio: "Community operator supporting builders and the work around them.", skills: ["Content"], joinedAt: "June 2026", completions: [], childNfts: [], agents: [] },
+  sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "A new builder preparing to contribute to the Injective ecosystem.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], nfts: [], agents: [] },
+  jinyoung: { slug: "jinyoung", handle: "jinyoung.inj", initials: "JP", bio: "Product lead building the bounty marketplace for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
+  juho: { slug: "juho", handle: "juho.inj", initials: "JK", bio: "Protocol engineer making on-chain proof useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
+  mina: { slug: "mina", handle: "mina.inj", initials: "MS", bio: "Experience designer creating clear paths from first task to lasting proof.", skills: ["Design"], joinedAt: "June 2026", completions: [], nfts: [], agents: [] },
+  ara: { slug: "ara", handle: "ara.inj", initials: "AR", bio: "Community operator supporting builders and the work around them.", skills: ["Content"], joinedAt: "June 2026", completions: [], nfts: [], agents: [] },
 };
 
 export function getMembers() { return members.filter((member) => member.isMember); }
@@ -68,6 +68,7 @@ type PublicProfileResponse = {
   created_at: string;
   tags: string[];
   completedBounties: Array<{
+    id: string;
     title: string;
     category: string;
     completed_at: string;
@@ -78,6 +79,15 @@ type PublicProfileResponse = {
     status: string;
     wallet_address: string;
     completed_bounties: unknown[];
+  }>;
+  nfts: Array<{
+    id: string;
+    nft_type: "NINJA_PARENT" | "BOUNTY_COMPLETION_CHILD";
+    status: "PENDING" | "MINTING" | "MINTED" | "ATTACHING" | "ATTACHED" | "FAILED";
+    contract_address: string;
+    token_id: string | null;
+    mint_tx_hash: string | null;
+    bounty_title: string | null;
   }>;
 };
 
@@ -96,6 +106,7 @@ function toProfile(data: PublicProfileResponse): Profile {
     const currency: "USDC" | "INJ" = reward?.symbol === "USDC" ? "USDC" : "INJ";
     const decimals = currency === "USDC" ? 6 : 18;
     return [{
+      bountySlug: completion.id,
       title: completion.title,
       category,
       completedAt: new Date(completion.completed_at).toLocaleDateString("en-US", {
@@ -124,7 +135,15 @@ function toProfile(data: PublicProfileResponse): Profile {
       month: "long",
     }),
     completions,
-    childNfts: completions.map(({ title }) => ({ title })),
+    nfts: data.nfts.map((nft) => ({
+      id: nft.id,
+      type: nft.nft_type === "NINJA_PARENT" ? "parent" : "completion",
+      title: nft.bounty_title ?? "Ninja NFT",
+      status: nft.status,
+      contractAddress: nft.contract_address,
+      tokenId: nft.token_id,
+      mintTxHash: nft.mint_tx_hash,
+    })),
     agents: data.agents.map((agent) => ({
       name: agent.name,
       wallet: agent.wallet_address,

@@ -36,6 +36,7 @@ export function PostManager({ posts }: { posts: AdminPost[] }) {
   const [records, setRecords] = useState(posts);
   const [mode, setMode] = useState<"create" | string>("create");
   const [form, setForm] = useState<PostForm>(emptyForm);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const formRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export function PostManager({ posts }: { posts: AdminPost[] }) {
   const startNew = () => {
     setMode("create");
     setForm(emptyForm);
+    setThumbnailFile(null);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -63,12 +65,14 @@ export function PostManager({ posts }: { posts: AdminPost[] }) {
       bodyMarkdown: post.bodyMarkdown,
       status: post.status,
     });
+    setThumbnailFile(null);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const savePost = async () => {
-    const post: AdminPost = { ...form, slug: mode === "create" ? "" : mode, publishedAt: null };
     try {
+      const thumbnail = thumbnailFile ? (await api.uploadAdminMedia(thumbnailFile)).url : form.thumbnail;
+      const post: AdminPost = { ...form, thumbnail, slug: mode === "create" ? "" : mode, publishedAt: null };
       await api.saveAdminPost(post, mode === "create");
       setRecords(await api.getAdminPosts());
       pushAdminToast({ variant: "success", title: mode === "create" ? "Post created" : "Post updated", description: `"${form.title}" was saved.` });
@@ -123,7 +127,7 @@ export function PostManager({ posts }: { posts: AdminPost[] }) {
             Category
             <div className="mt-2"><AdminSelect label="Category" onChange={(value) => updateForm("category", value as AdminPost["category"])} options={categories} value={form.category} /></div>
           </label>
-          <label className="text-sm font-semibold text-ink">Thumbnail<input className="sr-only" onChange={(event) => updateForm("thumbnail", event.target.files?.[0]?.name ?? null)} type="file" /><span className="mt-2 flex h-[46px] items-center rounded-control border border-border px-4 text-sm font-normal text-ink-placeholder">{form.thumbnail ?? "Upload image"}</span></label>
+          <label className="text-sm font-semibold text-ink">Thumbnail<input accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-sm font-normal text-ink-secondary file:mr-3 file:rounded-control file:border file:border-primary-outline file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-strong" onChange={(event) => setThumbnailFile(event.target.files?.[0] ?? null)} type="file" /><span className="mt-2 block text-xs font-normal text-ink-muted">{thumbnailFile?.name ?? form.thumbnail ?? "JPEG, PNG, or WebP up to 5 MB"}</span></label>
           <label className="text-sm font-semibold text-ink">External link<input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => updateForm("externalUrl", event.target.value || null)} placeholder="https://" value={form.externalUrl ?? ""} /></label>
           <label className="md:col-span-2 text-sm font-semibold text-ink">Body (markdown)<textarea className="mt-2 min-h-[144px] w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => updateForm("bodyMarkdown", event.target.value)} placeholder="Write your post in markdown" value={form.bodyMarkdown} /></label>
           <label className="text-sm font-semibold text-ink">

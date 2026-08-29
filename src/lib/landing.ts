@@ -101,6 +101,7 @@ export const landing: LandingData = {
       title: 'Ninja Labs joins the Injective builder hackathon',
       excerpt: 'Three bounty tracks will help new teams ship wallets, widgets, and educational content.',
       slug: 'ninja-labs-injective-builder-hackathon',
+      thumbnail: '',
     },
     {
       category: 'Injective ecosystem',
@@ -108,6 +109,7 @@ export const landing: LandingData = {
       title: 'New iAsset modules explained for bounty builders',
       excerpt: 'A primer on price feeds, market metadata, and integration patterns for upcoming tasks.',
       slug: 'iasset-modules-for-bounty-builders',
+      thumbnail: '',
     },
     {
       category: 'Events',
@@ -115,6 +117,7 @@ export const landing: LandingData = {
       title: 'Community review call for July bounty sponsors',
       excerpt: 'A live walkthrough of application intake, review status, and reward release timing.',
       slug: 'july-bounty-sponsor-review-call',
+      thumbnail: '',
     },
   ],
 };

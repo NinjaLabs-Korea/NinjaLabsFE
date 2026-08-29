@@ -48,6 +48,7 @@ export function createMockApiClient(seed = "default"): ApiClient {
     verifyWallet: async () => undefined,
     completeProfile: async () => undefined,
     completeOnboarding: async () => undefined,
+    uploadAdminMedia: async (file) => ({ id: `preview-${file.name}`, url: URL.createObjectURL(file) }),
     getAdminUsers: async () => getAdminUsers(),
     setAdminMember: async () => undefined,
     getAdminBounties: async () => getAdminBounties(),
