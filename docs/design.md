@@ -124,6 +124,12 @@ with `font-display` title, `text-ink-muted` copy, and one CTA using the recipes 
 
 **Admin persistence disclosure:** API-mode Create/Save forms state that changes are saved immediately. Destructive actions require confirmation and failures surface a danger toast.
 
+## Navigation loading
+
+Primary public navigation (including Home and Browse) uses `prefetch={true}` so dynamic page content can load before a click. Keep full prefetching limited to these few high-traffic links; card lists retain the default behavior. Public API requests remain `no-store`; prefetched route payloads are held in Next.js's client router cache.
+
+`src/app/loading.tsx` provides the shared fallback while a route is pending. Reuse the page shell, `bg-surface-subtle`, and existing control/tile/card radii. Announce loading with `role="status"` and screen-reader text; hide decorative skeletons from assistive technology and use `motion-safe:animate-pulse`. Detail routes retain their more specific skeletons.
+
 ## Per-area checklist before PR
 
 - [ ] Every color/size traces to a `@theme` token or a documented Figma px value.

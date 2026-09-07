@@ -19,6 +19,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
         <Link
           className="hidden rounded-control px-[21px] py-3 text-sm leading-[21px] font-semibold text-ink-secondary md:inline-block"
           href="/bounties"
+          prefetch={true}
         >
           Browse
         </Link>

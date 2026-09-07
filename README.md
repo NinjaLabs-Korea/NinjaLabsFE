@@ -71,3 +71,14 @@ Roles are split into **Landing / Bounties / Admin**. Gaps below are distilled fr
 ## Design source
 
 Figma file `DKvXU0AY4O9UalcHWXQCcI`, canvas “Screens (원본 분리)”. Design data is pulled via the Figma remote MCP; unresolved design gaps are tracked in `docs/figma/design-gaps.md` and the FigJam board linked there.
+
+### OAuth callback deployment
+
+Login creates a tab-local verifier and sends only its S256 challenge to the backend.
+The backend redirects to `/auth/callback#loginCode=...`; the frontend removes that
+fragment before POSTing the code and verifier to `/auth/exchange`. Access and refresh
+tokens arrive only in the response body. Failed or expired callbacks show a retry link.
+
+Deploy this frontend first, apply NinjaLabsBE migration `0013_oauth_login_codes.sql`,
+then deploy the backend. The frontend temporarily supports clearing legacy token
+fragments from the old backend. Existing token storage and refresh rotation remain unchanged.
