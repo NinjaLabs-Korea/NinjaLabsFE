@@ -136,7 +136,7 @@ export function UserMenu() {
         >
           <div className="border-b border-border px-3 pt-2.5 pb-2">
             <p className="text-sm font-semibold text-ink">{user.handle}</p>
-            <p className="text-xs text-ink-muted">Session preview{user.walletAddress ? ` · ${user.walletAddress}` : ""}</p>
+            <p className="wrap-anywhere text-xs text-ink-muted">Session preview{user.walletAddress ? ` · ${user.walletAddress}` : ""}</p>
           </div>
           <div className="pt-1.5">
             {menuItems.map((item, index) => (
