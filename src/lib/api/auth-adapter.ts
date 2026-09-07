@@ -1,5 +1,6 @@
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
-import { captureTokensFromLocation, createApiHttp, type ApiHttp } from "@/lib/api/http";
+import { captureTokensFromLocation, clearTokens, createApiHttp, type ApiHttp } from "@/lib/api/http";
+import { createLoginChallenge, exchangeLoginCodeFromLocation } from "@/lib/api/oauth";
 import { fetchMe, toClientUser } from "@/lib/api/me";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
 
@@ -24,8 +25,8 @@ export function shouldRedirectToOnboarding(
  * api 모드 실제 인증 어댑터 (BE: 구글 OAuth → 자체 JWT 세션)
  *
  * - signIn: BE `/auth/google`로 전체 페이지 리다이렉트. 구글 동의 후 BE가
- *   `FE#accessToken=..&refreshToken=..`로 돌려보내고, 어댑터 초기화가
- *   fragment를 수거해 `/auth/me`로 세션을 복원한다.
+ *   `/auth/callback#loginCode=..`로 돌려보낸다. 코드를 지운 뒤 브라우저의
+ *   verifier와 POST /auth/exchange로 교환하고 `/auth/me`로 세션을 복원한다.
  * - 서버 렌더 중에는 항상 "loading" — 브라우저에서만 토큰/네트워크에 접근한다.
  */
 export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiHttp } {
@@ -67,7 +68,10 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     });
     const captured = captureTokensFromLocation();
     onboardingLog("oauth.tokens.captured", { captured });
-    void restoreSession().then((restored) => {
+    void (async () => {
+      await exchangeLoginCodeFromLocation(apiUrl);
+      return restoreSession();
+    })().then((restored) => {
       const onboardingPath = shouldRedirectToOnboarding(
         restored.user,
         window.location.pathname,
@@ -78,10 +82,17 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
         onboardingStep: restored.user?.onboardingStep,
         onboardingCompleted: restored.user?.onboardingCompleted,
       });
-      if (onboardingPath) {
-        onboardingLog("onboarding.redirect.started", { targetPath: onboardingPath });
-        window.location.replace(onboardingPath);
+      const targetPath = onboardingPath ?? (
+        window.location.pathname === "/auth/callback" && restored.status === "signed-in" ? "/" : null
+      );
+      if (targetPath) {
+        onboardingLog("onboarding.redirect.started", { targetPath });
+        window.location.replace(targetPath);
       }
+    }).catch(() => {
+      clearTokens();
+      setSnapshot({ status: "signed-out", user: null });
+      onboardingLog("oauth.exchange.failed");
     });
   };
 
@@ -95,7 +106,8 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     },
     signIn: async () => {
       const traceId = getOnboardingTraceId();
-      const params = new URLSearchParams({ returnTo: window.location.origin });
+      const codeChallenge = await createLoginChallenge();
+      const params = new URLSearchParams({ returnTo: window.location.origin, codeChallenge });
       if (traceId) params.set("trace", traceId);
       onboardingLog("oauth.redirect.started", { returnOrigin: window.location.origin });
       window.location.assign(`${apiUrl.replace(/\/$/, "")}/auth/google?${params}`);
