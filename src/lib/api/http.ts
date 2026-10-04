@@ -74,6 +74,18 @@ export class ApiHttpError extends Error {
   }
 }
 
+/** Nest ValidationPipe sends `message` as a string[]; collapse it so `code` is always a string. */
+export async function toApiHttpError(res: Response): Promise<ApiHttpError> {
+  const body = (await res.json().catch(() => null)) as { message?: unknown } | null;
+  const message = body?.message;
+  const code = typeof message === "string" && message
+    ? message
+    : Array.isArray(message)
+      ? "VALIDATION_FAILED"
+      : "UNKNOWN_ERROR";
+  return new ApiHttpError(res.status, code);
+}
+
 export type ApiHttp = {
   /** 인증 헤더를 붙여 요청. 401이면 refresh 회전 후 1회 재시도. */
   fetchJson: <T>(path: string, init?: { method?: string; body?: unknown }) => Promise<T>;
@@ -166,8 +178,7 @@ export function createApiHttp(apiUrl: string): ApiHttp {
         onboardingLog("http.response.received", { path, status: res.status, attempt: 2 });
       }
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { message?: string } | null;
-        throw new ApiHttpError(res.status, body?.message ?? "UNKNOWN_ERROR");
+        throw await toApiHttpError(res);
       }
       if (res.status === 204) return undefined as T;
       return (await res.json()) as T;
@@ -182,8 +193,7 @@ export function createApiHttp(apiUrl: string): ApiHttp {
         onboardingLog("http.response.received", { path, status: res.status, attempt: 2 });
       }
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { message?: string } | null;
-        throw new ApiHttpError(res.status, body?.message ?? "UNKNOWN_ERROR");
+        throw await toApiHttpError(res);
       }
       return (await res.json()) as T;
     },
