@@ -112,7 +112,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
 
       {bounty.applicationRequired ? (
         <p className="mt-8 text-center text-sm text-ink-muted">
-          bounty.application_required ON · Viewing is public; applying and submitting require login.
+          Anyone can view this bounty. Sign in to apply and submit work.
         </p>
       ) : null}
     </div>
