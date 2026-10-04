@@ -7,8 +7,10 @@ import { loadRuntimeConfig } from "@/lib/runtime/config";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { origin } = loadRuntimeConfig();
+  // A failing API source drops only its detail URLs; static routes are always listed.
+  const orEmpty = <T>(promise: Promise<T[]>) => promise.catch((): T[] => []);
   const [bounties, members, notices] = await Promise.all([
-    getRuntimeBounties(), getRuntimeMembers(), getRuntimeNotices(),
+    orEmpty(getRuntimeBounties()), orEmpty(getRuntimeMembers()), orEmpty(getRuntimeNotices()),
   ]);
   const url = (path: string) => `${origin}${path}`;
 
