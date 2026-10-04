@@ -114,6 +114,14 @@ rounded-card border border-dashed border-border bg-surface-subtle p-6 text-cente
 
 with `font-display` title, `text-ink-muted` copy, and one CTA using the recipes above.
 
+**Logo tile (partner wall):**
+
+```
+flex h-28 items-center justify-center rounded-card border border-border bg-surface p-5 shadow-card
+```
+
+with a `next/image` `object-contain` logo in an `h-12` box; linked tiles add `transition-shadow hover:shadow-frame` + focus ring. Grid `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`. Hide the whole section when there are no logos — never render an empty wall.
+
 **Status chip:** use `ui/Badge` — variants `primary-soft` (default) / `selected` / `success` / `danger` / `warning` / `neutral` / `inverse`. Never hand-roll a chip; if a new status appears, add a Badge variant.
 
 **Reward display:** always `ui/RewardPill` (`{ amount, currency: 'INJ' | 'USDC' }`) — never re-create the token-icon + amount pair.
