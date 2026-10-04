@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import { useAuthActions, useAuthSnapshot } from "@/components/auth/FoundationProvider";
+import { useAuthActions, useAuthSnapshot, useFoundationMode } from "@/components/auth/FoundationProvider";
 import type { ClientUser } from "@/lib/contracts/auth";
 
 export function getAccountNavigationItems(user: Pick<ClientUser, "profileSlug">) {
@@ -15,6 +15,7 @@ export function getAccountNavigationItems(user: Pick<ClientUser, "profileSlug">)
 
 export function UserMenu() {
   const snapshot = useAuthSnapshot();
+  const mode = useFoundationMode();
   const { signOut } = useAuthActions();
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -136,7 +137,17 @@ export function UserMenu() {
         >
           <div className="border-b border-border px-3 pt-2.5 pb-2">
             <p className="text-sm font-semibold text-ink">{user.handle}</p>
-            <p className="text-xs text-ink-muted">Session preview{user.walletAddress ? ` · ${user.walletAddress}` : ""}</p>
+            {user.walletAddress ? (
+              <p className="whitespace-nowrap text-xs text-ink-muted" title={user.walletAddress}>
+                <span className="sr-only">Wallet address: {user.walletAddress}</span>
+                <span aria-hidden="true">
+                  {user.walletAddress.length > 12
+                    ? `${user.walletAddress.slice(0, 6)}…${user.walletAddress.slice(-4)}`
+                    : user.walletAddress}
+                </span>
+              </p>
+            ) : null}
+            {mode === "mock" ? <p className="text-xs text-ink-muted">Session preview</p> : null}
           </div>
           <div className="pt-1.5">
             {menuItems.map((item, index) => (
