@@ -4,7 +4,6 @@ import Image from "next/image";
 import { SignupGate } from "@/components/signup/SignupGate";
 import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
 import { CompleteOnboarding } from "@/components/signup/CompleteOnboarding";
-import { Badge } from "@/components/ui/Badge";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { signup } from "@/lib/signup";
 
@@ -17,10 +16,7 @@ export default function SignupGetStartedPage() {
   return (
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="mx-auto max-w-[896px]">
-        <div className="flex justify-end">
-          <Badge variant="danger">{signup.badges.completion}</Badge>
-        </div>
-        <div className="mt-8">
+        <div>
           <StepIndicator current={4} />
         </div>
         <div className="mt-6">

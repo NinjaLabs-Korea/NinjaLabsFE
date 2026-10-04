@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { SignupGate } from "@/components/signup/SignupGate";
 import { ProfileForm } from "@/components/signup/ProfileForm";
-import { Badge } from "@/components/ui/Badge";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { signup } from "@/lib/signup";
 
@@ -14,10 +13,7 @@ export default function SignupProfilePage() {
   return (
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="mx-auto max-w-[1024px]">
-        <div className="flex justify-end">
-          <Badge variant="danger">{signup.badges.profile}</Badge>
-        </div>
-        <div className="mt-8">
+        <div>
           <StepIndicator current={3} />
         </div>
         <div className="mt-6">

@@ -25,14 +25,7 @@ export default function SignupWalletPage() {
   return (
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="mx-auto max-w-[1024px]">
-        <div className="flex justify-end">
-          <Badge variant="danger">
-            {walletConnectionConfig
-              ? isApiMode ? "SIGN-UP FLOW" : "SIGN-UP FLOW (wallet preview)"
-              : "WALLET UNAVAILABLE"}
-          </Badge>
-        </div>
-        <div className="mt-8">
+        <div>
           <StepIndicator current={2} />
         </div>
         <div className="mt-6">

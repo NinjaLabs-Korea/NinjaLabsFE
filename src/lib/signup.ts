@@ -1,12 +1,6 @@
 export const signup = {
-  badges: {
-    wallet: "NFT minted at sign-up",
-    profile: "SIGN-UP FLOW",
-    completion: "SIGN-UP FLOW",
-  },
   login: {
     mock: {
-      badge: "SIGN-UP FLOW · SESSION PREVIEW",
       title: "Preview the Ninja Labs sign-in flow",
       description:
         "Explore this step with a local session preview. It does not contact Google or create an account.",
@@ -19,7 +13,6 @@ export const signup = {
       ],
     },
     api: {
-      badge: "SIGN-UP FLOW",
       title: "Sign in to Ninja Labs",
       description:
         "Continue with Google to create your account. You will be redirected to Google and back here once you approve.",
