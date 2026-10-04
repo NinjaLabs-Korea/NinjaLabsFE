@@ -1,7 +1,7 @@
 import type { Bounty, NoticePreview } from './types';
 import { getRuntimeBounties } from './bounties';
 import { getRuntimeNotices } from './notices';
-import { getRuntimeHallOfFame } from './hall-of-fame';
+import { emptyHallOfFame, getRuntimeHallOfFame } from './hall-of-fame';
 
 type LandingData = {
   hero: {
@@ -138,7 +138,7 @@ export async function getRuntimeLanding(): Promise<RuntimeLanding> {
   ]);
   const bounties = settledValue(bountiesResult, []);
   const notices = settledValue(noticesResult, []);
-  const hall = settledValue(hallResult, { stats: [], highlights: [], milestones: [] });
+  const hall = settledValue(hallResult, emptyHallOfFame);
   const completed = bounties.filter((bounty) => bounty.status === 'closed').slice(0, 5);
   return {
     hero: {
