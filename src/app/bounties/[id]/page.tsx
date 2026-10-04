@@ -9,6 +9,7 @@ import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import { Markdown } from "@/components/ui/Markdown";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { getRuntimeBounty } from "@/lib/bounties";
+import type { Reward } from "@/lib/types";
 
 type BountyDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -41,6 +42,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
 
   const deliverables = bounty.deliverables ?? [];
   const completionSteps = bounty.completionSteps ?? [];
+  const rewards = bounty.rewards ?? [bounty.reward];
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
@@ -87,7 +89,9 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               <>
                 <div className="mt-8 grid gap-3 sm:grid-cols-3">
                   <MetaCell label="Deliverable">
-                    {deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)}
+                    {deliverables.length > 0
+                      ? deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)
+                      : <span>{bounty.submissionGuideMarkdown ? "See the submission guide below" : "Described above"}</span>}
                   </MetaCell>
                   <MetaCell label="Deadline">{bounty.deadlineDetail ?? bounty.deadline}</MetaCell>
                   <MetaCell label="Review">{bounty.reviewProcess ?? ""}</MetaCell>
@@ -107,7 +111,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
           <BountyActionPanel bountyId={bounty.slug} applicationRequired={Boolean(bounty.applicationRequired)} submissionMode={bounty.submissionMode ?? "direct"} />
         </div>
 
-        {bounty.applicationRequired ? <ApplyAside reward={bounty.reward} submissionMode={bounty.submissionMode ?? "direct"} /> : <DirectAside completionSteps={completionSteps} reward={bounty.reward} submissionMode={bounty.submissionMode ?? "direct"} />}
+        {bounty.applicationRequired ? <ApplyAside completionSteps={completionSteps} rewards={rewards} submissionMode={bounty.submissionMode ?? "direct"} /> : <DirectAside completionSteps={completionSteps} rewards={rewards} submissionMode={bounty.submissionMode ?? "direct"} />}
       </div>
 
       {bounty.applicationRequired ? (
@@ -119,15 +123,23 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   );
 }
 
-function DirectAside({ completionSteps, reward, submissionMode }: { completionSteps: string[]; reward: { amount: number; currency: "INJ" | "USDC" }; submissionMode: "direct" | "agent" }) {
+function RewardTotal({ rewards }: { rewards: Reward[] }) {
+  return (
+    <p className="mt-3 font-display text-2xl -tracking-[0.24px] text-ink">
+      {rewards.map((reward) => `${reward.amount} ${reward.currency}`).join(" + ")}
+    </p>
+  );
+}
+
+function DirectAside({ completionSteps, rewards, submissionMode }: { completionSteps: string[]; rewards: Reward[]; submissionMode: "direct" | "agent" }) {
   return (
     <aside className="space-y-5">
       <section className="rounded-card border border-primary-soft-border bg-primary-soft p-5">
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">Reward</p>
-        <p className="mt-3 font-display text-2xl -tracking-[0.24px] text-ink">{reward.amount} {reward.currency}</p>
-        <div className="mt-4 flex items-center gap-2">
+        <RewardTotal rewards={rewards} />
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <span className="text-sm text-ink-secondary">Sponsor pays:</span>
-          <RewardPill reward={reward} />
+          {rewards.map((reward) => <RewardPill key={reward.currency} reward={reward} />)}
         </div>
       </section>
       <section className="rounded-card border border-border bg-surface p-5 shadow-card">
@@ -146,12 +158,12 @@ function DirectAside({ completionSteps, reward, submissionMode }: { completionSt
   );
 }
 
-function ApplyAside({ reward, submissionMode }: { reward: { amount: number; currency: "INJ" | "USDC" }; submissionMode: "direct" | "agent" }) {
+function ApplyAside({ completionSteps, rewards, submissionMode }: { completionSteps: string[]; rewards: Reward[]; submissionMode: "direct" | "agent" }) {
   return (
     <aside className="space-y-5">
       <section className="rounded-card border border-primary-soft-border bg-primary-soft p-5">
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">Reward</p>
-        <p className="mt-3 font-display text-2xl -tracking-[0.24px] text-ink">{reward.amount} {reward.currency}</p>
+        <RewardTotal rewards={rewards} />
         <ol className="mt-4 space-y-3">
           <li className="flex gap-3 text-sm text-ink-secondary"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-bold text-primary">1</span>Apply with relevant work and availability.</li>
           <li className="flex gap-3 text-sm text-ink-secondary"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-bold text-primary">2</span>Wait for sponsor review and approval.</li>
@@ -161,9 +173,9 @@ function ApplyAside({ reward, submissionMode }: { reward: { amount: number; curr
       <section className="rounded-card border border-border bg-surface p-5 shadow-card">
         <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">After approval</h2>
         <ol className="mt-4 space-y-3">
-          <li className="flex gap-3 text-sm text-ink-secondary"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-bold text-success">1</span>Complete the approved audit scope.</li>
-          <li className="flex gap-3 text-sm text-ink-secondary"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-bold text-success">2</span>Submit your completed-work link.</li>
-          <li className="flex gap-3 text-sm text-ink-secondary"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-bold text-success">3</span>Receive sponsor review and reward release.</li>
+          {completionSteps.map((step, index) => (
+            <li className="flex gap-3 text-sm text-ink-secondary" key={step}><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-bold text-success">{index + 1}</span>{step}</li>
+          ))}
         </ol>
       </section>
       {submissionMode === "agent" ? <BountyAgentPanel copy="Register as a verified agent to apply or submit after wallet-key verification." /> : null}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { BountyFilters } from "@/components/bounties/BountyFilters";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { getRuntimeBounties } from "@/lib/bounties";
+import { loadRuntimeBounties } from "@/lib/bounties";
 
 export const metadata: Metadata = {
   title: "Bounties — Ninja Labs",
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BountiesPage() {
-  const bounties = await getRuntimeBounties();
+  const { bounties, unavailable } = await loadRuntimeBounties();
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <section>
@@ -34,7 +34,14 @@ export default async function BountiesPage() {
       </section>
 
       <section className="mt-8" aria-label="Bounty filters and results">
-        <BountyFilters bounties={bounties} />
+        {unavailable ? (
+          <div className="rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
+            <p className="text-sm font-semibold text-ink">Bounties are temporarily unavailable.</p>
+            <p className="mt-1 text-sm text-ink-muted">We couldn’t reach the server. Please refresh in a moment.</p>
+          </div>
+        ) : (
+          <BountyFilters bounties={bounties} />
+        )}
       </section>
 
       <p className="mt-8 text-sm text-ink-muted">

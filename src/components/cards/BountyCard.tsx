@@ -41,7 +41,12 @@ export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3
           <p className="mt-2 line-clamp-2 text-sm text-ink-muted">{bounty.summary}</p>
         ) : null}
         <div className="mt-4 flex items-center justify-between gap-3">
-          <RewardPill reward={bounty.reward} />
+          <span className="flex items-center gap-1.5">
+            <RewardPill reward={bounty.reward} />
+            {bounty.rewards && bounty.rewards.length > 1 ? (
+              <span className="text-xs font-semibold text-ink-muted">+{bounty.rewards.length - 1}</span>
+            ) : null}
+          </span>
           <span className="text-right text-xs text-ink-muted">
             {isClosed ? "Closed" : bounty.deadline} · {bounty.sponsor}
           </span>

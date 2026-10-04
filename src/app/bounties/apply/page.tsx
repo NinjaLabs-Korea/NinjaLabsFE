@@ -6,7 +6,7 @@ import {
   BountyApplyGuideCta,
 } from "@/components/bounties/BountyApplyGuideCta";
 import { Badge } from "@/components/ui/Badge";
-import { getRuntimeBounties } from "@/lib/bounties";
+import { loadRuntimeBounties } from "@/lib/bounties";
 
 const statuses = ["Open", "Under review", "Approved", "Submitted", "Completed"];
 
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BountyApplyPage() {
-  const bounties = await getRuntimeBounties();
+  const { bounties, unavailable } = await loadRuntimeBounties();
   const applicationBounty = bounties.find(
     (bounty) => bounty.status === "active" && bounty.applicationRequired,
   );
@@ -73,7 +73,12 @@ export default async function BountyApplyPage() {
         </article>
       </section>
 
-      {!hasOpenBounty ? (
+      {unavailable ? (
+        <section className="mt-6 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-5" role="status">
+          <p className="text-sm font-semibold text-ink">Open bounties are temporarily unavailable.</p>
+          <p className="mt-1 text-sm text-ink-muted">We couldn’t reach the server. Please refresh in a moment.</p>
+        </section>
+      ) : !hasOpenBounty ? (
         <section className="mt-6 flex flex-col items-start justify-between gap-4 rounded-card border border-border bg-surface p-5 shadow-card sm:flex-row sm:items-center">
           <div>
             <h2 className="font-display text-xl font-bold text-ink">No open bounties right now</h2>

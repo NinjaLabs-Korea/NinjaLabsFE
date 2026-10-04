@@ -1,6 +1,7 @@
 import type { Bounty } from "./types";
 import { fetchPublicJson } from "./api/public";
 import { loadRuntimeConfig } from "./runtime/config";
+import { toRewards, type RewardRow } from "./rewards";
 
 export const bounties: Bounty[] = [
   {
@@ -36,7 +37,7 @@ export function getBounties(): Bounty[] { return bounties; }
 export function getBounty(slug: string): Bounty | undefined { return bounties.find((bounty) => bounty.slug === slug); }
 export function getActiveBounties(): Bounty[] { return bounties.filter((bounty) => bounty.status === "active"); }
 
-type BountyRewardRow = { symbol: string; amount: string; tokenType: string };
+type BountyRewardRow = RewardRow & { tokenType: string };
 type BountyListRow = {
   id: string;
   title: string;
@@ -56,7 +57,7 @@ type BountyDetailRow = BountyListRow & {
   requirements: string;
   evaluation_criteria: string;
 };
-type BountyListResponse = { items: BountyListRow[] };
+type BountyListResponse = { items: BountyListRow[]; page: number; pageSize: number; total: number };
 
 const categoryLabels = { DEV: "Dev", DESIGN: "Design", CONTENT: "Content", OTHER: "Other" } as const;
 
@@ -66,39 +67,80 @@ function dateLabel(value: string): string {
   return days > 0 ? `D-${days}` : "Closed";
 }
 
+const markdownListItem = /^\s*(?:[-*+]|\d+[.)])\s+(.+)$/;
+
+/** Deliverables are the list items of the requirements markdown, with inline formatting stripped. */
+export function deliverablesFromMarkdown(markdown: string | undefined): string[] {
+  if (!markdown) return [];
+  return markdown.split("\n").flatMap((line) => {
+    const item = markdownListItem.exec(line)?.[1];
+    if (!item) return [];
+    const text = item
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .replace(/[*_`~]/g, "")
+      .trim();
+    return text ? [text] : [];
+  });
+}
+
+/** BE has no per-bounty step list, so steps follow the bounty's submission flow. */
+export function completionStepsFor(submissionMode: "direct" | "agent"): string[] {
+  return submissionMode === "agent"
+    ? ["Register and verify an agent", "Complete the work", "Submit through the agent API", "Receive sponsor review and reward release"]
+    : ["Complete the work", "Submit your completed-work link", "Receive sponsor review and reward release"];
+}
+
 function toBounty(row: BountyListRow | BountyDetailRow): Bounty {
-  const reward = row.rewards[0];
+  const rewards = toRewards(row.rewards);
   const detail = "description" in row ? row : null;
+  const submissionMode = row.submission_mode === "AGENT" ? "agent" : "direct";
   return {
     slug: row.id,
     title: row.title,
     summary: row.summary,
     category: categoryLabels[row.category as keyof typeof categoryLabels] ?? "Other",
     status: row.status === "OPEN" ? "active" : "closed",
-    reward: {
-      amount: reward ? Number(reward.amount) / 10 ** (reward.symbol === "USDC" ? 6 : 18) : 0,
-      currency: reward?.symbol === "USDC" ? "USDC" : "INJ",
-    },
+    reward: rewards[0] ?? { amount: 0, currency: "INJ" },
+    ...(rewards.length > 1 ? { rewards } : {}),
     sponsor: row.sponsor_name,
     deadline: row.status === "OPEN" ? dateLabel(row.submission_deadline) : "Closed",
     deadlineDetail: new Date(row.submission_deadline).toLocaleString("en-US", { timeZone: "UTC", timeZoneName: "short" }),
     coverImage: row.cover_image_url ?? "",
     descriptionMarkdown: detail?.description ?? row.summary,
     submissionGuideMarkdown: detail?.requirements,
-    deliverables: detail?.requirements ? detail.requirements.split("\n").filter(Boolean) : [],
+    deliverables: deliverablesFromMarkdown(detail?.requirements),
     reviewProcess: detail?.evaluation_criteria ?? "Sponsor review",
-    submissionMode: row.submission_mode === "AGENT" ? "agent" : "direct",
-    completionSteps: ["Complete the work", "Submit the result URL", "Receive sponsor approval"],
+    submissionMode,
+    completionSteps: completionStepsFor(submissionMode),
     applicationRequired: row.application_required,
     applicationTitle: row.application_required ? row.title : undefined,
     applicationDescription: row.application_required ? row.summary : undefined,
   };
 }
 
+// BE caps pageSize at 50; filtering is client-side, so the list loads every page up to a safety cap.
+const PAGE_SIZE = 50;
+const MAX_PAGES = 20;
+
 export async function getRuntimeBounties(): Promise<Bounty[]> {
   if (loadRuntimeConfig().runtimeMode === "mock") return getBounties();
-  const response = await fetchPublicJson<BountyListResponse>("/bounties?page=1&pageSize=50");
-  return response.items.map(toBounty);
+  const fetchPage = (page: number) => fetchPublicJson<BountyListResponse>(`/bounties?page=${page}&pageSize=${PAGE_SIZE}`);
+  const first = await fetchPage(1);
+  const pageCount = Math.min(Math.ceil(first.total / PAGE_SIZE), MAX_PAGES);
+  const rest = await Promise.all(Array.from({ length: Math.max(pageCount - 1, 0) }, (_, index) => fetchPage(index + 2)));
+  const seen = new Set<string>();
+  return [first, ...rest].flatMap((response) => response.items)
+    .filter((row) => !seen.has(row.id) && Boolean(seen.add(row.id)))
+    .map(toBounty);
+}
+
+/** Page-level loader: an unreachable API renders an unavailable state instead of the error boundary. */
+export async function loadRuntimeBounties(): Promise<{ bounties: Bounty[]; unavailable: boolean }> {
+  try {
+    return { bounties: await getRuntimeBounties(), unavailable: false };
+  } catch {
+    return { bounties: [], unavailable: true };
+  }
 }
 
 export async function getRuntimeBounty(id: string): Promise<Bounty | undefined> {
