@@ -4,7 +4,7 @@ import Image from "next/image";
 
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { getRuntimeHallOfFame } from "@/lib/hall-of-fame";
+import { loadRuntimeHallOfFame } from "@/lib/hall-of-fame";
 
 const highlightVariants = {
   Milestone: "success",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HallOfFamePage() {
-  const hallOfFame = await getRuntimeHallOfFame();
+  const { hallOfFame, unavailable } = await loadRuntimeHallOfFame();
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -29,30 +29,60 @@ export default async function HallOfFamePage() {
         <Badge variant="success">Public</Badge>
       </div>
 
-      <section className="mt-10 rounded-panel bg-[linear-gradient(160deg,var(--color-hero-from)_0%,var(--color-hero-via)_55%,var(--color-hero-to)_100%)] p-6 shadow-frame sm:p-10">
-        <div className="grid gap-5 md:grid-cols-3">
-          {hallOfFame.stats.map((stat) => <div key={stat.label} className="rounded-card border border-on-inverse/15 bg-on-inverse/5 p-5"><p className="font-display text-4xl font-bold text-on-inverse">{stat.value}</p><p className="mt-2 text-sm text-on-inverse/70">{stat.label}</p></div>)}
+      {unavailable ? (
+        <div className="mt-10 rounded-card border border-dashed border-border bg-surface-subtle p-6 text-center" role="status">
+          <p className="font-display text-lg font-bold text-ink">The Hall of Fame is temporarily unavailable.</p>
+          <p className="mt-1 text-sm text-ink-muted">We couldn’t reach the server. Please refresh in a moment.</p>
         </div>
-        <p className="mt-5 text-sm text-on-inverse/70">Platform aggregate, not a ranking.</p>
-      </section>
+      ) : null}
 
-      <section className="py-14">
-        <SectionHeader eyebrow="Featured" heading="Highlights" action={{ label: "Read notices", href: "/notices" }} />
-        <div className="mt-6 grid gap-5 md:grid-cols-3">
-          {hallOfFame.highlights.map((highlight) => <Link href={highlight.href} key={highlight.title} className="overflow-hidden rounded-card border border-border bg-surface shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><div className="relative aspect-[16/9] bg-gradient-to-br from-primary-soft-border to-surface-subtle">{highlight.image ? <Image alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 370px" src={highlight.image} /> : null}</div><div className="p-5"><Badge variant={highlightVariants[highlight.category]}>{highlight.category}</Badge><h3 className="mt-3 font-display text-lg font-bold text-ink">{highlight.title}</h3><p className="mt-2 text-sm text-ink-muted">{highlight.body}</p></div></Link>)}
-        </div>
-      </section>
+      {hallOfFame.stats.length > 0 ? (
+        <section className="mt-10 rounded-panel bg-[linear-gradient(160deg,var(--color-hero-from)_0%,var(--color-hero-via)_55%,var(--color-hero-to)_100%)] p-6 shadow-frame sm:p-10">
+          <div className="grid gap-5 md:grid-cols-3">
+            {hallOfFame.stats.map((stat) => <div key={stat.label} className="rounded-card border border-on-inverse/15 bg-on-inverse/5 p-5"><p className="font-display text-4xl font-bold text-on-inverse">{stat.value}</p><p className="mt-2 text-sm text-on-inverse/70">{stat.label}</p></div>)}
+          </div>
+          <p className="mt-5 text-sm text-on-inverse/70">Platform aggregate, not a ranking.</p>
+        </section>
+      ) : null}
 
-      <section>
-        <SectionHeader eyebrow="Our story" heading="Timeline" />
-        <div className="relative mt-8 grid gap-8 md:grid-cols-3 md:before:absolute md:before:top-5 md:before:right-0 md:before:left-0 md:before:h-px md:before:bg-border">
-          {hallOfFame.milestones.map((milestone) => <article key={milestone.title} className="relative"><div className="flex size-10 items-center justify-center rounded-full border-4 border-primary-soft-border bg-primary text-xs font-bold text-on-inverse">N</div><h3 className="mt-5 font-display text-xl font-bold text-ink">{milestone.title}</h3><p className="mt-2 text-sm font-semibold text-primary">{milestone.date}</p><p className="mt-2 text-sm text-ink-muted">{milestone.description}</p></article>)}
-        </div>
-      </section>
+      {hallOfFame.highlights.length > 0 ? (
+        <section className="py-14">
+          <SectionHeader eyebrow="Featured" heading="Highlights" action={{ label: "Read notices", href: "/notices" }} />
+          <div className="mt-6 grid gap-5 md:grid-cols-3">
+            {hallOfFame.highlights.map((highlight) => <Link href={highlight.href} key={highlight.title} className="overflow-hidden rounded-card border border-border bg-surface shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><div className="relative aspect-[16/9] bg-gradient-to-br from-primary-soft-border to-surface-subtle">{highlight.image ? <Image alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 370px" src={highlight.image} /> : null}</div><div className="p-5"><Badge variant={highlightVariants[highlight.category]}>{highlight.category}</Badge><h3 className="mt-3 font-display text-lg font-bold text-ink">{highlight.title}</h3><p className="mt-2 text-sm text-ink-muted">{highlight.body}</p></div></Link>)}
+          </div>
+        </section>
+      ) : null}
 
-      <section className="mt-16 overflow-hidden rounded-panel bg-gradient-to-br from-primary-soft-border to-surface-subtle">
-        <div className="flex aspect-[1152/522] items-end p-6 sm:p-10"><p className="rounded-control bg-surface px-4 py-2 text-sm font-semibold text-ink">Ninja Labs KR community partner wall</p></div>
-      </section>
+      {hallOfFame.milestones.length > 0 ? (
+        <section>
+          <SectionHeader eyebrow="Our story" heading="Timeline" />
+          <div className="relative mt-8 grid gap-8 md:grid-cols-3 md:before:absolute md:before:top-5 md:before:right-0 md:before:left-0 md:before:h-px md:before:bg-border">
+            {hallOfFame.milestones.map((milestone) => <article key={milestone.title} className="relative"><div className="flex size-10 items-center justify-center rounded-full border-4 border-primary-soft-border bg-primary text-xs font-bold text-on-inverse">N</div><h3 className="mt-5 font-display text-xl font-bold text-ink">{milestone.title}</h3><p className="mt-2 text-sm font-semibold text-primary">{milestone.date}</p><p className="mt-2 text-sm text-ink-muted">{milestone.description}</p></article>)}
+          </div>
+        </section>
+      ) : null}
+
+      {hallOfFame.partners.length > 0 ? (
+        <section className="mt-16">
+          <SectionHeader eyebrow="Community" heading="Partners" />
+          <ul className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+            {hallOfFame.partners.map((partner) => {
+              const logo = <span className="relative block h-12 w-full"><Image alt={partner.name} className="object-contain" fill sizes="(max-width: 640px) 50vw, 240px" src={partner.logo} /></span>;
+              const tileClass = "flex h-28 items-center justify-center rounded-card border border-border bg-surface p-5 shadow-card";
+              return (
+                <li key={partner.name}>
+                  {partner.href ? (
+                    <a className={`${tileClass} transition-shadow hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`} href={partner.href} rel="noreferrer" target={partner.href.startsWith("http") ? "_blank" : undefined}>{logo}</a>
+                  ) : (
+                    <div className={tileClass}>{logo}</div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }

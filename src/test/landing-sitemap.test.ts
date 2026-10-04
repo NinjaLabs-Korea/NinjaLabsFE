@@ -8,7 +8,10 @@ const sources = {
 };
 vi.mock("@/lib/bounties", () => ({ getRuntimeBounties: () => sources.bounties() }));
 vi.mock("@/lib/notices", () => ({ getRuntimeNotices: () => sources.notices() }));
-vi.mock("@/lib/hall-of-fame", () => ({ getRuntimeHallOfFame: () => sources.hall() }));
+vi.mock("@/lib/hall-of-fame", () => ({
+  getRuntimeHallOfFame: () => sources.hall(),
+  emptyHallOfFame: { stats: [], highlights: [], milestones: [], partners: [] },
+}));
 vi.mock("@/lib/members", () => ({ getRuntimeMembers: () => sources.members() }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api", origin: "https://ninja.test" }) }));
 
