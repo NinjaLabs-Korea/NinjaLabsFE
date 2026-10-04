@@ -19,6 +19,7 @@ function errorText(error: unknown): string {
     APPLICATION_NOT_APPROVED: "Your application must be approved before submitting.",
     DEADLINE_PASSED: "The submission deadline has passed.",
     SUBMISSION_FINALIZED: "This submission has already been finalized.",
+    VALIDATION_FAILED: "Check the URLs and description, then try again.",
   };
   return messages[error.code] ?? error.code.replaceAll("_", " ").toLowerCase();
 }
@@ -104,6 +105,7 @@ export function BountyActionPanel({ bountyId, applicationRequired, submissionMod
       });
       setSubmitted(true);
       setFeedback({ kind: "success", text: "Your work was submitted successfully." });
+      formElement.reset();
     } catch (error) {
       setFeedback({ kind: "error", text: errorText(error) });
     } finally {
@@ -153,9 +155,6 @@ export function BountyActionPanel({ bountyId, applicationRequired, submissionMod
     }
   }
 
-  if (submitted || (submission && pendingSubmissionStatuses.includes(submission.status))) {
-    return <StatusPanel title="Submission under review" body="The sponsor is reviewing your work. You will be able to resubmit if they request a revision." feedback={feedback?.kind === "success" ? feedback.text : null} link={applicationRequired ? { href: "/applications", label: "View my applications" } : undefined} />;
-  }
   if (submission?.status === "approved") {
     return <StatusPanel title="Submission approved" body="The sponsor approved your work for this bounty." tone="success" />;
   }
@@ -163,17 +162,23 @@ export function BountyActionPanel({ bountyId, applicationRequired, submissionMod
     return <StatusPanel title="Submission not accepted" body="The sponsor reviewed your work and did not accept it. This submission is final." tone="danger" link={{ href: "/bounties", label: "Browse other bounties" }} />;
   }
 
+  // BE accepts resubmission until the submission is approved or rejected (after the deadline, only on revision request).
   const revising = submission?.status === "revision_requested";
+  const inReview = submitted || (submission !== undefined && pendingSubmissionStatuses.includes(submission.status));
+  const heading = revising ? "Resubmit your work" : inReview ? "Submission under review" : "Submit your work";
+  const actionLabel = revising ? "Resubmit" : inReview ? "Update submission" : "Submit";
   return (
     <section className={panelClass}>
-      <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{revising ? "Resubmit your work" : "Submit your work"}</h2>
+      <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{heading}</h2>
       {revising ? <p className="mt-2 text-sm text-warning">The sponsor requested a revision. Update your work and submit again.</p> : null}
+      {inReview ? <p className="mt-2 text-sm text-ink-muted">The sponsor is reviewing your work. You can still update it before the deadline; the latest version replaces the previous one.</p> : null}
+      {inReview && applicationRequired ? <Link className={outlineLinkClass} href="/applications">View my applications</Link> : null}
       <form className="mt-4 space-y-3" onSubmit={submit}>
         <input className={inputClass} name="submissionUrl" placeholder="Completed-work URL" required type="url" />
         <input className={inputClass} name="repositoryUrl" placeholder="Repository URL (optional)" type="url" />
         <input className={inputClass} name="commitSha" placeholder="Commit SHA (optional)" type="text" />
         <textarea className="min-h-24 w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink" name="description" placeholder="Describe what you completed" required />
-        <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy} type="submit">{busy ? "Submitting…" : revising ? "Resubmit" : "Submit"}</button>
+        <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy} type="submit">{busy ? "Submitting…" : actionLabel}</button>
       </form>
       {feedback ? <p className={`mt-3 text-sm ${feedback.kind === "success" ? "text-success" : "text-danger"}`}>{feedback.text}</p> : null}
     </section>

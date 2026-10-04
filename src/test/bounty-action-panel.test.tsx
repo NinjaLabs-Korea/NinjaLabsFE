@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import { createApiApiClient } from "@/lib/api/api-client";
-import type { ApiHttp } from "@/lib/api/http";
+import { toApiHttpError, type ApiHttp } from "@/lib/api/http";
 import type { AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
@@ -62,6 +62,7 @@ describe("BountyActionPanel", () => {
     state.submissions = [{ bountySlug: "bounty-1", status: "in_review" }];
     render(<BountyActionPanel applicationRequired bountyId="bounty-1" submissionMode="direct" />);
     expect(await screen.findByText("Submission under review")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Update submission" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
   });
 
@@ -122,5 +123,16 @@ describe("api client application mapping", () => {
         { bountySlug: "b5", status: "submitted" },
       ],
     });
+  });
+});
+
+describe("api error normalization", () => {
+  it("collapses Nest validation arrays into a string code", async () => {
+    const validation = await toApiHttpError(new Response(JSON.stringify({ statusCode: 400, message: ["submissionUrl must be a URL"] }), { status: 400 }));
+    expect(validation.code).toBe("VALIDATION_FAILED");
+    const conflict = await toApiHttpError(new Response(JSON.stringify({ statusCode: 409, message: "NICKNAME_TAKEN" }), { status: 409 }));
+    expect([conflict.status, conflict.code]).toEqual([409, "NICKNAME_TAKEN"]);
+    const empty = await toApiHttpError(new Response("oops", { status: 500 }));
+    expect(empty.code).toBe("UNKNOWN_ERROR");
   });
 });
