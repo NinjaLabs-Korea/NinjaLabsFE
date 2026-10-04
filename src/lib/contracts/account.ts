@@ -1,6 +1,19 @@
 import type { ClientUser } from "@/lib/contracts/auth";
 
-export type ApplicationStatus = "open" | "under_review" | "approved" | "submitted" | "completed";
+export type ApplicationStatus = "open" | "under_review" | "approved" | "submitted" | "completed" | "rejected";
+
+export type SubmissionStatus =
+  | "submitted"
+  | "resubmitted"
+  | "in_review"
+  | "revision_requested"
+  | "approved"
+  | "rejected";
+
+export type AccountSubmission = {
+  bountySlug: string;
+  status: SubmissionStatus;
+};
 
 export type AccountApplication = {
   bountySlug: string;

@@ -1,4 +1,4 @@
-import type { Account, AccountAgent, AccountApplication } from "@/lib/contracts/account";
+import type { Account, AccountAgent, AccountApplication, AccountSubmission, SubmissionStatus } from "@/lib/contracts/account";
 import type { ApiClient, ApiResult } from "@/lib/contracts/api";
 import type { ApiHttp } from "@/lib/api/http";
 import { fetchMe, toClientUser } from "@/lib/api/me";
@@ -43,6 +43,19 @@ const CATEGORY_LABEL = {
   OTHER: "Other",
 } as const;
 
+const SUBMISSION_STATUS: Record<SubmissionRow["status"], SubmissionStatus> = {
+  SUBMITTED: "submitted",
+  RESUBMITTED: "resubmitted",
+  IN_REVIEW: "in_review",
+  REVISION_REQUESTED: "revision_requested",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+};
+
+function toSubmission(row: SubmissionRow): AccountSubmission {
+  return { bountySlug: row.bounty_id, status: SUBMISSION_STATUS[row.status] ?? "submitted" };
+}
+
 function toApplication(row: ApplicationRow): AccountApplication {
   return {
     bountySlug: row.bounty_id,
@@ -51,7 +64,7 @@ function toApplication(row: ApplicationRow): AccountApplication {
     appliedAt: row.applied_at,
     note: row.message,
     // BE PENDING = 지원 완료(심사 대기) → FE 첫 단계 "open"(Applied)
-    status: row.status === "APPROVED" ? "approved" : "open",
+    status: row.status === "APPROVED" ? "approved" : row.status === "REJECTED" ? "rejected" : "open",
   };
 }
 
@@ -95,13 +108,13 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
         const submissionsByBounty = new Map(submissions.map((submission) => [submission.bounty_id, submission]));
         return {
           status: "available",
-          // 철회·반려 건은 FE 진행 단계 모델에 없으므로 목록에서 제외
+          // 철회 건은 FE 진행 단계 모델에 없으므로 제외. 반려 건은 상세/목록에서 상태를 보여주기 위해 유지
           data: rows
-            .filter((row) => row.status === "PENDING" || row.status === "APPROVED")
+            .filter((row) => row.status !== "WITHDRAWN")
             .map((row) => {
               const application = toApplication(row);
               const submission = submissionsByBounty.get(row.bounty_id);
-              if (!submission) return application;
+              if (!submission || application.status !== "approved") return application;
               return {
                 ...application,
                 status: submission.status === "APPROVED" ? "completed" as const : "submitted" as const,
@@ -110,6 +123,16 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
         };
       } catch {
         return networkUnavailable<readonly AccountApplication[]>();
+      }
+    },
+
+    getSubmissions: async (auth) => {
+      if (auth.status !== "signed-in") return { status: "available", data: [] };
+      try {
+        const rows = await http.fetchJson<SubmissionRow[]>("/submissions/me");
+        return { status: "available", data: rows.map(toSubmission) };
+      } catch {
+        return networkUnavailable<readonly AccountSubmission[]>();
       }
     },
 

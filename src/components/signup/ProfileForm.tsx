@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useFoundationApiClient, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { ApiHttpError } from "@/lib/api/http";
 import { Badge } from "@/components/ui/Badge";
 import { signup } from "@/lib/signup";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
@@ -13,6 +14,16 @@ const fieldTags = [
   { label: "Other", value: "OTHER" },
 ] as const;
 
+const validationMessage = "Fill in your nickname, bio, and at least one field tag.";
+
+function saveErrorText(error: unknown): string {
+  if (!(error instanceof ApiHttpError)) return "We couldn’t save your profile. Check your connection and try again.";
+  if (error.status === 401) return "Your session has ended. Sign in again to continue.";
+  if (error.status === 409 || error.code.includes("NICKNAME")) return "That nickname is already in use. Choose another one.";
+  if (error.status === 400 || error.status === 422) return "Check every field: nickname must be 2–50 characters and a bio and field tag are required.";
+  return "We couldn’t save your profile. Please try again.";
+}
+
 export function ProfileForm() {
   const apiClient = useFoundationApiClient();
   const mode = useFoundationMode();
@@ -20,6 +31,7 @@ export function ProfileForm() {
   const [bio, setBio] = useState(mode === "mock" ? signup.profile.bio : "");
   const [tags, setTags] = useState<string[]>(mode === "mock" ? ["DEV", "DESIGN"] : []);
   const [state, setState] = useState<"idle" | "pending" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState(validationMessage);
 
   const toggleTag = (value: string) => {
     setTags((current) =>
@@ -35,6 +47,7 @@ export function ProfileForm() {
         bioLength: bio.trim().length,
         tagCount: tags.length,
       });
+      setErrorMessage(validationMessage);
       setState("error");
       return;
     }
@@ -51,6 +64,7 @@ export function ProfileForm() {
       window.location.assign("/signup/get-started");
     } catch (error) {
       onboardingLog("profile.save.failed", onboardingErrorDetails(error));
+      setErrorMessage(saveErrorText(error));
       setState("error");
     }
   };
@@ -115,7 +129,7 @@ export function ProfileForm() {
       </button>
       {state === "error" ? (
         <p className="text-sm text-danger" role="alert">
-          Check every field and choose a nickname that is not already in use.
+          {errorMessage}
         </p>
       ) : null}
     </form>

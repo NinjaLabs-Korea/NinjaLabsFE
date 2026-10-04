@@ -1,7 +1,7 @@
 export const signup = {
   badges: {
     wallet: "NFT minted at sign-up",
-    profile: "All fields required / no skip",
+    profile: "SIGN-UP FLOW",
     completion: "SIGN-UP FLOW",
   },
   login: {

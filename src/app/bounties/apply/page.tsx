@@ -6,7 +6,7 @@ import {
   BountyApplyGuideCta,
 } from "@/components/bounties/BountyApplyGuideCta";
 import { Badge } from "@/components/ui/Badge";
-import { getRuntimeBounties } from "@/lib/bounties";
+import { loadRuntimeBounties } from "@/lib/bounties";
 
 const statuses = ["Open", "Under review", "Approved", "Submitted", "Completed"];
 
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BountyApplyPage() {
-  const bounties = await getRuntimeBounties();
+  const { bounties, unavailable } = await loadRuntimeBounties();
   const applicationBounty = bounties.find(
     (bounty) => bounty.status === "active" && bounty.applicationRequired,
   );
@@ -40,11 +40,11 @@ export default async function BountyApplyPage() {
 
       <section className="mt-8 grid gap-5 md:grid-cols-2">
         <article className="flex min-h-full flex-col rounded-card border border-border bg-surface p-5 shadow-card">
-          <Badge variant="success">Intake OFF</Badge>
+          <Badge variant="success">Direct submit</Badge>
           <h2 className="mt-4 font-display text-2xl font-bold -tracking-[0.24px] text-ink">Submit-type bounty</h2>
           <p className="mt-3 text-base text-ink-secondary">Anyone can work on the bounty and submit when the work is ready.</p>
           <div className="mt-5 rounded-tile bg-primary-soft p-4 text-sm text-ink-secondary">
-            [Submit] button shown directly → same as Bounty Detail
+            The submission form is available on the bounty page right away.
           </div>
           {directBounty ? (
             <Link
@@ -59,11 +59,11 @@ export default async function BountyApplyPage() {
         </article>
 
         <article className="flex min-h-full flex-col rounded-card border border-border bg-surface p-5 shadow-card">
-          <Badge variant="warning">Intake ON</Badge>
+          <Badge variant="warning">Application required</Badge>
           <h2 className="mt-4 font-display text-2xl font-bold -tracking-[0.24px] text-ink">Apply-type bounty</h2>
           <p className="mt-3 text-base text-ink-secondary">Submit work after the sponsor approves your application.</p>
           <div className="mt-5 rounded-tile bg-primary-soft p-4 text-sm text-ink-secondary">
-            [Apply] → application form → sponsor review → after approval, [Submit] enabled
+            Apply with a short proposal. Once the sponsor approves it, the submission form unlocks on the bounty page.
           </div>
           {applicationBounty ? (
             <BountyApplyGuideCta bountyHref={`/bounties/${applicationBounty.slug}`} />
@@ -73,7 +73,12 @@ export default async function BountyApplyPage() {
         </article>
       </section>
 
-      {!hasOpenBounty ? (
+      {unavailable ? (
+        <section className="mt-6 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-5" role="status">
+          <p className="text-sm font-semibold text-ink">Open bounties are temporarily unavailable.</p>
+          <p className="mt-1 text-sm text-ink-muted">We couldn’t reach the server. Please refresh in a moment.</p>
+        </section>
+      ) : !hasOpenBounty ? (
         <section className="mt-6 flex flex-col items-start justify-between gap-4 rounded-card border border-border bg-surface p-5 shadow-card sm:flex-row sm:items-center">
           <div>
             <h2 className="font-display text-xl font-bold text-ink">No open bounties right now</h2>
@@ -100,7 +105,7 @@ export default async function BountyApplyPage() {
         </ol>
       </section>
 
-      <p className="mt-4 text-xs text-ink-muted">Application status is available for bounties with intake enabled.</p>
+      <p className="mt-4 text-xs text-ink-muted">Application status is tracked for bounties that require an application.</p>
     </div>
   );
 }

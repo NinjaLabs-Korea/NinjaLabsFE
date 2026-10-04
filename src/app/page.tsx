@@ -10,7 +10,7 @@ import { getRuntimeLanding } from "@/lib/landing";
 const trackRecord = "Own your track record.";
 
 export default async function Home() {
-  const { hero, bounties, news } = await getRuntimeLanding();
+  const { hero, bounties, news, unavailable } = await getRuntimeLanding();
   const heroTitle = hero.title.replace(` ${trackRecord}`, "");
 
   return (
@@ -94,9 +94,11 @@ export default async function Home() {
                 + next
               </div>
             </div>
-            <p className="mt-4 text-center text-sm text-on-inverse/75">
-              {hero.portfolio.totalCompleted} bounties completed · a growing on-chain portfolio
-            </p>
+            {unavailable.stats ? null : (
+              <p className="mt-4 text-center text-sm text-on-inverse/75">
+                {hero.portfolio.totalCompleted} bounties completed · a growing on-chain portfolio
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -109,11 +111,20 @@ export default async function Home() {
           size="lg"
           action={{ label: "View all →", href: "/bounties" }}
         />
-        <div className="mt-7 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {bounties.map((bounty) => (
-            <BountyCard key={bounty.slug} bounty={bounty} showSummary={false} />
-          ))}
-        </div>
+        {unavailable.bounties ? (
+          <div className="mt-7 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
+            <p className="text-sm font-semibold text-ink">Active bounties are temporarily unavailable.</p>
+            <p className="mt-1 text-sm text-ink-muted">We couldn’t reach the server. Please refresh in a moment.</p>
+          </div>
+        ) : bounties.length === 0 ? (
+          <p className="mt-7 text-sm text-ink-muted">No active bounties right now. New sponsor opportunities will appear here.</p>
+        ) : (
+          <div className="mt-7 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {bounties.map((bounty) => (
+              <BountyCard key={bounty.slug} bounty={bounty} showSummary={false} />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="mx-auto max-w-content px-4 pb-20 sm:px-6">
@@ -124,11 +135,20 @@ export default async function Home() {
           size="lg"
           action={{ label: "View all →", href: "/notices" }}
         />
-        <div className="mt-7 grid grid-cols-1 gap-5 lg:grid-cols-3">
-          {news.map((notice) => (
-            <NewsCard key={notice.slug} notice={notice} />
-          ))}
-        </div>
+        {unavailable.news ? (
+          <div className="mt-7 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
+            <p className="text-sm font-semibold text-ink">Recent news is temporarily unavailable.</p>
+            <p className="mt-1 text-sm text-ink-muted">We couldn’t reach the server. Please refresh in a moment.</p>
+          </div>
+        ) : news.length === 0 ? (
+          <p className="mt-7 text-sm text-ink-muted">No news yet. Check back soon.</p>
+        ) : (
+          <div className="mt-7 grid grid-cols-1 gap-5 lg:grid-cols-3">
+            {news.map((notice) => (
+              <NewsCard key={notice.slug} notice={notice} />
+            ))}
+          </div>
+        )}
       </section>
     </>
   );

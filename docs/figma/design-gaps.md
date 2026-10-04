@@ -50,6 +50,7 @@ Created 2026-07-19 via Figma MCP (`generate_diagram`, team "Alex kim's team" —
 | Mobile nav menu (no-JS disclosure) | `src/components/layout/Header.tsx` |
 | "How applying works →" list button | `src/app/bounties/page.tsx` → `/bounties/apply` (user-requested; noted in `AGENTS.md`) |
 | Skip-to-content link | `src/app/layout.tsx` |
+| Annotation copy replaced with product copy | Figma 15v/16/12 annotation strings (`bounty.application_required ON`, `Intake ON/OFF`, `[Submit] button shown directly …`, `All fields required / no skip`) rendered verbatim to users; replaced with plain product copy in `src/app/bounties/[id]/page.tsx`, `src/app/bounties/apply/page.tsx`, `src/lib/signup.ts`. Layout and badge variants unchanged. |
 | Markdown body rendering (bounty description, notice body) + bounty "Submission guide" section | `src/components/ui/Markdown.tsx` (token-mapped, raw HTML off); `src/app/bounties/[id]/page.tsx`, `src/app/notices/[id]/page.tsx`; contract fields in `src/lib/types.ts` — design draws plain paragraphs; the markdown subset (bold/list/link/h2-h3) is an approved implementation divergence, not a claimed Figma-origin state. |
 
 ## Assets — blocked on assets

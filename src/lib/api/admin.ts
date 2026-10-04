@@ -1,6 +1,6 @@
 import type { ApiHttp } from "@/lib/api/http";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
-import { parseUnits } from "viem";
+import { toBaseUnits, toReward } from "@/lib/rewards";
 
 const categoryLabel = { DEV: "Dev", DESIGN: "Design", CONTENT: "Content", OTHER: "Other" } as const;
 const categoryCode = { Dev: "DEV", Design: "DESIGN", Content: "CONTENT", Other: "OTHER" } as const;
@@ -52,7 +52,7 @@ export function createAdminApi(http: ApiHttp) {
       const rows = await http.fetchJson<BountyRow[]>("/admin/bounties");
       return rows.map((row) => ({
         slug: row.id, title: row.title, sponsor: row.sponsor_name,
-        reward: { amount: Number(row.rewards[0]?.amount ?? 0) / 10 ** (row.rewards[0]?.symbol === "USDC" ? 6 : 18), currency: row.rewards[0]?.symbol === "USDC" ? "USDC" : "INJ" },
+        reward: (row.rewards[0] ? toReward(row.rewards[0]) : null) ?? { amount: 0, currency: "INJ" },
         ...(row.rewards[0]?.tokenContractAddress ? { rewardContractAddress: row.rewards[0].tokenContractAddress } : {}),
         ...(row.rewards[0]?.evmChainId ? { rewardChainId: row.rewards[0].evmChainId } : {}),
         intakeEnabled: row.application_required, status: bountyStatus(row.status),
@@ -78,7 +78,7 @@ export function createAdminApi(http: ApiHttp) {
           tokenType: bounty.reward.currency === "USDC" ? "ERC20" : "NATIVE",
           ...(bounty.reward.currency === "INJ" ? { tokenDenom: "inj" } : {}),
           displaySymbol: bounty.reward.currency,
-          amount: parseUnits(String(bounty.reward.amount), bounty.reward.currency === "USDC" ? 6 : 18).toString(),
+          amount: toBaseUnits(bounty.reward),
         } } : {}),
       };
       return http.fetchJson(create ? "/admin/bounties" : `/admin/bounties/${encodeURIComponent(bounty.slug)}`, { method: create ? "POST" : "PATCH", body });

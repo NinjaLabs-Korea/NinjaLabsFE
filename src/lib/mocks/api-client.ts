@@ -24,6 +24,21 @@ export function createMockApiClient(seed = "default"): ApiClient {
 
       return { status: "available", data: getMockFixtureSnapshot(fixtureSnapshot).applications };
     },
+    getSubmissions: async (auth) => {
+      if (!isFixtureOwner(auth, fixtureSnapshot)) {
+        return { status: "available", data: [] };
+      }
+
+      return {
+        status: "available",
+        data: getMockFixtureSnapshot(fixtureSnapshot).applications
+          .filter((application) => application.status === "submitted" || application.status === "completed")
+          .map((application) => ({
+            bountySlug: application.bountySlug,
+            status: application.status === "completed" ? "approved" as const : "submitted" as const,
+          })),
+      };
+    },
     getAgents: async (auth) => {
       if (!isFixtureOwner(auth, fixtureSnapshot)) {
         return { status: "available", data: [] };
