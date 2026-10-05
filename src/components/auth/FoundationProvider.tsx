@@ -8,7 +8,15 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import type { ApiClient } from "@/lib/contracts/api";
+import type {
+  AccountApi,
+  AdminApi,
+  AgentApi,
+  ApiClient,
+  BountyApi,
+  OnboardingApi,
+  WalletApi,
+} from "@/lib/contracts/api";
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
 import { createSessionPreviewAuthAdapter } from "@/lib/foundation/auth-adapter";
 import { createApiApiClient } from "@/lib/api/api-client";
@@ -35,7 +43,7 @@ function createFoundationContextValue(config: FoundationConfig): FoundationConte
     };
   }
 
-  // api 모드 — BE(NinjaLabsBE)에 실제 연결. 어댑터와 클라이언트가 토큰 저장소를 공유한다.
+  // api 모드: BE(NinjaLabsBE)에 실제 연결. 어댑터와 클라이언트가 토큰 저장소를 공유한다.
   const adapter = createApiAuthAdapter(config.apiUrl);
   return {
     adapter,
@@ -82,9 +90,13 @@ export function useAuthActions(): Pick<AuthAdapter, "signIn" | "signOut"> {
   return { signIn: adapter.signIn, signOut: adapter.signOut };
 }
 
-export function useFoundationApiClient(): ApiClient {
-  return useFoundationContext().apiClient;
-}
+// 컴포넌트는 필요한 API 조각만 받는다. 구현체(mock/api)는 FoundationProvider가 고른다.
+export const useAccountApi = (): AccountApi => useFoundationContext().apiClient;
+export const useBountyApi = (): BountyApi => useFoundationContext().apiClient;
+export const useAgentApi = (): AgentApi => useFoundationContext().apiClient;
+export const useWalletApi = (): WalletApi => useFoundationContext().apiClient;
+export const useOnboardingApi = (): OnboardingApi => useFoundationContext().apiClient;
+export const useAdminApi = (): AdminApi => useFoundationContext().apiClient;
 
 export function useFoundationMode(): FoundationConfig["mode"] {
   return useFoundationContext().mode;

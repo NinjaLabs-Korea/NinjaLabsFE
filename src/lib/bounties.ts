@@ -1,7 +1,6 @@
+import { toCategoryLabel, toRewards, type RewardRow } from "./api/codecs";
 import type { Bounty } from "./types";
-import { fetchPublicJson } from "./api/public";
-import { loadRuntimeConfig } from "./runtime/config";
-import { toRewards, type RewardRow } from "./rewards";
+import { fetchPublicJson, loadFromRuntime } from "./api/public";
 
 export const bounties: Bounty[] = [
   {
@@ -59,8 +58,7 @@ type BountyDetailRow = BountyListRow & {
 };
 type BountyListResponse = { items: BountyListRow[]; page: number; pageSize: number; total: number };
 
-const categoryLabels = { DEV: "Dev", DESIGN: "Design", CONTENT: "Content", OTHER: "Other" } as const;
-
+// "Closed" is a data sentinel (see mock records); components render a localized label for it.
 function dateLabel(value: string): string {
   const deadline = new Date(value);
   const days = Math.ceil((deadline.getTime() - Date.now()) / 86_400_000);
@@ -83,13 +81,6 @@ export function deliverablesFromMarkdown(markdown: string | undefined): string[]
   });
 }
 
-/** BE has no per-bounty step list, so steps follow the bounty's submission flow. */
-export function completionStepsFor(submissionMode: "direct" | "agent"): string[] {
-  return submissionMode === "agent"
-    ? ["Register and verify an agent", "Complete the work", "Submit through the agent API", "Receive sponsor review and reward release"]
-    : ["Complete the work", "Submit your completed-work link", "Receive sponsor review and reward release"];
-}
-
 function toBounty(row: BountyListRow | BountyDetailRow): Bounty {
   const rewards = toRewards(row.rewards);
   const detail = "description" in row ? row : null;
@@ -98,7 +89,7 @@ function toBounty(row: BountyListRow | BountyDetailRow): Bounty {
     slug: row.id,
     title: row.title,
     summary: row.summary,
-    category: categoryLabels[row.category as keyof typeof categoryLabels] ?? "Other",
+    category: toCategoryLabel(row.category) ?? "Other",
     status: row.status === "OPEN" ? "active" : "closed",
     reward: rewards[0] ?? { amount: 0, currency: "INJ" },
     ...(rewards.length > 1 ? { rewards } : {}),
@@ -109,9 +100,9 @@ function toBounty(row: BountyListRow | BountyDetailRow): Bounty {
     descriptionMarkdown: detail?.description ?? row.summary,
     submissionGuideMarkdown: detail?.requirements,
     deliverables: deliverablesFromMarkdown(detail?.requirements),
-    reviewProcess: detail?.evaluation_criteria ?? "Sponsor review",
+    // Missing review process / completion steps fall back to localized defaults in the detail page.
+    reviewProcess: detail?.evaluation_criteria,
     submissionMode,
-    completionSteps: completionStepsFor(submissionMode),
     applicationRequired: row.application_required,
     applicationTitle: row.application_required ? row.title : undefined,
     applicationDescription: row.application_required ? row.summary : undefined,
@@ -122,8 +113,7 @@ function toBounty(row: BountyListRow | BountyDetailRow): Bounty {
 const PAGE_SIZE = 50;
 const MAX_PAGES = 20;
 
-export async function getRuntimeBounties(): Promise<Bounty[]> {
-  if (loadRuntimeConfig().runtimeMode === "mock") return getBounties();
+async function fetchAllBounties(): Promise<Bounty[]> {
   const fetchPage = (page: number) => fetchPublicJson<BountyListResponse>(`/bounties?page=${page}&pageSize=${PAGE_SIZE}`);
   const first = await fetchPage(1);
   const pageCount = Math.min(Math.ceil(first.total / PAGE_SIZE), MAX_PAGES);
@@ -132,6 +122,10 @@ export async function getRuntimeBounties(): Promise<Bounty[]> {
   return [first, ...rest].flatMap((response) => response.items)
     .filter((row) => !seen.has(row.id) && Boolean(seen.add(row.id)))
     .map(toBounty);
+}
+
+export function getRuntimeBounties(): Promise<Bounty[]> {
+  return loadFromRuntime({ mock: getBounties, api: fetchAllBounties });
 }
 
 /** Page-level loader: an unreachable API renders an unavailable state instead of the error boundary. */
@@ -143,11 +137,15 @@ export async function loadRuntimeBounties(): Promise<{ bounties: Bounty[]; unava
   }
 }
 
-export async function getRuntimeBounty(id: string): Promise<Bounty | undefined> {
-  if (loadRuntimeConfig().runtimeMode === "mock") return getBounty(id);
-  try {
-    return toBounty(await fetchPublicJson<BountyDetailRow>(`/bounties/${encodeURIComponent(id)}`));
-  } catch {
-    return undefined;
-  }
+export function getRuntimeBounty(id: string): Promise<Bounty | undefined> {
+  return loadFromRuntime({
+    mock: () => getBounty(id),
+    api: async () => {
+      try {
+        return toBounty(await fetchPublicJson<BountyDetailRow>(`/bounties/${encodeURIComponent(id)}`));
+      } catch {
+        return undefined;
+      }
+    },
+  });
 }

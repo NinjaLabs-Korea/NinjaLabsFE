@@ -1,18 +1,15 @@
 import type { ApiHttp } from "@/lib/api/http";
+import type { AdminApi } from "@/lib/contracts/api";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
-import { toBaseUnits, toReward } from "@/lib/rewards";
+import { rewardFromBaseUnits, rewardToBaseUnits, toCategoryCode, toCategoryLabel, toMemberRoleCode, toMemberRoleLabel, type CategoryCode, type MemberRoleCode } from "@/lib/api/codecs";
 
-const categoryLabel = { DEV: "Dev", DESIGN: "Design", CONTENT: "Content", OTHER: "Other" } as const;
-const categoryCode = { Dev: "DEV", Design: "DESIGN", Content: "CONTENT", Other: "OTHER" } as const;
-const roleLabel = { CORE: "Core", DEV: "Dev", DESIGN: "Design", OPS: "Ops" } as const;
-const roleCode = { Core: "CORE", Dev: "DEV", Design: "DESIGN", Ops: "OPS" } as const;
 const noticeLabel = { NINJALABS: "Ninja Labs", INJECTIVE_ECOSYSTEM: "Injective ecosystem", EVENT: "Events", RECRUITMENT: "Recruitment", OTHER: "Other" } as const;
 const noticeCode = { "Ninja Labs": "NINJALABS", "Injective ecosystem": "INJECTIVE_ECOSYSTEM", Events: "EVENT", Recruitment: "RECRUITMENT", Other: "OTHER" } as const;
 const highlightLabel = { MILESTONE: "Milestone", FEATURED_BOUNTY: "Featured bounty", PARTNERSHIP: "Partnership" } as const;
 const highlightCode = { Milestone: "MILESTONE", "Featured bounty": "FEATURED_BOUNTY", Partnership: "PARTNERSHIP" } as const;
 
-type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: keyof typeof roleLabel | null; member_display_order: number | null; created_at: string; wallet_address: string | null };
-type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: keyof typeof categoryLabel; status: string; application_required: boolean; submission_mode: "DIRECT" | "AGENT"; cover_image_url: string | null; submission_deadline: string; rewards: Array<{ symbol: string; amount: string; tokenContractAddress?: string | null; evmChainId?: number | null }> };
+type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: MemberRoleCode | null; member_display_order: number | null; created_at: string; wallet_address: string | null };
+type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: CategoryCode; status: string; application_required: boolean; submission_mode: "DIRECT" | "AGENT"; cover_image_url: string | null; submission_deadline: string; rewards: Array<{ symbol: string; amount: string; tokenContractAddress?: string | null; evmChainId?: number | null }> };
 type NoticeRow = { id: string; title: string; body: string; category: keyof typeof noticeLabel; status: string; published_at: string | null; thumbnail_url: string | null; external_url: string | null };
 type HighlightRow = { id: string; type: string; title: string; description: string; image_url: string | null; link_url: string | null; display_order: number; is_published: boolean };
 
@@ -24,7 +21,8 @@ const bountyStatus = (status: string): AdminBounty["status"] => {
   return "closed";
 };
 
-export function createAdminApi(http: ApiHttp) {
+/** 운영자 콘솔 API — BE 행(snake_case, 코드값)을 FE 어드민 타입으로 변환한다 */
+export function createAdminApi(http: ApiHttp): AdminApi {
   return {
     uploadAdminMedia: async (file: File): Promise<{ id: string; url: string }> => {
       const form = new FormData();
@@ -38,27 +36,27 @@ export function createAdminApi(http: ApiHttp) {
         joinedAt: new Date(row.created_at).toLocaleDateString("en-US"),
         walletAddress: row.wallet_address, walletStatus: row.wallet_address ? "linked" : null,
         isMember: row.is_member,
-        memberRole: row.member_role ? roleLabel[row.member_role] : null,
+        memberRole: row.member_role ? toMemberRoleLabel(row.member_role) ?? null : null,
         memberDisplayOrder: row.member_display_order,
       }));
     },
     setAdminMember: async (userId: string, input: { isMember: boolean; role?: string; displayOrder?: number }) => {
       await http.fetchJson(`/admin/users/${encodeURIComponent(userId)}/member`, {
         method: "POST",
-        body: { ...input, ...(input.role ? { role: roleCode[input.role as keyof typeof roleCode] } : {}) },
+        body: { ...input, ...(input.role ? { role: toMemberRoleCode(input.role) } : {}) },
       });
     },
     getAdminBounties: async (): Promise<AdminBounty[]> => {
       const rows = await http.fetchJson<BountyRow[]>("/admin/bounties");
       return rows.map((row) => ({
         slug: row.id, title: row.title, sponsor: row.sponsor_name,
-        reward: (row.rewards[0] ? toReward(row.rewards[0]) : null) ?? { amount: 0, currency: "INJ" },
+        reward: rewardFromBaseUnits(row.rewards[0]),
         ...(row.rewards[0]?.tokenContractAddress ? { rewardContractAddress: row.rewards[0].tokenContractAddress } : {}),
         ...(row.rewards[0]?.evmChainId ? { rewardChainId: row.rewards[0].evmChainId } : {}),
         intakeEnabled: row.application_required, status: bountyStatus(row.status),
         submissionMode: row.submission_mode === "AGENT" ? "agent" : "direct",
         coverImage: row.cover_image_url,
-        deadline: row.submission_deadline, tags: [categoryLabel[row.category]],
+        deadline: row.submission_deadline, tags: [toCategoryLabel(row.category) ?? "Other"],
         description: row.description || row.summary, submissionGuide: row.requirements,
         deliverables: row.requirements.split("\n").filter(Boolean), reviewProcess: row.evaluation_criteria,
       }));
@@ -69,7 +67,7 @@ export function createAdminApi(http: ApiHttp) {
         summary: bounty.description.slice(0, 240), description: bounty.description,
         requirements: bounty.deliverables.join("\n") || bounty.submissionGuide,
         evaluationCriteria: bounty.reviewProcess,
-        category: categoryCode[bounty.tags[0] ?? "Other"],
+        category: toCategoryCode(bounty.tags[0] ?? "Other"),
         applicationRequired: bounty.intakeEnabled, maxWinners: 1,
         submissionMode: bounty.submissionMode === "agent" ? "AGENT" : "DIRECT",
         coverImageUrl: bounty.coverImage,
@@ -78,7 +76,7 @@ export function createAdminApi(http: ApiHttp) {
           tokenType: bounty.reward.currency === "USDC" ? "ERC20" : "NATIVE",
           ...(bounty.reward.currency === "INJ" ? { tokenDenom: "inj" } : {}),
           displaySymbol: bounty.reward.currency,
-          amount: toBaseUnits(bounty.reward),
+          amount: rewardToBaseUnits(bounty.reward),
         } } : {}),
       };
       return http.fetchJson(create ? "/admin/bounties" : `/admin/bounties/${encodeURIComponent(bounty.slug)}`, { method: create ? "POST" : "PATCH", body });

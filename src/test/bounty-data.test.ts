@@ -1,11 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { toBaseUnits, toReward, toRewards } from "@/lib/rewards";
+import { rewardToBaseUnits as toBaseUnits, toReward, toRewards } from "@/lib/api/codecs";
 
 const fetchPublicJson = vi.fn();
-vi.mock("@/lib/api/public", () => ({ fetchPublicJson: (path: string) => fetchPublicJson(path) }));
+vi.mock("@/lib/api/public", () => ({
+  fetchPublicJson: (path: string) => fetchPublicJson(path),
+  loadFromRuntime: (sources: { api: () => unknown }) => sources.api(),
+}));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
-const { completionStepsFor, deliverablesFromMarkdown, getRuntimeBounties, loadRuntimeBounties } = await import("@/lib/bounties");
+const { deliverablesFromMarkdown, getRuntimeBounties, loadRuntimeBounties } = await import("@/lib/bounties");
 
 const row = (id: string, rewards = [{ symbol: "INJ", amount: "1500000000000000000", tokenType: "NATIVE" }]) => ({
   id, title: id, summary: "", sponsor_name: "S", category: "DEV", status: "OPEN",
@@ -37,11 +40,6 @@ describe("bounty mapping", () => {
       "README",
     ]);
     expect(deliverablesFromMarkdown(undefined)).toEqual([]);
-  });
-
-  it("derives completion steps from the submission mode", () => {
-    expect(completionStepsFor("agent")[0]).toBe("Register and verify an agent");
-    expect(completionStepsFor("direct")).toHaveLength(3);
   });
 
   it("loads every page and keeps all reward tokens", async () => {

@@ -1,0 +1,92 @@
+{
+  "site": {
+    "title": "Ninja Labs | Build. Complete. Own your track record.",
+    "description": "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own."
+  },
+  "layout": {
+    "skipToContent": "Skip to content"
+  },
+  "localeSwitcher": {
+    "label": "Language"
+  },
+  "nav": {
+    "bounties": "Bounties",
+    "hallOfFame": "Hall of Fame",
+    "members": "Members",
+    "notices": "Notices"
+  },
+  "header": {
+    "homeLabel": "Ninja Labs home",
+    "mainNavigation": "Main navigation",
+    "mobileNavigation": "Mobile navigation",
+    "menu": "Menu",
+    "browse": "Browse",
+    "getStarted": "Get Started"
+  },
+  "footer": {
+    "tagline": "Build. Complete. Own your track record. On Injective.",
+    "platform": "Platform",
+    "community": "Community",
+    "legal": "© 2026 Ninja Labs · All content viewable without login · Returning users skip Intro and land on main."
+  },
+  "userMenu": {
+    "accountNavigation": "Account navigation",
+    "myProfile": "My profile",
+    "myApplications": "My applications",
+    "myAgents": "My agents",
+    "signOut": "Sign out",
+    "sessionPreview": "Session preview",
+    "walletAddress": "Wallet address: {wallet}"
+  },
+  "googleLogin": {
+    "continue": "Continue with Google",
+    "starting": "Starting Google sign-in…",
+    "retry": "Retry Google sign-in",
+    "mockPending": "Mock mode: starting the local sign-in preview.",
+    "mockIdle": "Mock mode: this local preview does not contact Google or create an account.",
+    "redirectNotice": "You will be redirected to Google to sign in.",
+    "failed": "Google sign-in failed. Please try again.",
+    "previewFailure": "Preview failed sign-in"
+  },
+  "wallet": {
+    "switching": "Switching network…",
+    "switchNetwork": "Switch to Injective EVM",
+    "unsupportedNetwork": "Your wallet is connected to an unsupported network.",
+    "awaitingSignature": "Waiting for signature…",
+    "verify": "Verify wallet",
+    "disconnectAddress": "Disconnect {address}",
+    "verifyFailed": "Wallet verification failed. Check the signature request and try again.",
+    "disconnectWalletLabel": "Disconnect wallet {address}",
+    "unavailable": "Wallet unavailable",
+    "unavailableHint": "Install or unlock a compatible browser wallet to connect.",
+    "connecting": "Connecting wallet…",
+    "connect": "Connect wallet",
+    "connectFailed": "Unable to connect your wallet. Try again.",
+    "supportedWallets": "Supported wallets"
+  },
+  "stepIndicator": {
+    "login": "1. Login",
+    "wallet": "2. Wallet + NFT",
+    "profile": "3. Profile",
+    "getStarted": "4. Get Started"
+  },
+  "confirmDialog": {
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "dismiss": "Dismiss"
+  },
+  "errorPage": {
+    "eyebrow": "ERROR",
+    "title": "Something went wrong",
+    "description": "We could not load this page. Please try again.",
+    "retry": "Try again",
+    "home": "Back to home"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or may have moved.",
+    "home": "Back to home",
+    "browseBounties": "Browse bounties"
+  }
+}

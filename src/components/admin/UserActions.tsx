@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
@@ -22,10 +23,13 @@ const roles: MemberRole[] = ["Core", "Dev", "Design", "Ops"];
 const focusClass = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
+  const t = useTranslations("admin.users");
+  const tCommon = useTranslations("admin.common");
   const [assignOpen, setAssignOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const [role, setRole] = useState<MemberRole>(user.memberRole ?? "Core");
   const [displayOrder, setDisplayOrder] = useState(String(user.memberDisplayOrder ?? 1));
+  const [orderInvalid, setOrderInvalid] = useState(false);
   const assignTitleId = `assign-member-role-${user.slug}`;
 
   function handleRemove() {
@@ -34,9 +38,15 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
   }
 
   function handleAssign() {
+    // 표시 순서는 비우면 자동(null), 입력하면 1 이상의 정수만 받는다. 잘못된 값은 조용히 버리지 않고 알린다.
+    const trimmed = displayOrder.trim();
+    const parsedOrder = Number(trimmed);
+    if (trimmed && !(Number.isInteger(parsedOrder) && parsedOrder >= 1)) {
+      setOrderInvalid(true);
+      return;
+    }
     setAssignOpen(false);
-    const parsedOrder = Number.parseInt(displayOrder, 10);
-    onAssign(role, Number.isInteger(parsedOrder) && parsedOrder >= 1 ? parsedOrder : null);
+    onAssign(role, trimmed ? parsedOrder : null);
   }
 
   return (
@@ -50,30 +60,31 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
           }
 
           setRole(user.memberRole ?? "Core");
+          setOrderInvalid(false);
           setAssignOpen(true);
         }}
         type="button"
       >
-        {user.isMember ? "Remove" : "Assign"}
+        {user.isMember ? t("actions.remove") : t("actions.assign")}
       </button>
 
       <ConfirmDialog
-        calloutText="This immediately updates the public member directory."
-        confirmLabel="Remove member"
-        description={<>Hides {user.nickname}&apos;s card from the public <b>Members</b> directory. Their account and profile are preserved.</>}
+        calloutText={t("actions.removeCallout")}
+        confirmLabel={t("actions.removeConfirm")}
+        description={t.rich("actions.removeDescription", { nickname: user.nickname, b: (chunks) => <b>{chunks}</b> })}
         destructive
-        eyebrow="Remove member"
+        eyebrow={t("actions.removeEyebrow")}
         onCancel={() => setRemoveOpen(false)}
         onConfirm={handleRemove}
         open={removeOpen}
-        title={`Remove ${user.nickname} from members?`}
+        title={t("actions.removeTitle", { nickname: user.nickname })}
       />
 
       <Modal labelledBy={assignTitleId} onClose={() => setAssignOpen(false)} open={assignOpen}>
-        <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">Member role</p>
-        <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink" id={assignTitleId}>Assign member role</h2>
-        <p className="mt-2 text-sm text-ink-muted">Marks <b>{user.nickname}</b> as a public member with the selected role and order.</p>
-        <div className="mt-4 flex flex-wrap gap-2" aria-label="Member role">
+        <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("actions.roleEyebrow")}</p>
+        <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink" id={assignTitleId}>{t("actions.assignTitle")}</h2>
+        <p className="mt-2 text-sm text-ink-muted">{t.rich("actions.assignDescription", { nickname: user.nickname, b: (chunks) => <b>{chunks}</b> })}</p>
+        <div className="mt-4 flex flex-wrap gap-2" aria-label={t("actions.roleGroupLabel")}>
           {roles.map((item) => (
             <button
               aria-pressed={role === item}
@@ -82,21 +93,29 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
               onClick={() => setRole(item)}
               type="button"
             >
-              {item}
+              {t(`roles.${item}`)}
             </button>
           ))}
         </div>
-        <label className="mt-4 block text-sm font-semibold text-ink" htmlFor={`display-order-${user.slug}`}>Display order</label>
+        <label className="mt-4 block text-sm font-semibold text-ink" htmlFor={`display-order-${user.slug}`}>{t("actions.displayOrder")}</label>
         <input
           className={`mt-2 h-[46px] w-[200px] rounded-control border border-border px-[17px] text-sm text-ink ${focusClass}`}
           id={`display-order-${user.slug}`}
-          onChange={(event) => setDisplayOrder(event.target.value)}
+          aria-describedby={orderInvalid ? `display-order-error-${user.slug}` : undefined}
+          aria-invalid={orderInvalid || undefined}
+          min={1}
+          onChange={(event) => {
+            setDisplayOrder(event.target.value);
+            setOrderInvalid(false);
+          }}
+          step={1}
           type="number"
           value={displayOrder}
         />
+        {orderInvalid ? <p className="mt-2 text-xs text-danger" id={`display-order-error-${user.slug}`}>{t("actions.displayOrderInvalid")}</p> : null}
         <div className="mt-6 flex justify-end gap-3">
-          <button className={`rounded-control border border-primary-outline px-5 py-3 text-sm leading-[21px] font-semibold text-primary-strong ${focusClass}`} onClick={() => setAssignOpen(false)} type="button">Cancel</button>
-          <button className={`rounded-control bg-primary px-5 py-3 text-sm leading-[21px] font-semibold text-on-inverse ${focusClass}`} onClick={handleAssign} type="button">Confirm</button>
+          <button className={`rounded-control border border-primary-outline px-5 py-3 text-sm leading-[21px] font-semibold text-primary-strong ${focusClass}`} onClick={() => setAssignOpen(false)} type="button">{tCommon("cancel")}</button>
+          <button className={`rounded-control bg-primary px-5 py-3 text-sm leading-[21px] font-semibold text-on-inverse ${focusClass}`} onClick={handleAssign} type="button">{tCommon("confirm")}</button>
         </div>
       </Modal>
     </>

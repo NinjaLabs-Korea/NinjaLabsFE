@@ -1,0 +1,151 @@
+{
+  "login": {
+    "pageTitle": "{title} | Ninja Labs",
+    "mock": {
+      "title": "Preview the Ninja Labs sign-in flow",
+      "description": "Explore this step with a local session preview. It does not contact Google or create an account.",
+      "disclosure": "Mock mode is local and test only. This preview does not contact Google or create an account.",
+      "statusTitle": "Preview status",
+      "edgeCases": {
+        "first": "Selecting the button starts a local session preview only",
+        "second": "Google authentication is not invoked"
+      }
+    },
+    "api": {
+      "title": "Sign in to Ninja Labs",
+      "description": "Continue with Google to create your account. You will be redirected to Google and back here once you approve.",
+      "disclosure": "Signing in creates or restores your Ninja Labs account. We only receive your Google email. No password is shared.",
+      "statusTitle": "How it works",
+      "edgeCases": {
+        "first": "You are redirected to Google's consent screen and back after approval",
+        "second": "A new account starts at onboarding step 1; returning users resume their session"
+      }
+    }
+  },
+  "wallet": {
+    "metadata": {
+      "title": "Connect wallet | Ninja Labs",
+      "descriptionApi": "Connect and verify an Injective wallet.",
+      "descriptionMock": "Preview an Injective wallet connection."
+    },
+    "title": "Connect your wallet",
+    "introApi": "Connect your Injective EVM wallet, then sign a gas-free message to prove ownership.",
+    "introMock": "Connect an Injective EVM wallet in this local session preview.",
+    "unavailableButton": "Wallet unavailable",
+    "unavailableNote": "Wallet connection is unavailable until a supported Injective EVM chain is configured.",
+    "badgeApi": "Gas-free verification",
+    "badgeMock": "Connection-only preview",
+    "noteApi": "The signature does not submit a transaction. A verified wallet is linked to your account and queues your Ninja NFT mint.",
+    "noteMock": "Mock mode does not sign, link an account, or call the backend.",
+    "connectLater": "Connect later",
+    "optionalNote": "Wallet verification is optional. You can continue now and connect one later.",
+    "whatHappens": "What happens",
+    "steps": {
+      "connection": {
+        "term": "Connection",
+        "detail": "MetaMask or another EVM wallet"
+      },
+      "signing": {
+        "term": "Signing",
+        "detail": "EIP-191 personal_sign ownership proof"
+      },
+      "gas": {
+        "term": "Gas",
+        "detail": "No transaction and no gas fee"
+      },
+      "accountLinking": {
+        "term": "Account linking",
+        "detail": "Verified wallet saved to your account"
+      },
+      "nft": {
+        "term": "NFT",
+        "detail": "Parent Ninja NFT mint is queued"
+      }
+    }
+  },
+  "profile": {
+    "metadata": {
+      "title": "Set up profile | Ninja Labs",
+      "description": "Spam control and profile quality"
+    },
+    "title": "Set up your profile",
+    "whyRequired": "Why all required",
+    "whyRequiredSubtitle": "Spam control and profile quality",
+    "requirements": {
+      "spamControl": "Spam control and profile quality",
+      "oneFlow": "Complete the signup funnel in one flow",
+      "noSkip": "No skipping or draft saving"
+    },
+    "form": {
+      "nicknameLabel": "Nickname",
+      "nicknamePlaceholder": "Enter your nickname",
+      "fieldTags": "Field tags*",
+      "tags": {
+        "dev": "Dev",
+        "design": "Design",
+        "content": "Content",
+        "other": "Other"
+      },
+      "bioLabel": "Bio*",
+      "bioPlaceholder": "Tell the community about yourself",
+      "bioHint": "Short intro required.",
+      "submit": "Next",
+      "saving": "Saving profile…",
+      "errors": {
+        "nickname": "Enter a nickname of at least 2 characters.",
+        "tags": "Choose at least one field tag.",
+        "bio": "Write a short intro."
+      },
+      "saveErrors": {
+        "network": "We couldn't save your profile. Check your connection and try again.",
+        "session": "Your session has ended. Sign in again to continue.",
+        "nickname": "That nickname is already in use. Choose another one.",
+        "invalid": "Check every field: the nickname must be 2-50 characters, and a bio and field tag are required.",
+        "generic": "We couldn't save your profile. Please try again."
+      }
+    }
+  },
+  "getStarted": {
+    "metadata": {
+      "title": "Get started | Ninja Labs",
+      "description": "All skippable and revisitable from main navigation."
+    },
+    "eyebrow": "ONBOARDING COMPLETE",
+    "title": "What would you like to do?",
+    "subtitle": "All skippable and revisitable from main navigation.",
+    "actions": {
+      "browseBounties": {
+        "title": "Browse active bounties",
+        "description": "Find a bounty and start building your on-chain track record."
+      },
+      "playground": {
+        "title": "Try Injective in the Playground",
+        "description": "Explore Injective before choosing your next bounty."
+      },
+      "learnMore": {
+        "title": "Learn more about Ninja Labs",
+        "description": "Discover the builder community and bounty marketplace."
+      }
+    },
+    "skip": "Skip and go to main",
+    "savedNote": "Your onboarding progress is saved. You can update your wallet and profile later.",
+    "completeError": {
+      "message": "We couldn't finish saving your onboarding. Please try again.",
+      "retry": "Retry"
+    }
+  },
+  "gate": {
+    "checking": "Checking your session…",
+    "title": "Sign in to continue signing up",
+    "body": "Your session has ended or you have not signed in yet.",
+    "cta": "Continue with Google"
+  },
+  "authCallback": {
+    "metaTitle": "Signing in | Ninja Labs",
+    "signingIn": "Signing you in…",
+    "restoring": "Restoring your account. You will be redirected shortly.",
+    "failedTitle": "Sign-in could not be completed",
+    "failedBody": "Please try signing in again in this browser tab.",
+    "backToSignIn": "Back to sign in"
+  }
+}

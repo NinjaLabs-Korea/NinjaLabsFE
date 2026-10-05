@@ -3,7 +3,7 @@
  *
  * - 로그인 토큰은 POST /auth/exchange 응답 본문으로만 받는다.
  *   기존 백엔드와의 순차 배포를 위해 이전 fragment 수거를 한시적으로 지원한다.
- * - access token은 15분 JWT, refresh는 회전(rotation) 방식 — 401을 받으면
+ * - access token은 15분 JWT, refresh는 회전(rotation) 방식. 401을 받으면
  *   refresh로 재발급을 1회 시도하고, 실패하면 세션을 비운다.
  * - 저장소는 localStorage(사용 불가 환경 대비 try/catch). 서버 렌더 중에는
  *   어떤 저장소/네트워크 접근도 하지 않는다.
@@ -127,7 +127,7 @@ export function createApiHttp(apiUrl: string): ApiHttp {
     });
   }
 
-  /** refresh 회전 — 동시 401은 하나의 refresh만 수행하도록 합쳐진다 */
+  /** refresh 회전: 동시 401은 하나의 refresh만 수행하도록 합쳐진다 */
   function refreshSession(): Promise<boolean> {
     refreshing ??= (async () => {
       try {
@@ -207,7 +207,7 @@ export function createApiHttp(apiUrl: string): ApiHttp {
       }
       onboardingLog("session.logout.requested");
       const traceId = getOnboardingTraceId();
-      // 서버 세션 폐기는 best-effort — 실패해도 로컬 로그아웃은 완료된 상태
+      // 서버 세션 폐기는 best-effort. 실패해도 로컬 로그아웃은 완료된 상태
       await fetch(`${base}/auth/logout`, {
         method: "POST",
         cache: "no-store",

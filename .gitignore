@@ -33,7 +33,7 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
-# 배포 런타임 설정 — 비밀값 없음 (Vercel 빌드가 읽음)
+# 배포 런타임 설정. 비밀값 없음 (Vercel 빌드가 읽음)
 !.env.production
 
 # vercel

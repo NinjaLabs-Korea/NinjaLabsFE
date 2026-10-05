@@ -3,6 +3,7 @@ import { captureTokensFromLocation, clearTokens, createApiHttp, type ApiHttp } f
 import { createLoginChallenge, exchangeLoginCodeFromLocation } from "@/lib/api/oauth";
 import { fetchMe, toClientUser } from "@/lib/api/me";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
+import { stripLocale, withLocaleOf } from "@/i18n/routing";
 
 export function getOnboardingPath(user: AuthSnapshot["user"]): string | null {
   if (!user || user.onboardingCompleted) return null;
@@ -17,8 +18,8 @@ export function shouldRedirectToOnboarding(
   pathname: string,
 ): string | null {
   const onboardingPath = getOnboardingPath(user);
-  if (!onboardingPath || pathname.startsWith("/signup/")) return null;
-  return onboardingPath;
+  if (!onboardingPath || stripLocale(pathname).startsWith("/signup/")) return null;
+  return withLocaleOf(pathname, onboardingPath);
 }
 
 /**
@@ -27,7 +28,7 @@ export function shouldRedirectToOnboarding(
  * - signIn: BE `/auth/google`로 전체 페이지 리다이렉트. 구글 동의 후 BE가
  *   `/auth/callback#loginCode=..`로 돌려보낸다. 코드를 지운 뒤 브라우저의
  *   verifier와 POST /auth/exchange로 교환하고 `/auth/me`로 세션을 복원한다.
- * - 서버 렌더 중에는 항상 "loading" — 브라우저에서만 토큰/네트워크에 접근한다.
+ * - 서버 렌더 중에는 항상 "loading". 브라우저에서만 토큰/네트워크에 접근한다.
  */
 export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiHttp } {
   const http = createApiHttp(apiUrl);
@@ -82,8 +83,10 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
         onboardingStep: restored.user?.onboardingStep,
         onboardingCompleted: restored.user?.onboardingCompleted,
       });
+      // 콜백은 로케일 경로(/en/auth/callback)로 들어오므로 로케일을 떼고 비교하고, 같은 로케일의 홈으로 보낸다.
+      const onCallback = stripLocale(window.location.pathname) === "/auth/callback";
       const targetPath = onboardingPath ?? (
-        window.location.pathname === "/auth/callback" && restored.status === "signed-in" ? "/" : null
+        onCallback && restored.status === "signed-in" ? withLocaleOf(window.location.pathname, "/") : null
       );
       if (targetPath) {
         onboardingLog("onboarding.redirect.started", { targetPath });

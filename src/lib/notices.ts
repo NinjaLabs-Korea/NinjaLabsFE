@@ -1,6 +1,5 @@
 import type { Notice } from "@/lib/types";
-import { fetchPublicJson } from "@/lib/api/public";
-import { loadRuntimeConfig } from "@/lib/runtime/config";
+import { fetchPublicJson, loadFromRuntime } from "@/lib/api/public";
 
 export const notices: Notice[] = [
   {
@@ -9,10 +8,10 @@ export const notices: Notice[] = [
     excerpt:
       "Three bounty tracks will help new teams ship wallets, widgets, and educational content.",
     bodyMarkdown:
-      "Three bounty tracks will help new teams ship wallets, widgets, and educational content. Each track pairs builders with clear scopes so first-time contributors can land meaningful work on Injective.\n\n- **Wallets** — ship wallet flows and integrations for Injective users\n- **Widgets** — build reusable, embeddable widgets for Injective data\n- **Educational content** — create guides and primers that onboard new builders",
+      "Three bounty tracks will help new teams ship wallets, widgets, and educational content. Each track pairs builders with clear scopes so first-time contributors can land meaningful work on Injective.\n\n- **Wallets**: ship wallet flows and integrations for Injective users\n- **Widgets**: build reusable, embeddable widgets for Injective data\n- **Educational content**: create guides and primers that onboard new builders",
     category: "Ninja Labs",
     publishedAt: "2026.06.20",
-    thumbnail: "ninja-api-forge-developer-campaign.png",
+    thumbnail: "",
   },
   {
     slug: "iasset-modules-for-bounty-builders",
@@ -23,8 +22,7 @@ export const notices: Notice[] = [
       "A primer on **price feeds**, market metadata, and integration patterns for upcoming tasks.\n\nBuild a reusable price widget for Injective iAssets. Start with the [iAsset overview](https://docs.injective.network) to understand the module surface before wiring anything up.",
     category: "Injective ecosystem",
     publishedAt: "2026.06.15",
-    thumbnail: "injective-multivm-ecosystem-campaign.png",
-    coverImage: "injective-multivm-ecosystem-campaign.png",
+    thumbnail: "",
     related: [
       { label: "Browse active bounty tracks", href: "/bounties" },
       { label: "View a public portfolio", href: "/members/jaemin" },
@@ -35,22 +33,31 @@ export const notices: Notice[] = [
     title: "Injective EVM community workshop",
     excerpt: "Injective EVM community workshop.",
     bodyMarkdown:
-      "Details and participation info to follow — check back here for the schedule and how to join.",
+      "Details and participation info to follow. Check back here for the schedule and how to join.",
     category: "Events",
     publishedAt: "2026.06.12",
-    thumbnail: "injective-evm-community-workshop.png",
+    thumbnail: "",
   },
   {
     slug: "ninja-bounty-prove-to-earn-campaign",
     title: "Ninja Bounty: Prove to Earn campaign",
     excerpt: "Ninja Bounty: Prove to Earn campaign.",
     bodyMarkdown:
-      "Details and participation info to follow — keep an eye on this notice for eligibility and timelines.",
+      "Details and participation info to follow. Keep an eye on this notice for eligibility and timelines.",
     category: "Ninja Labs",
     publishedAt: "2026.06.08",
-    thumbnail: "ninja-bounty-prove-to-earn-campaign.png",
+    thumbnail: "",
   },
 ];
+
+// Display-label keys (messages `notices.categories`); the category value itself stays English for matching.
+export const noticeCategoryKeys: Record<Notice["category"], string> = {
+  "Ninja Labs": "ninjaLabs",
+  "Injective ecosystem": "injectiveEcosystem",
+  Events: "events",
+  Recruitment: "recruitment",
+  Other: "other",
+};
 
 export function getNotices() {
   return notices;
@@ -94,17 +101,22 @@ function toNotice(row: NoticeRow): Notice {
   };
 }
 
-export async function getRuntimeNotices(): Promise<Notice[]> {
-  if (loadRuntimeConfig().runtimeMode === "mock") return getNotices();
-  const response = await fetchPublicJson<NoticeListResponse>("/notices?page=1&pageSize=50");
-  return response.items.map(toNotice);
+export function getRuntimeNotices(): Promise<Notice[]> {
+  return loadFromRuntime({
+    mock: getNotices,
+    api: async () => (await fetchPublicJson<NoticeListResponse>("/notices?page=1&pageSize=50")).items.map(toNotice),
+  });
 }
 
-export async function getRuntimeNotice(id: string): Promise<Notice | undefined> {
-  if (loadRuntimeConfig().runtimeMode === "mock") return getNotice(id);
-  try {
-    return toNotice(await fetchPublicJson<NoticeRow>(`/notices/${encodeURIComponent(id)}`));
-  } catch {
-    return undefined;
-  }
+export function getRuntimeNotice(id: string): Promise<Notice | undefined> {
+  return loadFromRuntime({
+    mock: () => getNotice(id),
+    api: async () => {
+      try {
+        return toNotice(await fetchPublicJson<NoticeRow>(`/notices/${encodeURIComponent(id)}`));
+      } catch {
+        return undefined;
+      }
+    },
+  });
 }

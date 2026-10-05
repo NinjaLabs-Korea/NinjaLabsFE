@@ -1,0 +1,44 @@
+{
+  "metadata": {
+    "title": "명예의 전당 | Ninja Labs",
+    "description": "커뮤니티를 앞으로 이끄는 빌더, 바운티, 파트너십의 기록입니다."
+  },
+  "header": {
+    "eyebrow": "커뮤니티 마일스톤",
+    "heading": "명예의 전당",
+    "description": "커뮤니티를 앞으로 이끄는 빌더, 바운티, 파트너십의 기록입니다.",
+    "public": "공개"
+  },
+  "stats": {
+    "bountiesRun": "진행한 바운티",
+    "buildersOnboarded": "합류한 빌더",
+    "ecosystemPartners": "생태계 파트너",
+    "rewardsPaid": "지급된 보상",
+    "bountiesCompleted": "완료된 바운티",
+    "buildersRewarded": "보상받은 빌더",
+    "completionNfts": "완료 NFT"
+  },
+  "aggregateNote": "플랫폼 전체 집계이며 순위가 아닙니다.",
+  "highlights": {
+    "eyebrow": "주목할 소식",
+    "heading": "하이라이트",
+    "readNotices": "공지사항 보기",
+    "categories": {
+      "milestone": "마일스톤",
+      "featuredBounty": "추천 바운티",
+      "partnership": "파트너십"
+    }
+  },
+  "timeline": {
+    "eyebrow": "우리의 이야기",
+    "heading": "타임라인"
+  },
+  "unavailable": {
+    "title": "명예의 전당을 일시적으로 불러올 수 없습니다.",
+    "body": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요."
+  },
+  "partners": {
+    "eyebrow": "커뮤니티",
+    "heading": "파트너"
+  }
+}

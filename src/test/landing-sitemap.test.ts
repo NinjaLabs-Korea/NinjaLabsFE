@@ -39,8 +39,8 @@ describe("landing and sitemap with a partially unavailable API", () => {
     sources.members.mockResolvedValue([{ slug: "ninja" }]);
     sources.notices.mockRejectedValue(new Error("down"));
     const urls = (await sitemap()).map((entry) => entry.url);
-    expect(urls).toContain("https://ninja.test/bounties");
-    expect(urls).toContain("https://ninja.test/members/ninja");
-    expect(urls.some((url) => url.startsWith("https://ninja.test/bounties/b"))).toBe(false);
+    expect(urls).toContain("https://ninja.test/en/bounties");
+    expect(urls).toContain("https://ninja.test/en/members/ninja");
+    expect(urls.some((url) => url.includes("/bounties/b"))).toBe(false);
   });
 });

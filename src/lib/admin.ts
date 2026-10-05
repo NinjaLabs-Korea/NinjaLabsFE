@@ -57,7 +57,22 @@ export type AdminPost = {
   externalUrl: string | null;
 };
 
-const adminUserSlugs = ["jaemin", "sora", "jinyoung", "juho", "mina", "ara"] as const;
+// Message keys (admin namespace) for displayed enum labels; the enum values themselves stay API-facing.
+export const highlightTypeLabelKeys: Record<AdminHighlight["type"], string> = {
+  Milestone: "milestone",
+  "Featured bounty": "featuredBounty",
+  Partnership: "partnership",
+};
+
+export const postCategoryLabelKeys: Record<AdminPost["category"], string> = {
+  "Ninja Labs": "ninjaLabs",
+  "Injective ecosystem": "injectiveEcosystem",
+  Events: "events",
+  Recruitment: "recruitment",
+  Other: "other",
+};
+
+const adminUserSlugs =["jaemin", "sora", "jinyoung", "juho", "mina", "ara"] as const;
 
 const userOverlays: Record<
   (typeof adminUserSlugs)[number],
@@ -73,17 +88,17 @@ const userOverlays: Record<
 
 const bountyOverlays: Record<
   string,
-  { intakeEnabled: boolean; deadline: string; status?: "reviewing" }
+  { deadline: string; status?: "reviewing" }
 > = {
-  "iasset-price-widget": { intakeEnabled: true, deadline: "07.14" },
-  "wallet-onboarding-states": { intakeEnabled: false, deadline: "07.12", status: "reviewing" },
-  "contract-security-audit": { intakeEnabled: false, deadline: "07.19" },
-  "injective-dev-tutorial": { intakeEnabled: true, deadline: "07.16" },
-  "helix-volume-analytics": { intakeEnabled: false, deadline: "07.21" },
-  "hydro-liquidity-explainer": { intakeEnabled: false, deadline: "07.17" },
-  "neptune-api-docs": { intakeEnabled: false, deadline: "07.23" },
-  "design-system-build": { intakeEnabled: false, deadline: "07.03" },
-  "quest-copy-refresh": { intakeEnabled: false, deadline: "07.01" },
+  "iasset-price-widget": { deadline: "07.14" },
+  "wallet-onboarding-states": { deadline: "07.12", status: "reviewing" },
+  "contract-security-audit": { deadline: "07.19" },
+  "injective-dev-tutorial": { deadline: "07.16" },
+  "helix-volume-analytics": { deadline: "07.21" },
+  "hydro-liquidity-explainer": { deadline: "07.17" },
+  "neptune-api-docs": { deadline: "07.23" },
+  "design-system-build": { deadline: "07.03" },
+  "quest-copy-refresh": { deadline: "07.01" },
 };
 
 export function getAdminUsers(): AdminUser[] {
@@ -120,7 +135,8 @@ export function getAdminBounties(): AdminBounty[] {
       title: bounty.title,
       sponsor: bounty.sponsor,
       reward: { ...bounty.reward },
-      intakeEnabled: overlay.intakeEnabled,
+      // Intake = 지원형 여부. API 모드의 `application_required`와 같은 값이므로 바운티 데이터에서 가져온다.
+      intakeEnabled: bounty.applicationRequired ?? false,
       submissionMode: bounty.submissionMode ?? "direct",
       coverImage: bounty.coverImage || null,
       status: overlay.status ?? bounty.status,

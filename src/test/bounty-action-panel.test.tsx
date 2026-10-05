@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
@@ -8,9 +8,10 @@ import { toApiHttpError, type ApiHttp } from "@/lib/api/http";
 import type { AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
+import { renderWithIntl } from "@/test/intl";
 
-vi.mock("next/link", () => ({
-  default: ({ children, href, ...props }: ComponentProps<"a">) => (
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ children, href, ...props }: ComponentProps<"a">) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -34,7 +35,8 @@ const apiClient = {
 
 vi.mock("@/components/auth/FoundationProvider", () => ({
   useAuthSnapshot: () => signedIn,
-  useFoundationApiClient: () => apiClient,
+  useAccountApi: () => apiClient,
+  useBountyApi: () => apiClient,
 }));
 
 const application = (status: AccountApplication["status"]): AccountApplication => ({
@@ -53,14 +55,14 @@ describe("BountyActionPanel", () => {
   });
 
   it("shows the apply form when no application exists", async () => {
-    render(<BountyActionPanel applicationRequired bountyId="bounty-1" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" submissionMode="direct" />);
     expect(await screen.findByRole("button", { name: "Apply" })).toBeTruthy();
   });
 
   it("shows review status instead of the apply form after submitting on an apply-type bounty", async () => {
     state.applications = [application("submitted")];
     state.submissions = [{ bountySlug: "bounty-1", status: "in_review" }];
-    render(<BountyActionPanel applicationRequired bountyId="bounty-1" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" submissionMode="direct" />);
     expect(await screen.findByText("Submission under review")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Update submission" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
@@ -68,26 +70,26 @@ describe("BountyActionPanel", () => {
 
   it("shows a rejected application without offering to apply again", async () => {
     state.applications = [application("rejected")];
-    render(<BountyActionPanel applicationRequired bountyId="bounty-1" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" submissionMode="direct" />);
     expect(await screen.findByText("Application not selected")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
   });
 
   it("unlocks submission after approval", async () => {
     state.applications = [application("approved")];
-    render(<BountyActionPanel applicationRequired bountyId="bounty-1" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" submissionMode="direct" />);
     expect(await screen.findByRole("button", { name: "Submit" })).toBeTruthy();
   });
 
   it("offers resubmission on direct bounties when a revision is requested", async () => {
     state.submissions = [{ bountySlug: "bounty-1", status: "revision_requested" }];
-    render(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" submissionMode="direct" />);
     expect(await screen.findByRole("button", { name: "Resubmit" })).toBeTruthy();
   });
 
   it("shows approved direct submissions as final", async () => {
     state.submissions = [{ bountySlug: "bounty-1", status: "approved" }];
-    render(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" submissionMode="direct" />);
     expect(await screen.findByText("Submission approved")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Submit" })).toBeNull();
   });

@@ -7,11 +7,14 @@ export function AdminSelect({
   options,
   value,
   onChange,
+  formatOption = (option) => option,
 }: {
   label: string;
   options: string[];
   value: string;
   onChange: (v: string) => void;
+  /** Maps an option value to its displayed (translated) label. */
+  formatOption?: (option: string) => string;
 }) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(() => Math.max(options.indexOf(value), 0));
@@ -95,7 +98,7 @@ export function AdminSelect({
         ref={triggerRef}
         type="button"
       >
-        {value}
+        {formatOption(value)}
         <span>▾</span>
       </button>
       {open && (
@@ -120,7 +123,7 @@ export function AdminSelect({
                 onMouseEnter={() => setActiveIndex(index)}
                 role="option"
               >
-                {option}
+                {formatOption(option)}
               </li>
             );
           })}

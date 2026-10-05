@@ -34,7 +34,7 @@ Page `#fbfbfe`; white table and editor cards; lavender `#eeefff` table header; t
 ## Interactions
 Public nav/footer/CTAs are links. Admin tabs switch administration areas. `+ New Post` opens/focuses the creation editor; Edit loads a row into it. Category and Status are dropdowns; thumbnail invokes upload; external link is optional; markdown textarea accepts body content. Save persists Draft or Publish. Latest published records surface on Intro (01) and Notices list (08); drafts have no published date and should remain private.
 
-> Mock-scope note: the state-changing behaviors above (assign/confirm/save/publish) are the design's product semantics. The G002 implementation renders them as static visual states only — no mutations — per the frozen matrix scope; wiring them is future backend scope.
+> Mock-scope note: the state-changing behaviors above (assign/confirm/save/publish) are the design's product semantics. The G002 implementation renders them as static visual states only - no mutations - per the frozen matrix scope; wiring them is future backend scope.
 
 ## Responsive inference
 At 768px: public nav collapses to a menu, title wraps, header badge/action can move beneath title, and admin tabs wrap; retain 24px gutters. The posts table keeps its 820px min-width with horizontal scrolling; editor columns can remain two-up only when practical, otherwise stack. At 390px: header reduces to menu plus primary CTA; tabs wrap; table remains horizontally scrollable; all editor controls become one column, textarea stays full width, and footer columns stack.
@@ -49,7 +49,7 @@ type NoticeCategory = 'ninja_labs' | 'injective_ecosystem' | 'events';
 type NoticeStatus = 'draft' | 'published';
 
 // Admin-only model (src/lib/admin.ts): published rows are slug-keyed derivations of public notices;
-// draft rows exist ONLY in the admin registry — private, never added to the public notices registry.
+// draft rows exist ONLY in the admin registry - private, never added to the public notices registry.
 type AdminPost = {
   id: string;
   slug: string;

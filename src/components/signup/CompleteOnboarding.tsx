@@ -1,11 +1,13 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
-import { useAuthSnapshot, useFoundationApiClient } from "@/components/auth/FoundationProvider";
+import { useAuthSnapshot, useOnboardingApi } from "@/components/auth/FoundationProvider";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
 
 export function CompleteOnboarding() {
-  const apiClient = useFoundationApiClient();
+  const t = useTranslations("signup.getStarted.completeError");
+  const apiClient = useOnboardingApi();
   const auth = useAuthSnapshot();
   const [state, setState] = useState<"pending" | "done" | "error">("pending");
   const signedIn = auth.status === "signed-in";
@@ -39,13 +41,13 @@ export function CompleteOnboarding() {
 
   return (
     <div className="mb-6 flex flex-col items-start justify-between gap-3 rounded-tile border border-danger bg-danger-soft p-4 sm:flex-row sm:items-center" role="alert">
-      <p className="text-sm text-danger">We couldn’t finish saving your onboarding. Please try again.</p>
+      <p className="text-sm text-danger">{t("message")}</p>
       <button
         className="rounded-control bg-danger px-4 py-2 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         onClick={retry}
         type="button"
       >
-        Retry
+        {t("retry")}
       </button>
     </div>
   );

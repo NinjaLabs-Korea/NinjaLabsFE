@@ -1,18 +1,13 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
 import {
-  useAccount,
-  useConnect,
-  useDisconnect,
-  useSignMessage,
-  useSwitchChain,
-} from "wagmi";
-import {
-  useFoundationApiClient,
+  useWalletApi,
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
+import { useRouter } from "@/i18n/navigation";
+import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
 import {
   maskWalletAddress,
   onboardingErrorDetails,
@@ -24,39 +19,29 @@ type WalletConnectButtonProps = {
   disabled?: boolean;
 };
 
-function formatAddress(address: string): string {
-  return `${address.slice(0, 6)}…${address.slice(-4)}`;
-}
-
 export function WalletConnectButton({
   chainId,
   disabled = false,
 }: WalletConnectButtonProps) {
+  const t = useTranslations("common.wallet");
   const router = useRouter();
-  const apiClient = useFoundationApiClient();
+  const apiClient = useWalletApi();
   const mode = useFoundationMode();
   const [verificationState, setVerificationState] = useState<"idle" | "pending" | "error">("idle");
-  const hasInjectedWallet = useSyncExternalStore(
-    () => () => undefined,
-    () => "ethereum" in window,
-    () => false,
-  );
-  const { address, chainId: connectedChainId, isConnected } = useAccount();
-  const { connect, connectors, error, isPending } = useConnect();
-  const { disconnect } = useDisconnect();
-  const { signMessageAsync } = useSignMessage();
-  const { switchChain, isPending: isSwitching } = useSwitchChain();
-  const isWrongNetwork = isConnected && connectedChainId !== chainId;
-  const injectedConnector = connectors.find(
-    (connector) => connector.type === "injected",
-  );
-  const walletConnectConnector = connectors.find(
-    (connector) => connector.type === "walletConnect",
-  );
-
-  const connector = hasInjectedWallet
-    ? injectedConnector
-    : walletConnectConnector;
+  const {
+    address,
+    connectedChainId,
+    isWrongNetwork,
+    isConnected,
+    connector,
+    connect,
+    connectError: error,
+    isConnecting: isPending,
+    disconnect,
+    signMessageAsync,
+    switchToTargetChain,
+    isSwitching,
+  } = useWalletConnection(chainId);
 
   const unavailable = !connector;
   const buttonClassName =
@@ -102,13 +87,13 @@ export function WalletConnectButton({
               fromChainId: connectedChainId,
               toChainId: chainId,
             });
-            switchChain({ chainId });
+            switchToTargetChain();
           }}
         >
-          {isSwitching ? "Switching network…" : "Switch to Injective EVM"}
+          {isSwitching ? t("switching") : t("switchNetwork")}
         </button>
         <p className="text-xs text-warning" role="status">
-          Your wallet is connected to an unsupported network.
+          {t("unsupportedNetwork")}
         </p>
       </div>
     );
@@ -124,7 +109,7 @@ export function WalletConnectButton({
             disabled={disabled || verificationState === "pending"}
             onClick={() => void verifyConnectedWallet()}
           >
-            {verificationState === "pending" ? "Waiting for signature…" : "Verify wallet"}
+            {verificationState === "pending" ? t("awaitingSignature") : t("verify")}
           </button>
           <button
             type="button"
@@ -137,11 +122,11 @@ export function WalletConnectButton({
               disconnect();
             }}
           >
-            Disconnect {formatAddress(address)}
+            {t("disconnectAddress", { address: shortWalletAddress(address) })}
           </button>
           {verificationState === "error" ? (
             <p className="text-xs text-danger" role="alert">
-              Wallet verification failed. Check the signature request and try again.
+              {t("verifyFailed")}
             </p>
           ) : null}
         </div>
@@ -159,9 +144,9 @@ export function WalletConnectButton({
           });
           disconnect();
         }}
-        aria-label={`Disconnect wallet ${formatAddress(address)}`}
+        aria-label={t("disconnectWalletLabel", { address: shortWalletAddress(address) })}
       >
-        {formatAddress(address)}
+        {shortWalletAddress(address)}
       </button>
     );
   }
@@ -174,10 +159,10 @@ export function WalletConnectButton({
           className={`${buttonClassName} border-border bg-surface text-ink-secondary`}
           disabled
         >
-          Wallet unavailable
+          {t("unavailable")}
         </button>
         <p className="text-xs text-ink-muted" role="status">
-          Install or unlock a compatible browser wallet to connect.
+          {t("unavailableHint")}
         </p>
       </div>
     );
@@ -194,14 +179,14 @@ export function WalletConnectButton({
             connectorType: connector.type,
             targetChainId: chainId,
           });
-          connect({ connector });
+          connect();
         }}
       >
-        {isPending ? "Connecting wallet…" : "Connect wallet"}
+        {isPending ? t("connecting") : t("connect")}
       </button>
       {error ? (
         <p className="text-xs text-danger" role="alert">
-          Unable to connect your wallet. Try again.
+          {t("connectFailed")}
         </p>
       ) : null}
     </div>

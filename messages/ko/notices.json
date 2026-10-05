@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "title": "공지사항 | Ninja Labs",
+    "description": "Injective 생태계를 위한 빌더 커뮤니티이자 바운티 마켓플레이스입니다."
+  },
+  "list": {
+    "eyebrow": "소식",
+    "heading": "공지사항",
+    "description": "Injective 생태계를 위한 빌더 커뮤니티이자 바운티 마켓플레이스입니다.",
+    "badge": "운영 공지만이 아닌 커뮤니티 피드"
+  },
+  "filters": {
+    "ariaLabel": "공지 카테고리",
+    "all": "전체",
+    "listAriaLabel": "공지사항",
+    "emptyTitle": "필터에 맞는 공지가 없습니다",
+    "emptyBody": "다른 카테고리를 선택하거나 검색을 초기화해 보세요.",
+    "reset": "필터 초기화"
+  },
+  "categories": {
+    "ninjaLabs": "Ninja Labs",
+    "injectiveEcosystem": "Injective 생태계",
+    "events": "이벤트",
+    "recruitment": "채용",
+    "other": "기타"
+  },
+  "detail": {
+    "notFoundTitle": "페이지를 찾을 수 없음 | Ninja Labs",
+    "pageTitle": "{title} | Ninja Labs",
+    "back": "← 목록으로",
+    "public": "공개",
+    "readMoreHeading": "자세히 보기",
+    "readMoreLink": "자세히 보기 →",
+    "related": "관련 링크"
+  }
+}

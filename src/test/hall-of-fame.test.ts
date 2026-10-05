@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const fetchPublicJson = vi.fn();
-vi.mock("@/lib/api/public", () => ({ fetchPublicJson: (path: string) => fetchPublicJson(path) }));
+vi.mock("@/lib/api/public", () => ({
+  fetchPublicJson: (path: string) => fetchPublicJson(path),
+  loadFromRuntime: (sources: { api: () => unknown }) => sources.api(),
+}));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
 const { loadRuntimeHallOfFame } = await import("@/lib/hall-of-fame");

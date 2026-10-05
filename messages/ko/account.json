@@ -1,0 +1,34 @@
+{
+  "common": {
+    "eyebrow": "계정",
+    "unavailableBody": "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+    "mockNote": "세션 미리보기: 데모 데이터이며 새로고침하면 초기화됩니다."
+  },
+  "signedOut": {
+    "body": "가입 절차를 완료하면 내 계정을 미리 볼 수 있습니다.",
+    "cta": "시작하기"
+  },
+  "applications": {
+    "meta": {
+      "title": "내 지원 내역 | Ninja Labs",
+      "description": "바운티 지원 내역과 검토 상태를 확인하세요."
+    },
+    "unavailableTitle": "지원 내역을 일시적으로 불러올 수 없습니다.",
+    "signedOutMessage": "로그인하고 지원 내역을 확인하세요",
+    "heading": "내 지원 내역",
+    "intro": "지원한 모든 지원형 바운티를 확인하세요. 스폰서가 승인하면 제출할 수 있습니다.",
+    "appliedAt": "{date} 지원",
+    "progressLabel": "지원 진행 상황",
+    "steps": {
+      "open": "지원 완료",
+      "under_review": "검토 중",
+      "approved": "승인됨",
+      "submitted": "제출됨",
+      "completed": "완료"
+    },
+    "approvedStatus": "승인됨: 제출 가능",
+    "submitWork": "작업 제출하기",
+    "rejectedStatus": "미선정",
+    "rejectedNote": "스폰서가 이 지원을 선정하지 않았습니다. 다른 진행 중인 바운티를 둘러보세요."
+  }
+}

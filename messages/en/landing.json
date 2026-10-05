@@ -1,0 +1,28 @@
+{
+  "hero": {
+    "eyebrow": "Built on Injective",
+    "title": "Complete bounties. Collect proof.",
+    "titleHighlight": "Own your track record.",
+    "description": "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.",
+    "getStarted": "Get Started",
+    "browseBounties": "Browse Bounties",
+    "portfolioMeta": "Ninja NFT · member since {year}",
+    "next": "+ next",
+    "portfolioSummary": "{count, plural, one {# bounty completed} other {# bounties completed}} · a growing on-chain portfolio"
+  },
+  "bounties": {
+    "eyebrow": "Marketplace",
+    "heading": "Active bounties",
+    "viewAll": "View all →",
+    "unavailable": "Active bounties are temporarily unavailable.",
+    "empty": "No active bounties right now. New sponsor opportunities will appear here."
+  },
+  "news": {
+    "eyebrow": "From the community",
+    "heading": "Recent news",
+    "viewAll": "View all →",
+    "unavailable": "Recent news is temporarily unavailable.",
+    "empty": "No news yet. Check back soon."
+  },
+  "unavailableBody": "We couldn't reach the server. Please refresh in a moment."
+}

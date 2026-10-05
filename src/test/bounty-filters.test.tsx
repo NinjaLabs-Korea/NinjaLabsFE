@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { BountyFilters } from "@/components/bounties/BountyFilters";
 import type { Bounty } from "@/lib/types";
+import { renderWithIntl } from "@/test/intl";
 
-vi.mock("next/link", () => ({
-  default: ({ children, href, ...props }: ComponentProps<"a">) => (
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ children, href, ...props }: ComponentProps<"a">) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -52,7 +53,7 @@ const bounties: Bounty[] = [
 
 describe("BountyFilters", () => {
   it("applies category and status as independent nested filters", () => {
-    render(<BountyFilters bounties={bounties} />);
+    renderWithIntl(<BountyFilters bounties={bounties} />);
 
     const categoryGroup = screen.getByRole("group", { name: "Category" });
     const statusGroup = screen.getByRole("group", { name: "Status" });

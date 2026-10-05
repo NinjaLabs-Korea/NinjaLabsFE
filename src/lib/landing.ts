@@ -1,16 +1,15 @@
 import type { Bounty, NoticePreview } from './types';
 import { getRuntimeBounties } from './bounties';
 import { getRuntimeNotices } from './notices';
-import { emptyHallOfFame, getRuntimeHallOfFame } from './hall-of-fame';
+import { emptyHallOfFame, getRuntimeHallOfFame, type HallStatKey } from './hall-of-fame';
 
+// Hero copy (eyebrow, title, description, CTA labels) lives in messages `landing.hero`;
+// CTA `labelKey` and stat `labelKey` resolve there and under `hallOfFame.stats`.
 type LandingData = {
   hero: {
-    eyebrow: string;
-    title: string;
-    description: string;
-    primaryCta: { label: string; href: string };
-    secondaryCta: { label: string; href: string };
-    stats: Array<{ value: string; label: string }>;
+    primaryCta: { labelKey: 'getStarted'; href: string };
+    secondaryCta: { labelKey: 'browseBounties'; href: string };
+    stats: Array<{ value: string; labelKey: HallStatKey }>;
     portfolio: {
       handle: string;
       memberSince: number;
@@ -24,16 +23,12 @@ type LandingData = {
 
 export const landing: LandingData = {
   hero: {
-    eyebrow: 'Built on Injective',
-    title: 'Complete bounties. Collect proof. Own your track record.',
-    description:
-      'A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT — together they become a portfolio you truly own.',
-    primaryCta: { label: 'Get Started', href: '/signup' },
-    secondaryCta: { label: 'Browse Bounties', href: '/bounties' },
+    primaryCta: { labelKey: 'getStarted', href: '/signup' },
+    secondaryCta: { labelKey: 'browseBounties', href: '/bounties' },
     stats: [
-      { value: '128', label: 'Bounties run' },
-      { value: '412', label: 'Builders onboarded' },
-      { value: '10+', label: 'Ecosystem partners' },
+      { value: '128', labelKey: 'bountiesRun' },
+      { value: '412', labelKey: 'buildersOnboarded' },
+      { value: '10+', labelKey: 'ecosystemPartners' },
     ],
     portfolio: {
       handle: 'ninja.inj',
@@ -143,7 +138,7 @@ export async function getRuntimeLanding(): Promise<RuntimeLanding> {
   return {
     hero: {
       ...landing.hero,
-      stats: hall.stats,
+      stats: hall.stats.map(({ value, labelKey }) => ({ value, labelKey })),
       portfolio: {
         handle: 'Ninja Labs',
         memberSince: 2026,
