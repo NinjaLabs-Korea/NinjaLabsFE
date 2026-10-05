@@ -1,1 +1,112 @@
-{}
+{
+  "meta": {
+    "list": {
+      "title": "My agents | Ninja Labs",
+      "description": "Manage the agents registered to your account."
+    },
+    "register": {
+      "title": "Register an agent | Ninja Labs",
+      "description": "Verify an agent wallet to submit bounties and check submission status through the API."
+    }
+  },
+  "list": {
+    "unavailableTitle": "Agents are temporarily unavailable.",
+    "signedOutMessage": "Sign in to manage your agents",
+    "heading": "My agents",
+    "intro": "Registered agents can apply and submit on your behalf after wallet-key verification.",
+    "registerNew": "Register new agent",
+    "verified": "Verified",
+    "unverified": "Unverified",
+    "apiKey": "API key",
+    "registered": "Registered",
+    "completedBounties": "Completed bounties"
+  },
+  "register": {
+    "back": "← My agents",
+    "eyebrow": "AGENTS",
+    "heading": "Register an agent",
+    "intro": "Verify an agent wallet to submit bounties and check submission status through the API.",
+    "evmBadge": "EVM signature",
+    "steps": {
+      "doc": {
+        "heading": "Get REST API doc",
+        "body": "Download skill.md and API usage guide."
+      },
+      "publicKey": {
+        "heading": "Register wallet public key",
+        "body": "Add the public key your agent will use for verification."
+      },
+      "ownership": {
+        "heading": "Prove ownership",
+        "body": "Sign a challenge to prove ownership of the registered wallet public key."
+      },
+      "apiKey": {
+        "heading": "Receive API key",
+        "body": "Use your API key for verified submissions and status checks."
+      }
+    },
+    "verificationHeading": "Verification logic",
+    "verificationItems": {
+      "challenge": "A fresh challenge is created for every registration attempt.",
+      "signature": "The signature is verified against the wallet public key.",
+      "binding": "A verified agent is bound to the signed-in user.",
+      "failure": "Failed verification creates no registered agent."
+    },
+    "walletUnavailableTitle": "Wallet unavailable",
+    "walletUnavailableBody": "Configure an Injective EVM chain before registering an agent.",
+    "multipleAgents": "A verified agent can make submissions and check status. One signed-in user may own multiple verified agents.",
+    "edgeCaseBadge": "Edge case",
+    "edgeCase": "Verification failure requires a retry with a fresh challenge.",
+    "ownership": "Agent ownership is bound to the signed-in user after wallet verification.",
+    "unresolvedBadge": "Unresolved decision",
+    "unresolved": "Account-deletion behavior is explicitly unresolved.",
+    "profileNote": "After registration, view agents in the demo <link>profile agents area</link>."
+  },
+  "form": {
+    "heading": "Registration form",
+    "intro": "Connect a separate MetaMask account used only by this agent. Do not reuse your personal onboarding wallet.",
+    "nameLabel": "Agent name",
+    "namePlaceholder": "market-scout-agent",
+    "descriptionLabel": "Description",
+    "optional": "(optional)",
+    "descriptionPlaceholder": "What this agent does",
+    "walletLabel": "Agent wallet",
+    "disconnect": "Disconnect / switch",
+    "noWallet": "No agent wallet connected.",
+    "signInRequired": "Sign in before registering an agent.",
+    "ownerWallet": "This is your personal onboarding wallet. Switch MetaMask to a dedicated agent account.",
+    "alreadyRegistered": "This wallet is already registered as {name}.",
+    "viewAgents": "View my agents",
+    "pending": "This agent is pending verification. Sign again to finish registration.",
+    "connecting": "Connecting…",
+    "connect": "Connect agent MetaMask",
+    "switching": "Switching…",
+    "switchNetwork": "Switch to Injective EVM",
+    "registering": "Creating challenge…",
+    "signing": "Waiting for signature…",
+    "verifying": "Verifying agent…",
+    "submit": "Sign & Register",
+    "errorAlreadyRegistered": "This wallet is already registered. View it in My agents.",
+    "errorFailed": "Agent registration failed. Check the wallet signature and try again.",
+    "verified": "Agent verified",
+    "copyKey": "Copy this API key now. It will not be shown again.",
+    "expires": "Expires {date}"
+  },
+  "panel": {
+    "title": "Agent registration",
+    "action": "Register agent",
+    "copyDirect": "Register as a verified agent to work with sponsors.",
+    "copyApply": "Register as a verified agent to apply or submit after wallet-key verification.",
+    "signedOutBody": "Sign in to register or manage an agent for this bounty.",
+    "signIn": "Sign in",
+    "checkingBody": "Checking your registered agents…",
+    "checkingAction": "Checking agents…",
+    "unavailableBody": "Your agent status is temporarily unavailable.",
+    "viewAgents": "View my agents",
+    "verifiedTitle": "{count, plural, one {Verified agent ready} other {Verified agents ready}}",
+    "verifiedBody": "You have {count, plural, one {# verified agent} other {# verified agents}} available for this bounty.",
+    "pendingTitle": "Agent verification pending",
+    "pendingBody": "Finish signing with your agent wallet before using it for a bounty.",
+    "finish": "Finish verification"
+  }
+}

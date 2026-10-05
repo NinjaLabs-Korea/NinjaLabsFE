@@ -1,1 +1,154 @@
-{}
+{
+  "meta": {
+    "list": {
+      "title": "Bounties | Ninja Labs",
+      "description": "Find paid work from Injective ecosystem sponsors, ship useful pieces, and collect on-chain proof for your Ninja portfolio."
+    },
+    "apply": {
+      "title": "How applying works | Ninja Labs",
+      "description": "Some bounties accept work directly. Others require sponsor approval before you can submit."
+    },
+    "notFound": "Not found | Ninja Labs",
+    "detailTitle": "{title} | Ninja Labs"
+  },
+  "categories": {
+    "Dev": "Dev",
+    "Design": "Design",
+    "Content": "Content",
+    "Other": "Other"
+  },
+  "status": {
+    "active": "Active",
+    "closed": "Closed"
+  },
+  "list": {
+    "eyebrow": "Marketplace",
+    "heading": "Bounties",
+    "publicBadge": "Public",
+    "howApplying": "How applying works →",
+    "intro": "Find paid work from Injective ecosystem sponsors, ship useful pieces, and collect on-chain proof for your Ninja portfolio.",
+    "resultsLabel": "Bounty filters and results",
+    "payoutNote": "Sponsors may pay INJ or USDC as-is, with no platform-side swap."
+  },
+  "filters": {
+    "category": "Category",
+    "status": "Status",
+    "all": "All",
+    "search": "Search bounties",
+    "emptyTitle": "No bounties match your filters",
+    "emptyBody": "Try a different category or clear the search.",
+    "reset": "Reset filters"
+  },
+  "apply": {
+    "eyebrow": "BOUNTIES",
+    "heading": "How bounty applications work",
+    "intro": "Some bounties accept work directly. Others require sponsor approval before you can submit.",
+    "auth": {
+      "checking": "Authentication: Checking",
+      "signedIn": "Authentication: Signed in",
+      "loginRequired": "Authentication: Login required"
+    },
+    "cta": {
+      "applyNow": "Apply now",
+      "viewAndSignIn": "View bounty and sign in",
+      "view": "View bounty"
+    },
+    "submitType": {
+      "badge": "Intake OFF",
+      "heading": "Submit-type bounty",
+      "body": "Anyone can work on the bounty and submit when the work is ready.",
+      "flow": "[Submit] button shown directly → same as Bounty Detail",
+      "viewDirect": "View direct bounty",
+      "none": "No submit-type bounties are open right now."
+    },
+    "applyType": {
+      "badge": "Intake ON",
+      "heading": "Apply-type bounty",
+      "body": "Submit work after the sponsor approves your application.",
+      "flow": "[Apply] → application form → sponsor review → after approval, [Submit] enabled",
+      "none": "No apply-type bounties are open right now."
+    },
+    "empty": {
+      "title": "No open bounties right now",
+      "body": "New sponsor opportunities will appear in the bounty marketplace.",
+      "browse": "Browse all bounties"
+    },
+    "statusHeading": "Application status",
+    "statuses": {
+      "open": "Open",
+      "underReview": "Under review",
+      "approved": "Approved",
+      "submitted": "Submitted",
+      "completed": "Completed"
+    },
+    "statusNote": "Application status is available for bounties with intake enabled."
+  },
+  "detail": {
+    "back": "← Back to bounties",
+    "agentSubmission": "Agent submission",
+    "directSubmission": "Direct submission",
+    "intakeOn": "Application intake ON",
+    "publicView": "Public view",
+    "actionsRequireLogin": "Actions require login",
+    "description": "Description",
+    "deliverable": "Deliverable",
+    "deadline": "Deadline",
+    "review": "Review",
+    "defaultReview": "Sponsor review",
+    "submissionGuide": "Submission guide",
+    "applyFootnote": "bounty.application_required ON · Viewing is public; applying and submitting require login.",
+    "reward": "Reward",
+    "sponsorPays": "Sponsor pays:",
+    "completionSteps": "Completion steps",
+    "defaultSteps": {
+      "work": "Complete the work",
+      "submit": "Submit the result URL",
+      "approval": "Receive sponsor approval"
+    },
+    "applySteps": {
+      "apply": "Apply with relevant work and availability.",
+      "review": "Wait for sponsor review and approval.",
+      "submit": "Submit completed work after approval."
+    },
+    "afterApproval": "After approval",
+    "afterApprovalSteps": {
+      "scope": "Complete the approved audit scope.",
+      "link": "Submit your completed-work link.",
+      "reward": "Receive sponsor review and reward release."
+    }
+  },
+  "action": {
+    "agentHeading": "Agent submission",
+    "agentBody": "This bounty accepts authenticated agent API requests instead of the browser submission form.",
+    "manageAgents": "Manage my agents",
+    "applyHeading": "Apply for this bounty",
+    "submitHeading": "Submit your work",
+    "signInPrompt": "Sign in to continue.",
+    "signIn": "Sign in",
+    "checkingStatus": "Checking your application status…",
+    "statusUnavailable": "Your application status is temporarily unavailable. Please refresh and try again.",
+    "underReviewHeading": "Application under review",
+    "underReviewBody": "Submission unlocks after sponsor approval.",
+    "viewApplications": "View my applications",
+    "submissionUrl": "Completed-work URL",
+    "repositoryUrl": "Repository URL (optional)",
+    "commitSha": "Commit SHA (optional)",
+    "submissionDescription": "Describe what you completed",
+    "submit": "Submit",
+    "submitting": "Submitting…",
+    "portfolioUrl": "Portfolio or relevant work URL (optional)",
+    "applyMessage": "Describe your approach and relevant experience",
+    "apply": "Apply",
+    "applying": "Applying…",
+    "submitSuccess": "Your work was submitted successfully.",
+    "applySuccess": "Application received. You can track it from My applications.",
+    "errors": {
+      "generic": "The request could not be completed. Please try again.",
+      "ALREADY_APPLIED": "You already applied to this bounty.",
+      "BOUNTY_NOT_OPEN": "This bounty is no longer open.",
+      "APPLICATION_NOT_APPROVED": "Your application must be approved before submitting.",
+      "DEADLINE_PASSED": "The submission deadline has passed.",
+      "SUBMISSION_FINALIZED": "This submission has already been finalized."
+    }
+  }
+}

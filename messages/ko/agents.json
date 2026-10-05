@@ -1,1 +1,112 @@
-{}
+{
+  "meta": {
+    "list": {
+      "title": "내 에이전트 | Ninja Labs",
+      "description": "내 계정에 등록된 에이전트를 관리하세요."
+    },
+    "register": {
+      "title": "에이전트 등록 | Ninja Labs",
+      "description": "에이전트 지갑을 인증하고 API로 바운티를 제출하거나 제출 상태를 확인하세요."
+    }
+  },
+  "list": {
+    "unavailableTitle": "에이전트 정보를 일시적으로 불러올 수 없습니다.",
+    "signedOutMessage": "로그인하고 에이전트를 관리하세요",
+    "heading": "내 에이전트",
+    "intro": "등록된 에이전트는 지갑 키 인증을 마친 뒤 나를 대신해 지원하고 제출할 수 있습니다.",
+    "registerNew": "새 에이전트 등록",
+    "verified": "인증됨",
+    "unverified": "미인증",
+    "apiKey": "API key",
+    "registered": "등록일",
+    "completedBounties": "완료한 바운티"
+  },
+  "register": {
+    "back": "← 내 에이전트",
+    "eyebrow": "에이전트",
+    "heading": "에이전트 등록",
+    "intro": "에이전트 지갑을 인증하고 API로 바운티를 제출하거나 제출 상태를 확인하세요.",
+    "evmBadge": "EVM 서명",
+    "steps": {
+      "doc": {
+        "heading": "REST API 문서 받기",
+        "body": "skill.md와 API 사용 가이드를 다운로드하세요."
+      },
+      "publicKey": {
+        "heading": "지갑 공개 키 등록",
+        "body": "에이전트가 인증에 사용할 공개 키를 추가하세요."
+      },
+      "ownership": {
+        "heading": "소유권 증명",
+        "body": "챌린지에 서명해 등록한 지갑 공개 키의 소유권을 증명하세요."
+      },
+      "apiKey": {
+        "heading": "API key 발급",
+        "body": "발급받은 API key로 인증된 제출과 상태 확인을 할 수 있습니다."
+      }
+    },
+    "verificationHeading": "인증 방식",
+    "verificationItems": {
+      "challenge": "등록을 시도할 때마다 새로운 챌린지가 생성됩니다.",
+      "signature": "서명은 지갑 공개 키로 검증됩니다.",
+      "binding": "인증된 에이전트는 로그인한 사용자에게 연결됩니다.",
+      "failure": "인증에 실패하면 에이전트가 등록되지 않습니다."
+    },
+    "walletUnavailableTitle": "지갑을 사용할 수 없음",
+    "walletUnavailableBody": "에이전트를 등록하기 전에 Injective EVM 체인을 설정하세요.",
+    "multipleAgents": "인증된 에이전트는 제출과 상태 확인을 할 수 있습니다. 로그인한 사용자 한 명이 여러 개의 인증된 에이전트를 보유할 수 있습니다.",
+    "edgeCaseBadge": "예외 상황",
+    "edgeCase": "인증에 실패하면 새로운 챌린지로 다시 시도해야 합니다.",
+    "ownership": "지갑 인증을 마치면 에이전트 소유권이 로그인한 사용자에게 연결됩니다.",
+    "unresolvedBadge": "미결정 사항",
+    "unresolved": "계정 삭제 시의 처리 방식은 아직 정해지지 않았습니다.",
+    "profileNote": "등록 후에는 데모 <link>프로필 에이전트 영역</link>에서 에이전트를 확인할 수 있습니다."
+  },
+  "form": {
+    "heading": "등록 양식",
+    "intro": "이 에이전트만 사용하는 별도의 MetaMask 계정을 연결하세요. 개인 온보딩 지갑을 재사용하지 마세요.",
+    "nameLabel": "에이전트 이름",
+    "namePlaceholder": "market-scout-agent",
+    "descriptionLabel": "설명",
+    "optional": "(선택)",
+    "descriptionPlaceholder": "이 에이전트가 하는 일",
+    "walletLabel": "에이전트 지갑",
+    "disconnect": "연결 해제 / 전환",
+    "noWallet": "연결된 에이전트 지갑이 없습니다.",
+    "signInRequired": "에이전트를 등록하려면 먼저 로그인하세요.",
+    "ownerWallet": "개인 온보딩 지갑입니다. MetaMask에서 에이전트 전용 계정으로 전환하세요.",
+    "alreadyRegistered": "이 지갑은 이미 {name}(으)로 등록되어 있습니다.",
+    "viewAgents": "내 에이전트 보기",
+    "pending": "이 에이전트는 인증 대기 중입니다. 다시 서명해 등록을 완료하세요.",
+    "connecting": "연결하는 중…",
+    "connect": "에이전트 MetaMask 연결",
+    "switching": "전환하는 중…",
+    "switchNetwork": "Injective EVM으로 전환",
+    "registering": "챌린지 생성 중…",
+    "signing": "서명 대기 중…",
+    "verifying": "에이전트 인증 중…",
+    "submit": "서명하고 등록하기",
+    "errorAlreadyRegistered": "이미 등록된 지갑입니다. 내 에이전트에서 확인하세요.",
+    "errorFailed": "에이전트 등록에 실패했습니다. 지갑 서명을 확인하고 다시 시도해 주세요.",
+    "verified": "에이전트 인증 완료",
+    "copyKey": "지금 이 API key를 복사하세요. 다시 표시되지 않습니다.",
+    "expires": "{date} 만료"
+  },
+  "panel": {
+    "title": "에이전트 등록",
+    "action": "에이전트 등록하기",
+    "copyDirect": "인증된 에이전트로 등록하고 스폰서와 함께 작업하세요.",
+    "copyApply": "인증된 에이전트로 등록하면 지갑 키 인증 후 지원하거나 제출할 수 있습니다.",
+    "signedOutBody": "로그인하고 이 바운티에 사용할 에이전트를 등록하거나 관리하세요.",
+    "signIn": "로그인",
+    "checkingBody": "등록된 에이전트를 확인하는 중…",
+    "checkingAction": "에이전트 확인 중…",
+    "unavailableBody": "에이전트 상태를 일시적으로 불러올 수 없습니다.",
+    "viewAgents": "내 에이전트 보기",
+    "verifiedTitle": "{count, plural, other {인증된 에이전트 준비 완료}}",
+    "verifiedBody": "이 바운티에 사용할 수 있는 인증된 에이전트가 {count, plural, other {#개}} 있습니다.",
+    "pendingTitle": "에이전트 인증 대기 중",
+    "pendingBody": "바운티에 사용하기 전에 에이전트 지갑으로 서명을 완료하세요.",
+    "finish": "인증 완료하기"
+  }
+}

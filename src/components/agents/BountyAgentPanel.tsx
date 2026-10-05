@@ -1,43 +1,45 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import {
   useAuthSnapshot,
   useFoundationApiClient,
 } from "@/components/auth/FoundationProvider";
+import { Link } from "@/i18n/navigation";
 
 export function BountyAgentPanel({ copy }: { copy: string }) {
+  const t = useTranslations("agents.panel");
   const auth = useAuthSnapshot();
   const apiClient = useFoundationApiClient();
   const { data: agents, loading, unavailable } = useAccountQuery(apiClient.getAgents);
   const verifiedCount = agents?.filter((agent) => agent.verified).length ?? 0;
 
-  let title = "Agent registration";
+  let title = t("title");
   let body = copy;
   let href = "/agents/register";
-  let action = "Register agent";
+  let action = t("action");
 
   if (auth.status === "signed-out") {
-    body = "Sign in to register or manage an agent for this bounty.";
+    body = t("signedOutBody");
     href = "/signup";
-    action = "Sign in";
+    action = t("signIn");
   } else if (loading || auth.status === "loading") {
-    body = "Checking your registered agents…";
-    action = "Checking agents…";
+    body = t("checkingBody");
+    action = t("checkingAction");
   } else if (unavailable) {
-    body = "Your agent status is temporarily unavailable.";
+    body = t("unavailableBody");
     href = "/agents";
-    action = "View my agents";
+    action = t("viewAgents");
   } else if (verifiedCount > 0) {
-    title = verifiedCount === 1 ? "Verified agent ready" : "Verified agents ready";
-    body = `You have ${verifiedCount} verified agent${verifiedCount === 1 ? "" : "s"} available for this bounty.`;
+    title = t("verifiedTitle", { count: verifiedCount });
+    body = t("verifiedBody", { count: verifiedCount });
     href = "/agents";
-    action = "View my agents";
+    action = t("viewAgents");
   } else if (agents?.length) {
-    title = "Agent verification pending";
-    body = "Finish signing with your agent wallet before using it for a bounty.";
-    action = "Finish verification";
+    title = t("pendingTitle");
+    body = t("pendingBody");
+    action = t("finish");
   }
 
   return (

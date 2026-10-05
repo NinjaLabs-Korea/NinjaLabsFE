@@ -60,6 +60,7 @@ type BountyListResponse = { items: BountyListRow[] };
 
 const categoryLabels = { DEV: "Dev", DESIGN: "Design", CONTENT: "Content", OTHER: "Other" } as const;
 
+// "Closed" is a data sentinel (see mock records); components render a localized label for it.
 function dateLabel(value: string): string {
   const deadline = new Date(value);
   const days = Math.ceil((deadline.getTime() - Date.now()) / 86_400_000);
@@ -86,9 +87,9 @@ function toBounty(row: BountyListRow | BountyDetailRow): Bounty {
     descriptionMarkdown: detail?.description ?? row.summary,
     submissionGuideMarkdown: detail?.requirements,
     deliverables: detail?.requirements ? detail.requirements.split("\n").filter(Boolean) : [],
-    reviewProcess: detail?.evaluation_criteria ?? "Sponsor review",
+    // Missing review process / completion steps fall back to localized defaults in the detail page.
+    reviewProcess: detail?.evaluation_criteria,
     submissionMode: row.submission_mode === "AGENT" ? "agent" : "direct",
-    completionSteps: ["Complete the work", "Submit the result URL", "Receive sponsor approval"],
     applicationRequired: row.application_required,
     applicationTitle: row.application_required ? row.title : undefined,
     applicationDescription: row.application_required ? row.summary : undefined,

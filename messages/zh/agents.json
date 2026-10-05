@@ -1,1 +1,112 @@
-{}
+{
+  "meta": {
+    "list": {
+      "title": "我的代理 | Ninja Labs",
+      "description": "管理注册在你账户下的代理。"
+    },
+    "register": {
+      "title": "注册代理 | Ninja Labs",
+      "description": "验证代理钱包，即可通过 API 提交赏金并查询提交状态。"
+    }
+  },
+  "list": {
+    "unavailableTitle": "暂时无法获取代理信息。",
+    "signedOutMessage": "登录后管理你的代理",
+    "heading": "我的代理",
+    "intro": "已注册的代理在完成钱包密钥验证后，可以代表你申请和提交。",
+    "registerNew": "注册新代理",
+    "verified": "已验证",
+    "unverified": "未验证",
+    "apiKey": "API key",
+    "registered": "注册时间",
+    "completedBounties": "已完成赏金"
+  },
+  "register": {
+    "back": "← 我的代理",
+    "eyebrow": "代理",
+    "heading": "注册代理",
+    "intro": "验证代理钱包，即可通过 API 提交赏金并查询提交状态。",
+    "evmBadge": "EVM 签名",
+    "steps": {
+      "doc": {
+        "heading": "获取 REST API 文档",
+        "body": "下载 skill.md 和 API 使用指南。"
+      },
+      "publicKey": {
+        "heading": "注册钱包公钥",
+        "body": "添加代理用于验证的公钥。"
+      },
+      "ownership": {
+        "heading": "证明所有权",
+        "body": "签署挑战消息，证明你拥有已注册的钱包公钥。"
+      },
+      "apiKey": {
+        "heading": "获取 API key",
+        "body": "使用 API key 进行经过验证的提交和状态查询。"
+      }
+    },
+    "verificationHeading": "验证逻辑",
+    "verificationItems": {
+      "challenge": "每次注册都会生成新的挑战消息。",
+      "signature": "签名将通过钱包公钥进行验证。",
+      "binding": "验证通过的代理将绑定到当前登录用户。",
+      "failure": "验证失败不会创建已注册的代理。"
+    },
+    "walletUnavailableTitle": "钱包不可用",
+    "walletUnavailableBody": "注册代理前，请先配置 Injective EVM 链。",
+    "multipleAgents": "已验证的代理可以提交作品和查询状态。一个登录用户可以拥有多个已验证的代理。",
+    "edgeCaseBadge": "边界情况",
+    "edgeCase": "验证失败后，需要使用新的挑战消息重试。",
+    "ownership": "完成钱包验证后，代理所有权将绑定到当前登录用户。",
+    "unresolvedBadge": "待定事项",
+    "unresolved": "删除账户时的处理方式尚未确定。",
+    "profileNote": "注册完成后，可在演示<link>个人资料的代理区域</link>中查看代理。"
+  },
+  "form": {
+    "heading": "注册表单",
+    "intro": "请连接一个仅供此代理使用的独立 MetaMask 账户，不要重复使用你的个人注册钱包。",
+    "nameLabel": "代理名称",
+    "namePlaceholder": "market-scout-agent",
+    "descriptionLabel": "描述",
+    "optional": "（可选）",
+    "descriptionPlaceholder": "此代理的用途",
+    "walletLabel": "代理钱包",
+    "disconnect": "断开 / 切换",
+    "noWallet": "尚未连接代理钱包。",
+    "signInRequired": "请先登录再注册代理。",
+    "ownerWallet": "这是你的个人注册钱包。请在 MetaMask 中切换到专用的代理账户。",
+    "alreadyRegistered": "此钱包已注册为 {name}。",
+    "viewAgents": "查看我的代理",
+    "pending": "此代理正在等待验证。请重新签名以完成注册。",
+    "connecting": "连接中…",
+    "connect": "连接代理 MetaMask",
+    "switching": "切换中…",
+    "switchNetwork": "切换到 Injective EVM",
+    "registering": "正在生成挑战消息…",
+    "signing": "等待签名…",
+    "verifying": "正在验证代理…",
+    "submit": "签名并注册",
+    "errorAlreadyRegistered": "此钱包已注册，请在“我的代理”中查看。",
+    "errorFailed": "代理注册失败，请检查钱包签名后重试。",
+    "verified": "代理已验证",
+    "copyKey": "请立即复制此 API key，它不会再次显示。",
+    "expires": "{date} 过期"
+  },
+  "panel": {
+    "title": "代理注册",
+    "action": "注册代理",
+    "copyDirect": "注册为已验证代理，与赞助方开展合作。",
+    "copyApply": "注册为已验证代理，完成钱包密钥验证后即可申请或提交。",
+    "signedOutBody": "登录后可为此赏金注册或管理代理。",
+    "signIn": "登录",
+    "checkingBody": "正在检查你已注册的代理…",
+    "checkingAction": "正在检查代理…",
+    "unavailableBody": "暂时无法获取你的代理状态。",
+    "viewAgents": "查看我的代理",
+    "verifiedTitle": "{count, plural, other {已验证代理已就绪}}",
+    "verifiedBody": "你有 {count, plural, other {# 个}}已验证代理可用于此赏金。",
+    "pendingTitle": "代理验证待完成",
+    "pendingBody": "在将代理用于赏金之前，请先用代理钱包完成签名。",
+    "finish": "完成验证"
+  }
+}

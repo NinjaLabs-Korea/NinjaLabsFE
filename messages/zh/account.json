@@ -1,1 +1,32 @@
-{}
+{
+  "common": {
+    "eyebrow": "账户",
+    "unavailableBody": "无法连接服务器，请稍后重试。",
+    "mockNote": "会话预览：演示数据，刷新后将重置。"
+  },
+  "signedOut": {
+    "body": "完成注册流程即可预览你的账户。",
+    "cta": "开始使用"
+  },
+  "applications": {
+    "meta": {
+      "title": "我的申请 | Ninja Labs",
+      "description": "跟踪你的赏金申请及其审核状态。"
+    },
+    "unavailableTitle": "暂时无法获取申请记录。",
+    "signedOutMessage": "登录后查看你的申请",
+    "heading": "我的申请",
+    "intro": "跟踪你申请过的所有申请型赏金。赞助方批准后即可提交。",
+    "appliedAt": "申请于 {date}",
+    "progressLabel": "申请进度",
+    "steps": {
+      "open": "已申请",
+      "under_review": "审核中",
+      "approved": "已批准",
+      "submitted": "已提交",
+      "completed": "已完成"
+    },
+    "approvedStatus": "已批准：可以提交",
+    "submitWork": "提交作品"
+  }
+}

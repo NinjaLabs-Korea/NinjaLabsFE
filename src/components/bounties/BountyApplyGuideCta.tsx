@@ -1,25 +1,28 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { useAuthSnapshot } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
+import { Link } from "@/i18n/navigation";
 
 export function BountyApplyAuthBadge() {
   const auth = useAuthSnapshot();
+  const t = useTranslations("bounties.apply.auth");
 
-  if (auth.status === "loading") return <Badge variant="neutral">Authentication: Checking</Badge>;
-  if (auth.status === "signed-in") return <Badge variant="success">Authentication: Signed in</Badge>;
-  return <Badge variant="danger">Authentication: Login required</Badge>;
+  if (auth.status === "loading") return <Badge variant="neutral">{t("checking")}</Badge>;
+  if (auth.status === "signed-in") return <Badge variant="success">{t("signedIn")}</Badge>;
+  return <Badge variant="danger">{t("loginRequired")}</Badge>;
 }
 
 export function BountyApplyGuideCta({ bountyHref }: { bountyHref: string }) {
   const auth = useAuthSnapshot();
+  const t = useTranslations("bounties.apply.cta");
   const label = auth.status === "signed-in"
-    ? "Apply now"
+    ? t("applyNow")
     : auth.status === "signed-out"
-      ? "View bounty and sign in"
-      : "View bounty";
+      ? t("viewAndSignIn")
+      : t("view");
 
   return (
     <Link

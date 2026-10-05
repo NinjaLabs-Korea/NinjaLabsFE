@@ -1,44 +1,53 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { BountyFilters } from "@/components/bounties/BountyFilters";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { Link } from "@/i18n/navigation";
 import { getRuntimeBounties } from "@/lib/bounties";
 
-export const metadata: Metadata = {
-  title: "Bounties | Ninja Labs",
-  description: "Find paid work from Injective ecosystem sponsors, ship useful pieces, and collect on-chain proof for your Ninja portfolio.",
+type BountiesPageProps = {
+  params: Promise<{ locale: string }>;
 };
 
-export default async function BountiesPage() {
+export async function generateMetadata({ params }: BountiesPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "bounties.meta.list" });
+  return { title: t("title"), description: t("description") };
+}
+
+export default async function BountiesPage({ params }: BountiesPageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("bounties.list");
   const bounties = await getRuntimeBounties();
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <section>
         <div className="flex items-start justify-between gap-4">
-          <SectionHeader eyebrow="Marketplace" heading="Bounties" level={1} size="xl" />
+          <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={1} size="xl" />
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <Badge variant="success">Public</Badge>
+            <Badge variant="success">{t("publicBadge")}</Badge>
             <Link
               className="rounded-control border border-primary-outline px-[21px] py-3 text-sm leading-[21px] font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               href="/bounties/apply"
             >
-              How applying works →
+              {t("howApplying")}
             </Link>
           </div>
         </div>
         <p className="mt-4 max-w-2xl text-lg text-ink-muted">
-          Find paid work from Injective ecosystem sponsors, ship useful pieces, and collect on-chain proof for your Ninja portfolio.
+          {t("intro")}
         </p>
       </section>
 
-      <section className="mt-8" aria-label="Bounty filters and results">
+      <section className="mt-8" aria-label={t("resultsLabel")}>
         <BountyFilters bounties={bounties} />
       </section>
 
       <p className="mt-8 text-sm text-ink-muted">
-        Sponsors may pay INJ or USDC as-is, with no platform-side swap.
+        {t("payoutNote")}
       </p>
     </div>
   );

@@ -1,8 +1,9 @@
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
+import { Link } from "@/i18n/navigation";
 import type { Bounty } from "@/lib/types";
 
 type BountyCardProps = {
@@ -14,6 +15,7 @@ type BountyCardProps = {
 };
 
 export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3" }: BountyCardProps) {
+  const t = useTranslations("bounties");
   const isClosed = bounty.status === "closed";
 
   return (
@@ -35,7 +37,7 @@ export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3
         )}
       </div>
       <div className="p-5">
-        <Badge variant={isClosed ? "danger" : "primary-soft"}>{isClosed ? "Closed" : bounty.category}</Badge>
+        <Badge variant={isClosed ? "danger" : "primary-soft"}>{isClosed ? t("status.closed") : t(`categories.${bounty.category}`)}</Badge>
         <TitleTag className="mt-3 font-display text-base font-bold -tracking-[0.16px] text-ink">{bounty.title}</TitleTag>
         {showSummary && bounty.summary ? (
           <p className="mt-2 line-clamp-2 text-sm text-ink-muted">{bounty.summary}</p>
@@ -43,7 +45,7 @@ export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3
         <div className="mt-4 flex items-center justify-between gap-3">
           <RewardPill reward={bounty.reward} />
           <span className="text-right text-xs text-ink-muted">
-            {isClosed ? "Closed" : bounty.deadline} · {bounty.sponsor}
+            {isClosed ? t("status.closed") : bounty.deadline} · {bounty.sponsor}
           </span>
         </div>
       </div>
