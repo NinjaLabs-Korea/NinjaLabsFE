@@ -1,11 +1,22 @@
 import { fetchPublicJson } from "@/lib/api/public";
 import { loadRuntimeConfig } from "@/lib/runtime/config";
 
+// Stat labels are UI copy: `labelKey` resolves under messages `hallOfFame.stats`.
+// `label` stays as the English fallback for surfaces not yet localized (admin).
+export type HallStatKey =
+  | "bountiesRun"
+  | "buildersOnboarded"
+  | "ecosystemPartners"
+  | "rewardsPaid"
+  | "bountiesCompleted"
+  | "buildersRewarded"
+  | "completionNfts";
+
 export const hallOfFame = {
   stats: [
-    { value: "128", label: "Bounties run" },
-    { value: "412", label: "Builders onboarded" },
-    { value: "$-", label: "Rewards paid" },
+    { value: "128", label: "Bounties run", labelKey: "bountiesRun" },
+    { value: "412", label: "Builders onboarded", labelKey: "buildersOnboarded" },
+    { value: "$-", label: "Rewards paid", labelKey: "rewardsPaid" },
   ],
   highlights: [
     { category: "Milestone", title: "100th builder onboarded", body: "A growing group of builders is collecting proof of work on Injective." },
@@ -31,7 +42,7 @@ type HighlightRow = {
 type StatsRow = { completedBounties: number; builders: number; completionNfts: number; sponsors: number };
 
 export type RuntimeHallOfFame = {
-  stats: Array<{ value: string; label: string }>;
+  stats: Array<{ value: string; label: string; labelKey: HallStatKey }>;
   highlights: Array<{ category: "Milestone" | "Featured bounty" | "Partnership"; title: string; body: string; href: string; image: string | null }>;
   milestones: Array<{ title: string; date: string; description: string }>;
 };
@@ -52,9 +63,9 @@ export async function getRuntimeHallOfFame(): Promise<RuntimeHallOfFame> {
     type === "MILESTONE" ? "Milestone" : type === "PARTNERSHIP" ? "Partnership" : "Featured bounty";
   return {
     stats: [
-      { value: String(stats.completedBounties), label: "Bounties completed" },
-      { value: String(stats.builders), label: "Builders rewarded" },
-      { value: String(stats.completionNfts), label: "Completion NFTs" },
+      { value: String(stats.completedBounties), label: "Bounties completed", labelKey: "bountiesCompleted" },
+      { value: String(stats.builders), label: "Builders rewarded", labelKey: "buildersRewarded" },
+      { value: String(stats.completionNfts), label: "Completion NFTs", labelKey: "completionNfts" },
     ],
     highlights: rows.map((row) => ({
       category: category(row.type),

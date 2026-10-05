@@ -1,1 +1,37 @@
-{}
+{
+  "metadata": {
+    "title": "名人堂 | Ninja Labs",
+    "description": "记录推动社区前进的建设者、赏金与合作伙伴。"
+  },
+  "header": {
+    "eyebrow": "社区里程碑",
+    "heading": "名人堂",
+    "description": "记录推动社区前进的建设者、赏金与合作伙伴。",
+    "public": "公开"
+  },
+  "stats": {
+    "bountiesRun": "已发布赏金",
+    "buildersOnboarded": "已加入的建设者",
+    "ecosystemPartners": "生态合作伙伴",
+    "rewardsPaid": "已发放奖励",
+    "bountiesCompleted": "已完成赏金",
+    "buildersRewarded": "获得奖励的建设者",
+    "completionNfts": "完成 NFT"
+  },
+  "aggregateNote": "以上为平台汇总数据，并非排名。",
+  "highlights": {
+    "eyebrow": "精选",
+    "heading": "亮点",
+    "readNotices": "查看公告",
+    "categories": {
+      "milestone": "里程碑",
+      "featuredBounty": "精选赏金",
+      "partnership": "合作伙伴"
+    }
+  },
+  "timeline": {
+    "eyebrow": "我们的故事",
+    "heading": "时间线"
+  },
+  "partnerWall": "Ninja Labs KR 社区合作伙伴墙"
+}

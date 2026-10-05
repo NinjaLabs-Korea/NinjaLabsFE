@@ -1,27 +1,35 @@
 import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NoticeFilters } from "@/components/notices/NoticeFilters";
 import { Badge } from "@/components/ui/Badge";
 import { getRuntimeNotices } from "@/lib/notices";
 
 
-export const metadata: Metadata = {
-  title: "Notices | Ninja Labs",
-  description: "A builder community and bounty marketplace for the Injective ecosystem.",
-};
+export async function generateMetadata({ params }: PageProps<"/[locale]/notices">): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "notices.metadata" });
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
-export default async function NoticesPage() {
+export default async function NoticesPage({ params }: PageProps<"/[locale]/notices">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("notices.list");
   const notices = await getRuntimeNotices();
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <section className="max-w-[896px]">
-        <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">News</p>
-        <h1 className="font-display text-5xl tracking-[-0.48px] text-ink">Notices</h1>
+        <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("eyebrow")}</p>
+        <h1 className="font-display text-5xl tracking-[-0.48px] text-ink">{t("heading")}</h1>
         <p className="mt-4 text-lg text-ink-muted">
-          A builder community and bounty marketplace for the Injective ecosystem.
+          {t("description")}
         </p>
         <div className="mt-4">
-          <Badge variant="success">Community feed, not just ops notices</Badge>
+          <Badge variant="success">{t("badge")}</Badge>
         </div>
       </section>
 

@@ -1,1 +1,37 @@
-{}
+{
+  "metadata": {
+    "title": "Hall of Fame | Ninja Labs",
+    "description": "A record of the builders, bounties, and partnerships moving the community forward."
+  },
+  "header": {
+    "eyebrow": "Community milestones",
+    "heading": "Hall of Fame",
+    "description": "A record of the builders, bounties, and partnerships moving the community forward.",
+    "public": "Public"
+  },
+  "stats": {
+    "bountiesRun": "Bounties run",
+    "buildersOnboarded": "Builders onboarded",
+    "ecosystemPartners": "Ecosystem partners",
+    "rewardsPaid": "Rewards paid",
+    "bountiesCompleted": "Bounties completed",
+    "buildersRewarded": "Builders rewarded",
+    "completionNfts": "Completion NFTs"
+  },
+  "aggregateNote": "Platform aggregate, not a ranking.",
+  "highlights": {
+    "eyebrow": "Featured",
+    "heading": "Highlights",
+    "readNotices": "Read notices",
+    "categories": {
+      "milestone": "Milestone",
+      "featuredBounty": "Featured bounty",
+      "partnership": "Partnership"
+    }
+  },
+  "timeline": {
+    "eyebrow": "Our story",
+    "heading": "Timeline"
+  },
+  "partnerWall": "Ninja Labs KR community partner wall"
+}

@@ -1,1 +1,23 @@
-{}
+{
+  "hero": {
+    "eyebrow": "基于 Injective 构建",
+    "title": "完成赏金任务，收集成果证明。",
+    "titleHighlight": "拥有你的履历。",
+    "description": "面向 Injective 生态的建设者社区与赏金市场。每完成一项任务都会铸造一枚链上 NFT，它们共同构成真正属于你的作品集。",
+    "getStarted": "立即开始",
+    "browseBounties": "浏览赏金",
+    "portfolioMeta": "Ninja NFT · {year} 年加入",
+    "next": "+ 下一个",
+    "portfolioSummary": "已完成 {count} 个赏金 · 持续成长的链上作品集"
+  },
+  "bounties": {
+    "eyebrow": "赏金市场",
+    "heading": "进行中的赏金",
+    "viewAll": "查看全部 →"
+  },
+  "news": {
+    "eyebrow": "来自社区",
+    "heading": "最新动态",
+    "viewAll": "查看全部 →"
+  }
+}

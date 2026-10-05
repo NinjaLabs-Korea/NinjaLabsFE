@@ -1,17 +1,19 @@
 import Image from "next/image";
-import Link from "next/link";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { BountyCard } from "@/components/cards/BountyCard";
 import { NewsCard } from "@/components/cards/NewsCard";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { Link } from "@/i18n/navigation";
 import { getRuntimeLanding } from "@/lib/landing";
 
-const trackRecord = "Own your track record.";
-
-export default async function Home() {
+export default async function Home({ params }: PageProps<"/[locale]">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations("landing");
+  const tStats = await getTranslations("hallOfFame.stats");
   const { hero, bounties, news } = await getRuntimeLanding();
-  const heroTitle = hero.title.replace(` ${trackRecord}`, "");
 
   return (
     <>
@@ -28,35 +30,35 @@ export default async function Home() {
                   height={13}
                   className="mr-1.5"
                 />
-                {hero.eyebrow}
+                {t("hero.eyebrow")}
               </Badge>
             </div>
             <h1 className="mt-5 max-w-[552px] font-display text-5xl -tracking-[0.6px] text-on-inverse sm:text-hero">
-              {heroTitle}{" "}
+              {t("hero.title")}{" "}
               <span className="bg-[linear-gradient(90deg,var(--color-glow)_0%,var(--color-accent-soft)_55%,var(--color-primary-outline)_100%)] bg-clip-text text-transparent">
-                {trackRecord}
+                {t("hero.titleHighlight")}
               </span>
             </h1>
-            <p className="mt-6 max-w-[524px] text-lg text-on-inverse/75">{hero.description}</p>
+            <p className="mt-6 max-w-[524px] text-lg text-on-inverse/75">{t("hero.description")}</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 className="rounded-control bg-primary px-[29px] py-[15px] text-center text-base font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 href={hero.primaryCta.href}
               >
-                {hero.primaryCta.label}
+                {t(`hero.${hero.primaryCta.labelKey}`)}
               </Link>
               <Link
                 className="rounded-control border border-on-inverse/20 bg-on-inverse/8 px-[29px] py-[15px] text-center text-base font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 href={hero.secondaryCta.href}
               >
-                {hero.secondaryCta.label}
+                {t(`hero.${hero.secondaryCta.labelKey}`)}
               </Link>
             </div>
             <dl className="mt-12 flex flex-wrap gap-x-10 gap-y-5">
               {hero.stats.map((stat) => (
-                <div key={stat.label}>
+                <div key={stat.labelKey}>
                   <dt className="font-display text-2xl font-bold text-on-inverse">{stat.value}</dt>
-                  <dd className="text-sm text-on-inverse/50">{stat.label}</dd>
+                  <dd className="text-sm text-on-inverse/50">{tStats(stat.labelKey)}</dd>
                 </div>
               ))}
             </dl>
@@ -74,7 +76,7 @@ export default async function Home() {
               <div>
                 <p className="text-base font-semibold text-on-inverse">{hero.portfolio.handle}</p>
                 <p className="text-sm text-on-inverse/50">
-                  Ninja NFT · member since {hero.portfolio.memberSince}
+                  {t("hero.portfolioMeta", { year: String(hero.portfolio.memberSince) })}
                 </p>
               </div>
             </div>
@@ -91,11 +93,11 @@ export default async function Home() {
                 </div>
               ))}
               <div className="grid aspect-square place-items-center rounded-tile border border-dashed border-on-inverse/25 text-sm text-on-inverse/50">
-                + next
+                {t("hero.next")}
               </div>
             </div>
             <p className="mt-4 text-center text-sm text-on-inverse/75">
-              {hero.portfolio.totalCompleted} bounties completed · a growing on-chain portfolio
+              {t("hero.portfolioSummary", { count: hero.portfolio.totalCompleted })}
             </p>
           </div>
         </div>
@@ -103,11 +105,11 @@ export default async function Home() {
 
       <section className="mx-auto max-w-content px-4 py-16 sm:px-6">
         <SectionHeader
-          eyebrow="Marketplace"
-          heading="Active bounties"
+          eyebrow={t("bounties.eyebrow")}
+          heading={t("bounties.heading")}
           level={2}
           size="lg"
-          action={{ label: "View all →", href: "/bounties" }}
+          action={{ label: t("bounties.viewAll"), href: "/bounties" }}
         />
         <div className="mt-7 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
           {bounties.map((bounty) => (
@@ -118,11 +120,11 @@ export default async function Home() {
 
       <section className="mx-auto max-w-content px-4 pb-20 sm:px-6">
         <SectionHeader
-          eyebrow="From the community"
-          heading="Recent news"
+          eyebrow={t("news.eyebrow")}
+          heading={t("news.heading")}
           level={2}
           size="lg"
-          action={{ label: "View all →", href: "/notices" }}
+          action={{ label: t("news.viewAll"), href: "/notices" }}
         />
         <div className="mt-7 grid grid-cols-1 gap-5 lg:grid-cols-3">
           {news.map((notice) => (

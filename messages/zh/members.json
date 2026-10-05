@@ -1,1 +1,104 @@
-{}
+{
+  "metadata": {
+    "title": "成员 | Ninja Labs",
+    "description": "认识共同塑造 Ninja Labs 的建设者与社区成员。"
+  },
+  "list": {
+    "eyebrow": "Ninja Labs 背后的人们",
+    "heading": "成员",
+    "description": "认识共同塑造 Ninja Labs 的建设者与社区成员。",
+    "public": "公开",
+    "howItWorks": "成员机制说明",
+    "rules": {
+      "registration": "所有人使用同一注册流程。",
+      "adminEnables": "由管理员开启 is_member。",
+      "memberEdits": "成员可自行编辑简介。",
+      "unassign": "取消成员身份后卡片会隐藏，但个人主页会保留。"
+    },
+    "viewProfile": "查看成员主页。",
+    "becomeFirst": "成为首位上榜成员。"
+  },
+  "filters": {
+    "ariaLabel": "成员角色",
+    "all": "全部",
+    "listAriaLabel": "成员",
+    "emptyTitle": "没有符合筛选条件的成员",
+    "emptyBody": "请尝试其他分类或清除搜索条件。",
+    "reset": "重置筛选"
+  },
+  "roles": {
+    "core": "核心",
+    "dev": "开发",
+    "design": "设计",
+    "ops": "运营"
+  },
+  "card": {
+    "profile": "主页",
+    "defaultTitle": "Ninja Labs 成员",
+    "defaultBio": "正在 Injective 生态中构建。",
+    "links": {
+      "posts": "帖子",
+      "agents": "智能体",
+      "bounties": "赏金",
+      "notices": "公告"
+    }
+  },
+  "profile": {
+    "notFoundTitle": "未找到 | Ninja Labs",
+    "pageTitle": "{handle} | Ninja Labs",
+    "bountiesCompleted": "已完成 {count} 个赏金",
+    "newBuilder": "新晋建设者",
+    "joined": "加入时间 {date}",
+    "publicShareable": "公开且可分享",
+    "categories": {
+      "dev": "开发",
+      "design": "设计",
+      "content": "内容",
+      "other": "其他"
+    },
+    "portfolio": {
+      "eyebrow": "作品集",
+      "headingCompleted": "链上工作证明。",
+      "headingEmpty": "第一份证明从这里开始。",
+      "bodyCompleted": "已通过的工作会连同当前链上铸造状态一起展示。",
+      "bodyEmpty": "完成一个赏金，即可为此作品集添加永久的工作记录。",
+      "nftName": "Ninja NFT",
+      "parentNft": "父 NFT · {status}",
+      "parentPending": "{handle} · 父 NFT 待铸造",
+      "token": "代币 {id}",
+      "tx": "交易 {hash}",
+      "next": "+ 下一个",
+      "emptyTitle": "暂无赏金 NFT",
+      "emptyBodyCompleted": "已通过的工作会在奖励发放并开始铸造后显示在这里。",
+      "emptyBodyNew": "完成一个赏金，添加你的第一份证明。",
+      "browse": "浏览进行中的赏金",
+      "nftCount": "{count, plural, =0 {暂无链上赏金 NFT 记录} other {{count} 个链上赏金 NFT}}"
+    },
+    "nftStatus": {
+      "PENDING": "待处理",
+      "MINTING": "铸造中",
+      "MINTED": "已铸造",
+      "ATTACHING": "关联中",
+      "ATTACHED": "已关联",
+      "FAILED": "失败"
+    },
+    "history": {
+      "eyebrow": "赏金记录",
+      "heading": "已完成的赏金",
+      "viewFilled": "查看完整主页示例",
+      "completedOn": "完成于 {date}",
+      "emptyTitle": "暂无已完成的赏金",
+      "emptyBody": "找到一个赏金，留下你的第一份证明。",
+      "findFirst": "寻找第一个赏金"
+    },
+    "agents": {
+      "eyebrow": "自动化",
+      "heading": "智能体",
+      "verified": "已验证",
+      "completed": "已完成 {count} 个赏金",
+      "emptyTitle": "暂无已注册的智能体",
+      "emptyBody": "通过签名验证注册智能体。",
+      "register": "注册智能体"
+    }
+  }
+}

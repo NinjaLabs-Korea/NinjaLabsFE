@@ -55,8 +55,9 @@ export async function getRuntimeMembers(): Promise<Member[]> {
     name: row.nickname,
     initials: row.nickname.slice(0, 2).toUpperCase(),
     role: memberRoleLabels[row.member_role] ?? "Core",
-    title: "Ninja Labs member",
-    bio: row.bio || "Building in the Injective ecosystem.",
+    // Empty title/bio fall back to localized defaults in MemberCard.
+    title: "",
+    bio: row.bio,
     isMember: true,
     links: { profile: `/members/${row.nickname}` },
   }));

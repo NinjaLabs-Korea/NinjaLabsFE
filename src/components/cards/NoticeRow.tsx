@@ -1,7 +1,9 @@
-import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/Badge";
+import { Link } from "@/i18n/navigation";
+import { noticeCategoryKeys } from "@/lib/notices";
 import type { Notice } from "@/lib/types";
 
 type NoticeRowProps = {
@@ -9,6 +11,7 @@ type NoticeRowProps = {
 };
 
 export function NoticeRow({ notice }: NoticeRowProps) {
+  const t = useTranslations("notices.categories");
   return (
     <Link
       className="block overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:flex"
@@ -19,7 +22,7 @@ export function NoticeRow({ notice }: NoticeRowProps) {
       </div>
       <div className="min-w-0 flex-1 p-5">
         <div className="flex items-center justify-between gap-3">
-          <Badge>{notice.category}</Badge>
+          <Badge>{t(noticeCategoryKeys[notice.category])}</Badge>
           <span className="shrink-0 text-sm text-ink-muted">{notice.publishedAt}</span>
         </div>
         <h2 className="mt-2 font-display text-xl font-bold tracking-[-0.2px] text-ink">

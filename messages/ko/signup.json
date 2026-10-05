@@ -1,1 +1,130 @@
-{}
+{
+  "badges": {
+    "flow": "가입 절차",
+    "walletPreview": "가입 절차 (지갑 미리보기)",
+    "walletUnavailable": "지갑 사용 불가",
+    "profile": "모든 항목 필수 / 건너뛰기 불가"
+  },
+  "login": {
+    "pageTitle": "{title} | Ninja Labs",
+    "mock": {
+      "badge": "가입 절차 · 세션 미리보기",
+      "title": "Ninja Labs 로그인 절차 미리보기",
+      "description": "로컬 세션 미리보기로 이 단계를 살펴보세요. Google에 연결하거나 계정을 만들지 않습니다.",
+      "disclosure": "모의 모드는 로컬 테스트 전용입니다. 이 미리보기는 Google에 연결하거나 계정을 만들지 않습니다.",
+      "statusTitle": "미리보기 상태",
+      "edgeCases": {
+        "first": "버튼을 누르면 로컬 세션 미리보기만 시작됩니다",
+        "second": "Google 인증은 호출되지 않습니다"
+      }
+    },
+    "api": {
+      "badge": "가입 절차",
+      "title": "Ninja Labs에 로그인",
+      "description": "Google로 계속하여 계정을 만드세요. Google로 이동한 뒤 승인하면 이 페이지로 돌아옵니다.",
+      "disclosure": "로그인하면 Ninja Labs 계정이 생성되거나 복원됩니다. Google 이메일만 전달받으며 비밀번호는 공유되지 않습니다.",
+      "statusTitle": "진행 방식",
+      "edgeCases": {
+        "first": "Google 동의 화면으로 이동했다가 승인 후 다시 돌아옵니다",
+        "second": "새 계정은 온보딩 1단계부터 시작하며, 기존 사용자는 이전 세션을 이어갑니다"
+      }
+    }
+  },
+  "wallet": {
+    "metadata": {
+      "title": "지갑 연결 | Ninja Labs",
+      "descriptionApi": "Injective 지갑을 연결하고 인증하세요.",
+      "descriptionMock": "Injective 지갑 연결을 미리 확인해 보세요."
+    },
+    "title": "지갑 연결하기",
+    "introApi": "Injective EVM 지갑을 연결한 뒤, 가스비 없는 메시지에 서명해 소유권을 증명하세요.",
+    "introMock": "이 로컬 세션 미리보기에서 Injective EVM 지갑을 연결해 보세요.",
+    "unavailableButton": "지갑 사용 불가",
+    "unavailableNote": "지원되는 Injective EVM 체인이 설정되기 전까지는 지갑을 연결할 수 없습니다.",
+    "badgeApi": "가스비 없는 인증",
+    "badgeMock": "연결 전용 미리보기",
+    "noteApi": "서명은 트랜잭션을 전송하지 않습니다. 인증된 지갑이 계정에 연결되고 Ninja NFT 발행이 대기열에 추가됩니다.",
+    "noteMock": "모의 모드에서는 서명, 계정 연결, 백엔드 호출을 하지 않습니다.",
+    "connectLater": "나중에 연결하기",
+    "optionalNote": "지갑 인증은 선택 사항입니다. 지금 계속 진행하고 나중에 연결할 수 있습니다.",
+    "whatHappens": "진행 과정",
+    "steps": {
+      "connection": {
+        "term": "연결",
+        "detail": "MetaMask 또는 다른 EVM 지갑"
+      },
+      "signing": {
+        "term": "서명",
+        "detail": "EIP-191 personal_sign 소유권 증명"
+      },
+      "gas": {
+        "term": "가스비",
+        "detail": "트랜잭션과 가스비 없음"
+      },
+      "accountLinking": {
+        "term": "계정 연결",
+        "detail": "인증된 지갑이 계정에 저장됨"
+      },
+      "nft": {
+        "term": "NFT",
+        "detail": "부모 Ninja NFT 발행이 대기열에 추가됨"
+      }
+    }
+  },
+  "profile": {
+    "metadata": {
+      "title": "프로필 설정 | Ninja Labs",
+      "description": "스팸 방지와 프로필 품질 관리"
+    },
+    "title": "프로필을 설정하세요",
+    "whyRequired": "모든 항목이 필수인 이유",
+    "whyRequiredSubtitle": "스팸 방지와 프로필 품질 관리",
+    "requirements": {
+      "spamControl": "스팸 방지와 프로필 품질 관리",
+      "oneFlow": "가입 과정을 한 번에 완료",
+      "noSkip": "건너뛰기 및 임시 저장 불가"
+    },
+    "form": {
+      "nicknameLabel": "닉네임",
+      "nicknamePlaceholder": "닉네임을 입력하세요",
+      "fieldTags": "분야 태그*",
+      "tags": {
+        "dev": "개발",
+        "design": "디자인",
+        "content": "콘텐츠",
+        "other": "기타"
+      },
+      "bioLabel": "소개*",
+      "bioPlaceholder": "커뮤니티에 나를 소개해 주세요",
+      "bioHint": "간단한 소개를 입력해 주세요.",
+      "submit": "다음",
+      "saving": "프로필 저장 중…",
+      "error": "모든 항목을 확인하고 사용 중이지 않은 닉네임을 선택해 주세요."
+    }
+  },
+  "getStarted": {
+    "metadata": {
+      "title": "시작하기 | Ninja Labs",
+      "description": "모두 건너뛸 수 있으며, 메인 메뉴에서 언제든 다시 찾을 수 있습니다."
+    },
+    "eyebrow": "온보딩 완료",
+    "title": "무엇을 해 볼까요?",
+    "subtitle": "모두 건너뛸 수 있으며, 메인 메뉴에서 언제든 다시 찾을 수 있습니다.",
+    "actions": {
+      "browseBounties": {
+        "title": "진행 중인 바운티 둘러보기",
+        "description": "바운티를 찾아 온체인 이력을 쌓기 시작하세요."
+      },
+      "playground": {
+        "title": "Playground에서 Injective 체험하기",
+        "description": "다음 바운티를 고르기 전에 Injective를 살펴보세요."
+      },
+      "learnMore": {
+        "title": "Ninja Labs 자세히 알아보기",
+        "description": "빌더 커뮤니티와 바운티 마켓플레이스를 알아보세요."
+      }
+    },
+    "skip": "건너뛰고 메인으로 이동",
+    "savedNote": "온보딩 진행 상황이 저장되었습니다. 지갑과 프로필은 나중에 수정할 수 있습니다."
+  }
+}

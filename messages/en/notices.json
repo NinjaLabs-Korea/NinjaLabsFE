@@ -1,1 +1,36 @@
-{}
+{
+  "metadata": {
+    "title": "Notices | Ninja Labs",
+    "description": "A builder community and bounty marketplace for the Injective ecosystem."
+  },
+  "list": {
+    "eyebrow": "News",
+    "heading": "Notices",
+    "description": "A builder community and bounty marketplace for the Injective ecosystem.",
+    "badge": "Community feed, not just ops notices"
+  },
+  "filters": {
+    "ariaLabel": "Notice categories",
+    "all": "All",
+    "listAriaLabel": "Notices",
+    "emptyTitle": "No notices match your filters",
+    "emptyBody": "Try a different category or clear the search.",
+    "reset": "Reset filters"
+  },
+  "categories": {
+    "ninjaLabs": "Ninja Labs",
+    "injectiveEcosystem": "Injective ecosystem",
+    "events": "Events",
+    "recruitment": "Recruitment",
+    "other": "Other"
+  },
+  "detail": {
+    "notFoundTitle": "Not found | Ninja Labs",
+    "pageTitle": "{title} | Ninja Labs",
+    "back": "← Back to list",
+    "public": "Public",
+    "readMoreHeading": "Read more",
+    "readMoreLink": "Read more →",
+    "related": "Related"
+  }
+}
