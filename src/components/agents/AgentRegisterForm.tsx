@@ -1,14 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useState, useSyncExternalStore, type FormEvent } from "react";
-import {
-  useAccount,
-  useConnect,
-  useDisconnect,
-  useSignMessage,
-  useSwitchChain,
-} from "wagmi";
+import { useState, type FormEvent } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import {
   useAuthSnapshot,
@@ -16,6 +9,7 @@ import {
   useAgentApi,
 } from "@/components/auth/FoundationProvider";
 import { Link } from "@/i18n/navigation";
+import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
 import type { AgentVerification } from "@/lib/contracts/api";
 import { ApiHttpError } from "@/lib/api/http";
 import {
@@ -26,10 +20,6 @@ import {
 
 type AgentRegisterFormProps = { chainId: number };
 type SubmissionState = "idle" | "registering" | "signing" | "verifying";
-
-function shortAddress(address: string): string {
-  return `${address.slice(0, 6)}…${address.slice(-4)}`;
-}
 
 export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const t = useTranslations("agents.form");
@@ -43,19 +33,20 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const [submissionState, setSubmissionState] = useState<SubmissionState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [verification, setVerification] = useState<AgentVerification | null>(null);
-  const hasInjectedWallet = useSyncExternalStore(
-    () => () => undefined,
-    () => "ethereum" in window,
-    () => false,
-  );
-  const { address, chainId: connectedChainId, isConnected } = useAccount();
-  const { connect, connectors, isPending: isConnecting } = useConnect();
-  const { disconnect } = useDisconnect();
-  const { signMessageAsync } = useSignMessage();
-  const { switchChain, isPending: isSwitching } = useSwitchChain();
-  const connector = connectors.find((candidate) => candidate.type === "injected");
+  const {
+    hasInjectedWallet,
+    address,
+    isConnected,
+    isWrongNetwork,
+    connector,
+    connect,
+    isConnecting,
+    disconnect,
+    signMessageAsync,
+    switchToTargetChain,
+    isSwitching,
+  } = useWalletConnection(chainId, { injectedOnly: true });
   const isBusy = submissionState !== "idle";
-  const isWrongNetwork = isConnected && connectedChainId !== chainId;
   const ownerWallet = auth.user?.walletAddress?.toLowerCase();
   const isOwnerWallet = Boolean(address && ownerWallet === address.toLowerCase());
   const existingAgent = address
@@ -172,7 +163,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         <p className="text-sm font-semibold text-ink">{t("walletLabel")}</p>
         {address ? (
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-            <code className="text-sm text-ink-secondary">{shortAddress(address)}</code>
+            <code className="text-sm text-ink-secondary">{shortWalletAddress(address)}</code>
             <button
               className="text-xs font-semibold text-primary-strong"
               disabled={isBusy}
@@ -216,7 +207,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         <button
           className="mt-5 h-[46px] w-full rounded-control bg-primary px-5 text-sm font-semibold text-on-inverse disabled:opacity-60"
           disabled={!hasInjectedWallet || !connector || isConnecting}
-          onClick={() => connector && connect({ connector })}
+          onClick={connect}
           type="button"
         >
           {isConnecting ? t("connecting") : t("connect")}
@@ -225,7 +216,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         <button
           className="mt-5 h-[46px] w-full rounded-control bg-warning-soft px-5 text-sm font-semibold text-warning disabled:opacity-60"
           disabled={isSwitching}
-          onClick={() => switchChain({ chainId })}
+          onClick={switchToTargetChain}
           type="button"
         >
           {isSwitching ? t("switching") : t("switchNetwork")}
