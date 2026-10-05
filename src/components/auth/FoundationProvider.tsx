@@ -35,7 +35,7 @@ function createFoundationContextValue(config: FoundationConfig): FoundationConte
     };
   }
 
-  // api 모드 — BE(NinjaLabsBE)에 실제 연결. 어댑터와 클라이언트가 토큰 저장소를 공유한다.
+  // api 모드: BE(NinjaLabsBE)에 실제 연결. 어댑터와 클라이언트가 토큰 저장소를 공유한다.
   const adapter = createApiAuthAdapter(config.apiUrl);
   return {
     adapter,

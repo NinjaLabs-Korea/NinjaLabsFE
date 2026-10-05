@@ -15,14 +15,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const profile = await getRuntimeProfile(id);
 
   if (!profile) {
-    return { title: "Not found — Ninja Labs" };
+    return { title: "Not found | Ninja Labs" };
   }
 
   return {
-    title: `${profile.handle} — Ninja Labs`,
+    title: `${profile.handle} | Ninja Labs`,
     description: profile.bio,
     openGraph: {
-      title: `${profile.handle} — Ninja Labs`,
+      title: `${profile.handle} | Ninja Labs`,
       description: profile.bio,
       url: `/members/${id}`,
     },

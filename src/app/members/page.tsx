@@ -12,7 +12,7 @@ const rules = [
 ];
 
 export const metadata: Metadata = {
-  title: "Members — Ninja Labs",
+  title: "Members | Ninja Labs",
   description: "Meet the builders and community members shaping Ninja Labs.",
 };
 

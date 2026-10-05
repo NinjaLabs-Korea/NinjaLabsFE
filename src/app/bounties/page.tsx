@@ -7,7 +7,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getRuntimeBounties } from "@/lib/bounties";
 
 export const metadata: Metadata = {
-  title: "Bounties — Ninja Labs",
+  title: "Bounties | Ninja Labs",
   description: "Find paid work from Injective ecosystem sponsors, ship useful pieces, and collect on-chain proof for your Ninja portfolio.",
 };
 

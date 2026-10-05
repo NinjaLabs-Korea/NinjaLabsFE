@@ -35,7 +35,7 @@ Panels, tabs, table and assignment panel: 20px radius and 1px `#e3e7f1`; inputs/
 ## Interactions
 Public nav/footer/logo/CTAs navigate normally. Admin tabs switch management sections. Search filters by email or nickname. Assign opens the role-assignment flow for non-members; role chips select `member_role`, display order is editable, and Confirm sets `is_member`; Remove clears member assignment without deleting the public profile. Wallet/member pill states are display status, not shown as inline toggles. Hover, validation, confirmation, pagination, and error states are not specified.
 
-> Mock-scope note: the state-changing behaviors above (assign/confirm/save/publish) are the design's product semantics. The G002 implementation renders them as static visual states only — no mutations — per the frozen matrix scope; wiring them is future backend scope.
+> Mock-scope note: the state-changing behaviors above (assign/confirm/save/publish) are the design's product semantics. The G002 implementation renders them as static visual states only - no mutations - per the frozen matrix scope; wiring them is future backend scope.
 
 ## Responsive inference
 At 768px preserve the public header as a collapsed menu and 24px gutters; intro/badge and New actions can wrap; admin tabs horizontally scroll or wrap; table remains horizontally scrollable at its 820px minimum. The inline assignment panel expands to available width. At 390px use menu plus primary CTA in the public header, stack intro and badge, make search and assignment fields full width, retain horizontal table scrolling rather than collapsing columns, and stack footer columns. Modal/panel remains a full-width sheet/card with role chips wrapping.

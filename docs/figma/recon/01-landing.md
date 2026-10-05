@@ -2,7 +2,7 @@
 `01 Landing` (node `19:3`) is 1440 × 2156.70 at x=120, y=160. The rendered page frame inside the labeled Figma wrapper is 1440 × 2096.70; header 65px, main 1756.70px, footer 273px.
 
 ## Shell
-Header is IDENTICAL to standard chrome: 64px white/translucent header with mascot + Ninja Labs logo, centered nav (Bounties, Hall of Fame, Members, Notices), and Browse/Get Started actions. It has a 1px bottom border. Footer differs from the stated standard 3-column footer: this page has branding plus **two** link columns only—Platform (Bounties, Hall of Fame, Notices) and Community (X / Twitter, Discord)—then a copyright/behavior notice: `© 2026 Ninja Labs · All content viewable without login · Returning users skip Intro and land on main.`
+Header is IDENTICAL to standard chrome: 64px white/translucent header with mascot + Ninja Labs logo, centered nav (Bounties, Hall of Fame, Members, Notices), and Browse/Get Started actions. It has a 1px bottom border. Footer differs from the stated standard 3-column footer: this page has branding plus **two** link columns only - Platform (Bounties, Hall of Fame, Notices) and Community (X / Twitter, Discord) - then a copyright/behavior notice: `© 2026 Ninja Labs · All content viewable without login · Returning users skip Intro and land on main.`
 
 ## Surface
 Default page surface is `#FBFBFE`, with white cards (`#FFFFFF`) and a translucent header `rgba(255,255,255,0.85)` plus 6px backdrop blur. The hero is the inverse/dark surface: a 870px linear gradient at 160deg from `#0C1528` (0%) through `#1D2B60` (55%) to `#4D3DFF` (100%), overlaid by violet radial glows (`rgba(123,108,255,0.30)` to transparent). The hero NFT panel is glass: `rgba(255,255,255,0.06)`, 4px blur, white-alpha border. Footer is solid `#0B1322`.

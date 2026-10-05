@@ -19,10 +19,10 @@ export async function generateMetadata({ params }: BountyDetailPageProps): Promi
   const bounty = await getRuntimeBounty(id);
 
   if (!bounty) {
-    return { title: "Not found — Ninja Labs" };
+    return { title: "Not found | Ninja Labs" };
   }
 
-  const title = `${bounty.applicationRequired && bounty.applicationTitle ? bounty.applicationTitle : bounty.title} — Ninja Labs`;
+  const title = `${bounty.applicationRequired && bounty.applicationTitle ? bounty.applicationTitle : bounty.title} | Ninja Labs`;
 
   return {
     title,

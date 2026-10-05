@@ -34,7 +34,7 @@ const stepLabel = (status: ApplicationStatus): string =>
   applicationSteps.find((step) => step.status === status)?.label ?? status;
 
 const statusLabel = (status: ApplicationStatus): string =>
-  status === "approved" ? "Approved — submit unlocked" : stepLabel(status);
+  status === "approved" ? "Approved: submit unlocked" : stepLabel(status);
 
 export function ApplicationsView() {
   const mode = useFoundationMode();
@@ -64,7 +64,7 @@ export function ApplicationsView() {
       <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">Account</p>
       <h1 className="mt-2 font-display text-5xl -tracking-[0.48px] text-ink">My applications</h1>
       <p className="mt-4 text-lg text-ink-muted">
-        Track every apply-type bounty you applied to — submitting unlocks after sponsor approval.
+        Track every apply-type bounty you applied to. Submitting unlocks after sponsor approval.
       </p>
 
       <div className="mt-8 space-y-5">
@@ -141,7 +141,7 @@ export function ApplicationsView() {
       </div>
 
       {mode === "mock" ? (
-        <p className="mt-3 text-xs text-ink-muted">Session preview — demo data, resets on reload.</p>
+        <p className="mt-3 text-xs text-ink-muted">Session preview: demo data, resets on reload.</p>
       ) : null}
     </>
   );

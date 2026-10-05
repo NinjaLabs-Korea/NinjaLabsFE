@@ -5,7 +5,7 @@ export const hallOfFame = {
   stats: [
     { value: "128", label: "Bounties run" },
     { value: "412", label: "Builders onboarded" },
-    { value: "$—", label: "Rewards paid" },
+    { value: "$-", label: "Rewards paid" },
   ],
   highlights: [
     { category: "Milestone", title: "100th builder onboarded", body: "A growing group of builders is collecting proof of work on Injective." },

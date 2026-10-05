@@ -9,7 +9,7 @@ import { getRuntimeHallOfFame } from "@/lib/hall-of-fame";
 
 
 export const metadata: Metadata = {
-  title: "Admin · Hall of Fame — Ninja Labs",
+  title: "Admin · Hall of Fame | Ninja Labs",
   description: "Curate the milestones and highlights that celebrate the Ninja Labs community.",
 };
 

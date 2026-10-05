@@ -19,13 +19,13 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   metadataBase: new URL(loadRuntimeConfig().origin),
-  title: "Ninja Labs — Build. Complete. Own your track record.",
+  title: "Ninja Labs | Build. Complete. Own your track record.",
   description:
-    "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT — together they become a portfolio you truly own.",
+    "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.",
   openGraph: {
-    title: "Ninja Labs — Build. Complete. Own your track record.",
+    title: "Ninja Labs | Build. Complete. Own your track record.",
     description:
-      "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT — together they become a portfolio you truly own.",
+      "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.",
     siteName: "Ninja Labs",
     type: "website",
     locale: "en_US",
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ninja Labs — Build. Complete. Own your track record.",
+    title: "Ninja Labs | Build. Complete. Own your track record.",
     description:
-      "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT — together they become a portfolio you truly own.",
+      "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.",
   },
 };
 const { foundationConfig } = composeFoundationRuntime(previewUser);

@@ -27,7 +27,7 @@ export const landing: LandingData = {
     eyebrow: 'Built on Injective',
     title: 'Complete bounties. Collect proof. Own your track record.',
     description:
-      'A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT — together they become a portfolio you truly own.',
+      'A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.',
     primaryCta: { label: 'Get Started', href: '/signup' },
     secondaryCta: { label: 'Browse Bounties', href: '/bounties' },
     stats: [

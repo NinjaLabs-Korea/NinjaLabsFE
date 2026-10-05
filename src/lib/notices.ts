@@ -9,7 +9,7 @@ export const notices: Notice[] = [
     excerpt:
       "Three bounty tracks will help new teams ship wallets, widgets, and educational content.",
     bodyMarkdown:
-      "Three bounty tracks will help new teams ship wallets, widgets, and educational content. Each track pairs builders with clear scopes so first-time contributors can land meaningful work on Injective.\n\n- **Wallets** — ship wallet flows and integrations for Injective users\n- **Widgets** — build reusable, embeddable widgets for Injective data\n- **Educational content** — create guides and primers that onboard new builders",
+      "Three bounty tracks will help new teams ship wallets, widgets, and educational content. Each track pairs builders with clear scopes so first-time contributors can land meaningful work on Injective.\n\n- **Wallets**: ship wallet flows and integrations for Injective users\n- **Widgets**: build reusable, embeddable widgets for Injective data\n- **Educational content**: create guides and primers that onboard new builders",
     category: "Ninja Labs",
     publishedAt: "2026.06.20",
     thumbnail: "",
@@ -34,7 +34,7 @@ export const notices: Notice[] = [
     title: "Injective EVM community workshop",
     excerpt: "Injective EVM community workshop.",
     bodyMarkdown:
-      "Details and participation info to follow — check back here for the schedule and how to join.",
+      "Details and participation info to follow. Check back here for the schedule and how to join.",
     category: "Events",
     publishedAt: "2026.06.12",
     thumbnail: "",
@@ -44,7 +44,7 @@ export const notices: Notice[] = [
     title: "Ninja Bounty: Prove to Earn campaign",
     excerpt: "Ninja Bounty: Prove to Earn campaign.",
     bodyMarkdown:
-      "Details and participation info to follow — keep an eye on this notice for eligibility and timelines.",
+      "Details and participation info to follow. Keep an eye on this notice for eligibility and timelines.",
     category: "Ninja Labs",
     publishedAt: "2026.06.08",
     thumbnail: "",

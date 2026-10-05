@@ -13,7 +13,7 @@ const highlightVariants = {
 } as const;
 
 export const metadata: Metadata = {
-  title: "Hall of Fame — Ninja Labs",
+  title: "Hall of Fame | Ninja Labs",
   description: "A record of the builders, bounties, and partnerships moving the community forward.",
 };
 

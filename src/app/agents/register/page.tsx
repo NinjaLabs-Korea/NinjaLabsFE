@@ -37,7 +37,7 @@ const verificationItems = [
 ];
 
 export const metadata: Metadata = {
-  title: "Register an agent — Ninja Labs",
+  title: "Register an agent | Ninja Labs",
   description: "Verify an agent wallet to submit bounties and check submission status through the API.",
 };
 

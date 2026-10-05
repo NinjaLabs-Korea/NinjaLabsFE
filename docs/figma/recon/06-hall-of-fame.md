@@ -23,7 +23,7 @@ IDENTICAL standard chrome: 64px translucent (`rgba(255,255,255,0.85)`, 6px blur)
 10px buttons; 20px cards/stat tiles; 28px gradient/partner panels; 999px pills/timeline dots. 1px `#e3e7f1` cards; timeline dot 4px `#dfddff`; footer rule `rgba(255,255,255,0.08)`. Card shadow `0 1px 2px rgba(17,26,46,.06), 0 1px 3px rgba(17,26,46,.05)`; frame shadow `0 14px 36px rgba(33,24,125,.12)`.
 
 ## Components
-- Stat tiles: 128 Bounties run, 412 Builders onboarded, `$—` Rewards paid; this is platform aggregate, explicitly not a ranking.
+- Stat tiles: 128 Bounties run, 412 Builders onboarded, `$ - ` Rewards paid; this is platform aggregate, explicitly not a ranking.
 - NewsCard/Article ×3: gradient media placeholder; category pill variants Milestone green, Featured bounty lavender, Partnership amber; title/body.
 - Timeline milestone: 40px violet circle with pale 4px ring, title/date-description.
 - SectionHeader: uppercase kicker + 24px title; outlined Read notices action.
@@ -43,4 +43,4 @@ At 768px retain 24px gutters; hero status moves beneath copy, stats and articles
 ```ts
 type HallOfFame = { stats: { bountiesRun: number; buildersOnboarded: number; rewardsPaid: string }; highlights: { category: 'Milestone'|'Featured bounty'|'Partnership'; title: string; body: string; image?: string }[]; milestones: { title: string; date: string; description: string }[]; partnerWall?: string }
 ```
-Examples: `128`, `412`, `$—`; `100th builder onboarded`; `May 3, 2026`; admin-curated highlights from `platform_highlight`.
+Examples: `128`, `412`, `$ - `; `100th builder onboarded`; `May 3, 2026`; admin-curated highlights from `platform_highlight`.

@@ -5,7 +5,7 @@ import { StepIndicator } from "@/components/ui/StepIndicator";
 import { signup } from "@/lib/signup";
 
 export const metadata: Metadata = {
-  title: "Set up profile — Ninja Labs",
+  title: "Set up profile | Ninja Labs",
   description: "Spam control and profile quality",
 };
 

@@ -1,34 +1,34 @@
 <!-- BEGIN:nextjs-agent-rules -->
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes - APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# NinjaLabsFE — Project Conventions
+# NinjaLabsFE - Project Conventions
 
 Ninja Labs frontend: a builder community & bounty marketplace for the Injective ecosystem.
 Pages are ported 1:1 from the Figma design file below. Read this whole file before writing code.
 
-## Stack (pinned — do not upgrade without team decision)
+## Stack (pinned - do not upgrade without team decision)
 
 - Next.js 16.2.10 (App Router, Turbopack) / React 19.2.4 / TypeScript 5.9.3
-- Tailwind CSS 4.3.3 (v4 — CSS-first config, **no** `tailwind.config.js`)
+- Tailwind CSS 4.3.3 (v4 - CSS-first config, **no** `tailwind.config.js`)
 - Node >= 24 (`.nvmrc`), npm 11 only. **Never** use bun/pnpm/yarn here; `package-lock.json` is the single lockfile.
 - All deps are exact-pinned; `.npmrc` has `save-exact=true`. Never introduce `^`/`~` ranges.
 
 ## Commands
 
-- `npm run dev` — dev server (localhost:3000)
-- `npm run test:unit` — focused foundation unit tests
-- `npm run build` — production build; **must pass before any work is considered done**
-- `npm run lint` — ESLint
+- `npm run dev` - dev server (localhost:3000)
+- `npm run test:unit` - focused foundation unit tests
+- `npm run build` - production build; **must pass before any work is considered done**
+- `npm run lint` - ESLint
 
 ## Git flow
 
 - Default branch: `main` (remote `origin`). `main` must always build (`npm run build` + `npm run lint` green); never commit broken work to it.
 - Direct commits to `main` are for the solo-maintainer fast path only (docs, small fixes). Any multi-commit feature, risky refactor, or collaborative work goes through a branch + PR.
-- Branch names: `<type>/<kebab-slug>` — types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test` (e.g. `feat/bounty-detail`, `fix/header-nav-active`).
-- Commit messages: Conventional Commits, matching the existing history — `<type>(<scope>): <summary>` with lowercase imperative summary, no trailing period (e.g. `feat(admin): session-local interactive admin managers`). Scope is optional for `docs`/`chore`.
+- Branch names: `<type>/<kebab-slug>` - types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test` (e.g. `feat/bounty-detail`, `fix/header-nav-active`).
+- Commit messages: Conventional Commits, matching the existing history - `<type>(<scope>): <summary>` with lowercase imperative summary, no trailing period (e.g. `feat(admin): session-local interactive admin managers`). Scope is optional for `docs`/`chore`.
 - One logical change per commit; never mix a feature with unrelated formatting or lockfile churn.
 - PRs target `main`, are squash-merged, and the squash title must itself be a valid Conventional Commit line. Delete the branch after merge.
 - Never force-push `main`. Force-push (`--force-with-lease` only) is allowed solely on your own feature branches.
@@ -37,7 +37,7 @@ Pages are ported 1:1 from the Figma design file below. Read this whole file befo
 
 ## Team agent workflow (Landing / Bounties / Admin owners)
 
-This file is the tool-agnostic agent entrypoint: Claude Code loads it via `CLAUDE.md` (`@AGENTS.md`); Cursor/Codex/Copilot read `AGENTS.md` natively. Do not create per-tool rule files — extend this one.
+This file is the tool-agnostic agent entrypoint: Claude Code loads it via `CLAUDE.md` (`@AGENTS.md`); Cursor/Codex/Copilot read `AGENTS.md` natively. Do not create per-tool rule files - extend this one.
 Figma MCP is preconfigured in `.mcp.json` (remote `https://mcp.figma.com/mcp`); each teammate authenticates with their own Figma account on first use.
 
 ### Ownership map (work only in your lane by default)
@@ -48,7 +48,7 @@ Figma MCP is preconfigured in `.mcp.json` (remote `https://mcp.figma.com/mcp`); 
 |Bounties|`/bounties*`, `/applications`, `/agents*`|`src/lib/bounties.ts`, `components/{bounties,account}/`, `cards/BountyCard`|
 |Admin|`/admin/*`|`src/lib/admin.ts`, `components/admin/`|
 
-### Shared surfaces — coordinate before changing
+### Shared surfaces - coordinate before changing
 
 `src/app/globals.css` (`@theme` tokens), `src/lib/types.ts`, `src/lib/{foundation,contracts,runtime,mocks}/`, `components/{layout,ui,auth,wallet}/`, `src/app/layout.tsx`, `package.json` + lockfile, and the three contract docs (`AGENTS.md`, `docs/design.md`, `README.md`). Announce the change in the PR description; keep it in its own commit so other lanes can rebase cleanly.
 
@@ -56,17 +56,17 @@ Figma MCP is preconfigured in `.mcp.json` (remote `https://mcp.figma.com/mcp`); 
 
 - Start every agent session by pointing it at the task's Figma node (table above) and `docs/design.md`; follow the recipes there instead of inventing variants.
 - One branch per lane task (`feat/<lane>-<slug>`); never let an agent commit another lane's files as drive-by changes.
-- Doc-sync duty: adding a component updates the inventory in this file; adding a visual pattern updates `docs/design.md`; resolving/creating a design gap updates `docs/figma/design-gaps.md` — in the same PR.
+- Doc-sync duty: adding a component updates the inventory in this file; adding a visual pattern updates `docs/design.md`; resolving/creating a design gap updates `docs/figma/design-gaps.md` - in the same PR.
 - Before ending a session: `npm run lint` + `npm run build` (+ `npm run test:unit` when touching foundation/auth/wallet/admin logic).
-- Agent runtime state (`.gjc/`, `artifacts/`) is gitignored — never commit it; never commit `.env.local`.
+- Agent runtime state (`.gjc/`, `artifacts/`) is gitignored - never commit it; never commit `.env.local`.
 
 ## Styling rules
 
 - **Tailwind utility classes only.** No CSS Modules, no styled-components, no `style={}` props, no new `.css` files.
 - The single CSS file is `src/app/globals.css`. Design tokens live there in the Tailwind v4 `@theme` block
   (`--color-*`, `--font-*`, `--radius-*`, ...) and are consumed as utilities (`bg-surface`, `text-accent`, ...).
-- New color/spacing/typography values from Figma go into `@theme` as tokens first — never hardcode hex values in components.
-- **`docs/design.md` is the design-system contract** — token semantics, radius/typography roles, and copy-paste recipes (buttons, cards, badges, focus ring, empty states). Follow its recipes instead of inventing variants; new patterns get added there in the same PR.
+- New color/spacing/typography values from Figma go into `@theme` as tokens first - never hardcode hex values in components.
+- **`docs/design.md` is the design-system contract** - token semantics, radius/typography roles, and copy-paste recipes (buttons, cards, badges, focus ring, empty states). Follow its recipes instead of inventing variants; new patterns get added there in the same PR.
 
 ## Folder structure
 
@@ -121,28 +121,28 @@ public/
   per-screen code/screenshot, `get_metadata` for structure, `download_assets` for images.
 - Every screen shares the same Header/Footer (rendered once in `src/app/layout.tsx`, not per page).
 - Implemented component inventory (40 files; keep in sync with `src/components/`):
-  - `layout/Header`, `layout/Footer` — the shared shell chrome (rendered once in `layout.tsx`)
-  - `ui/Badge` — pill chip; variants `primary-soft` (default) / `selected` (`bg-primary text-primary-soft`) / `success` / `danger` / `warning` / `neutral` / `inverse` (StepIndicator's white active step is intentional and NOT a Badge)
-  - `ui/RewardPill` — `{ amount, currency: 'INJ' | 'USDC' }`; INJ token icon vs `$` glyph
-  - `ui/SectionHeader` — eyebrow + heading (`level` 1|2|3, `size` 'lg'|'xl') + optional action link
-  - `ui/StepIndicator` — 4-step sign-up progress (`current` 1–4); wraps below 768
-  - `cards/BountyCard` — cover (gradient fallback) + Badge + title + optional summary (`showSummary`) + RewardPill + deadline·sponsor
-  - `cards/NewsCard` — vertical notice preview (Landing); consumes `NoticePreview`
-  - `cards/NoticeRow` — horizontal thumb + content row (Notices list)
-  - `cards/MemberCard` — photo/initials fallback + name + role line + bio + links
-  - `bounties/BountyFilters`, `notices/NoticeFilters`, `members/MemberFilters` — `"use client"` islands (list filtering + empty states with Reset)
-  - `layout/NavLinks` — `"use client"` island for active-nav highlight (`aria-current`); `src/app/error.tsx`/`global-error.tsx` are also client (Next error-boundary contract exception; global-error loads its own globals.css + fonts)
-  - `admin/AdminTabs` — in-page admin tab strip (`active` prop); `admin/AdminTable` — lavender-header table (`columns`, `minWidthClass`, `<tr>` children); API mode persists admin changes through AdminGuard-protected endpoints.
-  - `ui/Modal` (native `<dialog>`: ESC/backdrop/focus-trap built in), `ui/ConfirmDialog` (`destructive` variant = solid `bg-danger` action + danger-soft callout), `ui/Toast` (success/danger/warning/info; danger = `role="alert"`, others auto-dismiss) — FE-designed (no Figma origin), captured back as pages 26–28
-  - `admin/UserActions` — `"use client"` island wiring Remove→ConfirmDialog and Assign→role modal; replaces the inline role panel drawn in Figma 18 (user-approved divergence)
-  - `admin/AdminSelect` — APG select-only combobox (`role="combobox"` trigger + `aria-activedescendant` listbox, keyboard-complete); `admin/AdminToastHost` — single page-level toast stack (`pushAdminToast`)
-  - `admin/UserDirectory`, `admin/BountyManager`, `admin/HighlightManager`, `admin/PostManager` — API-backed manager islands for member assignment and bounty/notice/highlight create, edit, transition, and delete. Local mock mode retains deterministic fixtures.
-  - `ui/Markdown` — server-component markdown renderer (react-markdown + remark-gfm, exact-pinned): `allowedElements` subset (p/a/strong/em/ul/ol/li/h2/h3/code/pre/blockquote/br/del), token-mapped renderers, no `rehype-raw` (raw HTML disabled), external links get `target=_blank rel=noreferrer`; used by bounty detail (description + Submission guide) and notice detail; NO `@tailwindcss/typography`
-  - `auth/FoundationProvider` — `"use client"` runtime boundary: mock mode uses an in-memory session preview; API mode restores the backend JWT session. `layout/AuthArea` + `layout/UserMenu` consume it for desktop account menu and signed-in mobile account disclosure; `signup/ProfileForm` and `signup/CompleteOnboarding` persist onboarding through the API.
-  - `auth/GoogleLoginButton` — signs into the in-memory mock preview or starts backend Google OAuth in API mode. OAuth return routes to the first unfinished onboarding step. `wallet/WalletProvider` + `wallet/WalletConnectButton` connect an Injective EVM wallet and, in API mode, complete the backend challenge + EIP-191 signature verification flow.
-  - `account/ApplicationsView`, `account/AgentsView`, `account/SignedOutPanel` — FoundationProvider-aware owner views backed by applications/submissions and agent APIs in API mode. API keys remain masked after their one-time issuance.
+  - `layout/Header`, `layout/Footer` - the shared shell chrome (rendered once in `layout.tsx`)
+  - `ui/Badge` - pill chip; variants `primary-soft` (default) / `selected` (`bg-primary text-primary-soft`) / `success` / `danger` / `warning` / `neutral` / `inverse` (StepIndicator's white active step is intentional and NOT a Badge)
+  - `ui/RewardPill` - `{ amount, currency: 'INJ' | 'USDC' }`; INJ token icon vs `$` glyph
+  - `ui/SectionHeader` - eyebrow + heading (`level` 1|2|3, `size` 'lg'|'xl') + optional action link
+  - `ui/StepIndicator` - 4-step sign-up progress (`current` 1–4); wraps below 768
+  - `cards/BountyCard` - cover (gradient fallback) + Badge + title + optional summary (`showSummary`) + RewardPill + deadline·sponsor
+  - `cards/NewsCard` - vertical notice preview (Landing); consumes `NoticePreview`
+  - `cards/NoticeRow` - horizontal thumb + content row (Notices list)
+  - `cards/MemberCard` - photo/initials fallback + name + role line + bio + links
+  - `bounties/BountyFilters`, `notices/NoticeFilters`, `members/MemberFilters` - `"use client"` islands (list filtering + empty states with Reset)
+  - `layout/NavLinks` - `"use client"` island for active-nav highlight (`aria-current`); `src/app/error.tsx`/`global-error.tsx` are also client (Next error-boundary contract exception; global-error loads its own globals.css + fonts)
+  - `admin/AdminTabs` - in-page admin tab strip (`active` prop); `admin/AdminTable` - lavender-header table (`columns`, `minWidthClass`, `<tr>` children); API mode persists admin changes through AdminGuard-protected endpoints.
+  - `ui/Modal` (native `<dialog>`: ESC/backdrop/focus-trap built in), `ui/ConfirmDialog` (`destructive` variant = solid `bg-danger` action + danger-soft callout), `ui/Toast` (success/danger/warning/info; danger = `role="alert"`, others auto-dismiss) - FE-designed (no Figma origin), captured back as pages 26–28
+  - `admin/UserActions` - `"use client"` island wiring Remove→ConfirmDialog and Assign→role modal; replaces the inline role panel drawn in Figma 18 (user-approved divergence)
+  - `admin/AdminSelect` - APG select-only combobox (`role="combobox"` trigger + `aria-activedescendant` listbox, keyboard-complete); `admin/AdminToastHost` - single page-level toast stack (`pushAdminToast`)
+  - `admin/UserDirectory`, `admin/BountyManager`, `admin/HighlightManager`, `admin/PostManager` - API-backed manager islands for member assignment and bounty/notice/highlight create, edit, transition, and delete. Local mock mode retains deterministic fixtures.
+  - `ui/Markdown` - server-component markdown renderer (react-markdown + remark-gfm, exact-pinned): `allowedElements` subset (p/a/strong/em/ul/ol/li/h2/h3/code/pre/blockquote/br/del), token-mapped renderers, no `rehype-raw` (raw HTML disabled), external links get `target=_blank rel=noreferrer`; used by bounty detail (description + Submission guide) and notice detail; NO `@tailwindcss/typography`
+  - `auth/FoundationProvider` - `"use client"` runtime boundary: mock mode uses an in-memory session preview; API mode restores the backend JWT session. `layout/AuthArea` + `layout/UserMenu` consume it for desktop account menu and signed-in mobile account disclosure; `signup/ProfileForm` and `signup/CompleteOnboarding` persist onboarding through the API.
+  - `auth/GoogleLoginButton` - signs into the in-memory mock preview or starts backend Google OAuth in API mode. OAuth return routes to the first unfinished onboarding step. `wallet/WalletProvider` + `wallet/WalletConnectButton` connect an Injective EVM wallet and, in API mode, complete the backend challenge + EIP-191 signature verification flow.
+  - `account/ApplicationsView`, `account/AgentsView`, `account/SignedOutPanel` - FoundationProvider-aware owner views backed by applications/submissions and agent APIs in API mode. API keys remain masked after their one-time issuance.
 - Data: typed registries are local/test fixtures. API mode fetches public bounties, members, notices, highlights/stats, owner data, and public profiles from NinjaLabsBE with `no-store`; unknown dynamic records call `notFound()`.
-- Long-form prose is **markdown by contract**: `Bounty.descriptionMarkdown` + optional `Bounty.submissionGuideMarkdown`, `Notice.bodyMarkdown` — rendered via `ui/Markdown`; structured fields (`deliverables[]`, `completionSteps[]`, `reviewProcess`) stay typed, never markdown.
+- Long-form prose is **markdown by contract**: `Bounty.descriptionMarkdown` + optional `Bounty.submissionGuideMarkdown`, `Notice.bodyMarkdown` - rendered via `ui/Markdown`; structured fields (`deliverables[]`, `completionSteps[]`, `reviewProcess`) stay typed, never markdown.
 - Bounty deadlines: `deadline` is the list label (`D-7`), `deadlineDetail` the full timestamp shown on detail (19:1480 vs 19:1739).
 - Figma raster exports render **empty** via the export API (recorded as `figma-render-empty` in `src/lib/assets.ts`); covers/thumbnails use the design-native gradient placeholder. The two SVGs and one user-supplied mascot PNG in `public/figma/` are the available assets; the mascot PNG is not a Figma export.
 - Every user-visible route has metadata (`metadata` or variant-aware `generateMetadata`); the landing page inherits root-layout metadata and `/admin` (redirect-only) is exempt; app-level states: branded `not-found.tsx`/`error.tsx`/`global-error.tsx`, `loading.tsx` skeletons on the 3 dynamic routes, skip-to-content link, `icon.png` favicon (scaffold favicon.ico removed).

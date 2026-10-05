@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ApplicationsView } from "@/components/account/ApplicationsView";
 
 export const metadata: Metadata = {
-  title: "My applications — Ninja Labs",
+  title: "My applications | Ninja Labs",
   description: "Track your bounty applications and their review status.",
 };
 

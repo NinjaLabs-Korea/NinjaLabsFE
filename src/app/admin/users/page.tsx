@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { getAdminUsers } from "@/lib/admin";
 import { loadRuntimeConfig } from "@/lib/runtime/config";
 export const metadata: Metadata = {
-  title: "Admin · Users — Ninja Labs",
+  title: "Admin · Users | Ninja Labs",
   description: "Manage user access, wallet connections, and member roles.",
 };
 

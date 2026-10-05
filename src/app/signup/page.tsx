@@ -10,7 +10,7 @@ export function generateMetadata(): Metadata {
   const login = signup.login[loadRuntimeConfig().runtimeMode];
 
   return {
-    title: `${login.title} — Ninja Labs`,
+    title: `${login.title} | Ninja Labs`,
     description: login.description,
   };
 }

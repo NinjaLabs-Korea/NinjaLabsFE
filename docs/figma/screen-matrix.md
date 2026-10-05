@@ -1,4 +1,4 @@
-# Screen Matrix — Phase 0 artifact (G001)
+# Screen Matrix - Phase 0 artifact (G001)
 
 Source: 13-node Figma reconnaissance (files in `docs/figma/recon/`), fileKey `DKvXU0AY4O9UalcHWXQCcI`.
 Per-node detail lives in the recon files; this matrix is the frozen contract source for tokens, components, assets, and data registries.
@@ -25,11 +25,11 @@ Per-node detail lives in the recon files; this matrix is the frozen contract sou
 
 - **Chrome invariance: CONFIRMED 13/13.** Header (64px, `rgba(255,255,255,0.85)` + 6px blur, 1px bottom border) and footer (`#0B1322`, brand + Platform + Community columns + copyright rule) are byte-identical across nodes. Root layout owns `Header` + one flexing `<main>` + `Footer`. No route-group layout needed. (Clarification of the recon-template shorthand: the footer is brand column + 2 link columns; AGENTS.md itself mandates only one shared Header/Footer and is not contradicted.)
 - **Fonts:** Space Grotesk (display: brand, H1/H2, card titles, stats, reward values) + Inter (body, nav, badges, forms). Both on Google Fonts → `next/font/google` with `variable`; **Geist is replaced**. Bridge: `@theme inline` → `--font-sans: var(--font-inter)`, `--font-display: var(--font-space-grotesk)`.
-- **Pixel-diff reference:** native **1440** frame per node — the only pixel-comparison target. Canonical structural-assertion widths: **390** (mobile) and **768** (tablet). No per-breakpoint Figma frames exist.
+- **Pixel-diff reference:** native **1440** frame per node - the only pixel-comparison target. Canonical structural-assertion widths: **390** (mobile) and **768** (tablet). No per-breakpoint Figma frames exist.
 - **Spacing:** default Tailwind scale suffices (4px multiples dominate). No custom `--spacing-*`. Odd one-offs (21px card padding = 20px + 1px border effect, 119px shell inset) use arbitrary values at the point of use.
 - **Container:** content max-width 1200px with 24px gutters (`--container-content: 75rem`). Signup step columns 768/896/1024 are page-local widths, not tokens.
 - **Dark surfaces are inverse *surfaces*, not a theme.** Hero/portfolio/stat gradients + footer use inverse tokens; the scaffold OS dark media query is removed.
-- **Scaffold migration (Phase 1):** delete the scaffold `:root { --background/--foreground }` block, the `@media (prefers-color-scheme: dark)` query, the scaffold `@theme inline` bridge to Geist variables, AND the unlayered `body { font-family: Arial, ... }` rule — the Arial rule would override the Tailwind font bridge. Apply `bg-page text-ink font-sans antialiased` as utilities on `<body>` in `layout.tsx`; keep only `@import "tailwindcss"` plus the new `@theme` blocks in `globals.css`.
+- **Scaffold migration (Phase 1):** delete the scaffold `:root { --background/--foreground }` block, the `@media (prefers-color-scheme: dark)` query, the scaffold `@theme inline` bridge to Geist variables, AND the unlayered `body { font-family: Arial, ... }` rule - the Arial rule would override the Tailwind font bridge. Apply `bg-page text-ink font-sans antialiased` as utilities on `<body>` in `layout.tsx`; keep only `@import "tailwindcss"` plus the new `@theme` blocks in `globals.css`.
 
 ## Token draft (Phase 1 input → `src/app/globals.css`)
 
@@ -124,7 +124,7 @@ Duplicate policy: content-hash dedupe; same-source multi-size renders share one 
 ## Content registry shapes (Phase 2/4 input → `src/lib/`)
 
 ```ts
-// types.ts — discriminated unions
+// types.ts - discriminated unions
 type Reward = { amount: number; currency: 'INJ' | 'USDC' };
 type BountyCategory = 'Dev' | 'Design' | 'Content';
 type Bounty = { slug: string; title: string; summary: string; category: BountyCategory;
@@ -152,16 +152,16 @@ Registries: `bounties.ts`, `notices.ts`, `members.ts` (members + profiles keyed 
 
 ## Component contracts (Phase 2 input)
 
-- `ui/Badge` — variants: `primary-soft` (lavender/purple, default), `selected` (solid primary), `success`, `danger`, `warning`, `neutral`, `inverse` (hero glass). Size fixed 24px, pill.
-- `ui/RewardPill` — `Reward` display model; INJ → token icon, USDC → `$` glyph; lavender fill + border.
-- `ui/SectionHeader` — eyebrow + heading (level/size prop) + optional action link (`View all →` outline style).
-- `ui/StepIndicator` — 4 steps, states: completed (`#DFDDFF`/strong), active (solid primary/white), future (subtle/muted); fluid track widths.
-- `cards/BountyCard` — vertical (Landing 273w, List 370.67w — same skeleton, fluid) with cover, Badge, title, optional summary, RewardPill + deadline·sponsor row; closed → opacity-70.
-- `cards/NewsCard` — vertical (Landing) and horizontal-with-thumb (Notices list) are **different skeletons** → `NewsCard` (vertical) + `NoticeRow` (horizontal), both consuming `Notice`.
-- `cards/MemberCard` — confirmed by 07 recon (photo/initials fallback, name, role line, bio, links).
+- `ui/Badge` - variants: `primary-soft` (lavender/purple, default), `selected` (solid primary), `success`, `danger`, `warning`, `neutral`, `inverse` (hero glass). Size fixed 24px, pill.
+- `ui/RewardPill` - `Reward` display model; INJ → token icon, USDC → `$` glyph; lavender fill + border.
+- `ui/SectionHeader` - eyebrow + heading (level/size prop) + optional action link (`View all →` outline style).
+- `ui/StepIndicator` - 4 steps, states: completed (`#DFDDFF`/strong), active (solid primary/white), future (subtle/muted); fluid track widths.
+- `cards/BountyCard` - vertical (Landing 273w, List 370.67w - same skeleton, fluid) with cover, Badge, title, optional summary, RewardPill + deadline·sponsor row; closed → opacity-70.
+- `cards/NewsCard` - vertical (Landing) and horizontal-with-thumb (Notices list) are **different skeletons** → `NewsCard` (vertical) + `NoticeRow` (horizontal), both consuming `Notice`.
+- `cards/MemberCard` - confirmed by 07 recon (photo/initials fallback, name, role line, bio, links).
 - Page-local until reuse proven: stat tiles, timeline, NFT mosaic, ProfileHero, CompletionCard, AgentCard, empty-state panels, form controls.
 
-## Admin extension (run 2 — screens 18-21, recon files 18-21-admin-*.md)
+## Admin extension (run 2 - screens 18-21, recon files 18-21-admin-*.md)
 
 | nodeId | Screen | Route | Native frame | Shell | Repeated components | Data shape |
 |---|---|---|---|---|---|---|
@@ -171,12 +171,12 @@ Registries: `bounties.ts`, `notices.ts`, `members.ts` (members + profiles keyed 
 | 19:2937 | 21 Admin - Notices | `/admin/notices` | 1440×1857.60 | same | AdminTabs, AdminTable (5 cols, min-w 820, Published date or `–`), status Badge (Published success / Draft warning), + New Post, editor (Title/Category, Thumbnail/External link, markdown textarea 144px, Status select, Save) | `AdminPost` (category, status draft/published, publishedAt?, thumbnail?, externalUrl?, bodyMarkdown) |
 
 ### Admin decisions (frozen)
-- **Chrome: PUBLIC shell retained on all 4** (64px header + dark footer). Admin nav is an in-page 66px white rounded tab strip (User Mgmt / Bounty Mgmt / Hall of Fame / Notices; active = Badge selected style) + `ADMIN ONLY` neutral badge. NO nested layout needed — pages compose the tab strip; root layout untouched.
+- **Chrome: PUBLIC shell retained on all 4** (64px header + dark footer). Admin nav is an in-page 66px white rounded tab strip (User Mgmt / Bounty Mgmt / Hall of Fame / Notices; active = Badge selected style) + `ADMIN ONLY` neutral badge. NO nested layout needed - pages compose the tab strip; root layout untouched.
 - **Zero new tokens.** Every color/radius/shadow maps to existing @theme tokens (recon-verified; white-alpha/shadow rgba are existing utilities).
-- **New shared admin components** (promote to `src/components/admin/`, used by all 4): `AdminTabs` (the 66px tab strip ONLY — the `ADMIN ONLY` badge is page-header content rendered by each page next to its title/actions, NOT part of AdminTabs), `AdminTable` (lavender `bg-primary-soft` 52px header, `text-ink-notice` headings, fixed col widths, 1px row dividers, wrapper `overflow-x-auto` with per-screen min-width), admin form field primitives stay page-local until reuse proven across the 4 pages (rule-of-three applies within run 2).
-- **Tables never drop columns responsively** — horizontal scroll at min-width per recon (820/900/760/820).
-- **Status Badge reuse:** Active/Published → `success`, Reviewing/Draft → `warning`, Closed → `danger`, ADMIN ONLY/auto-aggregated → `neutral`, tabs → `selected` (active) / `primary-soft` (inactive). **Badge fix required in G002:** recon evidence (screens 12, 14, 18–21 uniformly) shows selected chips as `#4D3DFF` fill with `#EEEFFF` text; `Badge.selected` currently renders `text-on-inverse` (#FFF). Change `selected` to `text-primary-soft` — leader-approved shared-API correction, aligns all existing selected-chip usages (signup tags, bounty All chip) with the design.
-- **Mock scope + derivation (explicit adapters, no direct reuse):** forms/selects/toggles are static visual states (no mutations). Admin data lives in `src/lib/admin.ts` as keyed adapters/overlays over public registries — never direct casts: `AdminUser` = join of profile slugs with admin-only fields (email, wallet, precise joinedAt MM.DD, is_member from members registry, member_role/display_order); `AdminBounty` = bounty-slug overlay adding `intakeEnabled`, MM.DD deadline dates, and status widened with `reviewing` (public registry stays `active|closed`); admin highlights mirror hall-of-fame records plus `order`/`link` fields; `AdminPost` = published posts derived from notices (slug-keyed, publishedAt) **plus admin-only draft records that exist ONLY in the admin registry** (drafts are private; public notices registry is untouched).
+- **New shared admin components** (promote to `src/components/admin/`, used by all 4): `AdminTabs` (the 66px tab strip ONLY - the `ADMIN ONLY` badge is page-header content rendered by each page next to its title/actions, NOT part of AdminTabs), `AdminTable` (lavender `bg-primary-soft` 52px header, `text-ink-notice` headings, fixed col widths, 1px row dividers, wrapper `overflow-x-auto` with per-screen min-width), admin form field primitives stay page-local until reuse proven across the 4 pages (rule-of-three applies within run 2).
+- **Tables never drop columns responsively** - horizontal scroll at min-width per recon (820/900/760/820).
+- **Status Badge reuse:** Active/Published → `success`, Reviewing/Draft → `warning`, Closed → `danger`, ADMIN ONLY/auto-aggregated → `neutral`, tabs → `selected` (active) / `primary-soft` (inactive). **Badge fix required in G002:** recon evidence (screens 12, 14, 18–21 uniformly) shows selected chips as `#4D3DFF` fill with `#EEEFFF` text; `Badge.selected` currently renders `text-on-inverse` (#FFF). Change `selected` to `text-primary-soft` - leader-approved shared-API correction, aligns all existing selected-chip usages (signup tags, bounty All chip) with the design.
+- **Mock scope + derivation (explicit adapters, no direct reuse):** forms/selects/toggles are static visual states (no mutations). Admin data lives in `src/lib/admin.ts` as keyed adapters/overlays over public registries - never direct casts: `AdminUser` = join of profile slugs with admin-only fields (email, wallet, precise joinedAt MM.DD, is_member from members registry, member_role/display_order); `AdminBounty` = bounty-slug overlay adding `intakeEnabled`, MM.DD deadline dates, and status widened with `reviewing` (public registry stays `active|closed`); admin highlights mirror hall-of-fame records plus `order`/`link` fields; `AdminPost` = published posts derived from notices (slug-keyed, publishedAt) **plus admin-only draft records that exist ONLY in the admin registry** (drafts are private; public notices registry is untouched).
 - Out of run-2 scope (exist in Figma, not requested): 15 Apply Variant `19:1911`, 16 Bounty Apply `19:2093`, 17 Agent Register `19:2201`.
 
 ## Run-3 extension (screens 15v/16/17, recon files 15v-/16-/17-*.md)
