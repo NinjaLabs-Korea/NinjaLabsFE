@@ -151,6 +151,7 @@ export function UserMenu() {
                 className="flex items-center justify-between rounded-control px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 href={item.href}
                 key={item.key}
+                onClick={() => closeMenu()}
                 onKeyDown={handleMenuKeyDown}
                 ref={(element) => {
                   itemRefs.current[index] = element;
