@@ -183,6 +183,21 @@ describe("placeholder adapters", () => {
     });
   });
 
+  it("lists a mock application right after applying to a bounty", async () => {
+    const client = createMockApiClient();
+    const owner = { status: "signed-in" as const, user: getMockFixtureSnapshot().account.user };
+
+    await client.applyToBounty("helix-volume-analytics", { message: "QA approach" });
+    const result = await client.getApplications(owner);
+
+    expect(result.status).toBe("available");
+    expect(result.status === "available" ? result.data[0] : null).toMatchObject({
+      bountySlug: "helix-volume-analytics",
+      note: "QA approach",
+      status: "under_review",
+    });
+  });
+
   it("notifies subscribers across session-preview sign-in and sign-out", async () => {
     const adapter = createSessionPreviewAuthAdapter({
       id: "demo-user",
