@@ -96,7 +96,7 @@
     "review": "검토",
     "defaultReview": "스폰서 검토",
     "submissionGuide": "제출 가이드",
-    "applyFootnote": "bounty.application_required ON · 누구나 볼 수 있으며, 지원과 제출은 로그인이 필요합니다.",
+    "applyFootnote": "누구나 볼 수 있으며, 지원과 제출은 로그인이 필요합니다.",
     "reward": "보상",
     "sponsorPays": "스폰서 지급:",
     "completionSteps": "완료 단계",
