@@ -1,3 +1,4 @@
+import { rewardFromBaseUnits, toCategoryLabel } from "./api/codecs";
 import type { Bounty } from "./types";
 import { fetchPublicJson } from "./api/public";
 import { loadRuntimeConfig } from "./runtime/config";
@@ -58,8 +59,6 @@ type BountyDetailRow = BountyListRow & {
 };
 type BountyListResponse = { items: BountyListRow[] };
 
-const categoryLabels = { DEV: "Dev", DESIGN: "Design", CONTENT: "Content", OTHER: "Other" } as const;
-
 // "Closed" is a data sentinel (see mock records); components render a localized label for it.
 function dateLabel(value: string): string {
   const deadline = new Date(value);
@@ -74,12 +73,9 @@ function toBounty(row: BountyListRow | BountyDetailRow): Bounty {
     slug: row.id,
     title: row.title,
     summary: row.summary,
-    category: categoryLabels[row.category as keyof typeof categoryLabels] ?? "Other",
+    category: toCategoryLabel(row.category) ?? "Other",
     status: row.status === "OPEN" ? "active" : "closed",
-    reward: {
-      amount: reward ? Number(reward.amount) / 10 ** (reward.symbol === "USDC" ? 6 : 18) : 0,
-      currency: reward?.symbol === "USDC" ? "USDC" : "INJ",
-    },
+    reward: rewardFromBaseUnits(reward),
     sponsor: row.sponsor_name,
     deadline: row.status === "OPEN" ? dateLabel(row.submission_deadline) : "Closed",
     deadlineDetail: new Date(row.submission_deadline).toLocaleString("en-US", { timeZone: "UTC", timeZoneName: "short" }),

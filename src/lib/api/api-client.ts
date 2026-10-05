@@ -3,6 +3,7 @@ import type { ApiClient, ApiResult } from "@/lib/contracts/api";
 import type { ApiHttp } from "@/lib/api/http";
 import { fetchMe, toClientUser } from "@/lib/api/me";
 import { createAdminApi } from "@/lib/api/admin";
+import { toCategoryLabel, type CategoryCode } from "@/lib/api/codecs";
 
 /** BE GET /applications/me 행 */
 type ApplicationRow = {
@@ -13,7 +14,7 @@ type ApplicationRow = {
   reviewed_at: string | null;
   bounty_id: string;
   bounty_title: string;
-  category: "DEV" | "DESIGN" | "CONTENT" | "OTHER";
+  category: CategoryCode;
 };
 
 /** BE GET /agents/me 행 */
@@ -36,18 +37,11 @@ type SubmissionRow = {
   bounty_id: string;
 };
 
-const CATEGORY_LABEL = {
-  DEV: "Dev",
-  DESIGN: "Design",
-  CONTENT: "Content",
-  OTHER: "Other",
-} as const;
-
 function toApplication(row: ApplicationRow): AccountApplication {
   return {
     bountySlug: row.bounty_id,
     bountyTitle: row.bounty_title,
-    category: CATEGORY_LABEL[row.category] ?? "Other",
+    category: toCategoryLabel(row.category) ?? "Other",
     appliedAt: row.applied_at,
     note: row.message,
     // BE PENDING = 지원 완료(심사 대기) → FE 첫 단계 "open"(Applied)

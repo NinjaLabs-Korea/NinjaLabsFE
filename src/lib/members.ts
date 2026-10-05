@@ -1,3 +1,4 @@
+import { rewardFromBaseUnits, toCategoryLabel, toMemberRoleLabel } from "./api/codecs";
 import type { Member, Profile } from "./types";
 import { loadRuntimeConfig } from "./runtime/config";
 import { onboardingLog } from "./onboarding-log";
@@ -45,8 +46,6 @@ type MemberRow = {
   links: Array<{ type: string; url: string }>;
 };
 
-const memberRoleLabels = { CORE: "Core", DEV: "Dev", DESIGN: "Design", OPS: "Ops" } as const;
-
 export async function getRuntimeMembers(): Promise<Member[]> {
   if (loadRuntimeConfig().runtimeMode === "mock") return getMembers();
   const rows = await fetchPublicJson<MemberRow[]>("/members");
@@ -54,7 +53,7 @@ export async function getRuntimeMembers(): Promise<Member[]> {
     slug: row.nickname,
     name: row.nickname,
     initials: row.nickname.slice(0, 2).toUpperCase(),
-    role: memberRoleLabels[row.member_role] ?? "Core",
+    role: toMemberRoleLabel(row.member_role) ?? "Core",
     // Empty title/bio fall back to localized defaults in MemberCard.
     title: "",
     bio: row.bio,
@@ -92,20 +91,10 @@ type PublicProfileResponse = {
   }>;
 };
 
-const categoryMap = {
-  DEV: "Dev",
-  DESIGN: "Design",
-  CONTENT: "Content",
-  OTHER: "Other",
-} as const;
-
 function toProfile(data: PublicProfileResponse): Profile {
   const completions = data.completedBounties.flatMap((completion) => {
-    const category = categoryMap[completion.category as keyof typeof categoryMap];
+    const category = toCategoryLabel(completion.category);
     if (!category) return [];
-    const reward = completion.rewards[0];
-    const currency: "USDC" | "INJ" = reward?.symbol === "USDC" ? "USDC" : "INJ";
-    const decimals = currency === "USDC" ? 6 : 18;
     return [{
       bountySlug: completion.id,
       title: completion.title,
@@ -115,10 +104,7 @@ function toProfile(data: PublicProfileResponse): Profile {
         month: "long",
         day: "numeric",
       }),
-      reward: {
-        amount: reward ? Number(reward.amount) / 10 ** decimals : 0,
-        currency,
-      },
+      reward: rewardFromBaseUnits(completion.rewards[0]),
     }];
   });
 
@@ -128,7 +114,7 @@ function toProfile(data: PublicProfileResponse): Profile {
     initials: data.nickname.slice(0, 2).toUpperCase(),
     bio: data.bio,
     skills: data.tags.flatMap((tag) => {
-      const category = categoryMap[tag as keyof typeof categoryMap];
+      const category = toCategoryLabel(tag);
       return category ? [category] : [];
     }),
     joinedAt: new Date(data.created_at).toLocaleDateString("en-US", {
