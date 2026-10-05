@@ -26,7 +26,7 @@ Token colors: `#fbfbfe`, `#fff`, `#0b1322`, `#111a2e`, `#4f5d77`, `#77839c`, `#9
 ## Components
 - Existing public Header/Footer, Card, Badge, Button, Input, and status-token primitives.
 - New patterns: four-card `AgentRegistrationSteps`; `VerificationLogic` checked-list; `AgentRegistrationForm`; compact policy/edge-case notices.
-- Step copy: (1) Get REST API doc—download `skill.md` and API usage guide; (2) Register wallet public key; (3) Prove ownership—sign a challenge; (4) Receive API key for verified submissions/status checks.
+- Step copy: (1) Get REST API doc - download `skill.md` and API usage guide; (2) Register wallet public key; (3) Prove ownership - sign a challenge; (4) Receive API key for verified submissions/status checks.
 - Form: Agent name (placeholder `market-scout-agent`), Wallet Public Key (`inj1...abcd`), full-width `Sign & Register` CTA.
 
 ## Interactions

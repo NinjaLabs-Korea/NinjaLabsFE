@@ -16,14 +16,14 @@ export async function generateMetadata({ params }: NoticeDetailPageProps): Promi
   const notice = await getRuntimeNotice(id);
 
   if (!notice) {
-    return { title: "Not found — Ninja Labs" };
+    return { title: "Not found | Ninja Labs" };
   }
 
   return {
-    title: `${notice.title} — Ninja Labs`,
+    title: `${notice.title} | Ninja Labs`,
     description: notice.excerpt,
     openGraph: {
-      title: `${notice.title} — Ninja Labs`,
+      title: `${notice.title} | Ninja Labs`,
       description: notice.excerpt,
       url: `/notices/${notice.slug}`,
     },

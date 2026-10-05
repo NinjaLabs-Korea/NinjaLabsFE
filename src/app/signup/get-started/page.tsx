@@ -8,7 +8,7 @@ import { StepIndicator } from "@/components/ui/StepIndicator";
 import { signup } from "@/lib/signup";
 
 export const metadata: Metadata = {
-  title: "Get started — Ninja Labs",
+  title: "Get started | Ninja Labs",
   description: "All skippable and revisitable from main navigation.",
 };
 

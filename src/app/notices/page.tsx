@@ -5,7 +5,7 @@ import { getRuntimeNotices } from "@/lib/notices";
 
 
 export const metadata: Metadata = {
-  title: "Notices — Ninja Labs",
+  title: "Notices | Ninja Labs",
   description: "A builder community and bounty marketplace for the Injective ecosystem.",
 };
 

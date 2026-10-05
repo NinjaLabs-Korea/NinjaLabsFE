@@ -24,7 +24,7 @@ export const signup = {
       description:
         "Continue with Google to create your account. You will be redirected to Google and back here once you approve.",
       disclosure:
-        "Signing in creates or restores your Ninja Labs account. We only receive your Google email — no password is shared.",
+        "Signing in creates or restores your Ninja Labs account. We only receive your Google email. No password is shared.",
       statusTitle: "How it works",
       edgeCases: [
         "You are redirected to Google's consent screen and back after approval",

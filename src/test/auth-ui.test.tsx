@@ -55,7 +55,7 @@ function AuthState() {
 describe("AuthArea", () => {
   it("keeps the signed-in mobile account links and sign-out behavior in parity", async () => {
     render(
-      <FoundationProvider config={{ mode: "mock", previewUser }}>
+      <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
         <SignInOnMount />
         <AuthArea variant="mobile" />
         <AuthState />
@@ -83,7 +83,7 @@ describe("AuthArea", () => {
 describe("GoogleLoginButton", () => {
   it("shows a deterministic mock failure and clears it when retry succeeds", async () => {
     render(
-      <FoundationProvider config={{ mode: "mock", previewUser }}>
+      <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
         <GoogleLoginButton />
         <AuthState />
       </FoundationProvider>,
@@ -109,7 +109,7 @@ describe("GoogleLoginButton", () => {
 describe("BountyApplyGuideCta", () => {
   it("reflects a signed-in session and links to the real bounty", async () => {
     render(
-      <FoundationProvider config={{ mode: "mock", previewUser }}>
+      <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
         <SignInOnMount />
         <BountyApplyAuthBadge />
         <BountyApplyGuideCta bountyHref="/bounties/live-bounty-id" />

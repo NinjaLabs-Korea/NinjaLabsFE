@@ -3,7 +3,7 @@
  *
  * - 토큰 수명주기: 구글 로그인 후 BE가 `FE#accessToken=..&refreshToken=..`로
  *   리다이렉트한다. fragment는 서버로 전송되지 않으므로 로그에 남지 않는다.
- * - access token은 15분 JWT, refresh는 회전(rotation) 방식 — 401을 받으면
+ * - access token은 15분 JWT, refresh는 회전(rotation) 방식. 401을 받으면
  *   refresh로 재발급을 1회 시도하고, 실패하면 세션을 비운다.
  * - 저장소는 localStorage(사용 불가 환경 대비 try/catch). 서버 렌더 중에는
  *   어떤 저장소/네트워크 접근도 하지 않는다.
@@ -113,7 +113,7 @@ export function createApiHttp(apiUrl: string): ApiHttp {
     });
   }
 
-  /** refresh 회전 — 동시 401은 하나의 refresh만 수행하도록 합쳐진다 */
+  /** refresh 회전: 동시 401은 하나의 refresh만 수행하도록 합쳐진다 */
   function refreshSession(): Promise<boolean> {
     refreshing ??= (async () => {
       try {
@@ -195,7 +195,7 @@ export function createApiHttp(apiUrl: string): ApiHttp {
       }
       onboardingLog("session.logout.requested");
       const traceId = getOnboardingTraceId();
-      // 서버 세션 폐기는 best-effort — 실패해도 로컬 로그아웃은 완료된 상태
+      // 서버 세션 폐기는 best-effort. 실패해도 로컬 로그아웃은 완료된 상태
       await fetch(`${base}/auth/logout`, {
         method: "POST",
         cache: "no-store",

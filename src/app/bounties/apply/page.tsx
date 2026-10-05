@@ -11,7 +11,7 @@ import { getRuntimeBounties } from "@/lib/bounties";
 const statuses = ["Open", "Under review", "Approved", "Submitted", "Completed"];
 
 export const metadata: Metadata = {
-  title: "How applying works — Ninja Labs",
+  title: "How applying works | Ninja Labs",
   description: "Some bounties accept work directly. Others require sponsor approval before you can submit.",
 };
 

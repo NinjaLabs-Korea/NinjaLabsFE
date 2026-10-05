@@ -26,7 +26,7 @@ export function shouldRedirectToOnboarding(
  * - signIn: BE `/auth/google`로 전체 페이지 리다이렉트. 구글 동의 후 BE가
  *   `FE#accessToken=..&refreshToken=..`로 돌려보내고, 어댑터 초기화가
  *   fragment를 수거해 `/auth/me`로 세션을 복원한다.
- * - 서버 렌더 중에는 항상 "loading" — 브라우저에서만 토큰/네트워크에 접근한다.
+ * - 서버 렌더 중에는 항상 "loading". 브라우저에서만 토큰/네트워크에 접근한다.
  */
 export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiHttp } {
   const http = createApiHttp(apiUrl);

@@ -46,7 +46,7 @@ Tuple validation prevents mock mode outside local/test. API mode fetches the con
 
 Status of the original gate items (✅ = delivered by the NinjaLabsBE integration, ⏳ = still open):
 
-1. ✅ Real OAuth via the backend callback (`/auth/google` → code exchange → session issuance). Note the agreed contract uses bearer tokens delivered over a URL fragment and stored in `localStorage` with refresh rotation, **not** HttpOnly cookies — revisit if the team wants a BFF/cookie model.
+1. ✅ Real OAuth via the backend callback (`/auth/google` → code exchange → session issuance). Note the agreed contract uses bearer tokens delivered over a URL fragment and stored in `localStorage` with refresh rotation, **not** HttpOnly cookies - revisit if the team wants a BFF/cookie model.
 2. ⏳ HttpOnly, Secure session cookies (superseded by the bearer-token contract above unless revisited).
 3. CSRF protections for cookie-authenticated state changes.
 4. Trusted-edge rate limiting and Turnstile enforcement where abuse protection is required.

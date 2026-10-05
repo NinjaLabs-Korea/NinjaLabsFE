@@ -82,7 +82,7 @@ export function AgentsView() {
       </div>
 
       {mode === "mock" ? (
-        <p className="mt-3 text-xs text-ink-muted">Session preview — demo data, resets on reload.</p>
+        <p className="mt-3 text-xs text-ink-muted">Session preview: demo data, resets on reload.</p>
       ) : null}
     </>
   );

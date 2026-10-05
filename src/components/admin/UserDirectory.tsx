@@ -119,12 +119,12 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
                 <td className="px-5 py-4 text-sm text-ink-muted">{user.email}</td>
                 <td className="px-5 py-4 text-sm text-ink-secondary">{user.joinedAt}</td>
                 <td className="px-5 py-4 text-sm text-ink-secondary">
-                  {user.walletStatus === "linked" ? <Badge variant="success">Linked</Badge> : "—"}
+                  {user.walletStatus === "linked" ? <Badge variant="success">Linked</Badge> : "-"}
                 </td>
                 <td className="px-5 py-4 text-sm text-ink-secondary">
-                  {user.isMember ? <Badge variant="success">Yes</Badge> : "—"}
+                  {user.isMember ? <Badge variant="success">Yes</Badge> : "-"}
                 </td>
-                <td className="px-5 py-4 text-sm text-ink-secondary">{user.memberRole ?? "—"}</td>
+                <td className="px-5 py-4 text-sm text-ink-secondary">{user.memberRole ?? "-"}</td>
                 <td className="px-5 py-4">
                   <UserActions
                     onAssign={(role, displayOrder) => handleAssign(user, role, displayOrder)}

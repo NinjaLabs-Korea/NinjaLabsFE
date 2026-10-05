@@ -14,7 +14,7 @@ export type Bounty = {
   // 19:1480 shows D-7 label; 19:1739 shows full UTC deadline
   deadlineDetail?: string;
   coverImage: string;
-  /** Markdown (rendered by ui/Markdown): supported subset is p/a/strong/em/ul/ol/li/h2/h3/code/pre/blockquote/br/del — tables, images, and task lists are unsupported by design. */
+  /** Markdown (rendered by ui/Markdown): supported subset is p/a/strong/em/ul/ol/li/h2/h3/code/pre/blockquote/br/del. Tables, images, and task lists are unsupported by design. */
   descriptionMarkdown?: string;
   /** Markdown; same ui/Markdown subset as descriptionMarkdown. Renders a "Submission guide" section on non-application bounty detail. */
   submissionGuideMarkdown?: string;

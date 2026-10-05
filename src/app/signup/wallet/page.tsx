@@ -14,7 +14,7 @@ const isApiMode = foundationConfig.mode === "api";
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
 export const metadata: Metadata = {
-  title: "Connect wallet — Ninja Labs",
+  title: "Connect wallet | Ninja Labs",
   description: isApiMode
     ? "Connect and verify an Injective wallet."
     : "Preview an Injective wallet connection.",

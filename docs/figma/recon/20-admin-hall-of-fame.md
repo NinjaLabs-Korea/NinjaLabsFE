@@ -2,7 +2,7 @@
 1440 × 1941.56 prototype (node `19:2754`); the rendered admin page is 1438 × 1880.56 inside a 1px prototype border. Its main content ends at y=1461.56, then a 273px footer.
 
 ## Shell
-This uses the **public chrome**, not a separate admin sidebar/topbar: the 64px translucent `rgba(255,255,255,0.85)` header has mascot/logo, public nav (Bounties, Hall of Fame, Members, Notices), Browse, and Get Started; the dark `#0b1322` footer is unchanged. Admin-specific navigation is an in-page, 66px white rounded tab strip (User Mgmt, Bounty Mgmt, Hall of Fame selected, Notices), plus an `ADMIN ONLY` badge—there is no sidebar or admin topbar.
+This uses the **public chrome**, not a separate admin sidebar/topbar: the 64px translucent `rgba(255,255,255,0.85)` header has mascot/logo, public nav (Bounties, Hall of Fame, Members, Notices), Browse, and Get Started; the dark `#0b1322` footer is unchanged. Admin-specific navigation is an in-page, 66px white rounded tab strip (User Mgmt, Bounty Mgmt, Hall of Fame selected, Notices), plus an `ADMIN ONLY` badge - there is no sidebar or admin topbar.
 
 ## Surface
 Page `#fbfbfe`; white tab, table, and form cards; lavender `#eeefff` table header and cumulative-stat cards. Footer is `#0b1322`; header has 6px backdrop blur over translucent white. Cumulative stats are explicitly read-only/auto-aggregated; highlight curation is the editable surface.
@@ -35,7 +35,7 @@ Page `#fbfbfe`; white tab, table, and form cards; lavender `#eeefff` table heade
 ## Interactions
 Public nav/footer and CTAs are links. Admin tabs switch management destinations. `+ Add item` begins a new `platform_highlight`; Edit loads the selected record. Type dropdown, image upload, optional link, and display-order input feed Save. Cumulative stats are non-editable; the note explicitly says the form directly manages `platform_highlight`.
 
-> Mock-scope note: the state-changing behaviors above (assign/confirm/save/publish) are the design's product semantics. The G002 implementation renders them as static visual states only — no mutations — per the frozen matrix scope; wiring them is future backend scope.
+> Mock-scope note: the state-changing behaviors above (assign/confirm/save/publish) are the design's product semantics. The G002 implementation renders them as static visual states only - no mutations - per the frozen matrix scope; wiring them is future backend scope.
 
 ## Responsive inference
 At 768px: preserve 24px gutters; public nav collapses to a menu; admin tabs wrap; header actions and badge may move below title; stats become 1–2 columns; form stays two columns only where each control remains usable, otherwise stacks. The table retains its 760px minimum and horizontal scroll. At 390px: menu plus primary CTA replaces header nav; title/description wrap; tabs wrap into multiple rows; stats and all form fields are one column; table remains horizontally scrollable; footer columns stack.

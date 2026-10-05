@@ -6,7 +6,7 @@ import { getAdminBounties } from "@/lib/admin";
 import { loadRuntimeConfig } from "@/lib/runtime/config";
 
 export const metadata: Metadata = {
-  title: "Admin · Bounties — Ninja Labs",
+  title: "Admin · Bounties | Ninja Labs",
   description: "Create and manage sponsor-backed bounties.",
 };
 

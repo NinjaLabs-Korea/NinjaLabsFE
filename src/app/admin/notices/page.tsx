@@ -7,7 +7,7 @@ import { getAdminPosts } from "@/lib/admin";
 import { loadRuntimeConfig } from "@/lib/runtime/config";
 
 export const metadata: Metadata = {
-  title: "Admin · Notices — Ninja Labs",
+  title: "Admin · Notices | Ninja Labs",
   description: "Publish updates and resources for the Ninja Labs community.",
 };
 
