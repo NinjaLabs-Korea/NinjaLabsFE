@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { useFoundationApiClient } from "@/components/auth/FoundationProvider";
+import { useOnboardingApi } from "@/components/auth/FoundationProvider";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
 
 export function CompleteOnboarding() {
-  const apiClient = useFoundationApiClient();
+  const apiClient = useOnboardingApi();
 
   useEffect(() => {
     onboardingLog("onboarding.complete.started");

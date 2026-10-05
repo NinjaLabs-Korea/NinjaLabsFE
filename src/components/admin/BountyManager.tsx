@@ -8,7 +8,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import type { AdminBounty } from "@/lib/admin";
-import { useFoundationApiClient, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const columns = [
   { id: "title", widthClass: "w-[244px]" },
@@ -58,8 +58,7 @@ const emptyForm = (): FormValues => ({
 type Mode = { kind: "create" } | { kind: "edit"; slug: string };
 
 export function BountyManager({ bounties, children, tabs }: { bounties: AdminBounty[]; children: ReactNode; tabs: ReactNode }) {
-  const api = useFoundationApiClient();
-  const foundationMode = useFoundationMode();
+  const api = useAdminApi();
   const t = useTranslations("admin.bounties");
   const tCommon = useTranslations("admin.common");
   const [records, setRecords] = useState(bounties);
@@ -70,9 +69,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const editing = mode.kind === "edit";
 
   useEffect(() => {
-    if (foundationMode !== "api") return;
     api.getAdminBounties().then(setRecords).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
-  }, [api, foundationMode, t]);
+  }, [api, t]);
 
   const updateForm = <Key extends keyof FormValues>(key: Key, value: FormValues[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));

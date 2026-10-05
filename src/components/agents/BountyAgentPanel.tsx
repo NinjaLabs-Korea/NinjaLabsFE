@@ -4,14 +4,14 @@ import { useTranslations } from "next-intl";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import {
   useAuthSnapshot,
-  useFoundationApiClient,
+  useAccountApi,
 } from "@/components/auth/FoundationProvider";
 import { Link } from "@/i18n/navigation";
 
 export function BountyAgentPanel({ copy }: { copy: string }) {
   const t = useTranslations("agents.panel");
   const auth = useAuthSnapshot();
-  const apiClient = useFoundationApiClient();
+  const apiClient = useAccountApi();
   const { data: agents, loading, unavailable } = useAccountQuery(apiClient.getAgents);
   const verifiedCount = agents?.filter((agent) => agent.verified).length ?? 0;
 

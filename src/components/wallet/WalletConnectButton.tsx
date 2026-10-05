@@ -10,7 +10,7 @@ import {
   useSwitchChain,
 } from "wagmi";
 import {
-  useFoundationApiClient,
+  useWalletApi,
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
 import { useRouter } from "@/i18n/navigation";
@@ -35,7 +35,7 @@ export function WalletConnectButton({
 }: WalletConnectButtonProps) {
   const t = useTranslations("common.wallet");
   const router = useRouter();
-  const apiClient = useFoundationApiClient();
+  const apiClient = useWalletApi();
   const mode = useFoundationMode();
   const [verificationState, setVerificationState] = useState<"idle" | "pending" | "error">("idle");
   const hasInjectedWallet = useSyncExternalStore(

@@ -1,4 +1,5 @@
 import type { ApiHttp } from "@/lib/api/http";
+import type { AdminApi } from "@/lib/contracts/api";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
 import { rewardFromBaseUnits, rewardToBaseUnits, toCategoryCode, toCategoryLabel, toMemberRoleCode, toMemberRoleLabel, type CategoryCode, type MemberRoleCode } from "@/lib/api/codecs";
 
@@ -20,7 +21,8 @@ const bountyStatus = (status: string): AdminBounty["status"] => {
   return "closed";
 };
 
-export function createAdminApi(http: ApiHttp) {
+/** 운영자 콘솔 API — BE 행(snake_case, 코드값)을 FE 어드민 타입으로 변환한다 */
+export function createAdminApi(http: ApiHttp): AdminApi {
   return {
     uploadAdminMedia: async (file: File): Promise<{ id: string; url: string }> => {
       const form = new FormData();

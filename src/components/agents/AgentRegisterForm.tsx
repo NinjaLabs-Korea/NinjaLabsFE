@@ -12,7 +12,8 @@ import {
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import {
   useAuthSnapshot,
-  useFoundationApiClient,
+  useAccountApi,
+  useAgentApi,
 } from "@/components/auth/FoundationProvider";
 import { Link } from "@/i18n/navigation";
 import type { AgentVerification } from "@/lib/contracts/api";
@@ -34,8 +35,9 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const t = useTranslations("agents.form");
   const locale = useLocale();
   const auth = useAuthSnapshot();
-  const apiClient = useFoundationApiClient();
-  const { data: agents, loading: agentsLoading } = useAccountQuery(apiClient.getAgents);
+  const accountApi = useAccountApi();
+  const agentApi = useAgentApi();
+  const { data: agents, loading: agentsLoading } = useAccountQuery(accountApi.getAgents);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [submissionState, setSubmissionState] = useState<SubmissionState>("idle");
@@ -81,7 +83,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       onboardingLog("agent.registration.started", {
         wallet: maskWalletAddress(agentAddress),
       });
-      const registration = await apiClient.registerAgent({
+      const registration = await agentApi.registerAgent({
         name: name.trim(),
         ...(description.trim() ? { description: description.trim() } : {}),
         walletAddress: agentAddress,
@@ -99,7 +101,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       });
 
       setSubmissionState("verifying");
-      const verified = await apiClient.verifyAgent(registration.agentId, signature);
+      const verified = await agentApi.verifyAgent(registration.agentId, signature);
       setVerification(verified);
       onboardingLog("agent.registration.succeeded", {
         wallet: maskWalletAddress(agentAddress),

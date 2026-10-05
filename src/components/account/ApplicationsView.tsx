@@ -5,7 +5,7 @@ import { SignedOutPanel } from "@/components/account/SignedOutPanel";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import {
   useAuthSnapshot,
-  useFoundationApiClient,
+  useAccountApi,
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
@@ -34,7 +34,7 @@ export function ApplicationsView() {
     status === "approved" ? t("approvedStatus") : t(`steps.${status}`);
   const mode = useFoundationMode();
   const authSnapshot = useAuthSnapshot();
-  const apiClient = useFoundationApiClient();
+  const apiClient = useAccountApi();
   const { data: applications, unavailable } = useAccountQuery(apiClient.getApplications);
 
   if (unavailable) {

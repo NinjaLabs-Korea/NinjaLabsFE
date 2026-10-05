@@ -5,7 +5,7 @@ import { SignedOutPanel } from "@/components/account/SignedOutPanel";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import {
   useAuthSnapshot,
-  useFoundationApiClient,
+  useAccountApi,
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
@@ -19,7 +19,7 @@ export function AgentsView() {
   const tAccount = useTranslations("account.common");
   const mode = useFoundationMode();
   const authSnapshot = useAuthSnapshot();
-  const apiClient = useFoundationApiClient();
+  const apiClient = useAccountApi();
   const { data: agents, unavailable } = useAccountQuery(apiClient.getAgents);
 
   if (unavailable) {
