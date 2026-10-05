@@ -8,7 +8,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import type { AdminBounty } from "@/lib/admin";
-import { bountyToForm, emptyBountyForm, formToBounty, type BountyFormValues } from "@/lib/admin-bounty-form";
+import { bountyToForm, emptyBountyForm, formToBounty, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const columns = [
@@ -34,6 +34,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const [mode, setMode] = useState<Mode>({ kind: "create" });
   const [form, setForm] = useState<BountyFormValues>(emptyBountyForm);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [errors, setErrors] = useState<BountyFormErrors>({});
+  const [originalDeadline, setOriginalDeadline] = useState<string | undefined>();
   const formRef = useRef<HTMLElement>(null);
   const editing = mode.kind === "edit";
 
@@ -43,19 +45,35 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   const updateForm = <Key extends keyof BountyFormValues>(key: Key, value: BountyFormValues[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
+    // 산출물/제출 가이드는 둘 중 하나만 있으면 되므로 한쪽을 고치면 같은 에러를 지운다.
+    const cleared = key === "submissionGuide" ? "deliverables" : key;
+    setErrors((current) => ({ ...current, [cleared]: undefined }));
   };
+
+  const fieldError = (key: keyof BountyFormValues) => {
+    const error = errors[key];
+    return error ? <span className="mt-1 block text-xs font-normal text-danger" id={`bounty-${key}-error`}>{t(`form.errors.${error}`)}</span> : null;
+  };
+
+  const invalidProps = (key: keyof BountyFormValues) =>
+    errors[key] ? { "aria-invalid": true, "aria-describedby": `bounty-${key}-error` } : {};
 
   const startCreate = () => {
     setMode({ kind: "create" });
     setForm(emptyBountyForm());
     setCoverFile(null);
+    setErrors({});
+    setOriginalDeadline(undefined);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const startEdit = (bounty: AdminBounty) => {
     setMode({ kind: "edit", slug: bounty.slug });
-    setForm(bountyToForm(bounty));
+    const initial = bountyToForm(bounty);
+    setForm(initial);
     setCoverFile(null);
+    setErrors({});
+    setOriginalDeadline(initial.deadline);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -68,6 +86,12 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const nextErrors = validateBountyForm(form, { originalDeadline });
+    if (Object.values(nextErrors).some(Boolean)) {
+      setErrors(nextErrors);
+      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("form.errors.summary") });
+      return;
+    }
     try {
       const coverImage = coverFile ? (await api.uploadAdminMedia(coverFile)).url : form.coverImage;
       const bounty = formToBounty(form, mode.kind === "edit"
@@ -134,23 +158,27 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       <section className="mt-6 rounded-card border border-border bg-surface p-[21px] shadow-card" ref={formRef}>
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{editing ? t("form.eyebrowEdit") : t("form.eyebrowCreate")}</p>
         <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">{editing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
-        <form onSubmit={save}>
+        <form noValidate onSubmit={save}>
           <div className="mt-5 grid gap-5 md:grid-cols-2">
             <label className="block text-sm font-semibold text-ink">{t("form.title")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} type="text" value={form.title} />
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("title")} onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} type="text" value={form.title} />
+              {fieldError("title")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.sponsor")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("sponsor", event.target.value)} placeholder={t("form.sponsorPlaceholder")} type="text" value={form.sponsor} />
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("sponsor")} onChange={(event) => updateForm("sponsor", event.target.value)} placeholder={t("form.sponsorPlaceholder")} type="text" value={form.sponsor} />
+              {fieldError("sponsor")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.deadline")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("deadline", event.target.value)} required type="datetime-local" value={form.deadline} />
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("deadline")} onChange={(event) => updateForm("deadline", event.target.value)} required type="datetime-local" value={form.deadline} />
+              {fieldError("deadline")}
             </label>
             <div>
               <p className="text-sm font-semibold text-ink">{t("form.reward")}</p>
               <div className="mt-2 flex gap-3">
                 <div className="w-fit"><AdminSelect label={t("form.rewardCurrency")} onChange={(value) => updateForm("currency", value as BountyFormValues["currency"])} options={["INJ", "USDC"]} value={form.currency} /></div>
-                <input aria-label={t("form.rewardAmount")} className="h-[46px] min-w-0 flex-1 rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("amount", event.target.value)} placeholder={t("form.amountPlaceholder")} type="number" value={form.amount} />
+                <input aria-label={t("form.rewardAmount")} className="h-[46px] min-w-0 flex-1 rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("amount")} min="0" onChange={(event) => updateForm("amount", event.target.value)} placeholder={t("form.amountPlaceholder")} type="number" value={form.amount} />
               </div>
+              {fieldError("amount")}
             </div>
             <div>
               <p className="text-sm font-semibold text-ink">{t("form.intake")}</p>
@@ -173,17 +201,20 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               </div>
             </div>
             <label className="block text-sm font-semibold text-ink">{t("form.description")}
-              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("description", event.target.value)} placeholder={t("form.descriptionPlaceholder")} value={form.description} />
+              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("description")} onChange={(event) => updateForm("description", event.target.value)} placeholder={t("form.descriptionPlaceholder")} value={form.description} />
+              {fieldError("description")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.submissionGuide")}
               <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("submissionGuide", event.target.value)} placeholder={t("form.submissionGuidePlaceholder")} value={form.submissionGuide} />
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.deliverables")}
-              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("deliverables", event.target.value)} placeholder={t("form.deliverablesPlaceholder")} value={form.deliverables} />
+              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("deliverables")} onChange={(event) => updateForm("deliverables", event.target.value)} placeholder={t("form.deliverablesPlaceholder")} value={form.deliverables} />
               <p className="mt-2 text-xs text-ink-muted">{t("form.deliverablesHint")}</p>
+              {fieldError("deliverables")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.reviewProcess")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("reviewProcess", event.target.value)} placeholder={t("form.reviewProcessPlaceholder")} type="text" value={form.reviewProcess} />
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("reviewProcess")} onChange={(event) => updateForm("reviewProcess", event.target.value)} placeholder={t("form.reviewProcessPlaceholder")} type="text" value={form.reviewProcess} />
+              {fieldError("reviewProcess")}
             </label>
           </div>
           <button className="mt-5 h-[45px] rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" type="submit">{editing ? t("form.save") : t("form.create")}</button>

@@ -96,7 +96,7 @@
     "review": "Review",
     "defaultReview": "Sponsor review",
     "submissionGuide": "Submission guide",
-    "applyFootnote": "bounty.application_required ON · Viewing is public; applying and submitting require login.",
+    "applyFootnote": "Viewing is public; applying and submitting require login.",
     "reward": "Reward",
     "sponsorPays": "Sponsor pays:",
     "completionSteps": "Completion steps",

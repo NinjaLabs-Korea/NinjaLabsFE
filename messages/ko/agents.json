@@ -30,7 +30,8 @@
     "steps": {
       "doc": {
         "heading": "REST API 문서 받기",
-        "body": "skill.md와 API 사용 가이드를 다운로드하세요."
+        "body": "skill.md와 API 사용 가이드를 다운로드하세요.",
+        "download": "skill.md 다운로드 →"
       },
       "publicKey": {
         "heading": "지갑 공개 키 등록",

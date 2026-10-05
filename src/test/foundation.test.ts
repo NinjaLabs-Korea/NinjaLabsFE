@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createSessionPreviewAuthAdapter } from "@/lib/foundation/auth-adapter";
+import { createSessionPreviewAuthAdapter, SESSION_PREVIEW_STORAGE_KEY } from "@/lib/foundation/auth-adapter";
 import { createUnavailableApiClient } from "@/lib/foundation/api-client";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import { getMockFixtureSnapshot, mockFixtureSeed } from "@/lib/mocks/fixtures";
@@ -183,6 +183,21 @@ describe("placeholder adapters", () => {
     });
   });
 
+  it("lists a mock application right after applying to a bounty", async () => {
+    const client = createMockApiClient();
+    const owner = { status: "signed-in" as const, user: getMockFixtureSnapshot().account.user };
+
+    await client.applyToBounty("helix-volume-analytics", { message: "QA approach" });
+    const result = await client.getApplications(owner);
+
+    expect(result.status).toBe("available");
+    expect(result.status === "available" ? result.data[0] : null).toMatchObject({
+      bountySlug: "helix-volume-analytics",
+      note: "QA approach",
+      status: "under_review",
+    });
+  });
+
   it("notifies subscribers across session-preview sign-in and sign-out", async () => {
     const adapter = createSessionPreviewAuthAdapter({
       id: "demo-user",
@@ -199,5 +214,29 @@ describe("placeholder adapters", () => {
     await adapter.signIn();
 
     expect(snapshots).toEqual(["signed-in", "signed-out"]);
+  });
+
+  it("restores a session-preview sign-in after a full page load in the same tab", async () => {
+    const values = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => void values.set(key, value),
+      removeItem: (key: string) => void values.delete(key),
+    };
+    const user = { id: "demo-user", handle: "demo", initials: "DU", profileSlug: "demo" };
+
+    await createSessionPreviewAuthAdapter(user, () => storage).signIn();
+    expect(values.get(SESSION_PREVIEW_STORAGE_KEY)).toBe("signed-in");
+
+    // 새 페이지 로드 = 새 어댑터. 하이드레이션 전에는 signed-out, initialize 후 복원된다.
+    const reloaded = createSessionPreviewAuthAdapter(user, () => storage);
+    expect(reloaded.getSnapshot().status).toBe("signed-out");
+    reloaded.initialize?.();
+    expect(reloaded.getSnapshot()).toMatchObject({ status: "signed-in", user: { handle: "demo" } });
+
+    await reloaded.signOut();
+    const afterSignOut = createSessionPreviewAuthAdapter(user, () => storage);
+    afterSignOut.initialize?.();
+    expect(afterSignOut.getSnapshot().status).toBe("signed-out");
   });
 });

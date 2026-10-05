@@ -64,7 +64,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
             </dl>
           </div>
 
-          <div className="rounded-card border border-on-inverse/12 bg-on-inverse/6 p-[21px] shadow-card backdrop-blur-[4px]">
+          <div className="self-center rounded-card border border-on-inverse/12 bg-on-inverse/6 p-[21px] shadow-card backdrop-blur-[4px]">
             <div className="flex items-center gap-3">
               <Image
                 src="/figma/ninja-labs-mascot.png"

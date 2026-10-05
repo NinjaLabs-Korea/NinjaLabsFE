@@ -81,7 +81,8 @@
       "assignTitle": "分配成员角色",
       "assignDescription": "将 <b>{nickname}</b> 设为公开成员，并使用所选角色和排序。",
       "roleGroupLabel": "成员角色",
-      "displayOrder": "显示顺序"
+      "displayOrder": "显示顺序",
+      "displayOrderInvalid": "请输入大于等于 1 的整数，或留空。"
     }
   },
   "bounties": {
@@ -153,7 +154,15 @@
       "reviewProcess": "评审流程",
       "reviewProcessPlaceholder": "Ninja Labs 初审后由赞助方批准",
       "create": "创建",
-      "save": "保存"
+      "save": "保存",
+      "errors": {
+        "summary": "请先修正标出的字段再保存。",
+        "required": "此项为必填项。",
+        "deadlineInvalid": "请输入有效的日期和时间。",
+        "deadlinePast": "截止时间必须晚于当前时间。",
+        "amountInvalid": "请输入大于 0 的金额，或留空以保存为草稿。",
+        "deliverablesRequired": "请至少填写一项交付物或提交指南。"
+      }
     },
     "toast": {
       "loadFailedTitle": "无法获取赏金",

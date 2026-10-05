@@ -29,6 +29,7 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
   const [removeOpen, setRemoveOpen] = useState(false);
   const [role, setRole] = useState<MemberRole>(user.memberRole ?? "Core");
   const [displayOrder, setDisplayOrder] = useState(String(user.memberDisplayOrder ?? 1));
+  const [orderInvalid, setOrderInvalid] = useState(false);
   const assignTitleId = `assign-member-role-${user.slug}`;
 
   function handleRemove() {
@@ -37,9 +38,15 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
   }
 
   function handleAssign() {
+    // 표시 순서는 비우면 자동(null), 입력하면 1 이상의 정수만 받는다. 잘못된 값은 조용히 버리지 않고 알린다.
+    const trimmed = displayOrder.trim();
+    const parsedOrder = Number(trimmed);
+    if (trimmed && !(Number.isInteger(parsedOrder) && parsedOrder >= 1)) {
+      setOrderInvalid(true);
+      return;
+    }
     setAssignOpen(false);
-    const parsedOrder = Number.parseInt(displayOrder, 10);
-    onAssign(role, Number.isInteger(parsedOrder) && parsedOrder >= 1 ? parsedOrder : null);
+    onAssign(role, trimmed ? parsedOrder : null);
   }
 
   return (
@@ -53,6 +60,7 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
           }
 
           setRole(user.memberRole ?? "Core");
+          setOrderInvalid(false);
           setAssignOpen(true);
         }}
         type="button"
@@ -93,10 +101,18 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
         <input
           className={`mt-2 h-[46px] w-[200px] rounded-control border border-border px-[17px] text-sm text-ink ${focusClass}`}
           id={`display-order-${user.slug}`}
-          onChange={(event) => setDisplayOrder(event.target.value)}
+          aria-describedby={orderInvalid ? `display-order-error-${user.slug}` : undefined}
+          aria-invalid={orderInvalid || undefined}
+          min={1}
+          onChange={(event) => {
+            setDisplayOrder(event.target.value);
+            setOrderInvalid(false);
+          }}
+          step={1}
           type="number"
           value={displayOrder}
         />
+        {orderInvalid ? <p className="mt-2 text-xs text-danger" id={`display-order-error-${user.slug}`}>{t("actions.displayOrderInvalid")}</p> : null}
         <div className="mt-6 flex justify-end gap-3">
           <button className={`rounded-control border border-primary-outline px-5 py-3 text-sm leading-[21px] font-semibold text-primary-strong ${focusClass}`} onClick={() => setAssignOpen(false)} type="button">{tCommon("cancel")}</button>
           <button className={`rounded-control bg-primary px-5 py-3 text-sm leading-[21px] font-semibold text-on-inverse ${focusClass}`} onClick={handleAssign} type="button">{tCommon("confirm")}</button>

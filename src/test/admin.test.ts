@@ -75,3 +75,12 @@ describe("admin label keys", () => {
     }
   });
 });
+
+describe("admin bounty fixtures", () => {
+  it("shows intake ON exactly for bounties that require an application", () => {
+    const publicBounties = new Map(bounties.map((bounty) => [bounty.slug, bounty]));
+    for (const adminBounty of getAdminBounties()) {
+      expect(adminBounty.intakeEnabled).toBe(publicBounties.get(adminBounty.slug)?.applicationRequired ?? false);
+    }
+  });
+});
