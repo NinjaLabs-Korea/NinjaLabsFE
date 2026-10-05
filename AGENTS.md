@@ -22,6 +22,7 @@ Pages are ported 1:1 from the Figma design file below. Read this whole file befo
 - `npm run test:unit` - focused foundation unit tests
 - `npm run build` - production build; **must pass before any work is considered done**
 - `npm run lint` - ESLint
+- CI (`.github/workflows/ci.yml`) runs lint, `next typegen` + `tsc --noEmit`, unit tests, and the production build on every PR/push to `develop` and `main`. The dependency audit job is report-only until the pinned Next.js/wagmi upgrades are decided.
 
 ## Git flow
 
