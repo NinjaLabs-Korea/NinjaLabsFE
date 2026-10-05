@@ -81,7 +81,8 @@
       "assignTitle": "分配成员角色",
       "assignDescription": "将 <b>{nickname}</b> 设为公开成员，并使用所选角色和排序。",
       "roleGroupLabel": "成员角色",
-      "displayOrder": "显示顺序"
+      "displayOrder": "显示顺序",
+      "displayOrderInvalid": "请输入大于等于 1 的整数，或留空。"
     }
   },
   "bounties": {

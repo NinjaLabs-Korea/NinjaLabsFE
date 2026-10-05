@@ -157,7 +157,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
               <span className="mt-2 block text-xs font-normal text-ink-muted">{imageFile?.name ?? image ?? tCommon("fileHint")}</span>
             </div>
             <label className="text-sm font-semibold text-ink">{t("form.link")} <span className="font-normal text-ink-muted">{t("form.optional")}</span><input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => setLink(event.target.value)} placeholder="https://" value={link} /></label>
-            <label className="text-sm font-semibold text-ink">{t("form.displayOrder")}<input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => setOrder(Number(event.target.value))} placeholder="0" type="number" value={order} /></label>
+            <label className="text-sm font-semibold text-ink">{t("form.displayOrder")}<input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" min={0} onChange={(event) => setOrder(Number(event.target.value))} placeholder="0" required step={1} type="number" value={order} /></label>
           </div>
           <button className="mt-5 h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" type="submit">{tCommon("save")}</button>
           <p className="mt-3 text-xs text-ink-muted">{tCommon("saveNotice")}</p>

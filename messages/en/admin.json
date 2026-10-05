@@ -81,7 +81,8 @@
       "assignTitle": "Assign member role",
       "assignDescription": "Marks <b>{nickname}</b> as a public member with the selected role and order.",
       "roleGroupLabel": "Member role",
-      "displayOrder": "Display order"
+      "displayOrder": "Display order",
+      "displayOrderInvalid": "Enter a whole number of 1 or more, or leave it empty."
     }
   },
   "bounties": {

@@ -81,7 +81,8 @@
       "assignTitle": "멤버 역할 지정",
       "assignDescription": "<b>{nickname}</b>님을 선택한 역할과 순서로 공개 멤버에 등록합니다.",
       "roleGroupLabel": "멤버 역할",
-      "displayOrder": "표시 순서"
+      "displayOrder": "표시 순서",
+      "displayOrderInvalid": "1 이상의 정수를 입력하거나 비워 두세요."
     }
   },
   "bounties": {
