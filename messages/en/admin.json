@@ -153,7 +153,15 @@
       "reviewProcess": "Review process",
       "reviewProcessPlaceholder": "Ninja Labs triage plus sponsor approval",
       "create": "Create",
-      "save": "Save"
+      "save": "Save",
+      "errors": {
+        "summary": "Fix the highlighted fields before saving.",
+        "required": "This field is required.",
+        "deadlineInvalid": "Enter a valid date and time.",
+        "deadlinePast": "Choose a deadline in the future.",
+        "amountInvalid": "Enter an amount greater than 0, or leave it empty for a draft.",
+        "deliverablesRequired": "Add at least one deliverable or a submission guide."
+      }
     },
     "toast": {
       "loadFailedTitle": "Bounties unavailable",

@@ -153,7 +153,15 @@
       "reviewProcess": "评审流程",
       "reviewProcessPlaceholder": "Ninja Labs 初审后由赞助方批准",
       "create": "创建",
-      "save": "保存"
+      "save": "保存",
+      "errors": {
+        "summary": "请先修正标出的字段再保存。",
+        "required": "此项为必填项。",
+        "deadlineInvalid": "请输入有效的日期和时间。",
+        "deadlinePast": "截止时间必须晚于当前时间。",
+        "amountInvalid": "请输入大于 0 的金额，或留空以保存为草稿。",
+        "deliverablesRequired": "请至少填写一项交付物或提交指南。"
+      }
     },
     "toast": {
       "loadFailedTitle": "无法获取赏金",
