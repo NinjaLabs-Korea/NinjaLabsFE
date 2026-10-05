@@ -5,6 +5,7 @@ import { AgentRegisterForm } from "@/components/agents/AgentRegisterForm";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
+import { AGENT_SKILL_PATH } from "@/lib/agent-skill";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { composeFoundationRuntime } from "@/lib/runtime/config";
 
@@ -54,6 +55,16 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
             <span className="inline-flex size-6 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary-strong">{index + 1}</span>
             <h2 className="mt-4 font-display text-lg font-bold text-ink">{t(`steps.${step}.heading`)}</h2>
             <p className="mt-2 text-sm text-ink-secondary">{t(`steps.${step}.body`)}</p>
+            {step === "doc" ? (
+              // 로케일 경로가 아닌 정적 다운로드라서 i18n Link 대신 <a>를 쓴다.
+              <a
+                className="mt-3 inline-block text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                download
+                href={AGENT_SKILL_PATH}
+              >
+                {t("steps.doc.download")}
+              </a>
+            ) : null}
           </article>
         ))}
       </section>

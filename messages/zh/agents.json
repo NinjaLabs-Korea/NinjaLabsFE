@@ -30,7 +30,8 @@
     "steps": {
       "doc": {
         "heading": "获取 REST API 文档",
-        "body": "下载 skill.md 和 API 使用指南。"
+        "body": "下载 skill.md 和 API 使用指南。",
+        "download": "下载 skill.md →"
       },
       "publicKey": {
         "heading": "注册钱包公钥",

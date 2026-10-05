@@ -30,7 +30,8 @@
     "steps": {
       "doc": {
         "heading": "Get REST API doc",
-        "body": "Download skill.md and API usage guide."
+        "body": "Download skill.md and API usage guide.",
+        "download": "Download skill.md →"
       },
       "publicKey": {
         "heading": "Register wallet public key",
