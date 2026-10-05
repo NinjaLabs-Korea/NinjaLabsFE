@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getAdminBounties } from "@/lib/admin";
+import { getAdminBounties, getAdminHighlights, getAdminPosts, highlightTypeLabelKeys, postCategoryLabelKeys } from "@/lib/admin";
 import { bounties } from "@/lib/bounties";
+import en from "../../messages/en/admin.json";
+import ko from "../../messages/ko/admin.json";
+import zh from "../../messages/zh/admin.json";
 
 describe("admin bounty adapter", () => {
   it("maps iAsset price widget meta fields from the public registry", () => {
@@ -53,5 +56,22 @@ describe("admin bounty adapter", () => {
 
     expect(registryBounty!.reward.amount).toBe(500);
     expect(registryBounty!.deliverables).toEqual(["GitHub repository", "Preview URL", "README with integration notes"]);
+  });
+});
+
+describe("admin label keys", () => {
+  it.each([["en", en], ["ko", ko], ["zh", zh]] as const)("resolve every highlight type and post category in %s", (_locale, messages) => {
+    for (const { type } of getAdminHighlights()) {
+      expect(messages.hallOfFame.highlights.types).toHaveProperty(highlightTypeLabelKeys[type]);
+    }
+    for (const key of Object.values(highlightTypeLabelKeys)) {
+      expect(messages.hallOfFame.highlights.types).toHaveProperty(key);
+    }
+    for (const { category } of getAdminPosts()) {
+      expect(messages.notices.categories).toHaveProperty(postCategoryLabelKeys[category]);
+    }
+    for (const key of Object.values(postCategoryLabelKeys)) {
+      expect(messages.notices.categories).toHaveProperty(key);
+    }
   });
 });

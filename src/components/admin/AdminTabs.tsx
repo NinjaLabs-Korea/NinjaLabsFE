@@ -1,15 +1,18 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 const tabs = [
-  { active: "users", href: "/admin/users", label: "User Mgmt" },
-  { active: "bounties", href: "/admin/bounties", label: "Bounty Mgmt" },
-  { active: "hall-of-fame", href: "/admin/hall-of-fame", label: "Hall of Fame" },
-  { active: "notices", href: "/admin/notices", label: "Notices" },
+  { active: "users", href: "/admin/users", labelKey: "users" },
+  { active: "bounties", href: "/admin/bounties", labelKey: "bounties" },
+  { active: "hall-of-fame", href: "/admin/hall-of-fame", labelKey: "hallOfFame" },
+  { active: "notices", href: "/admin/notices", labelKey: "notices" },
 ] as const;
 
 type AdminTab = (typeof tabs)[number]["active"];
 
 export function AdminTabs({ active }: { active: AdminTab }) {
+  const t = useTranslations("admin.tabs");
+
   return (
     <nav className="flex flex-wrap gap-2 h-auto min-h-[66px] items-center rounded-card border border-border bg-surface p-[21px] shadow-card">
       {tabs.map((tab) => (
@@ -18,7 +21,7 @@ export function AdminTabs({ active }: { active: AdminTab }) {
           href={tab.href}
           key={tab.active}
         >
-          {tab.label}
+          {t(tab.labelKey)}
         </Link>
       ))}
     </nav>
