@@ -28,7 +28,8 @@
     "howApplying": "How applying works →",
     "intro": "Find paid work from Injective ecosystem sponsors, ship useful pieces, and collect on-chain proof for your Ninja portfolio.",
     "resultsLabel": "Bounty filters and results",
-    "payoutNote": "Sponsors may pay INJ or USDC as-is, with no platform-side swap."
+    "payoutNote": "Sponsors may pay INJ or USDC as-is, with no platform-side swap.",
+    "unavailable": "Bounties are temporarily unavailable."
   },
   "filters": {
     "category": "Category",
@@ -54,18 +55,18 @@
       "view": "View bounty"
     },
     "submitType": {
-      "badge": "Intake OFF",
+      "badge": "Direct submit",
       "heading": "Submit-type bounty",
       "body": "Anyone can work on the bounty and submit when the work is ready.",
-      "flow": "[Submit] button shown directly → same as Bounty Detail",
+      "flow": "The submission form is available on the bounty page right away.",
       "viewDirect": "View direct bounty",
       "none": "No submit-type bounties are open right now."
     },
     "applyType": {
-      "badge": "Intake ON",
+      "badge": "Application required",
       "heading": "Apply-type bounty",
       "body": "Submit work after the sponsor approves your application.",
-      "flow": "[Apply] → application form → sponsor review → after approval, [Submit] enabled",
+      "flow": "Apply with a short proposal. Once the sponsor approves it, the submission form unlocks on the bounty page.",
       "none": "No apply-type bounties are open right now."
     },
     "empty": {
@@ -81,13 +82,13 @@
       "submitted": "Submitted",
       "completed": "Completed"
     },
-    "statusNote": "Application status is available for bounties with intake enabled."
+    "statusNote": "Application status is tracked for bounties that require an application.",
+    "unavailable": "Open bounties are temporarily unavailable."
   },
   "detail": {
     "back": "← Back to bounties",
     "agentSubmission": "Agent submission",
     "directSubmission": "Direct submission",
-    "intakeOn": "Application intake ON",
     "publicView": "Public view",
     "actionsRequireLogin": "Actions require login",
     "description": "Description",
@@ -103,7 +104,9 @@
     "defaultSteps": {
       "work": "Complete the work",
       "submit": "Submit the result URL",
-      "approval": "Receive sponsor approval"
+      "approval": "Receive sponsor approval",
+      "agentRegister": "Register and verify an agent",
+      "agentSubmit": "Submit through the agent API"
     },
     "applySteps": {
       "apply": "Apply with relevant work and availability.",
@@ -111,11 +114,9 @@
       "submit": "Submit completed work after approval."
     },
     "afterApproval": "After approval",
-    "afterApprovalSteps": {
-      "scope": "Complete the approved audit scope.",
-      "link": "Submit your completed-work link.",
-      "reward": "Receive sponsor review and reward release."
-    }
+    "deliverableSeeGuide": "See the submission guide below",
+    "deliverableDescribed": "Described above",
+    "applicationRequired": "Application required"
   },
   "action": {
     "agentHeading": "Agent submission",
@@ -125,8 +126,8 @@
     "submitHeading": "Submit your work",
     "signInPrompt": "Sign in to continue.",
     "signIn": "Sign in",
-    "checkingStatus": "Checking your application status…",
-    "statusUnavailable": "Your application status is temporarily unavailable. Please refresh and try again.",
+    "checkingStatus": "Checking your bounty status…",
+    "statusUnavailable": "Your bounty status is temporarily unavailable. Please refresh and try again.",
     "underReviewHeading": "Application under review",
     "underReviewBody": "Submission unlocks after sponsor approval.",
     "viewApplications": "View my applications",
@@ -148,7 +149,23 @@
       "BOUNTY_NOT_OPEN": "This bounty is no longer open.",
       "APPLICATION_NOT_APPROVED": "Your application must be approved before submitting.",
       "DEADLINE_PASSED": "The submission deadline has passed.",
-      "SUBMISSION_FINALIZED": "This submission has already been finalized."
-    }
-  }
+      "SUBMISSION_FINALIZED": "This submission has already been finalized.",
+      "VALIDATION_FAILED": "Check the URLs and description, then try again."
+    },
+    "checkingSession": "Checking your session…",
+    "applicationRejectedHeading": "Application not selected",
+    "applicationRejectedBody": "The sponsor did not select your application for this bounty.",
+    "browseOther": "Browse other bounties",
+    "submissionApprovedHeading": "Submission approved",
+    "submissionApprovedBody": "The sponsor approved your work for this bounty.",
+    "submissionRejectedHeading": "Submission not accepted",
+    "submissionRejectedBody": "The sponsor reviewed your work and did not accept it. This submission is final.",
+    "resubmitHeading": "Resubmit your work",
+    "inReviewHeading": "Submission under review",
+    "revisionNote": "The sponsor requested a revision. Update your work and submit again.",
+    "inReviewNote": "The sponsor is reviewing your work. You can still update it before the deadline; the latest version replaces the previous one.",
+    "resubmit": "Resubmit",
+    "updateSubmission": "Update submission"
+  },
+  "unavailableBody": "We couldn't reach the server. Please refresh in a moment."
 }

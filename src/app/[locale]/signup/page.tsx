@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
-import { Badge } from "@/components/ui/Badge";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { signup } from "@/lib/signup";
 import { loadRuntimeConfig } from "@/lib/runtime/config";
@@ -25,10 +24,7 @@ export default async function SignupPage({ params }: PageProps<"/[locale]/signup
   return (
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="mx-auto max-w-[768px]">
-        <div className="flex justify-end">
-          <Badge variant="danger">{t("badge")}</Badge>
-        </div>
-        <div className="mt-8">
+        <div>
           <StepIndicator current={1} />
         </div>
         <div className="mx-auto mt-6 max-w-[576px] rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">

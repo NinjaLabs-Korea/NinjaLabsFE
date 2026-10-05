@@ -33,5 +33,12 @@
     "eyebrow": "Our story",
     "heading": "Timeline"
   },
-  "partnerWall": "Ninja Labs KR community partner wall"
+  "unavailable": {
+    "title": "The Hall of Fame is temporarily unavailable.",
+    "body": "We couldn't reach the server. Please refresh in a moment."
+  },
+  "partners": {
+    "eyebrow": "Community",
+    "heading": "Partners"
+  }
 }

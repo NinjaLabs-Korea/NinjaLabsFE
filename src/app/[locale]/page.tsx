@@ -13,7 +13,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
   setRequestLocale(locale);
   const t = await getTranslations("landing");
   const tStats = await getTranslations("hallOfFame.stats");
-  const { hero, bounties, news } = await getRuntimeLanding();
+  const { hero, bounties, news, unavailable } = await getRuntimeLanding();
 
   return (
     <>
@@ -96,9 +96,11 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
                 {t("hero.next")}
               </div>
             </div>
-            <p className="mt-4 text-center text-sm text-on-inverse/75">
-              {t("hero.portfolioSummary", { count: hero.portfolio.totalCompleted })}
-            </p>
+            {unavailable.stats ? null : (
+              <p className="mt-4 text-center text-sm text-on-inverse/75">
+                {t("hero.portfolioSummary", { count: hero.portfolio.totalCompleted })}
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -111,11 +113,20 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
           size="lg"
           action={{ label: t("bounties.viewAll"), href: "/bounties" }}
         />
-        <div className="mt-7 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {bounties.map((bounty) => (
-            <BountyCard key={bounty.slug} bounty={bounty} showSummary={false} />
-          ))}
-        </div>
+        {unavailable.bounties ? (
+          <div className="mt-7 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
+            <p className="text-sm font-semibold text-ink">{t("bounties.unavailable")}</p>
+            <p className="mt-1 text-sm text-ink-muted">{t("unavailableBody")}</p>
+          </div>
+        ) : bounties.length === 0 ? (
+          <p className="mt-7 text-sm text-ink-muted">{t("bounties.empty")}</p>
+        ) : (
+          <div className="mt-7 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {bounties.map((bounty) => (
+              <BountyCard key={bounty.slug} bounty={bounty} showSummary={false} />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="mx-auto max-w-content px-4 pb-20 sm:px-6">
@@ -126,11 +137,20 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
           size="lg"
           action={{ label: t("news.viewAll"), href: "/notices" }}
         />
-        <div className="mt-7 grid grid-cols-1 gap-5 lg:grid-cols-3">
-          {news.map((notice) => (
-            <NewsCard key={notice.slug} notice={notice} />
-          ))}
-        </div>
+        {unavailable.news ? (
+          <div className="mt-7 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
+            <p className="text-sm font-semibold text-ink">{t("news.unavailable")}</p>
+            <p className="mt-1 text-sm text-ink-muted">{t("unavailableBody")}</p>
+          </div>
+        ) : news.length === 0 ? (
+          <p className="mt-7 text-sm text-ink-muted">{t("news.empty")}</p>
+        ) : (
+          <div className="mt-7 grid grid-cols-1 gap-5 lg:grid-cols-3">
+            {news.map((notice) => (
+              <NewsCard key={notice.slug} notice={notice} />
+            ))}
+          </div>
+        )}
       </section>
     </>
   );

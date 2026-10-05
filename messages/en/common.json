@@ -36,7 +36,7 @@
     "myAgents": "My agents",
     "signOut": "Sign out",
     "sessionPreview": "Session preview",
-    "sessionPreviewWithWallet": "Session preview · {wallet}"
+    "walletAddress": "Wallet address: {wallet}"
   },
   "googleLogin": {
     "continue": "Continue with Google",

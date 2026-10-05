@@ -1,4 +1,4 @@
-import type { Account, AccountAgent, AccountApplication } from "@/lib/contracts/account";
+import type { Account, AccountAgent, AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
 
@@ -36,6 +36,7 @@ export type ApiResult<T> = ApiAvailable<T> | ApiUnavailable;
 export type AccountApi = {
   getAccount: (auth: AuthSnapshot) => Promise<ApiResult<Account | null>>;
   getApplications: (auth: AuthSnapshot) => Promise<ApiResult<readonly AccountApplication[]>>;
+  getSubmissions: (auth: AuthSnapshot) => Promise<ApiResult<readonly AccountSubmission[]>>;
   getAgents: (auth: AuthSnapshot) => Promise<ApiResult<readonly AccountAgent[]>>;
 };
 

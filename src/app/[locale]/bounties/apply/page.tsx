@@ -7,7 +7,7 @@ import {
 } from "@/components/bounties/BountyApplyGuideCta";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
-import { getRuntimeBounties } from "@/lib/bounties";
+import { loadRuntimeBounties } from "@/lib/bounties";
 
 // Keys under bounties.apply.statuses.
 const statuses = ["open", "underReview", "approved", "submitted", "completed"] as const;
@@ -26,7 +26,8 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("bounties.apply");
-  const bounties = await getRuntimeBounties();
+  const tBounties = await getTranslations("bounties");
+  const { bounties, unavailable } = await loadRuntimeBounties();
   const applicationBounty = bounties.find(
     (bounty) => bounty.status === "active" && bounty.applicationRequired,
   );
@@ -83,7 +84,12 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
         </article>
       </section>
 
-      {!hasOpenBounty ? (
+      {unavailable ? (
+        <section className="mt-6 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-5" role="status">
+          <p className="text-sm font-semibold text-ink">{t("unavailable")}</p>
+          <p className="mt-1 text-sm text-ink-muted">{tBounties("unavailableBody")}</p>
+        </section>
+      ) : !hasOpenBounty ? (
         <section className="mt-6 flex flex-col items-start justify-between gap-4 rounded-card border border-border bg-surface p-5 shadow-card sm:flex-row sm:items-center">
           <div>
             <h2 className="font-display text-xl font-bold text-ink">{t("empty.title")}</h2>

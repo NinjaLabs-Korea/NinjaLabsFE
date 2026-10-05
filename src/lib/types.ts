@@ -8,7 +8,10 @@ export type Bounty = {
   summary: string;
   category: BountyCategory;
   status: 'active' | 'closed';
+  /** Primary reward (first funded token); shown on cards. */
   reward: Reward;
+  /** Every reward token the bounty pays, primary first. Omitted when only `reward` exists. */
+  rewards?: Reward[];
   sponsor: string;
   deadline: string;
   // 19:1480 shows D-7 label; 19:1739 shows full UTC deadline

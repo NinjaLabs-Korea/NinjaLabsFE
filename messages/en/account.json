@@ -27,6 +27,8 @@
       "completed": "Completed"
     },
     "approvedStatus": "Approved: submit unlocked",
-    "submitWork": "Submit work"
+    "submitWork": "Submit work",
+    "rejectedStatus": "Not selected",
+    "rejectedNote": "The sponsor did not select this application. Browse other open bounties to keep building."
   }
 }

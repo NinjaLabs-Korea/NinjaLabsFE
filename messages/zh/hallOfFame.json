@@ -33,5 +33,12 @@
     "eyebrow": "我们的故事",
     "heading": "时间线"
   },
-  "partnerWall": "Ninja Labs KR 社区合作伙伴墙"
+  "unavailable": {
+    "title": "名人堂暂时无法加载。",
+    "body": "无法连接服务器，请稍后刷新。"
+  },
+  "partners": {
+    "eyebrow": "社区",
+    "heading": "合作伙伴"
+  }
 }

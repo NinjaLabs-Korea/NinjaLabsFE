@@ -1,7 +1,7 @@
 import type { Bounty, NoticePreview } from './types';
 import { getRuntimeBounties } from './bounties';
 import { getRuntimeNotices } from './notices';
-import { getRuntimeHallOfFame, type HallStatKey } from './hall-of-fame';
+import { emptyHallOfFame, getRuntimeHallOfFame, type HallStatKey } from './hall-of-fame';
 
 // Hero copy (eyebrow, title, description, CTA labels) lives in messages `landing.hero`;
 // CTA `labelKey` and stat `labelKey` resolve there and under `hallOfFame.stats`.
@@ -117,12 +117,23 @@ export const landing: LandingData = {
   ],
 };
 
-export async function getRuntimeLanding(): Promise<LandingData> {
-  const [bounties, notices, hall] = await Promise.all([
+export type RuntimeLanding = LandingData & {
+  /** Sections whose API source failed; the page renders an unavailable state instead of throwing. */
+  unavailable: { bounties: boolean; news: boolean; stats: boolean };
+};
+
+const settledValue = <T>(result: PromiseSettledResult<T>, fallback: T): T =>
+  result.status === 'fulfilled' ? result.value : fallback;
+
+export async function getRuntimeLanding(): Promise<RuntimeLanding> {
+  const [bountiesResult, noticesResult, hallResult] = await Promise.allSettled([
     getRuntimeBounties(),
     getRuntimeNotices(),
     getRuntimeHallOfFame(),
   ]);
+  const bounties = settledValue(bountiesResult, []);
+  const notices = settledValue(noticesResult, []);
+  const hall = settledValue(hallResult, emptyHallOfFame);
   const completed = bounties.filter((bounty) => bounty.status === 'closed').slice(0, 5);
   return {
     hero: {
@@ -137,5 +148,10 @@ export async function getRuntimeLanding(): Promise<LandingData> {
     },
     bounties: bounties.filter((bounty) => bounty.status === 'active').slice(0, 4),
     news: notices.slice(0, 3),
+    unavailable: {
+      bounties: bountiesResult.status === 'rejected',
+      news: noticesResult.status === 'rejected',
+      stats: hallResult.status === 'rejected',
+    },
   };
 }

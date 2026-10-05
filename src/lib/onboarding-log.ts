@@ -15,8 +15,14 @@ export function getOnboardingTraceId(): string | undefined {
   }
 }
 
-/** Temporary diagnostics. Never include tokens, OAuth codes, signatures, messages, or field values. */
+/** Opt-in at build time with NEXT_PUBLIC_ONBOARDING_DEBUG=true; silent otherwise (including production). */
+export function isOnboardingDebugEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_ONBOARDING_DEBUG === "true";
+}
+
+/** Opt-in diagnostics. Never include tokens, OAuth codes, signatures, messages, or field values. */
 export function onboardingLog(event: string, details: LogDetails = {}) {
+  if (!isOnboardingDebugEnabled()) return;
   const traceId = getOnboardingTraceId();
   globalThis.console.info("[onboarding]", {
     event,

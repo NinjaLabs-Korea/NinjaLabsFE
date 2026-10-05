@@ -1,14 +1,7 @@
 {
-  "badges": {
-    "flow": "SIGN-UP FLOW",
-    "walletPreview": "SIGN-UP FLOW (wallet preview)",
-    "walletUnavailable": "WALLET UNAVAILABLE",
-    "profile": "All fields required / no skip"
-  },
   "login": {
     "pageTitle": "{title} | Ninja Labs",
     "mock": {
-      "badge": "SIGN-UP FLOW · SESSION PREVIEW",
       "title": "Preview the Ninja Labs sign-in flow",
       "description": "Explore this step with a local session preview. It does not contact Google or create an account.",
       "disclosure": "Mock mode is local and test only. This preview does not contact Google or create an account.",
@@ -19,7 +12,6 @@
       }
     },
     "api": {
-      "badge": "SIGN-UP FLOW",
       "title": "Sign in to Ninja Labs",
       "description": "Continue with Google to create your account. You will be redirected to Google and back here once you approve.",
       "disclosure": "Signing in creates or restores your Ninja Labs account. We only receive your Google email. No password is shared.",
@@ -99,11 +91,17 @@
       "bioHint": "Short intro required.",
       "submit": "Next",
       "saving": "Saving profile…",
-      "error": "We couldn't save your profile. The nickname may already be in use. Try another one.",
       "errors": {
         "nickname": "Enter a nickname of at least 2 characters.",
         "tags": "Choose at least one field tag.",
         "bio": "Write a short intro."
+      },
+      "saveErrors": {
+        "network": "We couldn't save your profile. Check your connection and try again.",
+        "session": "Your session has ended. Sign in again to continue.",
+        "nickname": "That nickname is already in use. Choose another one.",
+        "invalid": "Check every field: the nickname must be 2-50 characters, and a bio and field tag are required.",
+        "generic": "We couldn't save your profile. Please try again."
       }
     }
   },
@@ -130,6 +128,24 @@
       }
     },
     "skip": "Skip and go to main",
-    "savedNote": "Your onboarding progress is saved. You can update your wallet and profile later."
+    "savedNote": "Your onboarding progress is saved. You can update your wallet and profile later.",
+    "completeError": {
+      "message": "We couldn't finish saving your onboarding. Please try again.",
+      "retry": "Retry"
+    }
+  },
+  "gate": {
+    "checking": "Checking your session…",
+    "title": "Sign in to continue signing up",
+    "body": "Your session has ended or you have not signed in yet.",
+    "cta": "Continue with Google"
+  },
+  "authCallback": {
+    "metaTitle": "Signing in | Ninja Labs",
+    "signingIn": "Signing you in…",
+    "restoring": "Restoring your account. You will be redirected shortly.",
+    "failedTitle": "Sign-in could not be completed",
+    "failedBody": "Please try signing in again in this browser tab.",
+    "backToSignIn": "Back to sign in"
   }
 }

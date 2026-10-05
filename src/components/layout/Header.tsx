@@ -20,7 +20,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 h-16 border-b border-border bg-surface/85 backdrop-blur-[6px]">
       <div className="mx-auto grid h-full max-w-content grid-cols-[1fr_auto_1fr] items-center px-6">
-        <Link className="flex items-center gap-2 justify-self-start" href="/" aria-label={t("homeLabel")}>
+        <Link className="flex items-center gap-2 justify-self-start" href="/" prefetch={true} aria-label={t("homeLabel")}>
           <Image
             src="/figma/ninja-labs-mascot.png"
             alt=""
@@ -51,6 +51,7 @@ export function Header() {
               <Link
                 className="rounded-control px-3 py-2 text-sm font-semibold text-primary-strong"
                 href="/bounties"
+                prefetch={true}
               >
                 {t("browse")}
               </Link>

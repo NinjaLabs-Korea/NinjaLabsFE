@@ -1,14 +1,7 @@
 {
-  "badges": {
-    "flow": "注册流程",
-    "walletPreview": "注册流程（钱包预览）",
-    "walletUnavailable": "钱包不可用",
-    "profile": "所有字段必填 / 不可跳过"
-  },
   "login": {
     "pageTitle": "{title} | Ninja Labs",
     "mock": {
-      "badge": "注册流程 · 会话预览",
       "title": "预览 Ninja Labs 登录流程",
       "description": "通过本地会话预览体验此步骤。不会连接 Google，也不会创建账户。",
       "disclosure": "模拟模式仅用于本地测试。此预览不会连接 Google，也不会创建账户。",
@@ -19,7 +12,6 @@
       }
     },
     "api": {
-      "badge": "注册流程",
       "title": "登录 Ninja Labs",
       "description": "使用 Google 继续以创建账户。你将被跳转到 Google，授权后返回此页面。",
       "disclosure": "登录会创建或恢复你的 Ninja Labs 账户。我们只会获取你的 Google 邮箱，不会共享密码。",
@@ -99,11 +91,17 @@
       "bioHint": "请填写简短介绍。",
       "submit": "下一步",
       "saving": "正在保存资料…",
-      "error": "无法保存个人资料。该昵称可能已被使用，请换一个试试。",
       "errors": {
         "nickname": "请输入至少 2 个字符的昵称。",
         "tags": "请至少选择一个领域标签。",
         "bio": "请填写简短的自我介绍。"
+      },
+      "saveErrors": {
+        "network": "无法保存个人资料，请检查网络连接后重试。",
+        "session": "您的会话已过期，请重新登录后继续。",
+        "nickname": "该昵称已被使用，请换一个。",
+        "invalid": "请检查所有字段：昵称需为 2-50 个字符，并且必须填写自我介绍和领域标签。",
+        "generic": "无法保存个人资料，请重试。"
       }
     }
   },
@@ -130,6 +128,24 @@
       }
     },
     "skip": "跳过并前往首页",
-    "savedNote": "你的引导进度已保存。之后可以随时更新钱包和个人资料。"
+    "savedNote": "你的引导进度已保存。之后可以随时更新钱包和个人资料。",
+    "completeError": {
+      "message": "未能完成保存引导进度，请重试。",
+      "retry": "重试"
+    }
+  },
+  "gate": {
+    "checking": "正在检查会话…",
+    "title": "请登录以继续注册",
+    "body": "您的会话已过期，或您尚未登录。",
+    "cta": "使用 Google 继续"
+  },
+  "authCallback": {
+    "metaTitle": "正在登录 | Ninja Labs",
+    "signingIn": "正在为您登录…",
+    "restoring": "正在恢复您的账户，即将跳转。",
+    "failedTitle": "登录未能完成",
+    "failedBody": "请在此浏览器标签页中重新登录。",
+    "backToSignIn": "返回登录"
   }
 }

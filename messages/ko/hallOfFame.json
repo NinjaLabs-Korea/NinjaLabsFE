@@ -33,5 +33,12 @@
     "eyebrow": "우리의 이야기",
     "heading": "타임라인"
   },
-  "partnerWall": "Ninja Labs KR 커뮤니티 파트너 월"
+  "unavailable": {
+    "title": "명예의 전당을 일시적으로 불러올 수 없습니다.",
+    "body": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요."
+  },
+  "partners": {
+    "eyebrow": "커뮤니티",
+    "heading": "파트너"
+  }
 }

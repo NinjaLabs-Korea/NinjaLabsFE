@@ -13,11 +13,16 @@
   "bounties": {
     "eyebrow": "赏金市场",
     "heading": "进行中的赏金",
-    "viewAll": "查看全部 →"
+    "viewAll": "查看全部 →",
+    "unavailable": "暂时无法加载进行中的赏金。",
+    "empty": "目前没有进行中的赏金。新的赞助机会将显示在这里。"
   },
   "news": {
     "eyebrow": "来自社区",
     "heading": "最新动态",
-    "viewAll": "查看全部 →"
-  }
+    "viewAll": "查看全部 →",
+    "unavailable": "暂时无法加载最新动态。",
+    "empty": "暂无动态，请稍后再来查看。"
+  },
+  "unavailableBody": "无法连接服务器，请稍后刷新。"
 }
