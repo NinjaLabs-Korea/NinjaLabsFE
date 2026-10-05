@@ -7,7 +7,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { UserActions } from "@/components/admin/UserActions";
 import { Badge } from "@/components/ui/Badge";
 import type { AdminUser } from "@/lib/admin";
-import { useFoundationApiClient, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const columns = [
   { id: "nickname", widthClass: "w-[157px]" },
@@ -20,8 +20,7 @@ const columns = [
 ];
 
 export function UserDirectory({ users }: { users: AdminUser[] }) {
-  const api = useFoundationApiClient();
-  const foundationMode = useFoundationMode();
+  const api = useAdminApi();
   const t = useTranslations("admin.users");
   const tCommon = useTranslations("admin.common");
   const [query, setQuery] = useState("");
@@ -32,9 +31,8 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   ));
 
   useEffect(() => {
-    if (foundationMode !== "api") return;
     api.getAdminUsers().then(setDirectoryUsers).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
-  }, [api, foundationMode, t]);
+  }, [api, t]);
 
   async function restoreMember(user: AdminUser) {
     await api.setAdminMember(user.slug, { isMember: user.isMember, ...(user.memberRole ? { role: user.memberRole } : {}), ...(user.memberDisplayOrder !== null ? { displayOrder: user.memberDisplayOrder } : {}) });

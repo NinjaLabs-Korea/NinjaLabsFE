@@ -6,7 +6,7 @@ import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { highlightTypeLabelKeys, type AdminHighlight } from "@/lib/admin";
-import { useFoundationApiClient, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const highlightColumns = [
   { id: "type", widthClass: "w-[22%]" },
@@ -23,8 +23,7 @@ type HighlightManagerProps = {
 };
 
 export function HighlightManager({ highlights }: HighlightManagerProps) {
-  const api = useFoundationApiClient();
-  const foundationMode = useFoundationMode();
+  const api = useAdminApi();
   const t = useTranslations("admin.hallOfFame.highlights");
   const tCommon = useTranslations("admin.common");
   const typeLabel = (value: string) => t(`types.${highlightTypeLabelKeys[value as AdminHighlight["type"]]}`);
@@ -41,9 +40,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (foundationMode !== "api") return;
     api.getAdminHighlights().then((items) => setRecords(sortHighlights(items))).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
-  }, [api, foundationMode, t]);
+  }, [api, t]);
 
   const isEditing = mode !== "create";
 

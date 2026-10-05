@@ -1,7 +1,7 @@
+import { rewardFromBaseUnits, toCategoryLabel, toMemberRoleLabel } from "./api/codecs";
 import type { Member, Profile } from "./types";
-import { loadRuntimeConfig } from "./runtime/config";
 import { onboardingLog } from "./onboarding-log";
-import { fetchPublicJson } from "./api/public";
+import { fetchPublicJson, loadFromRuntime } from "./api/public";
 
 export const PROFILE_EMPTY_ID = "sora";
 
@@ -45,16 +45,17 @@ type MemberRow = {
   links: Array<{ type: string; url: string }>;
 };
 
-const memberRoleLabels = { CORE: "Core", DEV: "Dev", DESIGN: "Design", OPS: "Ops" } as const;
+export function getRuntimeMembers(): Promise<Member[]> {
+  return loadFromRuntime({ mock: getMembers, api: fetchMembers });
+}
 
-export async function getRuntimeMembers(): Promise<Member[]> {
-  if (loadRuntimeConfig().runtimeMode === "mock") return getMembers();
+async function fetchMembers(): Promise<Member[]> {
   const rows = await fetchPublicJson<MemberRow[]>("/members");
   return rows.map((row) => ({
     slug: row.nickname,
     name: row.nickname,
     initials: row.nickname.slice(0, 2).toUpperCase(),
-    role: memberRoleLabels[row.member_role] ?? "Core",
+    role: toMemberRoleLabel(row.member_role) ?? "Core",
     // Empty title/bio fall back to localized defaults in MemberCard.
     title: "",
     bio: row.bio,
@@ -92,20 +93,10 @@ type PublicProfileResponse = {
   }>;
 };
 
-const categoryMap = {
-  DEV: "Dev",
-  DESIGN: "Design",
-  CONTENT: "Content",
-  OTHER: "Other",
-} as const;
-
 function toProfile(data: PublicProfileResponse): Profile {
   const completions = data.completedBounties.flatMap((completion) => {
-    const category = categoryMap[completion.category as keyof typeof categoryMap];
+    const category = toCategoryLabel(completion.category);
     if (!category) return [];
-    const reward = completion.rewards[0];
-    const currency: "USDC" | "INJ" = reward?.symbol === "USDC" ? "USDC" : "INJ";
-    const decimals = currency === "USDC" ? 6 : 18;
     return [{
       bountySlug: completion.id,
       title: completion.title,
@@ -115,10 +106,7 @@ function toProfile(data: PublicProfileResponse): Profile {
         month: "long",
         day: "numeric",
       }),
-      reward: {
-        amount: reward ? Number(reward.amount) / 10 ** decimals : 0,
-        currency,
-      },
+      reward: rewardFromBaseUnits(completion.rewards[0]),
     }];
   });
 
@@ -128,7 +116,7 @@ function toProfile(data: PublicProfileResponse): Profile {
     initials: data.nickname.slice(0, 2).toUpperCase(),
     bio: data.bio,
     skills: data.tags.flatMap((tag) => {
-      const category = categoryMap[tag as keyof typeof categoryMap];
+      const category = toCategoryLabel(tag);
       return category ? [category] : [];
     }),
     joinedAt: new Date(data.created_at).toLocaleDateString("en-US", {
@@ -154,27 +142,25 @@ function toProfile(data: PublicProfileResponse): Profile {
   };
 }
 
-export async function getRuntimeProfile(slug: string): Promise<Profile | undefined> {
-  const config = loadRuntimeConfig();
-  if (config.runtimeMode === "mock") {
-    onboardingLog("public-profile.mock.resolved", { slug, found: Boolean(getProfile(slug)) });
-    return getProfile(slug);
-  }
-
-  try {
-    onboardingLog("public-profile.fetch.started", { slug });
-    const response = await fetch(
-      `${config.apiUrl!.replace(/\/$/, "")}/users/${encodeURIComponent(slug)}`,
-      { cache: "no-store" },
-    );
-    onboardingLog("public-profile.fetch.completed", { slug, status: response.status });
-    if (!response.ok) return undefined;
-    return toProfile((await response.json()) as PublicProfileResponse);
-  } catch (caught) {
-    onboardingLog("public-profile.fetch.failed", {
-      slug,
-      errorName: caught instanceof Error ? caught.name : "UnknownError",
-    });
-    return undefined;
-  }
+export function getRuntimeProfile(slug: string): Promise<Profile | undefined> {
+  return loadFromRuntime({
+    mock: () => {
+      onboardingLog("public-profile.mock.resolved", { slug, found: Boolean(getProfile(slug)) });
+      return getProfile(slug);
+    },
+    api: async () => {
+      try {
+        onboardingLog("public-profile.fetch.started", { slug });
+        const data = await fetchPublicJson<PublicProfileResponse>(`/users/${encodeURIComponent(slug)}`);
+        onboardingLog("public-profile.fetch.completed", { slug });
+        return toProfile(data);
+      } catch (caught) {
+        onboardingLog("public-profile.fetch.failed", {
+          slug,
+          errorName: caught instanceof Error ? caught.name : "UnknownError",
+        });
+        return undefined;
+      }
+    },
+  });
 }

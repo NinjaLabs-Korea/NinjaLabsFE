@@ -1,5 +1,4 @@
-import { fetchPublicJson } from "@/lib/api/public";
-import { loadRuntimeConfig } from "@/lib/runtime/config";
+import { fetchPublicJson, loadFromRuntime } from "@/lib/api/public";
 
 // Stat labels are UI copy: `labelKey` resolves under messages `hallOfFame.stats`.
 // `label` stays as the English fallback for surfaces not yet localized (admin).
@@ -47,14 +46,19 @@ export type RuntimeHallOfFame = {
   milestones: Array<{ title: string; date: string; description: string }>;
 };
 
-export async function getRuntimeHallOfFame(): Promise<RuntimeHallOfFame> {
-  if (loadRuntimeConfig().runtimeMode === "mock") {
-    return {
-      stats: [...hallOfFame.stats],
-      highlights: hallOfFame.highlights.map((item) => ({ ...item, href: "/notices", image: null })),
-      milestones: [...hallOfFame.milestones],
-    };
-  }
+export function getRuntimeHallOfFame(): Promise<RuntimeHallOfFame> {
+  return loadFromRuntime({ mock: mockHallOfFame, api: fetchHallOfFame });
+}
+
+function mockHallOfFame(): RuntimeHallOfFame {
+  return {
+    stats: [...hallOfFame.stats],
+    highlights: hallOfFame.highlights.map((item) => ({ ...item, href: "/notices", image: null })),
+    milestones: [...hallOfFame.milestones],
+  };
+}
+
+async function fetchHallOfFame(): Promise<RuntimeHallOfFame> {
   const [rows, stats] = await Promise.all([
     fetchPublicJson<HighlightRow[]>("/hall-of-fame"),
     fetchPublicJson<StatsRow>("/hall-of-fame/stats"),

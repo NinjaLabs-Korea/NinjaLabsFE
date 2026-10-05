@@ -1,6 +1,5 @@
 import type { Notice } from "@/lib/types";
-import { fetchPublicJson } from "@/lib/api/public";
-import { loadRuntimeConfig } from "@/lib/runtime/config";
+import { fetchPublicJson, loadFromRuntime } from "@/lib/api/public";
 
 export const notices: Notice[] = [
   {
@@ -102,17 +101,22 @@ function toNotice(row: NoticeRow): Notice {
   };
 }
 
-export async function getRuntimeNotices(): Promise<Notice[]> {
-  if (loadRuntimeConfig().runtimeMode === "mock") return getNotices();
-  const response = await fetchPublicJson<NoticeListResponse>("/notices?page=1&pageSize=50");
-  return response.items.map(toNotice);
+export function getRuntimeNotices(): Promise<Notice[]> {
+  return loadFromRuntime({
+    mock: getNotices,
+    api: async () => (await fetchPublicJson<NoticeListResponse>("/notices?page=1&pageSize=50")).items.map(toNotice),
+  });
 }
 
-export async function getRuntimeNotice(id: string): Promise<Notice | undefined> {
-  if (loadRuntimeConfig().runtimeMode === "mock") return getNotice(id);
-  try {
-    return toNotice(await fetchPublicJson<NoticeRow>(`/notices/${encodeURIComponent(id)}`));
-  } catch {
-    return undefined;
-  }
+export function getRuntimeNotice(id: string): Promise<Notice | undefined> {
+  return loadFromRuntime({
+    mock: () => getNotice(id),
+    api: async () => {
+      try {
+        return toNotice(await fetchPublicJson<NoticeRow>(`/notices/${encodeURIComponent(id)}`));
+      } catch {
+        return undefined;
+      }
+    },
+  });
 }

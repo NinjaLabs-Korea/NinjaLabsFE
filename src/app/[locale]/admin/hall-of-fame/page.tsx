@@ -5,7 +5,7 @@ import { HighlightManager } from "@/components/admin/HighlightManager";
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { getAdminHighlights } from "@/lib/admin";
-import { loadRuntimeConfig } from "@/lib/runtime/config";
+import { loadFromRuntime } from "@/lib/api/public";
 import { getRuntimeHallOfFame } from "@/lib/hall-of-fame";
 
 
@@ -23,7 +23,7 @@ export default async function AdminHallOfFamePage({ params }: PageProps<"/[local
   setRequestLocale(locale);
   const t = await getTranslations("admin.hallOfFame");
   const tCommon = await getTranslations("admin.common");
-  const highlights = loadRuntimeConfig().runtimeMode === "mock" ? getAdminHighlights() : [];
+  const highlights = await loadFromRuntime({ mock: getAdminHighlights, api: async () => [] });
   const hall = await getRuntimeHallOfFame();
 
   return (

@@ -7,7 +7,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { Badge } from "@/components/ui/Badge";
 import { postCategoryLabelKeys, type AdminPost } from "@/lib/admin";
-import { useFoundationApiClient, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const postColumns = [
   { id: "title", widthClass: "w-[35%]" },
@@ -32,8 +32,7 @@ const emptyForm: PostForm = {
 };
 
 export function PostManager({ posts }: { posts: AdminPost[] }) {
-  const api = useFoundationApiClient();
-  const foundationMode = useFoundationMode();
+  const api = useAdminApi();
   const t = useTranslations("admin.notices");
   const tCommon = useTranslations("admin.common");
   const categoryLabel = (value: string) => t(`categories.${postCategoryLabelKeys[value as AdminPost["category"]]}`);
@@ -44,9 +43,8 @@ export function PostManager({ posts }: { posts: AdminPost[] }) {
   const formRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (foundationMode !== "api") return;
     api.getAdminPosts().then(setRecords).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
-  }, [api, foundationMode, t]);
+  }, [api, t]);
 
   const updateForm = <K extends keyof PostForm>(key: K, value: PostForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));

@@ -4,7 +4,7 @@ import { BountyManager } from "@/components/admin/BountyManager";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { getAdminBounties } from "@/lib/admin";
-import { loadRuntimeConfig } from "@/lib/runtime/config";
+import { loadFromRuntime } from "@/lib/api/public";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/admin/bounties">): Promise<Metadata> {
   const { locale } = await params;
@@ -19,7 +19,7 @@ export default async function AdminBountiesPage({ params }: PageProps<"/[locale]
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("admin.bounties");
-  const bounties = loadRuntimeConfig().runtimeMode === "mock" ? getAdminBounties() : [];
+  const bounties = await loadFromRuntime({ mock: getAdminBounties, api: async () => [] });
 
   return (
     <section className="mx-auto max-w-content px-6 py-16 pb-20">

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
-import { useFoundationApiClient, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { useOnboardingApi, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { signup } from "@/lib/signup";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
@@ -18,7 +18,7 @@ const fieldTags = [
 
 export function ProfileForm() {
   const t = useTranslations("signup.profile.form");
-  const apiClient = useFoundationApiClient();
+  const apiClient = useOnboardingApi();
   const mode = useFoundationMode();
   const [nickname, setNickname] = useState(mode === "mock" ? signup.profile.nickname : "");
   const [bio, setBio] = useState(mode === "mock" ? signup.profile.bio : "");

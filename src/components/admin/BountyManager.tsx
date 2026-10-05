@@ -8,7 +8,8 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import type { AdminBounty } from "@/lib/admin";
-import { useFoundationApiClient, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { bountyToForm, emptyBountyForm, formToBounty, type BountyFormValues } from "@/lib/admin-bounty-form";
+import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const columns = [
   { id: "title", widthClass: "w-[244px]" },
@@ -23,85 +24,37 @@ const columns = [
 const tags = ["Dev", "Design", "Content", "Other"] as const;
 const statusVariants = { draft: "neutral", funding: "warning", active: "success", reviewing: "warning", closed: "danger" } as const;
 
-type FormValues = {
-  title: string;
-  sponsor: string;
-  deadline: string;
-  amount: string;
-  currency: "INJ" | "USDC";
-  intake: "OFF" | "ON";
-  submissionMode: "Direct" | "Agent";
-  coverImage: string | null;
-  tags: AdminBounty["tags"];
-  description: string;
-  submissionGuide: string;
-  deliverables: string;
-  reviewProcess: string;
-};
-
-const emptyForm = (): FormValues => ({
-  title: "",
-  sponsor: "",
-  deadline: "",
-  amount: "",
-  currency: "INJ",
-  intake: "OFF",
-  submissionMode: "Direct",
-  coverImage: null,
-  tags: ["Dev"],
-  description: "",
-  submissionGuide: "",
-  deliverables: "",
-  reviewProcess: "",
-});
-
 type Mode = { kind: "create" } | { kind: "edit"; slug: string };
 
 export function BountyManager({ bounties, children, tabs }: { bounties: AdminBounty[]; children: ReactNode; tabs: ReactNode }) {
-  const api = useFoundationApiClient();
-  const foundationMode = useFoundationMode();
+  const api = useAdminApi();
   const t = useTranslations("admin.bounties");
   const tCommon = useTranslations("admin.common");
   const [records, setRecords] = useState(bounties);
   const [mode, setMode] = useState<Mode>({ kind: "create" });
-  const [form, setForm] = useState<FormValues>(emptyForm);
+  const [form, setForm] = useState<BountyFormValues>(emptyBountyForm);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const editing = mode.kind === "edit";
 
   useEffect(() => {
-    if (foundationMode !== "api") return;
     api.getAdminBounties().then(setRecords).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
-  }, [api, foundationMode, t]);
+  }, [api, t]);
 
-  const updateForm = <Key extends keyof FormValues>(key: Key, value: FormValues[Key]) => {
+  const updateForm = <Key extends keyof BountyFormValues>(key: Key, value: BountyFormValues[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
   };
 
   const startCreate = () => {
     setMode({ kind: "create" });
-    setForm(emptyForm());
+    setForm(emptyBountyForm());
     setCoverFile(null);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const startEdit = (bounty: AdminBounty) => {
     setMode({ kind: "edit", slug: bounty.slug });
-    setForm({
-      title: bounty.title,
-      sponsor: bounty.sponsor,
-      deadline: bounty.deadline.slice(0, 16),
-      amount: String(bounty.reward.amount),
-      currency: bounty.reward.currency,
-      intake: bounty.intakeEnabled ? "ON" : "OFF",
-      submissionMode: bounty.submissionMode === "agent" ? "Agent" : "Direct",
-      coverImage: bounty.coverImage,
-      tags: bounty.tags,
-      description: bounty.description,
-      submissionGuide: bounty.submissionGuide,
-      deliverables: bounty.deliverables.join("\n"),
-      reviewProcess: bounty.reviewProcess,
-    });
+    setForm(bountyToForm(bounty));
     setCoverFile(null);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -117,22 +70,9 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     event.preventDefault();
     try {
       const coverImage = coverFile ? (await api.uploadAdminMedia(coverFile)).url : form.coverImage;
-      const bounty: AdminBounty = {
-        slug: mode.kind === "edit" ? mode.slug : "",
-        title: form.title,
-        sponsor: form.sponsor,
-        reward: { amount: Number(form.amount) || 0, currency: form.currency },
-        intakeEnabled: form.intake === "ON",
-        submissionMode: form.submissionMode === "Agent" ? "agent" : "direct",
-        coverImage,
-        deadline: new Date(form.deadline).toISOString(),
-        tags: form.tags,
-        description: form.description,
-        submissionGuide: form.submissionGuide,
-        deliverables: form.deliverables.split("\n").map((line) => line.trim()).filter(Boolean),
-        reviewProcess: form.reviewProcess,
-        status: mode.kind === "edit" ? records.find((record) => record.slug === mode.slug)?.status ?? "draft" : Number(form.amount) > 0 ? "funding" : "draft",
-      };
+      const bounty = formToBounty(form, mode.kind === "edit"
+        ? { slug: mode.slug, coverImage, existingStatus: records.find((record) => record.slug === mode.slug)?.status ?? "draft" }
+        : { slug: "", coverImage });
       await api.saveAdminBounty(bounty, mode.kind === "create");
       setRecords(await api.getAdminBounties());
       pushAdminToast({ variant: "success", title: mode.kind === "edit" ? t("toast.updatedTitle") : t("toast.createdTitle"), description: tCommon("savedDescription", { title: form.title }) });
@@ -208,18 +148,18 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
             <div>
               <p className="text-sm font-semibold text-ink">{t("form.reward")}</p>
               <div className="mt-2 flex gap-3">
-                <div className="w-fit"><AdminSelect label={t("form.rewardCurrency")} onChange={(value) => updateForm("currency", value as FormValues["currency"])} options={["INJ", "USDC"]} value={form.currency} /></div>
+                <div className="w-fit"><AdminSelect label={t("form.rewardCurrency")} onChange={(value) => updateForm("currency", value as BountyFormValues["currency"])} options={["INJ", "USDC"]} value={form.currency} /></div>
                 <input aria-label={t("form.rewardAmount")} className="h-[46px] min-w-0 flex-1 rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("amount", event.target.value)} placeholder={t("form.amountPlaceholder")} type="number" value={form.amount} />
               </div>
             </div>
             <div>
               <p className="text-sm font-semibold text-ink">{t("form.intake")}</p>
-              <div className="mt-2 w-fit"><AdminSelect formatOption={(option) => t(`intake.${option}`)} label={t("form.intake")} onChange={(value) => updateForm("intake", value as FormValues["intake"])} options={["OFF", "ON"]} value={form.intake} /></div>
+              <div className="mt-2 w-fit"><AdminSelect formatOption={(option) => t(`intake.${option}`)} label={t("form.intake")} onChange={(value) => updateForm("intake", value as BountyFormValues["intake"])} options={["OFF", "ON"]} value={form.intake} /></div>
               <p className="mt-2 text-xs text-ink-muted">{t("form.intakeHint")}</p>
             </div>
             <div>
               <p className="text-sm font-semibold text-ink">{t("form.submissionMode")}</p>
-              <div className="mt-2 w-fit"><AdminSelect formatOption={(option) => t(`submissionModes.${option}`)} label={t("form.submissionMode")} onChange={(value) => updateForm("submissionMode", value as FormValues["submissionMode"])} options={["Direct", "Agent"]} value={form.submissionMode} /></div>
+              <div className="mt-2 w-fit"><AdminSelect formatOption={(option) => t(`submissionModes.${option}`)} label={t("form.submissionMode")} onChange={(value) => updateForm("submissionMode", value as BountyFormValues["submissionMode"])} options={["Direct", "Agent"]} value={form.submissionMode} /></div>
               <p className="mt-2 text-xs text-ink-muted">{t("form.submissionModeHint")}</p>
             </div>
             <label className="block text-sm font-semibold text-ink">{t("form.coverImage")}

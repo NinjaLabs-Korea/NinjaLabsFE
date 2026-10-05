@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { FormEvent, useState } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
-import { useAuthSnapshot, useFoundationApiClient } from "@/components/auth/FoundationProvider";
+import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
 import { Link } from "@/i18n/navigation";
 import { ApiHttpError } from "@/lib/api/http";
 
@@ -24,8 +24,9 @@ export function BountyActionPanel({ bountyId, applicationRequired, submissionMod
   const t = useTranslations("bounties.action");
   const tError = useTranslations("bounties.action.errors");
   const auth = useAuthSnapshot();
-  const api = useFoundationApiClient();
-  const { data: applications, loading, unavailable } = useAccountQuery(api.getApplications);
+  const accountApi = useAccountApi();
+  const bountyApi = useBountyApi();
+  const { data: applications, loading, unavailable } = useAccountQuery(accountApi.getApplications);
   const application = applications?.find((item) => item.bountySlug === bountyId);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
@@ -68,7 +69,7 @@ export function BountyActionPanel({ bountyId, applicationRequired, submissionMod
     setBusy(true);
     setFeedback(null);
     try {
-      await api.submitBounty(bountyId, {
+      await bountyApi.submitBounty(bountyId, {
         submissionUrl: String(form.get("submissionUrl") ?? ""),
         description: String(form.get("description") ?? ""),
         ...(form.get("repositoryUrl") ? { repositoryUrl: String(form.get("repositoryUrl")) } : {}),
@@ -90,7 +91,7 @@ export function BountyActionPanel({ bountyId, applicationRequired, submissionMod
     setBusy(true);
     setFeedback(null);
     try {
-      await api.applyToBounty(bountyId, {
+      await bountyApi.applyToBounty(bountyId, {
         message: String(form.get("message") ?? ""),
         ...(form.get("portfolioUrl") ? { portfolioUrl: String(form.get("portfolioUrl")) } : {}),
       });

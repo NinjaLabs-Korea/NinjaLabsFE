@@ -5,7 +5,7 @@ import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { UserDirectory } from "@/components/admin/UserDirectory";
 import { Badge } from "@/components/ui/Badge";
 import { getAdminUsers } from "@/lib/admin";
-import { loadRuntimeConfig } from "@/lib/runtime/config";
+import { loadFromRuntime } from "@/lib/api/public";
 export async function generateMetadata({ params }: PageProps<"/[locale]/admin/users">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "admin.users" });
@@ -20,7 +20,7 @@ export default async function AdminUsersPage({ params }: PageProps<"/[locale]/ad
   setRequestLocale(locale);
   const t = await getTranslations("admin.users");
   const tCommon = await getTranslations("admin.common");
-  const users = loadRuntimeConfig().runtimeMode === "mock" ? getAdminUsers() : [];
+  const users = await loadFromRuntime({ mock: getAdminUsers, api: async () => [] });
 
   return (
     <section className="mx-auto max-w-content px-6 py-16 pb-20">

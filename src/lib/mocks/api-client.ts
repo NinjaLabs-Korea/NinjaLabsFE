@@ -1,4 +1,4 @@
-import type { ApiClient } from "@/lib/contracts/api";
+import type { AdminApi, ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { createMockFixtures, getMockFixtureSnapshot, type MockAccountFixtures } from "@/lib/mocks/fixtures";
 import { getAdminBounties, getAdminHighlights, getAdminPosts, getAdminUsers } from "@/lib/admin";
@@ -48,6 +48,13 @@ export function createMockApiClient(seed = "default"): ApiClient {
     verifyWallet: async () => undefined,
     completeProfile: async () => undefined,
     completeOnboarding: async () => undefined,
+    ...createMockAdminApi(),
+  };
+}
+
+/** 운영자 콘솔 mock — 고정 fixture를 돌려주고 저장은 반영하지 않는다 */
+function createMockAdminApi(): AdminApi {
+  return {
     uploadAdminMedia: async (file) => ({ id: `preview-${file.name}`, url: URL.createObjectURL(file) }),
     getAdminUsers: async () => getAdminUsers(),
     setAdminMember: async () => undefined,
