@@ -99,7 +99,12 @@
       "bioHint": "Short intro required.",
       "submit": "Next",
       "saving": "Saving profile…",
-      "error": "Check every field and choose a nickname that is not already in use."
+      "error": "We couldn't save your profile. The nickname may already be in use. Try another one.",
+      "errors": {
+        "nickname": "Enter a nickname of at least 2 characters.",
+        "tags": "Choose at least one field tag.",
+        "bio": "Write a short intro."
+      }
     }
   },
   "getStarted": {
