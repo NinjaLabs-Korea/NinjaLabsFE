@@ -1,0 +1,12 @@
+{
+  "site": {
+    "title": "Ninja Labs | 构建、完成、拥有你的成果记录。",
+    "description": "面向 Injective 生态的开发者社区与赏金市场。你完成的每项任务都会铸造一枚链上 NFT，它们共同构成真正属于你的作品集。"
+  },
+  "layout": {
+    "skipToContent": "跳到主要内容"
+  },
+  "localeSwitcher": {
+    "label": "语言"
+  }
+}

@@ -2,6 +2,7 @@ import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
 import { captureTokensFromLocation, createApiHttp, type ApiHttp } from "@/lib/api/http";
 import { fetchMe, toClientUser } from "@/lib/api/me";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
+import { stripLocale, withLocaleOf } from "@/i18n/routing";
 
 export function getOnboardingPath(user: AuthSnapshot["user"]): string | null {
   if (!user || user.onboardingCompleted) return null;
@@ -16,8 +17,8 @@ export function shouldRedirectToOnboarding(
   pathname: string,
 ): string | null {
   const onboardingPath = getOnboardingPath(user);
-  if (!onboardingPath || pathname.startsWith("/signup/")) return null;
-  return onboardingPath;
+  if (!onboardingPath || stripLocale(pathname).startsWith("/signup/")) return null;
+  return withLocaleOf(pathname, onboardingPath);
 }
 
 /**

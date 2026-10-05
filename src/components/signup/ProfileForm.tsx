@@ -5,6 +5,7 @@ import { useFoundationApiClient, useFoundationMode } from "@/components/auth/Fou
 import { Badge } from "@/components/ui/Badge";
 import { signup } from "@/lib/signup";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
+import { withLocaleOf } from "@/i18n/routing";
 
 const fieldTags = [
   { label: "Dev", value: "DEV" },
@@ -48,7 +49,7 @@ export function ProfileForm() {
     try {
       await apiClient.completeProfile({ nickname: nickname.trim(), bio: bio.trim(), tags });
       onboardingLog("profile.save.succeeded", { targetPath: "/signup/get-started" });
-      window.location.assign("/signup/get-started");
+      window.location.assign(withLocaleOf(window.location.pathname, "/signup/get-started"));
     } catch (error) {
       onboardingLog("profile.save.failed", onboardingErrorDetails(error));
       setState("error");

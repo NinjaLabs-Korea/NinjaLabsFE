@@ -1,0 +1,12 @@
+{
+  "site": {
+    "title": "Ninja Labs | 만들고, 완료하고, 나만의 이력을 소유하세요.",
+    "description": "Injective 생태계를 위한 빌더 커뮤니티이자 바운티 마켓플레이스입니다. 완료한 작업마다 온체인 NFT가 발행되고, 이 NFT들이 모여 온전히 내 것인 포트폴리오가 됩니다."
+  },
+  "layout": {
+    "skipToContent": "본문으로 건너뛰기"
+  },
+  "localeSwitcher": {
+    "label": "언어"
+  }
+}

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AuthArea } from "@/components/layout/AuthArea";
+import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { NavLinks } from "@/components/layout/NavLinks";
 
 const navigation = [
@@ -30,6 +31,7 @@ export function Header() {
         </nav>
 
         <div className="col-start-3 flex items-center gap-2 justify-self-end">
+          <LocaleSwitcher />
           <AuthArea variant="desktop" />
 
           <details className="relative md:hidden">
