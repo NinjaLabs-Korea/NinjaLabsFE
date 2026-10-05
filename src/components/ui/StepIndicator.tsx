@@ -1,10 +1,14 @@
+import { useTranslations } from "next-intl";
+
 type StepIndicatorProps = {
   current: 1 | 2 | 3 | 4;
 };
 
-const steps = ["1. Login", "2. Wallet + NFT", "3. Profile", "4. Get Started"];
+// Message keys under `common.stepIndicator`, in step order.
+const steps = ["login", "wallet", "profile", "getStarted"] as const;
 
 export function StepIndicator({ current }: StepIndicatorProps) {
+  const t = useTranslations("common.stepIndicator");
   return (
     <ol className="flex flex-wrap gap-2">
       {steps.map((step, index) => {
@@ -21,7 +25,7 @@ export function StepIndicator({ current }: StepIndicatorProps) {
             key={step}
             className={`grid h-[45px] min-w-[140px] flex-1 place-items-center rounded-control text-sm leading-[21px] font-semibold ${stateClass}`}
           >
-            {step}
+            {t(step)}
           </li>
         );
       })}

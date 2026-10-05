@@ -1,19 +1,22 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useAuthActions, useAuthSnapshot } from "@/components/auth/FoundationProvider";
+import { Link } from "@/i18n/navigation";
 import type { ClientUser } from "@/lib/contracts/auth";
 
+// `key` is a message key under `common.userMenu`.
 export function getAccountNavigationItems(user: Pick<ClientUser, "profileSlug">) {
   return [
-    { label: "My profile", href: `/members/${user.profileSlug}` },
-    { label: "My applications", href: "/applications" },
-    { label: "My agents", href: "/agents" },
-  ];
+    { key: "myProfile", href: `/members/${user.profileSlug}` },
+    { key: "myApplications", href: "/applications" },
+    { key: "myAgents", href: "/agents" },
+  ] as const;
 }
 
 export function UserMenu() {
+  const t = useTranslations("common.userMenu");
   const snapshot = useAuthSnapshot();
   const { signOut } = useAuthActions();
   const [open, setOpen] = useState(false);
@@ -136,14 +139,18 @@ export function UserMenu() {
         >
           <div className="border-b border-border px-3 pt-2.5 pb-2">
             <p className="text-sm font-semibold text-ink">{user.handle}</p>
-            <p className="text-xs text-ink-muted">Session preview{user.walletAddress ? ` · ${user.walletAddress}` : ""}</p>
+            <p className="text-xs text-ink-muted">
+              {user.walletAddress
+                ? t("sessionPreviewWithWallet", { wallet: user.walletAddress })
+                : t("sessionPreview")}
+            </p>
           </div>
           <div className="pt-1.5">
             {menuItems.map((item, index) => (
               <Link
                 className="flex items-center justify-between rounded-control px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 href={item.href}
-                key={item.label}
+                key={item.key}
                 onKeyDown={handleMenuKeyDown}
                 ref={(element) => {
                   itemRefs.current[index] = element;
@@ -151,7 +158,7 @@ export function UserMenu() {
                 role="menuitem"
                 tabIndex={activeIndex === index ? 0 : -1}
               >
-                {item.label}
+                {t(item.key)}
               </Link>
             ))}
             <div className="my-1.5 border-t border-border" />
@@ -169,7 +176,7 @@ export function UserMenu() {
               tabIndex={activeIndex === menuItems.length ? 0 : -1}
               type="button"
             >
-              Sign out
+              {t("signOut")}
             </button>
           </div>
         </div>

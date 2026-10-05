@@ -1,14 +1,17 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useAuthActions, useAuthSnapshot } from "@/components/auth/FoundationProvider";
 import { getAccountNavigationItems, UserMenu } from "@/components/layout/UserMenu";
+import { Link } from "@/i18n/navigation";
 
 type AuthAreaProps = {
   variant: "desktop" | "mobile";
 };
 
 export function AuthArea({ variant }: AuthAreaProps) {
+  const t = useTranslations("common.header");
+  const tMenu = useTranslations("common.userMenu");
   const snapshot = useAuthSnapshot();
   const { signOut } = useAuthActions();
   const user = snapshot.status === "signed-in" ? snapshot.user : null;
@@ -20,7 +23,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
           className="hidden rounded-control px-[21px] py-3 text-sm leading-[21px] font-semibold text-ink-secondary md:inline-block"
           href="/bounties"
         >
-          Browse
+          {t("browse")}
         </Link>
         {user ? (
           <div className="hidden md:block">
@@ -31,7 +34,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
             className="rounded-control bg-primary px-[21px] py-3 text-sm leading-[21px] font-semibold text-on-inverse"
             href="/signup"
           >
-            Get Started
+            {t("getStarted")}
           </Link>
         )}
       </>
@@ -50,14 +53,14 @@ export function AuthArea({ variant }: AuthAreaProps) {
         </span>
         <span className="text-sm font-semibold text-ink">{user.handle}</span>
       </div>
-      <nav aria-label="Account navigation" className="space-y-1 px-1 pb-1">
+      <nav aria-label={tMenu("accountNavigation")} className="space-y-1 px-1 pb-1">
         {getAccountNavigationItems(user).map((item) => (
           <Link
             className="block rounded-control px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             href={item.href}
-            key={item.label}
+            key={item.key}
           >
-            {item.label}
+            {tMenu(item.key)}
           </Link>
         ))}
       </nav>
@@ -66,7 +69,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
         onClick={() => void signOut()}
         type="button"
       >
-        Sign out
+        {tMenu("signOut")}
       </button>
     </div>
   );

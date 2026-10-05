@@ -1,14 +1,16 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuthActions, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { useRouter } from "@/i18n/navigation";
 import { simulateMockSignInFailure } from "@/lib/foundation/auth-adapter";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
 
 type LoginState = "idle" | "pending" | "error";
 
 export function GoogleLoginButton() {
+  const t = useTranslations("common.googleLogin");
   const { signIn } = useAuthActions();
   const mode = useFoundationMode();
   const router = useRouter();
@@ -16,6 +18,7 @@ export function GoogleLoginButton() {
   const isMock = mode === "mock";
   const pending = loginState === "pending";
   const failed = loginState === "error";
+  const buttonLabel = pending ? t("starting") : failed ? t("retry") : t("continue");
 
   const handleSignIn = async (simulateFailure = false) => {
     onboardingLog("oauth.button.clicked", { mode, simulateFailure });
@@ -44,13 +47,7 @@ export function GoogleLoginButton() {
   return (
     <div className="mt-5">
       <button
-        aria-label={
-          pending
-            ? "Starting Google sign-in…"
-            : failed
-              ? "Retry Google sign-in"
-              : "Continue with Google"
-        }
+        aria-label={buttonLabel}
         aria-busy={pending}
         aria-describedby="google-login-status"
         className="flex w-full items-center justify-center gap-2 rounded-control bg-primary px-5 py-3 text-base font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
@@ -59,18 +56,18 @@ export function GoogleLoginButton() {
         type="button"
       >
         <span className="text-base font-bold">G</span>
-        {pending ? "Starting Google sign-in…" : failed ? "Retry Google sign-in" : "Continue with Google"}
+        {buttonLabel}
       </button>
       <p className="mt-3 text-sm text-ink-muted" id="google-login-status" role="status">
         {isMock
           ? pending
-            ? "Mock mode: starting the local sign-in preview."
-            : "Mock mode: this local preview does not contact Google or create an account."
-          : "You will be redirected to Google to sign in."}
+            ? t("mockPending")
+            : t("mockIdle")
+          : t("redirectNotice")}
       </p>
       {failed ? (
         <p className="mt-3 text-sm text-danger" role="alert">
-          Google sign-in failed. Please try again.
+          {t("failed")}
         </p>
       ) : null}
       {isMock && !pending && !failed ? (
@@ -79,7 +76,7 @@ export function GoogleLoginButton() {
           onClick={() => void handleSignIn(true)}
           type="button"
         >
-          Preview failed sign-in
+          {t("previewFailure")}
         </button>
       ) : null}
     </div>

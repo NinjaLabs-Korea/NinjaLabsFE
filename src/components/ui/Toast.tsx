@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 type ToastVariant = "success" | "danger" | "warning" | "info";
 
 type ToastProps = {
@@ -40,6 +42,7 @@ export function Toast({
   onAction,
   onDismiss,
 }: ToastProps) {
+  const t = useTranslations("common.toast");
   const styles = variantClasses[variant];
 
   return (
@@ -68,7 +71,7 @@ export function Toast({
       </div>
       <button
         type="button"
-        aria-label="Dismiss"
+        aria-label={t("dismiss")}
         className="text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         onClick={onDismiss}
       >
