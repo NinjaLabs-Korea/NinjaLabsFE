@@ -1,0 +1,92 @@
+{
+  "site": {
+    "title": "Ninja Labs | 构建、完成、拥有你的成果记录。",
+    "description": "面向 Injective 生态的开发者社区与赏金市场。你完成的每项任务都会铸造一枚链上 NFT，它们共同构成真正属于你的作品集。"
+  },
+  "layout": {
+    "skipToContent": "跳到主要内容"
+  },
+  "localeSwitcher": {
+    "label": "语言"
+  },
+  "nav": {
+    "bounties": "赏金",
+    "hallOfFame": "名人堂",
+    "members": "成员",
+    "notices": "公告"
+  },
+  "header": {
+    "homeLabel": "Ninja Labs 首页",
+    "mainNavigation": "主导航",
+    "mobileNavigation": "移动端导航",
+    "menu": "菜单",
+    "browse": "浏览",
+    "getStarted": "开始使用"
+  },
+  "footer": {
+    "tagline": "构建、完成、拥有你的成果记录。就在 Injective。",
+    "platform": "平台",
+    "community": "社区",
+    "legal": "© 2026 Ninja Labs · 所有内容无需登录即可查看 · 回访用户将跳过介绍页直接进入主页。"
+  },
+  "userMenu": {
+    "accountNavigation": "账户导航",
+    "myProfile": "我的主页",
+    "myApplications": "我的申请",
+    "myAgents": "我的智能体",
+    "signOut": "退出登录",
+    "sessionPreview": "会话预览",
+    "sessionPreviewWithWallet": "会话预览 · {wallet}"
+  },
+  "googleLogin": {
+    "continue": "使用 Google 继续",
+    "starting": "正在启动 Google 登录…",
+    "retry": "重试 Google 登录",
+    "mockPending": "模拟模式：正在启动本地登录预览。",
+    "mockIdle": "模拟模式：此本地预览不会连接 Google，也不会创建账户。",
+    "redirectNotice": "你将被重定向到 Google 进行登录。",
+    "failed": "Google 登录失败，请重试。",
+    "previewFailure": "预览登录失败"
+  },
+  "wallet": {
+    "switching": "正在切换网络…",
+    "switchNetwork": "切换到 Injective EVM",
+    "unsupportedNetwork": "你的钱包连接到了不受支持的网络。",
+    "awaitingSignature": "等待签名…",
+    "verify": "验证钱包",
+    "disconnectAddress": "断开 {address}",
+    "verifyFailed": "钱包验证失败。请检查签名请求后重试。",
+    "disconnectWalletLabel": "断开钱包 {address}",
+    "unavailable": "钱包不可用",
+    "unavailableHint": "请安装或解锁兼容的浏览器钱包以进行连接。",
+    "connecting": "正在连接钱包…",
+    "connect": "连接钱包",
+    "connectFailed": "无法连接你的钱包，请重试。",
+    "supportedWallets": "支持的钱包"
+  },
+  "stepIndicator": {
+    "login": "1. 登录",
+    "wallet": "2. 钱包 + NFT",
+    "profile": "3. 个人资料",
+    "getStarted": "4. 开始使用"
+  },
+  "confirmDialog": {
+    "cancel": "取消"
+  },
+  "toast": {
+    "dismiss": "关闭"
+  },
+  "errorPage": {
+    "eyebrow": "错误",
+    "title": "出错了",
+    "description": "无法加载此页面，请重试。",
+    "retry": "重试",
+    "home": "返回首页"
+  },
+  "notFound": {
+    "title": "页面未找到",
+    "description": "你要查找的页面不存在或已被移动。",
+    "home": "返回首页",
+    "browseBounties": "浏览赏金"
+  }
+}

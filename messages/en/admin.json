@@ -1,0 +1,270 @@
+{
+  "common": {
+    "eyebrow": "Admin",
+    "adminOnly": "ADMIN ONLY",
+    "saveNotice": "Changes are saved to the platform immediately.",
+    "fileHint": "JPEG, PNG, or WebP up to 5 MB",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "deleteConfirm": "Delete {title}?",
+    "savedDescription": "\"{title}\" was saved.",
+    "saveFailed": "Save failed",
+    "deleteFailed": "Delete failed"
+  },
+  "tabs": {
+    "users": "User Mgmt",
+    "bounties": "Bounty Mgmt",
+    "hallOfFame": "Hall of Fame",
+    "notices": "Notices"
+  },
+  "gate": {
+    "checking": "Checking admin access…",
+    "signInRequired": "Admin sign-in required",
+    "signIn": "Sign in",
+    "accessOnly": "Admin access only",
+    "noPermission": "Your account does not have administrator permission."
+  },
+  "users": {
+    "metaTitle": "Admin · Users | Ninja Labs",
+    "metaDescription": "Manage user access, wallet connections, and member roles.",
+    "eyebrow": "ADMIN",
+    "title": "User management",
+    "description": "Manage user access, wallet connections, and member roles.",
+    "columns": {
+      "nickname": "Nickname",
+      "email": "Email",
+      "joined": "Joined",
+      "wallet": "Wallet",
+      "member": "Member",
+      "role": "Role",
+      "action": "Action"
+    },
+    "searchLabel": "Search users",
+    "searchPlaceholder": "Search by email / nickname",
+    "walletLinked": "Linked",
+    "memberYes": "Yes",
+    "emptyTitle": "No users match your search",
+    "emptyBody": "Try a different email or nickname.",
+    "resetSearch": "Reset search",
+    "roles": {
+      "Core": "Core",
+      "Dev": "Dev",
+      "Design": "Design",
+      "Ops": "Ops"
+    },
+    "toast": {
+      "loadFailedTitle": "Users unavailable",
+      "loadFailedDescription": "Could not load the admin user directory.",
+      "restoredTitle": "Member restored",
+      "restoredDescription": "{nickname} was restored.",
+      "updateFailedTitle": "Update failed",
+      "removeFailedDescription": "The member assignment was not changed.",
+      "removedTitle": "Member removed",
+      "removedDescription": "{nickname} was removed from the public member directory.",
+      "undo": "Undo",
+      "assignFailedDescription": "The member role was not changed.",
+      "assignedTitle": "Member role assigned",
+      "assignedDescription": "{nickname} is now visible in the public member directory."
+    },
+    "actions": {
+      "assign": "Assign",
+      "remove": "Remove",
+      "removeEyebrow": "Remove member",
+      "removeTitle": "Remove {nickname} from members?",
+      "removeDescription": "Hides {nickname}'s card from the public <b>Members</b> directory. Their account and profile are preserved.",
+      "removeCallout": "This immediately updates the public member directory.",
+      "removeConfirm": "Remove member",
+      "roleEyebrow": "Member role",
+      "assignTitle": "Assign member role",
+      "assignDescription": "Marks <b>{nickname}</b> as a public member with the selected role and order.",
+      "roleGroupLabel": "Member role",
+      "displayOrder": "Display order"
+    }
+  },
+  "bounties": {
+    "metaTitle": "Admin · Bounties | Ninja Labs",
+    "metaDescription": "Create and manage sponsor-backed bounties.",
+    "eyebrow": "ADMIN",
+    "title": "Bounty management",
+    "description": "Create and manage sponsor-backed bounties.",
+    "newBounty": "+ New Bounty",
+    "columns": {
+      "title": "Title",
+      "sponsor": "Sponsor",
+      "reward": "Reward",
+      "intake": "Intake",
+      "status": "Status",
+      "deadline": "Deadline",
+      "action": "Action"
+    },
+    "intake": {
+      "ON": "ON",
+      "OFF": "OFF"
+    },
+    "submissionModes": {
+      "Direct": "Direct",
+      "Agent": "Agent"
+    },
+    "statuses": {
+      "draft": "Draft",
+      "funding": "Funding",
+      "active": "Active",
+      "reviewing": "Reviewing",
+      "closed": "Closed"
+    },
+    "tags": {
+      "Dev": "Dev",
+      "Design": "Design",
+      "Content": "Content",
+      "Other": "Other"
+    },
+    "open": "Open",
+    "close": "Close",
+    "form": {
+      "eyebrowCreate": "BOUNTY",
+      "eyebrowEdit": "EDIT BOUNTY",
+      "titleCreate": "New Bounty",
+      "titleEdit": "Edit Bounty",
+      "title": "Title",
+      "titlePlaceholder": "Bounty title",
+      "sponsor": "Sponsor",
+      "sponsorPlaceholder": "Sponsor name",
+      "deadline": "Deadline",
+      "reward": "Reward",
+      "rewardCurrency": "Reward currency",
+      "rewardAmount": "Reward amount",
+      "amountPlaceholder": "Amount",
+      "intake": "Intake",
+      "intakeHint": "Allow submissions from the public bounty page.",
+      "submissionMode": "Submission mode",
+      "submissionModeHint": "Agent mode accepts applications and submissions through the agent API key.",
+      "coverImage": "Cover image",
+      "tags": "Tags",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe the bounty",
+      "submissionGuide": "Submission guide",
+      "submissionGuidePlaceholder": "Add evaluation criteria and submission guidance",
+      "deliverables": "Deliverables",
+      "deliverablesPlaceholder": "One deliverable per line",
+      "deliverablesHint": "One item per line; saved as the public requirements list.",
+      "reviewProcess": "Review process",
+      "reviewProcessPlaceholder": "Ninja Labs triage plus sponsor approval",
+      "create": "Create",
+      "save": "Save"
+    },
+    "toast": {
+      "loadFailedTitle": "Bounties unavailable",
+      "loadFailedDescription": "Could not load admin bounties.",
+      "createdTitle": "Bounty created",
+      "updatedTitle": "Bounty updated",
+      "saveFailedDescription": "The bounty was not saved. Check the fields and your admin permissions.",
+      "statusUpdatedTitle": "Status updated",
+      "statusUpdatedDescription": "{title} is now {to, select, OPEN {open} other {submission closed}}.",
+      "transitionFailedTitle": "Transition failed",
+      "transitionFailedDescription": "This status transition is not currently allowed.",
+      "deletedTitle": "Bounty deleted",
+      "deleteFailedDescription": "The bounty was not deleted."
+    }
+  },
+  "hallOfFame": {
+    "metaTitle": "Admin · Hall of Fame | Ninja Labs",
+    "metaDescription": "Curate the milestones and highlights that celebrate the Ninja Labs community.",
+    "title": "Hall of Fame",
+    "description": "Curate the milestones and highlights that celebrate the Ninja Labs community.",
+    "statsEyebrow": "Read-only",
+    "statsTitle": "Cumulative stats",
+    "statsBadge": "auto-aggregated / read-only",
+    "highlights": {
+      "eyebrow": "Manual",
+      "title": "Highlight curation",
+      "addItem": "+ Add item",
+      "columns": {
+        "type": "Type",
+        "title": "Title",
+        "order": "Order",
+        "link": "Link",
+        "action": "Action"
+      },
+      "types": {
+        "milestone": "Milestone",
+        "featuredBounty": "Featured bounty",
+        "partnership": "Partnership"
+      },
+      "form": {
+        "eyebrowCreate": "Create",
+        "eyebrowEdit": "Edit",
+        "titleCreate": "Add highlight",
+        "titleEdit": "Edit highlight",
+        "type": "Type",
+        "title": "Title",
+        "titlePlaceholder": "Highlight title",
+        "description": "Description",
+        "image": "Image",
+        "uploadImage": "Upload image",
+        "link": "Link",
+        "optional": "(optional)",
+        "displayOrder": "Display order"
+      },
+      "toast": {
+        "loadFailedTitle": "Highlights unavailable",
+        "loadFailedDescription": "Could not load highlights.",
+        "addedTitle": "Highlight added",
+        "updatedTitle": "Highlight updated",
+        "saveFailedDescription": "The highlight was not saved.",
+        "deletedTitle": "Highlight deleted",
+        "deleteFailedDescription": "The highlight was not deleted."
+      }
+    }
+  },
+  "notices": {
+    "metaTitle": "Admin · Notices | Ninja Labs",
+    "metaDescription": "Publish updates and resources for the Ninja Labs community.",
+    "title": "Notices",
+    "description": "Publish updates and resources for the Ninja Labs community.",
+    "newPost": "+ New Post",
+    "columns": {
+      "title": "Title",
+      "category": "Category",
+      "status": "Status",
+      "published": "Published",
+      "action": "Action"
+    },
+    "categories": {
+      "ninjaLabs": "Ninja Labs",
+      "injectiveEcosystem": "Injective ecosystem",
+      "events": "Events",
+      "recruitment": "Recruitment",
+      "other": "Other"
+    },
+    "statuses": {
+      "draft": "Draft",
+      "published": "Published"
+    },
+    "form": {
+      "eyebrowCreate": "New post",
+      "eyebrowEdit": "Edit post",
+      "titleCreate": "New post",
+      "titleEdit": "Edit post",
+      "title": "Title",
+      "titlePlaceholder": "Post title",
+      "category": "Category",
+      "thumbnail": "Thumbnail",
+      "externalLink": "External link",
+      "body": "Body (markdown)",
+      "bodyPlaceholder": "Write your post in markdown",
+      "status": "Status"
+    },
+    "toast": {
+      "loadFailedTitle": "Notices unavailable",
+      "loadFailedDescription": "Could not load admin notices.",
+      "createdTitle": "Post created",
+      "updatedTitle": "Post updated",
+      "saveFailedDescription": "The notice was not saved.",
+      "deletedTitle": "Post deleted",
+      "deleteFailedDescription": "The notice was not deleted."
+    }
+  }
+}

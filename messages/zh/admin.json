@@ -1,0 +1,270 @@
+{
+  "common": {
+    "eyebrow": "管理后台",
+    "adminOnly": "仅限管理员",
+    "saveNotice": "更改会立即保存到平台。",
+    "fileHint": "JPEG、PNG 或 WebP，最大 5 MB",
+    "edit": "编辑",
+    "delete": "删除",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "deleteConfirm": "确定删除 {title} 吗？",
+    "savedDescription": "“{title}”已保存。",
+    "saveFailed": "保存失败",
+    "deleteFailed": "删除失败"
+  },
+  "tabs": {
+    "users": "用户管理",
+    "bounties": "赏金管理",
+    "hallOfFame": "名人堂",
+    "notices": "公告"
+  },
+  "gate": {
+    "checking": "正在检查管理员权限…",
+    "signInRequired": "需要管理员登录",
+    "signIn": "登录",
+    "accessOnly": "仅限管理员访问",
+    "noPermission": "你的账户没有管理员权限。"
+  },
+  "users": {
+    "metaTitle": "管理后台 · 用户 | Ninja Labs",
+    "metaDescription": "管理用户访问权限、钱包连接和成员角色。",
+    "eyebrow": "管理后台",
+    "title": "用户管理",
+    "description": "管理用户访问权限、钱包连接和成员角色。",
+    "columns": {
+      "nickname": "昵称",
+      "email": "邮箱",
+      "joined": "加入时间",
+      "wallet": "钱包",
+      "member": "成员",
+      "role": "角色",
+      "action": "操作"
+    },
+    "searchLabel": "搜索用户",
+    "searchPlaceholder": "按邮箱 / 昵称搜索",
+    "walletLinked": "已连接",
+    "memberYes": "是",
+    "emptyTitle": "没有符合搜索条件的用户",
+    "emptyBody": "请尝试其他邮箱或昵称。",
+    "resetSearch": "重置搜索",
+    "roles": {
+      "Core": "核心",
+      "Dev": "开发",
+      "Design": "设计",
+      "Ops": "运营"
+    },
+    "toast": {
+      "loadFailedTitle": "无法获取用户",
+      "loadFailedDescription": "无法加载管理员用户列表。",
+      "restoredTitle": "成员已恢复",
+      "restoredDescription": "已恢复 {nickname}。",
+      "updateFailedTitle": "更新失败",
+      "removeFailedDescription": "成员设置未更改。",
+      "removedTitle": "成员已移除",
+      "removedDescription": "已将 {nickname} 从公开成员列表中移除。",
+      "undo": "撤销",
+      "assignFailedDescription": "成员角色未更改。",
+      "assignedTitle": "已分配成员角色",
+      "assignedDescription": "{nickname} 现在会显示在公开成员列表中。"
+    },
+    "actions": {
+      "assign": "分配",
+      "remove": "移除",
+      "removeEyebrow": "移除成员",
+      "removeTitle": "确定将 {nickname} 从成员中移除吗？",
+      "removeDescription": "将在公开<b>成员</b>列表中隐藏 {nickname} 的卡片。其账户和个人资料将保留。",
+      "removeCallout": "此操作会立即更新公开成员列表。",
+      "removeConfirm": "移除成员",
+      "roleEyebrow": "成员角色",
+      "assignTitle": "分配成员角色",
+      "assignDescription": "将 <b>{nickname}</b> 设为公开成员，并使用所选角色和排序。",
+      "roleGroupLabel": "成员角色",
+      "displayOrder": "显示顺序"
+    }
+  },
+  "bounties": {
+    "metaTitle": "管理后台 · 赏金 | Ninja Labs",
+    "metaDescription": "创建和管理由赞助方支持的赏金任务。",
+    "eyebrow": "管理后台",
+    "title": "赏金管理",
+    "description": "创建和管理由赞助方支持的赏金任务。",
+    "newBounty": "+ 新建赏金",
+    "columns": {
+      "title": "标题",
+      "sponsor": "赞助方",
+      "reward": "奖励",
+      "intake": "接收提交",
+      "status": "状态",
+      "deadline": "截止时间",
+      "action": "操作"
+    },
+    "intake": {
+      "ON": "开启",
+      "OFF": "关闭"
+    },
+    "submissionModes": {
+      "Direct": "直接",
+      "Agent": "代理"
+    },
+    "statuses": {
+      "draft": "草稿",
+      "funding": "注资中",
+      "active": "进行中",
+      "reviewing": "审核中",
+      "closed": "已关闭"
+    },
+    "tags": {
+      "Dev": "开发",
+      "Design": "设计",
+      "Content": "内容",
+      "Other": "其他"
+    },
+    "open": "开放",
+    "close": "关闭",
+    "form": {
+      "eyebrowCreate": "赏金",
+      "eyebrowEdit": "编辑赏金",
+      "titleCreate": "新建赏金",
+      "titleEdit": "编辑赏金",
+      "title": "标题",
+      "titlePlaceholder": "赏金标题",
+      "sponsor": "赞助方",
+      "sponsorPlaceholder": "赞助方名称",
+      "deadline": "截止时间",
+      "reward": "奖励",
+      "rewardCurrency": "奖励币种",
+      "rewardAmount": "奖励金额",
+      "amountPlaceholder": "金额",
+      "intake": "接收提交",
+      "intakeHint": "允许通过公开赏金页面提交。",
+      "submissionMode": "提交方式",
+      "submissionModeHint": "代理模式通过代理 API 密钥接收申请和提交。",
+      "coverImage": "封面图片",
+      "tags": "标签",
+      "description": "描述",
+      "descriptionPlaceholder": "描述此赏金",
+      "submissionGuide": "提交指南",
+      "submissionGuidePlaceholder": "填写评审标准和提交说明",
+      "deliverables": "交付物",
+      "deliverablesPlaceholder": "每行一个交付物",
+      "deliverablesHint": "每行一项，将保存为公开的要求列表。",
+      "reviewProcess": "评审流程",
+      "reviewProcessPlaceholder": "Ninja Labs 初审后由赞助方批准",
+      "create": "创建",
+      "save": "保存"
+    },
+    "toast": {
+      "loadFailedTitle": "无法获取赏金",
+      "loadFailedDescription": "无法加载管理后台赏金。",
+      "createdTitle": "赏金已创建",
+      "updatedTitle": "赏金已更新",
+      "saveFailedDescription": "赏金未保存。请检查填写内容和管理员权限。",
+      "statusUpdatedTitle": "状态已更新",
+      "statusUpdatedDescription": "{title} 现在{to, select, OPEN {已开放} other {已截止提交}}。",
+      "transitionFailedTitle": "状态变更失败",
+      "transitionFailedDescription": "当前不允许进行此状态变更。",
+      "deletedTitle": "赏金已删除",
+      "deleteFailedDescription": "赏金未删除。"
+    }
+  },
+  "hallOfFame": {
+    "metaTitle": "管理后台 · 名人堂 | Ninja Labs",
+    "metaDescription": "精选展示 Ninja Labs 社区成就的里程碑与亮点。",
+    "title": "名人堂",
+    "description": "精选展示 Ninja Labs 社区成就的里程碑与亮点。",
+    "statsEyebrow": "只读",
+    "statsTitle": "累计统计",
+    "statsBadge": "自动汇总 / 只读",
+    "highlights": {
+      "eyebrow": "手动",
+      "title": "亮点精选",
+      "addItem": "+ 添加项目",
+      "columns": {
+        "type": "类型",
+        "title": "标题",
+        "order": "排序",
+        "link": "链接",
+        "action": "操作"
+      },
+      "types": {
+        "milestone": "里程碑",
+        "featuredBounty": "精选赏金",
+        "partnership": "合作伙伴"
+      },
+      "form": {
+        "eyebrowCreate": "创建",
+        "eyebrowEdit": "编辑",
+        "titleCreate": "添加亮点",
+        "titleEdit": "编辑亮点",
+        "type": "类型",
+        "title": "标题",
+        "titlePlaceholder": "亮点标题",
+        "description": "描述",
+        "image": "图片",
+        "uploadImage": "上传图片",
+        "link": "链接",
+        "optional": "（可选）",
+        "displayOrder": "显示顺序"
+      },
+      "toast": {
+        "loadFailedTitle": "无法获取亮点",
+        "loadFailedDescription": "无法加载亮点。",
+        "addedTitle": "亮点已添加",
+        "updatedTitle": "亮点已更新",
+        "saveFailedDescription": "亮点未保存。",
+        "deletedTitle": "亮点已删除",
+        "deleteFailedDescription": "亮点未删除。"
+      }
+    }
+  },
+  "notices": {
+    "metaTitle": "管理后台 · 公告 | Ninja Labs",
+    "metaDescription": "为 Ninja Labs 社区发布动态和资源。",
+    "title": "公告",
+    "description": "为 Ninja Labs 社区发布动态和资源。",
+    "newPost": "+ 新建文章",
+    "columns": {
+      "title": "标题",
+      "category": "分类",
+      "status": "状态",
+      "published": "发布时间",
+      "action": "操作"
+    },
+    "categories": {
+      "ninjaLabs": "Ninja Labs",
+      "injectiveEcosystem": "Injective 生态",
+      "events": "活动",
+      "recruitment": "招聘",
+      "other": "其他"
+    },
+    "statuses": {
+      "draft": "草稿",
+      "published": "已发布"
+    },
+    "form": {
+      "eyebrowCreate": "新建文章",
+      "eyebrowEdit": "编辑文章",
+      "titleCreate": "新建文章",
+      "titleEdit": "编辑文章",
+      "title": "标题",
+      "titlePlaceholder": "文章标题",
+      "category": "分类",
+      "thumbnail": "缩略图",
+      "externalLink": "外部链接",
+      "body": "正文（Markdown）",
+      "bodyPlaceholder": "使用 Markdown 撰写文章",
+      "status": "状态"
+    },
+    "toast": {
+      "loadFailedTitle": "无法获取公告",
+      "loadFailedDescription": "无法加载管理后台公告。",
+      "createdTitle": "文章已创建",
+      "updatedTitle": "文章已更新",
+      "saveFailedDescription": "公告未保存。",
+      "deletedTitle": "文章已删除",
+      "deleteFailedDescription": "公告未删除。"
+    }
+  }
+}

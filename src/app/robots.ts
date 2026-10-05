@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { routing } from "@/i18n/routing";
 import { loadRuntimeConfig } from "@/lib/runtime/config";
 
 export default function robots(): MetadataRoute.Robots {
@@ -10,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       // Admin and owner-private account surfaces must not be indexed.
-      disallow: ["/admin", "/applications", "/agents$"],
+      disallow: routing.locales.flatMap((l) => [`/${l}/admin`, `/${l}/applications`, `/${l}/agents$`]),
     },
     sitemap: `${origin}/sitemap.xml`,
   };

@@ -9,6 +9,7 @@ import {
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import { type Chain, http } from "viem";
 import { createConfig, WagmiProvider } from "wagmi";
@@ -42,6 +43,7 @@ export function WalletProvider({
   walletConnectProjectId,
   children,
 }: WalletProviderProps) {
+  const t = useTranslations("common.wallet");
   const [queryClient] = useState(() => new QueryClient());
   const [config] = useState(() => {
     const chain = createInjectiveChain(chainId, rpcUrl);
@@ -52,7 +54,7 @@ export function WalletProvider({
         ? connectorsForWallets(
             [
               {
-                groupName: "Supported wallets",
+                groupName: t("supportedWallets"),
                 wallets: [injectedWallet, walletConnectWallet],
               },
             ],

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { SignedOutPanel } from "@/components/account/SignedOutPanel";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import {
@@ -9,6 +9,7 @@ import {
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
+import { Link } from "@/i18n/navigation";
 import type { ApplicationStatus } from "@/lib/contracts/account";
 
 const focusClass =
@@ -22,21 +23,15 @@ const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success
   completed: "success",
 };
 
-const applicationSteps: readonly { status: ApplicationStatus; label: string }[] = [
-  { status: "open", label: "Applied" },
-  { status: "under_review", label: "Under review" },
-  { status: "approved", label: "Approved" },
-  { status: "submitted", label: "Submitted" },
-  { status: "completed", label: "Completed" },
-];
-
-const stepLabel = (status: ApplicationStatus): string =>
-  applicationSteps.find((step) => step.status === status)?.label ?? status;
-
-const statusLabel = (status: ApplicationStatus): string =>
-  status === "approved" ? "Approved: submit unlocked" : stepLabel(status);
+// Step labels live under account.applications.steps, keyed by status.
+const applicationSteps: readonly ApplicationStatus[] = ["open", "under_review", "approved", "submitted", "completed"];
 
 export function ApplicationsView() {
+  const t = useTranslations("account.applications");
+  const tAccount = useTranslations("account.common");
+  const tBounties = useTranslations("bounties.categories");
+  const statusLabel = (status: ApplicationStatus): string =>
+    status === "approved" ? t("approvedStatus") : t(`steps.${status}`);
   const mode = useFoundationMode();
   const authSnapshot = useAuthSnapshot();
   const apiClient = useFoundationApiClient();
@@ -45,14 +40,14 @@ export function ApplicationsView() {
   if (unavailable) {
     return (
       <div className="rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center">
-        <p className="text-sm font-semibold text-ink">Applications are temporarily unavailable.</p>
-        <p className="mt-1 text-sm text-ink-muted">We couldn’t reach the server. Please try again shortly.</p>
+        <p className="text-sm font-semibold text-ink">{t("unavailableTitle")}</p>
+        <p className="mt-1 text-sm text-ink-muted">{tAccount("unavailableBody")}</p>
       </div>
     );
   }
 
   if (authSnapshot.status !== "signed-in") {
-    return <SignedOutPanel message="Sign in to see your applications" />;
+    return <SignedOutPanel message={t("signedOutMessage")} />;
   }
 
   if (!applications) {
@@ -61,15 +56,15 @@ export function ApplicationsView() {
 
   return (
     <>
-      <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">Account</p>
-      <h1 className="mt-2 font-display text-5xl -tracking-[0.48px] text-ink">My applications</h1>
+      <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{tAccount("eyebrow")}</p>
+      <h1 className="mt-2 font-display text-5xl -tracking-[0.48px] text-ink">{t("heading")}</h1>
       <p className="mt-4 text-lg text-ink-muted">
-        Track every apply-type bounty you applied to. Submitting unlocks after sponsor approval.
+        {t("intro")}
       </p>
 
       <div className="mt-8 space-y-5">
         {applications.map((application) => {
-          const currentIndex = applicationSteps.findIndex((step) => step.status === application.status);
+          const currentIndex = applicationSteps.indexOf(application.status);
 
           return (
             <article
@@ -78,12 +73,12 @@ export function ApplicationsView() {
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="flex gap-2">
-                  <Badge variant="primary-soft">{application.category}</Badge>
+                  <Badge variant="primary-soft">{tBounties(application.category)}</Badge>
                   <Badge variant={statusVariants[application.status]}>
                     {statusLabel(application.status)}
                   </Badge>
                 </span>
-                <span className="text-xs text-ink-muted">Applied {application.appliedAt}</span>
+                <span className="text-xs text-ink-muted">{t("appliedAt", { date: application.appliedAt })}</span>
               </div>
 
               <Link
@@ -95,14 +90,14 @@ export function ApplicationsView() {
               <p className="mt-1 text-sm text-ink-muted">{application.note}</p>
 
               <ol
-                aria-label="Application progress"
+                aria-label={t("progressLabel")}
                 className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2"
               >
                 {applicationSteps.map((step, index) => (
                   <li
                     aria-current={index === currentIndex ? "step" : undefined}
                     className="flex items-center gap-2"
-                    key={step.status}
+                    key={step}
                   >
                     <span
                       className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
@@ -118,7 +113,7 @@ export function ApplicationsView() {
                     <span
                       className={`text-sm font-semibold ${index === currentIndex ? "text-ink" : "text-ink-muted"}`}
                     >
-                      {step.label}
+                      {t(`steps.${step}`)}
                     </span>
                     {index < applicationSteps.length - 1 ? (
                       <span aria-hidden="true" className="hidden h-px w-5 bg-primary-outline sm:block" />
@@ -132,7 +127,7 @@ export function ApplicationsView() {
                   className={`mt-4 inline-block rounded-control bg-primary px-4 py-2 text-sm font-semibold text-on-inverse ${focusClass}`}
                   href={`/bounties/${application.bountySlug}`}
                 >
-                  Submit work
+                  {t("submitWork")}
                 </Link>
               ) : null}
             </article>
@@ -141,7 +136,7 @@ export function ApplicationsView() {
       </div>
 
       {mode === "mock" ? (
-        <p className="mt-3 text-xs text-ink-muted">Session preview: demo data, resets on reload.</p>
+        <p className="mt-3 text-xs text-ink-muted">{tAccount("mockNote")}</p>
       ) : null}
     </>
   );

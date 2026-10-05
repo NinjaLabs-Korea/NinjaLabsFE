@@ -1,0 +1,104 @@
+{
+  "metadata": {
+    "title": "멤버 | Ninja Labs",
+    "description": "Ninja Labs를 함께 만들어 가는 빌더와 커뮤니티 멤버를 만나 보세요."
+  },
+  "list": {
+    "eyebrow": "Ninja Labs를 만드는 사람들",
+    "heading": "멤버",
+    "description": "Ninja Labs를 함께 만들어 가는 빌더와 커뮤니티 멤버를 만나 보세요.",
+    "public": "공개",
+    "howItWorks": "멤버십 운영 방식",
+    "rules": {
+      "registration": "가입 절차는 모두 동일합니다.",
+      "adminEnables": "관리자가 is_member를 활성화합니다.",
+      "memberEdits": "멤버가 직접 소개를 편집합니다.",
+      "unassign": "멤버 지정을 해제하면 카드는 숨겨지지만 프로필은 유지됩니다."
+    },
+    "viewProfile": "멤버 프로필 보기",
+    "becomeFirst": "첫 번째 멤버가 되어 보세요."
+  },
+  "filters": {
+    "ariaLabel": "멤버 역할",
+    "all": "전체",
+    "listAriaLabel": "멤버",
+    "emptyTitle": "필터에 맞는 멤버가 없습니다",
+    "emptyBody": "다른 카테고리를 선택하거나 검색을 초기화해 보세요.",
+    "reset": "필터 초기화"
+  },
+  "roles": {
+    "core": "코어",
+    "dev": "개발",
+    "design": "디자인",
+    "ops": "운영"
+  },
+  "card": {
+    "profile": "프로필",
+    "defaultTitle": "Ninja Labs 멤버",
+    "defaultBio": "Injective 생태계에서 빌드하고 있습니다.",
+    "links": {
+      "posts": "게시글",
+      "agents": "에이전트",
+      "bounties": "바운티",
+      "notices": "공지사항"
+    }
+  },
+  "profile": {
+    "notFoundTitle": "페이지를 찾을 수 없음 | Ninja Labs",
+    "pageTitle": "{handle} | Ninja Labs",
+    "bountiesCompleted": "바운티 {count}개 완료",
+    "newBuilder": "신규 빌더",
+    "joined": "가입일 {date}",
+    "publicShareable": "공개 및 공유 가능",
+    "categories": {
+      "dev": "개발",
+      "design": "디자인",
+      "content": "콘텐츠",
+      "other": "기타"
+    },
+    "portfolio": {
+      "eyebrow": "포트폴리오",
+      "headingCompleted": "온체인에 기록된 작업 증명",
+      "headingEmpty": "첫 번째 증명은 여기서 시작됩니다.",
+      "bodyCompleted": "승인된 작업은 현재 온체인 발행 상태와 함께 표시됩니다.",
+      "bodyEmpty": "바운티를 완료하면 이 포트폴리오에 영구적인 작업 기록이 추가됩니다.",
+      "nftName": "Ninja NFT",
+      "parentNft": "부모 NFT · {status}",
+      "parentPending": "{handle} · 부모 NFT 대기 중",
+      "token": "토큰 {id}",
+      "tx": "Tx {hash}",
+      "next": "+ 다음",
+      "emptyTitle": "아직 바운티 NFT가 없습니다",
+      "emptyBodyCompleted": "승인된 작업은 보상 지급 후 발행이 시작되면 여기에 표시됩니다.",
+      "emptyBodyNew": "바운티를 완료하고 첫 번째 증명을 추가해 보세요.",
+      "browse": "진행 중인 바운티 둘러보기",
+      "nftCount": "{count, plural, =0 {기록된 온체인 바운티 NFT가 없습니다} other {온체인 바운티 NFT {count}개}}"
+    },
+    "nftStatus": {
+      "PENDING": "대기 중",
+      "MINTING": "발행 중",
+      "MINTED": "발행 완료",
+      "ATTACHING": "연결 중",
+      "ATTACHED": "연결 완료",
+      "FAILED": "실패"
+    },
+    "history": {
+      "eyebrow": "바운티 이력",
+      "heading": "완료한 바운티",
+      "viewFilled": "작성된 프로필 예시 보기",
+      "completedOn": "완료일 {date}",
+      "emptyTitle": "아직 완료한 바운티가 없습니다",
+      "emptyBody": "바운티를 찾아 첫 번째 증명을 남겨 보세요.",
+      "findFirst": "첫 바운티 찾기"
+    },
+    "agents": {
+      "eyebrow": "자동화",
+      "heading": "에이전트",
+      "verified": "인증됨",
+      "completed": "바운티 {count}개 완료",
+      "emptyTitle": "아직 등록된 에이전트가 없습니다",
+      "emptyBody": "서명 인증으로 에이전트를 등록하세요.",
+      "register": "에이전트 등록"
+    }
+  }
+}

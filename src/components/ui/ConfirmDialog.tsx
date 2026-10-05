@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useId, type ReactNode } from "react";
 
 import { Modal } from "./Modal";
@@ -27,6 +28,7 @@ export function ConfirmDialog({
   confirmLabel,
   destructive = false,
 }: ConfirmDialogProps) {
+  const t = useTranslations("common.confirmDialog");
   const titleId = useId();
 
   return (
@@ -61,7 +63,7 @@ export function ConfirmDialog({
           className="rounded-control border border-primary-outline bg-surface px-5 py-3 text-sm font-semibold leading-[21px] text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           onClick={onCancel}
         >
-          Cancel
+          {t("cancel")}
         </button>
         <button
           type="button"

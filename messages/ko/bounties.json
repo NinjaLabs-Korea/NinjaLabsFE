@@ -1,0 +1,154 @@
+{
+  "meta": {
+    "list": {
+      "title": "바운티 | Ninja Labs",
+      "description": "Injective 생태계 스폰서의 유급 작업을 찾고, 유용한 결과물을 만들어 Ninja 포트폴리오에 남을 온체인 증명을 받아 보세요."
+    },
+    "apply": {
+      "title": "지원 방법 안내 | Ninja Labs",
+      "description": "바로 제출할 수 있는 바운티도 있고, 제출 전에 스폰서 승인이 필요한 바운티도 있습니다."
+    },
+    "notFound": "페이지를 찾을 수 없음 | Ninja Labs",
+    "detailTitle": "{title} | Ninja Labs"
+  },
+  "categories": {
+    "Dev": "개발",
+    "Design": "디자인",
+    "Content": "콘텐츠",
+    "Other": "기타"
+  },
+  "status": {
+    "active": "진행 중",
+    "closed": "마감"
+  },
+  "list": {
+    "eyebrow": "마켓플레이스",
+    "heading": "바운티",
+    "publicBadge": "공개",
+    "howApplying": "지원 방법 보기 →",
+    "intro": "Injective 생태계 스폰서의 유급 작업을 찾고, 유용한 결과물을 만들어 Ninja 포트폴리오에 남을 온체인 증명을 받아 보세요.",
+    "resultsLabel": "바운티 필터 및 결과",
+    "payoutNote": "스폰서는 INJ 또는 USDC로 그대로 지급하며, 플랫폼에서 별도로 스왑하지 않습니다."
+  },
+  "filters": {
+    "category": "카테고리",
+    "status": "상태",
+    "all": "전체",
+    "search": "바운티 검색",
+    "emptyTitle": "조건에 맞는 바운티가 없습니다",
+    "emptyBody": "다른 카테고리를 선택하거나 검색어를 지워 보세요.",
+    "reset": "필터 초기화"
+  },
+  "apply": {
+    "eyebrow": "바운티",
+    "heading": "바운티 지원 방식 안내",
+    "intro": "바로 제출할 수 있는 바운티도 있고, 제출 전에 스폰서 승인이 필요한 바운티도 있습니다.",
+    "auth": {
+      "checking": "인증: 확인 중",
+      "signedIn": "인증: 로그인됨",
+      "loginRequired": "인증: 로그인 필요"
+    },
+    "cta": {
+      "applyNow": "지금 지원하기",
+      "viewAndSignIn": "바운티 보고 로그인하기",
+      "view": "바운티 보기"
+    },
+    "submitType": {
+      "badge": "지원 접수 OFF",
+      "heading": "제출형 바운티",
+      "body": "누구나 작업을 진행하고, 준비되면 바로 제출할 수 있습니다.",
+      "flow": "[제출하기] 버튼이 바로 표시됨 → 바운티 상세와 동일",
+      "viewDirect": "제출형 바운티 보기",
+      "none": "현재 진행 중인 제출형 바운티가 없습니다."
+    },
+    "applyType": {
+      "badge": "지원 접수 ON",
+      "heading": "지원형 바운티",
+      "body": "스폰서가 지원을 승인한 뒤에 작업을 제출할 수 있습니다.",
+      "flow": "[지원하기] → 지원서 작성 → 스폰서 검토 → 승인 후 [제출하기] 활성화",
+      "none": "현재 진행 중인 지원형 바운티가 없습니다."
+    },
+    "empty": {
+      "title": "현재 진행 중인 바운티가 없습니다",
+      "body": "새로운 스폰서 기회는 바운티 마켓플레이스에 표시됩니다.",
+      "browse": "전체 바운티 보기"
+    },
+    "statusHeading": "지원 상태",
+    "statuses": {
+      "open": "접수",
+      "underReview": "검토 중",
+      "approved": "승인됨",
+      "submitted": "제출됨",
+      "completed": "완료"
+    },
+    "statusNote": "지원 상태는 지원 접수가 활성화된 바운티에서만 확인할 수 있습니다."
+  },
+  "detail": {
+    "back": "← 바운티 목록으로",
+    "agentSubmission": "에이전트 제출",
+    "directSubmission": "직접 제출",
+    "intakeOn": "지원 접수 ON",
+    "publicView": "공개 보기",
+    "actionsRequireLogin": "참여하려면 로그인 필요",
+    "description": "설명",
+    "deliverable": "결과물",
+    "deadline": "마감",
+    "review": "검토",
+    "defaultReview": "스폰서 검토",
+    "submissionGuide": "제출 가이드",
+    "applyFootnote": "bounty.application_required ON · 누구나 볼 수 있으며, 지원과 제출은 로그인이 필요합니다.",
+    "reward": "보상",
+    "sponsorPays": "스폰서 지급:",
+    "completionSteps": "완료 단계",
+    "defaultSteps": {
+      "work": "작업 완료하기",
+      "submit": "결과물 URL 제출하기",
+      "approval": "스폰서 승인 받기"
+    },
+    "applySteps": {
+      "apply": "관련 작업물과 참여 가능 일정을 적어 지원하세요.",
+      "review": "스폰서의 검토와 승인을 기다리세요.",
+      "submit": "승인 후 완료한 작업을 제출하세요."
+    },
+    "afterApproval": "승인 이후",
+    "afterApprovalSteps": {
+      "scope": "승인된 감사 범위를 완료하세요.",
+      "link": "완료한 작업 링크를 제출하세요.",
+      "reward": "스폰서 검토를 거쳐 보상을 받으세요."
+    }
+  },
+  "action": {
+    "agentHeading": "에이전트 제출",
+    "agentBody": "이 바운티는 브라우저 제출 양식 대신 인증된 에이전트 API 요청으로 받습니다.",
+    "manageAgents": "내 에이전트 관리",
+    "applyHeading": "이 바운티에 지원하기",
+    "submitHeading": "작업 제출하기",
+    "signInPrompt": "계속하려면 로그인하세요.",
+    "signIn": "로그인",
+    "checkingStatus": "지원 상태를 확인하는 중…",
+    "statusUnavailable": "지원 상태를 일시적으로 불러올 수 없습니다. 새로고침 후 다시 시도해 주세요.",
+    "underReviewHeading": "지원서 검토 중",
+    "underReviewBody": "스폰서가 승인하면 제출할 수 있습니다.",
+    "viewApplications": "내 지원 내역 보기",
+    "submissionUrl": "완료한 작업 URL",
+    "repositoryUrl": "저장소 URL (선택)",
+    "commitSha": "커밋 SHA (선택)",
+    "submissionDescription": "완료한 작업을 설명해 주세요",
+    "submit": "제출하기",
+    "submitting": "제출하는 중…",
+    "portfolioUrl": "포트폴리오 또는 관련 작업 URL (선택)",
+    "applyMessage": "작업 방식과 관련 경험을 설명해 주세요",
+    "apply": "지원하기",
+    "applying": "지원하는 중…",
+    "submitSuccess": "작업이 성공적으로 제출되었습니다.",
+    "applySuccess": "지원이 접수되었습니다. 내 지원 내역에서 확인할 수 있습니다.",
+    "errors": {
+      "generic": "요청을 처리하지 못했습니다. 다시 시도해 주세요.",
+      "ALREADY_APPLIED": "이미 이 바운티에 지원했습니다.",
+      "BOUNTY_NOT_OPEN": "더 이상 진행 중인 바운티가 아닙니다.",
+      "APPLICATION_NOT_APPROVED": "제출하려면 먼저 지원이 승인되어야 합니다.",
+      "DEADLINE_PASSED": "제출 마감이 지났습니다.",
+      "SUBMISSION_FINALIZED": "이미 확정된 제출입니다."
+    }
+  }
+}

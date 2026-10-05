@@ -57,7 +57,22 @@ export type AdminPost = {
   externalUrl: string | null;
 };
 
-const adminUserSlugs = ["jaemin", "sora", "jinyoung", "juho", "mina", "ara"] as const;
+// Message keys (admin namespace) for displayed enum labels; the enum values themselves stay API-facing.
+export const highlightTypeLabelKeys: Record<AdminHighlight["type"], string> = {
+  Milestone: "milestone",
+  "Featured bounty": "featuredBounty",
+  Partnership: "partnership",
+};
+
+export const postCategoryLabelKeys: Record<AdminPost["category"], string> = {
+  "Ninja Labs": "ninjaLabs",
+  "Injective ecosystem": "injectiveEcosystem",
+  Events: "events",
+  Recruitment: "recruitment",
+  Other: "other",
+};
+
+const adminUserSlugs =["jaemin", "sora", "jinyoung", "juho", "mina", "ara"] as const;
 
 const userOverlays: Record<
   (typeof adminUserSlugs)[number],

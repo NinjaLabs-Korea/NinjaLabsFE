@@ -1,0 +1,130 @@
+{
+  "badges": {
+    "flow": "注册流程",
+    "walletPreview": "注册流程（钱包预览）",
+    "walletUnavailable": "钱包不可用",
+    "profile": "所有字段必填 / 不可跳过"
+  },
+  "login": {
+    "pageTitle": "{title} | Ninja Labs",
+    "mock": {
+      "badge": "注册流程 · 会话预览",
+      "title": "预览 Ninja Labs 登录流程",
+      "description": "通过本地会话预览体验此步骤。不会连接 Google，也不会创建账户。",
+      "disclosure": "模拟模式仅用于本地测试。此预览不会连接 Google，也不会创建账户。",
+      "statusTitle": "预览状态",
+      "edgeCases": {
+        "first": "点击按钮仅会启动本地会话预览",
+        "second": "不会调用 Google 身份验证"
+      }
+    },
+    "api": {
+      "badge": "注册流程",
+      "title": "登录 Ninja Labs",
+      "description": "使用 Google 继续以创建账户。你将被跳转到 Google，授权后返回此页面。",
+      "disclosure": "登录会创建或恢复你的 Ninja Labs 账户。我们只会获取你的 Google 邮箱，不会共享密码。",
+      "statusTitle": "工作原理",
+      "edgeCases": {
+        "first": "你将跳转到 Google 授权页面，授权后返回",
+        "second": "新账户从引导第 1 步开始；老用户将恢复之前的会话"
+      }
+    }
+  },
+  "wallet": {
+    "metadata": {
+      "title": "连接钱包 | Ninja Labs",
+      "descriptionApi": "连接并验证 Injective 钱包。",
+      "descriptionMock": "预览 Injective 钱包连接。"
+    },
+    "title": "连接你的钱包",
+    "introApi": "连接你的 Injective EVM 钱包，然后签署一条免 Gas 消息以证明所有权。",
+    "introMock": "在此本地会话预览中连接 Injective EVM 钱包。",
+    "unavailableButton": "钱包不可用",
+    "unavailableNote": "在配置受支持的 Injective EVM 链之前，无法连接钱包。",
+    "badgeApi": "免 Gas 验证",
+    "badgeMock": "仅连接预览",
+    "noteApi": "签名不会提交交易。验证后的钱包将关联到你的账户，并将你的 Ninja NFT 铸造加入队列。",
+    "noteMock": "模拟模式不会签名、关联账户或调用后端。",
+    "connectLater": "稍后连接",
+    "optionalNote": "钱包验证为可选项。你可以先继续，稍后再连接。",
+    "whatHappens": "会发生什么",
+    "steps": {
+      "connection": {
+        "term": "连接",
+        "detail": "MetaMask 或其他 EVM 钱包"
+      },
+      "signing": {
+        "term": "签名",
+        "detail": "EIP-191 personal_sign 所有权证明"
+      },
+      "gas": {
+        "term": "Gas 费",
+        "detail": "无交易，无 Gas 费"
+      },
+      "accountLinking": {
+        "term": "账户关联",
+        "detail": "验证后的钱包将保存到你的账户"
+      },
+      "nft": {
+        "term": "NFT",
+        "detail": "父 Ninja NFT 铸造已加入队列"
+      }
+    }
+  },
+  "profile": {
+    "metadata": {
+      "title": "设置个人资料 | Ninja Labs",
+      "description": "防止垃圾账户，保证资料质量"
+    },
+    "title": "设置你的个人资料",
+    "whyRequired": "为什么全部必填",
+    "whyRequiredSubtitle": "防止垃圾账户，保证资料质量",
+    "requirements": {
+      "spamControl": "防止垃圾账户，保证资料质量",
+      "oneFlow": "一次性完成注册流程",
+      "noSkip": "不可跳过或保存草稿"
+    },
+    "form": {
+      "nicknameLabel": "昵称",
+      "nicknamePlaceholder": "请输入昵称",
+      "fieldTags": "领域标签*",
+      "tags": {
+        "dev": "开发",
+        "design": "设计",
+        "content": "内容",
+        "other": "其他"
+      },
+      "bioLabel": "简介*",
+      "bioPlaceholder": "向社区介绍一下你自己",
+      "bioHint": "请填写简短介绍。",
+      "submit": "下一步",
+      "saving": "正在保存资料…",
+      "error": "请检查所有字段，并选择一个尚未被使用的昵称。"
+    }
+  },
+  "getStarted": {
+    "metadata": {
+      "title": "开始使用 | Ninja Labs",
+      "description": "以下均可跳过，之后也可从主导航随时访问。"
+    },
+    "eyebrow": "引导完成",
+    "title": "接下来想做什么？",
+    "subtitle": "以下均可跳过，之后也可从主导航随时访问。",
+    "actions": {
+      "browseBounties": {
+        "title": "浏览进行中的赏金",
+        "description": "找到一个赏金，开始积累你的链上履历。"
+      },
+      "playground": {
+        "title": "在 Playground 中体验 Injective",
+        "description": "在选择下一个赏金之前，先探索 Injective。"
+      },
+      "learnMore": {
+        "title": "进一步了解 Ninja Labs",
+        "description": "了解建设者社区与赏金市场。"
+      }
+    },
+    "skip": "跳过并前往首页",
+    "savedNote": "你的引导进度已保存。之后可以随时更新钱包和个人资料。"
+  }
+}

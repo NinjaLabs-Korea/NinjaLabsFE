@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 import { getRuntimeBounties } from "@/lib/bounties";
 import { getRuntimeMembers } from "@/lib/members";
 import { getRuntimeNotices } from "@/lib/notices";
+import { localeTags, routing } from "@/i18n/routing";
 import { loadRuntimeConfig } from "@/lib/runtime/config";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -10,9 +11,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [bounties, members, notices] = await Promise.all([
     getRuntimeBounties(), getRuntimeMembers(), getRuntimeNotices(),
   ]);
-  const url = (path: string) => `${origin}${path}`;
+  const url = (path: string) => path;
 
-  return [
+  const entries: MetadataRoute.Sitemap = [
     { url: url("/"), changeFrequency: "weekly", priority: 1 },
     { url: url("/bounties"), changeFrequency: "daily", priority: 0.9 },
     ...bounties.map(({ slug }) => ({
@@ -38,4 +39,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: url("/signup"), changeFrequency: "monthly", priority: 0.5 },
     { url: url("/agents/register"), changeFrequency: "monthly", priority: 0.5 },
   ];
+
+  // One entry per locale, each listing every language variant as an alternate.
+  const localized = (locale: string, path: string) => `${origin}/${locale}${path === "/" ? "" : path}`;
+  return entries.flatMap((entry) =>
+    routing.locales.map((locale) => ({
+      ...entry,
+      url: localized(locale, entry.url),
+      alternates: {
+        languages: Object.fromEntries(
+          routing.locales.map((l) => [localeTags[l].htmlLang, localized(l, entry.url)]),
+        ),
+      },
+    })),
+  );
 }

@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
 import { FoundationProvider } from "@/components/auth/FoundationProvider";
 import { createSessionPreviewAuthAdapter } from "@/lib/foundation/auth-adapter";
+import { renderWithIntl } from "@/test/intl";
 
-vi.mock("next/navigation", () => ({
+vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
@@ -107,7 +108,7 @@ const previewUser = {
 };
 
 function renderWalletButton() {
-  return render(
+  return renderWithIntl(
     <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
       <WalletConnectButton chainId={1439} />
     </FoundationProvider>,
@@ -140,7 +141,7 @@ describe("WalletProvider", () => {
   });
 
   it("constructs an SSR-safe RainbowKit configuration with injected and WalletConnect wallet metadata", () => {
-    render(
+    renderWithIntl(
       <WalletProvider
         chainId={1439}
         rpcUrl="https://rpc.ninjalabs.example"
@@ -195,7 +196,7 @@ describe("WalletProvider", () => {
   });
 
   it("uses injected-only Wagmi without RainbowKit when no project ID is configured", () => {
-    render(
+    renderWithIntl(
       <WalletProvider chainId={1439}>
         <span>Wallet content</span>
       </WalletProvider>,

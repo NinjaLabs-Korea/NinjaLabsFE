@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { useEffect, type ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -14,16 +14,26 @@ import {
   BountyApplyGuideCta,
 } from "@/components/bounties/BountyApplyGuideCta";
 import { getOnboardingPath, shouldRedirectToOnboarding } from "@/lib/api/auth-adapter";
+import { renderWithIntl } from "@/test/intl";
 
-vi.mock("next/link", () => ({
-  default: ({ children, href, ...props }: ComponentProps<"a">) => (
+const routerPush = vi.hoisted(() => vi.fn());
+
+function MockLink({ children, href, ...props }: ComponentProps<"a">) {
+  return (
     <a href={href} {...props}>
       {children}
     </a>
-  ),
+  );
+}
+
+vi.mock("@/i18n/navigation", () => ({
+  Link: MockLink,
+  useRouter: () => ({ push: routerPush }),
+  usePathname: () => "/",
 }));
 
-const routerPush = vi.fn();
+// Kept for components outside this lane that may still import next/link or next/navigation.
+vi.mock("next/link", () => ({ default: MockLink }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: routerPush }),
@@ -54,7 +64,7 @@ function AuthState() {
 
 describe("AuthArea", () => {
   it("keeps the signed-in mobile account links and sign-out behavior in parity", async () => {
-    render(
+    renderWithIntl(
       <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
         <SignInOnMount />
         <AuthArea variant="mobile" />
@@ -82,7 +92,7 @@ describe("AuthArea", () => {
 
 describe("GoogleLoginButton", () => {
   it("shows a deterministic mock failure and clears it when retry succeeds", async () => {
-    render(
+    renderWithIntl(
       <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
         <GoogleLoginButton />
         <AuthState />
@@ -108,7 +118,7 @@ describe("GoogleLoginButton", () => {
 
 describe("BountyApplyGuideCta", () => {
   it("reflects a signed-in session and links to the real bounty", async () => {
-    render(
+    renderWithIntl(
       <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
         <SignInOnMount />
         <BountyApplyAuthBadge />

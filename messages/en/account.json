@@ -1,0 +1,32 @@
+{
+  "common": {
+    "eyebrow": "Account",
+    "unavailableBody": "We couldn’t reach the server. Please try again shortly.",
+    "mockNote": "Session preview: demo data, resets on reload."
+  },
+  "signedOut": {
+    "body": "Complete the sign-up flow to preview your account.",
+    "cta": "Get Started"
+  },
+  "applications": {
+    "meta": {
+      "title": "My applications | Ninja Labs",
+      "description": "Track your bounty applications and their review status."
+    },
+    "unavailableTitle": "Applications are temporarily unavailable.",
+    "signedOutMessage": "Sign in to see your applications",
+    "heading": "My applications",
+    "intro": "Track every apply-type bounty you applied to. Submitting unlocks after sponsor approval.",
+    "appliedAt": "Applied {date}",
+    "progressLabel": "Application progress",
+    "steps": {
+      "open": "Applied",
+      "under_review": "Under review",
+      "approved": "Approved",
+      "submitted": "Submitted",
+      "completed": "Completed"
+    },
+    "approvedStatus": "Approved: submit unlocked",
+    "submitWork": "Submit work"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "metadata": {
+    "title": "Members | Ninja Labs",
+    "description": "Meet the builders and community members shaping Ninja Labs."
+  },
+  "list": {
+    "eyebrow": "The people behind Ninja Labs",
+    "heading": "Members",
+    "description": "Meet the builders and community members shaping Ninja Labs.",
+    "public": "Public",
+    "howItWorks": "How membership works",
+    "rules": {
+      "registration": "Registration is shared.",
+      "adminEnables": "Admin enables is_member.",
+      "memberEdits": "Member edits bio.",
+      "unassign": "Unassign hides card but preserves profile."
+    },
+    "viewProfile": "View a member profile.",
+    "becomeFirst": "Become the first listed member."
+  },
+  "filters": {
+    "ariaLabel": "Member roles",
+    "all": "All",
+    "listAriaLabel": "Members",
+    "emptyTitle": "No members match your filters",
+    "emptyBody": "Try a different category or clear the search.",
+    "reset": "Reset filters"
+  },
+  "roles": {
+    "core": "Core",
+    "dev": "Dev",
+    "design": "Design",
+    "ops": "Ops"
+  },
+  "card": {
+    "profile": "Profile",
+    "defaultTitle": "Ninja Labs member",
+    "defaultBio": "Building in the Injective ecosystem.",
+    "links": {
+      "posts": "Posts",
+      "agents": "Agents",
+      "bounties": "Bounties",
+      "notices": "Notices"
+    }
+  },
+  "profile": {
+    "notFoundTitle": "Not found | Ninja Labs",
+    "pageTitle": "{handle} | Ninja Labs",
+    "bountiesCompleted": "{count, plural, one {# bounty completed} other {# bounties completed}}",
+    "newBuilder": "New builder",
+    "joined": "Joined {date}",
+    "publicShareable": "Public and shareable",
+    "categories": {
+      "dev": "Dev",
+      "design": "Design",
+      "content": "Content",
+      "other": "Other"
+    },
+    "portfolio": {
+      "eyebrow": "Portfolio",
+      "headingCompleted": "Proof of work, on-chain.",
+      "headingEmpty": "The first proof starts here.",
+      "bodyCompleted": "Approved work is shown with its current on-chain mint status.",
+      "bodyEmpty": "Complete a bounty to add a permanent record of work to this portfolio.",
+      "nftName": "Ninja NFT",
+      "parentNft": "Parent NFT · {status}",
+      "parentPending": "{handle} · parent NFT pending",
+      "token": "Token {id}",
+      "tx": "Tx {hash}",
+      "next": "+ next",
+      "emptyTitle": "No bounty NFTs yet",
+      "emptyBodyCompleted": "Approved work appears here after payout and minting begins.",
+      "emptyBodyNew": "Complete a bounty to add your first proof.",
+      "browse": "Browse active bounties",
+      "nftCount": "{count, plural, =0 {No on-chain bounty NFTs recorded} one {# on-chain bounty NFT} other {# on-chain bounty NFTs}}"
+    },
+    "nftStatus": {
+      "PENDING": "PENDING",
+      "MINTING": "MINTING",
+      "MINTED": "MINTED",
+      "ATTACHING": "ATTACHING",
+      "ATTACHED": "ATTACHED",
+      "FAILED": "FAILED"
+    },
+    "history": {
+      "eyebrow": "Bounty history",
+      "heading": "Completed bounties",
+      "viewFilled": "View filled profile",
+      "completedOn": "Completed {date}",
+      "emptyTitle": "No completed bounties yet",
+      "emptyBody": "Find a bounty and make your first proof.",
+      "findFirst": "Find a first bounty"
+    },
+    "agents": {
+      "eyebrow": "Automation",
+      "heading": "Agents",
+      "verified": "Verified",
+      "completed": "{count, plural, one {# bounty completed} other {# bounties completed}}",
+      "emptyTitle": "No registered agents yet",
+      "emptyBody": "Register an agent with signature verification.",
+      "register": "Register agent"
+    }
+  }
+}

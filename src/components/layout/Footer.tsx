@@ -1,11 +1,12 @@
 import Image from "next/image";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 const platformLinks = [
-  { href: "/bounties", label: "Bounties" },
-  { href: "/hall-of-fame", label: "Hall of Fame" },
-  { href: "/notices", label: "Notices" },
-];
+  { href: "/bounties", key: "bounties" },
+  { href: "/hall-of-fame", key: "hallOfFame" },
+  { href: "/notices", key: "notices" },
+] as const;
 
 const communityLinks = [
   { href: "https://x.com/", label: "X / Twitter" },
@@ -13,6 +14,9 @@ const communityLinks = [
 ];
 
 export function Footer() {
+  const t = useTranslations("common.footer");
+  const tNav = useTranslations("common.nav");
+
   return (
     <footer className="bg-inverse-surface text-on-inverse">
       <div className="mx-auto max-w-content px-6 pt-12">
@@ -29,20 +33,22 @@ export function Footer() {
               <span className="font-display text-xl font-bold">Ninja Labs</span>
             </div>
             <p className="mt-3 max-w-[287px] text-sm text-ink-muted">
-              Build. Complete. Own your track record. On Injective.
+              {t("tagline")}
             </p>
           </div>
 
           <div className="flex flex-col gap-8 sm:flex-row sm:gap-12">
-            <FooterLinkColumn heading="Platform" links={platformLinks} />
-            <FooterLinkColumn heading="Community" links={communityLinks} external />
+            <FooterLinkColumn
+              heading={t("platform")}
+              links={platformLinks.map(({ href, key }) => ({ href, label: tNav(key) }))}
+            />
+            <FooterLinkColumn heading={t("community")} links={communityLinks} external />
           </div>
         </div>
 
         <div className="mt-8 border-t border-on-inverse/8 pt-[25px] pb-12">
           <p className="text-xs leading-4 text-on-inverse-muted">
-            © 2026 Ninja Labs · All content viewable without login · Returning users skip Intro and
-            land on main.
+            {t("legal")}
           </p>
         </div>
       </div>
