@@ -1,8 +1,7 @@
 import { rewardFromBaseUnits, toCategoryLabel, toMemberRoleLabel } from "./api/codecs";
 import type { Member, Profile } from "./types";
-import { loadRuntimeConfig } from "./runtime/config";
 import { onboardingLog } from "./onboarding-log";
-import { fetchPublicJson } from "./api/public";
+import { fetchPublicJson, loadFromRuntime } from "./api/public";
 
 export const PROFILE_EMPTY_ID = "sora";
 
@@ -46,8 +45,11 @@ type MemberRow = {
   links: Array<{ type: string; url: string }>;
 };
 
-export async function getRuntimeMembers(): Promise<Member[]> {
-  if (loadRuntimeConfig().runtimeMode === "mock") return getMembers();
+export function getRuntimeMembers(): Promise<Member[]> {
+  return loadFromRuntime({ mock: getMembers, api: fetchMembers });
+}
+
+async function fetchMembers(): Promise<Member[]> {
   const rows = await fetchPublicJson<MemberRow[]>("/members");
   return rows.map((row) => ({
     slug: row.nickname,
@@ -140,27 +142,25 @@ function toProfile(data: PublicProfileResponse): Profile {
   };
 }
 
-export async function getRuntimeProfile(slug: string): Promise<Profile | undefined> {
-  const config = loadRuntimeConfig();
-  if (config.runtimeMode === "mock") {
-    onboardingLog("public-profile.mock.resolved", { slug, found: Boolean(getProfile(slug)) });
-    return getProfile(slug);
-  }
-
-  try {
-    onboardingLog("public-profile.fetch.started", { slug });
-    const response = await fetch(
-      `${config.apiUrl!.replace(/\/$/, "")}/users/${encodeURIComponent(slug)}`,
-      { cache: "no-store" },
-    );
-    onboardingLog("public-profile.fetch.completed", { slug, status: response.status });
-    if (!response.ok) return undefined;
-    return toProfile((await response.json()) as PublicProfileResponse);
-  } catch (caught) {
-    onboardingLog("public-profile.fetch.failed", {
-      slug,
-      errorName: caught instanceof Error ? caught.name : "UnknownError",
-    });
-    return undefined;
-  }
+export function getRuntimeProfile(slug: string): Promise<Profile | undefined> {
+  return loadFromRuntime({
+    mock: () => {
+      onboardingLog("public-profile.mock.resolved", { slug, found: Boolean(getProfile(slug)) });
+      return getProfile(slug);
+    },
+    api: async () => {
+      try {
+        onboardingLog("public-profile.fetch.started", { slug });
+        const data = await fetchPublicJson<PublicProfileResponse>(`/users/${encodeURIComponent(slug)}`);
+        onboardingLog("public-profile.fetch.completed", { slug });
+        return toProfile(data);
+      } catch (caught) {
+        onboardingLog("public-profile.fetch.failed", {
+          slug,
+          errorName: caught instanceof Error ? caught.name : "UnknownError",
+        });
+        return undefined;
+      }
+    },
+  });
 }

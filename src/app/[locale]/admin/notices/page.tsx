@@ -5,7 +5,7 @@ import { AdminTabs } from "@/components/admin/AdminTabs";
 import { PostManager } from "@/components/admin/PostManager";
 import { Badge } from "@/components/ui/Badge";
 import { getAdminPosts } from "@/lib/admin";
-import { loadRuntimeConfig } from "@/lib/runtime/config";
+import { loadFromRuntime } from "@/lib/api/public";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/admin/notices">): Promise<Metadata> {
   const { locale } = await params;
@@ -21,7 +21,7 @@ export default async function AdminNoticesPage({ params }: PageProps<"/[locale]/
   setRequestLocale(locale);
   const t = await getTranslations("admin.notices");
   const tCommon = await getTranslations("admin.common");
-  const posts = loadRuntimeConfig().runtimeMode === "mock" ? getAdminPosts() : [];
+  const posts = await loadFromRuntime({ mock: getAdminPosts, api: async () => [] });
 
   return (
     <section className="relative mx-auto max-w-content px-6 py-16 pb-20">

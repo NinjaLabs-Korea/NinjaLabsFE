@@ -1,7 +1,6 @@
 import { rewardFromBaseUnits, toCategoryLabel } from "./api/codecs";
 import type { Bounty } from "./types";
-import { fetchPublicJson } from "./api/public";
-import { loadRuntimeConfig } from "./runtime/config";
+import { fetchPublicJson, loadFromRuntime } from "./api/public";
 
 export const bounties: Bounty[] = [
   {
@@ -92,17 +91,22 @@ function toBounty(row: BountyListRow | BountyDetailRow): Bounty {
   };
 }
 
-export async function getRuntimeBounties(): Promise<Bounty[]> {
-  if (loadRuntimeConfig().runtimeMode === "mock") return getBounties();
-  const response = await fetchPublicJson<BountyListResponse>("/bounties?page=1&pageSize=50");
-  return response.items.map(toBounty);
+export function getRuntimeBounties(): Promise<Bounty[]> {
+  return loadFromRuntime({
+    mock: getBounties,
+    api: async () => (await fetchPublicJson<BountyListResponse>("/bounties?page=1&pageSize=50")).items.map(toBounty),
+  });
 }
 
-export async function getRuntimeBounty(id: string): Promise<Bounty | undefined> {
-  if (loadRuntimeConfig().runtimeMode === "mock") return getBounty(id);
-  try {
-    return toBounty(await fetchPublicJson<BountyDetailRow>(`/bounties/${encodeURIComponent(id)}`));
-  } catch {
-    return undefined;
-  }
+export function getRuntimeBounty(id: string): Promise<Bounty | undefined> {
+  return loadFromRuntime({
+    mock: () => getBounty(id),
+    api: async () => {
+      try {
+        return toBounty(await fetchPublicJson<BountyDetailRow>(`/bounties/${encodeURIComponent(id)}`));
+      } catch {
+        return undefined;
+      }
+    },
+  });
 }
