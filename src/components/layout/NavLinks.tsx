@@ -25,7 +25,7 @@ export function NavLinks({ links, variant }: NavLinksProps) {
           : `rounded-control px-3 py-2 text-sm font-medium text-ink-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary${isActive ? " bg-primary-soft text-primary-strong font-semibold" : ""}`;
 
         return (
-          <Link aria-current={isActive ? "page" : undefined} className={className} href={href} key={href}>
+          <Link aria-current={isActive ? "page" : undefined} className={className} href={href} key={href} prefetch={true}>
             {label}
           </Link>
         );

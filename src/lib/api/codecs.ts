@@ -5,7 +5,7 @@
  * FE 도메인 타입(lib/types.ts)은 표시용 라벨과 사람 단위 금액을 쓴다.
  * 새 카테고리·역할·토큰을 추가할 때는 이 파일만 고친다.
  */
-import { parseUnits } from "viem";
+import { formatUnits, parseUnits } from "viem";
 import type { BountyCategory, Member, Reward } from "@/lib/types";
 
 // ── 바운티 카테고리 ────────────────────────────────────────
@@ -60,17 +60,34 @@ export const TOKEN_DECIMALS: Record<Reward["currency"], number> = {
   USDC: 6,
 };
 
-export function toRewardCurrency(symbol: string | undefined): Reward["currency"] {
-  return symbol === "USDC" ? "USDC" : "INJ";
+export type RewardRow = { symbol: string; amount: string };
+
+function isRewardCurrency(symbol: string): symbol is Reward["currency"] {
+  return symbol in TOKEN_DECIMALS;
 }
 
-/** BE 보상 행(최소 단위) → 표시용 Reward. 보상이 없으면 0 INJ. */
-export function rewardFromBaseUnits(row: { symbol: string; amount: string } | undefined): Reward {
-  const currency = toRewardCurrency(row?.symbol);
-  return {
-    amount: row ? Number(row.amount) / 10 ** TOKEN_DECIMALS[currency] : 0,
-    currency,
-  };
+/** BE 보상 행(최소 단위) → 표시용 Reward. 모르는 토큰이나 정수가 아닌 금액은 null (다른 토큰으로 잘못 표시하지 않는다). */
+export function toReward(row: RewardRow): Reward | null {
+  const symbol = row.symbol.toUpperCase();
+  if (!isRewardCurrency(symbol)) return null;
+  try {
+    return { amount: Number(formatUnits(BigInt(row.amount), TOKEN_DECIMALS[symbol])), currency: symbol };
+  } catch {
+    return null;
+  }
+}
+
+/** 여러 보상 행 중 표시 가능한 것만 남긴다. */
+export function toRewards(rows: readonly RewardRow[]): Reward[] {
+  return rows.flatMap((row) => {
+    const reward = toReward(row);
+    return reward ? [reward] : [];
+  });
+}
+
+/** 대표 보상 하나. 보상이 없거나 표시할 수 없으면 0 INJ. */
+export function rewardFromBaseUnits(row: RewardRow | undefined): Reward {
+  return (row ? toReward(row) : null) ?? { amount: 0, currency: "INJ" };
 }
 
 /** 표시용 Reward → BE에 보낼 최소 단위 정수 문자열 */

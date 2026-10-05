@@ -27,6 +27,8 @@
       "completed": "완료"
     },
     "approvedStatus": "승인됨: 제출 가능",
-    "submitWork": "작업 제출하기"
+    "submitWork": "작업 제출하기",
+    "rejectedStatus": "미선정",
+    "rejectedNote": "스폰서가 이 지원을 선정하지 않았습니다. 다른 진행 중인 바운티를 둘러보세요."
   }
 }

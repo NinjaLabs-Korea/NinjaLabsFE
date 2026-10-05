@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { useOnboardingApi, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { ApiHttpError } from "@/lib/api/http";
 import { Badge } from "@/components/ui/Badge";
 import { signup } from "@/lib/signup";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
@@ -16,6 +17,17 @@ const fieldTags = [
   { labelKey: "other", value: "OTHER" },
 ] as const;
 
+type SaveErrorKey = "network" | "session" | "nickname" | "invalid" | "generic";
+
+/** 저장 실패 원인 → messages `signup.profile.form.saveErrors.<key>` */
+function saveErrorKey(error: unknown): SaveErrorKey {
+  if (!(error instanceof ApiHttpError)) return "network";
+  if (error.status === 401) return "session";
+  if (error.status === 409 || error.code.includes("NICKNAME")) return "nickname";
+  if (error.status === 400 || error.status === 422) return "invalid";
+  return "generic";
+}
+
 export function ProfileForm() {
   const t = useTranslations("signup.profile.form");
   const apiClient = useOnboardingApi();
@@ -26,6 +38,7 @@ export function ProfileForm() {
   const [state, setState] = useState<"idle" | "pending" | "error">("idle");
   // 필드 검증 에러. 저장 실패(state "error", 예: 닉네임 중복)와는 따로 표시한다.
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<"nickname" | "tags" | "bio", true>>>({});
+  const [saveError, setSaveError] = useState<SaveErrorKey>("generic");
 
   const toggleTag = (value: string) => {
     setTags((current) =>
@@ -64,6 +77,7 @@ export function ProfileForm() {
       window.location.assign(withLocaleOf(window.location.pathname, "/signup/get-started"));
     } catch (error) {
       onboardingLog("profile.save.failed", onboardingErrorDetails(error));
+      setSaveError(saveErrorKey(error));
       setState("error");
     }
   };
@@ -141,7 +155,7 @@ export function ProfileForm() {
       </button>
       {state === "error" ? (
         <p className="text-sm text-danger" role="alert">
-          {t("error")}
+          {t(`saveErrors.${saveError}`)}
         </p>
       ) : null}
     </form>

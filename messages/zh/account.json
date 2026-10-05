@@ -27,6 +27,8 @@
       "completed": "已完成"
     },
     "approvedStatus": "已批准：可以提交",
-    "submitWork": "提交作品"
+    "submitWork": "提交作品",
+    "rejectedStatus": "未入选",
+    "rejectedNote": "赞助方未选择此申请。浏览其他进行中的赏金，继续创作吧。"
   }
 }

@@ -36,7 +36,7 @@
     "myAgents": "내 에이전트",
     "signOut": "로그아웃",
     "sessionPreview": "세션 미리보기",
-    "sessionPreviewWithWallet": "세션 미리보기 · {wallet}"
+    "walletAddress": "지갑 주소: {wallet}"
   },
   "googleLogin": {
     "continue": "Google로 계속하기",

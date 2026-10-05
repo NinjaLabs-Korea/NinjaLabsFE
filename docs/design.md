@@ -114,6 +114,14 @@ rounded-card border border-dashed border-border bg-surface-subtle p-6 text-cente
 
 with `font-display` title, `text-ink-muted` copy, and one CTA using the recipes above.
 
+**Logo tile (partner wall):**
+
+```
+flex h-28 items-center justify-center rounded-card border border-border bg-surface p-5 shadow-card
+```
+
+with a `next/image` `object-contain` logo in an `h-12` box; linked tiles add `transition-shadow hover:shadow-frame` + focus ring. Grid `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`. Hide the whole section when there are no logos - never render an empty wall.
+
 **Status chip:** use `ui/Badge` - variants `primary-soft` (default) / `selected` / `success` / `danger` / `warning` / `neutral` / `inverse`. Never hand-roll a chip; if a new status appears, add a Badge variant.
 
 **Reward display:** always `ui/RewardPill` (`{ amount, currency: 'INJ' | 'USDC' }`) - never re-create the token-icon + amount pair.
@@ -123,6 +131,12 @@ with `font-display` title, `text-ink-muted` copy, and one CTA using the recipes 
 **Feedback:** modals via `ui/Modal` (native `<dialog>`), destructive confirms via `ui/ConfirmDialog` (`destructive` = solid `bg-danger`), toasts via `ui/Toast` (danger = `role="alert"`, persistent; others auto-dismiss). Admin pages push through `admin/AdminToastHost` (`pushAdminToast`).
 
 **Admin persistence disclosure:** API-mode Create/Save forms state that changes are saved immediately. Destructive actions require confirmation and failures surface a danger toast.
+
+## Navigation loading
+
+Primary public navigation (including Home and Browse) uses `prefetch={true}` so dynamic page content can load before a click. Keep full prefetching limited to these few high-traffic links; card lists retain the default behavior. Public API requests remain `no-store`; prefetched route payloads are held in Next.js's client router cache.
+
+Only the three dynamic detail routes have `loading.tsx` skeletons. Do not add a shared `[locale]/loading.tsx` or any loading boundary above `[id]`: streaming would start before `[id]/layout.tsx` checks that the record exists, so unknown ids would return 200 instead of 404. Skeletons reuse the page shell, `bg-surface-subtle`, and existing control/tile/card radii; announce loading with `role="status"` and screen-reader text, hide decorative skeletons from assistive technology, and use `motion-safe:animate-pulse`.
 
 ## Per-area checklist before PR
 

@@ -13,11 +13,16 @@
   "bounties": {
     "eyebrow": "Marketplace",
     "heading": "Active bounties",
-    "viewAll": "View all →"
+    "viewAll": "View all →",
+    "unavailable": "Active bounties are temporarily unavailable.",
+    "empty": "No active bounties right now. New sponsor opportunities will appear here."
   },
   "news": {
     "eyebrow": "From the community",
     "heading": "Recent news",
-    "viewAll": "View all →"
-  }
+    "viewAll": "View all →",
+    "unavailable": "Recent news is temporarily unavailable.",
+    "empty": "No news yet. Check back soon."
+  },
+  "unavailableBody": "We couldn't reach the server. Please refresh in a moment."
 }

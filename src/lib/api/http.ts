@@ -1,8 +1,8 @@
 /**
  * BE(NinjaLabsBE) HTTP 전송 계층.
  *
- * - 토큰 수명주기: 구글 로그인 후 BE가 `FE#accessToken=..&refreshToken=..`로
- *   리다이렉트한다. fragment는 서버로 전송되지 않으므로 로그에 남지 않는다.
+ * - 로그인 토큰은 POST /auth/exchange 응답 본문으로만 받는다.
+ *   기존 백엔드와의 순차 배포를 위해 이전 fragment 수거를 한시적으로 지원한다.
  * - access token은 15분 JWT, refresh는 회전(rotation) 방식. 401을 받으면
  *   refresh로 재발급을 1회 시도하고, 실패하면 세션을 비운다.
  * - 저장소는 localStorage(사용 불가 환경 대비 try/catch). 서버 렌더 중에는
@@ -56,9 +56,11 @@ export function captureTokensFromLocation(): boolean {
   const params = new URLSearchParams(window.location.hash.slice(1));
   const accessToken = params.get("accessToken");
   const refreshToken = params.get("refreshToken");
+  if (!params.has("accessToken") && !params.has("refreshToken")) return false;
+  // Strip even malformed/partial callbacks and preserve Next.js router history state.
+  window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
   if (!accessToken || !refreshToken) return false;
   setTokens(accessToken, refreshToken);
-  window.history.replaceState(null, "", window.location.pathname + window.location.search);
   return true;
 }
 
@@ -70,6 +72,18 @@ export class ApiHttpError extends Error {
     super(`API ${status}: ${code}`);
     this.name = "ApiHttpError";
   }
+}
+
+/** Nest ValidationPipe sends `message` as a string[]; collapse it so `code` is always a string. */
+export async function toApiHttpError(res: Response): Promise<ApiHttpError> {
+  const body = (await res.json().catch(() => null)) as { message?: unknown } | null;
+  const message = body?.message;
+  const code = typeof message === "string" && message
+    ? message
+    : Array.isArray(message)
+      ? "VALIDATION_FAILED"
+      : "UNKNOWN_ERROR";
+  return new ApiHttpError(res.status, code);
 }
 
 export type ApiHttp = {
@@ -164,8 +178,7 @@ export function createApiHttp(apiUrl: string): ApiHttp {
         onboardingLog("http.response.received", { path, status: res.status, attempt: 2 });
       }
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { message?: string } | null;
-        throw new ApiHttpError(res.status, body?.message ?? "UNKNOWN_ERROR");
+        throw await toApiHttpError(res);
       }
       if (res.status === 204) return undefined as T;
       return (await res.json()) as T;
@@ -180,8 +193,7 @@ export function createApiHttp(apiUrl: string): ApiHttp {
         onboardingLog("http.response.received", { path, status: res.status, attempt: 2 });
       }
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { message?: string } | null;
-        throw new ApiHttpError(res.status, body?.message ?? "UNKNOWN_ERROR");
+        throw await toApiHttpError(res);
       }
       return (await res.json()) as T;
     },

@@ -11,6 +11,7 @@ import { Markdown } from "@/components/ui/Markdown";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { getPathname, Link } from "@/i18n/navigation";
 import { getRuntimeBounty } from "@/lib/bounties";
+import type { Reward } from "@/lib/types";
 
 type BountyDetailPageProps = {
   params: Promise<{ locale: string; id: string }>;
@@ -46,10 +47,13 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   }
 
   const deliverables = bounty.deliverables ?? [];
-  // API bounties carry no completion steps; fall back to localized generic steps.
+  // API bounties carry no completion steps; fall back to localized generic steps for the submission flow.
   const completionSteps = bounty.completionSteps?.length
     ? bounty.completionSteps
-    : [t("detail.defaultSteps.work"), t("detail.defaultSteps.submit"), t("detail.defaultSteps.approval")];
+    : bounty.submissionMode === "agent"
+      ? [t("detail.defaultSteps.agentRegister"), t("detail.defaultSteps.work"), t("detail.defaultSteps.agentSubmit"), t("detail.defaultSteps.approval")]
+      : [t("detail.defaultSteps.work"), t("detail.defaultSteps.submit"), t("detail.defaultSteps.approval")];
+  const rewards = bounty.rewards ?? [bounty.reward];
   const isClosedDeadline = bounty.deadline === "Closed";
 
   return (
@@ -73,7 +77,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               {bounty.status === "active" ? t("status.active") : t("status.closed")}
             </Badge>
             <Badge variant="neutral">{bounty.submissionMode === "agent" ? t("detail.agentSubmission") : t("detail.directSubmission")}</Badge>
-            {bounty.applicationRequired ? <Badge variant="warning">{t("detail.intakeOn")}</Badge> : null}
+            {bounty.applicationRequired ? <Badge variant="warning">{t("detail.applicationRequired")}</Badge> : null}
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -97,7 +101,9 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               <>
                 <div className="mt-8 grid gap-3 sm:grid-cols-3">
                   <MetaCell label={t("detail.deliverable")}>
-                    {deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)}
+                    {deliverables.length > 0
+                      ? deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)
+                      : <span>{bounty.submissionGuideMarkdown ? t("detail.deliverableSeeGuide") : t("detail.deliverableDescribed")}</span>}
                   </MetaCell>
                   <MetaCell label={t("detail.deadline")}>{bounty.deadlineDetail ?? (isClosedDeadline ? t("status.closed") : bounty.deadline)}</MetaCell>
                   <MetaCell label={t("detail.review")}>{bounty.reviewProcess ?? t("detail.defaultReview")}</MetaCell>
@@ -117,7 +123,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
           <BountyActionPanel bountyId={bounty.slug} applicationRequired={Boolean(bounty.applicationRequired)} submissionMode={bounty.submissionMode ?? "direct"} />
         </div>
 
-        {bounty.applicationRequired ? <ApplyAside agentCopy={tAgents("copyApply")} reward={bounty.reward} submissionMode={bounty.submissionMode ?? "direct"} /> : <DirectAside agentCopy={tAgents("copyDirect")} completionSteps={completionSteps} reward={bounty.reward} submissionMode={bounty.submissionMode ?? "direct"} />}
+        {bounty.applicationRequired ? <ApplyAside agentCopy={tAgents("copyApply")} completionSteps={completionSteps} rewards={rewards} submissionMode={bounty.submissionMode ?? "direct"} /> : <DirectAside agentCopy={tAgents("copyDirect")} completionSteps={completionSteps} rewards={rewards} submissionMode={bounty.submissionMode ?? "direct"} />}
       </div>
 
       {bounty.applicationRequired ? (
@@ -129,16 +135,24 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   );
 }
 
-function DirectAside({ agentCopy, completionSteps, reward, submissionMode }: { agentCopy: string; completionSteps: string[]; reward: { amount: number; currency: "INJ" | "USDC" }; submissionMode: "direct" | "agent" }) {
+function RewardTotal({ rewards }: { rewards: Reward[] }) {
+  return (
+    <p className="mt-3 font-display text-2xl -tracking-[0.24px] text-ink">
+      {rewards.map((reward) => `${reward.amount} ${reward.currency}`).join(" + ")}
+    </p>
+  );
+}
+
+function DirectAside({ agentCopy, completionSteps, rewards, submissionMode }: { agentCopy: string; completionSteps: string[]; rewards: Reward[]; submissionMode: "direct" | "agent" }) {
   const t = useTranslations("bounties.detail");
   return (
     <aside className="space-y-5">
       <section className="rounded-card border border-primary-soft-border bg-primary-soft p-5">
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("reward")}</p>
-        <p className="mt-3 font-display text-2xl -tracking-[0.24px] text-ink">{reward.amount} {reward.currency}</p>
-        <div className="mt-4 flex items-center gap-2">
+        <RewardTotal rewards={rewards} />
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <span className="text-sm text-ink-secondary">{t("sponsorPays")}</span>
-          <RewardPill reward={reward} />
+          {rewards.map((reward) => <RewardPill key={reward.currency} reward={reward} />)}
         </div>
       </section>
       <section className="rounded-card border border-border bg-surface p-5 shadow-card">
@@ -157,13 +171,13 @@ function DirectAside({ agentCopy, completionSteps, reward, submissionMode }: { a
   );
 }
 
-function ApplyAside({ agentCopy, reward, submissionMode }: { agentCopy: string; reward: { amount: number; currency: "INJ" | "USDC" }; submissionMode: "direct" | "agent" }) {
+function ApplyAside({ agentCopy, completionSteps, rewards, submissionMode }: { agentCopy: string; completionSteps: string[]; rewards: Reward[]; submissionMode: "direct" | "agent" }) {
   const t = useTranslations("bounties.detail");
   return (
     <aside className="space-y-5">
       <section className="rounded-card border border-primary-soft-border bg-primary-soft p-5">
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("reward")}</p>
-        <p className="mt-3 font-display text-2xl -tracking-[0.24px] text-ink">{reward.amount} {reward.currency}</p>
+        <RewardTotal rewards={rewards} />
         <ol className="mt-4 space-y-3">
           <li className="flex gap-3 text-sm text-ink-secondary"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-bold text-primary">1</span>{t("applySteps.apply")}</li>
           <li className="flex gap-3 text-sm text-ink-secondary"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-bold text-primary">2</span>{t("applySteps.review")}</li>
@@ -173,9 +187,9 @@ function ApplyAside({ agentCopy, reward, submissionMode }: { agentCopy: string; 
       <section className="rounded-card border border-border bg-surface p-5 shadow-card">
         <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{t("afterApproval")}</h2>
         <ol className="mt-4 space-y-3">
-          <li className="flex gap-3 text-sm text-ink-secondary"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-bold text-success">1</span>{t("afterApprovalSteps.scope")}</li>
-          <li className="flex gap-3 text-sm text-ink-secondary"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-bold text-success">2</span>{t("afterApprovalSteps.link")}</li>
-          <li className="flex gap-3 text-sm text-ink-secondary"><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-bold text-success">3</span>{t("afterApprovalSteps.reward")}</li>
+          {completionSteps.map((step, index) => (
+            <li className="flex gap-3 text-sm text-ink-secondary" key={step}><span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-bold text-success">{index + 1}</span>{step}</li>
+          ))}
         </ol>
       </section>
       {submissionMode === "agent" ? <BountyAgentPanel copy={agentCopy} /> : null}

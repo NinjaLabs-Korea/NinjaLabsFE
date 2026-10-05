@@ -28,7 +28,8 @@
     "howApplying": "了解申请流程 →",
     "intro": "寻找 Injective 生态赞助方发布的有偿任务，交付有价值的成果，并为你的 Ninja 作品集积累链上证明。",
     "resultsLabel": "赏金筛选与结果",
-    "payoutNote": "赞助方将直接以 INJ 或 USDC 支付，平台不进行兑换。"
+    "payoutNote": "赞助方将直接以 INJ 或 USDC 支付，平台不进行兑换。",
+    "unavailable": "暂时无法加载赏金。"
   },
   "filters": {
     "category": "类别",
@@ -54,18 +55,18 @@
       "view": "查看赏金"
     },
     "submitType": {
-      "badge": "申请通道 关闭",
+      "badge": "直接提交",
       "heading": "提交型赏金",
       "body": "任何人都可以参与，完成后即可直接提交。",
-      "flow": "直接显示 [提交] 按钮 → 与赏金详情页相同",
+      "flow": "赏金页面上可直接使用提交表单。",
       "viewDirect": "查看提交型赏金",
       "none": "目前没有进行中的提交型赏金。"
     },
     "applyType": {
-      "badge": "申请通道 开启",
+      "badge": "需要申请",
       "heading": "申请型赏金",
       "body": "赞助方批准你的申请后，即可提交作品。",
-      "flow": "[申请] → 填写申请表 → 赞助方审核 → 批准后启用 [提交]",
+      "flow": "提交一份简短的提案进行申请。赞助方批准后，赏金页面上的提交表单即会开放。",
       "none": "目前没有进行中的申请型赏金。"
     },
     "empty": {
@@ -81,13 +82,13 @@
       "submitted": "已提交",
       "completed": "已完成"
     },
-    "statusNote": "仅开启申请通道的赏金可查看申请状态。"
+    "statusNote": "需要申请的赏金会跟踪申请状态。",
+    "unavailable": "暂时无法加载进行中的赏金。"
   },
   "detail": {
     "back": "← 返回赏金列表",
     "agentSubmission": "代理提交",
     "directSubmission": "直接提交",
-    "intakeOn": "申请通道 开启",
     "publicView": "公开浏览",
     "actionsRequireLogin": "操作需要登录",
     "description": "描述",
@@ -103,7 +104,9 @@
     "defaultSteps": {
       "work": "完成任务",
       "submit": "提交成果 URL",
-      "approval": "获得赞助方批准"
+      "approval": "获得赞助方批准",
+      "agentRegister": "注册并验证代理",
+      "agentSubmit": "通过代理 API 提交"
     },
     "applySteps": {
       "apply": "附上相关作品和可投入时间提交申请。",
@@ -111,11 +114,9 @@
       "submit": "获批后提交已完成的作品。"
     },
     "afterApproval": "获批之后",
-    "afterApprovalSteps": {
-      "scope": "完成已批准的审计范围。",
-      "link": "提交已完成作品的链接。",
-      "reward": "经赞助方审核后领取奖励。"
-    }
+    "deliverableSeeGuide": "请参阅下方的提交指南",
+    "deliverableDescribed": "见上文描述",
+    "applicationRequired": "需要申请"
   },
   "action": {
     "agentHeading": "代理提交",
@@ -125,8 +126,8 @@
     "submitHeading": "提交你的作品",
     "signInPrompt": "请登录后继续。",
     "signIn": "登录",
-    "checkingStatus": "正在检查你的申请状态…",
-    "statusUnavailable": "暂时无法获取你的申请状态，请刷新后重试。",
+    "checkingStatus": "正在检查赏金进度…",
+    "statusUnavailable": "暂时无法获取赏金进度，请刷新后重试。",
     "underReviewHeading": "申请审核中",
     "underReviewBody": "赞助方批准后即可提交。",
     "viewApplications": "查看我的申请",
@@ -148,7 +149,23 @@
       "BOUNTY_NOT_OPEN": "此赏金已不再开放。",
       "APPLICATION_NOT_APPROVED": "你的申请需获批准后才能提交。",
       "DEADLINE_PASSED": "提交已截止。",
-      "SUBMISSION_FINALIZED": "此提交已最终确定。"
-    }
-  }
+      "SUBMISSION_FINALIZED": "此提交已最终确定。",
+      "VALIDATION_FAILED": "请检查 URL 和描述后重试。"
+    },
+    "checkingSession": "正在检查会话…",
+    "applicationRejectedHeading": "申请未入选",
+    "applicationRejectedBody": "赞助方未选择您对此赏金的申请。",
+    "browseOther": "浏览其他赏金",
+    "submissionApprovedHeading": "提交已通过",
+    "submissionApprovedBody": "赞助方已批准您在此赏金中的工作。",
+    "submissionRejectedHeading": "提交未被采纳",
+    "submissionRejectedBody": "赞助方审核后未采纳您的工作。此结果为最终结果。",
+    "resubmitHeading": "重新提交作品",
+    "inReviewHeading": "提交审核中",
+    "revisionNote": "赞助方要求修改。请更新作品后重新提交。",
+    "inReviewNote": "赞助方正在审核您的作品。截止前仍可更新，最新版本将替换之前的提交。",
+    "resubmit": "重新提交",
+    "updateSubmission": "更新提交"
+  },
+  "unavailableBody": "无法连接服务器，请稍后刷新。"
 }

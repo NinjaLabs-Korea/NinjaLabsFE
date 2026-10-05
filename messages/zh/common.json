@@ -36,7 +36,7 @@
     "myAgents": "我的智能体",
     "signOut": "退出登录",
     "sessionPreview": "会话预览",
-    "sessionPreviewWithWallet": "会话预览 · {wallet}"
+    "walletAddress": "钱包地址：{wallet}"
   },
   "googleLogin": {
     "continue": "使用 Google 继续",

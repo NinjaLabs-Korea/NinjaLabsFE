@@ -11,6 +11,7 @@ export function createUnavailableApiClient(): ApiClient {
   return {
     getAccount: async () => unavailable(),
     getApplications: async () => unavailable(),
+    getSubmissions: async () => unavailable(),
     getAgents: async () => unavailable(),
     applyToBounty: async () => { throw new Error("Bounty application API is unavailable."); },
     submitBounty: async () => { throw new Error("Bounty submission API is unavailable."); },

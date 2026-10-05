@@ -15,12 +15,13 @@ import type { ApplicationStatus } from "@/lib/contracts/account";
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
-const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success" | "primary-soft"> = {
+const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success" | "primary-soft" | "danger"> = {
   open: "neutral",
   under_review: "warning",
   approved: "success",
   submitted: "primary-soft",
   completed: "success",
+  rejected: "danger",
 };
 
 // Step labels live under account.applications.steps, keyed by status.
@@ -31,7 +32,7 @@ export function ApplicationsView() {
   const tAccount = useTranslations("account.common");
   const tBounties = useTranslations("bounties.categories");
   const statusLabel = (status: ApplicationStatus): string =>
-    status === "approved" ? t("approvedStatus") : t(`steps.${status}`);
+    status === "approved" ? t("approvedStatus") : status === "rejected" ? t("rejectedStatus") : t(`steps.${status}`);
   const mode = useFoundationMode();
   const authSnapshot = useAuthSnapshot();
   const apiClient = useAccountApi();
@@ -89,38 +90,42 @@ export function ApplicationsView() {
               </Link>
               <p className="mt-1 text-sm text-ink-muted">{application.note}</p>
 
-              <ol
-                aria-label={t("progressLabel")}
-                className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2"
-              >
-                {applicationSteps.map((step, index) => (
-                  <li
-                    aria-current={index === currentIndex ? "step" : undefined}
-                    className="flex items-center gap-2"
-                    key={step}
-                  >
-                    <span
-                      className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
-                        index < currentIndex
-                          ? "bg-primary-soft-border text-primary-strong"
-                          : index === currentIndex
-                            ? "bg-primary text-on-inverse"
-                            : "bg-surface-subtle text-ink-muted"
-                      }`}
+              {application.status === "rejected" ? (
+                <p className="mt-4 text-sm text-ink-muted">{t("rejectedNote")}</p>
+              ) : (
+                <ol
+                  aria-label={t("progressLabel")}
+                  className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2"
+                >
+                  {applicationSteps.map((step, index) => (
+                    <li
+                      aria-current={index === currentIndex ? "step" : undefined}
+                      className="flex items-center gap-2"
+                      key={step}
                     >
-                      {index + 1}
-                    </span>
-                    <span
-                      className={`text-sm font-semibold ${index === currentIndex ? "text-ink" : "text-ink-muted"}`}
-                    >
-                      {t(`steps.${step}`)}
-                    </span>
-                    {index < applicationSteps.length - 1 ? (
-                      <span aria-hidden="true" className="hidden h-px w-5 bg-primary-outline sm:block" />
-                    ) : null}
-                  </li>
-                ))}
-              </ol>
+                      <span
+                        className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+                          index < currentIndex
+                            ? "bg-primary-soft-border text-primary-strong"
+                            : index === currentIndex
+                              ? "bg-primary text-on-inverse"
+                              : "bg-surface-subtle text-ink-muted"
+                        }`}
+                      >
+                        {index + 1}
+                      </span>
+                      <span
+                        className={`text-sm font-semibold ${index === currentIndex ? "text-ink" : "text-ink-muted"}`}
+                      >
+                        {t(`steps.${step}`)}
+                      </span>
+                      {index < applicationSteps.length - 1 ? (
+                        <span aria-hidden="true" className="hidden h-px w-5 bg-primary-outline sm:block" />
+                      ) : null}
+                    </li>
+                  ))}
+                </ol>
+              )}
 
               {application.status === "approved" ? (
                 <Link

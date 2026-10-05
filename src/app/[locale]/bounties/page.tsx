@@ -5,7 +5,7 @@ import { BountyFilters } from "@/components/bounties/BountyFilters";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
-import { getRuntimeBounties } from "@/lib/bounties";
+import { loadRuntimeBounties } from "@/lib/bounties";
 
 type BountiesPageProps = {
   params: Promise<{ locale: string }>;
@@ -21,7 +21,8 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("bounties.list");
-  const bounties = await getRuntimeBounties();
+  const tBounties = await getTranslations("bounties");
+  const { bounties, unavailable } = await loadRuntimeBounties();
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <section>
@@ -43,7 +44,14 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
       </section>
 
       <section className="mt-8" aria-label={t("resultsLabel")}>
-        <BountyFilters bounties={bounties} />
+        {unavailable ? (
+          <div className="rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
+            <p className="text-sm font-semibold text-ink">{t("unavailable")}</p>
+            <p className="mt-1 text-sm text-ink-muted">{tBounties("unavailableBody")}</p>
+          </div>
+        ) : (
+          <BountyFilters bounties={bounties} />
+        )}
       </section>
 
       <p className="mt-8 text-sm text-ink-muted">

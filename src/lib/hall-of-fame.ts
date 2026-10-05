@@ -44,7 +44,11 @@ export type RuntimeHallOfFame = {
   stats: Array<{ value: string; label: string; labelKey: HallStatKey }>;
   highlights: Array<{ category: "Milestone" | "Featured bounty" | "Partnership"; title: string; body: string; href: string; image: string | null }>;
   milestones: Array<{ title: string; date: string; description: string }>;
+  /** Partner wall: published Partnership highlights that carry a logo image. Empty → the wall is hidden. */
+  partners: Array<{ name: string; logo: string; href: string | null }>;
 };
+
+export const emptyHallOfFame: RuntimeHallOfFame = { stats: [], highlights: [], milestones: [], partners: [] };
 
 export function getRuntimeHallOfFame(): Promise<RuntimeHallOfFame> {
   return loadFromRuntime({ mock: mockHallOfFame, api: fetchHallOfFame });
@@ -55,6 +59,7 @@ function mockHallOfFame(): RuntimeHallOfFame {
     stats: [...hallOfFame.stats],
     highlights: hallOfFame.highlights.map((item) => ({ ...item, href: "/notices", image: null })),
     milestones: [...hallOfFame.milestones],
+    partners: [],
   };
 }
 
@@ -83,5 +88,19 @@ async function fetchHallOfFame(): Promise<RuntimeHallOfFame> {
       date: row.published_at ? new Date(row.published_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "",
       description: row.description,
     })),
+    partners: rows.flatMap((row) =>
+      row.type === "PARTNERSHIP" && row.image_url
+        ? [{ name: row.title, logo: row.image_url, href: row.link_url }]
+        : [],
+    ),
   };
+}
+
+/** Page-level loader: an unreachable API renders an unavailable state instead of the error boundary. */
+export async function loadRuntimeHallOfFame(): Promise<{ hallOfFame: RuntimeHallOfFame; unavailable: boolean }> {
+  try {
+    return { hallOfFame: await getRuntimeHallOfFame(), unavailable: false };
+  } catch {
+    return { hallOfFame: emptyHallOfFame, unavailable: true };
+  }
 }
