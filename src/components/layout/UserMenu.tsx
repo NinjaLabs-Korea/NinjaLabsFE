@@ -61,10 +61,10 @@ export function UserMenu() {
           <div className="pt-1.5">
             {menuItems.map((item, index) => (
               <Link
+                key={item.key}
                 {...menu.itemProps(index)}
                 className={menuItemClass}
                 href={item.href}
-                key={item.key}
                 onClick={() => menu.closeMenu()}
                 role="menuitem"
               >

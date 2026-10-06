@@ -11,7 +11,7 @@ function Menu() {
       {menu.open ? (
         <div {...menu.menuProps}>
           {["One", "Two", "Three"].map((label, index) => (
-            <button {...menu.itemProps(index)} key={label} role="menuitem" type="button">
+            <button key={label} {...menu.itemProps(index)} role="menuitem" type="button">
               {label}
             </button>
           ))}

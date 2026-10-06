@@ -38,10 +38,11 @@ export function LocaleSwitcher() {
         <div className={`${menuPanelClass} w-36`} {...menu.menuProps} aria-label={t("label")}>
           {routing.locales.map((l, index) => (
             <button
+              // key must precede the spread; otherwise JSX falls back to createElement and warns about the children.
+              key={l}
               {...menu.itemProps(index)}
               aria-checked={l === locale}
               className={l === locale ? `${menuItemBaseClass} font-semibold text-ink` : menuItemClass}
-              key={l}
               lang={l}
               onClick={() => switchTo(l)}
               role="menuitemradio"
