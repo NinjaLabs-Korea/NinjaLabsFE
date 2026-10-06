@@ -121,7 +121,7 @@ public/
 - Design data comes from the Figma remote MCP (`https://mcp.figma.com/mcp`): `get_design_context` for
   per-screen code/screenshot, `get_metadata` for structure, `download_assets` for images.
 - Every screen shares the same Header/Footer (rendered once in `src/app/layout.tsx`, not per page).
-- Implemented component inventory (46 files; keep in sync with `src/components/`):
+- Implemented component inventory (49 files; keep in sync with `src/components/`):
   - `layout/Header`, `layout/Footer` - the shared shell chrome (rendered once in `layout.tsx`)
   - `ui/Badge` - pill chip; variants `primary-soft` (default) / `selected` (`bg-primary text-primary-soft`) / `success` / `danger` / `warning` / `neutral` / `inverse` (StepIndicator's white active step is intentional and NOT a Badge)
   - `ui/RewardPill` - `{ amount, currency: 'INJ' | 'USDC' }`; INJ token icon vs `$` glyph
@@ -132,6 +132,7 @@ public/
   - `cards/NoticeRow` - horizontal thumb + content row (Notices list)
   - `cards/MemberCard` - photo/initials fallback + name + role line + bio + links
   - `bounties/BountyFilters`, `notices/NoticeFilters`, `members/MemberFilters` - `"use client"` islands (list filtering + empty states with Reset)
+  - `layout/LocaleSwitcher` + `layout/UserMenu` - header dropdowns built on `layout/useMenuButton` (APG menu button: focus moves into the menu on open, arrows/Home/End/Escape/Tab, outside click closes; shared `menuPanelClass` / `menuItemClass`). The locale menu uses `menuitemradio` with the current locale checked; never use a native `<select>` in the header.
   - `layout/NavLinks` - `"use client"` island for active-nav highlight (`aria-current`); `src/app/error.tsx`/`global-error.tsx` are also client (Next error-boundary contract exception; global-error loads its own globals.css + fonts)
   - `admin/AdminTabs` - in-page admin tab strip (`active` prop); `admin/AdminTable` - lavender-header table (`columns`, `minWidthClass`, `<tr>` children); API mode persists admin changes through AdminGuard-protected endpoints.
   - `ui/Modal` (native `<dialog>`: ESC/backdrop/focus-trap built in), `ui/ConfirmDialog` (`destructive` variant = solid `bg-danger` action + danger-soft callout), `ui/Toast` (success/danger/warning/info; danger = `role="alert"`, others auto-dismiss) - FE-designed (no Figma origin), captured back as pages 26–28

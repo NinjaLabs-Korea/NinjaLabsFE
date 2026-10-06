@@ -122,6 +122,8 @@ flex h-28 items-center justify-center rounded-card border border-border bg-surfa
 
 with a `next/image` `object-contain` logo in an `h-12` box; linked tiles add `transition-shadow hover:shadow-frame` + focus ring. Grid `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`. Hide the whole section when there are no logos - never render an empty wall.
 
+**Header dropdown menu:** use `layout/useMenuButton` with `menuPanelClass` (`rounded-tile border border-border bg-surface p-1.5 shadow-frame`, right-aligned under the trigger) and `menuItemClass`; mark the selected item with `font-semibold text-ink` + a `text-primary` ✓. Triggers read as header text (`text-sm font-semibold text-ink-secondary`, no fill) unless they carry identity (the account chip). Do not use native `<select>` in the header: its OS-styled popup cannot match.
+
 **Status chip:** use `ui/Badge` - variants `primary-soft` (default) / `selected` / `success` / `danger` / `warning` / `neutral` / `inverse`. Never hand-roll a chip; if a new status appears, add a Badge variant.
 
 **Reward display:** always `ui/RewardPill` (`{ amount, currency: 'INJ' | 'USDC' }`) - never re-create the token-icon + amount pair.
