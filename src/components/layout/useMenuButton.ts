@@ -15,7 +15,8 @@ export function useMenuButton(itemCount: number) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(MenuItemElement | null)[]>([]);
-  // 다음 렌더 후 포커스를 옮길지 여부. rAF는 보이지 않는 탭에서 멈추므로 커밋 직후 effect에서 처리한다.
+  // 메뉴를 "여는" 순간에만 쓴다: 항목이 아직 렌더되지 않았으므로 커밋 직후 effect에서 포커스한다.
+  // (rAF는 보이지 않는 탭에서 멈추므로 쓰지 않는다.)
   const focusPending = useRef(false);
   const menuId = useId();
 
@@ -24,9 +25,9 @@ export function useMenuButton(itemCount: number) {
     if (restoreFocus) buttonRef.current?.focus();
   };
 
+  // 이미 열린 메뉴: 항목이 DOM에 있으므로 바로 포커스한다. activeIndex는 항목의 onFocus가 맞춘다.
   const focusItem = (index: number) => {
-    focusPending.current = true;
-    setActiveIndex(index);
+    itemRefs.current[index]?.focus();
   };
 
   useEffect(() => {
@@ -36,8 +37,9 @@ export function useMenuButton(itemCount: number) {
   }, [open, activeIndex]);
 
   const openMenu = (focusIndex = 0) => {
+    focusPending.current = true;
+    setActiveIndex(focusIndex);
     setOpen(true);
-    focusItem(focusIndex);
   };
 
   useEffect(() => {
@@ -106,6 +108,8 @@ export function useMenuButton(itemCount: number) {
         itemRefs.current[index] = element;
       },
       tabIndex: activeIndex === index ? 0 : -1,
+      // 마우스 등 키보드 밖에서 옮겨진 포커스도 roving tabindex 기준(activeIndex)에 반영한다.
+      onFocus: () => setActiveIndex(index),
       onKeyDown: onItemKeyDown,
     }),
   };
