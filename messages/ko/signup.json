@@ -118,9 +118,9 @@
         "title": "진행 중인 바운티 둘러보기",
         "description": "바운티를 찾아 온체인 이력을 쌓기 시작하세요."
       },
-      "playground": {
-        "title": "Playground에서 Injective 체험하기",
-        "description": "다음 바운티를 고르기 전에 Injective를 살펴보세요."
+      "injectiveDocs": {
+        "title": "Injective 문서 살펴보기",
+        "description": "다음 바운티를 고르기 전에 Injective EVM 개발 방법을 알아보세요."
       },
       "learnMore": {
         "title": "Ninja Labs 자세히 알아보기",

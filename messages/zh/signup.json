@@ -118,9 +118,9 @@
         "title": "浏览进行中的赏金",
         "description": "找到一个赏金，开始积累你的链上履历。"
       },
-      "playground": {
-        "title": "在 Playground 中体验 Injective",
-        "description": "在选择下一个赏金之前，先探索 Injective。"
+      "injectiveDocs": {
+        "title": "浏览 Injective 文档",
+        "description": "在选择下一个赏金之前，了解如何在 Injective EVM 上开发。"
       },
       "learnMore": {
         "title": "进一步了解 Ninja Labs",

@@ -118,9 +118,9 @@
         "title": "Browse active bounties",
         "description": "Find a bounty and start building your on-chain track record."
       },
-      "playground": {
-        "title": "Try Injective in the Playground",
-        "description": "Explore Injective before choosing your next bounty."
+      "injectiveDocs": {
+        "title": "Explore the Injective docs",
+        "description": "Learn how to build on Injective EVM before choosing your next bounty."
       },
       "learnMore": {
         "title": "Learn more about Ninja Labs",

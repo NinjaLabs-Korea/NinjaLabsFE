@@ -15,7 +15,7 @@ export const signup = {
     // `key` resolves under messages `signup.getStarted.actions`.
     actions: [
       { key: "browseBounties", href: "/bounties", icon: "→" },
-      { key: "playground", href: "https://playground.injective.network", icon: "↗" },
+      { key: "injectiveDocs", href: "https://docs.injective.network/developers-evm", icon: "↗" },
       { key: "learnMore", href: "/", icon: "mascot" },
     ],
   },
