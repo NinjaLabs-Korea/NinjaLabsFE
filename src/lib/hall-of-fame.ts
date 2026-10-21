@@ -1,7 +1,6 @@
 import { fetchPublicJson, loadFromRuntime } from "@/lib/api/public";
 
 // Stat labels are UI copy: `labelKey` resolves under messages `hallOfFame.stats`.
-// `label` stays as the English fallback for surfaces not yet localized (admin).
 export type HallStatKey =
   | "bountiesRun"
   | "buildersOnboarded"
@@ -13,14 +12,14 @@ export type HallStatKey =
 
 export const hallOfFame = {
   stats: [
-    { value: "128", label: "Bounties run", labelKey: "bountiesRun" },
-    { value: "412", label: "Builders onboarded", labelKey: "buildersOnboarded" },
-    { value: "$-", label: "Rewards paid", labelKey: "rewardsPaid" },
+    { value: "128", labelKey: "bountiesRun" },
+    { value: "412", labelKey: "buildersOnboarded" },
+    { value: "$-", labelKey: "rewardsPaid" },
   ],
   highlights: [
-    { category: "Milestone", title: "100th builder onboarded", body: "New sign-ups completed Google, wallet, NFT, and profile setup in one month." },
-    { category: "Featured bounty", title: "Helix analytics module shipped", body: "A bounty deliverable became a reusable market activity card for the DEX team." },
-    { category: "Partnership", title: "Hydro opens content bounties", body: "New educational tasks bring liquidity, vaults, and staking content into the board." },
+    { category: "Milestone", title: "100th builder onboarded", body: "New sign-ups completed Google, wallet, NFT, and profile setup in one month.", href: "/notices" },
+    { category: "Featured bounty", title: "Helix analytics module shipped", body: "A bounty deliverable became a reusable market activity card for the DEX team.", href: "/bounties/helix-volume-analytics" },
+    { category: "Partnership", title: "Hydro opens content bounties", body: "New educational tasks bring liquidity, vaults, and staking content into the board.", href: "/notices" },
   ],
   milestones: [
     { title: "First bounty", date: "May 3, 2026", description: "Injective price widget posted for public builders." },
@@ -41,7 +40,7 @@ type HighlightRow = {
 type StatsRow = { completedBounties: number; builders: number; completionNfts: number; sponsors: number };
 
 export type RuntimeHallOfFame = {
-  stats: Array<{ value: string; label: string; labelKey: HallStatKey }>;
+  stats: Array<{ value: string; labelKey: HallStatKey }>;
   highlights: Array<{ category: "Milestone" | "Featured bounty" | "Partnership"; title: string; body: string; href: string; image: string | null }>;
   milestones: Array<{ title: string; date: string; description: string }>;
   /** Partner wall: published Partnership highlights that carry a logo image. Empty → the wall is hidden. */
@@ -57,7 +56,7 @@ export function getRuntimeHallOfFame(): Promise<RuntimeHallOfFame> {
 function mockHallOfFame(): RuntimeHallOfFame {
   return {
     stats: [...hallOfFame.stats],
-    highlights: hallOfFame.highlights.map((item) => ({ ...item, href: item.category === "Featured bounty" ? "/bounties/helix-volume-analytics" : "/notices", image: null })),
+    highlights: hallOfFame.highlights.map((item) => ({ ...item, image: null })),
     milestones: [...hallOfFame.milestones],
     partners: [],
   };
@@ -72,9 +71,9 @@ async function fetchHallOfFame(): Promise<RuntimeHallOfFame> {
     type === "MILESTONE" ? "Milestone" : type === "PARTNERSHIP" ? "Partnership" : "Featured bounty";
   return {
     stats: [
-      { value: String(stats.completedBounties), label: "Bounties completed", labelKey: "bountiesCompleted" },
-      { value: String(stats.builders), label: "Builders rewarded", labelKey: "buildersRewarded" },
-      { value: String(stats.completionNfts), label: "Completion NFTs", labelKey: "completionNfts" },
+      { value: String(stats.completedBounties), labelKey: "bountiesCompleted" },
+      { value: String(stats.builders), labelKey: "buildersRewarded" },
+      { value: String(stats.completionNfts), labelKey: "completionNfts" },
     ],
     highlights: rows.map((row) => ({
       category: category(row.type),

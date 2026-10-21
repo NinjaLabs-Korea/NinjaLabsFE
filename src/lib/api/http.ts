@@ -1,8 +1,8 @@
 /**
  * BE(NinjaLabsBE) HTTP 전송 계층.
  *
- * - 로그인 토큰은 POST /auth/exchange 응답 본문으로만 받는다.
- *   기존 백엔드와의 순차 배포를 위해 이전 fragment 수거를 한시적으로 지원한다.
+ * - 로그인 토큰은 POST /auth/exchange 응답 본문으로만 받는다 (lib/api/oauth.ts).
+ *   URL fragment로 토큰을 받는 경로는 없다 — 링크로 세션을 심는 공격면을 만들지 않는다.
  * - access token은 15분 JWT, refresh는 회전(rotation) 방식. 401을 받으면
  *   refresh로 재발급을 1회 시도하고, 실패하면 세션을 비운다.
  * - 저장소는 localStorage(사용 불가 환경 대비 try/catch). 서버 렌더 중에는
@@ -45,23 +45,6 @@ export function setTokens(accessToken: string | null, refreshToken: string | nul
 
 export function clearTokens(): void {
   setTokens(null, null);
-}
-
-/**
- * OAuth 콜백 fragment(#accessToken=..&refreshToken=..)를 1회 수거하고
- * 주소창에서 지운다. 토큰이 있었으면 true.
- */
-export function captureTokensFromLocation(): boolean {
-  if (!isBrowser() || !window.location.hash) return false;
-  const params = new URLSearchParams(window.location.hash.slice(1));
-  const accessToken = params.get("accessToken");
-  const refreshToken = params.get("refreshToken");
-  if (!params.has("accessToken") && !params.has("refreshToken")) return false;
-  // Strip even malformed/partial callbacks and preserve Next.js router history state.
-  window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
-  if (!accessToken || !refreshToken) return false;
-  setTokens(accessToken, refreshToken);
-  return true;
 }
 
 export class ApiHttpError extends Error {

@@ -7,6 +7,8 @@ import { WalletProvider } from "@/components/wallet/WalletProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { AGENT_SKILL_PATH } from "@/lib/agent-skill";
+import { loadFromRuntime } from "@/lib/api/public";
+import { PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { composeFoundationRuntime } from "@/lib/runtime/config";
 
@@ -32,6 +34,8 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("agents.register");
+  // Figma 17 footnote links to the owned-agents area of the profile; outside mock mode the signed-in user's own agents page is the real destination.
+  const agentsProfileHref = await loadFromRuntime({ mock: () => `/members/${PROFILE_FILLED_EXAMPLE_ID}#agents`, api: async () => "/agents" });
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <Link
@@ -115,7 +119,7 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
 
       <p className="mt-5 text-sm text-ink-muted">
         {t.rich("profileNote", {
-          link: (chunks) => <Link className="font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/members/jaemin#agents">{chunks}</Link>,
+          link: (chunks) => <Link className="font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={agentsProfileHref}>{chunks}</Link>,
         })}
       </p>
     </div>

@@ -10,7 +10,8 @@ import { ApiHttpError } from "@/lib/api/http";
 import type { SubmissionStatus } from "@/lib/contracts/account";
 
 const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card";
-const outlineLinkClass = "mt-4 inline-flex rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong";
+const outlineButtonClass = "inline-flex rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong";
+const outlineLinkClass = `mt-4 ${outlineButtonClass}`;
 const inputClass = "h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 // API error codes with localized copy under bounties.action.errors; others fall back to the raw code.
@@ -58,9 +59,9 @@ function SignedOutPanel({ applicationRequired }: { applicationRequired: boolean 
           <p className="mt-2 text-sm text-ink-muted">{applicationRequired ? t("applySignedOutBody") : t("submitSignedOutBody")}</p>
         </div>
         {applicationRequired ? (
-          <Link className={outlineLinkClass.replace("mt-4 ", "")} href="/bounties/apply">{t("viewIntakeRules")}</Link>
+          <Link className={outlineButtonClass} href="/bounties/apply">{t("viewIntakeRules")}</Link>
         ) : (
-          <Link className={outlineLinkClass.replace("mt-4 ", "")} href="/signup">{t("signInFirst")}</Link>
+          <Link className={outlineButtonClass} href="/signup">{t("signInFirst")}</Link>
         )}
       </div>
       {applicationRequired ? (

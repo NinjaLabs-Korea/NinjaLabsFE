@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { Badge } from "@/components/ui/Badge";
 import { postCategoryLabelKeys, type AdminPost } from "@/lib/admin";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
@@ -40,6 +41,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   const [mode, setMode] = useState<"create" | string>("create");
   const [form, setForm] = useState<PostForm>(emptyForm);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<AdminPost | null>(null);
   const formRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -85,7 +87,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   };
 
   const deletePost = async (post: AdminPost) => {
-    if (!window.confirm(tCommon("deleteConfirm", { title: post.title }))) return;
+    setPendingDelete(null);
     try {
       await api.deleteAdminPost(post.slug);
       setRecords((current) => current.filter((item) => item.slug !== post.slug));
@@ -99,6 +101,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
 
   return (
     <>
+      <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void deletePost(pendingDelete)} title={pendingDelete?.title ?? null} />
       <div className="flex flex-wrap items-start justify-between gap-6">
         {children}
         <div className="flex items-center gap-3">
@@ -121,7 +124,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
             <td className="px-5 py-4 text-sm text-ink-secondary">{categoryLabel(post.category)}</td>
             <td className="px-5 py-4"><Badge variant={post.status === "published" ? "success" : "warning"}>{t(`statuses.${post.status}`)}</Badge></td>
             <td className="px-5 py-4 text-sm text-ink-secondary">{post.publishedAt ?? "–"}</td>
-            <td className="px-5 py-4"><div className="flex gap-2"><button className="h-11 rounded-control border border-primary-outline bg-surface px-3 text-sm font-semibold text-primary-strong" onClick={() => editPost(post)} type="button">{tCommon("edit")}</button><button className="h-11 rounded-control border border-danger px-3 text-sm font-semibold text-danger" onClick={() => deletePost(post)} type="button">{tCommon("delete")}</button></div></td>
+            <td className="px-5 py-4"><div className="flex gap-2"><button className="h-11 rounded-control border border-primary-outline bg-surface px-3 text-sm font-semibold text-primary-strong" onClick={() => editPost(post)} type="button">{tCommon("edit")}</button><button className="h-11 rounded-control border border-danger px-3 text-sm font-semibold text-danger" onClick={() => setPendingDelete(post)} type="button">{tCommon("delete")}</button></div></td>
           </tr>
         ))}
       </AdminTable>

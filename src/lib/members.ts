@@ -3,6 +3,8 @@ import type { Member, Profile } from "./types";
 import { onboardingLog } from "./onboarding-log";
 import { fetchPublicJson, loadFromRuntime } from "./api/public";
 
+/** Mock fixture slugs used by demo affordances (Figma 05 / 05-Empty). */
+export const PROFILE_FILLED_EXAMPLE_ID = "jaemin";
 export const PROFILE_EMPTY_ID = "sora";
 
 const members: Member[] = [

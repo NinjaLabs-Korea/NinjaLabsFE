@@ -12,7 +12,10 @@
     "deleteConfirm": "{title}을(를) 삭제하시겠습니까?",
     "savedDescription": "\"{title}\"이(가) 저장되었습니다.",
     "saveFailed": "저장 실패",
-    "deleteFailed": "삭제 실패"
+    "deleteFailed": "삭제 실패",
+    "deleteEyebrow": "삭제",
+    "deleteDescription": "플랫폼에서 이 항목을 삭제합니다. 공개 페이지에 즉시 반영됩니다.",
+    "deleteCallout": "되돌릴 수 없습니다."
   },
   "tabs": {
     "users": "사용자 관리",

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { webcrypto, createHash } from "node:crypto";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { captureTokensFromLocation, getTokens } from "@/lib/api/http";
+import { getTokens } from "@/lib/api/http";
 import { createLoginChallenge, exchangeLoginCodeFromLocation } from "@/lib/api/oauth";
 
 beforeEach(() => {
@@ -64,23 +64,12 @@ describe("OAuth code handoff", () => {
   it("leaves ordinary anchors untouched", async () => {
     window.history.replaceState(null, "", "/#faq");
     expect(await exchangeLoginCodeFromLocation("https://api.example")).toBe(false);
-    expect(captureTokensFromLocation()).toBe(false);
     expect(window.location.hash).toBe("#faq");
   });
 
-  it("still consumes old backend token callbacks during a frontend-first rollout", () => {
-    window.history.replaceState({ marker: "router" }, "", "/?from=login#accessToken=old-access&refreshToken=old-refresh");
-    expect(captureTokensFromLocation()).toBe(true);
-    expect(window.location.href).not.toContain("Token=");
-    expect(window.location.search).toBe("?from=login");
-    expect(window.history.state).toEqual({ marker: "router" });
-    expect(getTokens()).toEqual({ accessToken: "old-access", refreshToken: "old-refresh" });
-  });
-
-  it.each(["accessToken=partial", "refreshToken=partial", "accessToken=&refreshToken="])("removes incomplete legacy credentials: %s", (hash) => {
-    window.history.replaceState(null, "", `/auth/callback#${hash}`);
-    expect(captureTokensFromLocation()).toBe(false);
-    expect(window.location.hash).toBe("");
+  it("ignores legacy token fragments instead of installing a session from the URL", async () => {
+    window.history.replaceState(null, "", "/?from=login#accessToken=planted&refreshToken=planted");
+    expect(await exchangeLoginCodeFromLocation("https://api.example")).toBe(false);
     expect(getTokens()).toEqual({ accessToken: null, refreshToken: null });
   });
 });

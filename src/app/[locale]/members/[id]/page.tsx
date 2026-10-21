@@ -6,7 +6,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
-import { getRuntimeProfile } from "@/lib/members";
+import { loadFromRuntime } from "@/lib/api/public";
+import { getRuntimeProfile, PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
 
 type MemberProfilePageProps = PageProps<"/[locale]/members/[id]">;
 
@@ -41,6 +42,8 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
   const profile = await getRuntimeProfile(id);
   if (!profile) notFound();
   const completed = profile.completions.length > 0;
+  // "View filled profile" is a demo affordance from Figma 05-Empty; only the mock fixture has a filled profile to point at.
+  const filledExampleHref = await loadFromRuntime({ mock: () => `/members/${PROFILE_FILLED_EXAMPLE_ID}`, api: async () => null });
   const completionNfts = profile.nfts.filter((nft) => nft.type === "completion");
 
   return (
@@ -106,7 +109,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
         <SectionHeader
           eyebrow={t("history.eyebrow")}
           heading={completed ? t("history.heading") : t("history.headingEmpty")}
-          action={completed ? { label: t("history.browseMore"), href: "/bounties" } : { label: t("history.viewFilled"), href: "/members/jaemin" }}
+          action={completed ? { label: t("history.browseMore"), href: "/bounties" } : filledExampleHref ? { label: t("history.viewFilled"), href: filledExampleHref } : undefined}
         />
         {completed ? (
           <div className="mt-6 grid gap-5 md:grid-cols-3">

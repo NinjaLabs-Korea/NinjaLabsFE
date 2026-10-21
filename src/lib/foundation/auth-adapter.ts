@@ -1,11 +1,5 @@
 import type { AuthAdapter, AuthSnapshot, ClientUser } from "@/lib/contracts/auth";
 
-export class AuthAdapterUnavailableError extends Error {
-  constructor() {
-    super("Authentication is unavailable while API mode is a frontend-only placeholder.");
-    this.name = "AuthAdapterUnavailableError";
-  }
-}
 export class MockSignInPreviewError extends Error {
   constructor() {
     super("Mock Google sign-in failed. No request was made.");
@@ -96,18 +90,5 @@ export function createSessionPreviewAuthAdapter(
       remember(false);
       return store.setSnapshot({ status: "signed-out", user: null });
     },
-  };
-}
-
-export function createUnavailableAuthAdapter(): AuthAdapter {
-  const store = createSnapshotStore({ status: "signed-out", user: null });
-
-  return {
-    getSnapshot: store.getSnapshot,
-    subscribe: store.subscribe,
-    signIn: async () => {
-      throw new AuthAdapterUnavailableError();
-    },
-    signOut: async () => store.getSnapshot(),
   };
 }

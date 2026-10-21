@@ -88,8 +88,8 @@ public/
 
 ## Figma → code mapping
 
-- File: `https://www.figma.com/design/DKvXU0AY4O9UalcHWXQCcI` (fileKey `DKvXU0AY4O9UalcHWXQCcI`)
-- Canvas `19:2` "Screens (원본 분리)" holds every screen. Node IDs:
+- **Current design file (2026-10):** `https://www.figma.com/design/assDqL6bnfovzvql7XlcH1/ninjalabs-design?node-id=31-3` (fileKey `assDqL6bnfovzvql7XlcH1`). Container `31:3` → section `31:2` holds every screen in the same 01–21 order as the table below (e.g. 01 Landing `31:5`, 05 User Profile `31:246`, 06 Hall of Fame `31:424`, 07 Members `31:575`, 08 Notices `31:848`; later screens follow in canvas order). The FE was pixel-audited against this file on 2026-10-22 (`docs/figma/design-gaps.md`). The team has view-only access, so Figma MCP `get_design_context` may be refused; fall back to the Figma web canvas.
+- Previous file (node IDs in the table and in `docs/figma/recon/*`): `https://www.figma.com/design/DKvXU0AY4O9UalcHWXQCcI` (fileKey `DKvXU0AY4O9UalcHWXQCcI`), canvas `19:2` "Screens (원본 분리)":
 
 | Screen | nodeId | Route |
 |---|---|---|
@@ -137,6 +137,7 @@ public/
   - `admin/AdminTabs` - in-page admin tab strip (`active` prop); `admin/AdminTable` - lavender-header table (`columns`, `minWidthClass`, `<tr>` children); API mode persists admin changes through AdminGuard-protected endpoints.
   - `ui/Modal` (native `<dialog>`: ESC/backdrop/focus-trap built in), `ui/ConfirmDialog` (`destructive` variant = solid `bg-danger` action + danger-soft callout), `ui/Toast` (success/danger/warning/info; danger = `role="alert"`, others auto-dismiss) - FE-designed (no Figma origin), captured back as pages 26–28
   - `admin/UserActions` - `"use client"` island wiring Remove→ConfirmDialog and Assign→role modal; replaces the inline role panel drawn in Figma 18 (user-approved divergence)
+  - `admin/DeleteConfirmDialog` - shared destructive `ConfirmDialog` for Bounty/Highlight/Post managers (copy under `admin.common.delete*`); never use `window.confirm`
   - `admin/AdminSelect` - APG select-only combobox (`role="combobox"` trigger + `aria-activedescendant` listbox, keyboard-complete); `admin/AdminToastHost` - single page-level toast stack (`pushAdminToast`)
   - `admin/UserDirectory`, `admin/BountyManager`, `admin/HighlightManager`, `admin/PostManager` - API-backed manager islands for member assignment and bounty/notice/highlight create, edit, transition, and delete. Local mock mode retains deterministic fixtures.
   - `ui/Markdown` - server-component markdown renderer (react-markdown + remark-gfm, exact-pinned): `allowedElements` subset (p/a/strong/em/ul/ol/li/h2/h3/code/pre/blockquote/br/del), token-mapped renderers, no `rehype-raw` (raw HTML disabled), external links get `target=_blank rel=noreferrer`; used by bounty detail (description + Submission guide) and notice detail; NO `@tailwindcss/typography`

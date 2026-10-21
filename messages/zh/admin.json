@@ -12,7 +12,10 @@
     "deleteConfirm": "确定删除 {title} 吗？",
     "savedDescription": "“{title}”已保存。",
     "saveFailed": "保存失败",
-    "deleteFailed": "删除失败"
+    "deleteFailed": "删除失败",
+    "deleteEyebrow": "删除",
+    "deleteDescription": "将从平台中删除此记录，公开页面会立即更新。",
+    "deleteCallout": "此操作无法撤销。"
   },
   "tabs": {
     "users": "用户管理",

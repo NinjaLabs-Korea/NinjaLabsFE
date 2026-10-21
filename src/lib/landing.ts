@@ -21,100 +21,18 @@ type LandingData = {
   news: NoticePreview[];
 };
 
-export const landing: LandingData = {
+/**
+ * Static hero fixture. Bounties, news, and stats are never read from here:
+ * `getRuntimeLanding` derives them from the bounty/notice/hall-of-fame sources
+ * so the landing page cannot drift from the list pages.
+ */
+export const landing: Pick<LandingData, 'hero'> = {
   hero: {
     primaryCta: { labelKey: 'getStarted', href: '/signup' },
     secondaryCta: { labelKey: 'browseBounties', href: '/bounties' },
-    stats: [
-      { value: '128', labelKey: 'bountiesRun' },
-      { value: '412', labelKey: 'buildersOnboarded' },
-      { value: '10+', labelKey: 'ecosystemPartners' },
-    ],
-    portfolio: {
-      handle: 'ninja.inj',
-      memberSince: 2026,
-      completed: [
-        'Frontend widget',
-        'Contract audit',
-        'Design system',
-        'Docs revamp',
-        'Bug bounty',
-      ],
-      totalCompleted: 5,
-    },
+    stats: [],
+    portfolio: { handle: 'ninja.inj', memberSince: 2026, completed: [], totalCompleted: 0 },
   },
-  bounties: [
-    {
-      slug: 'iasset-price-widget',
-      title: 'Build an iAsset price widget',
-      summary: 'Create a reusable React component for iAsset market data.',
-      category: 'Dev',
-      status: 'active',
-      reward: { amount: 500, currency: 'INJ' },
-      sponsor: 'Injective',
-      deadline: 'D-7',
-      coverImage: '',
-    },
-    {
-      slug: 'wallet-onboarding-states',
-      title: 'Design wallet onboarding states',
-      summary: 'Map install, connect, failure, and retry states for new builders.',
-      category: 'Design',
-      status: 'active',
-      reward: { amount: 300, currency: 'USDC' },
-      sponsor: 'Helix',
-      deadline: 'D-5',
-      coverImage: '',
-    },
-    {
-      slug: 'contract-security-audit',
-      title: 'Smart contract security audit',
-      summary: 'Review a CosmWasm reward vault and deliver a concise findings report.',
-      category: 'Dev',
-      status: 'active',
-      reward: { amount: 800, currency: 'USDC' },
-      sponsor: 'Ninja Labs',
-      deadline: 'D-12',
-      coverImage: '',
-    },
-    {
-      slug: 'injective-dev-tutorial',
-      title: 'Write an Injective dev tutorial',
-      summary: 'Explain account funding, contract interaction, and testnet verification.',
-      category: 'Content',
-      status: 'active',
-      reward: { amount: 250, currency: 'INJ' },
-      sponsor: 'Injective',
-      deadline: 'D-9',
-      coverImage: '',
-    },
-  ],
-  news: [
-    {
-      category: 'Ninja Labs',
-      publishedAt: '2026.06.20',
-      title: 'Ninja Labs joins the Injective builder hackathon',
-      excerpt: 'Three bounty tracks will help new teams ship wallets, widgets, and educational content.',
-      slug: 'ninja-labs-injective-builder-hackathon',
-      thumbnail: '',
-    },
-    {
-      category: 'Injective ecosystem',
-      publishedAt: '2026.06.15',
-      title: 'New iAsset modules explained for bounty builders',
-      excerpt: 'A primer on price feeds, market metadata, and integration patterns for upcoming tasks.',
-      slug: 'iasset-modules-for-bounty-builders',
-      thumbnail: '',
-    },
-    {
-      category: 'Events',
-      publishedAt: '2026.06.12',
-      title: 'Community review call for July bounty sponsors',
-      excerpt: 'Ninja Labs will walk through application intake, review status, and reward release timing.',
-      slug: 'july-bounty-sponsor-review-call',
-      thumbnail: '',
-    },
-  ],
 };
 
 export type RuntimeLanding = LandingData & {

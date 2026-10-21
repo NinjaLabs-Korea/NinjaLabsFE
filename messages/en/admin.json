@@ -12,7 +12,10 @@
     "deleteConfirm": "Delete {title}?",
     "savedDescription": "\"{title}\" was saved.",
     "saveFailed": "Save failed",
-    "deleteFailed": "Delete failed"
+    "deleteFailed": "Delete failed",
+    "deleteEyebrow": "Delete",
+    "deleteDescription": "This removes the record from the platform. Public pages update immediately.",
+    "deleteCallout": "This cannot be undone."
   },
   "tabs": {
     "users": "User Mgmt",

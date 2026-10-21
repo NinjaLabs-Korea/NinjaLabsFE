@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "r
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { highlightTypeLabelKeys, type AdminHighlight } from "@/lib/admin";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
@@ -36,6 +37,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [link, setLink] = useState("");
   const [order, setOrder] = useState(0);
+  const [pendingDelete, setPendingDelete] = useState<AdminHighlight | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -101,7 +103,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   }
 
   async function handleDelete(highlight: AdminHighlight) {
-    if (!window.confirm(tCommon("deleteConfirm", { title: highlight.title }))) return;
+    setPendingDelete(null);
     try {
       await api.deleteAdminHighlight(highlight.id);
       setRecords((current) => current.filter((item) => item.id !== highlight.id));
@@ -113,6 +115,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
 
   return (
     <>
+      <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void handleDelete(pendingDelete)} title={pendingDelete?.title ?? null} />
       <section>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -130,7 +133,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
                 <td className="px-5 py-4 text-sm text-ink-secondary">{highlight.order}</td>
                 <td className="px-5 py-4 text-sm text-ink-secondary">{highlight.link ?? "–"}</td>
                 <td className="px-5 py-4">
-                  <div className="flex gap-2"><button className="h-11 rounded-control border border-primary-outline bg-surface px-3 text-sm font-semibold text-primary-strong" onClick={() => handleEdit(highlight)} type="button">{tCommon("edit")}</button><button className="h-11 rounded-control border border-danger px-3 text-sm font-semibold text-danger" onClick={() => handleDelete(highlight)} type="button">{tCommon("delete")}</button></div>
+                  <div className="flex gap-2"><button className="h-11 rounded-control border border-primary-outline bg-surface px-3 text-sm font-semibold text-primary-strong" onClick={() => handleEdit(highlight)} type="button">{tCommon("edit")}</button><button className="h-11 rounded-control border border-danger px-3 text-sm font-semibold text-danger" onClick={() => setPendingDelete(highlight)} type="button">{tCommon("delete")}</button></div>
                 </td>
               </tr>
             ))}
