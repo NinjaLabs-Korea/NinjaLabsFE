@@ -115,7 +115,6 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
 
   return (
     <>
-      <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void handleDelete(pendingDelete)} title={pendingDelete?.title ?? null} />
       <section>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -166,6 +165,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
           <p className="mt-3 text-xs text-ink-muted">{tCommon("saveNotice")}</p>
         </form>
       </section>
+      <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void handleDelete(pendingDelete)} title={pendingDelete?.title ?? null} />
     </>
   );
 }

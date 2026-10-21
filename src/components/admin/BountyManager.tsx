@@ -132,7 +132,6 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   return (
     <>
-      <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void remove(pendingDelete)} title={pendingDelete?.title ?? null} />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>{children}</div>
         <div className="flex items-center gap-2">
@@ -224,6 +223,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
           <p className="mt-3 text-xs text-ink-muted">{t("form.rewardNote")} {tCommon("saveNotice")}</p>
         </form>
       </section>
+      <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void remove(pendingDelete)} title={pendingDelete?.title ?? null} />
     </>
   );
 }

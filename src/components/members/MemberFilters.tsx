@@ -21,9 +21,9 @@ export function MemberFilters({ members }: MemberFiltersProps) {
 
   return (
     <>
-      <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")}>
-        <button className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => setRole("All")} type="button"><Badge variant={role === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
-        {roles.map((item) => <button className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => setRole(item)} type="button"><Badge variant={role === item ? "selected" : "primary-soft"}>{t(`roles.${item.toLowerCase()}`)}</Badge></button>)}
+      <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")} role="group">
+        <button aria-pressed={role === "All"} className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => setRole("All")} type="button"><Badge variant={role === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
+        {roles.map((item) => <button aria-pressed={role === item} className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => setRole(item)} type="button"><Badge variant={role === item ? "selected" : "primary-soft"}>{t(`roles.${item.toLowerCase()}`)}</Badge></button>)}
       </div>
       {visibleMembers.length > 0 ? (
         <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4" aria-label={t("filters.listAriaLabel")}>

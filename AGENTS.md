@@ -121,7 +121,7 @@ public/
 - Design data comes from the Figma remote MCP (`https://mcp.figma.com/mcp`): `get_design_context` for
   per-screen code/screenshot, `get_metadata` for structure, `download_assets` for images.
 - Every screen shares the same Header/Footer (rendered once in `src/app/layout.tsx`, not per page).
-- Implemented component inventory (49 files; keep in sync with `src/components/`):
+- Implemented component inventory (50 files; keep in sync with `src/components/`):
   - `layout/Header`, `layout/Footer` - the shared shell chrome (rendered once in `layout.tsx`)
   - `ui/Badge` - pill chip; variants `primary-soft` (default) / `selected` (`bg-primary text-primary-soft`) / `success` / `danger` / `warning` / `neutral` / `inverse` (StepIndicator's white active step is intentional and NOT a Badge)
   - `ui/RewardPill` - `{ amount, currency: 'INJ' | 'USDC' }`; INJ token icon vs `$` glyph. `variant="icon"` renders only the token glyph for composed pills (bounty detail "Sponsor pays: 500 INJ")

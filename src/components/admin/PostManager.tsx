@@ -101,7 +101,6 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
 
   return (
     <>
-      <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void deletePost(pendingDelete)} title={pendingDelete?.title ?? null} />
       <div className="flex flex-wrap items-start justify-between gap-6">
         {children}
         <div className="flex items-center gap-3">
@@ -150,6 +149,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
         <p className="mt-3 text-xs text-ink-muted">{tCommon("saveNotice")}</p>
       </section>
       </div>
+      <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void deletePost(pendingDelete)} title={pendingDelete?.title ?? null} />
     </>
   );
 }
