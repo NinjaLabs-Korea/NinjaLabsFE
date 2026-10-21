@@ -138,9 +138,9 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
         </div>
       </section>
 
-      <section className="rounded-card border border-border bg-surface p-5 shadow-card" ref={formRef}>
+      <section className="rounded-card border border-border bg-surface p-[21px] shadow-card" ref={formRef}>
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{isEditing ? t("form.eyebrowEdit") : t("form.eyebrowCreate")}</p>
-        <h2 className="font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
+        <h2 className="mt-2 font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
         <form onSubmit={handleSubmit}>
           <div className="mt-6 grid gap-5 md:grid-cols-2">
             <div className="text-sm font-semibold text-ink">
@@ -156,7 +156,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
               <input accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleImageChange} ref={imageInputRef} type="file" />
               <span className="mt-2 block text-xs font-normal text-ink-muted">{imageFile?.name ?? image ?? tCommon("fileHint")}</span>
             </div>
-            <label className="text-sm font-semibold text-ink">{t("form.link")} <span className="font-normal text-ink-muted">{t("form.optional")}</span><input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => setLink(event.target.value)} placeholder="https://" value={link} /></label>
+            <label className="text-sm font-semibold text-ink">{t("form.link")} <span className="font-normal text-ink-muted">{t("form.optional")}</span><input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => setLink(event.target.value)} placeholder={t("form.linkPlaceholder")} value={link} /></label>
             <label className="text-sm font-semibold text-ink">{t("form.displayOrder")}<input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" min={0} onChange={(event) => setOrder(Number(event.target.value))} placeholder="0" required step={1} type="number" value={order} /></label>
           </div>
           <button className="mt-5 h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" type="submit">{tCommon("save")}</button>

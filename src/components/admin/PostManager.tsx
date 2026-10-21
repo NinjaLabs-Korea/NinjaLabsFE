@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
@@ -31,7 +31,7 @@ const emptyForm: PostForm = {
   status: "draft",
 };
 
-export function PostManager({ posts }: { posts: AdminPost[] }) {
+export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; children: ReactNode; tabs: ReactNode }) {
   const api = useAdminApi();
   const t = useTranslations("admin.notices");
   const tCommon = useTranslations("admin.common");
@@ -98,16 +98,22 @@ export function PostManager({ posts }: { posts: AdminPost[] }) {
   const isEditing = mode !== "create";
 
   return (
-    <div className="mt-6 space-y-6">
-      <div className="absolute right-6 top-16">
-        <button
-          className="h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          onClick={startNew}
-          type="button"
-        >
-          {t("newPost")}
-        </button>
+    <>
+      <div className="flex flex-wrap items-start justify-between gap-6">
+        {children}
+        <div className="flex items-center gap-3">
+          <Badge variant="neutral">{tCommon("adminOnly")}</Badge>
+          <button
+            className="h-[45px] rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            onClick={startNew}
+            type="button"
+          >
+            {t("newPost")}
+          </button>
+        </div>
       </div>
+      {tabs}
+      <div className="mt-6 space-y-6">
       <AdminTable columns={postColumns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[820px]">
         {records.map((post) => (
           <tr key={post.slug} className="border-t border-border">
@@ -120,9 +126,9 @@ export function PostManager({ posts }: { posts: AdminPost[] }) {
         ))}
       </AdminTable>
 
-      <section className="rounded-card border border-border bg-surface p-5 shadow-card" ref={formRef}>
+      <section className="rounded-card border border-border bg-surface p-[21px] shadow-card" ref={formRef}>
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{isEditing ? t("form.eyebrowEdit") : t("form.eyebrowCreate")}</p>
-        <h2 className="font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
+        <h2 className="mt-2 font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
         <div className="mt-6 grid gap-5 md:grid-cols-2">
           <label className="text-sm font-semibold text-ink">{t("form.title")}<input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} value={form.title} /></label>
           <label className="text-sm font-semibold text-ink">
@@ -130,7 +136,7 @@ export function PostManager({ posts }: { posts: AdminPost[] }) {
             <div className="mt-2"><AdminSelect formatOption={categoryLabel} label={t("form.category")} onChange={(value) => updateForm("category", value as AdminPost["category"])} options={categories} value={form.category} /></div>
           </label>
           <label className="text-sm font-semibold text-ink">{t("form.thumbnail")}<input accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-sm font-normal text-ink-secondary file:mr-3 file:rounded-control file:border file:border-primary-outline file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-strong" onChange={(event) => setThumbnailFile(event.target.files?.[0] ?? null)} type="file" /><span className="mt-2 block text-xs font-normal text-ink-muted">{thumbnailFile?.name ?? form.thumbnail ?? tCommon("fileHint")}</span></label>
-          <label className="text-sm font-semibold text-ink">{t("form.externalLink")}<input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => updateForm("externalUrl", event.target.value || null)} placeholder="https://" value={form.externalUrl ?? ""} /></label>
+          <label className="text-sm font-semibold text-ink">{t("form.externalLink")}<input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => updateForm("externalUrl", event.target.value || null)} placeholder={t("form.externalLinkPlaceholder")} value={form.externalUrl ?? ""} /></label>
           <label className="md:col-span-2 text-sm font-semibold text-ink">{t("form.body")}<textarea className="mt-2 min-h-[144px] w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => updateForm("bodyMarkdown", event.target.value)} placeholder={t("form.bodyPlaceholder")} value={form.bodyMarkdown} /></label>
           <label className="text-sm font-semibold text-ink">
             {t("form.status")}
@@ -140,6 +146,7 @@ export function PostManager({ posts }: { posts: AdminPost[] }) {
         <button className="mt-5 h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={savePost} type="button">{tCommon("save")}</button>
         <p className="mt-3 text-xs text-ink-muted">{tCommon("saveNotice")}</p>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

@@ -38,7 +38,7 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
             </Link>
           </div>
         </div>
-        <p className="mt-4 max-w-2xl text-lg text-ink-muted">
+        <p className="mt-4 max-w-[768px] text-lg text-ink-muted">
           {t("intro")}
         </p>
       </section>

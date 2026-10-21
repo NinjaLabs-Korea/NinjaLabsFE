@@ -69,3 +69,18 @@ Export-failure claims are scoped to recorded attempts: `figma-render-empty` rows
 | OG / social share image | **FE shipped (code-generated)** - `src/app/opengraph-image.tsx` renders a 1200×630 brand card (hero gradient tokens + user-supplied mascot) via `ImageResponse`; root metadata adds `metadataBase`/openGraph/twitter and detail pages override og title/url. No designed share asset exists in the Figma file; the generated card is an approved implementation divergence. | `src/app/opengraph-image.tsx`, `src/app/layout.tsx`, `src/app/robots.ts`, `src/app/sitemap.ts`; `docs/figma/screen-matrix.md` asset manifest (no share-image row) |
 
 2026-09-07: `/[locale]/auth/callback` adds a minimal sign-in progress / retry state using existing typography, spacing, and primary-button tokens. It has no dedicated Figma frame. Successful code exchange redirects to onboarding or home; failed/copy-pasted callbacks show a clean URL and a sign-in retry link.
+
+## 2026-10-22 pixel audit against `assDqL6bnfovzvql7XlcH1` (node 31-3)
+
+Branch `fix/figma-pixel-audit`. Every screen in the new design file was compared to the FE at 1440/1600px and the FE was brought back in line; the only intentional divergences are the ones already listed above plus:
+
+| Item | Decision |
+|---|---|
+| Header language switcher (`layout/LocaleSwitcher`) | Not drawn in Figma; **kept** - a user requirement that post-dates the design. |
+| Members role chips | Figma 07 draws Core/Dev/Design/Ops with Core highlighted while showing all four roles' cards; FE keeps an "All" chip so the filter is functional. |
+| Bounty list chips | Figma 14 draws one row (All/Dev/Design/Content/Active/Closed) - FE now renders that single row, offering only categories present in the data, with "All" clearing both groups. |
+| Bounty detail signed-out panel | Figma 15/15v draw the Submit/Apply form with a LOGIN REQUIRED badge and "Sign in first"/"View intake rules"; FE renders that as a disabled preview that links to `/signup`. Signed-in states keep the functional form. |
+| Profile NFT tiles | Figma 05 shows title only; FE shows title and surfaces token/tx as a `title` tooltip, and only prints a status label when the NFT is not yet ATTACHED. |
+| Admin "+ New Post" | Now lives in the masthead row next to ADMIN ONLY (21) via a slot in `admin/PostManager`, replacing the absolute-position hack. |
+| Hall of Fame stats | Figma 06 has no "Platform aggregate" footnote; removed. Timeline renders dot-on-line + title + "date · description" (`hallOfFame.timeline.entry`). |
+| Sign-up frame badges | Still omitted (see "Sign-up status badges removed" above); the step headers now carry the Figma eyebrow/title/subtitle and the Figma footnotes are rendered under the cards. |

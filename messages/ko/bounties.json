@@ -28,7 +28,7 @@
     "howApplying": "지원 방법 보기 →",
     "intro": "Injective 생태계 스폰서의 유급 작업을 찾고, 유용한 결과물을 만들어 Ninja 포트폴리오에 남을 온체인 증명을 받아 보세요.",
     "resultsLabel": "바운티 필터 및 결과",
-    "payoutNote": "스폰서는 INJ 또는 USDC로 그대로 지급하며, 플랫폼에서 별도로 스왑하지 않습니다.",
+    "payoutNote": "스폰서는 INJ, USDC 등 어떤 토큰으로든 바운티를 올릴 수 있습니다. 보상은 그대로 지급되므로 빌더가 직접 스왑하며, Ninja Labs는 플랫폼 차원의 스왑을 제공하지 않습니다.",
     "unavailable": "바운티를 일시적으로 불러올 수 없습니다."
   },
   "filters": {
@@ -38,43 +38,46 @@
     "search": "바운티 검색",
     "emptyTitle": "조건에 맞는 바운티가 없습니다",
     "emptyBody": "다른 카테고리를 선택하거나 검색어를 지워 보세요.",
-    "reset": "필터 초기화"
+    "reset": "필터 초기화",
+    "ariaLabel": "바운티 필터"
   },
   "apply": {
-    "eyebrow": "바운티",
-    "heading": "바운티 지원 방식 안내",
-    "intro": "바로 제출할 수 있는 바운티도 있고, 제출 전에 스폰서 승인이 필요한 바운티도 있습니다.",
+    "eyebrow": "바운티 워크플로",
+    "heading": "바운티 유형 — 제출형 vs 지원형",
+    "intro": "바로 제출을 받는 바운티도 있고, 작업을 시작하기 전에 스폰서 승인이 필요한 바운티도 있습니다.",
     "auth": {
-      "checking": "인증: 확인 중",
-      "signedIn": "인증: 로그인됨",
-      "loginRequired": "인증: 로그인 필요"
+      "checking": "세션 확인 중",
+      "signedIn": "로그인됨",
+      "loginRequired": "로그인 필요"
     },
     "cta": {
       "applyNow": "지금 지원하기",
-      "viewAndSignIn": "바운티 보고 로그인하기",
+      "viewAndSignIn": "로그인 후 지원하기",
       "view": "바운티 보기"
     },
     "submitType": {
       "badge": "바로 제출",
-      "heading": "제출형 바운티",
-      "body": "누구나 작업을 진행하고, 준비되면 바로 제출할 수 있습니다.",
-      "flow": "바운티 페이지에서 바로 제출 양식을 사용할 수 있습니다.",
-      "viewDirect": "제출형 바운티 보기",
-      "none": "현재 진행 중인 제출형 바운티가 없습니다."
+      "heading": "제출형",
+      "body": "누구나 작업한 뒤 바로 제출합니다. 완성된 결과물만 보고 스폰서가 판단할 수 있는 작은 작업에 적합합니다.",
+      "flow": "바운티 상세 페이지와 동일하게 제출 버튼이 바로 표시됩니다.",
+      "viewDirect": "상세 예시 보기",
+      "none": "현재 진행 중인 제출형 바운티가 없습니다.",
+      "flowTitle": "버튼 동작"
     },
     "applyType": {
       "badge": "지원 필요",
-      "heading": "지원형 바운티",
-      "body": "스폰서가 지원을 승인한 뒤에 작업을 제출할 수 있습니다.",
-      "flow": "짧은 제안서로 지원하세요. 스폰서가 승인하면 바운티 페이지에서 제출 양식이 열립니다.",
-      "none": "현재 진행 중인 지원형 바운티가 없습니다."
+      "heading": "지원형",
+      "body": "스폰서가 승인한 뒤에만 제출이 열립니다. 스폰서가 빌더를 먼저 검토하고 싶은 규모 있는 작업에 유용합니다.",
+      "flow": "지원 → 지원서 작성 → 스폰서 검토 → 승인 후 제출 버튼 활성화.",
+      "none": "현재 진행 중인 지원형 바운티가 없습니다.",
+      "flowTitle": "버튼 동작"
     },
     "empty": {
       "title": "현재 진행 중인 바운티가 없습니다",
       "body": "새로운 스폰서 기회는 바운티 마켓플레이스에 표시됩니다.",
       "browse": "전체 바운티 보기"
     },
-    "statusHeading": "지원 상태",
+    "statusHeading": "바운티 상태 흐름",
     "statuses": {
       "open": "접수",
       "underReview": "검토 중",
@@ -82,8 +85,9 @@
       "submitted": "제출됨",
       "completed": "완료"
     },
-    "statusNote": "지원 상태는 지원이 필요한 바운티에서 확인할 수 있습니다.",
-    "unavailable": "진행 중인 바운티를 일시적으로 불러올 수 없습니다."
+    "statusNote": "지원형은 제출 전에 승인 단계가 하나 추가되며, 스폰서가 지원서를 먼저 검토합니다.",
+    "unavailable": "진행 중인 바운티를 일시적으로 불러올 수 없습니다.",
+    "statusEyebrow": "지원형 상태 흐름"
   },
   "detail": {
     "back": "← 바운티 목록으로",
@@ -97,48 +101,59 @@
     "review": "검토",
     "defaultReview": "스폰서 검토",
     "submissionGuide": "제출 가이드",
-    "applyFootnote": "누구나 볼 수 있으며, 지원과 제출은 로그인이 필요합니다.",
-    "reward": "보상",
-    "sponsorPays": "스폰서 지급:",
-    "completionSteps": "완료 단계",
-    "defaultSteps": {
-      "work": "작업 완료하기",
-      "submit": "결과물 URL 제출하기",
-      "approval": "스폰서 승인 받기",
-      "agentRegister": "에이전트 등록 및 검증",
-      "agentSubmit": "에이전트 API로 제출"
-    },
-    "applySteps": {
-      "apply": "관련 작업물과 참여 가능 일정을 적어 지원하세요.",
-      "review": "스폰서의 검토와 승인을 기다리세요.",
-      "submit": "승인 후 완료한 작업을 제출하세요."
-    },
+    "applyFootnote": "누구나 볼 수 있으며, 지원과 제출에는 로그인이 필요합니다. 제출은 스폰서 승인 후에만 열립니다.",
+    "sponsorPays": "스폰서 지급: {reward}",
     "afterApproval": "승인 이후",
     "deliverableSeeGuide": "아래 제출 가이드를 확인하세요",
     "deliverableDescribed": "위 설명 참고",
-    "applicationRequired": "지원 필요"
+    "applicationRequired": "지원 필요",
+    "descriptionHeading": "요구 사항, 제출 가이드, 평가 기준",
+    "descriptionHeadingApply": "요구 사항, 지원 가이드, 평가 기준",
+    "rewardInfo": "보상 정보",
+    "rewardNotes": {
+      "flow": "흐름: 예치 → 검토 → 릴리스 → 전송.",
+      "token": "원래 토큰 그대로 지급되며, 필요하면 빌더가 직접 스왑합니다.",
+      "noSwap": "플랫폼 차원의 스왑은 없습니다. 컨트랙트와 지갑은 Injective 주소를 사용합니다."
+    },
+    "rewardNotesApply": {
+      "flow": "흐름: 예치 → 지원서 검토 → 승인 → 제출 → 릴리스.",
+      "token": "보상은 {currency}로 지급되며, 필요하면 빌더가 직접 스왑합니다.",
+      "noSwap": "플랫폼 차원의 스왑은 없습니다. 컨트랙트와 지갑은 Injective 주소를 사용합니다."
+    },
+    "completionHeading": "완료 + 승인 시",
+    "completionSteps": {
+      "transfer": "보상이 사용자 지갑으로 전송됩니다.",
+      "mint": "바운티 NFT가 자식 증명 아이템으로 발행됩니다.",
+      "attach": "자식 NFT가 사용자의 Ninja NFT에 연결되어 프로필 포트폴리오에 표시됩니다."
+    },
+    "afterApprovalSteps": {
+      "approve": "스폰서가 지원서를 승인합니다.",
+      "unlock": "완료한 작업을 제출할 수 있는 제출 필드가 열립니다.",
+      "reward": "최종 승인 후 보상 전송과 자식 바운티 NFT 발행이 진행됩니다."
+    },
+    "statusFlowEyebrow": "지원형 상태",
+    "footnote": "누구나 볼 수 있으며, 제출과 지원에는 로그인이 필요합니다. 자식 NFT는 완료한 바운티마다 남는 포트폴리오 증명입니다."
   },
   "action": {
     "agentHeading": "에이전트 제출",
     "agentBody": "이 바운티는 브라우저 제출 양식 대신 인증된 에이전트 API 요청으로 받습니다.",
     "manageAgents": "내 에이전트 관리",
-    "applyHeading": "이 바운티에 지원하기",
-    "submitHeading": "작업 제출하기",
-    "signInPrompt": "계속하려면 로그인하세요.",
+    "applyHeading": "지원",
+    "submitHeading": "제출",
     "signIn": "로그인",
     "checkingStatus": "바운티 진행 상태를 확인하는 중…",
     "statusUnavailable": "바운티 진행 상태를 일시적으로 불러올 수 없습니다. 새로고침 후 다시 시도하세요.",
     "underReviewHeading": "지원서 검토 중",
     "underReviewBody": "스폰서가 승인하면 제출할 수 있습니다.",
     "viewApplications": "내 지원 내역 보기",
-    "submissionUrl": "완료한 작업 URL",
+    "submissionUrl": "완료한 작업 링크",
     "repositoryUrl": "저장소 URL (선택)",
     "commitSha": "커밋 SHA (선택)",
     "submissionDescription": "완료한 작업을 설명해 주세요",
     "submit": "제출하기",
     "submitting": "제출하는 중…",
-    "portfolioUrl": "포트폴리오 또는 관련 작업 URL (선택)",
-    "applyMessage": "작업 방식과 관련 경험을 설명해 주세요",
+    "portfolioUrl": "관련 작업 링크 (선택)",
+    "applyMessage": "지원 메모",
     "apply": "지원하기",
     "applying": "지원하는 중…",
     "submitSuccess": "작업이 성공적으로 제출되었습니다.",
@@ -165,7 +180,14 @@
     "revisionNote": "스폰서가 수정을 요청했습니다. 작업물을 고친 뒤 다시 제출하세요.",
     "inReviewNote": "스폰서가 작업물을 검토하고 있습니다. 마감 전까지는 수정할 수 있으며, 최신 버전이 이전 제출을 대체합니다.",
     "resubmit": "다시 제출",
-    "updateSubmission": "제출물 수정"
+    "updateSubmission": "제출물 수정",
+    "loginRequired": "로그인 필요",
+    "submitSignedOutBody": "로그인한 뒤 완료한 작업 링크를 붙여 넣으세요. 로그인하지 않아도 모든 바운티 내용을 볼 수 있습니다.",
+    "applySignedOutBody": "먼저 짧은 지원서를 제출하세요. 제출 버튼은 스폰서 승인 후에만 열립니다.",
+    "signInFirst": "먼저 로그인",
+    "viewIntakeRules": "접수 규칙 보기",
+    "submitDisabled": "승인 전까지 제출 불가",
+    "availability": "참여 가능 일정"
   },
   "unavailableBody": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요."
 }

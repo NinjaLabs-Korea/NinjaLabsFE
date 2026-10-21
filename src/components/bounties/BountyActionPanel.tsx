@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { FormEvent, useState } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
+import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { ApiHttpError } from "@/lib/api/http";
 import type { SubmissionStatus } from "@/lib/contracts/account";
@@ -43,6 +44,47 @@ function StatusPanel({ title, body, tone = "muted", feedback, link }: {
 
 const pendingSubmissionStatuses: readonly SubmissionStatus[] = ["submitted", "resubmitted", "in_review"];
 
+/** Figma 15/15v public (signed-out) state: heading + LOGIN REQUIRED badge, "Sign in first", and a disabled preview of the form. */
+function SignedOutPanel({ applicationRequired }: { applicationRequired: boolean }) {
+  const t = useTranslations("bounties.action");
+  return (
+    <section className={panelClass}>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{applicationRequired ? t("applyHeading") : t("submitHeading")}</h2>
+            <Badge variant="danger">{t("loginRequired")}</Badge>
+          </div>
+          <p className="mt-2 text-sm text-ink-muted">{applicationRequired ? t("applySignedOutBody") : t("submitSignedOutBody")}</p>
+        </div>
+        {applicationRequired ? (
+          <Link className={outlineLinkClass.replace("mt-4 ", "")} href="/bounties/apply">{t("viewIntakeRules")}</Link>
+        ) : (
+          <Link className={outlineLinkClass.replace("mt-4 ", "")} href="/signup">{t("signInFirst")}</Link>
+        )}
+      </div>
+      {applicationRequired ? (
+        <fieldset className="mt-4 space-y-3" disabled>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <input aria-label={t("portfolioUrl")} className={inputClass} placeholder={t("portfolioUrl")} type="url" />
+            <input aria-label={t("availability")} className={inputClass} placeholder={t("availability")} type="text" />
+          </div>
+          <textarea aria-label={t("applyMessage")} className="min-h-28 w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder" placeholder={t("applyMessage")} />
+          <div className="flex flex-wrap gap-3">
+            <Link className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href="/signup">{t("apply")}</Link>
+            <span className="rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong opacity-60">{t("submitDisabled")}</span>
+          </div>
+        </fieldset>
+      ) : (
+        <fieldset className="mt-4 flex flex-col gap-3 sm:flex-row" disabled>
+          <input aria-label={t("submissionUrl")} className={inputClass} placeholder={t("submissionUrl")} type="url" />
+          <Link className="shrink-0 rounded-control bg-primary px-5 py-3 text-center text-sm font-semibold text-on-inverse" href="/signup">{t("submit")}</Link>
+        </fieldset>
+      )}
+    </section>
+  );
+}
+
 export function BountyActionPanel({ bountyId, applicationRequired, submissionMode }: { bountyId: string; applicationRequired: boolean; submissionMode: "direct" | "agent" }) {
   const t = useTranslations("bounties.action");
   const tError = useTranslations("bounties.action.errors");
@@ -76,13 +118,7 @@ export function BountyActionPanel({ bountyId, applicationRequired, submissionMod
   }
 
   if (auth.status !== "signed-in") {
-    return (
-      <section className={panelClass}>
-        <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{applicationRequired ? t("applyHeading") : t("submitHeading")}</h2>
-        <p className="mt-2 text-sm text-ink-muted">{t("signInPrompt")}</p>
-        <Link className="mt-4 inline-flex rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href="/signup">{t("signIn")}</Link>
-      </section>
-    );
+    return <SignedOutPanel applicationRequired={applicationRequired} />;
   }
 
   if (submissionsQuery.loading || (applicationRequired && applicationsQuery.loading)) {

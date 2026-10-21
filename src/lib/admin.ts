@@ -72,7 +72,7 @@ export const postCategoryLabelKeys: Record<AdminPost["category"], string> = {
   Other: "other",
 };
 
-const adminUserSlugs =["jaemin", "sora", "jinyoung", "juho", "mina", "ara"] as const;
+const adminUserSlugs = ["jaemin", "sora", "jinyoung", "juho", "mina", "ara"] as const;
 
 const userOverlays: Record<
   (typeof adminUserSlugs)[number],
@@ -157,7 +157,7 @@ export function getAdminHighlights(): AdminHighlight[] {
     title: highlight.title,
     order: index + 1,
     image: null,
-    ...(highlight.category === "Featured bounty" ? { link: "/bounties/iasset-price-widget" } : {}),
+    ...(highlight.category === "Featured bounty" ? { link: "/bounties/helix-volume-analytics" } : {}),
   }));
 }
 

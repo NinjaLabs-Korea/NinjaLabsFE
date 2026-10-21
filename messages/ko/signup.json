@@ -5,22 +5,23 @@
       "title": "Ninja Labs 로그인 절차 미리보기",
       "description": "로컬 세션 미리보기로 이 단계를 살펴보세요. Google에 연결하거나 계정을 만들지 않습니다.",
       "disclosure": "모의 모드는 로컬 테스트 전용입니다. 이 미리보기는 Google에 연결하거나 계정을 만들지 않습니다.",
-      "statusTitle": "미리보기 상태",
+      "statusTitle": "예외 상황",
       "edgeCases": {
         "first": "버튼을 누르면 로컬 세션 미리보기만 시작됩니다",
         "second": "Google 인증은 호출되지 않습니다"
       }
     },
     "api": {
-      "title": "Ninja Labs에 로그인",
-      "description": "Google로 계속하여 계정을 만드세요. Google로 이동한 뒤 승인하면 이 페이지로 돌아옵니다.",
+      "title": "Ninja Labs 시작하기",
+      "description": "Google로 시작하세요 — 지갑 설치가 필요 없습니다.",
       "disclosure": "로그인하면 Ninja Labs 계정이 생성되거나 복원됩니다. Google 이메일만 전달받으며 비밀번호는 공유되지 않습니다.",
-      "statusTitle": "진행 방식",
+      "statusTitle": "예외 상황",
       "edgeCases": {
-        "first": "Google 동의 화면으로 이동했다가 승인 후 다시 돌아옵니다",
-        "second": "새 계정은 온보딩 1단계부터 시작하며, 기존 사용자는 이전 세션을 이어갑니다"
+        "first": "이미 로그인한 사용자가 시작하기를 누르면 → 메인으로 이동합니다.",
+        "second": "Google 로그인을 거부하거나 실패하면 → 오류를 지우고 다시 시도합니다."
       }
-    }
+    },
+    "eyebrow": "계정 만들기"
   },
   "wallet": {
     "metadata": {
@@ -61,7 +62,9 @@
         "term": "NFT",
         "detail": "부모 Ninja NFT 발행이 대기열에 추가됨"
       }
-    }
+    },
+    "eyebrow": "지갑",
+    "whatHappensEyebrow": "NFT 발행"
   },
   "profile": {
     "metadata": {
@@ -69,15 +72,14 @@
       "description": "스팸 방지와 프로필 품질 관리"
     },
     "title": "프로필을 설정하세요",
-    "whyRequired": "모든 항목이 필수인 이유",
-    "whyRequiredSubtitle": "스팸 방지와 프로필 품질 관리",
+    "whyRequired": "스팸 방지와 프로필 품질 관리",
     "requirements": {
-      "spamControl": "스팸 방지와 프로필 품질 관리",
-      "oneFlow": "가입 과정을 한 번에 완료",
-      "noSkip": "건너뛰기 및 임시 저장 불가"
+      "spamControl": "닉네임만으로는 스팸 가입을 걸러낼 수 없어 닉네임, 분야 태그, 소개가 모두 필수입니다.",
+      "oneFlow": "필수 항목이 많아지면 이탈이 늘 수 있어 출시 후 단계별 퍼널을 모니터링합니다.",
+      "noSkip": "중간에 나가면 임시 저장되지 않으며, 다시 들어오면 온보딩을 처음부터 시작합니다."
     },
     "form": {
-      "nicknameLabel": "닉네임",
+      "nicknameLabel": "닉네임*",
       "nicknamePlaceholder": "닉네임을 입력하세요",
       "fieldTags": "분야 태그*",
       "tags": {
@@ -103,16 +105,19 @@
         "invalid": "모든 항목을 확인하세요. 닉네임은 2~50자이며, 자기소개와 분야 태그가 필요합니다.",
         "generic": "프로필을 저장하지 못했습니다. 다시 시도해 주세요."
       }
-    }
+    },
+    "eyebrow": "프로필",
+    "subtitle": "스폰서와 다른 빌더가 공개 포트폴리오에서 보게 될 정보입니다.",
+    "whyRequiredEyebrow": "모든 항목이 필수인 이유"
   },
   "getStarted": {
     "metadata": {
       "title": "시작하기 | Ninja Labs",
-      "description": "모두 건너뛸 수 있으며, 메인 메뉴에서 언제든 다시 찾을 수 있습니다."
+      "description": "모두 건너뛸 수 있습니다. 메인 메뉴에서 언제든 이 옵션으로 돌아올 수 있습니다."
     },
     "eyebrow": "온보딩 완료",
     "title": "무엇을 해 볼까요?",
-    "subtitle": "모두 건너뛸 수 있으며, 메인 메뉴에서 언제든 다시 찾을 수 있습니다.",
+    "subtitle": "모두 건너뛸 수 있습니다. 메인 메뉴에서 언제든 이 옵션으로 돌아올 수 있습니다.",
     "actions": {
       "browseBounties": {
         "title": "진행 중인 바운티 둘러보기",

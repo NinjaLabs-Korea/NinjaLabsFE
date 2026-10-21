@@ -6,28 +6,28 @@ import { fetchPublicJson, loadFromRuntime } from "./api/public";
 export const PROFILE_EMPTY_ID = "sora";
 
 const members: Member[] = [
-  { slug: "jinyoung", name: "Jinyoung Park", initials: "JP", role: "Core", title: "Product lead", bio: "Building the bounty marketplace for the Injective ecosystem.", isMember: true, links: { profile: "/members/jinyoung", posts: "/notices" } },
-  { slug: "juho", name: "Juho Kim", initials: "JK", role: "Dev", title: "Protocol engineer", bio: "Making on-chain proof useful for every builder.", isMember: true, links: { profile: "/members/juho", agents: "/members/juho" } },
-  { slug: "mina", name: "Mina Seo", initials: "MS", role: "Design", title: "Experience", bio: "Designing clear paths from first task to lasting proof.", isMember: true, links: { profile: "/members/mina", bounties: "/bounties" } },
-  { slug: "ara", name: "Ara Choi", initials: "AR", role: "Ops", title: "Community", bio: "Supporting builders and the community around their work.", isMember: true, links: { profile: "/members/ara", notices: "/notices" } },
+  { slug: "jinyoung", name: "Jinyoung Park", initials: "JP", role: "Core", title: "Product lead", bio: "Sets bounty quality standards and coordinates sponsor review loops.", isMember: true, links: { profile: "/members/jinyoung", posts: "/notices" } },
+  { slug: "juho", name: "Juho Kim", initials: "JK", role: "Dev", title: "Protocol engineer", bio: "Reviews CosmWasm deliverables and supports agent verification design.", isMember: true, links: { profile: "/members/juho", agents: "/members/juho" } },
+  { slug: "mina", name: "Mina Seo", initials: "MS", role: "Design", title: "Experience", bio: "Shapes onboarding, badge states, and public profile presentation.", isMember: true, links: { profile: "/members/mina", bounties: "/bounties" } },
+  { slug: "ara", name: "Ara Choi", initials: "AR", role: "Ops", title: "Community", bio: "Publishes notices and keeps member, sponsor, and builder updates current.", isMember: true, links: { profile: "/members/ara", notices: "/notices" } },
 ];
 
 export const profiles: Record<string, Profile> = {
   jaemin: {
-    slug: "jaemin", handle: "jaemin.inj", initials: "JM", bio: "Builder focused on useful tools and thoughtful experiences for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026",
+    slug: "jaemin", handle: "jaemin.inj", initials: "JM", bio: "Frontend builder focused on wallet onboarding, market data surfaces, and developer tools for Injective teams. Ships small, polished interfaces that sponsors can adopt without a long handoff.", skills: ["Dev", "Design"], joinedAt: "May 2026",
     completions: [
-      { title: "iAsset widget", category: "Dev", completedAt: "June 18, 2026", reward: { amount: 500, currency: "INJ" } },
-      { title: "Wallet flow", category: "Design", completedAt: "June 10, 2026", reward: { amount: 300, currency: "USDC" } },
-      { title: "Hydro guide", category: "Content", completedAt: "May 28, 2026", reward: { amount: 180, currency: "INJ" } },
+      { bountySlug: "iasset-price-widget", title: "Build an iAsset price widget", category: "Dev", completedAt: "July 2, 2026", reward: { amount: 500, currency: "INJ" } },
+      { bountySlug: "wallet-onboarding-states", title: "Design wallet onboarding states", category: "Design", completedAt: "June 24, 2026", reward: { amount: 300, currency: "USDC" } },
+      { bountySlug: "hydro-liquidity-explainer", title: "Hydro liquidity explainer", category: "Content", completedAt: "June 18, 2026", reward: { amount: 180, currency: "INJ" } },
       { title: "Audit report", category: "Dev", completedAt: "May 21, 2026", reward: { amount: 0, currency: "INJ" } },
       { title: "Docs revamp", category: "Content", completedAt: "May 14, 2026", reward: { amount: 0, currency: "INJ" } },
       { title: "Helix card", category: "Design", completedAt: "May 8, 2026", reward: { amount: 0, currency: "INJ" } },
       { title: "Quest copy", category: "Content", completedAt: "May 1, 2026", reward: { amount: 0, currency: "INJ" } },
     ],
     nfts: ["iAsset widget", "Wallet flow", "Audit report", "Docs revamp", "Hydro guide", "Helix card", "Quest copy"].map((title, index) => ({ id: `preview-nft-${index}`, type: "completion" as const, title, status: "ATTACHED" as const, contractAddress: "preview", tokenId: String(index + 1), mintTxHash: null })),
-    agents: [{ name: "market-scout-agent", wallet: "inj1...9k4d", verified: true, completedBounties: 3 }, { name: "proof-collector", wallet: "inj1...4r2m", verified: true, completedBounties: 2 }],
+    agents: [{ name: "market-scout-agent", wallet: "inj1...9k4d", verified: true, completedBounties: 3 }, { name: "docs-runner-agent", wallet: "inj1...x7ab", verified: true, completedBounties: 2 }],
   },
-  sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "A new builder preparing to contribute to the Injective ecosystem.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], nfts: [], agents: [] },
+  sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "New Injective builder exploring market data tasks, documentation bounties, and small UI components. This public profile is ready to become a portfolio as work is completed.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], nfts: [], agents: [] },
   jinyoung: { slug: "jinyoung", handle: "jinyoung.inj", initials: "JP", bio: "Product lead building the bounty marketplace for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
   juho: { slug: "juho", handle: "juho.inj", initials: "JK", bio: "Protocol engineer making on-chain proof useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
   mina: { slug: "mina", handle: "mina.inj", initials: "MS", bio: "Experience designer creating clear paths from first task to lasting proof.", skills: ["Design"], joinedAt: "June 2026", completions: [], nfts: [], agents: [] },

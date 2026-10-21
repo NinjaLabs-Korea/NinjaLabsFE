@@ -1,12 +1,12 @@
 {
   "metadata": {
     "title": "公告 | Ninja Labs",
-    "description": "面向 Injective 生态的建设者社区与赏金市场。"
+    "description": "一个展示社区活跃、持续交付并迎来新赞助方的动态与新闻信息流。"
   },
   "list": {
-    "eyebrow": "动态",
-    "heading": "公告",
-    "description": "面向 Injective 生态的建设者社区与赏金市场。",
+    "eyebrow": "公告 / 动态",
+    "heading": "Ninja Labs 与 Injective 生态的最新动态",
+    "description": "一个展示社区活跃、持续交付并迎来新赞助方的动态与新闻信息流。",
     "badge": "不只是运营公告，更是社区动态"
   },
   "filters": {

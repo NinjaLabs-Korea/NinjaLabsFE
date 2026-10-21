@@ -18,14 +18,14 @@ export const hallOfFame = {
     { value: "$-", label: "Rewards paid", labelKey: "rewardsPaid" },
   ],
   highlights: [
-    { category: "Milestone", title: "100th builder onboarded", body: "A growing group of builders is collecting proof of work on Injective." },
-    { category: "Featured bounty", title: "Build an iAsset price widget", body: "A reusable price widget for Injective iAssets became a builder favorite." },
-    { category: "Partnership", title: "Ninja Labs KR community partner wall", body: "Community partners are helping more builders find their next contribution." },
+    { category: "Milestone", title: "100th builder onboarded", body: "New sign-ups completed Google, wallet, NFT, and profile setup in one month." },
+    { category: "Featured bounty", title: "Helix analytics module shipped", body: "A bounty deliverable became a reusable market activity card for the DEX team." },
+    { category: "Partnership", title: "Hydro opens content bounties", body: "New educational tasks bring liquidity, vaults, and staking content into the board." },
   ],
   milestones: [
-    { title: "Ninja Labs launches", date: "April 8, 2026", description: "The first bounties opened for the Injective builder community." },
-    { title: "100th builder onboarded", date: "May 3, 2026", description: "A hundred builders joined to complete work and collect proof." },
-    { title: "First community partnership", date: "June 20, 2026", description: "Ninja Labs KR joined the growing community partner network." },
+    { title: "First bounty", date: "May 3, 2026", description: "Injective price widget posted for public builders." },
+    { title: "100th builder", date: "June 11, 2026", description: "Verified profiles crossed the first community marker." },
+    { title: "Partnership", date: "June 25, 2026", description: "Helix and Hydro opened recurring sponsor queues." },
   ],
 } as const;
 
@@ -57,7 +57,7 @@ export function getRuntimeHallOfFame(): Promise<RuntimeHallOfFame> {
 function mockHallOfFame(): RuntimeHallOfFame {
   return {
     stats: [...hallOfFame.stats],
-    highlights: hallOfFame.highlights.map((item) => ({ ...item, href: "/notices", image: null })),
+    highlights: hallOfFame.highlights.map((item) => ({ ...item, href: item.category === "Featured bounty" ? "/bounties/helix-volume-analytics" : "/notices", image: null })),
     milestones: [...hallOfFame.milestones],
     partners: [],
   };

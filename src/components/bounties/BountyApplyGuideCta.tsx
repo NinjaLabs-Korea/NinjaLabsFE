@@ -18,6 +18,7 @@ export function BountyApplyAuthBadge() {
 export function BountyApplyGuideCta({ bountyHref }: { bountyHref: string }) {
   const auth = useAuthSnapshot();
   const t = useTranslations("bounties.apply.cta");
+  // 16 draws "Apply after login" for visitors; signed-in users go straight to the apply form.
   const label = auth.status === "signed-in"
     ? t("applyNow")
     : auth.status === "signed-out"

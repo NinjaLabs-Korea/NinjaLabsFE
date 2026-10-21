@@ -18,10 +18,9 @@
     "buildersRewarded": "获得奖励的建设者",
     "completionNfts": "完成 NFT"
   },
-  "aggregateNote": "以上为平台汇总数据，并非排名。",
   "highlights": {
-    "eyebrow": "精选",
-    "heading": "亮点",
+    "eyebrow": "管理员精选",
+    "heading": "精选亮点",
     "readNotices": "查看公告",
     "categories": {
       "milestone": "里程碑",
@@ -30,15 +29,16 @@
     }
   },
   "timeline": {
-    "eyebrow": "我们的故事",
-    "heading": "时间线"
+    "eyebrow": "时间线",
+    "heading": "平台里程碑",
+    "entry": "{date} · {description}"
   },
   "unavailable": {
     "title": "名人堂暂时无法加载。",
     "body": "无法连接服务器，请稍后刷新。"
   },
   "partners": {
-    "eyebrow": "社区",
-    "heading": "合作伙伴"
+    "eyebrow": "生态",
+    "heading": "合作伙伴标志"
   }
 }

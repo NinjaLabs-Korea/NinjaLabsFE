@@ -24,7 +24,6 @@ export type Bounty = {
   deliverables?: string[];
   reviewProcess?: string;
   submissionMode?: 'direct' | 'agent';
-  completionSteps?: string[];
   // 19:1911 apply variant driver
   applicationRequired?: boolean;
   /** 19:1911 renders variant-specific masthead/description copy without changing list copy. */

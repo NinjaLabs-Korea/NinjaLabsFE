@@ -218,7 +218,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
             </label>
           </div>
           <button className="mt-5 h-[45px] rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" type="submit">{editing ? t("form.save") : t("form.create")}</button>
-          <p className="mt-3 text-xs text-ink-muted">{tCommon("saveNotice")}</p>
+          <p className="mt-3 text-xs text-ink-muted">{t("form.rewardNote")} {tCommon("saveNotice")}</p>
         </form>
       </section>
     </>

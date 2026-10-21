@@ -40,12 +40,15 @@ export default async function SignupWalletPage({ params }: PageProps<"/[locale]/
           <SignupGate>
             <div className="grid gap-5 lg:grid-cols-5">
               <article className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] lg:col-span-3">
-                <h1 className="font-display text-4xl -tracking-[0.36px] text-ink">
-                  {t("wallet.title")}
-                </h1>
-                <p className="mt-3 text-base text-ink-muted">
-                  {isApiMode ? t("wallet.introApi") : t("wallet.introMock")}
-                </p>
+                <div className="text-center">
+                  <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("wallet.eyebrow")}</p>
+                  <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] text-ink">
+                    {t("wallet.title")}
+                  </h1>
+                  <p className="mt-3 text-base text-ink-muted">
+                    {isApiMode ? t("wallet.introApi") : t("wallet.introMock")}
+                  </p>
+                </div>
                 <div className="mt-5 [&_button]:w-full">
                   {walletConnectionConfig ? (
                     <WalletProvider
@@ -84,12 +87,13 @@ export default async function SignupWalletPage({ params }: PageProps<"/[locale]/
                 >
                   {t("wallet.connectLater")}
                 </Link>
-                <p className="mt-4 text-sm text-ink-muted">
+                <p className="mt-4 text-center text-sm text-ink-muted">
                   {t("wallet.optionalNote")}
                 </p>
               </article>
               <aside className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] lg:col-span-2">
-                <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">
+                <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("wallet.whatHappensEyebrow")}</p>
+                <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">
                   {t("wallet.whatHappens")}
                 </h2>
                 <dl className="mt-5 space-y-4">

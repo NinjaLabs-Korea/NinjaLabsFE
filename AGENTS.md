@@ -124,7 +124,7 @@ public/
 - Implemented component inventory (49 files; keep in sync with `src/components/`):
   - `layout/Header`, `layout/Footer` - the shared shell chrome (rendered once in `layout.tsx`)
   - `ui/Badge` - pill chip; variants `primary-soft` (default) / `selected` (`bg-primary text-primary-soft`) / `success` / `danger` / `warning` / `neutral` / `inverse` (StepIndicator's white active step is intentional and NOT a Badge)
-  - `ui/RewardPill` - `{ amount, currency: 'INJ' | 'USDC' }`; INJ token icon vs `$` glyph
+  - `ui/RewardPill` - `{ amount, currency: 'INJ' | 'USDC' }`; INJ token icon vs `$` glyph. `variant="icon"` renders only the token glyph for composed pills (bounty detail "Sponsor pays: 500 INJ")
   - `ui/SectionHeader` - eyebrow + heading (`level` 1|2|3, `size` 'lg'|'xl') + optional action link
   - `ui/StepIndicator` - 4-step sign-up progress (`current` 1–4); wraps below 768
   - `cards/BountyCard` - cover (gradient fallback) + Badge + title + optional summary (`showSummary`) + RewardPill + deadline·sponsor

@@ -54,9 +54,13 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
       {hallOfFame.stats.length > 0 ? (
         <section className="mt-10 rounded-panel bg-[linear-gradient(160deg,var(--color-hero-from)_0%,var(--color-hero-via)_55%,var(--color-hero-to)_100%)] p-6 shadow-frame sm:p-10">
           <div className="grid gap-5 md:grid-cols-3">
-            {hallOfFame.stats.map((stat) => <div key={stat.labelKey} className="rounded-card border border-on-inverse/15 bg-on-inverse/5 p-5"><p className="font-display text-4xl font-bold text-on-inverse">{stat.value}</p><p className="mt-2 text-sm text-on-inverse/70">{t(`stats.${stat.labelKey}`)}</p></div>)}
+            {hallOfFame.stats.map((stat) => (
+              <div key={stat.labelKey} className="rounded-card border border-on-inverse/15 bg-on-inverse/5 p-5 text-center">
+                <p className="font-display text-4xl font-bold text-on-inverse">{stat.value}</p>
+                <p className="mt-2 text-sm text-on-inverse/70">{t(`stats.${stat.labelKey}`)}</p>
+              </div>
+            ))}
           </div>
-          <p className="mt-5 text-sm text-on-inverse/70">{t("aggregateNote")}</p>
         </section>
       ) : null}
 
@@ -64,7 +68,18 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
         <section className="py-14">
           <SectionHeader eyebrow={t("highlights.eyebrow")} heading={t("highlights.heading")} action={{ label: t("highlights.readNotices"), href: "/notices" }} />
           <div className="mt-6 grid gap-5 md:grid-cols-3">
-            {hallOfFame.highlights.map((highlight) => <Link href={highlight.href} key={highlight.title} className="overflow-hidden rounded-card border border-border bg-surface shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"><div className="relative aspect-[16/9] bg-gradient-to-br from-primary-soft-border to-surface-subtle">{highlight.image ? <Image alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 370px" src={highlight.image} /> : null}</div><div className="p-5"><Badge variant={highlightVariants[highlight.category]}>{t(`highlights.categories.${highlightLabelKeys[highlight.category]}`)}</Badge><h3 className="mt-3 font-display text-lg font-bold text-ink">{highlight.title}</h3><p className="mt-2 text-sm text-ink-muted">{highlight.body}</p></div></Link>)}
+            {hallOfFame.highlights.map((highlight) => (
+              <Link href={highlight.href} key={highlight.title} className="overflow-hidden rounded-card border border-border bg-surface shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                <div className="relative aspect-[16/9] bg-gradient-to-br from-primary-soft-border to-surface-subtle">
+                  {highlight.image ? <Image alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 370px" src={highlight.image} /> : null}
+                </div>
+                <div className="p-5">
+                  <Badge variant={highlightVariants[highlight.category]}>{t(`highlights.categories.${highlightLabelKeys[highlight.category]}`)}</Badge>
+                  <h3 className="mt-3 font-display text-lg font-bold text-ink">{highlight.title}</h3>
+                  <p className="mt-2 text-sm text-ink-muted">{highlight.body}</p>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
       ) : null}
@@ -72,9 +87,15 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
       {hallOfFame.milestones.length > 0 ? (
         <section>
           <SectionHeader eyebrow={t("timeline.eyebrow")} heading={t("timeline.heading")} />
-          <div className="relative mt-8 grid gap-8 md:grid-cols-3 md:before:absolute md:before:top-5 md:before:right-0 md:before:left-0 md:before:h-px md:before:bg-border">
-            {hallOfFame.milestones.map((milestone) => <article key={milestone.title} className="relative"><div className="flex size-10 items-center justify-center rounded-full border-4 border-primary-soft-border bg-primary text-xs font-bold text-on-inverse">N</div><h3 className="mt-5 font-display text-xl font-bold text-ink">{milestone.title}</h3><p className="mt-2 text-sm font-semibold text-primary">{milestone.date}</p><p className="mt-2 text-sm text-ink-muted">{milestone.description}</p></article>)}
-          </div>
+          <ol className="relative mt-8 grid gap-8 md:grid-cols-3 md:before:absolute md:before:top-[17px] md:before:right-0 md:before:left-0 md:before:h-px md:before:bg-border">
+            {hallOfFame.milestones.map((milestone) => (
+              <li key={milestone.title} className="relative">
+                <span aria-hidden className="block size-9 rounded-full border-4 border-primary-soft-border bg-primary" />
+                <h3 className="mt-5 font-display text-xl font-bold text-ink">{milestone.title}</h3>
+                <p className="mt-2 text-sm text-ink-muted">{t("timeline.entry", { date: milestone.date, description: milestone.description })}</p>
+              </li>
+            ))}
+          </ol>
         </section>
       ) : null}
 

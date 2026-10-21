@@ -23,6 +23,7 @@ export default async function AdminHallOfFamePage({ params }: PageProps<"/[local
   setRequestLocale(locale);
   const t = await getTranslations("admin.hallOfFame");
   const tCommon = await getTranslations("admin.common");
+  const tStats = await getTranslations("hallOfFame.stats");
   const highlights = await loadFromRuntime({ mock: getAdminHighlights, api: async () => [] });
   const hall = await getRuntimeHallOfFame();
 
@@ -53,10 +54,10 @@ export default async function AdminHallOfFamePage({ params }: PageProps<"/[local
             <Badge variant="neutral">{t("statsBadge")}</Badge>
           </div>
           <div className="mt-6 grid gap-5 md:grid-cols-3">
-            {hall.stats.map(({ value, label }) => (
-              <article key={label} className="rounded-card border border-primary-soft-border bg-primary-soft p-5">
+            {hall.stats.map(({ value, labelKey }) => (
+              <article key={labelKey} className="rounded-card border border-primary-soft-border bg-primary-soft p-5 text-center">
                 <p className="font-display text-4xl font-bold text-primary">{value}</p>
-                <p className="mt-2 text-sm text-ink-muted">{label}</p>
+                <p className="mt-2 text-sm text-ink-muted">{tStats(labelKey)}</p>
               </article>
             ))}
           </div>

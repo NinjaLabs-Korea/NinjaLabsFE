@@ -52,7 +52,7 @@ const bounties: Bounty[] = [
 ];
 
 describe("BountyFilters", () => {
-  it("applies category and status as independent nested filters", () => {
+  it("applies category and status as independent filters and resets both with All", () => {
     renderWithIntl(<BountyFilters bounties={bounties} />);
 
     const categoryGroup = screen.getByRole("group", { name: "Category" });
@@ -67,9 +67,22 @@ describe("BountyFilters", () => {
     expect(screen.queryByText("Active dev bounty")).toBeNull();
     expect(screen.getByText("Closed dev bounty")).toBeTruthy();
 
-    fireEvent.click(within(categoryGroup).getByRole("button", { name: "All" }));
+    // Re-clicking an active chip clears only that group.
+    fireEvent.click(within(categoryGroup).getByRole("button", { name: "Dev" }));
     expect(screen.getByText("Closed dev bounty")).toBeTruthy();
     expect(screen.queryByText("Active design bounty")).toBeNull();
     expect(within(statusGroup).getByRole("button", { name: "Closed" }).getAttribute("aria-pressed")).toBe("true");
+
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
+    expect(screen.getByText("Active dev bounty")).toBeTruthy();
+    expect(screen.getByText("Closed dev bounty")).toBeTruthy();
+    expect(screen.getByText("Active design bounty")).toBeTruthy();
+    expect(within(statusGroup).getByRole("button", { name: "Closed" }).getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("offers only the categories present in the list", () => {
+    renderWithIntl(<BountyFilters bounties={bounties} />);
+    const categoryGroup = screen.getByRole("group", { name: "Category" });
+    expect(within(categoryGroup).getAllByRole("button").map((button) => button.textContent)).toEqual(["Dev", "Design"]);
   });
 });
