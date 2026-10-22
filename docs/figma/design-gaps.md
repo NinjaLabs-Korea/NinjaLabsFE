@@ -84,3 +84,7 @@ Branch `fix/figma-pixel-audit`. Every screen in the new design file was compared
 | Admin "+ New Post" | Now lives in the masthead row next to ADMIN ONLY (21) via a slot in `admin/PostManager`, replacing the absolute-position hack. |
 | Hall of Fame stats | Figma 06 has no "Platform aggregate" footnote; removed. Timeline renders dot-on-line + title + "date · description" (`hallOfFame.timeline.entry`). |
 | Sign-up frame badges | Still omitted (see "Sign-up status badges removed" above); the step headers now carry the Figma eyebrow/title/subtitle and the Figma footnotes are rendered under the cards. |
+
+### Responsive pass (2026-10-22)
+
+Figma only draws 1440px frames. Every route was checked at 390px and 768px (no horizontal scroll on any page; admin tables scroll inside their own `overflow-x-auto` wrapper). Fixes applied: header hides the wordmark below `sm` so locale + Get Started + Menu fit at 390px and CJK labels never wrap; `ui/SectionHeader` and the bounty/profile mastheads wrap their action under the heading; the profile card stacks avatar over text below `sm`; the signed-out Submit/Apply panel keeps a readable text width. No mobile frames exist to match pixel-for-pixel, so these are implementation decisions.

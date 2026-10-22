@@ -26,9 +26,9 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <section>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={1} size="xl" />
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <Badge variant="success">{t("publicBadge")}</Badge>
             <Link
               className="rounded-control border border-primary-outline px-[21px] py-3 text-sm leading-[21px] font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

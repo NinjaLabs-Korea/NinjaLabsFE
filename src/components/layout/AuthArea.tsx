@@ -32,7 +32,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
           </div>
         ) : (
           <Link
-            className="rounded-control bg-primary px-[21px] py-3 text-sm leading-[21px] font-semibold text-on-inverse"
+            className="whitespace-nowrap rounded-control bg-primary px-4 py-3 text-sm leading-[21px] font-semibold text-on-inverse sm:px-[21px]"
             href="/signup"
           >
             {t("getStarted")}

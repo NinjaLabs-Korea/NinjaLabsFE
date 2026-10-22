@@ -48,15 +48,15 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
-      <section className="flex flex-wrap items-start gap-4">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-6 rounded-card border border-border bg-surface p-[21px] shadow-card">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <div className="flex min-w-0 flex-1 flex-col gap-5 rounded-card border border-border bg-surface p-[21px] shadow-card sm:flex-row sm:items-center sm:gap-6">
           <div className="flex size-24 shrink-0 items-center justify-center rounded-full bg-primary-soft-border font-display text-[30px] text-primary">{profile.initials}</div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               {profile.skills.map((skill) => <Badge key={skill}>{t(`categories.${skill.toLowerCase()}`)}</Badge>)}
               <Badge variant={completed ? "success" : "neutral"}>{completed ? t("bountiesCompleted", { count: profile.completions.length }) : t("newBuilder")}</Badge>
             </div>
-            <h1 className="mt-3 font-display text-5xl -tracking-[0.48px] text-ink">{profile.handle}</h1>
+            <h1 className="mt-3 break-words font-display text-4xl -tracking-[0.36px] text-ink sm:text-5xl sm:-tracking-[0.48px]">{profile.handle}</h1>
             <p className="mt-3 max-w-[768px] text-base text-ink-muted">{profile.bio}</p>
           </div>
         </div>

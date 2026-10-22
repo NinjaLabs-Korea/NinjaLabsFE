@@ -28,19 +28,19 @@ export function Header() {
             height={28}
             className="rounded-logo"
           />
-          <span className="font-display text-xl font-bold text-ink">Ninja Labs</span>
+          <span className="hidden whitespace-nowrap font-display text-xl font-bold text-ink sm:inline">Ninja Labs</span>
         </Link>
 
         <nav className="col-start-2 hidden gap-7 md:flex" aria-label={t("mainNavigation")}>
           <NavLinks links={links} variant="desktop" />
         </nav>
 
-        <div className="col-start-3 flex items-center gap-2 justify-self-end">
+        <div className="col-start-3 flex items-center gap-1 justify-self-end sm:gap-2">
           <LocaleSwitcher />
           <AuthArea variant="desktop" />
 
           <details className="relative md:hidden">
-            <summary className="flex cursor-pointer list-none items-center rounded-control px-3 py-3 text-sm leading-[21px] font-semibold text-ink-secondary [&::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center whitespace-nowrap rounded-control px-2 py-3 text-sm sm:px-3 leading-[21px] font-semibold text-ink-secondary [&::-webkit-details-marker]:hidden">
               {t("menu")}
             </summary>
             <nav
