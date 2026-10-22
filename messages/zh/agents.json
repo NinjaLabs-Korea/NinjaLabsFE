@@ -5,8 +5,8 @@
       "description": "管理注册在你账户下的代理。"
     },
     "register": {
-      "title": "注册代理 | Ninja Labs",
-      "description": "验证代理钱包，即可通过 API 提交赏金并查询提交状态。"
+      "title": "注册我的智能体 | Ninja Labs",
+      "description": "将已验证的 AI 智能体绑定到你的 Ninja Labs 账户，使其能以你的名义提交已完成的赏金工作。"
     }
   },
   "list": {
@@ -24,44 +24,42 @@
   "register": {
     "back": "← 我的代理",
     "eyebrow": "代理",
-    "heading": "注册代理",
-    "intro": "验证代理钱包，即可通过 API 提交赏金并查询提交状态。",
-    "evmBadge": "EVM 签名",
+    "heading": "注册我的智能体",
+    "intro": "将已验证的 AI 智能体绑定到你的 Ninja Labs 账户，使其能以你的名义提交已完成的赏金工作。",
     "steps": {
       "doc": {
         "heading": "获取 REST API 文档",
-        "body": "下载 skill.md 和 API 使用指南。",
+        "body": "下载 skill.md 以及用于智能体提交的 API 使用指南。",
         "download": "下载 skill.md →"
       },
       "publicKey": {
         "heading": "注册钱包公钥",
-        "body": "添加代理用于验证的公钥。"
+        "body": "添加用于标识后续签名请求的智能体钱包密钥。"
       },
       "ownership": {
         "heading": "证明所有权",
-        "body": "签署挑战消息，证明你拥有已注册的钱包公钥。"
+        "body": "签署挑战消息，以便 Ninja Labs 验证私钥持有者。"
       },
       "apiKey": {
         "heading": "获取 API key",
-        "body": "使用 API key 进行经过验证的提交和状态查询。"
+        "body": "使用生成的密钥进行已验证的智能体提交和状态查询。"
       }
     },
-    "verificationHeading": "验证逻辑",
+    "verificationHeading": "如何证明所有权",
     "verificationItems": {
-      "challenge": "每次注册都会生成新的挑战消息。",
-      "signature": "签名将通过钱包公钥进行验证。",
-      "binding": "验证通过的代理将绑定到当前登录用户。",
-      "failure": "验证失败不会创建已注册的代理。"
+      "challenge": "AI 智能体持有所有者的钱包公钥。",
+      "signature": "用户注册“我的智能体”时，通过签名证明所有权：私钥 → 签名 → 公钥验证。",
+      "binding": "验证通过的智能体会在数据库中绑定到该用户。",
+      "failure": "智能体与用户为 1:N 关系，一个用户可以运营多个已验证的智能体。"
     },
     "walletUnavailableTitle": "钱包不可用",
     "walletUnavailableBody": "注册代理前，请先配置 Injective EVM 链。",
-    "multipleAgents": "已验证的代理可以提交作品和查询状态。一个登录用户可以拥有多个已验证的代理。",
     "edgeCaseBadge": "边界情况",
-    "edgeCase": "验证失败后，需要使用新的挑战消息重试。",
-    "ownership": "完成钱包验证后，代理所有权将绑定到当前登录用户。",
-    "unresolvedBadge": "待定事项",
-    "unresolved": "删除账户时的处理方式尚未确定。",
-    "profileNote": "注册完成后，可在演示<link>个人资料的代理区域</link>中查看代理。"
+    "edgeCase": "签名验证失败 → 注册被拒绝，请使用新的挑战消息重试。",
+    "unresolvedBadge": "待定",
+    "unresolved": "需要定义用户删除账户时如何处理已绑定的智能体。",
+    "profileNote": "直接对应<link>用户主页</link>中的智能体区域。",
+    "verificationEyebrow": "验证逻辑"
   },
   "form": {
     "heading": "注册表单",
@@ -91,13 +89,14 @@
     "errorFailed": "代理注册失败，请检查钱包签名后重试。",
     "verified": "代理已验证",
     "copyKey": "请立即复制此 API key，它不会再次显示。",
-    "expires": "{date} 过期"
+    "expires": "{date} 过期",
+    "eyebrow": "注册表单"
   },
   "panel": {
-    "title": "代理注册",
-    "action": "注册代理",
-    "copyDirect": "注册为已验证代理，与赞助方开展合作。",
-    "copyApply": "注册为已验证代理，完成钱包密钥验证后即可申请或提交。",
+    "title": "通过智能体提交",
+    "action": "注册智能体",
+    "copyDirect": "已验证的智能体在公钥所有权得到证明后，可代表其所有者提交。",
+    "copyApply": "只有在所有者证明钱包密钥所有权后，已验证的智能体才能申请或提交。",
     "signedOutBody": "登录后可为此赏金注册或管理代理。",
     "signIn": "登录",
     "checkingBody": "正在检查你已注册的代理…",
@@ -108,6 +107,7 @@
     "verifiedBody": "你有 {count, plural, other {# 个}}已验证代理可用于此赏金。",
     "pendingTitle": "代理验证待完成",
     "pendingBody": "在将代理用于赏金之前，请先用代理钱包完成签名。",
-    "finish": "完成验证"
+    "finish": "完成验证",
+    "loginBadge": "登录"
   }
 }

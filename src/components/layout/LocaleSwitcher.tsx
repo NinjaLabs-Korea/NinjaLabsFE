@@ -27,7 +27,7 @@ export function LocaleSwitcher() {
       <button
         {...menu.buttonProps(routing.locales.indexOf(locale))}
         aria-label={t("label")}
-        className={`flex items-center gap-1.5 rounded-control px-3 py-3 text-sm leading-[21px] font-semibold hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${menu.open ? "text-ink" : "text-ink-secondary"}`}
+        className={`flex items-center gap-1.5 whitespace-nowrap rounded-control px-2 py-3 text-sm sm:px-3 leading-[21px] font-semibold hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${menu.open ? "text-ink" : "text-ink-secondary"}`}
         disabled={pending}
       >
         {localeLabels[locale]}

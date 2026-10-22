@@ -10,7 +10,8 @@ import type { Notice } from "@/lib/types";
 
 type NoticeFiltersProps = { notices: Notice[] };
 type CategoryFilter = "All" | Notice["category"];
-const categories: Notice["category"][] = ["Ninja Labs", "Injective ecosystem", "Events", "Recruitment", "Other"];
+// Canonical chip order; only categories present in the feed are offered (08 draws All / Ninja Labs / Injective ecosystem / Events).
+const categoryOrder: Notice["category"][] = ["Ninja Labs", "Injective ecosystem", "Events", "Recruitment", "Other"];
 
 export function NoticeFilters({ notices }: NoticeFiltersProps) {
   const t = useTranslations("notices");
@@ -18,13 +19,17 @@ export function NoticeFilters({ notices }: NoticeFiltersProps) {
   const resetFilters = () => {
     setCategory("All");
   };
+  const categories = useMemo(() => {
+    const present = new Set(notices.map((notice) => notice.category));
+    return categoryOrder.filter((item) => present.has(item));
+  }, [notices]);
   const visibleNotices = useMemo(() => notices.filter((notice) => category === "All" || notice.category === category), [category, notices]);
 
   return (
     <>
-      <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")}>
-        <button className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => setCategory("All")} type="button"><Badge variant={category === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
-        {categories.map((item) => <button className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => setCategory(item)} type="button"><Badge variant={category === item ? "selected" : "primary-soft"}>{t(`categories.${noticeCategoryKeys[item]}`)}</Badge></button>)}
+      <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")} role="group">
+        <button aria-pressed={category === "All"} className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => setCategory("All")} type="button"><Badge variant={category === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
+        {categories.map((item) => <button aria-pressed={category === item} className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => setCategory(item)} type="button"><Badge variant={category === item ? "selected" : "primary-soft"}>{t(`categories.${noticeCategoryKeys[item]}`)}</Badge></button>)}
       </div>
       {visibleNotices.length > 0 ? (
         <section className="mt-8 space-y-4" aria-label={t("filters.listAriaLabel")}>

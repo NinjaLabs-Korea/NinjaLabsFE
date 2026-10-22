@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "r
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { highlightTypeLabelKeys, type AdminHighlight } from "@/lib/admin";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
@@ -36,6 +37,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [link, setLink] = useState("");
   const [order, setOrder] = useState(0);
+  const [pendingDelete, setPendingDelete] = useState<AdminHighlight | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -101,7 +103,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   }
 
   async function handleDelete(highlight: AdminHighlight) {
-    if (!window.confirm(tCommon("deleteConfirm", { title: highlight.title }))) return;
+    setPendingDelete(null);
     try {
       await api.deleteAdminHighlight(highlight.id);
       setRecords((current) => current.filter((item) => item.id !== highlight.id));
@@ -130,7 +132,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
                 <td className="px-5 py-4 text-sm text-ink-secondary">{highlight.order}</td>
                 <td className="px-5 py-4 text-sm text-ink-secondary">{highlight.link ?? "–"}</td>
                 <td className="px-5 py-4">
-                  <div className="flex gap-2"><button className="h-11 rounded-control border border-primary-outline bg-surface px-3 text-sm font-semibold text-primary-strong" onClick={() => handleEdit(highlight)} type="button">{tCommon("edit")}</button><button className="h-11 rounded-control border border-danger px-3 text-sm font-semibold text-danger" onClick={() => handleDelete(highlight)} type="button">{tCommon("delete")}</button></div>
+                  <div className="flex gap-2"><button className="h-11 rounded-control border border-primary-outline bg-surface px-3 text-sm font-semibold text-primary-strong" onClick={() => handleEdit(highlight)} type="button">{tCommon("edit")}</button><button className="h-11 rounded-control border border-danger px-3 text-sm font-semibold text-danger" onClick={() => setPendingDelete(highlight)} type="button">{tCommon("delete")}</button></div>
                 </td>
               </tr>
             ))}
@@ -138,9 +140,9 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
         </div>
       </section>
 
-      <section className="rounded-card border border-border bg-surface p-5 shadow-card" ref={formRef}>
+      <section className="rounded-card border border-border bg-surface p-[21px] shadow-card" ref={formRef}>
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{isEditing ? t("form.eyebrowEdit") : t("form.eyebrowCreate")}</p>
-        <h2 className="font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
+        <h2 className="mt-2 font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
         <form onSubmit={handleSubmit}>
           <div className="mt-6 grid gap-5 md:grid-cols-2">
             <div className="text-sm font-semibold text-ink">
@@ -156,13 +158,14 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
               <input accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleImageChange} ref={imageInputRef} type="file" />
               <span className="mt-2 block text-xs font-normal text-ink-muted">{imageFile?.name ?? image ?? tCommon("fileHint")}</span>
             </div>
-            <label className="text-sm font-semibold text-ink">{t("form.link")} <span className="font-normal text-ink-muted">{t("form.optional")}</span><input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => setLink(event.target.value)} placeholder="https://" value={link} /></label>
+            <label className="text-sm font-semibold text-ink">{t("form.link")} <span className="font-normal text-ink-muted">{t("form.optional")}</span><input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" onChange={(event) => setLink(event.target.value)} placeholder={t("form.linkPlaceholder")} value={link} /></label>
             <label className="text-sm font-semibold text-ink">{t("form.displayOrder")}<input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" min={0} onChange={(event) => setOrder(Number(event.target.value))} placeholder="0" required step={1} type="number" value={order} /></label>
           </div>
           <button className="mt-5 h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" type="submit">{tCommon("save")}</button>
           <p className="mt-3 text-xs text-ink-muted">{tCommon("saveNotice")}</p>
         </form>
       </section>
+      <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void handleDelete(pendingDelete)} title={pendingDelete?.title ?? null} />
     </>
   );
 }

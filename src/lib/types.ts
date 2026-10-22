@@ -14,7 +14,7 @@ export type Bounty = {
   rewards?: Reward[];
   sponsor: string;
   deadline: string;
-  // 19:1480 shows D-7 label; 19:1739 shows full UTC deadline
+  // Figma 14 (list card) shows the D-7 label; Figma 15 (detail meta cell) shows the full UTC deadline
   deadlineDetail?: string;
   coverImage: string;
   /** Markdown (rendered by ui/Markdown): supported subset is p/a/strong/em/ul/ol/li/h2/h3/code/pre/blockquote/br/del. Tables, images, and task lists are unsupported by design. */
@@ -24,10 +24,9 @@ export type Bounty = {
   deliverables?: string[];
   reviewProcess?: string;
   submissionMode?: 'direct' | 'agent';
-  completionSteps?: string[];
-  // 19:1911 apply variant driver
+  // Figma 15v apply-variant driver
   applicationRequired?: boolean;
-  /** 19:1911 renders variant-specific masthead/description copy without changing list copy. */
+  /** Figma 15v renders variant-specific masthead/description copy without changing list copy. */
   applicationTitle?: string;
   applicationDescription?: string;
 };

@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { AdminTable } from "@/components/admin/AdminTable";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
@@ -36,6 +37,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<BountyFormErrors>({});
   const [originalDeadline, setOriginalDeadline] = useState<string | undefined>();
+  const [pendingDelete, setPendingDelete] = useState<AdminBounty | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const editing = mode.kind === "edit";
 
@@ -118,7 +120,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   };
 
   const remove = async (bounty: AdminBounty) => {
-    if (!window.confirm(tCommon("deleteConfirm", { title: bounty.title }))) return;
+    setPendingDelete(null);
     try {
       await api.deleteAdminBounty(bounty.slug);
       setRecords((current) => current.filter((item) => item.slug !== bounty.slug));
@@ -149,7 +151,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <td className="px-5 py-4 text-sm text-ink-secondary">{t(`intake.${bounty.intakeEnabled ? "ON" : "OFF"}`)}<p className="mt-1 text-xs text-ink-muted">{t(`submissionModes.${bounty.submissionMode === "agent" ? "Agent" : "Direct"}`)}</p></td>
               <td className="px-5 py-4"><Badge variant={statusVariants[bounty.status]}>{t(`statuses.${bounty.status}`)}</Badge></td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{bounty.deadline}</td>
-              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<button className="rounded-control border border-danger px-3 py-2 text-sm font-semibold text-danger" onClick={() => remove(bounty)} type="button">{tCommon("delete")}</button></div></td>
+              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<button className="rounded-control border border-danger px-3 py-2 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
             </tr>
           ))}
         </AdminTable>
@@ -218,9 +220,10 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
             </label>
           </div>
           <button className="mt-5 h-[45px] rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" type="submit">{editing ? t("form.save") : t("form.create")}</button>
-          <p className="mt-3 text-xs text-ink-muted">{tCommon("saveNotice")}</p>
+          <p className="mt-3 text-xs text-ink-muted">{t("form.rewardNote")} {tCommon("saveNotice")}</p>
         </form>
       </section>
+      <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void remove(pendingDelete)} title={pendingDelete?.title ?? null} />
     </>
   );
 }

@@ -5,22 +5,23 @@
       "title": "预览 Ninja Labs 登录流程",
       "description": "通过本地会话预览体验此步骤。不会连接 Google，也不会创建账户。",
       "disclosure": "模拟模式仅用于本地测试。此预览不会连接 Google，也不会创建账户。",
-      "statusTitle": "预览状态",
+      "statusTitle": "边界情况",
       "edgeCases": {
         "first": "点击按钮仅会启动本地会话预览",
         "second": "不会调用 Google 身份验证"
       }
     },
     "api": {
-      "title": "登录 Ninja Labs",
-      "description": "使用 Google 继续以创建账户。你将被跳转到 Google，授权后返回此页面。",
+      "title": "开始使用 Ninja Labs",
+      "description": "使用 Google 开始 — 无需安装钱包。",
       "disclosure": "登录会创建或恢复你的 Ninja Labs 账户。我们只会获取你的 Google 邮箱，不会共享密码。",
-      "statusTitle": "工作原理",
+      "statusTitle": "边界情况",
       "edgeCases": {
-        "first": "你将跳转到 Google 授权页面，授权后返回",
-        "second": "新账户从引导第 1 步开始；老用户将恢复之前的会话"
+        "first": "已登录用户点击“开始使用” → 前往首页。",
+        "second": "Google 登录被拒绝或失败 → 清除错误并重试。"
       }
-    }
+    },
+    "eyebrow": "创建账户"
   },
   "wallet": {
     "metadata": {
@@ -61,7 +62,9 @@
         "term": "NFT",
         "detail": "父 Ninja NFT 铸造已加入队列"
       }
-    }
+    },
+    "eyebrow": "钱包",
+    "whatHappensEyebrow": "NFT 铸造"
   },
   "profile": {
     "metadata": {
@@ -69,15 +72,14 @@
       "description": "防止垃圾账户，保证资料质量"
     },
     "title": "设置你的个人资料",
-    "whyRequired": "为什么全部必填",
-    "whyRequiredSubtitle": "防止垃圾账户，保证资料质量",
+    "whyRequired": "防止垃圾账户，保证资料质量",
     "requirements": {
-      "spamControl": "防止垃圾账户，保证资料质量",
-      "oneFlow": "一次性完成注册流程",
-      "noSkip": "不可跳过或保存草稿"
+      "spamControl": "仅靠昵称无法过滤垃圾注册，因此昵称、领域标签和简介均为必填。",
+      "oneFlow": "更多必填项可能增加流失，因此团队会在上线后监控每一步的转化漏斗。",
+      "noSkip": "退出时不保存草稿；重新进入将从引导流程开头重新开始。"
     },
     "form": {
-      "nicknameLabel": "昵称",
+      "nicknameLabel": "昵称*",
       "nicknamePlaceholder": "请输入昵称",
       "fieldTags": "领域标签*",
       "tags": {
@@ -103,16 +105,19 @@
         "invalid": "请检查所有字段：昵称需为 2-50 个字符，并且必须填写自我介绍和领域标签。",
         "generic": "无法保存个人资料，请重试。"
       }
-    }
+    },
+    "eyebrow": "个人资料",
+    "subtitle": "这是赞助方和其他建设者在你的公开作品集中看到的内容。",
+    "whyRequiredEyebrow": "为什么全部必填"
   },
   "getStarted": {
     "metadata": {
       "title": "开始使用 | Ninja Labs",
-      "description": "以下均可跳过，之后也可从主导航随时访问。"
+      "description": "以下均可跳过。你可以随时从主导航返回这些选项。"
     },
     "eyebrow": "引导完成",
     "title": "接下来想做什么？",
-    "subtitle": "以下均可跳过，之后也可从主导航随时访问。",
+    "subtitle": "以下均可跳过。你可以随时从主导航返回这些选项。",
     "actions": {
       "browseBounties": {
         "title": "浏览进行中的赏金",

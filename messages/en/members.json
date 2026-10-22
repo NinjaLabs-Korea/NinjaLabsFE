@@ -1,22 +1,21 @@
 {
   "metadata": {
     "title": "Members | Ninja Labs",
-    "description": "Meet the builders and community members shaping Ninja Labs."
+    "description": "Meet the people operating Ninja Labs, reviewing bounty submissions, and helping Injective builders ship useful work."
   },
   "list": {
-    "eyebrow": "The people behind Ninja Labs",
-    "heading": "Members",
-    "description": "Meet the builders and community members shaping Ninja Labs.",
+    "eyebrow": "Official members",
+    "heading": "Team",
+    "description": "Meet the people operating Ninja Labs, reviewing bounty submissions, and helping Injective builders ship useful work.",
     "public": "Public",
-    "howItWorks": "How membership works",
+    "howItWorks": "Member assignment rules",
     "rules": {
-      "registration": "Registration is shared.",
-      "adminEnables": "Admin enables is_member.",
-      "memberEdits": "Member edits bio.",
-      "unassign": "Unassign hides card but preserves profile."
+      "registration": "Same sign-up path as any user, with no separate member registration.",
+      "adminEnables": "After sign-up, an admin flags the user as a member and assigns a role.",
+      "memberEdits": "Members write and edit their own intro through their public profile.",
+      "unassign": "When unassigned, they drop from this tab immediately while the profile stays live."
     },
-    "viewProfile": "View a member profile.",
-    "becomeFirst": "Become the first listed member."
+    "howItWorksEyebrow": "How it works"
   },
   "filters": {
     "ariaLabel": "Member roles",
@@ -48,8 +47,6 @@
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "{count, plural, one {# bounty completed} other {# bounties completed}}",
     "newBuilder": "New builder",
-    "joined": "Joined {date}",
-    "publicShareable": "Public and shareable",
     "categories": {
       "dev": "Dev",
       "design": "Design",
@@ -58,21 +55,20 @@
     },
     "portfolio": {
       "eyebrow": "Portfolio",
-      "headingCompleted": "Proof of work, on-chain.",
-      "headingEmpty": "The first proof starts here.",
-      "bodyCompleted": "Approved work is shown with its current on-chain mint status.",
-      "bodyEmpty": "Complete a bounty to add a permanent record of work to this portfolio.",
-      "nftName": "Ninja NFT",
-      "parentNft": "Parent NFT · {status}",
-      "parentPending": "{handle} · parent NFT pending",
+      "headingCompleted": "On-chain proof that keeps growing",
+      "headingEmpty": "Your trophy shelf starts here",
+      "bodyCompleted": "The Ninja NFT is the parent identity. Every approved bounty mints a child NFT beneath it, turning completed work into a portable builder portfolio.",
+      "bodyEmpty": "The Ninja NFT is already minted as the parent identity. The first approved bounty will add a child NFT to this public collection.",
       "token": "Token {id}",
       "tx": "Tx {hash}",
       "next": "+ next",
       "emptyTitle": "No bounty NFTs yet",
       "emptyBodyCompleted": "Approved work appears here after payout and minting begins.",
-      "emptyBodyNew": "Complete a bounty to add your first proof.",
+      "emptyBodyNew": "Complete an active bounty and the first child NFT will appear here as on-chain proof.",
       "browse": "Browse active bounties",
-      "nftCount": "{count, plural, =0 {No on-chain bounty NFTs recorded} one {# on-chain bounty NFT} other {# on-chain bounty NFTs}}"
+      "memberSince": "Ninja NFT · member since {date}",
+      "summaryCompleted": "{count, plural, one {# bounty completed} other {# bounties completed}} · a growing on-chain portfolio",
+      "summaryEmpty": "0 bounties completed · ready for the first proof"
     },
     "nftStatus": {
       "PENDING": "PENDING",
@@ -83,22 +79,26 @@
       "FAILED": "FAILED"
     },
     "history": {
-      "eyebrow": "Bounty history",
-      "heading": "Completed bounties",
+      "eyebrow": "Completed work",
+      "heading": "Recent bounty completions",
       "viewFilled": "View filled profile",
-      "completedOn": "Completed {date}",
+      "completedOn": "Completed {date} · {reward}",
       "emptyTitle": "No completed bounties yet",
-      "emptyBody": "Find a bounty and make your first proof.",
-      "findFirst": "Find a first bounty"
+      "emptyBody": "The next completed task will show its title, completion date, reward, and minted child NFT proof.",
+      "findFirst": "Find a first bounty",
+      "headingEmpty": "Bounty completions",
+      "browseMore": "Browse more"
     },
     "agents": {
-      "eyebrow": "Automation",
-      "heading": "Agents",
+      "eyebrow": "Owned agents",
+      "heading": "Agents and their completed bounties",
       "verified": "Verified",
       "completed": "{count, plural, one {# bounty completed} other {# bounties completed}}",
       "emptyTitle": "No registered agents yet",
-      "emptyBody": "Register an agent with signature verification.",
-      "register": "Register agent"
-    }
+      "emptyBody": "Advanced users can register verified agents after proving ownership by wallet signature.",
+      "register": "Register agent",
+      "wallet": "Registered wallet public key: {wallet}"
+    },
+    "shareable": "Shareable URL — no login needed"
   }
 }

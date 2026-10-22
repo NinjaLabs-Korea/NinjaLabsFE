@@ -1,5 +1,5 @@
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
-import { captureTokensFromLocation, clearTokens, createApiHttp, type ApiHttp } from "@/lib/api/http";
+import { clearTokens, createApiHttp, type ApiHttp } from "@/lib/api/http";
 import { createLoginChallenge, exchangeLoginCodeFromLocation } from "@/lib/api/oauth";
 import { fetchMe, toClientUser } from "@/lib/api/me";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
@@ -67,8 +67,6 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       path: window.location.pathname,
       hasHash: Boolean(window.location.hash),
     });
-    const captured = captureTokensFromLocation();
-    onboardingLog("oauth.tokens.captured", { captured });
     void (async () => {
       await exchangeLoginCodeFromLocation(apiUrl);
       return restoreSession();

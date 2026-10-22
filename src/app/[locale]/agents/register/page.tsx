@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { AgentRegisterForm } from "@/components/agents/AgentRegisterForm";
+import { BountyApplyAuthBadge } from "@/components/bounties/BountyApplyGuideCta";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { AGENT_SKILL_PATH } from "@/lib/agent-skill";
+import { loadFromRuntime } from "@/lib/api/public";
+import { PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { composeFoundationRuntime } from "@/lib/runtime/config";
 
@@ -31,6 +34,8 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("agents.register");
+  // Figma 17 footnote links to the owned-agents area of the profile; outside mock mode the signed-in user's own agents page is the real destination.
+  const agentsProfileHref = await loadFromRuntime({ mock: () => `/members/${PROFILE_FILLED_EXAMPLE_ID}#agents`, api: async () => "/agents" });
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <Link
@@ -46,12 +51,12 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
           <h1 className="mt-3 font-display text-5xl -tracking-[0.48px] text-ink">{t("heading")}</h1>
           <p className="mt-4 text-lg text-ink-secondary">{t("intro")}</p>
         </div>
-        <Badge variant="primary-soft">{t("evmBadge")}</Badge>
+        <BountyApplyAuthBadge />
       </section>
 
       <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {steps.map((step, index) => (
-          <article className="rounded-card border border-border bg-surface p-5 shadow-card" key={step}>
+          <article className="rounded-card border border-border bg-surface p-[21px] shadow-card" key={step}>
             <span className="inline-flex size-6 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary-strong">{index + 1}</span>
             <h2 className="mt-4 font-display text-lg font-bold text-ink">{t(`steps.${step}.heading`)}</h2>
             <p className="mt-2 text-sm text-ink-secondary">{t(`steps.${step}.body`)}</p>
@@ -70,8 +75,9 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
       </section>
 
       <section className="mt-8 grid gap-5 lg:grid-cols-5">
-        <article className="rounded-card border border-border bg-surface p-5 shadow-card lg:col-span-3">
-          <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{t("verificationHeading")}</h2>
+        <article className="rounded-card border border-border bg-surface p-[21px] shadow-card lg:col-span-3">
+          <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("verificationEyebrow")}</p>
+          <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">{t("verificationHeading")}</h2>
           <ul className="mt-5 space-y-4">
             {verificationItems.map((item) => (
               <li className="flex gap-3 text-base text-ink-secondary" key={item}>
@@ -91,7 +97,7 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
             <AgentRegisterForm chainId={walletConnectionConfig.chainId} />
           </WalletProvider>
         ) : (
-          <article className="rounded-card border border-border bg-surface p-5 shadow-card lg:col-span-2">
+          <article className="rounded-card border border-border bg-surface p-[21px] shadow-card lg:col-span-2">
             <h2 className="font-display text-2xl text-ink">{t("walletUnavailableTitle")}</h2>
             <p className="mt-2 text-sm text-ink-muted">
               {t("walletUnavailableBody")}
@@ -101,27 +107,19 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
       </section>
 
       <section className="mt-8 grid gap-5 md:grid-cols-2">
-        <article className="rounded-tile border border-border bg-surface p-5">
-          <p className="text-sm text-ink-secondary">
-            {t("multipleAgents")}
-          </p>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <Badge variant="danger">{t("edgeCaseBadge")}</Badge>
-            <p className="text-sm text-ink-secondary">{t("edgeCase")}</p>
-          </div>
+        <article className="rounded-card border border-border bg-surface p-[21px] shadow-card">
+          <Badge variant="danger">{t("edgeCaseBadge")}</Badge>
+          <p className="mt-3 text-sm text-ink-secondary">{t("edgeCase")}</p>
         </article>
-        <article className="rounded-tile border border-border bg-surface p-5">
-          <p className="text-sm text-ink-secondary">{t("ownership")}</p>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <Badge variant="warning">{t("unresolvedBadge")}</Badge>
-            <p className="text-sm text-ink-secondary">{t("unresolved")}</p>
-          </div>
+        <article className="rounded-card border border-border bg-surface p-[21px] shadow-card">
+          <Badge variant="warning">{t("unresolvedBadge")}</Badge>
+          <p className="mt-3 text-sm text-ink-secondary">{t("unresolved")}</p>
         </article>
       </section>
 
-      <p className="mt-4 text-xs text-ink-muted">
+      <p className="mt-5 text-sm text-ink-muted">
         {t.rich("profileNote", {
-          link: (chunks) => <Link className="font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/members/jaemin#agents">{chunks}</Link>,
+          link: (chunks) => <Link className="font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={agentsProfileHref}>{chunks}</Link>,
         })}
       </p>
     </div>

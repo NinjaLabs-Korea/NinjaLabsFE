@@ -19,7 +19,7 @@ const sizeClasses = {
 export function SectionHeader({ eyebrow, heading, level = 2, size = "lg", action }: SectionHeaderProps) {
   const Heading = `h${level}` as "h1" | "h2" | "h3";
   return (
-    <div className="flex items-end justify-between gap-4">
+    <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{eyebrow}</p>
         <Heading className={sizeClasses[size]}>

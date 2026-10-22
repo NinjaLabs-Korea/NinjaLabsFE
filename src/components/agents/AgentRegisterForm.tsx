@@ -124,10 +124,10 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
 
   return (
     <form
-      className="rounded-card border border-border bg-surface p-5 shadow-card lg:col-span-2"
+      className="rounded-card border border-border bg-surface p-[21px] shadow-card lg:col-span-2"
       onSubmit={(event) => void submit(event)}
     >
-      <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{t("heading")}</h2>
+      <h2 className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("eyebrow")}</h2>
       <p className="mt-2 text-sm text-ink-muted">
         {t("intro")}
       </p>

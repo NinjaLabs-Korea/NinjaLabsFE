@@ -6,8 +6,10 @@ import {
   useAuthSnapshot,
   useAccountApi,
 } from "@/components/auth/FoundationProvider";
+import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 
+/** "Submit via agent" aside (Figma 15/15v): copy adapts to the viewer's agent status, the LOGIN badge shows until signed in. */
 export function BountyAgentPanel({ copy }: { copy: string }) {
   const t = useTranslations("agents.panel");
   const auth = useAuthSnapshot();
@@ -21,9 +23,7 @@ export function BountyAgentPanel({ copy }: { copy: string }) {
   let action = t("action");
 
   if (auth.status === "signed-out") {
-    body = t("signedOutBody");
     href = "/signup";
-    action = t("signIn");
   } else if (loading || auth.status === "loading") {
     body = t("checkingBody");
     action = t("checkingAction");
@@ -43,12 +43,15 @@ export function BountyAgentPanel({ copy }: { copy: string }) {
   }
 
   return (
-    <section className="rounded-card border border-dashed border-border-dashed bg-surface p-5">
-      <h2 className="font-display text-lg font-bold text-ink">{title}</h2>
+    <section className="rounded-card border border-dashed border-border-dashed bg-surface p-[21px]">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-display text-lg font-bold text-ink">{title}</h2>
+        {auth.status === "signed-in" ? null : <Badge variant="danger">{t("loginBadge")}</Badge>}
+      </div>
       <p className="mt-2 text-sm text-ink-secondary">{body}</p>
       <Link
         aria-disabled={loading || auth.status === "loading"}
-        className="mt-4 inline-flex rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:pointer-events-none aria-disabled:opacity-60"
+        className="mt-4 flex w-full items-center justify-center rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:pointer-events-none aria-disabled:opacity-60"
         href={href}
       >
         {action}
