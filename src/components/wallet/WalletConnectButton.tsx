@@ -39,8 +39,10 @@ export function WalletConnectButton({
     isConnecting: isPending,
     disconnect,
     signMessageAsync,
+    canSwitch,
     switchToTargetChain,
     isSwitching,
+    switchError,
   } = useWalletConnection(chainId);
 
   const unavailable = !connector;
@@ -76,12 +78,13 @@ export function WalletConnectButton({
   };
 
   if (isWrongNetwork) {
+    // No RPC URL for the configured chain (mock mode): the switch is never requested, the user is asked to switch manually.
     return (
       <div className="flex flex-col items-start gap-2">
         <button
           type="button"
           className={`${buttonClassName} border-warning-soft bg-warning-soft text-warning`}
-          disabled={disabled || isSwitching}
+          disabled={disabled || isSwitching || !canSwitch}
           onClick={() => {
             onboardingLog("wallet.network-switch.requested", {
               fromChainId: connectedChainId,
@@ -93,8 +96,13 @@ export function WalletConnectButton({
           {isSwitching ? t("switching") : t("switchNetwork")}
         </button>
         <p className="text-xs text-warning" role="status">
-          {t("unsupportedNetwork")}
+          {canSwitch ? t("unsupportedNetwork") : t("switchUnavailable")}
         </p>
+        {switchError ? (
+          <p className="text-xs text-danger" role="alert">
+            {t(switchError === "rejected" ? "switchRejected" : "switchFailed")}
+          </p>
+        ) : null}
       </div>
     );
   }

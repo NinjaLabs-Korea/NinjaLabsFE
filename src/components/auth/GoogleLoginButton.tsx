@@ -4,7 +4,6 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useAuthActions, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { useRouter } from "@/i18n/navigation";
-import { simulateMockSignInFailure } from "@/lib/foundation/auth-adapter";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
 
 type LoginState = "idle" | "pending" | "error";
@@ -26,6 +25,8 @@ export function GoogleLoginButton() {
 
     try {
       if (simulateFailure) {
+        // mock 전용 모듈: 이 분기에서만 불러와 세션 미리보기 어댑터가 공용 번들에 실리지 않게 한다.
+        const { simulateMockSignInFailure } = await import("@/lib/foundation/auth-adapter");
         await simulateMockSignInFailure();
       } else {
         // api 모드: 구글 동의 화면으로 전체 페이지 리다이렉트 (Promise는 resolve되지 않음)
