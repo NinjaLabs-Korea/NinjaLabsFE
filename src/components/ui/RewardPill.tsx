@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useFormatter } from "next-intl";
 
 type RewardPillProps = {
   reward: {
@@ -18,6 +19,7 @@ function TokenIcon({ currency }: { currency: RewardPillProps["reward"]["currency
 }
 
 export function RewardPill({ reward, variant = "pill" }: RewardPillProps) {
+  const format = useFormatter();
   if (variant === "icon") {
     return <TokenIcon currency={reward.currency} />;
   }
@@ -25,7 +27,7 @@ export function RewardPill({ reward, variant = "pill" }: RewardPillProps) {
     <span className="inline-flex items-center gap-1.5 rounded-control border border-primary-soft-border bg-primary-soft px-[13px] py-1.5">
       <TokenIcon currency={reward.currency} />
       <span className="font-display text-sm font-bold text-ink">
-        {reward.amount} {reward.currency}
+        {format.number(reward.amount, { maximumFractionDigits: 6 })} {reward.currency}
       </span>
     </span>
   );

@@ -15,6 +15,8 @@ type ConfirmDialogProps = {
   calloutText?: string;
   confirmLabel: string;
   destructive?: boolean;
+  /** See `Modal.returnFocusTo`: focus target after close when the opener was removed/disabled by the confirmed action. */
+  returnFocusTo?: () => HTMLElement | null | undefined;
 };
 
 export function ConfirmDialog({
@@ -27,15 +29,19 @@ export function ConfirmDialog({
   calloutText,
   confirmLabel,
   destructive = false,
+  returnFocusTo,
 }: ConfirmDialogProps) {
   const t = useTranslations("common.confirmDialog");
   const titleId = useId();
+  const descriptionId = useId();
 
   return (
     <Modal
+      describedBy={descriptionId}
       labelledBy={titleId}
       onClose={onCancel}
       open={open}
+      returnFocusTo={returnFocusTo}
       role={destructive ? "alertdialog" : undefined}
     >
       <p
@@ -51,7 +57,7 @@ export function ConfirmDialog({
       >
         {title}
       </h2>
-      <div className="mt-2 text-sm text-ink-muted">{description}</div>
+      <div className="mt-2 text-sm text-ink-muted" id={descriptionId}>{description}</div>
       {calloutText ? (
         <div className="mt-4 rounded-tile border border-border bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">
           {calloutText}

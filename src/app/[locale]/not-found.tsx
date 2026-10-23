@@ -1,18 +1,9 @@
-import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { NotFoundSection } from "@/components/layout/NotFoundSection";
 
-export default async function NotFound() {
-  const t = await getTranslations("common.notFound");
-
-  return (
-    <section className="mx-auto max-w-content px-6 py-24 text-center">
-      <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">404</p>
-      <h1 className="mt-3 font-display text-5xl -tracking-[0.48px] text-ink">{t("title")}</h1>
-      <p className="mt-4 text-lg text-ink-muted">{t("description")}</p>
-      <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Link className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/">{t("home")}</Link>
-        <Link className="rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/bounties">{t("browseBounties")}</Link>
-      </div>
-    </section>
-  );
+// Boundary for `notFound()` thrown inside the [locale] segment (e.g. a well-formed but missing detail id in api mode).
+// The server cannot stream this boundary (React SSR has no error boundaries: the response is Next's bare
+// `<html id="__next_error__">` shell with status 404); it renders after hydration. Router-level 404s (unknown paths,
+// ids the proxy rejects) are served fully rendered by app/not-found.tsx instead.
+export default function NotFound() {
+  return <NotFoundSection />;
 }

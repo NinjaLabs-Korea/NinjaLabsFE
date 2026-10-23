@@ -1,18 +1,22 @@
-// Catches paths the locale proxy does not rewrite (e.g. unknown files).
-// It renders outside app/[locale]/layout.tsx, so it supplies its own document.
-import Link from "next/link";
-import "./globals.css";
+import { hasLocale } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
+import { AppShell } from "@/components/layout/AppShell";
+import { NotFoundSection } from "@/components/layout/NotFoundSection";
+import { routing } from "@/i18n/routing";
 
-export default function RootNotFound() {
+// Router-level 404 (`/_not-found`): URLs that match no route, including the proxy's rewrites for unknown detail ids.
+// It renders outside app/[locale]/layout.tsx, so it supplies the whole document through AppShell. The locale comes
+// from the `x-next-intl-locale` request header the proxy sets (`src/i18n/request.ts` falls back to the default).
+export default async function RootNotFound() {
+  const requested = await getLocale();
+  const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
+  const t = await getTranslations({ locale, namespace: "common.notFound" });
+
   return (
-    <html lang="en">
-      <body className="bg-page text-ink font-sans antialiased min-h-dvh">
-        <section className="mx-auto max-w-content px-6 py-24 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">404</p>
-          <h1 className="mt-3 text-5xl -tracking-[0.48px] text-ink">Page not found</h1>
-          <Link className="mt-8 inline-block rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href="/">Back to home</Link>
-        </section>
-      </body>
-    </html>
+    <AppShell locale={locale}>
+      {/* not-found.tsx cannot export metadata; React hoists this <title> into <head>. */}
+      <title>{t("metaTitle")}</title>
+      <NotFoundSection />
+    </AppShell>
   );
 }
