@@ -3,6 +3,8 @@ import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
+import { safeHttpUrl } from "@/lib/api/codecs";
+import { imageProps } from "@/lib/image";
 import { noticeCategoryKeys } from "@/lib/notices";
 import type { Notice } from "@/lib/types";
 
@@ -12,13 +14,14 @@ type NoticeRowProps = {
 
 export function NoticeRow({ notice }: NoticeRowProps) {
   const t = useTranslations("notices.categories");
+  const thumbnail = safeHttpUrl(notice.thumbnail);
   return (
     <Link
       className="block overflow-hidden rounded-card border border-border bg-surface shadow-card transition-shadow hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:flex"
       href={`/notices/${notice.slug}`}
     >
       <div className="relative aspect-video shrink-0 overflow-hidden bg-gradient-to-br from-primary-soft-border to-surface-subtle md:h-[133.5px] md:w-56 md:aspect-auto">
-        {notice.thumbnail ? <Image alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 224px" src={notice.thumbnail} /> : null}
+        {thumbnail ? <Image {...imageProps(thumbnail)} alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 224px" /> : null}
       </div>
       <div className="min-w-0 flex-1 p-5">
         <div className="flex items-center justify-between gap-3">

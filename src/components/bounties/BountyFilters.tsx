@@ -40,10 +40,11 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
     const normalizedQuery = query.trim().toLowerCase();
     return bounties.filter((bounty) => {
       const matchesCategory = category === "All" || bounty.category === category;
+      // Figma 14 draws only Active/Closed chips: "Closed" also covers reviewing bounties (no new applications/submissions).
       const matchesStatus =
         status === "All" ||
         (status === "Active" && bounty.status === "active") ||
-        (status === "Closed" && bounty.status === "closed");
+        (status === "Closed" && bounty.status !== "active");
       const matchesQuery =
         !normalizedQuery ||
         [bounty.title, bounty.summary]
@@ -59,7 +60,7 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
     <>
       {/* 14: one chip row (All + categories + statuses) with the search field on the right. "All" clears both groups. */}
       <div className="flex flex-col gap-5 rounded-card border border-border bg-surface p-[21px] shadow-card sm:flex-row sm:items-center sm:justify-between sm:gap-8">
-        <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")}>
+        <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")} role="group">
           <button
             aria-pressed={category === "All" && status === "All"}
             className={chipButtonClass}

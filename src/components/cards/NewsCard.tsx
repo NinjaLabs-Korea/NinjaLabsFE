@@ -3,6 +3,8 @@ import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
+import { safeHttpUrl } from "@/lib/api/codecs";
+import { imageProps } from "@/lib/image";
 import { noticeCategoryKeys } from "@/lib/notices";
 import type { NoticePreview } from "@/lib/types";
 
@@ -12,14 +14,15 @@ type NewsCardProps = {
 
 export function NewsCard({ notice }: NewsCardProps) {
   const t = useTranslations("notices.categories");
+  const thumbnail = safeHttpUrl(notice.thumbnail);
   return (
     <Link
       className="block rounded-card border border-border bg-surface p-5 shadow-card transition-shadow hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       href={`/notices/${notice.slug}`}
     >
-      {notice.thumbnail ? (
+      {thumbnail ? (
         <div className="relative mb-4 aspect-video overflow-hidden rounded-tile">
-          <Image alt="" className="object-cover" fill sizes="(max-width: 1024px) 100vw, 370px" src={notice.thumbnail} />
+          <Image {...imageProps(thumbnail)} alt="" className="object-cover" fill sizes="(max-width: 1024px) 100vw, 370px" />
         </div>
       ) : null}
       <div className="flex items-center justify-between gap-3">
