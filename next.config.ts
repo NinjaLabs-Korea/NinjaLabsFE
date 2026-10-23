@@ -3,9 +3,94 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+/** Same env the runtime config reads (`lib/runtime/config.ts`); unset in mock mode. */
+const apiUrl = process.env.NINJA_API_BASE_URL?.replace(/\/$/, "");
+
+/** Origin form for `connect-src`; omitted when there is no API (mock mode) or the value is not a URL. */
+function apiOrigin(): string | null {
+  if (!apiUrl) return null;
+  try {
+    return new URL(apiUrl).origin;
+  } catch {
+    return null;
+  }
+}
+
+function appOrigin(): string | null {
+  try {
+    return process.env.NINJA_APP_ORIGIN ? new URL(process.env.NINJA_APP_ORIGIN).origin : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Absolute image URLs the optimizer may fetch: BE media on the API origin and anything on the app origin.
+ * `lib/image.ts imageProps()` renders every other `safeHttpUrl`-admitted URL `unoptimized`, so the two
+ * lists must agree - hence the same prefixes are inlined into the bundle through `env` below.
+ */
+const optimizedImagePrefixes = [
+  apiOrigin() ? `${apiOrigin()}/media/` : null,
+  appOrigin() ? `${appOrigin()}/` : null,
+].filter((prefix): prefix is string => prefix !== null);
+
+/**
+ * Report-only CSP: it is NOT enforced, so a violation only logs to the browser console
+ * (no `report-to`/`report-uri` endpoint yet). Enforcing it today would break the app because
+ * Next.js emits inline bootstrap scripts (`'unsafe-inline'` in script-src) and RainbowKit/wagmi
+ * inject inline styles; dev mode also needs `'unsafe-eval'`. To enforce it, generate a per-request
+ * nonce in `src/proxy.ts`, pass it to `<Script>`/`next/script` and the root layout via the
+ * `x-nonce` header, replace `'unsafe-inline'`/`'unsafe-eval'` with `'nonce-…' 'strict-dynamic'`,
+ * audit the RainbowKit inline styles, and only then rename this header to `Content-Security-Policy`.
+ */
+function contentSecurityPolicy(): string {
+  const connectSrc = [
+    "'self'",
+    apiOrigin(),
+    "https://*.walletconnect.com",
+    "https://*.walletconnect.org",
+    "wss://*.walletconnect.com",
+    "wss://*.walletconnect.org",
+    "https://*.injective.network",
+    "wss://*.injective.network",
+    "https://k8s.testnet.json-rpc.injective.network",
+  ].filter((source): source is string => source !== null);
+  return [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: blob: https:",
+    `connect-src ${connectSrc.join(" ")}`,
+    "frame-src https://*.walletconnect.com https://*.walletconnect.org",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+}
+
 const nextConfig: NextConfig = {
+  env: { NINJA_OPTIMIZED_IMAGE_PREFIXES: optimizedImagePrefixes.join(",") },
+  images: {
+    remotePatterns: optimizedImagePrefixes.map((prefix) => new URL(`${prefix}**`)),
+  },
+  async headers() {
+    // Every route, including `/skill.md` (download) and the `/media/*` rewrite: none of these
+    // headers change how a download or an image response is consumed.
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "Content-Security-Policy-Report-Only", value: contentSecurityPolicy() },
+        ],
+      },
+    ];
+  },
   async rewrites() {
-    const apiUrl = process.env.NINJA_API_BASE_URL?.replace(/\/$/, "");
     return apiUrl
       ? [{ source: "/media/:path*", destination: `${apiUrl}/media/:path*` }]
       : [];
