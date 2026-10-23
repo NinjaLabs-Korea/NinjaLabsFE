@@ -21,7 +21,9 @@ Created 2026-07-19 via Figma MCP (`generate_diagram`, team "Alex kim's team" - t
 | Item | Notes | Evidence |
 |---|---|---|
 | Validation error visuals | **Partially implemented** - the profile form enforces required fields/tags, reports save or nickname-conflict failure, and the wallet step reports connection/signature failure. Real-time nickname availability remains open. | `src/components/signup/ProfileForm.tsx`, `src/components/wallet/WalletConnectButton.tsx`; real-time check design intent in `docs/figma/recon/12-signup-profile.md` |
-| Submit feedback | **Implemented** - public bounty Apply/Submit and admin mutations display success or failure feedback; agent registration reports signing/API failures. | `src/components/bounties/BountyActionPanel.tsx`, `src/components/admin/*Manager.tsx`, `src/components/agents/AgentRegistrationForm.tsx` |
+| Submit feedback | **Implemented** - public bounty Apply/Submit and admin mutations display success or failure feedback; admin save buttons show a pending "Saving…" state and ignore a second submit; agent registration reports signing/API failures. | `src/components/bounties/BountyActionPanel.tsx`, `src/components/admin/*Manager.tsx`, `src/components/agents/AgentRegisterForm.tsx` |
+| Agent-only participation state | **FE-designed (no Figma node)** - when only the owner's agent applied/submitted on a bounty, the detail panel shows an informational "Handled by your agent" card (link to My agents) instead of the direct apply/submit form; the owner's own row always takes precedence. | `src/components/bounties/BountyActionPanel.tsx` (`bounties.action.agentRow*`) |
+| Manual network switch guidance | **FE-designed (no Figma node)** - without a configured RPC URL (mock mode) the wrong-network state disables the switch button and asks the user to switch the wallet manually instead of requesting a switch wagmi cannot complete. | `src/components/wallet/WalletConnectButton.tsx`, `src/components/agents/AgentRegisterForm.tsx` (`common.wallet.switchUnavailable`) |
 | Confirmation dialogs | **Approved implementation divergence** - `ui/ConfirmDialog` + admin Remove wiring live (session-preview copy); captured as `26 Modal - Confirm (FE)`. | User-approved execution of the pending plan and reviewed live screenshots (2026-07-20); `src/components/ui/ConfirmDialog.tsx`, `src/components/admin/UserActions.tsx` |
 
 ## Data UX - blocked on design
@@ -85,6 +87,26 @@ Branch `fix/figma-pixel-audit`. Every screen in the new design file was compared
 | Hall of Fame stats | Figma 06 has no "Platform aggregate" footnote; removed. Timeline renders dot-on-line + title + "date · description" (`hallOfFame.timeline.entry`). |
 | Sign-up frame badges | Still omitted (see "Sign-up status badges removed" above); the step headers now carry the Figma eyebrow/title/subtitle and the Figma footnotes are rendered under the cards. |
 
+### Contract-driven additions (2026-10-22, `fix/wiki-audit-findings`)
+
+| Item | Decision |
+|---|---|
+| Agent key management on `/agents` (FE capture 31, frame `64:2`) | Capture 31 shows name/wallet/masked key/registered/completed only. The BE now issues expiring keys and allows rotation/revocation, so `account/AgentsView` adds a key-status Badge + expiry, a warning line when < 14 days remain or the key is EXPIRED, "Rotate key" (new key revealed once in the same success tile as the register form) and "Revoke agent" behind a destructive `ConfirmDialog`; revoked agents keep a danger badge and lose their actions. No Figma frame; styling reuses existing tokens (`docs/design.md` "Soft danger action", "One-time secret reveal"). |
+| Bounty `reviewing` status (Figma 14 `19:1480` / 15 `19:1739`) | Figma draws only Active/Closed. BE `SUBMISSION_CLOSED`/`IN_REVIEW` were folded into "Closed", which hid the resubmit path for `revision_requested` work. FE adds a third public status `reviewing` with a warning Badge (card + detail, label mirrors the admin manager's "Reviewing"), keeps the card at full opacity, closes new applications/submissions in the action panel while still offering resubmission, and lets the list's "Closed" chip cover it (no third chip is drawn). |
+| "via <agent>" on My applications (FE capture 30, frame `63:2`) and bounty detail | Capture 30 has owner-made rows only. Agent-made applications now appear with a neutral "via <agent name>" Badge, and when only the agent acted on a bounty the detail panel shows the informational "Handled by your agent" card (no direct form; the owner's own row always takes precedence). |
+| Wallet chain-add / switch rejection | No Figma state. When the wallet does not know Injective EVM, the switch call now carries `addEthereumChainParameter` so the wallet prompts to add the chain; declining shows a distinct `text-danger` alert line ("You declined the network switch…") under the existing warning-soft Switch button (`WalletConnectButton`, `AgentRegisterForm`). |
+
 ### Responsive pass (2026-10-22)
 
 Figma only draws 1440px frames. Every route was checked at 390px and 768px (no horizontal scroll on any page; admin tables scroll inside their own `overflow-x-auto` wrapper). Fixes applied: header hides the wordmark below `sm` so locale + Get Started + Menu fit at 390px and CJK labels never wrap; `ui/SectionHeader` and the bounty/profile mastheads wrap their action under the heading; the profile card stacks avatar over text below `sm`; the signed-out Submit/Apply panel keeps a readable text width. No mobile frames exist to match pixel-for-pixel, so these are implementation decisions.
+
+### Accessibility and bundle follow-ups (2026-10-23, `fix/wiki-audit-findings`)
+
+| Item | Decision |
+|---|---|
+| Bounty detail apply/submit forms (Figma 15 `19:1739` / 15v `19:1911`) | Figma draws placeholder-only inputs. The signed-in forms now carry visible labels above each control (design `Form fields` recipe), `aria-invalid`/`aria-describedby` wiring to the inline `role="alert"` error, focus moves to the status heading after success, and a persistent polite live region announces the success copy. The signed-out disabled preview keeps the Figma look (placeholder + `aria-label`). |
+| `/applications`, `/agents` mastheads (FE captures 30/31) | The captures only show the signed-in state. The eyebrow/`h1`/intro (and "Register new agent") are now rendered by the page for every auth state; the signed-out "Sign in" panel sits under the heading instead of replacing it. |
+| Bounty card countdown (Figma 14 `19:1480`) | Figma draws `D-7`. en/zh now read as a full phrase ("7 days left" / "剩余 7 天") from `bounties.card.daysLeft`; ko keeps the compact `D-7` and exposes the full phrase (`daysLeftLabel`) to assistive technology only. Card cover images are decorative (`alt=""`) because the title is already the link text. |
+| Header mobile menu | No Figma interaction spec. The `<details>` menu now closes on link click, Escape (focus returns to "Menu") and outside click (`layout/MobileMenu`); markup and styling are unchanged. |
+| Open Graph image | Text and `alt` were English-only; now localized through `common.site.og.*` (ko/zh share the brand line "Ninja Labs"). No Figma artefact. |
+

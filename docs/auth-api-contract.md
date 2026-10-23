@@ -3,8 +3,13 @@
 ## Current completed foundation
 
 - `FoundationProvider` is the runtime boundary for auth state. In **mock mode**, it uses deterministic fixtures and an in-memory session preview that resets on reload. Mock mode is local/test only.
-- In **API mode**, the auth adapter and account/application/agent client are backed by the real backend (NinjaLabsBE, see its `docs/api-contract.md`). Sign-in redirects to the backend's `/auth/google`; the OAuth callback returns to the app with `#accessToken=..&refreshToken=..` (URL fragment, never sent to servers), which `src/lib/api/http.ts` captures into `localStorage`. Requests send `Authorization: Bearer`; a 401 triggers one refresh-rotation retry (`POST /auth/refresh`), and a failed refresh clears the session.
-- The Google button performs real Google OAuth in API mode (full-page redirect via the backend). On callback, `/auth/me.onboardingStep` routes an incomplete account to wallet, profile, or completion. Mock mode still signs into the local preview and advances to `/signup/wallet`.
+- In **API mode**, the auth adapter (`src/lib/api/auth-adapter.ts`) and account/application/agent client are backed by the real backend (NinjaLabsBE, see its `docs/api-contract.md`). Sign-in is a PKCE-style login-code flow; access/refresh tokens never appear in a URL:
+  1. `signIn` (`createLoginChallenge` in `src/lib/api/oauth.ts`) generates a random verifier, stores it in `sessionStorage["ninja.oauthVerifier"]` (tab-local), and full-page-redirects to the backend's `GET /auth/google?returnTo=<origin>&codeChallenge=<S256 base64url>&trace=<id>`. Only the challenge leaves the browser; the backend binds it to its signed OAuth state and rejects a missing challenge with `401 INVALID_CODE_CHALLENGE`.
+  2. After Google consent the backend (`GET /auth/google/callback`) redirects to `<origin>/auth/callback#loginCode=<43-char code>` (or `#error=AUTH_FAILED`). The code is single-use, valid for 60 seconds, and stored server-side only as a hash. The locale proxy forwards `/auth/callback` to `/<locale>/auth/callback`; the browser keeps the fragment.
+  3. The adapter's `initialize()` (run once by `FoundationProvider` in the browser) calls `exchangeLoginCodeFromLocation`: it strips the fragment with `history.replaceState` before any network work, reads and deletes the verifier, and `POST /auth/exchange { code, codeVerifier }`. The response body `{ accessToken, refreshToken }` is stored in `localStorage` (`ninja.accessToken` / `ninja.refreshToken`) by `src/lib/api/http.ts`. A missing verifier (e.g. a different tab or browser), an expired/reused code, or a mismatching verifier fails with `401 INVALID_LOGIN_CODE`; the adapter then clears tokens, publishes `signed-out`, and `/auth/callback` shows a retry link.
+  4. `initialize()` then restores the session via `GET /auth/me`. On the callback page a signed-in user is sent to the first unfinished onboarding step (`onboardingStep` 2 wallet, 3 profile, 4 get-started) or to the locale home.
+  Requests send `Authorization: Bearer <accessToken>`; a 401 triggers one refresh-rotation retry (`POST /auth/refresh`). Only a refresh answered with **401/403** clears the session (the refresh token is expired, revoked or rotated away); a refresh that fails with 429, 5xx or a network error keeps the stored tokens and surfaces `REFRESH_UNAVAILABLE`, so a throttled or briefly unavailable backend never signs everyone out. The backend also keeps a 30-second reuse grace for a just-rotated refresh token, which covers two tabs racing the same rotation. Sign-out calls `POST /auth/logout` with the refresh token.
+- The Google button performs real Google OAuth in API mode (full-page redirect via the backend, as above). Mock mode still signs into the local preview and advances to `/signup/wallet`.
 - In API mode RainbowKit connects an Injective EVM wallet, requests a backend nonce challenge, signs it with EIP-191 `personal_sign`, and verifies it through `/wallets/verify`. The backend stores the corresponding `inj1` address and queues the parent NFT mint. Connection alone never authenticates the user; wallet verification remains optional.
 - The profile form persists nickname, bio, and tags through `/users/me/profile`; the completion screen calls `/users/me/complete-onboarding`. Public profile routes load `/users/:nickname` in API mode.
 - Agent verification returns the usable API key once; the registration UI shows it only in that response. Later owner views receive and display only the masked prefix.
@@ -30,7 +35,7 @@ Runtime configuration is mandatory and fail-closed. Missing, partial, malformed,
 | `NINJA_MOCK_SEED` | Mock only | Required in mock mode and forbidden in API mode. Selects the deterministic fixture scenario (`default`). |
 | `NINJA_API_BASE_URL` | API only | Required HTTPS backend base URL (NinjaLabsBE). Passed to the client through `FoundationConfig`; the API-mode auth adapter and account client fetch it directly. |
 | `NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID` | No | Optional Injective EVM `1776` (mainnet) or `1439` (testnet). Omitting wallet variables renders the unavailable connection state. |
-| `NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL` | No | Optional public RPC URL; requires a configured chain ID. |
+| `NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL` | API mode with a chain ID | Public JSON-RPC URL; requires a configured chain ID. Required in API mode whenever a chain ID is set (without it the wagmi chain has no transport and RPC reads fail silently); optional in mock mode. |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | No | Optional public WalletConnect project identifier. Without it, the connection UI remains injected-wallet-only. |
 
 | Deployment tier | Allowed runtime mode |
@@ -46,13 +51,13 @@ Tuple validation prevents mock mode outside local/test. API mode fetches the con
 
 Status of the original gate items (✅ = delivered by the NinjaLabsBE integration, ⏳ = still open):
 
-1. ✅ Real OAuth via the backend callback (`/auth/google` → code exchange → session issuance). Note the agreed contract uses bearer tokens delivered over a URL fragment and stored in `localStorage` with refresh rotation, **not** HttpOnly cookies - revisit if the team wants a BFF/cookie model.
+1. ✅ Real OAuth via the backend callback (`/auth/google` → Google code exchange → one-time `#loginCode` → `POST /auth/exchange` with the PKCE verifier → session issuance). Note the agreed contract uses bearer tokens returned in the exchange response body and stored in `localStorage` with refresh rotation, **not** HttpOnly cookies - revisit if the team wants a BFF/cookie model. Tokens are no longer accepted from a URL fragment.
 2. ⏳ HttpOnly, Secure session cookies (superseded by the bearer-token contract above unless revisited).
 3. CSRF protections for cookie-authenticated state changes.
 4. Trusted-edge rate limiting and Turnstile enforcement where abuse protection is required.
 5. ✅ Backend-owned identity, authorization, and AdminGuard enforcement. A frontend login wall remains defense-in-depth UX, not the security boundary.
 6. ✅ Wallet signature challenge, EIP-191 verification, nonce/replay protection, `inj1` normalization, and account linking.
-7. ✅ Agent API-key authentication plus agent-owned application and submission endpoints. Key rotation/revocation UX remains follow-up scope.
+7. ✅ Agent API-key authentication plus agent-owned application and submission endpoints. Key rotation (`POST /agents/:id/keys/rotate`, new key revealed once) and agent revocation (`POST /agents/:id/revoke`, behind a destructive confirm) are implemented on the `/agents` page (`account/AgentsView`).
 
 These are deferred requirements, not implementation promises made by the current frontend.
 
