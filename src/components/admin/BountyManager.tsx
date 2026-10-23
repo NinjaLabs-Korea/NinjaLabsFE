@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { AdminTable } from "@/components/admin/AdminTable";
@@ -9,7 +9,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import type { AdminBounty } from "@/lib/admin";
-import { bountyToForm, emptyBountyForm, formToBounty, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
+import { BOUNTY_SPONSOR_MAX, BOUNTY_TITLE_MAX, bountyToForm, emptyBountyForm, formToBounty, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const columns = [
@@ -31,15 +31,31 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const api = useAdminApi();
   const t = useTranslations("admin.bounties");
   const tCommon = useTranslations("admin.common");
+  // UTC-pinned via src/i18n/request.ts; the model keeps the BE ISO string (mock fixtures are ISO too).
+  const format = useFormatter();
   const [records, setRecords] = useState(bounties);
   const [mode, setMode] = useState<Mode>({ kind: "create" });
   const [form, setForm] = useState<BountyFormValues>(emptyBountyForm);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<BountyFormErrors>({});
   const [originalDeadline, setOriginalDeadline] = useState<string | undefined>();
+  const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<AdminBounty | null>(null);
   const formRef = useRef<HTMLElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const editing = mode.kind === "edit";
+
+  const deadlineCell = (iso: string) => {
+    const date = new Date(iso);
+    return Number.isNaN(date.getTime()) ? "–" : format.dateTime(date, { dateStyle: "medium", timeStyle: "short" });
+  };
+
+  /** Clears the stored cover and any picked file; the save then sends `coverImageUrl: null` so the BE drops it. */
+  const removeCover = () => {
+    updateForm("coverImage", null);
+    setCoverFile(null);
+    if (coverInputRef.current) coverInputRef.current.value = "";
+  };
 
   useEffect(() => {
     api.getAdminBounties().then(setRecords).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
@@ -88,16 +104,19 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (saving) return;
     const nextErrors = validateBountyForm(form, { originalDeadline });
     if (Object.values(nextErrors).some(Boolean)) {
       setErrors(nextErrors);
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("form.errors.summary") });
       return;
     }
+    setSaving(true);
     try {
       const coverImage = coverFile ? (await api.uploadAdminMedia(coverFile)).url : form.coverImage;
+      const existing = mode.kind === "edit" ? records.find((record) => record.slug === mode.slug) : undefined;
       const bounty = formToBounty(form, mode.kind === "edit"
-        ? { slug: mode.slug, coverImage, existingStatus: records.find((record) => record.slug === mode.slug)?.status ?? "draft" }
+        ? { slug: mode.slug, coverImage, existingStatus: existing?.status ?? "draft", maxWinners: existing?.maxWinners }
         : { slug: "", coverImage });
       await api.saveAdminBounty(bounty, mode.kind === "create");
       setRecords(await api.getAdminBounties());
@@ -105,6 +124,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       startCreate();
     } catch {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("toast.saveFailedDescription") });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -150,7 +171,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <td className="px-5 py-4"><RewardPill reward={bounty.reward} />{bounty.rewardContractAddress ? <p className="mt-1 text-xs text-ink-muted" title={bounty.rewardContractAddress}>EVM {bounty.rewardChainId} · {bounty.rewardContractAddress.slice(0, 6)}…{bounty.rewardContractAddress.slice(-4)}</p> : null}</td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{t(`intake.${bounty.intakeEnabled ? "ON" : "OFF"}`)}<p className="mt-1 text-xs text-ink-muted">{t(`submissionModes.${bounty.submissionMode === "agent" ? "Agent" : "Direct"}`)}</p></td>
               <td className="px-5 py-4"><Badge variant={statusVariants[bounty.status]}>{t(`statuses.${bounty.status}`)}</Badge></td>
-              <td className="px-5 py-4 text-sm text-ink-secondary">{bounty.deadline}</td>
+              <td className="px-5 py-4 text-sm text-ink-secondary">{deadlineCell(bounty.deadline)}</td>
               <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<button className="rounded-control border border-danger px-3 py-2 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
             </tr>
           ))}
@@ -163,11 +184,11 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
         <form noValidate onSubmit={save}>
           <div className="mt-5 grid gap-5 md:grid-cols-2">
             <label className="block text-sm font-semibold text-ink">{t("form.title")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("title")} onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} type="text" value={form.title} />
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("title")} maxLength={BOUNTY_TITLE_MAX} onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} type="text" value={form.title} />
               {fieldError("title")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.sponsor")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("sponsor")} onChange={(event) => updateForm("sponsor", event.target.value)} placeholder={t("form.sponsorPlaceholder")} type="text" value={form.sponsor} />
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("sponsor")} maxLength={BOUNTY_SPONSOR_MAX} onChange={(event) => updateForm("sponsor", event.target.value)} placeholder={t("form.sponsorPlaceholder")} type="text" value={form.sponsor} />
               {fieldError("sponsor")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.deadline")}
@@ -192,10 +213,13 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <div className="mt-2 w-fit"><AdminSelect formatOption={(option) => t(`submissionModes.${option}`)} label={t("form.submissionMode")} onChange={(value) => updateForm("submissionMode", value as BountyFormValues["submissionMode"])} options={["Direct", "Agent"]} value={form.submissionMode} /></div>
               <p className="mt-2 text-xs text-ink-muted">{t("form.submissionModeHint")}</p>
             </div>
-            <label className="block text-sm font-semibold text-ink">{t("form.coverImage")}
-              <input accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-sm font-normal text-ink-secondary file:mr-3 file:rounded-control file:border file:border-primary-outline file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-strong" onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)} type="file" />
+            <div className="text-sm font-semibold text-ink">
+              <label className="block">{t("form.coverImage")}
+                <input accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-sm font-normal text-ink-secondary file:mr-3 file:rounded-control file:border file:border-primary-outline file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-strong" onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)} ref={coverInputRef} type="file" />
+              </label>
               <span className="mt-2 block text-xs font-normal text-ink-muted">{coverFile?.name ?? form.coverImage ?? tCommon("fileHint")}</span>
-            </label>
+              {form.coverImage || coverFile ? <button className="mt-2 text-xs font-semibold text-danger hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={removeCover} type="button">{tCommon("removeImage")}</button> : null}
+            </div>
             <div>
               <p className="text-sm font-semibold text-ink">{t("form.tags")}</p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -219,7 +243,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               {fieldError("reviewProcess")}
             </label>
           </div>
-          <button className="mt-5 h-[45px] rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" type="submit">{editing ? t("form.save") : t("form.create")}</button>
+          <button className="mt-5 h-[45px] rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={saving} type="submit">{saving ? tCommon("saving") : editing ? t("form.save") : t("form.create")}</button>
           <p className="mt-3 text-xs text-ink-muted">{t("form.rewardNote")} {tCommon("saveNotice")}</p>
         </form>
       </section>

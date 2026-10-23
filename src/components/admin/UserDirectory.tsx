@@ -118,7 +118,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
               <tr className="border-t border-border" key={user.slug}>
                 <td className="px-5 py-4 text-sm font-semibold text-ink">{user.nickname}</td>
                 <td className="px-5 py-4 text-sm text-ink-muted">{user.email}</td>
-                <td className="px-5 py-4 text-sm text-ink-secondary">{user.joinedAt}</td>
+                <td className="px-5 py-4 text-sm text-ink-secondary">{user.joinedAt || "–"}</td>
                 <td className="px-5 py-4 text-sm text-ink-secondary">
                   {user.walletStatus === "linked" ? <Badge variant="success">{t("walletLinked")}</Badge> : "-"}
                 </td>
