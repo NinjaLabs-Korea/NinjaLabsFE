@@ -27,7 +27,7 @@ describe("landing and sitemap with a partially unavailable API", () => {
     sources.bounties.mockResolvedValue([bounty]);
     sources.notices.mockRejectedValue(new Error("down"));
     sources.hall.mockRejectedValue(new Error("down"));
-    const landing = await getRuntimeLanding();
+    const landing = await getRuntimeLanding("en");
     expect(landing.unavailable).toEqual({ bounties: false, news: true, stats: true });
     expect(landing.bounties).toEqual([bounty]);
     expect(landing.news).toEqual([]);
@@ -42,5 +42,17 @@ describe("landing and sitemap with a partially unavailable API", () => {
     expect(urls).toContain("https://ninja.test/en/bounties");
     expect(urls).toContain("https://ninja.test/en/members/ninja");
     expect(urls.some((url) => url.includes("/bounties/b"))).toBe(false);
+  });
+
+  it("lists a notice without a parseable published date, just without lastModified", async () => {
+    sources.bounties.mockResolvedValue([]);
+    sources.members.mockResolvedValue([]);
+    sources.notices.mockResolvedValue([{ slug: "dated", publishedAt: "2026.06.20" }, { slug: "undated", publishedAt: "" }]);
+    const entries = await sitemap();
+    const dated = entries.find((entry) => entry.url === "https://ninja.test/en/notices/dated");
+    const undated = entries.find((entry) => entry.url === "https://ninja.test/en/notices/undated");
+    expect(dated?.lastModified).toEqual(new Date("2026-06-20"));
+    expect(undated).toBeDefined();
+    expect(undated).not.toHaveProperty("lastModified");
   });
 });

@@ -1,7 +1,13 @@
 {
   "site": {
     "title": "Ninja Labs | 构建、完成、拥有你的成果记录。",
-    "description": "面向 Injective 生态的开发者社区与赏金市场。你完成的每项任务都会铸造一枚链上 NFT，它们共同构成真正属于你的作品集。"
+    "description": "面向 Injective 生态的开发者社区与赏金市场。你完成的每项任务都会铸造一枚链上 NFT，它们共同构成真正属于你的作品集。",
+    "og": {
+      "alt": "Ninja Labs | 构建、完成、拥有你的成果记录。",
+      "headline": "完成赏金，收集证明。",
+      "highlight": "拥有你的成果记录。",
+      "tagline": "面向 Injective 生态的开发者社区与赏金市场。"
+    }
   },
   "layout": {
     "skipToContent": "跳到主要内容"
@@ -62,7 +68,10 @@
     "connecting": "正在连接钱包…",
     "connect": "连接钱包",
     "connectFailed": "无法连接你的钱包，请重试。",
-    "supportedWallets": "支持的钱包"
+    "supportedWallets": "支持的钱包",
+    "switchRejected": "你拒绝了网络切换。请在钱包中批准以继续。",
+    "switchFailed": "无法切换网络。请将 Injective EVM 添加到钱包后重试。",
+    "switchUnavailable": "此环境未配置自动网络切换。请在钱包中手动切换到 Injective EVM 后重试。"
   },
   "stepIndicator": {
     "login": "1. 登录",
@@ -87,6 +96,7 @@
     "title": "页面未找到",
     "description": "你要查找的页面不存在或已被移动。",
     "home": "返回首页",
-    "browseBounties": "浏览赏金"
+    "browseBounties": "浏览赏金",
+    "metaTitle": "页面未找到 | Ninja Labs"
   }
 }

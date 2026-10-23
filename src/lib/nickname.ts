@@ -1,0 +1,43 @@
+/**
+ * 닉네임 규칙 — NinjaLabsBE `src/users/nickname.ts` + `CompleteProfileDto`(@Trim @Length(2,50) @Matches @IsNotReservedNickname)의 거울.
+ * BE 규칙이 바뀌면 여기와 `src/test/nickname.test.ts`를 함께 고칠 것. `/users/:nickname` 경로에 그대로 쓰이는 값이다.
+ *
+ *   - 유니코드 문자/숫자와 `_ . -`만, 공백 불가
+ *   - 처음과 끝은 문자/숫자 (`.ninja`, `ninja-`, `..`, `--` 불가)
+ *   - 길이 2~50 (trim 후, **코드 포인트** 기준 — BE `@Length`/validator `isLength`는 서로게이트 쌍을 한 글자로 센다)
+ *   - 라우트와 충돌하는 예약어는 대소문자 무관 거부
+ */
+export const NICKNAME = /^[\p{L}\p{N}][\p{L}\p{N}_.-]*[\p{L}\p{N}]$/u;
+export const NICKNAME_MIN = 2;
+export const NICKNAME_MAX = 50;
+export const RESERVED_NICKNAMES: readonly string[] = ["me", "check-nickname", "admin", "new", "edit"];
+
+const ALLOWED_CHARS = /^[\p{L}\p{N}_.-]+$/u;
+
+export function isReservedNickname(value: string): boolean {
+  return RESERVED_NICKNAMES.includes(value.trim().toLowerCase());
+}
+
+/** 실패 사유. 화면 문구는 messages `signup.profile.form.nicknameErrors.<사유>`에 있다. */
+export type NicknameError = "tooShort" | "tooLong" | "reserved" | "chars" | "edge";
+
+/** 코드 포인트 수 (`"𝐀".length === 2`지만 한 글자). `<input maxLength>`는 UTF-16 단위라 더 엄격할 뿐, 검증은 이 값으로 한다. */
+export function nicknameLength(value: string): number {
+  return [...value].length;
+}
+
+/** BE와 같은 순서로 검사한다: trim → 길이 → 예약어 → 문자 집합 → 양 끝. 통과하면 null. */
+export function validateNickname(raw: string): NicknameError | null {
+  const value = raw.trim();
+  const length = nicknameLength(value);
+  if (length < NICKNAME_MIN) return "tooShort";
+  if (length > NICKNAME_MAX) return "tooLong";
+  if (isReservedNickname(value)) return "reserved";
+  if (!ALLOWED_CHARS.test(value)) return "chars";
+  if (!NICKNAME.test(value)) return "edge";
+  return null;
+}
+
+export function isValidNickname(raw: string): boolean {
+  return validateNickname(raw) === null;
+}

@@ -6,7 +6,7 @@ import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { getAdminHighlights } from "@/lib/admin";
 import { loadFromRuntime } from "@/lib/api/public";
-import { getRuntimeHallOfFame } from "@/lib/hall-of-fame";
+import { loadRuntimeHallOfFame } from "@/lib/hall-of-fame";
 
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/admin/hall-of-fame">): Promise<Metadata> {
@@ -24,8 +24,10 @@ export default async function AdminHallOfFamePage({ params }: PageProps<"/[local
   const t = await getTranslations("admin.hallOfFame");
   const tCommon = await getTranslations("admin.common");
   const tStats = await getTranslations("hallOfFame.stats");
+  const tHall = await getTranslations("hallOfFame.unavailable");
   const highlights = await loadFromRuntime({ mock: getAdminHighlights, api: async () => [] });
-  const hall = await getRuntimeHallOfFame();
+  // Same unavailable wrapper as the public page: a BE outage renders a status panel instead of the error boundary.
+  const { hallOfFame: hall, unavailable } = await loadRuntimeHallOfFame(locale);
 
   return (
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
@@ -53,6 +55,12 @@ export default async function AdminHallOfFamePage({ params }: PageProps<"/[local
             </div>
             <Badge variant="neutral">{t("statsBadge")}</Badge>
           </div>
+          {unavailable ? (
+            <div className="mt-6 rounded-card border border-dashed border-border bg-surface-subtle p-6 text-center" role="status">
+              <p className="font-display text-lg font-bold text-ink">{tHall("title")}</p>
+              <p className="mt-1 text-sm text-ink-muted">{tHall("body")}</p>
+            </div>
+          ) : null}
           <div className="mt-6 grid gap-5 md:grid-cols-3">
             {hall.stats.map(({ value, labelKey }) => (
               <article key={labelKey} className="rounded-card border border-primary-soft-border bg-primary-soft p-5 text-center">

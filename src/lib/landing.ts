@@ -43,11 +43,11 @@ export type RuntimeLanding = LandingData & {
 const settledValue = <T>(result: PromiseSettledResult<T>, fallback: T): T =>
   result.status === 'fulfilled' ? result.value : fallback;
 
-export async function getRuntimeLanding(): Promise<RuntimeLanding> {
+export async function getRuntimeLanding(locale: string): Promise<RuntimeLanding> {
   const [bountiesResult, noticesResult, hallResult] = await Promise.allSettled([
-    getRuntimeBounties(),
+    getRuntimeBounties(locale),
     getRuntimeNotices(),
-    getRuntimeHallOfFame(),
+    getRuntimeHallOfFame(locale),
   ]);
   const bounties = settledValue(bountiesResult, []);
   const notices = settledValue(noticesResult, []);

@@ -2,7 +2,9 @@
   "common": {
     "eyebrow": "계정",
     "unavailableBody": "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
-    "mockNote": "세션 미리보기: 데모 데이터이며 새로고침하면 초기화됩니다."
+    "mockNote": "세션 미리보기: 데모 데이터이며 새로고침하면 초기화됩니다.",
+    "loading": "계정 정보를 불러오는 중…",
+    "sessionExpired": "세션이 만료되었습니다. 다시 로그인해 주세요."
   },
   "signedOut": {
     "body": "가입 절차를 완료하면 내 계정을 미리 볼 수 있습니다.",
@@ -21,7 +23,6 @@
     "progressLabel": "지원 진행 상황",
     "steps": {
       "open": "지원 완료",
-      "under_review": "검토 중",
       "approved": "승인됨",
       "submitted": "제출됨",
       "completed": "완료"
@@ -29,6 +30,7 @@
     "approvedStatus": "승인됨: 제출 가능",
     "submitWork": "작업 제출하기",
     "rejectedStatus": "미선정",
-    "rejectedNote": "스폰서가 이 지원을 선정하지 않았습니다. 다른 진행 중인 바운티를 둘러보세요."
+    "rejectedNote": "스폰서가 이 지원을 선정하지 않았습니다. 다른 진행 중인 바운티를 둘러보세요.",
+    "viaAgent": "{name} 대행"
   }
 }

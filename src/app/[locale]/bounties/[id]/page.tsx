@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Badge } from "@/components/ui/Badge";
 import { BountyAgentPanel } from "@/components/agents/BountyAgentPanel";
@@ -10,6 +10,7 @@ import { Markdown } from "@/components/ui/Markdown";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { getPathname, Link } from "@/i18n/navigation";
 import { getRuntimeBounty } from "@/lib/bounties";
+import { validateDetailId } from "@/lib/detail-id";
 import type { Reward } from "@/lib/types";
 
 type BountyDetailPageProps = {
@@ -30,7 +31,7 @@ const applyStatuses = [
 export async function generateMetadata({ params }: BountyDetailPageProps): Promise<Metadata> {
   const { locale, id } = await params;
   const t = await getTranslations({ locale, namespace: "bounties.meta" });
-  const bounty = await getRuntimeBounty(id);
+  const bounty = (await validateDetailId("bounties", id)) ? await getRuntimeBounty(id, locale) : undefined;
 
   if (!bounty) {
     return { title: t("notFound") };
@@ -50,7 +51,10 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   setRequestLocale(locale);
   const t = await getTranslations("bounties");
   const tAgents = await getTranslations("agents.panel");
-  const bounty = await getRuntimeBounty(id);
+  const format = await getFormatter();
+  // Shape check before the fetch (api: UUID, mock: slug); the layout already did it, this keeps the page self-contained.
+  if (!(await validateDetailId("bounties", id))) notFound();
+  const bounty = await getRuntimeBounty(id, locale);
 
   if (!bounty) {
     notFound();
@@ -80,9 +84,9 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
           </h1>
           <div className="mt-4 flex flex-wrap gap-2">
             <Badge variant="primary-soft">{t(`categories.${bounty.category}`)}</Badge>
-            <Badge variant={bounty.status === "active" ? "success" : "danger"}>
+            <Badge variant={bounty.status === "active" ? "success" : bounty.status === "reviewing" ? "warning" : "danger"}>
               {bounty.status === "active" ? <span className="mr-1.5 inline-block size-1.5 rounded-full bg-success" /> : null}
-              {bounty.status === "active" ? t("status.active") : t("status.closed")}
+              {t(`status.${bounty.status}`)}
             </Badge>
             {applicationRequired
               ? <Badge variant="warning">{t("detail.applicationRequired")}</Badge>
@@ -115,7 +119,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
                       ? deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)
                       : <span>{bounty.submissionGuideMarkdown ? t("detail.deliverableSeeGuide") : t("detail.deliverableDescribed")}</span>}
                   </MetaCell>
-                  <MetaCell label={t("detail.deadline")}>{bounty.deadlineDetail ?? (isClosedDeadline ? t("status.closed") : bounty.deadline)}</MetaCell>
+                  <MetaCell label={t("detail.deadline")}>{bounty.deadlineDetail || t(isClosedDeadline ? "status.closed" : "status.active")}</MetaCell>
                   <MetaCell label={t("detail.review")}>{bounty.reviewProcess ?? t("detail.defaultReview")}</MetaCell>
                 </div>
                 {bounty.submissionGuideMarkdown ? (
@@ -130,7 +134,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             ) : null}
           </article>
 
-          <BountyActionPanel bountyId={bounty.slug} applicationRequired={applicationRequired} submissionMode={submissionMode} />
+          <BountyActionPanel bountyId={bounty.slug} applicationRequired={applicationRequired} status={bounty.status} submissionMode={submissionMode} />
 
           {applicationRequired ? (
             <section className="rounded-card border border-border bg-surface p-[21px] shadow-card">
@@ -151,7 +155,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
           <section className="rounded-card border border-primary-soft-border bg-primary-soft p-[21px]">
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("detail.rewardInfo")}</p>
-              {rewards.map((reward) => <SponsorPaysPill key={reward.currency} label={t("detail.sponsorPays", { reward: `${reward.amount} ${reward.currency}` })} reward={reward} />)}
+              {rewards.map((reward) => <SponsorPaysPill key={reward.currency} label={t("detail.sponsorPays", { reward: `${format.number(reward.amount, { maximumFractionDigits: 6 })} ${reward.currency}` })} reward={reward} />)}
             </div>
             <ol className="mt-4 space-y-3">
               {(["flow", "token", "noSwap"] as const).map((note, index) => (

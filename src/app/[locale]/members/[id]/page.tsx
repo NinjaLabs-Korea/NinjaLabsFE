@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { loadFromRuntime } from "@/lib/api/public";
+import { validateDetailId } from "@/lib/detail-id";
 import { getRuntimeProfile, PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
 
 type MemberProfilePageProps = PageProps<"/[locale]/members/[id]">;
@@ -18,7 +19,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: MemberProfilePageProps): Promise<Metadata> {
   const { locale, id } = await params;
   const t = await getTranslations({ locale, namespace: "members.profile" });
-  const profile = await getRuntimeProfile(id);
+  const profile = (await validateDetailId("members", id)) ? await getRuntimeProfile(id, locale) : undefined;
 
   if (!profile) {
     return { title: t("notFoundTitle") };
@@ -39,7 +40,10 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
   const { locale, id } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("members.profile");
-  const profile = await getRuntimeProfile(id);
+  const format = await getFormatter();
+  // Shape check before the fetch (api: nickname, mock: slug); the layout already did it, this keeps the page self-contained.
+  if (!(await validateDetailId("members", id))) notFound();
+  const profile = await getRuntimeProfile(id, locale);
   if (!profile) notFound();
   const completed = profile.completions.length > 0;
   // "View filled profile" is a demo affordance from Figma 05-Empty; only the mock fixture has a filled profile to point at.
@@ -117,7 +121,12 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
               <Link className="rounded-card border border-border bg-surface p-[21px] shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={completion.bountySlug ? `/bounties/${completion.bountySlug}` : "/bounties"} key={completion.title}>
                 <Badge>{t(`categories.${completion.category.toLowerCase()}`)}</Badge>
                 <h3 className="mt-3 font-display text-lg font-bold text-ink">{completion.title}</h3>
-                <p className="mt-2 text-sm text-ink-muted">{t("history.completedOn", { date: completion.completedAt, reward: `${completion.reward.amount} ${completion.reward.currency}` })}</p>
+                <p className="mt-2 text-sm text-ink-muted">
+                  {completion.reward
+                    ? t("history.completedOn", { date: completion.completedAt, reward: `${format.number(completion.reward.amount, { maximumFractionDigits: 6 })} ${completion.reward.currency}` })
+                    : t("history.completedDate", { date: completion.completedAt })}
+                </p>
+                {completion.payoutStatus === "PENDING" ? <div className="mt-2"><Badge variant="warning">{t("payoutPending")}</Badge></div> : null}
               </Link>
             ))}
           </div>

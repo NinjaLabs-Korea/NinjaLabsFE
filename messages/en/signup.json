@@ -96,7 +96,9 @@
       "errors": {
         "nickname": "Enter a nickname of at least 2 characters.",
         "tags": "Choose at least one field tag.",
-        "bio": "Write a short intro."
+        "bio": "Write a short intro.",
+        "nicknameRejected": "The server rejected this nickname. Check the rules above.",
+        "bioRejected": "The server rejected this bio. Keep it under 1000 characters."
       },
       "saveErrors": {
         "network": "We couldn't save your profile. Check your connection and try again.",
@@ -104,6 +106,19 @@
         "nickname": "That nickname is already in use. Choose another one.",
         "invalid": "Check every field: the nickname must be 2-50 characters, and a bio and field tag are required.",
         "generic": "We couldn't save your profile. Please try again."
+      },
+      "nicknameHint": "2–50 characters: letters, digits, _ . - — starting and ending with a letter or digit.",
+      "nicknameErrors": {
+        "tooShort": "Use at least 2 characters.",
+        "tooLong": "Use at most 50 characters.",
+        "reserved": "This word is reserved. Choose another nickname.",
+        "chars": "Use only letters, digits, and _ . - (no spaces).",
+        "edge": "Start and end with a letter or digit."
+      },
+      "nicknameCheck": {
+        "checking": "Checking availability…",
+        "available": "Nickname is available.",
+        "taken": "That nickname is already taken."
       }
     },
     "eyebrow": "Profile",

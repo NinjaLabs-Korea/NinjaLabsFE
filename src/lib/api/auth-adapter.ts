@@ -1,6 +1,11 @@
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
 import { clearTokens, createApiHttp, type ApiHttp } from "@/lib/api/http";
-import { createLoginChallenge, exchangeLoginCodeFromLocation } from "@/lib/api/oauth";
+import {
+  createLoginChallenge,
+  exchangeLoginCodeFromLocation,
+  isAuthCallbackPath,
+  LoginExchangeError,
+} from "@/lib/api/oauth";
 import { fetchMe, toClientUser } from "@/lib/api/me";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
 import { stripLocale, withLocaleOf } from "@/i18n/routing";
@@ -82,7 +87,7 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
         onboardingCompleted: restored.user?.onboardingCompleted,
       });
       // 콜백은 로케일 경로(/en/auth/callback)로 들어오므로 로케일을 떼고 비교하고, 같은 로케일의 홈으로 보낸다.
-      const onCallback = stripLocale(window.location.pathname) === "/auth/callback";
+      const onCallback = isAuthCallbackPath(window.location.pathname);
       const targetPath = onboardingPath ?? (
         onCallback && restored.status === "signed-in" ? withLocaleOf(window.location.pathname, "/") : null
       );
@@ -90,10 +95,17 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
         onboardingLog("onboarding.redirect.started", { targetPath });
         window.location.replace(targetPath);
       }
-    }).catch(() => {
-      clearTokens();
-      setSnapshot({ status: "signed-out", user: null });
-      onboardingLog("oauth.exchange.failed");
+    }).catch((error: unknown) => {
+      // 교환을 실제로 시도했다가 실패한 경우에만 기존 세션을 비운다. `#error=`나 verifier 없는
+      // `#loginCode=`(링크로 심을 수 있는 값)로는 로그인 중이던 세션을 잃지 않고 그대로 복원한다.
+      const attempted = error instanceof LoginExchangeError && error.attempted;
+      onboardingLog("oauth.exchange.failed", { attempted });
+      if (attempted) {
+        clearTokens();
+        setSnapshot({ status: "signed-out", user: null });
+        return;
+      }
+      return restoreSession().catch(() => setSnapshot({ status: "signed-out", user: null }));
     });
   };
 

@@ -1,4 +1,6 @@
 import type { Notice } from "@/lib/types";
+import { formatIsoDate, toNoticeCategoryLabel } from "@/lib/api/codecs";
+import { fetchAllPublicPages } from "@/lib/api/paging";
 import { fetchPublicJson, loadFromRuntime } from "@/lib/api/public";
 
 export const notices: Notice[] = [
@@ -77,15 +79,6 @@ type NoticeRow = {
   external_url: string | null;
   published_at: string;
 };
-type NoticeListResponse = { items: NoticeRow[] };
-
-const categoryLabels = {
-  NINJALABS: "Ninja Labs",
-  INJECTIVE_ECOSYSTEM: "Injective ecosystem",
-  EVENT: "Events",
-  RECRUITMENT: "Recruitment",
-  OTHER: "Other",
-} as const;
 
 function toNotice(row: NoticeRow): Notice {
   return {
@@ -93,8 +86,9 @@ function toNotice(row: NoticeRow): Notice {
     title: row.title,
     excerpt: row.summary ?? "",
     bodyMarkdown: row.body ?? row.summary ?? "",
-    category: categoryLabels[row.category as keyof typeof categoryLabels] ?? "Other",
-    publishedAt: new Date(row.published_at).toLocaleDateString("en-CA").replaceAll("-", "."),
+    category: toNoticeCategoryLabel(row.category) ?? "Other",
+    // Stable `YYYY.MM.DD` (not localized): the Figma date label, and sitemap.ts parses it back into a Date.
+    publishedAt: formatIsoDate(row.published_at).replaceAll("-", "."),
     thumbnail: row.thumbnail_url ?? "",
     coverImage: row.thumbnail_url ?? undefined,
     externalUrl: row.external_url ?? undefined,
@@ -104,7 +98,7 @@ function toNotice(row: NoticeRow): Notice {
 export function getRuntimeNotices(): Promise<Notice[]> {
   return loadFromRuntime({
     mock: getNotices,
-    api: async () => (await fetchPublicJson<NoticeListResponse>("/notices?page=1&pageSize=50")).items.map(toNotice),
+    api: async () => (await fetchAllPublicPages<NoticeRow>("/notices")).map(toNotice),
   });
 }
 

@@ -87,7 +87,8 @@
       "emptyBody": "다음에 완료하는 작업은 제목, 완료일, 보상, 발행된 자식 NFT 증명과 함께 표시됩니다.",
       "findFirst": "첫 바운티 찾기",
       "headingEmpty": "완료한 바운티",
-      "browseMore": "더 둘러보기"
+      "browseMore": "더 둘러보기",
+      "completedDate": "{date} 완료"
     },
     "agents": {
       "eyebrow": "보유 에이전트",
@@ -99,6 +100,7 @@
       "register": "에이전트 등록",
       "wallet": "등록된 지갑 공개 키: {wallet}"
     },
-    "shareable": "공유 가능한 URL — 로그인 불필요"
+    "shareable": "공유 가능한 URL — 로그인 불필요",
+    "payoutPending": "지급 대기"
   }
 }

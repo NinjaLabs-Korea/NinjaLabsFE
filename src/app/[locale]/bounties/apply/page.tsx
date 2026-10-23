@@ -33,7 +33,7 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
   setRequestLocale(locale);
   const t = await getTranslations("bounties.apply");
   const tBounties = await getTranslations("bounties");
-  const { bounties, unavailable } = await loadRuntimeBounties();
+  const { bounties, unavailable } = await loadRuntimeBounties(locale);
   const applicationBounty = bounties.find(
     (bounty) => bounty.status === "active" && bounty.applicationRequired,
   );

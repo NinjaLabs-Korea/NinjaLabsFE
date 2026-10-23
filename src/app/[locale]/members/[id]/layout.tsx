@@ -1,11 +1,14 @@
 import { notFound } from "next/navigation";
+import { validateDetailId } from "@/lib/detail-id";
 import { getRuntimeProfile } from "@/lib/members";
 
 // 없는 id는 loading.tsx 스트리밍이 시작되기 전에 여기서 404로 끝낸다.
 // 스트리밍이 시작되면 상태 코드가 200으로 고정되기 때문이다 (Next docs: loading.js > Status Codes).
 // page.tsx도 같은 조회를 하지만 같은 요청 안의 fetch는 메모이즈되어 API를 두 번 부르지 않는다.
+// id 모양부터 확인한다 (api: nickname, mock: slug): 쓰레기 id는 조회 없이 404.
 export default async function MemberProfileLayout({ children, params }: LayoutProps<"/[locale]/members/[id]">) {
-  const { id } = await params;
-  if (!(await getRuntimeProfile(id))) notFound();
+  const { locale, id } = await params;
+  if (!(await validateDetailId("members", id))) notFound();
+  if (!(await getRuntimeProfile(id, locale))) notFound();
   return children;
 }

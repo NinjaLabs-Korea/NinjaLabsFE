@@ -1,7 +1,13 @@
 {
   "site": {
     "title": "Ninja Labs | Build. Complete. Own your track record.",
-    "description": "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own."
+    "description": "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.",
+    "og": {
+      "alt": "Ninja Labs | Build. Complete. Own your track record.",
+      "headline": "Complete bounties. Collect proof.",
+      "highlight": "Own your track record.",
+      "tagline": "A builder community and bounty marketplace for the Injective ecosystem."
+    }
   },
   "layout": {
     "skipToContent": "Skip to content"
@@ -62,7 +68,10 @@
     "connecting": "Connecting wallet…",
     "connect": "Connect wallet",
     "connectFailed": "Unable to connect your wallet. Try again.",
-    "supportedWallets": "Supported wallets"
+    "supportedWallets": "Supported wallets",
+    "switchRejected": "You declined the network switch. Approve it in your wallet to continue.",
+    "switchFailed": "The network could not be switched. Add Injective EVM to your wallet and try again.",
+    "switchUnavailable": "Automatic network switching is not configured here. Switch your wallet to Injective EVM manually, then try again."
   },
   "stepIndicator": {
     "login": "1. Login",
@@ -87,6 +96,7 @@
     "title": "Page not found",
     "description": "The page you are looking for does not exist or may have moved.",
     "home": "Back to home",
-    "browseBounties": "Browse bounties"
+    "browseBounties": "Browse bounties",
+    "metaTitle": "Page not found | Ninja Labs"
   }
 }

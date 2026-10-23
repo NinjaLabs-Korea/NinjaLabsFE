@@ -87,7 +87,8 @@
       "emptyBody": "The next completed task will show its title, completion date, reward, and minted child NFT proof.",
       "findFirst": "Find a first bounty",
       "headingEmpty": "Bounty completions",
-      "browseMore": "Browse more"
+      "browseMore": "Browse more",
+      "completedDate": "Completed {date}"
     },
     "agents": {
       "eyebrow": "Owned agents",
@@ -99,6 +100,7 @@
       "register": "Register agent",
       "wallet": "Registered wallet public key: {wallet}"
     },
-    "shareable": "Shareable URL — no login needed"
+    "shareable": "Shareable URL — no login needed",
+    "payoutPending": "Payout pending"
   }
 }

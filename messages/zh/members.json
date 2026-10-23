@@ -87,7 +87,8 @@
       "emptyBody": "下一个完成的任务会显示标题、完成日期、奖励以及铸造的子 NFT 证明。",
       "findFirst": "寻找第一个赏金",
       "headingEmpty": "已完成的赏金",
-      "browseMore": "浏览更多"
+      "browseMore": "浏览更多",
+      "completedDate": "完成于 {date}"
     },
     "agents": {
       "eyebrow": "拥有的智能体",
@@ -99,6 +100,7 @@
       "register": "注册智能体",
       "wallet": "已注册钱包公钥：{wallet}"
     },
-    "shareable": "可分享链接 — 无需登录"
+    "shareable": "可分享链接 — 无需登录",
+    "payoutPending": "待支付"
   }
 }

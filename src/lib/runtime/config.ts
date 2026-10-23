@@ -142,12 +142,28 @@ function parseWalletConfig(environment: RuntimeEnvironment): WalletConfig | null
     throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID must be one of: 1439, 1776.");
   }
 
+  const parsedRpcUrl = rpcUrl ? parseHttpUrl(rpcUrl, "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", false) : undefined;
+  if (parsedRpcUrl) assertChainRpcPairing(chainId as WalletChainId, parsedRpcUrl);
+
   return {
     chainId: chainId as WalletChainId,
-    ...(rpcUrl
-      ? { rpcUrl: parseHttpUrl(rpcUrl, "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", false) }
-      : {}),
+    ...(parsedRpcUrl ? { rpcUrl: parsedRpcUrl } : {}),
   };
+}
+
+/**
+ * Cheap mismatch guard: 1776 is Injective EVM mainnet and 1439 is testnet, and the public Injective RPC hosts carry the
+ * network name (`k8s.testnet.json-rpc.injective.network`, `sentry.evm-rpc.injective.network` / `*mainnet*`). A chain
+ * id pointed at the other network's RPC would let wallets sign against the wrong chain, so the build fails instead.
+ */
+function assertChainRpcPairing(chainId: WalletChainId, rpcUrl: string): void {
+  const host = new URL(rpcUrl).hostname.toLowerCase();
+  if (chainId === 1776 && host.includes("testnet")) {
+    throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1776 (mainnet) cannot use a testnet RPC URL.");
+  }
+  if (chainId === 1439 && host.includes("mainnet")) {
+    throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1439 (testnet) cannot use a mainnet RPC URL.");
+  }
 }
 
 
@@ -203,13 +219,19 @@ export function readRuntimeConfig(environment: RuntimeEnvironment): RuntimeConfi
     }
   }
 
+  const wallet = parseWalletConfig(environment);
+  // Without an RPC URL the wagmi chain has no transport, so reads such as balances fail silently; mock mode keeps the fallback.
+  if (runtimeMode === "api" && wallet && !wallet.rpcUrl) {
+    throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL is required in api mode when NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID is set.");
+  }
+
   return {
     deploymentTier,
     runtimeMode,
     origin,
     mockAvailable,
     apiAvailable,
-    wallet: parseWalletConfig(environment),
+    wallet,
     ...(apiUrl
       ? {
           apiUrl: requireHttps(

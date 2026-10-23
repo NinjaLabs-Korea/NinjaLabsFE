@@ -2,7 +2,9 @@
   "common": {
     "eyebrow": "账户",
     "unavailableBody": "无法连接服务器，请稍后重试。",
-    "mockNote": "会话预览：演示数据，刷新后将重置。"
+    "mockNote": "会话预览：演示数据，刷新后将重置。",
+    "loading": "正在加载账户信息…",
+    "sessionExpired": "会话已过期，请重新登录。"
   },
   "signedOut": {
     "body": "完成注册流程即可预览你的账户。",
@@ -21,7 +23,6 @@
     "progressLabel": "申请进度",
     "steps": {
       "open": "已申请",
-      "under_review": "审核中",
       "approved": "已批准",
       "submitted": "已提交",
       "completed": "已完成"
@@ -29,6 +30,7 @@
     "approvedStatus": "已批准：可以提交",
     "submitWork": "提交作品",
     "rejectedStatus": "未入选",
-    "rejectedNote": "赞助方未选择此申请。浏览其他进行中的赏金，继续创作吧。"
+    "rejectedNote": "赞助方未选择此申请。浏览其他进行中的赏金，继续创作吧。",
+    "viaAgent": "由 {name} 代为申请"
   }
 }

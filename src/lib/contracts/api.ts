@@ -9,7 +9,8 @@ export type ApiAvailable<T> = {
 
 export type ApiUnavailable = {
   status: "unavailable";
-  reason: "api-mode-placeholder" | "network-error";
+  /** `unauthorized`: 401/403 after the refresh attempt (session gone) - views show a sign-in prompt; `server-error`: the BE answered with an error; `network-error`: no answer. */
+  reason: "unauthorized" | "server-error" | "network-error";
 };
 
 export type AgentRegistration = {
@@ -25,11 +26,24 @@ export type AgentVerification = {
   expiresAt: string;
 };
 
+/** POST /agents/:id/keys/rotate — 새 원문 키는 이 응답에서 한 번만 노출된다 */
+export type AgentKeyRotation = {
+  agentId: string;
+  apiKey: string;
+  expiresAt: string;
+};
+
+/** POST /agents/:id/revoke */
+export type AgentRevocation = {
+  agentId: string;
+  status: "REVOKED";
+};
+
 export type ApiResult<T> = ApiAvailable<T> | ApiUnavailable;
 
 /**
  * FE ↔ BE 계약. 도메인별 인터페이스로 나눠, 컴포넌트는 필요한 조각만 의존한다
- * (예: 지갑 버튼은 WalletApi만). 구현체(api / mock / unavailable)는 모든 조각을 구현한다.
+ * (예: 지갑 버튼은 WalletApi만). 구현체(api / mock)는 모든 조각을 구현한다.
  */
 
 /** 로그인 사용자의 읽기 전용 계정 데이터 */
@@ -59,6 +73,9 @@ export type AgentApi = {
     walletAddress: string;
   }) => Promise<AgentRegistration>;
   verifyAgent: (agentId: string, signature: string) => Promise<AgentVerification>;
+  /** 404 AGENT_NOT_FOUND / 409 AGENT_NOT_ACTIVE */
+  rotateAgentKey: (agentId: string) => Promise<AgentKeyRotation>;
+  revokeAgent: (agentId: string) => Promise<AgentRevocation>;
 };
 
 /** 지갑 소유권 인증 (challenge → 서명 → verify) */
@@ -69,6 +86,8 @@ export type WalletApi = {
 
 /** 가입 온보딩 (프로필 저장 / 완료 처리) */
 export type OnboardingApi = {
+  /** 공개 `GET /users/check-nickname?nickname=` — 예약어도 `available: false`. mock은 항상 available. */
+  checkNickname: (nickname: string) => Promise<{ available: boolean }>;
   completeProfile: (input: {
     nickname: string;
     bio: string;
@@ -87,10 +106,16 @@ export type AdminApi = {
   transitionAdminBounty: (bountyId: string, to: string) => Promise<void>;
   deleteAdminBounty: (bountyId: string) => Promise<void>;
   getAdminPosts: () => Promise<AdminPost[]>;
-  saveAdminPost: (post: AdminPost, create: boolean) => Promise<{ id: string }>;
+  /** On edits, `options.publish` is sent only when the publish state was toggled (the BE stamps published_at whenever it is present). Cleared `thumbnail`/`externalUrl` are sent as `null`. */
+  saveAdminPost: (post: AdminPost, create: boolean, options?: { publish?: boolean }) => Promise<{ id: string }>;
   deleteAdminPost: (noticeId: string) => Promise<void>;
   getAdminHighlights: () => Promise<AdminHighlight[]>;
-  saveAdminHighlight: (highlight: AdminHighlight, create: boolean) => Promise<{ id: string }>;
+  /**
+   * On edits, `options.publish` is sent only when the published state toggled (the BE re-stamps published_at whenever it
+   * is present) and `type` only when `options.typeChanged` (an unknown BE code is kept as loaded, never re-sent).
+   * Cleared optional URLs (`link`, `image`) are sent as `null` so the BE writes null instead of keeping the old value.
+   */
+  saveAdminHighlight: (highlight: AdminHighlight, create: boolean, options?: { publish?: boolean; typeChanged?: boolean }) => Promise<{ id: string }>;
   deleteAdminHighlight: (highlightId: string) => Promise<void>;
 };
 

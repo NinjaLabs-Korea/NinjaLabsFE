@@ -8,7 +8,7 @@ vi.mock("@/lib/api/public", () => ({
 }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
-const { deliverablesFromMarkdown, getRuntimeBounties, loadRuntimeBounties } = await import("@/lib/bounties");
+const { deliverablesFromMarkdown, getBounties, getRuntimeBounties, getRuntimeBounty, loadRuntimeBounties, toBountyStatus, toPublicBountyStatus } = await import("@/lib/bounties");
 
 const row = (id: string, rewards = [{ symbol: "INJ", amount: "1500000000000000000", tokenType: "NATIVE" }]) => ({
   id, title: id, summary: "", sponsor_name: "S", category: "DEV", status: "OPEN",
@@ -50,15 +50,54 @@ describe("bounty mapping", () => {
         : [row("b50", [{ symbol: "INJ", amount: "1000000000000000000", tokenType: "NATIVE" }, { symbol: "USDC", amount: "5000000", tokenType: "ERC20" }])];
       return { items, page, pageSize: 50, total: 51 };
     });
-    const bounties = await getRuntimeBounties();
+    const bounties = await getRuntimeBounties("en");
     expect(bounties).toHaveLength(51);
     expect(fetchPublicJson).toHaveBeenCalledTimes(2);
     expect(bounties[0].reward).toEqual({ amount: 1.5, currency: "INJ" });
     expect(bounties[50].rewards).toEqual([{ amount: 1, currency: "INJ" }, { amount: 5, currency: "USDC" }]);
   });
 
+  it("maps the BE lifecycle onto active / reviewing / closed, keeps the Closed deadline sentinel, and exposes daysLeft as a number", async () => {
+    expect(["OPEN", "SUBMISSION_CLOSED", "IN_REVIEW", "COMPLETED", "CANCELLED"].map(toBountyStatus)).toEqual(["active", "reviewing", "reviewing", "closed", "closed"]);
+    fetchPublicJson.mockResolvedValue({ items: [{ ...row("open") }, { ...row("review"), status: "IN_REVIEW" }, { ...row("done"), status: "COMPLETED" }], page: 1, pageSize: 50, total: 3 });
+    const bounties = await getRuntimeBounties("en");
+    expect(bounties.map((bounty) => [bounty.status, bounty.deadline])).toEqual([["active", "Open"], ["reviewing", "Closed"], ["closed", "Closed"]]);
+    // The card localizes the countdown (bounties.card.daysLeft); the model never carries a "D-7" string.
+    expect(bounties.map((bounty) => bounty.daysLeft)).toEqual([expect.any(Number), undefined, undefined]);
+    expect(bounties[0].daysLeft).toBeGreaterThan(0);
+    expect(getBounties().every((bounty) => !/^D-\d+$/.test(bounty.deadline))).toBe(true);
+    expect(getBounties().some((bounty) => bounty.status === "reviewing")).toBe(true);
+  });
+
+  it("presents an OPEN bounty whose submission deadline has passed (or is unparseable) as closed", async () => {
+    const now = new Date("2026-07-01T00:00:00Z").getTime();
+    expect(toPublicBountyStatus("OPEN", "2026-07-02T00:00:00Z", now)).toBe("active");
+    expect(toPublicBountyStatus("OPEN", "2026-07-01T00:00:00Z", now)).toBe("closed");
+    expect(toPublicBountyStatus("OPEN", "2026-06-30T23:59:59Z", now)).toBe("closed");
+    expect(toPublicBountyStatus("OPEN", "not a date", now)).toBe("closed");
+    expect(toPublicBountyStatus("IN_REVIEW", "2020-01-01T00:00:00Z", now)).toBe("reviewing");
+
+    fetchPublicJson.mockResolvedValue({ items: [{ ...row("past"), submission_deadline: "2020-01-01T00:00:00Z" }, { ...row("broken"), submission_deadline: "soon" }, row("open")], page: 1, pageSize: 50, total: 3 });
+    const bounties = await getRuntimeBounties("en");
+    expect(bounties.map((bounty) => [bounty.status, bounty.deadline, bounty.daysLeft])).toEqual([
+      ["closed", "Closed", undefined],
+      ["closed", "Closed", undefined],
+      ["active", "Open", expect.any(Number)],
+    ]);
+  });
+
+  it("formats deadlineDetail in UTC through the shared formatter and leaves it empty when unparseable", async () => {
+    fetchPublicJson.mockResolvedValueOnce({ ...row("open"), submission_deadline: "2026-07-14T23:59:00.000Z", description: "D", requirements: "- Repo", evaluation_criteria: "E" });
+    const bounty = await getRuntimeBounty("open", "en");
+    expect(bounty?.deadlineDetail).toBe("July 14, 2026 at 11:59 PM UTC");
+    fetchPublicJson.mockResolvedValueOnce({ ...row("broken"), submission_deadline: "soon", description: "D", requirements: "", evaluation_criteria: "E" });
+    const broken = await getRuntimeBounty("broken", "en");
+    expect(broken?.deadlineDetail).toBe("");
+    expect(broken?.status).toBe("closed");
+  });
+
   it("reports an unavailable API instead of throwing", async () => {
     fetchPublicJson.mockRejectedValue(new Error("down"));
-    await expect(loadRuntimeBounties()).resolves.toEqual({ bounties: [], unavailable: true });
+    await expect(loadRuntimeBounties("en")).resolves.toEqual({ bounties: [], unavailable: true });
   });
 });

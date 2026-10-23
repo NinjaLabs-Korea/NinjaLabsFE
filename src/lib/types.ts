@@ -7,13 +7,17 @@ export type Bounty = {
   title: string;
   summary: string;
   category: BountyCategory;
-  status: 'active' | 'closed';
+  /** `reviewing` = BE SUBMISSION_CLOSED | IN_REVIEW: no new applications/submissions, but a requested revision can still be resubmitted. */
+  status: 'active' | 'reviewing' | 'closed';
   /** Primary reward (first funded token); shown on cards. */
   reward: Reward;
   /** Every reward token the bounty pays, primary first. Omitted when only `reward` exists. */
   rewards?: Reward[];
   sponsor: string;
+  /** `"Closed"` sentinel for every bounty that no longer accepts work; open bounties carry `daysLeft` instead. */
   deadline: string;
+  /** Days until the submission deadline (open bounties only); cards render it through `bounties.card.daysLeft`. */
+  daysLeft?: number;
   // Figma 14 (list card) shows the D-7 label; Figma 15 (detail meta cell) shows the full UTC deadline
   deadlineDetail?: string;
   coverImage: string;
@@ -58,12 +62,17 @@ export type Member = {
   links: Partial<Record<'profile' | 'posts' | 'agents' | 'bounties' | 'notices', string>>;
 };
 
+/** BE `/users/:nickname` `completedBounties[].payoutStatus` — older BE rows omit it (derived from `rewards`). */
+export type PayoutStatus = 'PAID' | 'PENDING' | 'NONE';
+
 export type Completion = {
   bountySlug?: string;
   title: string;
   category: BountyCategory;
   completedAt: string;
-  reward: Reward;
+  /** PAID → the paid payout; PENDING → the posted bounty reward (shown with a "payout pending" badge); NONE → null (nothing shown). */
+  reward: Reward | null;
+  payoutStatus: PayoutStatus;
   childNft?: { tokenId: string };
 };
 

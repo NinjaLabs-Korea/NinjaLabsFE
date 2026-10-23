@@ -1,9 +1,86 @@
-import { describe, expect, it } from "vitest";
-import { getAdminBounties, getAdminHighlights, getAdminPosts, highlightTypeLabelKeys, postCategoryLabelKeys } from "@/lib/admin";
+// @vitest-environment jsdom
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { createElement } from "react";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { PostManager } from "@/components/admin/PostManager";
+import { getAdminBounties, getAdminHighlights, getAdminPosts, highlightPublishOptionFor, highlightTypeLabelKey, highlightTypeLabelKeys, postCategoryLabelKeys, publishOptionFor, type AdminPost } from "@/lib/admin";
+import { HIGHLIGHT_TYPE_CODES } from "@/lib/api/codecs";
 import { bounties } from "@/lib/bounties";
+import { renderWithIntl } from "@/test/intl";
 import en from "../../messages/en/admin.json";
 import ko from "../../messages/ko/admin.json";
 import zh from "../../messages/zh/admin.json";
+
+describe("admin post publish option (PostManager → saveAdminPost)", () => {
+  it("always sends `publish` on create, derived from the chosen status", () => {
+    expect(publishOptionFor(undefined, "published", "create")).toEqual({ publish: true });
+    expect(publishOptionFor(undefined, "draft", "create")).toEqual({ publish: false });
+    expect(publishOptionFor("draft", "draft", "create")).toEqual({ publish: false });
+  });
+
+  it("omits `publish` on a plain edit and sends it only when the status toggled", () => {
+    expect(publishOptionFor("published", "published", "edit")).toBeUndefined();
+    expect(publishOptionFor("draft", "draft", "edit")).toBeUndefined();
+    expect(publishOptionFor("draft", "published", "edit")).toEqual({ publish: true });
+    expect(publishOptionFor("published", "draft", "edit")).toEqual({ publish: false });
+    // The edited row was not in the loaded list (e.g. the list re-read failed): treat it as a toggle rather than guess.
+    expect(publishOptionFor(undefined, "published", "edit")).toEqual({ publish: true });
+  });
+
+  it("applies the same contract to highlight `is_published` booleans", () => {
+    expect(highlightPublishOptionFor(undefined, true, "create")).toEqual({ publish: true });
+    expect(highlightPublishOptionFor(undefined, false, "create")).toEqual({ publish: false });
+    expect(highlightPublishOptionFor(true, true, "edit")).toBeUndefined();
+    expect(highlightPublishOptionFor(false, false, "edit")).toBeUndefined();
+    expect(highlightPublishOptionFor(false, true, "edit")).toEqual({ publish: true });
+    expect(highlightPublishOptionFor(true, false, "edit")).toEqual({ publish: false });
+  });
+});
+
+const loadedPost: AdminPost = {
+  slug: "launch-week",
+  title: "Launch week",
+  category: "Ninja Labs",
+  status: "published",
+  publishedAt: "2026-10-01",
+  bodyMarkdown: "Body",
+  thumbnail: null,
+  externalUrl: null,
+};
+const adminApi = {
+  getAdminPosts: vi.fn(async () => [loadedPost]),
+  saveAdminPost: vi.fn(async () => ({ id: "post-1" })),
+  uploadAdminMedia: vi.fn(),
+  deleteAdminPost: vi.fn(),
+};
+
+vi.mock("@/components/auth/FoundationProvider", () => ({
+  useAdminApi: () => adminApi,
+}));
+
+describe("PostManager publish option (render)", () => {
+  beforeAll(() => {
+    // jsdom has no <dialog> or scrollIntoView; the manager only needs them to exist.
+    HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute("open", ""); };
+    HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) { this.removeAttribute("open"); };
+    HTMLElement.prototype.scrollIntoView = () => undefined;
+  });
+
+  it("derives `publish` from the status of the loaded row, not the server-rendered prop", async () => {
+    // The SSR prop is stale (draft); the client re-read says the post is already published.
+    // `children` is a required prop of PostManager and this is a .ts file, so createElement must receive it as a prop.
+    // eslint-disable-next-line react/no-children-prop
+    renderWithIntl(createElement(PostManager, { posts: [{ ...loadedPost, status: "draft" }], children: null, tabs: null }));
+    await waitFor(() => expect(adminApi.getAdminPosts).toHaveBeenCalled());
+    // The row's status badge (not the "Published" column header) reflects the loaded row.
+    await screen.findByText("Published", { selector: "span" });
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(adminApi.saveAdminPost).toHaveBeenCalledTimes(1));
+    // published → published on edit: `publish` is omitted so the BE keeps published_at.
+    expect(adminApi.saveAdminPost).toHaveBeenCalledWith(expect.objectContaining({ slug: "launch-week", status: "published" }), false, undefined);
+  });
+});
 
 describe("admin bounty adapter", () => {
   it("maps iAsset price widget meta fields from the public registry", () => {
@@ -62,11 +139,14 @@ describe("admin bounty adapter", () => {
 describe("admin label keys", () => {
   it.each([["en", en], ["ko", ko], ["zh", zh]] as const)("resolve every highlight type and post category in %s", (_locale, messages) => {
     for (const { type } of getAdminHighlights()) {
-      expect(messages.hallOfFame.highlights.types).toHaveProperty(highlightTypeLabelKeys[type]);
+      expect(messages.hallOfFame.highlights.types).toHaveProperty(highlightTypeLabelKey(type) ?? "missing");
     }
-    for (const key of Object.values(highlightTypeLabelKeys)) {
-      expect(messages.hallOfFame.highlights.types).toHaveProperty(key);
+    // All six BE HIGHLIGHT_TYPES have a label; an unknown code has none (the UI shows the raw code).
+    expect(HIGHLIGHT_TYPE_CODES).toEqual(["MILESTONE", "FEATURED_BOUNTY", "PROJECT", "PARTNERSHIP", "AWARD", "OTHER"]);
+    for (const code of HIGHLIGHT_TYPE_CODES) {
+      expect(messages.hallOfFame.highlights.types).toHaveProperty(highlightTypeLabelKeys[code]);
     }
+    expect(highlightTypeLabelKey("FUTURE_TYPE")).toBeNull();
     for (const { category } of getAdminPosts()) {
       expect(messages.notices.categories).toHaveProperty(postCategoryLabelKeys[category]);
     }

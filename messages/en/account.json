@@ -2,7 +2,9 @@
   "common": {
     "eyebrow": "Account",
     "unavailableBody": "We couldn’t reach the server. Please try again shortly.",
-    "mockNote": "Session preview: demo data, resets on reload."
+    "mockNote": "Session preview: demo data, resets on reload.",
+    "loading": "Loading your account…",
+    "sessionExpired": "Your session has expired. Sign in again to continue."
   },
   "signedOut": {
     "body": "Complete the sign-up flow to preview your account.",
@@ -21,7 +23,6 @@
     "progressLabel": "Application progress",
     "steps": {
       "open": "Applied",
-      "under_review": "Under review",
       "approved": "Approved",
       "submitted": "Submitted",
       "completed": "Completed"
@@ -29,6 +30,7 @@
     "approvedStatus": "Approved: submit unlocked",
     "submitWork": "Submit work",
     "rejectedStatus": "Not selected",
-    "rejectedNote": "The sponsor did not select this application. Browse other open bounties to keep building."
+    "rejectedNote": "The sponsor did not select this application. Browse other open bounties to keep building.",
+    "viaAgent": "via {name}"
   }
 }

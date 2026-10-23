@@ -22,7 +22,7 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
   setRequestLocale(locale);
   const t = await getTranslations("bounties.list");
   const tBounties = await getTranslations("bounties");
-  const { bounties, unavailable } = await loadRuntimeBounties();
+  const { bounties, unavailable } = await loadRuntimeBounties(locale);
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <section>

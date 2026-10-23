@@ -24,5 +24,8 @@
     "unavailable": "Recent news is temporarily unavailable.",
     "empty": "No news yet. Check back soon."
   },
-  "unavailableBody": "We couldn't reach the server. Please refresh in a moment."
+  "unavailableBody": "We couldn't reach the server. Please refresh in a moment.",
+  "stats": {
+    "unavailable": "Community stats are temporarily unavailable."
+  }
 }

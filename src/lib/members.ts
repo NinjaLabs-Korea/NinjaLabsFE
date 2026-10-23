@@ -1,5 +1,5 @@
-import { rewardFromBaseUnits, toCategoryLabel, toMemberRoleLabel } from "./api/codecs";
-import type { Member, Profile } from "./types";
+import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toReward, type RewardRow } from "./api/codecs";
+import type { Completion, Member, PayoutStatus, Profile, Reward } from "./types";
 import { onboardingLog } from "./onboarding-log";
 import { fetchPublicJson, loadFromRuntime } from "./api/public";
 
@@ -18,13 +18,14 @@ export const profiles: Record<string, Profile> = {
   jaemin: {
     slug: "jaemin", handle: "jaemin.inj", initials: "JM", bio: "Frontend builder focused on wallet onboarding, market data surfaces, and developer tools for Injective teams. Ships small, polished interfaces that sponsors can adopt without a long handoff.", skills: ["Dev", "Design"], joinedAt: "May 2026",
     completions: [
-      { bountySlug: "iasset-price-widget", title: "Build an iAsset price widget", category: "Dev", completedAt: "July 2, 2026", reward: { amount: 500, currency: "INJ" } },
-      { bountySlug: "wallet-onboarding-states", title: "Design wallet onboarding states", category: "Design", completedAt: "June 24, 2026", reward: { amount: 300, currency: "USDC" } },
-      { bountySlug: "hydro-liquidity-explainer", title: "Hydro liquidity explainer", category: "Content", completedAt: "June 18, 2026", reward: { amount: 180, currency: "INJ" } },
-      { title: "Audit report", category: "Dev", completedAt: "May 21, 2026", reward: { amount: 0, currency: "INJ" } },
-      { title: "Docs revamp", category: "Content", completedAt: "May 14, 2026", reward: { amount: 0, currency: "INJ" } },
-      { title: "Helix card", category: "Design", completedAt: "May 8, 2026", reward: { amount: 0, currency: "INJ" } },
-      { title: "Quest copy", category: "Content", completedAt: "May 1, 2026", reward: { amount: 0, currency: "INJ" } },
+      { bountySlug: "iasset-price-widget", title: "Build an iAsset price widget", category: "Dev", completedAt: "July 2, 2026", reward: { amount: 500, currency: "INJ" }, payoutStatus: "PAID" },
+      { bountySlug: "wallet-onboarding-states", title: "Design wallet onboarding states", category: "Design", completedAt: "June 24, 2026", reward: { amount: 300, currency: "USDC" }, payoutStatus: "PAID" },
+      // Approved but not paid out yet: the posted reward shows with the "payout pending" badge (Figma 05 has no such state; FE-designed).
+      { bountySlug: "hydro-liquidity-explainer", title: "Hydro liquidity explainer", category: "Content", completedAt: "June 18, 2026", reward: { amount: 180, currency: "INJ" }, payoutStatus: "PENDING" },
+      { title: "Audit report", category: "Dev", completedAt: "May 21, 2026", reward: null, payoutStatus: "NONE" },
+      { title: "Docs revamp", category: "Content", completedAt: "May 14, 2026", reward: null, payoutStatus: "NONE" },
+      { title: "Helix card", category: "Design", completedAt: "May 8, 2026", reward: null, payoutStatus: "NONE" },
+      { title: "Quest copy", category: "Content", completedAt: "May 1, 2026", reward: null, payoutStatus: "NONE" },
     ],
     nfts: ["iAsset widget", "Wallet flow", "Audit report", "Docs revamp", "Hydro guide", "Helix card", "Quest copy"].map((title, index) => ({ id: `preview-nft-${index}`, type: "completion" as const, title, status: "ATTACHED" as const, contractAddress: "preview", tokenId: String(index + 1), mintTxHash: null })),
     agents: [{ name: "market-scout-agent", wallet: "inj1...9k4d", verified: true, completedBounties: 3 }, { name: "docs-runner-agent", wallet: "inj1...x7ab", verified: true, completedBounties: 2 }],
@@ -76,7 +77,11 @@ type PublicProfileResponse = {
     title: string;
     category: string;
     completed_at: string;
-    rewards: Array<{ amount: string; symbol: string }>;
+    /** payouts actually PAID for this submission (older BE: the only reward field) */
+    rewards: RewardRow[];
+    /** the bounty's posted rewards — shown while the payout is PENDING (absent on older BE) */
+    postedRewards?: RewardRow[];
+    payoutStatus?: PayoutStatus;
   }>;
   agents: Array<{
     name: string;
@@ -95,7 +100,21 @@ type PublicProfileResponse = {
   }>;
 };
 
-function toProfile(data: PublicProfileResponse): Profile {
+const firstReward = (rows: readonly RewardRow[] | undefined): Reward | null => (rows?.[0] ? toReward(rows[0]) : null);
+
+/**
+ * `payoutStatus` + `postedRewards` are newer BE fields: PAID shows the paid payout, PENDING the posted reward (badge), NONE nothing.
+ * An older BE only sends `rewards` (paid payouts), so a missing `payoutStatus` is derived from whether anything was paid.
+ */
+export function toCompletionReward(row: Pick<PublicProfileResponse["completedBounties"][number], "rewards" | "postedRewards" | "payoutStatus">): Pick<Completion, "reward" | "payoutStatus"> {
+  const paid = firstReward(row.rewards);
+  const status: PayoutStatus = row.payoutStatus ?? (paid ? "PAID" : "NONE");
+  if (status === "PAID") return { reward: paid, payoutStatus: paid ? "PAID" : "NONE" };
+  if (status === "PENDING") return { reward: firstReward(row.postedRewards), payoutStatus: "PENDING" };
+  return { reward: null, payoutStatus: "NONE" };
+}
+
+function toProfile(data: PublicProfileResponse, locale: string): Profile {
   const completions = data.completedBounties.flatMap((completion) => {
     const category = toCategoryLabel(completion.category);
     if (!category) return [];
@@ -103,12 +122,8 @@ function toProfile(data: PublicProfileResponse): Profile {
       bountySlug: completion.id,
       title: completion.title,
       category,
-      completedAt: new Date(completion.completed_at).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      reward: rewardFromBaseUnits(completion.rewards[0]),
+      completedAt: formatUtcDate(completion.completed_at, locale, { year: "numeric", month: "long", day: "numeric" }),
+      ...toCompletionReward(completion),
     }];
   });
 
@@ -121,10 +136,7 @@ function toProfile(data: PublicProfileResponse): Profile {
       const category = toCategoryLabel(tag);
       return category ? [category] : [];
     }),
-    joinedAt: new Date(data.created_at).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-    }),
+    joinedAt: formatUtcDate(data.created_at, locale, { year: "numeric", month: "long" }),
     completions,
     nfts: data.nfts.map((nft) => ({
       id: nft.id,
@@ -144,7 +156,8 @@ function toProfile(data: PublicProfileResponse): Profile {
   };
 }
 
-export function getRuntimeProfile(slug: string): Promise<Profile | undefined> {
+/** `locale` formats API dates for display and comes from the server page; see `getRuntimeBounties` for why it is a parameter. */
+export function getRuntimeProfile(slug: string, locale: string): Promise<Profile | undefined> {
   return loadFromRuntime({
     mock: () => {
       onboardingLog("public-profile.mock.resolved", { slug, found: Boolean(getProfile(slug)) });
@@ -155,7 +168,7 @@ export function getRuntimeProfile(slug: string): Promise<Profile | undefined> {
         onboardingLog("public-profile.fetch.started", { slug });
         const data = await fetchPublicJson<PublicProfileResponse>(`/users/${encodeURIComponent(slug)}`);
         onboardingLog("public-profile.fetch.completed", { slug });
-        return toProfile(data);
+        return toProfile(data, locale);
       } catch (caught) {
         onboardingLog("public-profile.fetch.failed", {
           slug,

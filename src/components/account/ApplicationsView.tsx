@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { SignedOutPanel } from "@/components/account/SignedOutPanel";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import {
@@ -17,7 +17,6 @@ const focusClass =
 
 const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success" | "primary-soft" | "danger"> = {
   open: "neutral",
-  under_review: "warning",
   approved: "success",
   submitted: "primary-soft",
   completed: "success",
@@ -25,18 +24,24 @@ const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success
 };
 
 // Step labels live under account.applications.steps, keyed by status.
-const applicationSteps: readonly ApplicationStatus[] = ["open", "under_review", "approved", "submitted", "completed"];
+const applicationSteps: readonly ApplicationStatus[] = ["open", "approved", "submitted", "completed"];
 
 export function ApplicationsView() {
   const t = useTranslations("account.applications");
   const tAccount = useTranslations("account.common");
   const tBounties = useTranslations("bounties.categories");
+  const format = useFormatter();
   const statusLabel = (status: ApplicationStatus): string =>
     status === "approved" ? t("approvedStatus") : status === "rejected" ? t("rejectedStatus") : t(`steps.${status}`);
   const mode = useFoundationMode();
   const authSnapshot = useAuthSnapshot();
   const apiClient = useAccountApi();
-  const { data: applications, unavailable } = useAccountQuery(apiClient.getApplications);
+  const { data: applications, unavailable, reason } = useAccountQuery(apiClient.getApplications);
+
+  // The BE rejected the session (401/403 after refresh): ask to sign in again instead of blaming the server.
+  if (unavailable && reason === "unauthorized") {
+    return <SignedOutPanel message={tAccount("sessionExpired")} />;
+  }
 
   if (unavailable) {
     return (
@@ -47,39 +52,36 @@ export function ApplicationsView() {
     );
   }
 
-  if (authSnapshot.status !== "signed-in") {
+  if (authSnapshot.status === "signed-out") {
     return <SignedOutPanel message={t("signedOutMessage")} />;
   }
 
-  if (!applications) {
-    return null;
+  if (authSnapshot.status === "loading" || !applications) {
+    return <p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p>;
   }
 
   return (
     <>
-      <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{tAccount("eyebrow")}</p>
-      <h1 className="mt-2 font-display text-5xl -tracking-[0.48px] text-ink">{t("heading")}</h1>
-      <p className="mt-4 text-lg text-ink-muted">
-        {t("intro")}
-      </p>
-
-      <div className="mt-8 space-y-5">
+      <div className="space-y-5">
         {applications.map((application) => {
           const currentIndex = applicationSteps.indexOf(application.status);
 
           return (
             <article
               className="rounded-card border border-border bg-surface p-5 shadow-card"
-              key={application.bountySlug}
+              key={application.id}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="flex gap-2">
+                <span className="flex flex-wrap gap-2">
                   <Badge variant="primary-soft">{tBounties(application.category)}</Badge>
                   <Badge variant={statusVariants[application.status]}>
                     {statusLabel(application.status)}
                   </Badge>
+                  {application.agent ? (
+                    <Badge variant="neutral">{t("viaAgent", { name: application.agent.name })}</Badge>
+                  ) : null}
                 </span>
-                <span className="text-xs text-ink-muted">{t("appliedAt", { date: application.appliedAt })}</span>
+                <span className="text-xs text-ink-muted">{t("appliedAt", { date: format.dateTime(new Date(application.appliedAt), { dateStyle: "medium" }) })}</span>
               </div>
 
               <Link

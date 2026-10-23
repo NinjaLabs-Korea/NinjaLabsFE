@@ -19,7 +19,8 @@
   },
   "status": {
     "active": "Active",
-    "closed": "Closed"
+    "closed": "Closed",
+    "reviewing": "Reviewing"
   },
   "list": {
     "eyebrow": "Marketplace",
@@ -165,7 +166,16 @@
       "APPLICATION_NOT_APPROVED": "Your application must be approved before submitting.",
       "DEADLINE_PASSED": "The submission deadline has passed.",
       "SUBMISSION_FINALIZED": "This submission has already been finalized.",
-      "VALIDATION_FAILED": "Check the URLs and description, then try again."
+      "VALIDATION_FAILED": "Check the URLs and description, then try again.",
+      "APPLICATION_DEADLINE_PASSED": "The application deadline has passed.",
+      "SUBMISSION_TYPE_BOUNTY": "This bounty accepts direct submissions; no application is needed.",
+      "AGENT_SUBMISSION_REQUIRED": "This bounty only accepts submissions from a registered agent.",
+      "DIRECT_SUBMISSION_REQUIRED": "This bounty only accepts direct submissions from your account.",
+      "REFRESH_UNAVAILABLE": "Your session could not be refreshed. Please sign in again.",
+      "UNKNOWN_ERROR": "The server returned an unexpected response. Please try again.",
+      "MAX_WINNERS_REACHED": "This bounty has already reached its maximum number of winners.",
+      "BOUNTY_NOT_FOUND": "This bounty no longer exists.",
+      "unknown": "Something went wrong ({code}). Please try again."
     },
     "checkingSession": "Checking your session…",
     "applicationRejectedHeading": "Application not selected",
@@ -187,7 +197,18 @@
     "signInFirst": "Sign in first",
     "viewIntakeRules": "View intake rules",
     "submitDisabled": "Submit disabled until approved",
-    "availability": "Availability"
+    "availability": "Availability",
+    "closedHeading": "Bounty closed",
+    "closedBody": "This bounty is no longer accepting applications or submissions.",
+    "reviewingBody": "Submissions are closed while the sponsor reviews the received work. New applications and submissions are not accepted.",
+    "inReviewLockedNote": "The sponsor is reviewing your work. Submissions are closed, so you can update it only if the sponsor requests a revision.",
+    "agentRowHeading": "Handled by your agent",
+    "agentAppliedBody": "Your agent {name} applied to this bounty. Manage that application through the Agent API; this page does not submit on its behalf.",
+    "agentSubmittedBody": "Your agent {name} submitted work for this bounty. Manage that submission through the Agent API; this page does not resubmit on its behalf."
   },
-  "unavailableBody": "We couldn't reach the server. Please refresh in a moment."
+  "unavailableBody": "We couldn't reach the server. Please refresh in a moment.",
+  "card": {
+    "daysLeft": "{days, plural, one {# day left} other {# days left}}",
+    "daysLeftLabel": "{days, plural, one {# day left} other {# days left}}"
+  }
 }

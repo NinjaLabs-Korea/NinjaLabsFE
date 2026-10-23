@@ -19,7 +19,35 @@
     "unverified": "未验证",
     "apiKey": "API key",
     "registered": "注册时间",
-    "completedBounties": "已完成赏金"
+    "completedBounties": "已完成赏金",
+    "keyStatusLabel": "密钥状态",
+    "keyStatus": {
+      "active": "有效",
+      "revoked": "已撤销",
+      "expired": "已过期",
+      "none": "未签发"
+    },
+    "keyExpires": "{date} 过期",
+    "keyExpiringSoon": "此密钥将在 {days} 天后过期，请在过期前轮换。",
+    "keyExpired": "此密钥已过期。请轮换密钥以继续使用该代理。",
+    "rotateKey": "轮换密钥",
+    "rotating": "正在轮换密钥…",
+    "rotatedHeading": "已签发新的 API key",
+    "rotatedCopy": "请立即复制此 API key，它不会再次显示；旧密钥将立即失效。",
+    "rotateFailed": "无法轮换密钥，请重试。",
+    "rotateNotActive": "只有处于活动状态的代理才能轮换密钥。",
+    "revokeAgent": "撤销代理",
+    "revoking": "正在撤销…",
+    "revoked": "已撤销",
+    "revokedNote": "此代理已被撤销。其 API key 不再有效，也无法再代表你操作。",
+    "revokeFailed": "无法撤销代理，请重试。",
+    "revokeDialog": {
+      "eyebrow": "撤销代理",
+      "title": "撤销 {name}？",
+      "description": "该代理的 API key 将立即失效，且无法再代表你申请或提交。已有的申请和提交仍保留在你的账户中。",
+      "callout": "此操作无法撤销。",
+      "confirm": "撤销"
+    }
   },
   "register": {
     "back": "← 我的代理",
@@ -90,7 +118,23 @@
     "verified": "代理已验证",
     "copyKey": "请立即复制此 API key，它不会再次显示。",
     "expires": "{date} 过期",
-    "eyebrow": "注册表单"
+    "eyebrow": "注册表单",
+    "counter": "{count}/{max}",
+    "errorInvalid": "请先修正标出的字段再注册。",
+    "errors": {
+      "nameRequired": "请输入代理名称。",
+      "nameTooLong": "最多 {max} 个字符。",
+      "nameRejected": "服务器拒绝了此名称，请缩短或简化。",
+      "descriptionTooLong": "最多 {max} 个字符。",
+      "descriptionRejected": "服务器拒绝了此描述，请缩短。"
+    }
+  },
+  "keyReveal": {
+    "keyReady": "API key 已就绪 — 请立即复制。",
+    "keyLabel": "新的 API key",
+    "copy": "复制",
+    "copied": "API key 已复制到剪贴板。",
+    "copyUnavailable": "此环境无法使用复制功能，请选中密钥后手动复制。"
   },
   "panel": {
     "title": "通过智能体提交",
@@ -102,6 +146,7 @@
     "checkingBody": "正在检查你已注册的代理…",
     "checkingAction": "正在检查代理…",
     "unavailableBody": "暂时无法获取你的代理状态。",
+    "sessionExpiredBody": "会话已过期。重新登录后即可为此赏金使用你的代理。",
     "viewAgents": "查看我的代理",
     "verifiedTitle": "{count, plural, other {已验证代理已就绪}}",
     "verifiedBody": "你有 {count, plural, other {# 个}}已验证代理可用于此赏金。",

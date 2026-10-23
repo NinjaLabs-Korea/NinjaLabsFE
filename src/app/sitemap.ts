@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // A failing API source drops only its detail URLs; static routes are always listed.
   const orEmpty = <T>(promise: Promise<T[]>) => promise.catch((): T[] => []);
   const [bounties, members, notices] = await Promise.all([
-    orEmpty(getRuntimeBounties()), orEmpty(getRuntimeMembers()), orEmpty(getRuntimeNotices()),
+    orEmpty(getRuntimeBounties(routing.defaultLocale)), orEmpty(getRuntimeMembers()), orEmpty(getRuntimeNotices()),
   ]);
   const url = (path: string) => path;
 
@@ -32,12 +32,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     })),
     { url: url("/notices"), changeFrequency: "weekly", priority: 0.7 },
-    ...notices.map(({ slug, publishedAt }) => ({
-      url: url(`/notices/${slug}`),
-      lastModified: new Date(publishedAt.replaceAll(".", "-")),
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    })),
+    ...notices.map(({ slug, publishedAt }) => {
+      // `publishedAt` is "" when the BE row had no parseable date (lib/notices.ts); such entries carry no lastModified.
+      const lastModified = new Date(publishedAt.replaceAll(".", "-"));
+      return {
+        url: url(`/notices/${slug}`),
+        ...(Number.isNaN(lastModified.getTime()) ? {} : { lastModified }),
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      };
+    }),
     { url: url("/signup"), changeFrequency: "monthly", priority: 0.5 },
     { url: url("/agents/register"), changeFrequency: "monthly", priority: 0.5 },
   ];

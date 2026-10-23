@@ -19,7 +19,35 @@
     "unverified": "미인증",
     "apiKey": "API key",
     "registered": "등록일",
-    "completedBounties": "완료한 바운티"
+    "completedBounties": "완료한 바운티",
+    "keyStatusLabel": "키 상태",
+    "keyStatus": {
+      "active": "사용 중",
+      "revoked": "폐기됨",
+      "expired": "만료됨",
+      "none": "미발급"
+    },
+    "keyExpires": "{date} 만료",
+    "keyExpiringSoon": "이 키는 {days}일 후 만료됩니다. 만료 전에 교체하세요.",
+    "keyExpired": "이 키는 만료되었습니다. 에이전트를 계속 사용하려면 키를 교체하세요.",
+    "rotateKey": "키 교체",
+    "rotating": "키 교체 중…",
+    "rotatedHeading": "새 API key 발급 완료",
+    "rotatedCopy": "지금 이 API key를 복사하세요. 다시 표시되지 않으며, 이전 키는 즉시 사용이 중단됩니다.",
+    "rotateFailed": "키를 교체하지 못했습니다. 다시 시도해 주세요.",
+    "rotateNotActive": "활성 상태의 에이전트만 키를 교체할 수 있습니다.",
+    "revokeAgent": "에이전트 폐기",
+    "revoking": "폐기 중…",
+    "revoked": "폐기됨",
+    "revokedNote": "이 에이전트는 폐기되었습니다. API key는 더 이상 동작하지 않으며 나를 대신해 활동할 수 없습니다.",
+    "revokeFailed": "에이전트를 폐기하지 못했습니다. 다시 시도해 주세요.",
+    "revokeDialog": {
+      "eyebrow": "에이전트 폐기",
+      "title": "{name}을(를) 폐기할까요?",
+      "description": "에이전트의 API key가 즉시 비활성화되고 더 이상 나를 대신해 지원하거나 제출할 수 없습니다. 기존 지원서와 제출물은 내 계정에 그대로 남습니다.",
+      "callout": "되돌릴 수 없습니다.",
+      "confirm": "폐기"
+    }
   },
   "register": {
     "back": "← 내 에이전트",
@@ -90,7 +118,23 @@
     "verified": "에이전트 인증 완료",
     "copyKey": "지금 이 API key를 복사하세요. 다시 표시되지 않습니다.",
     "expires": "{date} 만료",
-    "eyebrow": "등록 양식"
+    "eyebrow": "등록 양식",
+    "counter": "{count}/{max}",
+    "errorInvalid": "표시된 항목을 수정한 뒤 등록하세요.",
+    "errors": {
+      "nameRequired": "에이전트 이름을 입력하세요.",
+      "nameTooLong": "최대 {max}자까지 입력할 수 있습니다.",
+      "nameRejected": "서버가 이 이름을 거부했습니다. 더 짧거나 단순하게 바꿔 주세요.",
+      "descriptionTooLong": "최대 {max}자까지 입력할 수 있습니다.",
+      "descriptionRejected": "서버가 이 설명을 거부했습니다. 더 짧게 줄여 주세요."
+    }
+  },
+  "keyReveal": {
+    "keyReady": "API key가 준비되었습니다 — 지금 복사하세요.",
+    "keyLabel": "새 API key",
+    "copy": "복사",
+    "copied": "API key를 클립보드에 복사했습니다.",
+    "copyUnavailable": "이 환경에서는 복사 기능을 사용할 수 없습니다. 키를 선택해 직접 복사하세요."
   },
   "panel": {
     "title": "에이전트로 제출",
@@ -102,6 +146,7 @@
     "checkingBody": "등록된 에이전트를 확인하는 중…",
     "checkingAction": "에이전트 확인 중…",
     "unavailableBody": "에이전트 상태를 일시적으로 불러올 수 없습니다.",
+    "sessionExpiredBody": "세션이 만료되었습니다. 다시 로그인하면 이 바운티에 에이전트를 사용할 수 있습니다.",
     "viewAgents": "내 에이전트 보기",
     "verifiedTitle": "{count, plural, other {인증된 에이전트 준비 완료}}",
     "verifiedBody": "이 바운티에 사용할 수 있는 인증된 에이전트가 {count, plural, other {#개}} 있습니다.",
