@@ -148,6 +148,10 @@ with a `next/image` `object-contain` logo in an `h-12` box; linked tiles add `tr
 
 **Admin persistence disclosure:** API-mode Create/Save forms state that changes are saved immediately. Destructive actions require confirmation and failures surface a danger toast.
 
+## Admin operations console (FE-designed, no Figma node)
+
+`/admin/operations` and `/admin/nft-jobs` reuse the admin shell exactly: page header (eyebrow + `font-display` h1 + muted lead), `AdminTabs`, then stacked `rounded-card border border-border bg-surface p-[21px] shadow-card` panels, each with the panel eyebrow (`text-xs font-bold uppercase tracking-[0.96px] text-primary`) and a `font-display text-2xl` h3. Tables are `AdminTable`; status chips are `Badge` (success = funded/approved/paid/open, warning = pending/needs action, danger = rejected/failed/cancelled, neutral = finished/draft, primary-soft = in review/approved payout). Actions use the outline button (`border-primary-outline text-primary-strong`), the primary button for the forward step (confirm deposit, approve submission, request payout, mark paid) and the danger outline for reject/cancel. Every form action opens `admin/OpsFormModal` (on `ui/Modal`); destructive cancel uses `ConfirmDialog destructive`. Lifecycle blockers render as a `text-warning` list under the disabled transition button; the two-person rule renders as `text-xs font-semibold text-warning` text in place of the Approve button. Hashes and addresses are `font-mono text-xs`, shortened `0x1234…abcd` with the full value in `title`. Shared class strings: `src/components/admin/ops-ui.ts`.
+
 ## Navigation loading
 
 Primary public navigation (including Home and Browse) uses `prefetch={true}` so dynamic page content can load before a click. Keep full prefetching limited to these few high-traffic links; card lists retain the default behavior. Public API requests remain `no-store`; prefetched route payloads are held in Next.js's client router cache.
