@@ -27,6 +27,9 @@
       "REFERENCE_NOT_FOUND": "This record points to something that no longer exists. Reload the page and try again.",
       "BOUNTY_NOT_FOUND": "The bounty no longer exists. Reload the page to refresh the list.",
       "BOUNTY_HAS_OPEN_FUNDS": "This bounty still holds funds in the multisig (a confirmed deposit not fully paid out, or an open payout). Finish or refund the payouts before deleting it.",
+      "DEADLINE_IN_PAST": "The deadline cannot be moved into the past. Pick a future date and time, or keep the saved deadline.",
+      "MEDIA_FILE_TOO_LARGE": "The image is larger than 5 MB. Choose a smaller file and try again.",
+      "MEDIA_FILE_TYPE_UNSUPPORTED": "Only PNG, JPEG and WebP images can be uploaded. Choose a different file and try again.",
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
     }
   },

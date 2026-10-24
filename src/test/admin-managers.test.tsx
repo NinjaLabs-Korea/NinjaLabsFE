@@ -57,6 +57,7 @@ beforeEach(() => {
   adminApi.saveAdminBounty.mockReset();
   adminApi.saveAdminHighlight.mockReset();
   adminApi.saveAdminPost.mockReset();
+  adminApi.uploadAdminMedia.mockReset();
   adminApi.getAdminBounties.mockClear();
   adminApi.getAdminHighlights.mockClear();
   adminApi.getAdminPosts.mockClear();
@@ -251,6 +252,9 @@ describe("admin BE error codes", () => {
     expect(adminApiErrorCode(new ApiHttpError(400, "REFERENCE_NOT_FOUND"))).toBe("REFERENCE_NOT_FOUND");
     expect(adminApiErrorCode(new ApiHttpError(404, "BOUNTY_NOT_FOUND"))).toBe("BOUNTY_NOT_FOUND");
     expect(adminApiErrorCode(new ApiHttpError(503, "DATABASE_UNAVAILABLE"))).toBe("DATABASE_UNAVAILABLE");
+    expect(adminApiErrorCode(new ApiHttpError(400, "DEADLINE_IN_PAST"))).toBe("DEADLINE_IN_PAST");
+    expect(adminApiErrorCode(new ApiHttpError(400, "MEDIA_FILE_TOO_LARGE"))).toBe("MEDIA_FILE_TOO_LARGE");
+    expect(adminApiErrorCode(new ApiHttpError(400, "MEDIA_FILE_TYPE_UNSUPPORTED"))).toBe("MEDIA_FILE_TYPE_UNSUPPORTED");
     expect(adminApiErrorCode(new ApiHttpError(400, "VALIDATION_FAILED"))).toBeNull();
     expect(adminApiErrorCode(new Error("INVALID_CHARACTER"))).toBeNull();
   });
@@ -258,6 +262,7 @@ describe("admin BE error codes", () => {
   it.each([
     ["INVALID_CHARACTER", "A field contains characters that cannot be saved (for example a NUL byte). Remove them and try again."],
     ["BOUNTY_NOT_FOUND", "The bounty no longer exists. Reload the page to refresh the list."],
+    ["DEADLINE_IN_PAST", "The deadline cannot be moved into the past. Pick a future date and time, or keep the saved deadline."],
   ])("shows the localized %s copy in the bounty save toast", async (code, copy) => {
     adminApi.saveAdminBounty.mockRejectedValue(new ApiHttpError(code === "BOUNTY_NOT_FOUND" ? 404 : 400, code));
     const { AdminToastHost } = await import("@/components/admin/AdminToastHost");
@@ -266,6 +271,23 @@ describe("admin BE error codes", () => {
     fireEvent.click(screen.getByRole("button", { name: "Edit" }));
     fireEvent.submit((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).closest("form") as HTMLFormElement);
     expect(await screen.findByText(copy)).toBeTruthy();
+  });
+
+  it.each([
+    ["MEDIA_FILE_TOO_LARGE", "The image is larger than 5 MB. Choose a smaller file and try again."],
+    ["MEDIA_FILE_TYPE_UNSUPPORTED", "Only PNG, JPEG and WebP images can be uploaded. Choose a different file and try again."],
+  ])("explains a rejected image upload (%s) in the highlight save toast without saving", async (code, copy) => {
+    adminApi.uploadAdminMedia.mockRejectedValue(new ApiHttpError(400, code));
+    const { AdminToastHost } = await import("@/components/admin/AdminToastHost");
+    const { container } = renderWithIntl(<><HighlightManager highlights={[highlight]} /><AdminToastHost /></>);
+    await waitFor(() => expect(adminApi.getAdminHighlights).toHaveBeenCalled());
+    fireEvent.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+    const fileInput = container.ownerDocument.querySelector<HTMLInputElement>('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(fileInput, { target: { files: [new File(["x"], "cover.png", { type: "image/png" })] } });
+    fireEvent.submit((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).closest("form") as HTMLFormElement);
+    expect(await screen.findByText(copy)).toBeTruthy();
+    expect(adminApi.uploadAdminMedia).toHaveBeenCalledTimes(1);
+    expect(adminApi.saveAdminHighlight).not.toHaveBeenCalled();
   });
 
   it("maps REFERENCE_NOT_FOUND in the highlight save toast", async () => {
