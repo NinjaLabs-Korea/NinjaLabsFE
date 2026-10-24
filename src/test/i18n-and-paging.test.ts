@@ -133,7 +133,7 @@ describe("public fetcher and runtime source selection", () => {
     const request = vi.fn(async () => new Response(null, { status: 404 }));
     vi.stubGlobal("fetch", request);
     await expect(fetchPublicJson("/notices/x")).rejects.toThrow("Public API 404: /notices/x");
-    expect(request).toHaveBeenCalledWith("https://api.example/notices/x", { cache: "no-store" });
+    expect(request).toHaveBeenCalledWith("https://api.example/notices/x", { cache: "no-store", signal: expect.any(AbortSignal) });
   });
 
   it("runs only the source for the current mode", async () => {

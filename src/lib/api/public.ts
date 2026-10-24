@@ -1,5 +1,8 @@
 import { loadRuntimeConfig } from "@/lib/runtime/config";
 
+/** 공개 페이지 SSR이 BE를 기다리는 상한 — BE가 멈춰도 Vercel 함수가 매달리지 않게 한다. */
+export const PUBLIC_FETCH_TIMEOUT_MS = 8000;
+
 /** Server-side public API fetcher used by public App Router pages. */
 export async function fetchPublicJson<T>(path: string): Promise<T> {
   const config = loadRuntimeConfig();
@@ -9,6 +12,7 @@ export async function fetchPublicJson<T>(path: string): Promise<T> {
 
   const response = await fetch(`${config.apiUrl.replace(/\/$/, "")}${path}`, {
     cache: "no-store",
+    signal: AbortSignal.timeout(PUBLIC_FETCH_TIMEOUT_MS),
   });
   if (!response.ok) {
     throw new Error(`Public API ${response.status}: ${path}`);
