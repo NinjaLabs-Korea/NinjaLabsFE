@@ -45,6 +45,12 @@ const optimizedImagePrefixes = [
  * audit the RainbowKit inline styles, and only then rename this header to `Content-Security-Policy`.
  */
 function contentSecurityPolicy(): string {
+  // Wallet origins from `grep -rhoE 'https://[^"/ ]+' node_modules/@rainbow-me/rainbowkit/dist node_modules/@walletconnect`
+  // (RainbowKit 2 + WalletConnect 2, only `injectedWallet`/`walletConnectWallet` are configured): the walletconnect
+  // wildcards cover rpc/pulse/verify/echo/secure(-mobile).walletconnect.{org,com} and the relay websockets (pulse =
+  // telemetry and verify = domain attestation are also listed by name so tightening the wildcards keeps them);
+  // api.web3modal.org (wallet list/config) and enhanced-provider.rainbow.me (RainbowKit ENS/provider proxy) are separate
+  // hosts. Docs/learn/app-store links in those bundles are navigation targets, not fetches, so they are not listed.
   const connectSrc = [
     "'self'",
     apiOrigin(),
@@ -52,6 +58,11 @@ function contentSecurityPolicy(): string {
     "https://*.walletconnect.org",
     "wss://*.walletconnect.com",
     "wss://*.walletconnect.org",
+    "https://pulse.walletconnect.org",
+    "https://verify.walletconnect.org",
+    "https://verify.walletconnect.com",
+    "https://api.web3modal.org",
+    "https://enhanced-provider.rainbow.me",
     "https://*.injective.network",
     "wss://*.injective.network",
     "https://k8s.testnet.json-rpc.injective.network",
