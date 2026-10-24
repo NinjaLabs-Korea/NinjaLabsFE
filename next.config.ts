@@ -44,6 +44,9 @@ const optimizedImagePrefixes = [
  * `x-nonce` header, replace `'unsafe-inline'`/`'unsafe-eval'` with `'nonce-…' 'strict-dynamic'`,
  * audit the RainbowKit inline styles, and only then rename this header to `Content-Security-Policy`.
  */
+/** Cloudflare Turnstile (sign-in bot check, `lib/turnstile.ts`): api.js, the challenge iframe and its fetches. */
+const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
+
 function contentSecurityPolicy(): string {
   // Wallet origins from `grep -rhoE 'https://[^"/ ]+' node_modules/@rainbow-me/rainbowkit/dist node_modules/@walletconnect`
   // (RainbowKit 2 + WalletConnect 2, only `injectedWallet`/`walletConnectWallet` are configured): the walletconnect
@@ -66,16 +69,17 @@ function contentSecurityPolicy(): string {
     "https://*.injective.network",
     "wss://*.injective.network",
     "https://k8s.testnet.json-rpc.injective.network",
+    TURNSTILE_ORIGIN,
   ].filter((source): source is string => source !== null);
   return [
     "default-src 'self'",
     "object-src 'none'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${TURNSTILE_ORIGIN}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
     `connect-src ${connectSrc.join(" ")}`,
-    "frame-src https://*.walletconnect.com https://*.walletconnect.org",
+    `frame-src https://*.walletconnect.com https://*.walletconnect.org ${TURNSTILE_ORIGIN}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

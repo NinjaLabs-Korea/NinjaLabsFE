@@ -13,4 +13,13 @@ describe("next.config security headers", () => {
     expect(csp.split("; ")).toContain("object-src 'none'");
     expect(headers.some((header) => header.key === "Content-Security-Policy")).toBe(false);
   });
+
+  it("lets the Cloudflare Turnstile script, challenge iframe and fetches through the report-only CSP", async () => {
+    const rules = await nextConfig.headers!();
+    const csp = rules.find((rule) => rule.source === "/:path*")!.headers.find((header) => header.key === "Content-Security-Policy-Report-Only")!.value;
+    const directive = (name: string) => csp.split("; ").find((part) => part.startsWith(`${name} `))!.split(" ").slice(1);
+    for (const name of ["script-src", "frame-src", "connect-src"]) {
+      expect(directive(name)).toContain("https://challenges.cloudflare.com");
+    }
+  });
 });
