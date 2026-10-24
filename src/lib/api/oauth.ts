@@ -1,5 +1,6 @@
-import { AUTH_PROXY_PATH, cookieAuthInit, installSession } from "@/lib/api/http";
-import { stripLocale } from "@/i18n/routing";
+import { AUTH_PROXY_PATH, cookieAuthInit, installSession, isAuthCallbackPath } from "@/lib/api/http";
+
+export { isAuthCallbackPath };
 
 const VERIFIER_KEY = "ninja.oauthVerifier";
 
@@ -42,11 +43,6 @@ function takeFreshVerifier(now = Date.now()): string | null {
   if (!stored) return null;
   const age = now - stored.createdAt;
   return age >= 0 && age <= LOGIN_VERIFIER_TTL_MS ? stored.verifier : null;
-}
-
-/** BE OAuth returns to `/auth/callback` (the locale proxy makes it `/<locale>/auth/callback`, fragment kept). */
-export function isAuthCallbackPath(pathname: string): boolean {
-  return stripLocale(pathname) === "/auth/callback";
 }
 
 /**

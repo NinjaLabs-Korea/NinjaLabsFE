@@ -9,6 +9,7 @@ import {
   getAccessToken,
   installSession,
   resetSessionState,
+  SESSION_HINT_KEY,
 } from "@/lib/api/http";
 import { FakeBroadcastChannel } from "./fake-broadcast-channel";
 
@@ -34,15 +35,24 @@ function stubRefreshFlow(refresh: Handler, extra?: Handler) {
 const urls = (request: ReturnType<typeof vi.fn>) => request.mock.calls.map(([url]) => url as string);
 const refreshCalls = (request: ReturnType<typeof vi.fn>) => request.mock.calls.filter(([url]) => url === REFRESH);
 
+/** The only keys this auth layer may leave in Web Storage; none of them holds a secret. */
+const ALLOWED_STORAGE_KEYS = [SESSION_HINT_KEY, AUTH_EVENT_STORAGE_KEY, "ninja.oauthVerifier", "ninja.onboardingTraceId"];
+
 /** Every key Web Storage holds must be non-secret: no token-shaped value is ever written. */
 function expectNoTokensInStorage() {
   for (const storage of [localStorage, sessionStorage]) {
     for (let index = 0; index < storage.length; index += 1) {
       const key = storage.key(index)!;
+      expect(ALLOWED_STORAGE_KEYS).toContain(key);
       expect(key).not.toMatch(/token/i);
       expect(storage.getItem(key)).not.toMatch(/access|refresh/);
     }
   }
+}
+
+/** localStorage holds nothing but the non-secret session hint (`present`) or nothing at all. */
+function expectOnlySessionHint(present = true) {
+  expect({ ...localStorage }).toEqual(present ? { [SESSION_HINT_KEY]: "1" } : {});
 }
 
 beforeEach(() => {
@@ -50,6 +60,8 @@ beforeEach(() => {
   sessionStorage.clear();
   resetSessionState();
   window.history.replaceState(null, "", "/en/bounties");
+  // Returning visitor by default: an earlier sign-in left the session hint, so page loads try the refresh cookie.
+  localStorage.setItem(SESSION_HINT_KEY, "1");
   // Node's real BroadcastChannel would deliver asynchronously to adapters left over from earlier tests.
   FakeBroadcastChannel.instances = [];
   vi.stubGlobal("BroadcastChannel", FakeBroadcastChannel);
@@ -73,7 +85,7 @@ describe("cookie-mode refresh request", () => {
     expect(JSON.parse(String(init.body))).toEqual({});
     expect(getAccessToken()).toBe("fresh-access");
     expect(http.hasSession()).toBe(true);
-    expect(localStorage.length).toBe(0);
+    expectOnlySessionHint();
   });
 
   it("sends API calls cross-origin with the Bearer access token and no cookie credentials", async () => {
@@ -376,7 +388,7 @@ describe("API auth adapter session restore", () => {
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
     expect(JSON.parse(String((request.mock.calls[0] as [string, RequestInit])[1].body))).toEqual({ refreshToken: "old-refresh" });
-    expect(localStorage.length).toBe(0);
+    expectOnlySessionHint();
   });
 
   it("signs out through the same-origin logout and leaves nothing in storage", async () => {
@@ -515,5 +527,102 @@ describe("API auth adapter session end without reload", () => {
     });
     await expect(adapter.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ code: "REFRESH_UNAVAILABLE" });
     expect(adapter.getSnapshot().status).toBe("signed-in");
+  });
+});
+
+describe("non-secret session hint (skips the anonymous refresh probe)", () => {
+  beforeEach(() => localStorage.removeItem(SESSION_HINT_KEY));
+
+  it("an anonymous page load without the hint sends no network request and ends signed-out", async () => {
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
+    expect(request).not.toHaveBeenCalled();
+    expectOnlySessionHint(false);
+  });
+
+  it("without the hint, initSession resolves no-session and a later 401 does not probe the cookie either", async () => {
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+    const http = createApiHttp(API);
+    await expect(http.initSession()).resolves.toEqual({ ok: false, reason: "no-session" });
+    await expect(http.fetchJson("/bounties/mine")).rejects.toMatchObject({ status: 401 });
+    expect(refreshCalls(request)).toHaveLength(0);
+  });
+
+  it("with the hint, the page load tries the refresh cookie and keeps the hint on success", async () => {
+    localStorage.setItem(SESSION_HINT_KEY, "1");
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    expect(urls(request)).toEqual([REFRESH, `${API}/auth/me`]);
+    expectOnlySessionHint();
+  });
+
+  it.each([401, 403])("clears the hint when the refresh answers %i", async (status) => {
+    localStorage.setItem(SESSION_HINT_KEY, "1");
+    stubRefreshFlow(() => new Response(null, { status }));
+    await expect(createApiHttp(API).initSession()).resolves.toEqual({ ok: false, reason: "rejected" });
+    expectOnlySessionHint(false);
+  });
+
+  it.each([429, 503])("keeps the hint when the refresh is only unavailable (%i)", async (status) => {
+    localStorage.setItem(SESSION_HINT_KEY, "1");
+    stubRefreshFlow(() => new Response(null, { status }));
+    await createApiHttp(API).initSession();
+    expectOnlySessionHint();
+  });
+
+  it("clears the hint on sign-out", async () => {
+    localStorage.setItem(SESSION_HINT_KEY, "1");
+    stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }), () => new Response(null, { status: 204 }));
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    await adapter.signOut();
+    expectOnlySessionHint(false);
+  });
+
+  it("clears the hint when another tab signs out", async () => {
+    localStorage.setItem(SESSION_HINT_KEY, "1");
+    stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    localStorage.setItem(SESSION_HINT_KEY, "1");
+    new FakeBroadcastChannel(AUTH_CHANNEL_NAME).postMessage({ type: "signed-out" });
+    expect(adapter.getSnapshot().status).toBe("signed-out");
+    expectOnlySessionHint(false);
+  });
+
+  it("still migrates a legacy refresh token without the hint, and sets the hint once it worked", async () => {
+    localStorage.setItem("ninja.refreshToken", "old-refresh");
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+    await expect(createApiHttp(API).initSession()).resolves.toEqual({ ok: true });
+    expect(JSON.parse(String((request.mock.calls[0] as [string, RequestInit])[1].body))).toEqual({ refreshToken: "old-refresh" });
+    expectOnlySessionHint();
+  });
+
+  it("a failed legacy migration without the hint leaves no hint behind", async () => {
+    localStorage.setItem("ninja.refreshToken", "old-refresh");
+    stubRefreshFlow(() => new Response(null, { status: 401 }));
+    await createApiHttp(API).initSession();
+    expectOnlySessionHint(false);
+  });
+
+  it("still tries the refresh on the OAuth callback route without the hint", async () => {
+    window.history.replaceState(null, "", "/ko/auth/callback");
+    const request = stubRefreshFlow(() => new Response(null, { status: 401 }));
+    await createApiHttp(API).initSession();
+    expect(refreshCalls(request)).toHaveLength(1);
+  });
+
+  it("only ever stores the literal '1' (never a token) and ignores any other value", async () => {
+    localStorage.setItem(SESSION_HINT_KEY, "fresh-access");
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+    await createApiHttp(API).initSession();
+    expect(request).not.toHaveBeenCalled();
+    localStorage.removeItem(SESSION_HINT_KEY);
   });
 });

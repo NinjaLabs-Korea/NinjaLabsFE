@@ -57,7 +57,8 @@ describe("OAuth code handoff", () => {
     expect(await exchangeLoginCodeFromLocation()).toBe(true);
     expect(sessionStorage.getItem("ninja.oauthVerifier")).toBeNull();
     expect(getAccessToken()).toBe("test-access");
-    expect(localStorage.length).toBe(0);
+    // Only the non-secret session hint is written.
+    expect({ ...localStorage }).toEqual({ "ninja.session": "1" });
     expect(await exchangeLoginCodeFromLocation()).toBe(false);
     expect(request).toHaveBeenCalledTimes(1);
   });
@@ -140,6 +141,8 @@ const me = { id: "u1", nickname: "ninja", onboardingStep: 4, onboardingCompleted
  * token, `/auth/me` with the user, the exchange (if any) with `exchange`, everything else 500.
  */
 function stubCurrentSession(exchange: () => Response = () => new Response(null, { status: 500 })) {
+  // That earlier sign-in left the non-secret session hint behind (it makes the page load try the refresh).
+  localStorage.setItem("ninja.session", "1");
   const request = vi.fn(async (url: string) => {
     if (url === REFRESH) return Response.json({ accessToken: "current-access" });
     if (url === EXCHANGE) return exchange();
@@ -203,7 +206,7 @@ describe("API auth adapter login handoff", () => {
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
     expect(urls(request)).toEqual([EXCHANGE, `${API}/auth/me`]);
     expect(getAccessToken()).toBe("new-access");
-    expect(localStorage.length).toBe(0);
+    expect({ ...localStorage }).toEqual({ "ninja.session": "1" });
     expect(received).toEqual([{ type: "signed-in" }]);
   });
 });

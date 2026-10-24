@@ -54,7 +54,7 @@ describe("useAuthSnapshot hydration", () => {
     const config = { mode: "api", apiUrl: "https://api.example.test" } as const;
     localStorage.clear();
     vi.stubGlobal("BroadcastChannel", FakeBroadcastChannel);
-    // No refresh cookie: the page-load probe to the same-origin auth proxy answers 401.
+    // Anonymous visitor (no session hint): the page load must not probe the auth proxy at all.
     const request = vi.fn(async (url: string) => new Response(url === "/api/auth/refresh" ? null : "unexpected", { status: 401 }));
     vi.stubGlobal("fetch", request);
 
@@ -91,7 +91,7 @@ describe("useAuthSnapshot hydration", () => {
 
     await waitFor(() => expect(container.textContent).toBe("signed-out"));
     expect(recoverable).toEqual([]);
-    expect(request.mock.calls.map(([url]) => url)).toEqual(["/api/auth/refresh"]);
+    expect(request).not.toHaveBeenCalled();
     expect(localStorage.length).toBe(0);
   });
 });

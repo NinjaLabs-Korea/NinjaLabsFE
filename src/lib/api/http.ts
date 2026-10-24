@@ -17,10 +17,16 @@
  *   바뀌었으면 새 access token을 버리고, 그 응답이 다시 심은 쿠키는 best-effort `POST /api/auth/logout`으로 폐기한다.
  * - 1회성 마이그레이션: 예전 빌드가 남긴 `localStorage["ninja.refreshToken"]`이 있으면 `initSession()`이 그 값을
  *   refresh 본문에 실어 보내(BE가 쿠키를 심는다) 결과와 무관하게 `ninja.accessToken`/`ninja.refreshToken`을 지운다.
+ * - 세션 힌트: `localStorage["ninja.session"] = "1"`은 비밀이 아닌 "이 브라우저에 세션이 있었을 수 있다" 표시다.
+ *   교환/refresh 성공 시 쓰고, 로그아웃·refresh 401/403·다른 탭 로그아웃(`endLocalSession`) 시 지운다.
+ *   `initSession()`은 힌트가 없으면 refresh를 보내지 않고 바로 signed-out으로 끝낸다(익명 방문마다 401 + BE per-IP
+ *   예산 소모 방지). 예외: 레거시 `ninja.refreshToken`이 있으면(마이그레이션) 또는 `/auth/callback`에서는 시도한다.
+ *   힌트는 권한 판단에 절대 쓰지 않는다 — refresh를 "시도할지"만 정한다. 서버가 거절하면 힌트도 지운다.
  * - 서버 렌더 중에는 어떤 저장소/네트워크 접근도 하지 않는다.
  */
 
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
+import { stripLocale } from "@/i18n/routing";
 
 /** Same-origin prefix that `next.config.ts` rewrites to `${NINJA_API_BASE_URL}/auth`. */
 export const AUTH_PROXY_PATH = "/api/auth";
@@ -31,6 +37,8 @@ export const SESSION_MODE_VALUE = "cookie";
 export const LEGACY_ACCESS_TOKEN_KEY = "ninja.accessToken";
 export const LEGACY_REFRESH_TOKEN_KEY = "ninja.refreshToken";
 const REFRESH_LOCK = "ninja.auth.refresh";
+/** Non-secret "a session may exist" hint (never a token, never used for authorization). */
+export const SESSION_HINT_KEY = "ninja.session";
 
 /**
  * What this tab knows about the refresh cookie (it cannot read it). `absent` after a rejected refresh or a sign-out:
@@ -57,6 +65,30 @@ export function discardLegacyTokens(): void {
   }
 }
 
+/** BE OAuth returns to `/auth/callback` (the locale proxy makes it `/<locale>/auth/callback`, fragment kept). */
+export function isAuthCallbackPath(pathname: string): boolean {
+  return stripLocale(pathname) === "/auth/callback";
+}
+
+function writeSessionHint(present: boolean): void {
+  try {
+    if (!isBrowser()) return;
+    if (present) window.localStorage.setItem(SESSION_HINT_KEY, "1");
+    else window.localStorage.removeItem(SESSION_HINT_KEY);
+  } catch {
+    // storage unavailable: the next page load simply skips (or keeps) the refresh attempt
+  }
+}
+
+/** True when this browser may hold a refresh cookie. Only decides whether to try a refresh; never trusted. */
+export function hasSessionHint(): boolean {
+  try {
+    return isBrowser() && window.localStorage.getItem(SESSION_HINT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 function readLegacyRefreshToken(): string | null {
   try {
     return isBrowser() ? window.localStorage.getItem(LEGACY_REFRESH_TOKEN_KEY) : null;
@@ -73,6 +105,7 @@ export function getAccessToken(): string | null {
 export function installSession(token: string): void {
   accessToken = token;
   cookieState = "present";
+  writeSessionHint(true);
 }
 
 /** This tab's session is over (local sign-out, or another tab signed out). Does not call the BE. */
@@ -80,6 +113,7 @@ export function endLocalSession(): void {
   sessionEpoch += 1;
   accessToken = null;
   cookieState = "absent";
+  writeSessionHint(false);
 }
 
 /** Another tab signed in: the shared cookie jar may hold a session again, so the next 401 may refresh. */
@@ -158,7 +192,7 @@ export type ApiHttp = {
   fetchForm: <T>(path: string, form: FormData) => Promise<T>;
   /** True while this tab holds an access token (after a login exchange or a successful refresh). */
   hasSession: () => boolean;
-  /** Page-load restore: legacy migration if needed, then one `POST /api/auth/refresh`. */
+  /** Page-load restore: legacy migration if needed, then one `POST /api/auth/refresh` (skipped without the session hint). */
   initSession: () => Promise<RefreshResult>;
   signOutRemote: () => Promise<void>;
 };
@@ -228,6 +262,7 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       if (res.status === 401 || res.status === 403) {
         // refresh 쿠키가 없음·만료·폐기됨: 이 탭의 세션은 끝났다.
         onboardingLog("http.refresh.failed", { status: res.status, reason: "REJECTED" });
+        writeSessionHint(false);
         if (sessionEpoch === epoch) {
           const hadSession = accessToken !== null || cookieState === "present";
           endLocalSession();
@@ -257,6 +292,7 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       }
       accessToken = token;
       cookieState = "present";
+      writeSessionHint(true);
       onboardingLog("http.refresh.succeeded", { status: res.status });
       return { ok: true };
     } catch {
@@ -302,6 +338,12 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       if (readLegacyRefreshToken() === null) {
         // A stray legacy access token alone is useless (and a secret at rest): drop it without a migration call.
         discardLegacyTokens();
+        if (!hasSessionHint() && !(isBrowser() && isAuthCallbackPath(window.location.pathname))) {
+          // No hint: this browser never completed a sign-in (or signed out). Do not probe the cookie.
+          onboardingLog("http.refresh.skipped", { reason: "NO_SESSION_HINT" });
+          if (!refreshing) cookieState = "absent";
+          return Promise.resolve({ ok: false, reason: "no-session" });
+        }
         return refreshSession(false);
       }
       return refreshSession(true);
