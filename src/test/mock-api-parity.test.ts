@@ -135,6 +135,16 @@ describe("mock submission revisions", () => {
     expect(submissions.status === "available" && submissions.data.filter((row) => row.bountySlug === "b1")).toEqual([{ bountySlug: "b1", status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null }]);
   });
 
+  it("resubmitting work sent back for revision clears the revision state like the BE (RESUBMITTED → submitted)", async () => {
+    const mock = createMockApiClient();
+    const before = await mock.getApplications(owner());
+    const revising = before.status === "available" ? before.data.find((row) => row.status === "revisionRequested") : undefined;
+    expect(revising).toBeDefined();
+    await mock.submitBounty(revising!.bountySlug, { submissionUrl: "https://x.y", description: "d" });
+    const after = await mock.getApplications(owner());
+    expect(after.status === "available" && after.data.find((row) => row.id === revising!.id)?.status).toBe("submitted");
+  });
+
   it("starts every new client from the fixtures (nothing leaks between clients)", async () => {
     const first = createMockApiClient();
     await first.applyToBounty("helix-volume-analytics", { message: "m" });
