@@ -17,10 +17,11 @@ import {
 import { renderWithIntl } from "@/test/intl";
 
 const signIn = vi.hoisted(() => vi.fn());
+const foundation = vi.hoisted(() => ({ mode: "api" as "api" | "mock" }));
 
 vi.mock("@/components/auth/FoundationProvider", () => ({
   useAuthActions: () => ({ signIn, signOut: vi.fn() }),
-  useFoundationMode: () => "api",
+  useFoundationMode: () => foundation.mode,
 }));
 vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
@@ -42,6 +43,7 @@ function installFakeTurnstile() {
 }
 
 beforeEach(() => {
+  foundation.mode = "api";
   signIn.mockReset();
   signIn.mockReturnValue(new Promise(() => {}));
   resetTurnstileLoaderForTests();
@@ -109,6 +111,16 @@ describe("GoogleLoginButton with Turnstile", () => {
     expect(screen.queryByRole("group", { name: "Human verification" })).toBeNull();
     fireEvent.click(button());
     await waitFor(() => expect(signIn).toHaveBeenCalledWith(undefined));
+    expect(fake.api.render).not.toHaveBeenCalled();
+  });
+
+  it("mock mode ignores the site key: no widget, button enabled", async () => {
+    foundation.mode = "mock";
+    const fake = installFakeTurnstile();
+    renderWithIntl(<GoogleLoginButton turnstileSiteKey={SITE_KEY} />);
+    expect(button().disabled).toBe(false);
+    expect(screen.queryByRole("group", { name: "Human verification" })).toBeNull();
+    await act(async () => {});
     expect(fake.api.render).not.toHaveBeenCalled();
   });
 

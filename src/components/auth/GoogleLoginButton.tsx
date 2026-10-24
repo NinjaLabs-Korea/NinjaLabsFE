@@ -25,7 +25,10 @@ export function GoogleLoginButton({ turnstileSiteKey }: GoogleLoginButtonProps =
   const isMock = mode === "mock";
   const pending = loginState === "pending";
   const failed = loginState === "error";
-  const awaitingTurnstile = Boolean(turnstileSiteKey) && !turnstileToken;
+  // Mock mode never reaches the BE, so it never needs (or renders) the widget — a preview host outside the site key's
+  // hostname list would otherwise leave the button disabled forever.
+  const turnstileKey = isMock ? undefined : turnstileSiteKey;
+  const awaitingTurnstile = Boolean(turnstileKey) && !turnstileToken;
   const buttonLabel = pending ? t("starting") : failed ? t("retry") : t("continue");
 
   const handleTurnstile = useCallback((_status: TurnstileStatus, token: string | null) => setTurnstileToken(token), []);
@@ -53,11 +56,8 @@ export function GoogleLoginButton({ turnstileSiteKey }: GoogleLoginButtonProps =
         await simulateMockSignInFailure();
       } else {
         // api 모드: 구글 동의 화면으로 전체 페이지 리다이렉트 (Promise는 resolve되지 않음). 위젯 토큰은 BE가 1회 검증한다.
+        // 토큰을 쓴 뒤 뒤로가기로 돌아오면 pageshow(bfcache) 핸들러가 위젯을 다시 돌린다.
         await signIn(turnstileToken ? { turnstileToken } : undefined);
-        if (turnstileSiteKey) {
-          // mock 모드는 토큰을 쓰지 않지만 실제와 같게 1회용으로 취급한다
-          turnstileRef.current?.reset();
-        }
       }
 
       setLoginState("idle");
@@ -86,7 +86,7 @@ export function GoogleLoginButton({ turnstileSiteKey }: GoogleLoginButtonProps =
         <span className="text-base font-bold">G</span>
         {buttonLabel}
       </button>
-      {turnstileSiteKey ? <TurnstileWidget onChange={handleTurnstile} ref={turnstileRef} siteKey={turnstileSiteKey} /> : null}
+      {turnstileKey ? <TurnstileWidget onChange={handleTurnstile} ref={turnstileRef} siteKey={turnstileKey} /> : null}
       <p className="mt-3 text-sm text-ink-muted" id="google-login-status" role="status">
         {isMock
           ? pending
