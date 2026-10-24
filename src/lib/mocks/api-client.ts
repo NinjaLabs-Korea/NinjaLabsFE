@@ -215,7 +215,7 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
   // Operations console twin: per-bounty applications/submissions/rewards/payouts seeded on first open, with the BE's checks.
   const operations = createMockOperationsApi({ findBounty: (bountyId) => bounties.find((item) => item.slug === bountyId), nextId });
   const openedOperations = new Set<string>();
-  const { transitionOperations, getAdminOperations, ...operationWrites } = operations;
+  const { transitionOperations, hasOpenFunds, getAdminOperations, ...operationWrites } = operations;
   return {
     ...operationWrites,
     getAdminOperations: async (bountyId) => {
@@ -263,6 +263,8 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
     },
     deleteAdminBounty: async (bountyId) => {
       requireOne(bounties, (item) => item.slug === bountyId, "BOUNTY_NOT_FOUND");
+      // Like the transition above, the BE's money rule applies to a bounty whose operations rows exist (opened in the console).
+      if (openedOperations.has(bountyId) && hasOpenFunds(bountyId)) throw new MockApiError(409, "BOUNTY_HAS_OPEN_FUNDS");
       bounties = bounties.filter((item) => item.slug !== bountyId);
     },
     getAdminPosts: async () => posts.map((post) => ({ ...post })),

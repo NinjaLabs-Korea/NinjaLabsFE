@@ -144,6 +144,24 @@ export function lifecycleFor(ops: AdminOperations): AdminOperations["lifecycle"]
   return { blockers, allowedTransitions: [...(BOUNTY_TRANSITIONS[ops.bounty.status as BountyStatusCode] ?? [])] };
 }
 
+/**
+ * BE `BountyAdminService.remove` (BOUNTY_HAS_OPEN_FUNDS): funds still sit in the multisig when any reward is REFUND_PENDING, or is
+ * FUNDED/PARTIALLY_PAID/PAID with deposited_amount > the sum of its PAID payouts (the whole deposit, not the allocation cap), or
+ * any payout is still open (REQUESTED / AWAITING_MULTISIG_APPROVAL / APPROVED / BROADCASTING). DEPOSIT_PENDING, REFUNDED,
+ * CANCELLED and fully-paid rewards do not block.
+ */
+export function bountyHasOpenFunds(ops: Pick<AdminOperations, "rewards" | "payouts">): boolean {
+  const heldRewards = ops.rewards.some((reward) => {
+    if (reward.status === "REFUND_PENDING") return true;
+    if (!isRewardFunded(reward)) return false;
+    const paid = ops.payouts
+      .filter((p) => p.rewardId === reward.id && p.status === "PAID")
+      .reduce((sum, p) => sum + BigInt(p.amount), BigInt(0));
+    return BigInt(reward.depositedAmount ?? "0") > paid;
+  });
+  return heldRewards || ops.payouts.some((p) => OPEN_PAYOUT_STATUSES.includes(p.status));
+}
+
 function seedNftJobs(): AdminNftJob[] {
   const job = (id: string, overrides: Partial<AdminNftJob>): AdminNftJob => ({
     id, nftId: `${id}-nft`, jobType: "MINT_PARENT", status: "FAILED", retryCount: 5, lastError: "node unreachable: request timed out", scheduledAt: iso(-1),
@@ -177,7 +195,7 @@ function seedAuditLogs(): AdminAuditLog[] {
 export function createMockOperationsApi(options: {
   findBounty: (bountyId: string) => AdminBounty | undefined;
   nextId: (prefix: string) => string;
-}): OperationsApi & { transitionOperations: (bountyId: string, to: string) => void } {
+}): OperationsApi & { transitionOperations: (bountyId: string, to: string) => void; hasOpenFunds: (bountyId: string) => boolean } {
   const state = new Map<string, AdminOperations>();
   let nftJobs = seedNftJobs();
   const auditLogs = seedAuditLogs();
@@ -203,6 +221,7 @@ export function createMockOperationsApi(options: {
 
   return {
     getAdminOperations: async (bountyId) => snapshot(opsFor(bountyId)),
+    hasOpenFunds: (bountyId) => bountyHasOpenFunds(opsFor(bountyId)),
     transitionOperations: (bountyId, to) => {
       const ops = opsFor(bountyId);
       const lifecycle = lifecycleFor(ops);
