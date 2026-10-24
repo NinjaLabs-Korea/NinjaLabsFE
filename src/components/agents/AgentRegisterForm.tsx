@@ -46,6 +46,14 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   // 필드 검증 에러 (BE RegisterAgentDto 한도의 거울, `lib/agent-register-form.ts`). 요청 실패 문구(errorMessage)와는 따로 표시한다.
   const [fieldErrors, setFieldErrors] = useState<AgentRegisterErrors>({});
   const [verification, setVerification] = useState<AgentVerification | null>(null);
+  // The one-time key belongs to the session that received it: signing out (or switching account) on this page must drop
+  // it from state and the DOM, not leave it on screen for the next person at the machine.
+  const sessionUserId = auth.status === "signed-in" ? auth.user.id : null;
+  const [verificationOwner, setVerificationOwner] = useState(sessionUserId);
+  if (verificationOwner !== sessionUserId) {
+    setVerificationOwner(sessionUserId);
+    setVerification(null);
+  }
   const {
     hasInjectedWallet,
     address,

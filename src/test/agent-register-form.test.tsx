@@ -55,8 +55,10 @@ const walletDefaults = {
 // Mutable so a test can put the hook into the wrong-network / failed-switch state.
 const wallet = { ...walletDefaults };
 
+// Mutable so a test can sign the user out while the form stays mounted.
+const authState: { current: AuthSnapshot } = { current: signedIn };
 vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAuthSnapshot: () => signedIn,
+  useAuthSnapshot: () => authState.current,
   useAccountApi: () => apiClient,
   useAgentApi: () => apiClient,
 }));
@@ -184,6 +186,31 @@ describe("AgentRegisterForm connected-wallet check", () => {
     expect(await screen.findByText("API key copied to the clipboard.")).toBeTruthy();
     expect(writeText).toHaveBeenCalledWith("nl_live_first_key");
     expect(verifyAgent).toHaveBeenCalledWith("agent-new", "0xsig");
+  });
+
+  it("drops the revealed key from the page when the user signs out while the form stays mounted", async () => {
+    registerAgent.mockResolvedValue({ agentId: "agent-new", status: "PENDING_VERIFICATION", verificationMessage: "sign me" });
+    signMessageAsync.mockResolvedValue("0xsig");
+    verifyAgent.mockResolvedValue({ agentId: "agent-new", status: "ACTIVE", apiKey: "nl_live_secret_key", expiresAt: "2027-01-01T00:00:00Z" });
+    const view = renderWithIntl(<AgentRegisterForm chainId={1439} />);
+    const submit = (await screen.findByRole("button", { name: "Sign & Register" })) as HTMLButtonElement;
+    fireEvent.change(screen.getByLabelText("Agent name"), { target: { value: "fresh-agent" } });
+    await waitFor(() => expect(submit.disabled).toBe(false));
+    fireEvent.submit(submit.closest("form") as HTMLFormElement);
+    expect(((await screen.findByLabelText("New API key")) as HTMLInputElement).value).toBe("nl_live_secret_key");
+
+    try {
+      authState.current = { status: "signed-out", user: null };
+      view.rerender(<AgentRegisterForm chainId={1439} />);
+      await waitFor(() => expect(screen.queryByLabelText("New API key")).toBeNull());
+      expect(view.container.innerHTML).not.toContain("nl_live_secret_key");
+      // Signing back in does not bring the old key back.
+      authState.current = signedIn;
+      view.rerender(<AgentRegisterForm chainId={1439} />);
+      expect(screen.queryByLabelText("New API key")).toBeNull();
+    } finally {
+      authState.current = signedIn;
+    }
   });
 });
 

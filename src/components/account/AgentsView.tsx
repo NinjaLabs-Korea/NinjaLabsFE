@@ -43,6 +43,13 @@ export function AgentsView() {
   // Rotated keys are shown once, per agent (a second rotation must not hide the first one-time key);
   // they live only in this render tree and are dropped on navigation.
   const [rotations, setRotations] = useState<Record<string, AgentKeyRotation | undefined>>({});
+  // ...and only for the session that rotated them: a sign-out or account switch on this page drops every revealed key.
+  const sessionUserId = authSnapshot.status === "signed-in" ? authSnapshot.user.id : null;
+  const [rotationsOwner, setRotationsOwner] = useState(sessionUserId);
+  if (rotationsOwner !== sessionUserId) {
+    setRotationsOwner(sessionUserId);
+    setRotations({});
+  }
   const setRotation = (agentId: string, rotation: AgentKeyRotation | null) =>
     setRotations((current) => {
       const next = { ...current };

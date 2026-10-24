@@ -111,6 +111,24 @@ describe("AgentsView", () => {
     await waitFor(() => expect(screen.getByText("nl_live_····…new1")).toBeTruthy());
   });
 
+  it("forgets a rotated key once the session ends, even if the same user signs back in on this page", async () => {
+    const view = renderWithIntl(<AgentsView />);
+    fireEvent.click((await screen.findAllByRole("button", { name: "Rotate key" }))[0]);
+    expect(((await screen.findByLabelText("New API key")) as HTMLInputElement).value).toBe("nl_preview_rotated_key_not_for_production");
+    try {
+      state.auth = { status: "signed-out", user: null };
+      view.rerender(<AgentsView />);
+      await waitFor(() => expect(screen.queryByLabelText("New API key")).toBeNull());
+      state.auth = signedIn;
+      view.rerender(<AgentsView />);
+      await screen.findAllByRole("button", { name: "Rotate key" });
+      expect(screen.queryByLabelText("New API key")).toBeNull();
+      expect(view.container.innerHTML).not.toContain("nl_preview_rotated_key");
+    } finally {
+      state.auth = signedIn;
+    }
+  });
+
   it("copies the revealed key and reports when the clipboard is unavailable", async () => {
     const writeText = vi.fn(async () => undefined);
     Object.defineProperty(window.navigator, "clipboard", { configurable: true, value: { writeText } });
