@@ -196,5 +196,16 @@ export function rewardFromBaseUnits(row: RewardRow | undefined): Reward {
 
 /** 표시용 Reward → BE에 보낼 최소 단위 정수 문자열 */
 export function rewardToBaseUnits(reward: Reward): string {
-  return parseUnits(String(reward.amount), TOKEN_DECIMALS[reward.currency]).toString();
+  const decimals = TOKEN_DECIMALS[reward.currency];
+  return parseUnits(toDecimalString(reward.amount, decimals), decimals).toString();
+}
+
+/**
+ * `String(n)` switches to exponent notation below 1e-6 and from 1e21 (`"1e-7"`, `"1e+21"`), which `parseUnits` refuses.
+ * Those two ranges are spelled out instead: integers through BigInt, tiny fractions with the token's decimals.
+ */
+function toDecimalString(amount: number, decimals: number): string {
+  const text = String(amount);
+  if (!/e/i.test(text)) return text;
+  return Number.isInteger(amount) ? BigInt(amount).toString() : amount.toFixed(decimals);
 }

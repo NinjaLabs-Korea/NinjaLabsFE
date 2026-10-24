@@ -27,8 +27,18 @@ describe("reward base units", () => {
     expect(rewardToBaseUnits(reward)).toBe(expected);
   });
 
+  // `String(1e-7)` is "1e-7": a valid amount the admin form accepts must still convert instead of throwing.
+  it.each([
+    [{ amount: 0.0000001, currency: "INJ" }, "100000000000"],
+    [{ amount: 1e-18, currency: "INJ" }, "1"],
+    [{ amount: 1e21, currency: "INJ" }, "1000000000000000000000000000000000000000"],
+    [{ amount: 2e21, currency: "USDC" }, "2000000000000000000000000000"],
+  ] as const)("converts the exponent-notation amount %o -> %s", (reward, expected) => {
+    expect(rewardToBaseUnits(reward)).toBe(expected);
+  });
+
   it("round-trips display amounts through the BE base-unit string", () => {
-    for (const reward of [{ amount: 0.5, currency: "INJ" }, { amount: 99.99, currency: "USDC" }] as const) {
+    for (const reward of [{ amount: 0.5, currency: "INJ" }, { amount: 99.99, currency: "USDC" }, { amount: 0.0000001, currency: "INJ" }] as const) {
       expect(toReward({ symbol: reward.currency, amount: rewardToBaseUnits(reward) })).toEqual(reward);
     }
   });
