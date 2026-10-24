@@ -73,6 +73,11 @@ and Chrome, the Postgres data dir). Two things use it:
 - the reaper (`lib/reaper.mjs`) runs at every start and as `npm run test:integration -- --reap`: for each `ninja-it-*` dir whose
   harness is dead it runs `pg_ctl stop -m immediate`, kills the recorded process groups and deletes the dir. Dirs of a live
   harness are never touched, so parallel runs on different ports are safe.
+- pids.json is not the only source: teardown and `--reap` also scan the process table (`ps` + `lsof -d cwd` on macOS, `/proc` on
+  Linux) for any process whose cwd or command line points into `$TMPDIR/ninja-it-*`, so orphans survive neither a deleted temp
+  dir nor a process that escaped its group (e.g. a `next-server` whose `cwd` is a deleted `ninja-it-XXXX/fe`). The temp dir is
+  deleted only after every recorded group and stray process is confirmed dead; otherwise it stays and `--reap` retries.
+  The matching rule lives in `runDirOf()` (`lib/reaper.mjs`) and is pinned by `src/test/integration-reaper-scan.test.ts`.
 
 If a run stops with "port ... is in use", run `--reap` first. A leftover from before this mechanism existed has no `pids.json`;
 stop it by hand (`pg_ctl -D <dir>/pg stop -m immediate`).
