@@ -1,29 +1,40 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
+import type { HighlightTypeLabel } from "@/lib/api/codecs";
 import { loadRuntimeHallOfFame } from "@/lib/hall-of-fame";
+import { imageProps } from "@/lib/image";
+import { localeAlternates } from "@/i18n/alternates";
 
+// One entry per BE highlight type (`lib/api/codecs.ts HIGHLIGHT_TYPE_LABELS`).
 const highlightVariants = {
   Milestone: "success",
   "Featured bounty": "primary-soft",
+  Project: "primary-soft",
   Partnership: "warning",
-} as const;
+  Award: "success",
+  Other: "neutral",
+} as const satisfies Record<HighlightTypeLabel, string>;
 
 // Display-label keys (messages `hallOfFame.highlights.categories`).
 const highlightLabelKeys = {
   Milestone: "milestone",
   "Featured bounty": "featuredBounty",
+  Project: "project",
   Partnership: "partnership",
-} as const;
+  Award: "award",
+  Other: "other",
+} as const satisfies Record<HighlightTypeLabel, string>;
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/hall-of-fame">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "hallOfFame.metadata" });
   return {
+    alternates: localeAlternates(locale, "/hall-of-fame"),
     title: t("title"),
     description: t("description"),
   };
@@ -33,7 +44,8 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("hallOfFame");
-  const { hallOfFame, unavailable } = await loadRuntimeHallOfFame();
+  const format = await getFormatter();
+  const { hallOfFame, unavailable } = await loadRuntimeHallOfFame(locale);
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -53,10 +65,11 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
 
       {hallOfFame.stats.length > 0 ? (
         <section className="mt-10 rounded-panel bg-[linear-gradient(160deg,var(--color-hero-from)_0%,var(--color-hero-via)_55%,var(--color-hero-to)_100%)] p-6 shadow-frame sm:p-10">
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className={`grid gap-5 ${hallOfFame.stats.length === 4 ? "sm:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3"}`}>
             {hallOfFame.stats.map((stat) => (
               <div key={stat.labelKey} className="rounded-card border border-on-inverse/15 bg-on-inverse/5 p-5 text-center">
-                <p className="font-display text-4xl font-bold text-on-inverse">{stat.value}</p>
+                {/* The paid total is a multi-token string ("12,500 USDC · 300 INJ"), so it steps down a size and may wrap. */}
+                <p className={`font-display font-bold text-on-inverse ${stat.labelKey === "rewardsPaid" ? "break-words text-2xl" : "text-4xl"}`}>{/^\d+$/.test(stat.value) ? format.number(Number(stat.value)) : stat.value}</p>
                 <p className="mt-2 text-sm text-on-inverse/70">{t(`stats.${stat.labelKey}`)}</p>
               </div>
             ))}
@@ -71,7 +84,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
             {hallOfFame.highlights.map((highlight) => (
               <Link href={highlight.href} key={highlight.title} className="overflow-hidden rounded-card border border-border bg-surface shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
                 <div className="relative aspect-[16/9] bg-gradient-to-br from-primary-soft-border to-surface-subtle">
-                  {highlight.image ? <Image alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 370px" src={highlight.image} /> : null}
+                  {highlight.image ? <Image {...imageProps(highlight.image)} alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 370px" /> : null}
                 </div>
                 <div className="p-5">
                   <Badge variant={highlightVariants[highlight.category]}>{t(`highlights.categories.${highlightLabelKeys[highlight.category]}`)}</Badge>
@@ -104,7 +117,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
           <SectionHeader eyebrow={t("partners.eyebrow")} heading={t("partners.heading")} />
           <ul className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
             {hallOfFame.partners.map((partner) => {
-              const logo = <span className="relative block h-12 w-full"><Image alt={partner.name} className="object-contain" fill sizes="(max-width: 640px) 50vw, 240px" src={partner.logo} /></span>;
+              const logo = <span className="relative block h-12 w-full"><Image {...imageProps(partner.logo)} alt={partner.name} className="object-contain" fill sizes="(max-width: 640px) 50vw, 240px" /></span>;
               const tileClass = "flex h-28 items-center justify-center rounded-card border border-border bg-surface p-5 shadow-card";
               return (
                 <li key={partner.name}>

@@ -42,13 +42,16 @@ export function useMenuButton(itemCount: number) {
     setOpen(true);
   };
 
+  // Outside click closes through a document pointerdown listener (like MobileMenu), never through blur: Safari and
+  // Firefox on macOS do not focus a button on mousedown, so a click inside the menu blurs the root with
+  // `relatedTarget === null` and a blur-based close would dismiss the menu before its click lands.
   useEffect(() => {
     if (!open) return;
-    const closeOnOutsideMouseDown = (event: MouseEvent) => {
+    const closeOnOutsidePointerDown = (event: PointerEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     };
-    document.addEventListener("mousedown", closeOnOutsideMouseDown);
-    return () => document.removeEventListener("mousedown", closeOnOutsideMouseDown);
+    document.addEventListener("pointerdown", closeOnOutsidePointerDown);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePointerDown);
   }, [open]);
 
   const onItemKeyDown = (event: KeyboardEvent<MenuItemElement>) => {
@@ -80,11 +83,14 @@ export function useMenuButton(itemCount: number) {
   return {
     open,
     closeMenu,
-    /** 감싸는 div에 펼쳐 넣는다: 포커스가 메뉴 밖으로 나가면 닫는다. */
+    /**
+     * 감싸는 div에 펼쳐 넣는다: 포커스가 메뉴 밖의 다른 요소로 옮겨가면(Tab 등) 닫는다. `relatedTarget === null`(창 전환,
+     * 버튼을 포커스하지 않는 Safari/Firefox-macOS의 mousedown)은 무시한다 — 바깥 클릭은 pointerdown 리스너가 맡는다.
+     */
     rootProps: {
       ref: rootRef,
       onBlur: (event: FocusEvent<HTMLDivElement>) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) closeMenu();
+        if (event.relatedTarget !== null && !event.currentTarget.contains(event.relatedTarget)) closeMenu();
       },
     },
     /** `initialIndex`: 열 때 포커스할 항목 (예: 현재 선택된 언어). */

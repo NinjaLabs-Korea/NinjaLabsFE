@@ -1,0 +1,52 @@
+// Flow 5: agents - verified + pending agents listed, key rotation shown once (DB prefix/hash), revoke dialog (DB status),
+// and the round-9 rule that a one-time key leaves state and the DOM when the session ends (sign-out).
+import { Browser, report } from '../lib/cdp.mjs'; import { sql, ids, check, clean, done, sleep, signIn, signedInHeader, clickSignOut } from '../lib/harness.mjs';
+import { registerAgent } from '../lib/agent.mjs';
+await registerAgent(ids.BUILDER, 'DashBot', true); await registerAgent(ids.BUILDER, 'PendingBot', false); await registerAgent(ids.BUILDER, 'KeyBot', true);
+const status = (name) => sql(`select status from agent where name='${name}' and owner_user_id='${ids.BUILDER}'`);
+check('DB: DashBot ACTIVE, PendingBot PENDING_VERIFICATION', status('DashBot') === 'ACTIVE' && status('PendingBot') === 'PENDING_VERIFICATION');
+const card = (name) => `[...document.querySelectorAll('article')].find(a=>a.innerText.includes(${JSON.stringify(name)}))`;
+const b = await Browser.connect(); const ctx = await b.newContext(); const p = await b.newPage(ctx);
+await signIn(p, ids.BUILDER);
+await p.goto('/en/agents'); await p.waitText('PendingBot');
+const list = await p.text(); clean(await report(p, '/agents list'));
+check('/agents lists all three agents', ['DashBot', 'PendingBot', 'KeyBot'].every((n) => list.includes(n)));
+const keyBefore = sql(`select key_prefix from agent_api_key k join agent a on a.id=k.agent_id where a.name='DashBot' and k.status='ACTIVE'`);
+await p.eval(`[...${card('DashBot')}.querySelectorAll('button')].find(b=>b.innerText.includes('Rotate key')).click()`);
+await p.waitText('New API key issued', 8000); await p.idle();
+const key = await p.eval(`${card('DashBot')}.querySelector('input[readonly]')?.value`);
+clean(await report(p, 'rotate'));
+const keyAfter = sql(`select key_prefix from agent_api_key k join agent a on a.id=k.agent_id where a.name='DashBot' and k.status='ACTIVE'`);
+check('rotate shows the new key once', typeof key === 'string' && key.startsWith('nj_'), key?.slice(0, 12));
+check('DB: active key prefix changed and matches the shown key', keyAfter !== keyBefore && key?.startsWith(keyAfter), `${keyBefore} -> ${keyAfter}`);
+check('DB: exactly one ACTIVE key for DashBot', sql(`select count(*) from agent_api_key k join agent a on a.id=k.agent_id where a.name='DashBot' and k.status='ACTIVE'`) === '1');
+await p.goto('/en/agents'); await p.waitText('DashBot');
+const reloaded = await p.eval('document.documentElement.outerHTML');
+clean(await report(p, 'reload after rotate'));
+check('after reload the full key is gone, prefix shown', !reloaded.includes(key) && reloaded.includes(keyAfter));
+// revoke DashBot
+await p.eval(`[...${card('DashBot')}.querySelectorAll('button')].find(b=>b.innerText.includes('Revoke agent')).click()`);
+await p.waitFor(`!!document.querySelector('[role=dialog], dialog[open]')`, 5000);
+const dlg = (await p.eval(`document.querySelector('[role=dialog], dialog[open]').innerText`)).replace(/\s+/g, ' ');
+check('revoke dialog names the agent', dlg.includes('Revoke DashBot?'), dlg.slice(0, 80));
+await p.eval(`[...document.querySelector('[role=dialog], dialog[open]').querySelectorAll('button')].find(b=>/revoke/i.test(b.innerText) && !/cancel/i.test(b.innerText)).click()`);
+await p.waitText('This agent was revoked', 8000); await p.idle();
+clean(await report(p, 'revoke'));
+check('DB: DashBot REVOKED, no ACTIVE key', status('DashBot') === 'REVOKED' && sql(`select count(*) from agent_api_key k join agent a on a.id=k.agent_id where a.name='DashBot' and k.status='ACTIVE'`) === '0');
+await p.goto('/en/agents'); await p.waitText('DashBot');
+check('after reload DashBot shows revoked', (await p.eval(`${card('DashBot')}.innerText`)).includes('revoked'));
+// one-time key dropped on sign-out (round 9)
+await p.eval(`[...${card('KeyBot')}.querySelectorAll('button')].find(b=>b.innerText.includes('Rotate key')).click()`);
+await p.waitText('New API key issued', 8000); await p.idle();
+const key2 = await p.eval(`${card('KeyBot')}.querySelector('input[readonly]')?.value`);
+check('KeyBot key revealed', typeof key2 === 'string' && key2.startsWith('nj_'));
+p.reset();
+check('signed in before sign-out', await signedInHeader(p));
+await clickSignOut(p);
+await sleep(1500); await p.idle();
+const html = await p.eval('document.documentElement.outerHTML');
+clean(await report(p, 'sign out with key shown'));
+check('after sign-out the one-time key is not in the DOM', !html.includes(key2));
+check('after sign-out the account area is signed out', !(await signedInHeader(p)));
+check('after sign-out no readonly key input remains', !(await p.eval(`!!document.querySelector('input[readonly][value^="nj_"]') || [...document.querySelectorAll('input[readonly]')].some(i=>i.value.startsWith('nj_'))`)));
+b.close(); done('5 agents');

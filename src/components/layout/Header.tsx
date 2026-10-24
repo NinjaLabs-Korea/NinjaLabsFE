@@ -2,6 +2,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { AuthArea } from "@/components/layout/AuthArea";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
+import { MobileMenu } from "@/components/layout/MobileMenu";
 import { NavLinks } from "@/components/layout/NavLinks";
 import { Link } from "@/i18n/navigation";
 
@@ -39,10 +40,7 @@ export function Header() {
           <LocaleSwitcher />
           <AuthArea variant="desktop" />
 
-          <details className="relative md:hidden">
-            <summary className="flex cursor-pointer list-none items-center whitespace-nowrap rounded-control px-2 py-3 text-sm sm:px-3 leading-[21px] font-semibold text-ink-secondary [&::-webkit-details-marker]:hidden">
-              {t("menu")}
-            </summary>
+          <MobileMenu label={t("menu")}>
             <nav
               className="absolute right-0 top-full z-50 mt-2 flex w-44 flex-col gap-1 rounded-tile border border-border bg-surface p-2 shadow-card"
               aria-label={t("mobileNavigation")}
@@ -57,7 +55,7 @@ export function Header() {
               </Link>
               <AuthArea variant="mobile" />
             </nav>
-          </details>
+          </MobileMenu>
         </div>
       </div>
     </header>

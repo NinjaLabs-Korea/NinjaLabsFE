@@ -25,7 +25,10 @@
     "categories": {
       "milestone": "마일스톤",
       "featuredBounty": "추천 바운티",
-      "partnership": "파트너십"
+      "partnership": "파트너십",
+      "project": "프로젝트",
+      "award": "수상",
+      "other": "기타"
     }
   },
   "timeline": {

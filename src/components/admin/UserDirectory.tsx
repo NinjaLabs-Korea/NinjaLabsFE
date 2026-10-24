@@ -6,7 +6,7 @@ import { AdminTable } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { UserActions } from "@/components/admin/UserActions";
 import { Badge } from "@/components/ui/Badge";
-import type { AdminUser } from "@/lib/admin";
+import { type AdminUser, adminErrorDescription } from "@/lib/admin-helpers";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const columns = [
@@ -19,23 +19,55 @@ const columns = [
   { id: "action", widthClass: "w-[199px]" },
 ];
 
+/** BE `MemberAdminService.PAGE_SIZE`. */
+const USERS_PAGE_SIZE = 30;
+
 export function UserDirectory({ users }: { users: AdminUser[] }) {
   const api = useAdminApi();
   const t = useTranslations("admin.users");
   const tCommon = useTranslations("admin.common");
   const [query, setQuery] = useState("");
   const [directoryUsers, setDirectoryUsers] = useState(users);
+  // The BE returns 30 users per page; a shorter first page means there is nothing more to load.
+  const [nextPage, setNextPage] = useState(2);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const normalizedQuery = query.toLowerCase();
   const visibleUsers = directoryUsers.filter((user) => (
     user.nickname.toLowerCase().includes(normalizedQuery) || user.email.toLowerCase().includes(normalizedQuery)
   ));
 
   useEffect(() => {
-    api.getAdminUsers().then(setDirectoryUsers).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
+    api.getAdminUsers().then((loaded) => {
+      setDirectoryUsers(loaded);
+      setNextPage(2);
+      setHasMore(loaded.length >= USERS_PAGE_SIZE);
+    }).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
   }, [api, t]);
 
+  async function loadMore() {
+    setLoadingMore(true);
+    try {
+      const loaded = await api.getAdminUsers("", nextPage);
+      // Join dedupes by id: a signup between the two requests shifts rows across the page boundary.
+      setDirectoryUsers((current) => [...current, ...loaded.filter((user) => !current.some((existing) => existing.slug === user.slug))]);
+      setNextPage((current) => current + 1);
+      setHasMore(loaded.length >= USERS_PAGE_SIZE);
+    } catch {
+      pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") });
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
   async function restoreMember(user: AdminUser) {
-    await api.setAdminMember(user.slug, { isMember: user.isMember, ...(user.memberRole ? { role: user.memberRole } : {}), ...(user.memberDisplayOrder !== null ? { displayOrder: user.memberDisplayOrder } : {}) });
+    // Called from the toast's Undo action, which does not await it: a rejection must become a toast, not an unhandled error.
+    try {
+      await api.setAdminMember(user.slug, { isMember: user.isMember, ...(user.memberRole ? { role: user.memberRole } : {}), ...(user.memberDisplayOrder !== null ? { displayOrder: user.memberDisplayOrder } : {}) });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: adminErrorDescription(error, tCommon, t("toast.removeFailedDescription")) });
+      return;
+    }
     setDirectoryUsers((currentUsers) => currentUsers.map((currentUser) => (
       currentUser.slug === user.slug
         ? {
@@ -56,8 +88,8 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   async function handleRemove(user: AdminUser) {
     try {
       await api.setAdminMember(user.slug, { isMember: false });
-    } catch {
-      pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: t("toast.removeFailedDescription") });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: adminErrorDescription(error, tCommon, t("toast.removeFailedDescription")) });
       return;
     }
     setDirectoryUsers((currentUsers) => currentUsers.map((currentUser) => (
@@ -81,8 +113,8 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   ) {
     try {
       await api.setAdminMember(user.slug, { isMember: true, role, ...(displayOrder !== null ? { displayOrder } : {}) });
-    } catch {
-      pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: t("toast.assignFailedDescription") });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: adminErrorDescription(error, tCommon, t("toast.assignFailedDescription")) });
       return;
     }
     setDirectoryUsers((currentUsers) => currentUsers.map((currentUser) => (
@@ -118,7 +150,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
               <tr className="border-t border-border" key={user.slug}>
                 <td className="px-5 py-4 text-sm font-semibold text-ink">{user.nickname}</td>
                 <td className="px-5 py-4 text-sm text-ink-muted">{user.email}</td>
-                <td className="px-5 py-4 text-sm text-ink-secondary">{user.joinedAt}</td>
+                <td className="px-5 py-4 text-sm text-ink-secondary">{user.joinedAt || "–"}</td>
                 <td className="px-5 py-4 text-sm text-ink-secondary">
                   {user.walletStatus === "linked" ? <Badge variant="success">{t("walletLinked")}</Badge> : "-"}
                 </td>
@@ -136,6 +168,11 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
               </tr>
             ))}
           </AdminTable>
+          {hasMore ? (
+            <div className="mt-4 flex justify-center">
+              <button className="rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={loadingMore} onClick={() => void loadMore()} type="button">{t("loadMore")}</button>
+            </div>
+          ) : null}
           <p className="mt-3 text-xs text-ink-muted">{tCommon("saveNotice")}</p>
         </div>
       ) : (

@@ -13,7 +13,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
   setRequestLocale(locale);
   const t = await getTranslations("landing");
   const tStats = await getTranslations("hallOfFame.stats");
-  const { hero, bounties, news, unavailable } = await getRuntimeLanding();
+  const { hero, bounties, news, unavailable } = await getRuntimeLanding(locale);
 
   return (
     <>
@@ -54,14 +54,18 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
                 {t(`hero.${hero.secondaryCta.labelKey}`)}
               </Link>
             </div>
-            <dl className="mt-12 flex flex-wrap gap-x-10 gap-y-5">
-              {hero.stats.map((stat) => (
-                <div key={stat.labelKey}>
-                  <dt className="font-display text-2xl font-bold text-on-inverse">{stat.value}</dt>
-                  <dd className="text-sm text-on-inverse/50">{tStats(stat.labelKey)}</dd>
-                </div>
-              ))}
-            </dl>
+            {unavailable.stats ? (
+              <p className="mt-12 text-sm text-on-inverse/60" role="status">{t("stats.unavailable")}</p>
+            ) : (
+              <dl className="mt-12 flex flex-wrap gap-x-10 gap-y-5">
+                {hero.stats.map((stat) => (
+                  <div key={stat.labelKey}>
+                    <dt className="font-display text-2xl font-bold text-on-inverse">{stat.value}</dt>
+                    <dd className="text-sm text-on-inverse/50">{tStats(stat.labelKey)}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
           </div>
 
           <div className="self-center rounded-card border border-on-inverse/12 bg-on-inverse/6 p-[21px] shadow-card backdrop-blur-[4px]">

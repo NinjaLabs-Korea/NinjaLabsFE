@@ -1,76 +1,12 @@
+import { toHighlightTypeCode } from "./api/codecs";
 import { getBounties } from "./bounties";
 import { hallOfFame } from "./hall-of-fame";
 import { getMembers, profiles } from "./members";
 import { getNotices } from "./notices";
 import type { Member } from "./types";
+import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "./admin-helpers";
 
-export type AdminUser = {
-  slug: string;
-  nickname: string;
-  email: string;
-  joinedAt: string;
-  walletAddress: string | null;
-  walletStatus: "linked" | null;
-  isMember: boolean;
-  memberRole: "Core" | "Dev" | "Design" | "Ops" | null;
-  memberDisplayOrder: number | null;
-};
-
-export type AdminBounty = {
-  slug: string;
-  title: string;
-  sponsor: string;
-  reward: { amount: number; currency: "INJ" | "USDC" };
-  rewardContractAddress?: string;
-  rewardChainId?: number;
-  intakeEnabled: boolean;
-  submissionMode: "direct" | "agent";
-  coverImage: string | null;
-  status: "draft" | "funding" | "active" | "reviewing" | "closed";
-  deadline: string;
-  tags: Array<"Dev" | "Design" | "Content" | "Other">;
-  description: string;
-  submissionGuide: string;
-  deliverables: string[];
-  reviewProcess: string;
-};
-
-export type AdminHighlight = {
-  id: string;
-  type: "Milestone" | "Featured bounty" | "Partnership";
-  title: string;
-  order: number;
-  link?: string;
-  image: string | null;
-  description?: string;
-  published?: boolean;
-};
-
-export type AdminPost = {
-  slug: string;
-  title: string;
-  category: "Ninja Labs" | "Injective ecosystem" | "Events" | "Recruitment" | "Other";
-  status: "draft" | "published";
-  publishedAt: string | null;
-  bodyMarkdown: string;
-  thumbnail: string | null;
-  externalUrl: string | null;
-};
-
-// Message keys (admin namespace) for displayed enum labels; the enum values themselves stay API-facing.
-export const highlightTypeLabelKeys: Record<AdminHighlight["type"], string> = {
-  Milestone: "milestone",
-  "Featured bounty": "featuredBounty",
-  Partnership: "partnership",
-};
-
-export const postCategoryLabelKeys: Record<AdminPost["category"], string> = {
-  "Ninja Labs": "ninjaLabs",
-  "Injective ecosystem": "injectiveEcosystem",
-  Events: "events",
-  Recruitment: "recruitment",
-  Other: "other",
-};
+export * from "./admin-helpers";
 
 const adminUserSlugs = ["jaemin", "sora", "jinyoung", "juho", "mina", "ara"] as const;
 
@@ -78,27 +14,30 @@ const userOverlays: Record<
   (typeof adminUserSlugs)[number],
   Pick<AdminUser, "email" | "joinedAt" | "walletAddress" | "walletStatus">
 > = {
-  jaemin: { email: "jaemin@example.com", joinedAt: "05.01", walletAddress: "inj1...9k4d", walletStatus: "linked" },
-  sora: { email: "sora@example.com", joinedAt: "07.01", walletAddress: null, walletStatus: null },
-  jinyoung: { email: "jinyoung@example.com", joinedAt: "05.03", walletAddress: "inj1...2p8m", walletStatus: "linked" },
-  juho: { email: "juho@example.com", joinedAt: "05.12", walletAddress: "inj1...7n3q", walletStatus: "linked" },
-  mina: { email: "mina@example.com", joinedAt: "06.04", walletAddress: "inj1...5w6r", walletStatus: "linked" },
-  ara: { email: "ara@example.com", joinedAt: "06.20", walletAddress: "inj1...8c1v", walletStatus: "linked" },
+  // joinedAt: the same `YYYY-MM-DD` the api adapter derives with formatIsoDate(created_at).
+  jaemin: { email: "jaemin@example.com", joinedAt: "2026-05-01", walletAddress: "inj1...9k4d", walletStatus: "linked" },
+  sora: { email: "sora@example.com", joinedAt: "2026-07-01", walletAddress: null, walletStatus: null },
+  jinyoung: { email: "jinyoung@example.com", joinedAt: "2026-05-03", walletAddress: "inj1...2p8m", walletStatus: "linked" },
+  juho: { email: "juho@example.com", joinedAt: "2026-05-12", walletAddress: "inj1...7n3q", walletStatus: "linked" },
+  mina: { email: "mina@example.com", joinedAt: "2026-06-04", walletAddress: "inj1...5w6r", walletStatus: "linked" },
+  ara: { email: "ara@example.com", joinedAt: "2026-06-20", walletAddress: "inj1...8c1v", walletStatus: "linked" },
 };
 
+// deadline: ISO like the BE `submission_deadline`, so the form/table code paths are identical in mock and api mode.
 const bountyOverlays: Record<
   string,
   { deadline: string; status?: "reviewing" }
 > = {
-  "iasset-price-widget": { deadline: "07.14" },
-  "wallet-onboarding-states": { deadline: "07.12", status: "reviewing" },
-  "contract-security-audit": { deadline: "07.19" },
-  "injective-dev-tutorial": { deadline: "07.16" },
-  "helix-volume-analytics": { deadline: "07.21" },
-  "hydro-liquidity-explainer": { deadline: "07.17" },
-  "neptune-api-docs": { deadline: "07.23" },
-  "design-system-build": { deadline: "07.03" },
-  "quest-copy-refresh": { deadline: "07.01" },
+  "iasset-price-widget": { deadline: "2026-07-14T23:59:00.000Z" },
+  "wallet-onboarding-states": { deadline: "2026-07-12T23:59:00.000Z", status: "reviewing" },
+  "contract-security-audit": { deadline: "2026-07-19T23:59:00.000Z" },
+  "injective-dev-tutorial": { deadline: "2026-07-16T23:59:00.000Z" },
+  "helix-volume-analytics": { deadline: "2026-07-21T23:59:00.000Z" },
+  "hydro-liquidity-explainer": { deadline: "2026-07-17T23:59:00.000Z" },
+  "neptune-api-docs": { deadline: "2026-07-23T23:59:00.000Z" },
+  "agent-skill-benchmark": { deadline: "2026-07-10T23:59:00.000Z" },
+  "design-system-build": { deadline: "2026-07-03T23:59:00.000Z" },
+  "quest-copy-refresh": { deadline: "2026-07-01T23:59:00.000Z" },
 };
 
 export function getAdminUsers(): AdminUser[] {
@@ -141,9 +80,12 @@ export function getAdminBounties(): AdminBounty[] {
       coverImage: bounty.coverImage || null,
       status: overlay.status ?? bounty.status,
       deadline: overlay.deadline,
+      applicationDeadline: null,
+      maxWinners: 1,
       tags: bounty.slug === "iasset-price-widget" ? [bounty.category, "Other"] : [bounty.category],
       description: bounty.descriptionMarkdown ?? bounty.summary,
       submissionGuide: bounty.submissionGuideMarkdown ?? "",
+      requirements: (bounty.deliverables ?? []).join("\n"),
       deliverables: [...(bounty.deliverables ?? [])],
       reviewProcess: bounty.reviewProcess ?? "",
     };
@@ -153,10 +95,12 @@ export function getAdminBounties(): AdminBounty[] {
 export function getAdminHighlights(): AdminHighlight[] {
   return hallOfFame.highlights.map((highlight, index) => ({
     id: `highlight-${index + 1}`,
-    type: highlight.category,
+    type: toHighlightTypeCode(highlight.category),
     title: highlight.title,
+    description: highlight.body,
     order: index + 1,
     image: null,
+    published: true,
     ...(highlight.category === "Featured bounty" ? { link: "/bounties/helix-volume-analytics" } : {}),
   }));
 }

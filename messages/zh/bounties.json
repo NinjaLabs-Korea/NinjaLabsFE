@@ -19,7 +19,8 @@
   },
   "status": {
     "active": "进行中",
-    "closed": "已截止"
+    "closed": "已截止",
+    "reviewing": "审核中"
   },
   "list": {
     "eyebrow": "市场",
@@ -95,6 +96,8 @@
     "directSubmission": "直接提交",
     "publicView": "公开浏览",
     "actionsRequireLogin": "操作需要登录",
+    "signedInView": "已登录",
+    "actionsAvailable": "可以参与",
     "description": "描述",
     "deliverable": "交付物",
     "deadline": "截止时间",
@@ -165,7 +168,19 @@
       "APPLICATION_NOT_APPROVED": "你的申请需获批准后才能提交。",
       "DEADLINE_PASSED": "提交已截止。",
       "SUBMISSION_FINALIZED": "此提交已最终确定。",
-      "VALIDATION_FAILED": "请检查 URL 和描述后重试。"
+      "VALIDATION_FAILED": "请检查 URL 和描述后重试。",
+      "APPLICATION_DEADLINE_PASSED": "申请已截止。",
+      "SUBMISSION_TYPE_BOUNTY": "此赏金接受直接提交，无需申请。",
+      "AGENT_SUBMISSION_REQUIRED": "此赏金仅接受已注册代理的提交。",
+      "DIRECT_SUBMISSION_REQUIRED": "此赏金仅接受你的账户直接提交。",
+      "REFRESH_UNAVAILABLE": "无法刷新你的会话，请重新登录。",
+      "UNKNOWN_ERROR": "服务器返回了意外响应，请重试。",
+      "MAX_WINNERS_REACHED": "此赏金已达到最大获胜者数量。",
+      "BOUNTY_NOT_FOUND": "此赏金已不存在。",
+      "INVALID_CHARACTER": "您的内容包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
+      "REFERENCE_NOT_FOUND": "此请求引用的对象已不存在。请刷新页面后重试。",
+      "unknown": "出了点问题（{code}），请重试。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
     },
     "checkingSession": "正在检查会话…",
     "applicationRejectedHeading": "申请未入选",
@@ -187,7 +202,18 @@
     "signInFirst": "请先登录",
     "viewIntakeRules": "查看申请规则",
     "submitDisabled": "批准前无法提交",
-    "availability": "可投入时间"
+    "availability": "可投入时间",
+    "closedHeading": "赏金已关闭",
+    "closedBody": "此赏金不再接受申请或提交。",
+    "reviewingBody": "赞助方审核已收到的作品期间，提交已关闭，不再接受新的申请和提交。",
+    "inReviewLockedNote": "赞助方正在审核您的作品。提交已关闭，仅在赞助方要求修改时才能更新。",
+    "agentRowHeading": "由你的代理处理",
+    "agentAppliedBody": "你的代理 {name} 已申请此赏金。请通过 Agent API 管理该申请；本页面不会代为提交。",
+    "agentSubmittedBody": "你的代理 {name} 已为此赏金提交作品。请通过 Agent API 管理该提交；本页面不会代为重新提交。"
   },
-  "unavailableBody": "无法连接服务器，请稍后刷新。"
+  "unavailableBody": "无法连接服务器，请稍后刷新。",
+  "card": {
+    "daysLeft": "剩余 {days} 天",
+    "daysLeftLabel": "距截止还有 {days} 天"
+  }
 }

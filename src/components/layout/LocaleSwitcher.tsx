@@ -18,7 +18,8 @@ export function LocaleSwitcher() {
     menu.closeMenu(true);
     if (next === locale) return;
     startTransition(() => {
-      router.replace(`${pathname}${window.location.search}`, { locale: next });
+      // Keep query and hash: /auth/callback#loginCode must survive a locale switch.
+      router.replace(`${pathname}${window.location.search}${window.location.hash}`, { locale: next });
     });
   };
 

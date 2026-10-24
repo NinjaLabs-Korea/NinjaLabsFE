@@ -6,10 +6,12 @@ import { UserDirectory } from "@/components/admin/UserDirectory";
 import { Badge } from "@/components/ui/Badge";
 import { getAdminUsers } from "@/lib/admin";
 import { loadFromRuntime } from "@/lib/api/public";
+import { localeAlternates } from "@/i18n/alternates";
 export async function generateMetadata({ params }: PageProps<"/[locale]/admin/users">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "admin.users" });
   return {
+    alternates: localeAlternates(locale, "/admin/users"),
     title: t("metaTitle"),
     description: t("metaDescription"),
   };

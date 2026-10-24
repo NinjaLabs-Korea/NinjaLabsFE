@@ -91,6 +91,7 @@ export function AdminSelect({
         aria-haspopup="listbox"
         role="combobox"
         aria-label={label}
+        id={`${listboxId}-trigger`}
         className="flex h-[46px] w-full items-center justify-between rounded-control border border-border px-[17px] text-sm text-ink-secondary"
         onBlur={() => setOpen(false)}
         onClick={() => (open ? setOpen(false) : openListbox())}
@@ -102,7 +103,7 @@ export function AdminSelect({
         <span>▾</span>
       </button>
       {open && (
-        <ul className="absolute z-30 mt-1 w-full rounded-tile border border-border bg-surface p-1 shadow-frame" id={listboxId} role="listbox">
+        <ul aria-labelledby={`${listboxId}-trigger`} className="absolute z-30 mt-1 w-full rounded-tile border border-border bg-surface p-1 shadow-frame" id={listboxId} role="listbox">
           {options.map((option, index) => {
             const selected = value === option;
             const active = activeIndex === index;

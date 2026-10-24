@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { loadRuntimeBounties } from "@/lib/bounties";
+import { localeAlternates } from "@/i18n/alternates";
 
 type BountiesPageProps = {
   params: Promise<{ locale: string }>;
@@ -14,7 +15,7 @@ type BountiesPageProps = {
 export async function generateMetadata({ params }: BountiesPageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "bounties.meta.list" });
-  return { title: t("title"), description: t("description") };
+  return { alternates: localeAlternates(locale, "/bounties"), title: t("title"), description: t("description") };
 }
 
 export default async function BountiesPage({ params }: BountiesPageProps) {
@@ -22,7 +23,7 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
   setRequestLocale(locale);
   const t = await getTranslations("bounties.list");
   const tBounties = await getTranslations("bounties");
-  const { bounties, unavailable } = await loadRuntimeBounties();
+  const { bounties, unavailable } = await loadRuntimeBounties(locale);
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <section>

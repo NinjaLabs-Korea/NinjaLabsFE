@@ -15,13 +15,32 @@
     "deleteFailed": "删除失败",
     "deleteEyebrow": "删除",
     "deleteDescription": "将从平台中删除此记录，公开页面会立即更新。",
-    "deleteCallout": "此操作无法撤销。"
+    "deleteCallout": "此操作无法撤销。",
+    "urlHint": "https://… 或 /media/… 路径",
+    "urlInvalid": "请输入 http(s) URL（或允许的站内路径）。",
+    "required": "此项为必填项。",
+    "fixFields": "请先修正标出的字段再保存。",
+    "saving": "保存中…",
+    "removeImage": "移除图片",
+    "errors": {
+      "INVALID_CHARACTER": "某个字段包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
+      "REFERENCE_NOT_FOUND": "该记录引用的对象已不存在。请刷新页面后重试。",
+      "BOUNTY_NOT_FOUND": "该赏金已不存在。请刷新页面以更新列表。",
+      "BOUNTY_HAS_OPEN_FUNDS": "该赏金在多签中仍有资金（已确认的存款未全部发放，或仍有进行中的付款）。请先完成付款或退款再删除。",
+      "DEADLINE_IN_PAST": "截止时间不能改到过去。请选择未来的日期和时间，或保留已保存的截止时间。",
+      "MEDIA_FILE_TOO_LARGE": "图片超过 5 MB。请选择更小的文件后重试。",
+      "MEDIA_FILE_TYPE_UNSUPPORTED": "仅支持上传 PNG、JPEG 和 WebP 图片。请选择其他文件后重试。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
+    }
   },
   "tabs": {
     "users": "用户管理",
     "bounties": "赏金管理",
     "hallOfFame": "名人堂",
-    "notices": "公告"
+    "notices": "公告",
+    "operations": "运营",
+    "nftJobs": "NFT 任务",
+    "audit": "审计日志"
   },
   "gate": {
     "checking": "正在检查管理员权限…",
@@ -85,7 +104,8 @@
       "roleGroupLabel": "成员角色",
       "displayOrder": "显示顺序",
       "displayOrderInvalid": "请输入大于等于 1 的整数，或留空。"
-    }
+    },
+    "loadMore": "加载更多"
   },
   "bounties": {
     "metaTitle": "管理后台 · 赏金 | Ninja Labs",
@@ -162,7 +182,9 @@
         "deadlineInvalid": "请输入有效的日期和时间。",
         "deadlinePast": "截止时间必须晚于当前时间。",
         "amountInvalid": "请输入大于 0 的金额，或留空以保存为草稿。",
-        "deliverablesRequired": "请至少填写一项交付物或提交指南。"
+        "deliverablesRequired": "请至少填写一项交付物或提交指南。",
+        "titleTooLong": "最多 200 个字符。",
+        "sponsorTooLong": "最多 100 个字符。"
       },
       "rewardNote": "创建后奖励代币即被锁定。奖励流程 = 锁定 → 释放 → 转账，不进行兑换。"
     },
@@ -178,7 +200,8 @@
       "transitionFailedDescription": "当前不允许进行此状态变更。",
       "deletedTitle": "赏金已删除",
       "deleteFailedDescription": "赏金未删除。"
-    }
+    },
+    "operations": "运营"
   },
   "hallOfFame": {
     "metaTitle": "管理后台 · 名人堂 | Ninja Labs",
@@ -202,7 +225,10 @@
       "types": {
         "milestone": "里程碑",
         "featuredBounty": "精选赏金",
-        "partnership": "合作伙伴"
+        "partnership": "合作伙伴",
+        "project": "项目",
+        "award": "奖项",
+        "other": "其他"
       },
       "form": {
         "eyebrowCreate": "添加项目表单",
@@ -218,7 +244,9 @@
         "link": "链接",
         "optional": "（可选）",
         "displayOrder": "显示顺序",
-        "linkPlaceholder": "/bounties/12"
+        "linkPlaceholder": "/bounties/12",
+        "published": "可见性",
+        "removeImage": "移除图片"
       },
       "toast": {
         "loadFailedTitle": "无法获取亮点",
@@ -228,6 +256,10 @@
         "saveFailedDescription": "亮点未保存。",
         "deletedTitle": "亮点已删除",
         "deleteFailedDescription": "亮点未删除。"
+      },
+      "publishStates": {
+        "published": "已发布",
+        "draft": "隐藏"
       }
     }
   },
@@ -278,6 +310,361 @@
       "saveFailedDescription": "公告未保存。",
       "deletedTitle": "文章已删除",
       "deleteFailedDescription": "公告未删除。"
+    }
+  },
+  "operations": {
+    "metaTitle": "管理 · 运营 | Ninja Labs",
+    "metaDescription": "确认奖励存款、审核申请与提交、处理付款，并推进赏金生命周期。",
+    "title": "赏金运营",
+    "description": "确认奖励存款、审核申请与提交、处理付款，并推进赏金生命周期。",
+    "adminOnlyBadge": "ADMIN ONLY",
+    "pickBounty": "赏金",
+    "noBounties": "还没有赏金。请先在赏金管理中创建。",
+    "loading": "正在加载运营数据…",
+    "loadFailed": "无法加载运营数据。",
+    "retry": "重试",
+    "refresh": "刷新",
+    "working": "处理中…",
+    "bountyEyebrow": "当前赏金",
+    "bountyMeta": "提交截止 {deadline} · 最多 {maxWinners, plural, other {# 名}}获奖者",
+    "bountyStatuses": {
+      "DRAFT": "草稿",
+      "FUNDING_PENDING": "等待存款",
+      "OPEN": "进行中",
+      "SUBMISSION_CLOSED": "提交已截止",
+      "IN_REVIEW": "审核中",
+      "COMPLETED": "已完成",
+      "CANCELLED": "已取消"
+    },
+    "rewardStatuses": {
+      "DEPOSIT_PENDING": "等待存款",
+      "FUNDED": "已存款",
+      "PARTIALLY_PAID": "部分发放",
+      "PAID": "已发放",
+      "REFUND_PENDING": "等待退款",
+      "REFUNDED": "已退款",
+      "CANCELLED": "已取消"
+    },
+    "applicationStatuses": {
+      "PENDING": "待审核",
+      "APPROVED": "已通过",
+      "REJECTED": "已拒绝",
+      "WITHDRAWN": "已撤回"
+    },
+    "submissionStatuses": {
+      "SUBMITTED": "已提交",
+      "RESUBMITTED": "已重新提交",
+      "IN_REVIEW": "审核中",
+      "REVISION_REQUESTED": "要求修改",
+      "APPROVED": "已通过",
+      "REJECTED": "已驳回"
+    },
+    "payoutStatuses": {
+      "REQUESTED": "已申请",
+      "AWAITING_MULTISIG_APPROVAL": "等待多签",
+      "APPROVED": "已批准",
+      "BROADCASTING": "广播中",
+      "PAID": "已发放",
+      "FAILED": "失败",
+      "CANCELLED": "已取消"
+    },
+    "actor": {
+      "agent": "代理",
+      "owner": "所有者：{nickname}",
+      "unknown": "未知用户"
+    },
+    "blockers": {
+      "DEADLINE_PASSED": "提交截止时间已过。请先在赏金管理中延长截止时间。",
+      "REWARDS_UNFUNDED": "有 {count, plural, other {# 笔}}奖励存款尚未确认。",
+      "PENDING_APPLICATIONS": "仍有 {count, plural, other {# 份}}申请待审核。",
+      "UNSUBMITTED_PARTICIPANTS": "有 {count, plural, other {# 名}}已通过的参与者尚未提交。请等待其提交或截止时间。",
+      "UNRESOLVED_SUBMISSIONS": "仍有 {count, plural, other {# 份}}提交需要最终审核（含要求修改的提交）。",
+      "UNPAID_WINNERS": "每位通过的获奖者都必须有已发放的付款记录，且不能有进行中的付款。",
+      "unknown": "服务器阻止了此操作（{code}）。"
+    },
+    "lifecycle": {
+      "eyebrow": "生命周期",
+      "title": "状态流转",
+      "none": "无法继续流转 — 该赏金已结束。",
+      "to": "→ {status}",
+      "actions": {
+        "FUNDING_PENDING": "标记为等待存款",
+        "OPEN": "开放赏金",
+        "SUBMISSION_CLOSED": "截止提交",
+        "IN_REVIEW": "进入审核阶段",
+        "COMPLETED": "完成赏金",
+        "CANCELLED": "取消赏金"
+      },
+      "hints": {
+        "FUNDING_PENDING": "等待赞助方向多签存款。",
+        "OPEN": "公开赏金并接受申请与提交。",
+        "SUBMISSION_CLOSED": "停止接收新的申请与提交；审核继续进行。",
+        "IN_REVIEW": "最终审核阶段；要求修改的提交仍可重新提交。",
+        "COMPLETED": "所有审核与付款完成后关闭赏金。",
+        "CANCELLED": "无获奖者结束赏金。存款请在平台外退款。"
+      },
+      "cancelTitle": "取消此赏金？",
+      "cancelDescription": "“{title}”将不再接收作品，也无法继续审核或申请付款。",
+      "cancelCallout": "在控制台中无法撤销取消。"
+    },
+    "rewards": {
+      "eyebrow": "奖励",
+      "title": "存款",
+      "description": "开放赏金前请确认赞助方已向多签存款。金额为精确的代币单位。",
+      "empty": "该赏金没有奖励。",
+      "columns": {
+        "token": "代币",
+        "status": "状态",
+        "posted": "公布金额",
+        "deposited": "存款金额",
+        "allocated": "已分配",
+        "depositTx": "存款交易",
+        "action": "操作"
+      },
+      "custody": "多签 {address}",
+      "allocatedOf": "{allocated} / {cap}",
+      "confirm": "确认存款",
+      "modalTitle": "确认奖励存款",
+      "modalDescription": "记录向 {address} 存入至少 {amount} 的链上交易。请先在浏览器中核对交易。",
+      "depositedAmount": "存款金额（{symbol}）",
+      "amountBelowPosted": "存款必须覆盖公布的奖励（{amount}）。"
+    },
+    "applications": {
+      "eyebrow": "申请",
+      "title": "申请者",
+      "empty": "还没有申请。",
+      "columns": {
+        "applicant": "申请者",
+        "message": "留言",
+        "status": "状态",
+        "applied": "申请时间",
+        "action": "操作"
+      },
+      "portfolio": "作品集",
+      "reviewNote": "备注：{note}",
+      "actions": {
+        "APPROVED": "通过",
+        "REJECTED": "拒绝"
+      },
+      "approvalClosed": "仅在赏金进行中且未过提交截止时间时才能通过申请；现在只能拒绝。",
+      "modalDescription": "申请者：{name}。备注会展示给申请者。",
+      "approveTitle": "通过申请",
+      "rejectTitle": "拒绝申请"
+    },
+    "submissions": {
+      "eyebrow": "提交",
+      "title": "作品审核",
+      "empty": "还没有提交。",
+      "columns": {
+        "submitter": "提交者",
+        "work": "最新版本",
+        "status": "状态",
+        "wallet": "收款钱包",
+        "action": "操作"
+      },
+      "revision": "第 {revision} 版",
+      "workLink": "查看作品",
+      "repoLink": "代码仓库",
+      "history": "审核记录（{count}）",
+      "historyItem": "{decision} · 第 {revision} 版 · {date}",
+      "noWallet": "未绑定钱包 — 无法申请付款",
+      "decisions": {
+        "START_REVIEW": "开始审核",
+        "REQUEST_REVISION": "要求修改",
+        "APPROVE": "通过",
+        "REJECT": "驳回"
+      },
+      "modalDescription": "提交者：{name}。此决定针对第 {revision} 版；若期间有新版本提交，服务器会拒绝。",
+      "modalTitles": {
+        "START_REVIEW": "开始审核此提交",
+        "REQUEST_REVISION": "要求修改",
+        "APPROVE": "通过此提交",
+        "REJECT": "驳回此提交"
+      }
+    },
+    "payouts": {
+      "eyebrow": "付款",
+      "title": "获奖者付款",
+      "empty": "还没有付款申请。",
+      "policyTwoPerson": "双人规则：付款必须由申请人以外的另一位管理员批准。",
+      "policySelfAllowed": "此部署允许自我批准（PAYOUT_ALLOW_SELF_APPROVAL）。自我批准会单独记入审计日志。",
+      "headroom": "可分配金额：{amount}",
+      "request": "申请付款",
+      "noCandidates": "没有尚未付款的已通过提交。",
+      "columns": {
+        "recipient": "收款人",
+        "amount": "金额",
+        "status": "状态",
+        "requested": "申请人",
+        "approved": "批准人",
+        "tx": "付款交易",
+        "action": "操作"
+      },
+      "byYou": "我",
+      "selfBlocked": "这是你申请的付款，需由另一位管理员批准（双人规则）。",
+      "approve": "批准",
+      "markPaid": "记录已付款",
+      "selfAllowedCallout": "这是你申请的付款。此处允许你自行批准，但会在审计日志中记为自我批准。",
+      "requestTitle": "申请付款",
+      "requestDescription": "此奖励最多还可分配 {amount}。",
+      "approveTitle": "批准付款",
+      "approveDescription": "请确认多签已批准向 {address} 发送 {amount}。",
+      "paidTitle": "记录付款",
+      "paidDescription": "粘贴向 {address} 发送 {amount} 的多签交易哈希。",
+      "submission": "已通过的提交",
+      "amount": "金额（{symbol}）",
+      "amountOverHeadroom": "此奖励仅剩 {amount} 可分配。"
+    },
+    "form": {
+      "txHash": "交易哈希",
+      "txHashInvalid": "请输入 32 字节的十六进制交易哈希（64 个十六进制字符，0x 可选）。",
+      "amountInvalid": "请输入正数 {symbol} 金额，小数位不得超过代币精度。",
+      "amountHint": "代币单位（如 12.5），发送前会换算为最小单位。",
+      "noteOptional": "备注（可选）",
+      "commentOptional": "评语（可选）",
+      "commentRequired": "评语（必填）"
+    },
+    "toast": {
+      "loadFailedTitle": "运营数据不可用",
+      "actionFailedTitle": "操作失败",
+      "bountiesFailedTitle": "赏金列表不可用",
+      "bountiesFailedDescription": "无法加载赏金列表。",
+      "transitionedTitle": "状态已更新",
+      "transitionedDescription": "{title} 现在为 {status}。",
+      "depositConfirmedTitle": "存款已确认",
+      "applicationApprovedTitle": "申请已通过",
+      "applicationRejectedTitle": "申请已拒绝",
+      "submission": {
+        "START_REVIEW": "已开始审核",
+        "REQUEST_REVISION": "已要求修改",
+        "APPROVE": "提交已通过",
+        "REJECT": "提交已驳回"
+      },
+      "payoutRequestedTitle": "已申请付款",
+      "payoutRequestedDescription": "向 {name} 支付 {amount}",
+      "payoutApprovedTitle": "付款已批准",
+      "payoutPaidTitle": "付款已记录"
+    },
+    "errors": {
+      "BOUNTY_NOT_FOUND": "该赏金已不存在。请刷新页面。",
+      "BOUNTY_REVIEW_CLOSED": "该赏金已不在进行中，审核与付款申请已关闭。",
+      "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "该申请已被审核或撤回。",
+      "APPLICATION_APPROVAL_CLOSED": "仅在赏金进行中且未过提交截止时间时才能通过申请。",
+      "SUBMISSION_NOT_FOUND": "该提交已不存在。",
+      "SUBMISSION_NOT_REVIEWABLE": "该提交在当前状态下无法做出此决定。",
+      "SUBMISSION_REVISION_CHANGED": "审核期间有新版本提交。请查看最新版本后重新决定。",
+      "REVISION_COMMENT_REQUIRED": "请填写需要修改的内容。",
+      "MAX_WINNERS_REACHED": "已通过的获奖者已达上限。",
+      "INVALID_DECISION": "不支持该审核决定。",
+      "REWARD_NOT_FOUND": "该奖励已不存在。",
+      "REWARD_NOT_FOUND_OR_NOT_PENDING": "存款已确认过，或金额不足以覆盖公布的奖励。",
+      "REWARD_NOT_FUNDED": "申请付款前请先确认奖励存款。",
+      "INVALID_TX_HASH": "交易哈希无效。",
+      "INVALID_TOKEN_AMOUNT": "金额必须是以最小单位表示的正整数。",
+      "TX_HASH_ALREADY_USED": "该交易哈希已被记录（作为存款，或其他赏金的付款）。",
+      "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND": "该提交未通过，或其所有者没有绑定的主钱包。",
+      "APPROVED_SUBMISSION_NOT_FOUND": "付款对应的提交已不再是通过状态。",
+      "PAYOUT_ALREADY_REQUESTED": "该提交和奖励的付款已存在。",
+      "PAYOUT_EXCEEDS_AVAILABLE_REWARD": "金额超过了此奖励剩余可分配的额度。",
+      "PAYOUT_NOT_FOUND_OR_WRONG_STATUS": "该付款已进入下一步（或已不存在）。列表已刷新。",
+      "PAYOUT_SELF_APPROVAL": "你不能批准自己申请的付款。请联系另一位管理员（双人规则）。",
+      "NFT_JOB_NOT_FOUND_OR_NOT_FAILED": "该任务已不是失败状态（可能已在重试）。",
+      "INVALID_TRANSITION": "当前状态不允许该流转。",
+      "TRANSITION_BLOCKED": "流转被阻止。请查看下方列出的原因。",
+      "VALIDATION_FAILED": "服务器拒绝了输入。请检查后重试。",
+      "INVALID_CHARACTER": "字段中包含无法保存的字符。请删除后重试。",
+      "ADMIN_ONLY": "你的账号已不再拥有管理员权限。",
+      "UNAUTHORIZED": "会话已过期。请重新登录。",
+      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。",
+      "REFRESH_UNAVAILABLE": "无法刷新会话。请重新登录。",
+      "NETWORK_ERROR": "无法连接服务器。请检查网络后重试。",
+      "unknown": "出现问题（{code}）。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
+    }
+  },
+  "nftJobs": {
+    "metaTitle": "管理 · NFT 任务 | Ninja Labs",
+    "metaDescription": "查看 NFT 铸造与关联任务，并重试永久失败的任务。",
+    "title": "NFT 任务控制台",
+    "description": "查看 NFT 铸造与关联任务，并重试永久失败的任务。",
+    "filterLabel": "任务状态",
+    "statuses": {
+      "FAILED": "失败",
+      "PENDING": "等待中",
+      "PROCESSING": "处理中"
+    },
+    "hints": {
+      "FAILED": "5 次尝试均失败的任务。修复原因（Gas、合约、钱包）后重试，Worker 会在一分钟内处理。",
+      "PENDING": "排队中或等待下一次尝试（失败的尝试每 10 分钟重试一次）。",
+      "PROCESSING": "正在铸造。停留超过 15 分钟的任务会自动重新排队。"
+    },
+    "empty": "此状态下没有任务。",
+    "columns": {
+      "job": "任务",
+      "owner": "所有者",
+      "attempts": "失败次数",
+      "lastError": "最近错误",
+      "updated": "更新时间",
+      "action": "操作"
+    },
+    "jobTypes": {
+      "MINT_PARENT": "铸造忍者 NFT",
+      "MINT_CHILD": "铸造完成 NFT",
+      "ATTACH_CHILD": "关联完成 NFT",
+      "RETRY_MINT": "重试铸造",
+      "RETRY_ATTACH": "重试关联"
+    },
+    "nftTypes": {
+      "NINJA_PARENT": "忍者 NFT",
+      "BOUNTY_COMPLETION_CHILD": "完成 NFT"
+    },
+    "nftLine": "{type} · NFT {status}",
+    "retry": "重试",
+    "pagination": "任务分页",
+    "previous": "上一页",
+    "next": "下一页",
+    "pageOf": "第 {page} 页，共 {pages} 页",
+    "toast": {
+      "loadFailedTitle": "NFT 任务不可用",
+      "loadFailedDescription": "无法加载 NFT 任务。",
+      "retriedTitle": "任务已重新排队",
+      "retriedDescription": "Worker 将在一分钟内重试。",
+      "retryFailedTitle": "重试失败"
+    }
+  },
+  "audit": {
+    "metaTitle": "管理 · 审计日志 | Ninja Labs",
+    "metaDescription": "只读查看支付审批和运维脚本操作的审计记录。",
+    "title": "审计日志",
+    "description": "只读查看支付审批和运维脚本操作的审计记录。",
+    "filterLabel": "审计日志筛选",
+    "entityType": "实体类型",
+    "entityTypePlaceholder": "例如 payout",
+    "entityId": "实体 ID",
+    "entityIdPlaceholder": "UUID",
+    "apply": "查询",
+    "reset": "重置",
+    "invalidEntityId": "实体 ID 必须是 UUID。",
+    "columns": {
+      "time": "时间",
+      "actor": "操作者",
+      "action": "操作",
+      "entity": "对象"
+    },
+    "actors": {
+      "script": "运维脚本",
+      "agent": "代理",
+      "unknown": "未知"
+    },
+    "empty": "没有符合条件的审计日志。",
+    "pagination": "审计日志分页",
+    "previous": "上一页",
+    "next": "下一页",
+    "pageOf": "第 {page} / {pages} 页",
+    "total": "共 {total} 条",
+    "toast": {
+      "loadFailedTitle": "审计日志不可用",
+      "loadFailedDescription": "无法加载审计日志。"
     }
   }
 }

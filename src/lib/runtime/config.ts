@@ -20,6 +20,8 @@ export type PublicRuntimeConfig = {
   mockAvailable: boolean;
   apiAvailable: boolean;
   wallet: WalletConfig | null;
+  /** Cloudflare Turnstile site key (public). Set → the sign-in button requires a widget token (BE `TURNSTILE_SECRET_KEY`). */
+  turnstileSiteKey?: string;
 };
 
 export type RuntimeConfig = PublicRuntimeConfig & {
@@ -35,6 +37,7 @@ export type RuntimeEnvironment = {
   NINJA_MOCK_SEED?: string;
   NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID?: string;
   NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL?: string;
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY?: string;
 };
 
 export type FoundationConfig =
@@ -113,6 +116,12 @@ function requireHttps(value: string, name: string): string {
   }
   return value;
 }
+
+function isPlaintextTier(environment: RuntimeEnvironment): boolean {
+  const tier = environment.NINJA_DEPLOYMENT_TIER?.trim();
+  return tier === "local" || tier === "test";
+}
+
 function optionalValue(environment: RuntimeEnvironment, name: keyof RuntimeEnvironment): string | undefined {
   return environment[name]?.trim() || undefined;
 }
@@ -142,14 +151,46 @@ function parseWalletConfig(environment: RuntimeEnvironment): WalletConfig | null
     throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID must be one of: 1439, 1776.");
   }
 
+  const parsedRpcUrl = rpcUrl ? parseHttpUrl(rpcUrl, "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", false) : undefined;
+  if (parsedRpcUrl) assertChainRpcPairing(chainId as WalletChainId, parsedRpcUrl);
+  // A plaintext RPC is fine for local/test (e.g. a local anvil); staging/production api builds fail fast, mirroring
+  // the NINJA_API_BASE_URL rule. `next.config.ts rpcOrigin()` admits whatever this function accepts.
+  if (parsedRpcUrl && environment.NINJA_RUNTIME_MODE?.trim() === "api" && !isPlaintextTier(environment)) {
+    requireHttps(parsedRpcUrl, "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL");
+  }
+
   return {
     chainId: chainId as WalletChainId,
-    ...(rpcUrl
-      ? { rpcUrl: parseHttpUrl(rpcUrl, "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", false) }
-      : {}),
+    ...(parsedRpcUrl ? { rpcUrl: parsedRpcUrl } : {}),
   };
 }
 
+/**
+ * Cheap mismatch guard: 1776 is Injective EVM mainnet and 1439 is testnet, and the public Injective RPC hosts carry the
+ * network name (`k8s.testnet.json-rpc.injective.network`, `sentry.evm-rpc.injective.network` / `*mainnet*`). A chain
+ * id pointed at the other network's RPC would let wallets sign against the wrong chain, so the build fails instead.
+ */
+function assertChainRpcPairing(chainId: WalletChainId, rpcUrl: string): void {
+  const host = new URL(rpcUrl).hostname.toLowerCase();
+  // Injective's own RPC hosts name only the testnet (`sentry.evm-rpc.injective.network` is mainnet with neither word).
+  const injectiveMainnetHost = (host === "injective.network" || host.endsWith(".injective.network")) && !host.includes("testnet");
+  if (chainId === 1776 && host.includes("testnet")) {
+    throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1776 (mainnet) cannot use a testnet RPC URL.");
+  }
+  if (chainId === 1439 && (host.includes("mainnet") || injectiveMainnetHost)) {
+    throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1439 (testnet) cannot use a mainnet RPC URL.");
+  }
+}
+
+
+/** Site keys are short public identifiers (`0x4AAAAAAA…`, Cloudflare test keys `1x00000000000000000000AA`); reject anything else at build time. */
+function parseTurnstileSiteKey(environment: RuntimeEnvironment): string | undefined {
+  const siteKey = optionalValue(environment, "NEXT_PUBLIC_TURNSTILE_SITE_KEY");
+  if (siteKey && !/^[A-Za-z0-9_-]{8,128}$/.test(siteKey)) {
+    throw new RuntimeConfigError("NEXT_PUBLIC_TURNSTILE_SITE_KEY must be a Cloudflare Turnstile site key (letters, digits, '-' or '_').");
+  }
+  return siteKey;
+}
 
 export function readRuntimeConfig(environment: RuntimeEnvironment): RuntimeConfig {
 
@@ -183,8 +224,9 @@ export function readRuntimeConfig(environment: RuntimeEnvironment): RuntimeConfi
   const mockSeed = optionalValue(environment, "NINJA_MOCK_SEED");
 
   if (runtimeMode === "mock") {
+    // WHATWG URL keeps the brackets on an IPv6 hostname (`http://[::1]:3000` -> "[::1]").
     const originHostname = new URL(origin).hostname;
-    if (originHostname !== "localhost" && originHostname !== "127.0.0.1" && originHostname !== "::1") {
+    if (originHostname !== "localhost" && originHostname !== "127.0.0.1" && originHostname !== "[::1]") {
       throw new RuntimeConfigError("mock mode requires a localhost NINJA_APP_ORIGIN.");
     }
     if (!mockSeed) {
@@ -203,13 +245,22 @@ export function readRuntimeConfig(environment: RuntimeEnvironment): RuntimeConfi
     }
   }
 
+  const wallet = parseWalletConfig(environment);
+  // Without an RPC URL the wagmi chain has no transport, so reads such as balances fail silently; mock mode keeps the fallback.
+  if (runtimeMode === "api" && wallet && !wallet.rpcUrl) {
+    throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL is required in api mode when NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID is set.");
+  }
+
+  const turnstileSiteKey = parseTurnstileSiteKey(environment);
+
   return {
     deploymentTier,
     runtimeMode,
     origin,
     mockAvailable,
     apiAvailable,
-    wallet: parseWalletConfig(environment),
+    wallet,
+    ...(turnstileSiteKey ? { turnstileSiteKey } : {}),
     ...(apiUrl
       ? {
           apiUrl: requireHttps(
@@ -231,6 +282,7 @@ export function loadRuntimeConfig(): RuntimeConfig {
     NINJA_MOCK_SEED: process.env.NINJA_MOCK_SEED,
     NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: process.env.NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID,
     NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: process.env.NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL,
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
   });
 }
 
@@ -255,5 +307,6 @@ export function toPublicRuntimeConfig(config: RuntimeConfig): PublicRuntimeConfi
     mockAvailable: config.mockAvailable,
     apiAvailable: config.apiAvailable,
     wallet: config.wallet ? { ...config.wallet } : null,
+    ...(config.turnstileSiteKey ? { turnstileSiteKey: config.turnstileSiteKey } : {}),
   };
 }

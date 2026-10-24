@@ -5,11 +5,13 @@ import { AdminTabs } from "@/components/admin/AdminTabs";
 import { PostManager } from "@/components/admin/PostManager";
 import { getAdminPosts } from "@/lib/admin";
 import { loadFromRuntime } from "@/lib/api/public";
+import { localeAlternates } from "@/i18n/alternates";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/admin/notices">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "admin.notices" });
   return {
+    alternates: localeAlternates(locale, "/admin/notices"),
     title: t("metaTitle"),
     description: t("metaDescription"),
   };

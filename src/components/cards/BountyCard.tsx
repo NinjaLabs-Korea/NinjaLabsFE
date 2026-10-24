@@ -4,6 +4,8 @@ import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { Link } from "@/i18n/navigation";
+import { safeHttpUrl } from "@/lib/api/codecs";
+import { imageProps } from "@/lib/image";
 import type { Bounty } from "@/lib/types";
 
 type BountyCardProps = {
@@ -17,6 +19,12 @@ type BountyCardProps = {
 export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3" }: BountyCardProps) {
   const t = useTranslations("bounties");
   const isClosed = bounty.status === "closed";
+  // reviewing (BE SUBMISSION_CLOSED/IN_REVIEW) keeps full opacity: a requested revision can still be resubmitted.
+  const statusLabel = bounty.status === "active" ? null : t(`status.${bounty.status}`);
+  const coverImage = safeHttpUrl(bounty.coverImage);
+  // Compact label (ko keeps "D-7") plus the full phrase for assistive technology; en/zh already read as a full phrase.
+  const daysLeft = bounty.daysLeft !== undefined ? t("card.daysLeft", { days: bounty.daysLeft }) : null;
+  const daysLeftLabel = bounty.daysLeft !== undefined ? t("card.daysLeftLabel", { days: bounty.daysLeft }) : null;
 
   return (
     <Link
@@ -24,10 +32,10 @@ export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3
       href={`/bounties/${bounty.slug}`}
     >
       <div className="relative aspect-[368.67/207.37]">
-        {bounty.coverImage ? (
+        {coverImage ? (
           <Image
-            src={bounty.coverImage}
-            alt={bounty.title}
+            {...imageProps(coverImage)}
+            alt=""
             fill
             sizes="(max-width: 768px) 100vw, 370px"
             className="object-cover"
@@ -37,7 +45,7 @@ export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3
         )}
       </div>
       <div className="p-5">
-        <Badge variant={isClosed ? "danger" : "primary-soft"}>{isClosed ? t("status.closed") : t(`categories.${bounty.category}`)}</Badge>
+        <Badge variant={isClosed ? "danger" : bounty.status === "reviewing" ? "warning" : "primary-soft"}>{statusLabel ?? t(`categories.${bounty.category}`)}</Badge>
         <TitleTag className="mt-3 font-display text-base font-bold -tracking-[0.16px] text-ink">{bounty.title}</TitleTag>
         {showSummary && bounty.summary ? (
           <p className="mt-2 line-clamp-2 text-sm text-ink-muted">{bounty.summary}</p>
@@ -50,7 +58,9 @@ export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3
             ) : null}
           </span>
           <span className="text-right text-xs text-ink-muted">
-            {isClosed ? t("status.closed") : bounty.deadline} · {bounty.sponsor}
+            {statusLabel ?? (daysLeft && daysLeftLabel ? (
+              daysLeft === daysLeftLabel ? daysLeft : <><span aria-hidden="true">{daysLeft}</span><span className="sr-only">{daysLeftLabel}</span></>
+            ) : t("status.active"))} · {bounty.sponsor}
           </span>
         </div>
       </div>

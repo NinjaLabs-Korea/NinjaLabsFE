@@ -1,0 +1,20 @@
+// Flow 3: wallet step without an extension: signed-out page, step-2 redirect, "Wallet unavailable" disabled, no DB writes.
+import { Browser, report } from '../lib/cdp.mjs'; import { sql, ids, check, clean, done, sleep, signIn } from '../lib/harness.mjs';
+const b = await Browser.connect(); const ctx = await b.newContext(); const p = await b.newPage(ctx);
+await p.goto('/en/signup/wallet'); await sleep(800);
+const out = await p.text();
+clean(await report(p, 'wallet signed-out'), { signedOut: true });
+check('signed-out wallet page asks to sign in', out.includes('Sign in to continue signing up'));
+await signIn(p, ids.N2, { landing: '/signup/wallet' });
+await p.goto('/en/bounties'); await p.waitFor(`location.pathname.endsWith('/signup/wallet')`, 8000);
+const landed = await p.url(); clean(await report(p, 'step2 redirect', { landed }));
+check('step-2 user lands on /en/signup/wallet', landed.endsWith('/en/signup/wallet'), landed);
+await sleep(1000);
+const hasEth = await p.eval(`'ethereum' in window`);
+const buttons = await p.eval(`[...document.querySelectorAll('main button')].map(b=>b.innerText.trim()+(b.disabled?'(disabled)':''))`);
+clean(await report(p, 'wallet no extension', { hasEth, buttons }));
+check('no injected provider', !hasEth);
+check('"Wallet unavailable" button is disabled', buttons.some((t) => /Wallet unavailable\(disabled\)/.test(t)), buttons);
+const db = sql(`select (select count(*) from wallet where user_id='${ids.N2}')||' '||(select onboarding_step from "user" where id='${ids.N2}')`);
+check('DB: no wallet row, still step 2', db === '0 2', db);
+b.close(); done('3 wallet');

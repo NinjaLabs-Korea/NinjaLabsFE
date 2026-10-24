@@ -59,6 +59,8 @@
       "headingEmpty": "Your trophy shelf starts here",
       "bodyCompleted": "The Ninja NFT is the parent identity. Every approved bounty mints a child NFT beneath it, turning completed work into a portable builder portfolio.",
       "bodyEmpty": "The Ninja NFT is already minted as the parent identity. The first approved bounty will add a child NFT to this public collection.",
+      "bodyEmptyPending": "The Ninja NFT parent identity is being minted. Once it lands, the first approved bounty will add a child NFT to this public collection.",
+      "bodyEmptyNotMinted": "The Ninja NFT parent identity is not minted yet. It is issued after onboarding, and approved bounties then add child NFTs to this public collection.",
       "token": "Token {id}",
       "tx": "Tx {hash}",
       "next": "+ next",
@@ -87,7 +89,8 @@
       "emptyBody": "The next completed task will show its title, completion date, reward, and minted child NFT proof.",
       "findFirst": "Find a first bounty",
       "headingEmpty": "Bounty completions",
-      "browseMore": "Browse more"
+      "browseMore": "Browse more",
+      "completedDate": "Completed {date}"
     },
     "agents": {
       "eyebrow": "Owned agents",
@@ -99,6 +102,8 @@
       "register": "Register agent",
       "wallet": "Registered wallet public key: {wallet}"
     },
-    "shareable": "Shareable URL — no login needed"
+    "shareable": "Shareable URL — no login needed",
+    "payoutPending": "Payout pending",
+    "payoutPartial": "Partially paid"
   }
 }

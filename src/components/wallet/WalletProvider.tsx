@@ -1,69 +1,35 @@
 "use client";
 
-import {
-  connectorsForWallets,
-  RainbowKitProvider,
-} from "@rainbow-me/rainbowkit";
-import {
-  injectedWallet,
-  walletConnectWallet,
-} from "@rainbow-me/rainbowkit/wallets";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
-import { type Chain, http } from "viem";
+import { http } from "viem";
 import { createConfig, WagmiProvider } from "wagmi";
 import { injected } from "wagmi/connectors";
+import { createInjectiveChain } from "@/components/wallet/injective-chain";
 
 type WalletProviderProps = {
   chainId: number;
   rpcUrl?: string;
-  walletConnectProjectId?: string;
   children: ReactNode;
 };
 
-function createInjectiveChain(chainId: number, rpcUrl?: string): Chain {
-  return {
-    id: chainId,
-    name: "Injective EVM",
-    nativeCurrency: {
-      name: "Injective",
-      symbol: "INJ",
-      decimals: 18,
-    },
-    rpcUrls: {
-      default: { http: rpcUrl ? [rpcUrl] : [] },
-    },
-  };
-}
-
-export function WalletProvider({
-  chainId,
-  rpcUrl,
-  walletConnectProjectId,
-  children,
-}: WalletProviderProps) {
-  const t = useTranslations("common.wallet");
+/**
+ * Injected-only (browser extension) wagmi provider. The config is identical on the server and in the browser, so the
+ * server HTML and the first client render agree (no hydration mismatch).
+ *
+ * WalletConnect is intentionally absent since the wagmi 3 upgrade (2026-10-24): RainbowKit 2.x only supports wagmi 2,
+ * and wagmi 3's `walletConnect` connector needs `@walletconnect/ethereum-provider`, whose `@reown/appkit` tree still
+ * carries high-severity advisories. Re-add it once a RainbowKit release supports wagmi 3 (or the WalletConnect
+ * provider tree audits clean) - see AGENTS.md "Stack".
+ */
+export function WalletProvider({ chainId, rpcUrl, children }: WalletProviderProps) {
   const [queryClient] = useState(() => new QueryClient());
   const [config] = useState(() => {
     const chain = createInjectiveChain(chainId, rpcUrl);
 
     return createConfig({
       chains: [chain],
-      connectors: walletConnectProjectId
-        ? connectorsForWallets(
-            [
-              {
-                groupName: t("supportedWallets"),
-                wallets: [injectedWallet, walletConnectWallet],
-              },
-            ],
-            {
-              appName: "Ninja Labs",
-              projectId: walletConnectProjectId,
-            },
-          )
-        : [injected()],
+      connectors: [injected()],
       transports: { [chain.id]: http(rpcUrl) },
       ssr: true,
     });
@@ -71,13 +37,7 @@ export function WalletProvider({
 
   return (
     <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        {walletConnectProjectId ? (
-          <RainbowKitProvider initialChain={chainId}>{children}</RainbowKitProvider>
-        ) : (
-          children
-        )}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </WagmiProvider>
   );
 }

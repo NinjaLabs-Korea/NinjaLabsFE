@@ -5,11 +5,13 @@ import { AdminTabs } from "@/components/admin/AdminTabs";
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { getAdminBounties } from "@/lib/admin";
 import { loadFromRuntime } from "@/lib/api/public";
+import { localeAlternates } from "@/i18n/alternates";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/admin/bounties">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "admin.bounties" });
   return {
+    alternates: localeAlternates(locale, "/admin/bounties"),
     title: t("metaTitle"),
     description: t("metaDescription"),
   };
