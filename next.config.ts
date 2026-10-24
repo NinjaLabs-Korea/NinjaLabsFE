@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { routing } from "./src/i18n/routing";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
@@ -87,6 +88,18 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
           { key: "Content-Security-Policy-Report-Only", value: contentSecurityPolicy() },
         ],
+      },
+    ];
+  },
+  async redirects() {
+    // `[locale]/opengraph-image.tsx` exports generateImageMetadata (localized `alt`), so the image lives at
+    // `/<locale>/opengraph-image/social`. Scrapers that cached the earlier id-less og:image URL keep resolving.
+    // Redirects run before the proxy, so this path never reaches its in-locale 404 rewrite.
+    return [
+      {
+        source: `/:locale(${routing.locales.join("|")})/opengraph-image`,
+        destination: "/:locale/opengraph-image/social",
+        permanent: true,
       },
     ];
   },
