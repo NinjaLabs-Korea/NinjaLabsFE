@@ -222,10 +222,11 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
       return result;
     },
     uploadAdminMedia: async (file) => ({ id: `preview-${file.name}`, url: URL.createObjectURL(file) }),
-    getAdminUsers: async (query = "") => {
+    getAdminUsers: async (query = "", page = 1) => {
       const needle = query.trim().toLowerCase();
       return users
         .filter((user) => !needle || user.nickname.toLowerCase().includes(needle) || user.email.toLowerCase().includes(needle))
+        .slice((page - 1) * 30, page * 30)
         .map((user) => ({ ...user }));
     },
     setAdminMember: async (userId, input) => {

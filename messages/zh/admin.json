@@ -36,7 +36,8 @@
     "hallOfFame": "名人堂",
     "notices": "公告",
     "operations": "运营",
-    "nftJobs": "NFT 任务"
+    "nftJobs": "NFT 任务",
+    "audit": "审计日志"
   },
   "gate": {
     "checking": "正在检查管理员权限…",
@@ -100,7 +101,8 @@
       "roleGroupLabel": "成员角色",
       "displayOrder": "显示顺序",
       "displayOrderInvalid": "请输入大于等于 1 的整数，或留空。"
-    }
+    },
+    "loadMore": "加载更多"
   },
   "bounties": {
     "metaTitle": "管理后台 · 赏金 | Ninja Labs",
@@ -625,6 +627,41 @@
       "retriedTitle": "任务已重新排队",
       "retriedDescription": "Worker 将在一分钟内重试。",
       "retryFailedTitle": "重试失败"
+    }
+  },
+  "audit": {
+    "metaTitle": "管理 · 审计日志 | Ninja Labs",
+    "metaDescription": "只读查看支付审批和运维脚本操作的审计记录。",
+    "title": "审计日志",
+    "description": "只读查看支付审批和运维脚本操作的审计记录。",
+    "filterLabel": "审计日志筛选",
+    "entityType": "实体类型",
+    "entityTypePlaceholder": "例如 payout",
+    "entityId": "实体 ID",
+    "entityIdPlaceholder": "UUID",
+    "apply": "查询",
+    "reset": "重置",
+    "invalidEntityId": "实体 ID 必须是 UUID。",
+    "columns": {
+      "time": "时间",
+      "actor": "操作者",
+      "action": "操作",
+      "entity": "对象"
+    },
+    "actors": {
+      "script": "运维脚本",
+      "agent": "代理",
+      "unknown": "未知"
+    },
+    "empty": "没有符合条件的审计日志。",
+    "pagination": "审计日志分页",
+    "previous": "上一页",
+    "next": "下一页",
+    "pageOf": "第 {page} / {pages} 页",
+    "total": "共 {total} 条",
+    "toast": {
+      "loadFailedTitle": "审计日志不可用",
+      "loadFailedDescription": "无法加载审计日志。"
     }
   }
 }

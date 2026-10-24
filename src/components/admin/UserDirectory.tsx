@@ -19,20 +19,46 @@ const columns = [
   { id: "action", widthClass: "w-[199px]" },
 ];
 
+/** BE `MemberAdminService.PAGE_SIZE`. */
+const USERS_PAGE_SIZE = 30;
+
 export function UserDirectory({ users }: { users: AdminUser[] }) {
   const api = useAdminApi();
   const t = useTranslations("admin.users");
   const tCommon = useTranslations("admin.common");
   const [query, setQuery] = useState("");
   const [directoryUsers, setDirectoryUsers] = useState(users);
+  // The BE returns 30 users per page; a shorter first page means there is nothing more to load.
+  const [nextPage, setNextPage] = useState(2);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const normalizedQuery = query.toLowerCase();
   const visibleUsers = directoryUsers.filter((user) => (
     user.nickname.toLowerCase().includes(normalizedQuery) || user.email.toLowerCase().includes(normalizedQuery)
   ));
 
   useEffect(() => {
-    api.getAdminUsers().then(setDirectoryUsers).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
+    api.getAdminUsers().then((loaded) => {
+      setDirectoryUsers(loaded);
+      setNextPage(2);
+      setHasMore(loaded.length >= USERS_PAGE_SIZE);
+    }).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
   }, [api, t]);
+
+  async function loadMore() {
+    setLoadingMore(true);
+    try {
+      const loaded = await api.getAdminUsers("", nextPage);
+      // Join dedupes by id: a signup between the two requests shifts rows across the page boundary.
+      setDirectoryUsers((current) => [...current, ...loaded.filter((user) => !current.some((existing) => existing.slug === user.slug))]);
+      setNextPage((current) => current + 1);
+      setHasMore(loaded.length >= USERS_PAGE_SIZE);
+    } catch {
+      pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") });
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   async function restoreMember(user: AdminUser) {
     // Called from the toast's Undo action, which does not await it: a rejection must become a toast, not an unhandled error.
@@ -142,6 +168,11 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
               </tr>
             ))}
           </AdminTable>
+          {hasMore ? (
+            <div className="mt-4 flex justify-center">
+              <button className="rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={loadingMore} onClick={() => void loadMore()} type="button">{t("loadMore")}</button>
+            </div>
+          ) : null}
           <p className="mt-3 text-xs text-ink-muted">{tCommon("saveNotice")}</p>
         </div>
       ) : (

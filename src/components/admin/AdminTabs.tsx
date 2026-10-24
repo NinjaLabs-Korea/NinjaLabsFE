@@ -8,6 +8,7 @@ const tabs = [
   { active: "nft-jobs", href: "/admin/nft-jobs", labelKey: "nftJobs" },
   { active: "hall-of-fame", href: "/admin/hall-of-fame", labelKey: "hallOfFame" },
   { active: "notices", href: "/admin/notices", labelKey: "notices" },
+  { active: "audit", href: "/admin/audit", labelKey: "audit" },
 ] as const;
 
 type AdminTab = (typeof tabs)[number]["active"];

@@ -1,6 +1,7 @@
 import type { Account, AccountAgent, AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
+import type { AdminAuditLogFilter, AdminAuditLogPage } from "@/lib/admin-audit";
 import type { AdminNftJobPage, AdminOperations, NftJobStatus, SubmissionDecision } from "@/lib/admin-operations";
 
 export type ApiAvailable<T> = {
@@ -111,7 +112,8 @@ export type AccountSettingsApi = {
 /** 운영자 콘솔 (AdminGuard 보호 엔드포인트) */
 export type AdminApi = {
   uploadAdminMedia: (file: File) => Promise<{ id: string; url: string }>;
-  getAdminUsers: (query?: string) => Promise<AdminUser[]>;
+  /** GET /admin/users?q=&page= — the BE returns 30 rows per page (a short page is the last one). */
+  getAdminUsers: (query?: string, page?: number) => Promise<AdminUser[]>;
   setAdminMember: (userId: string, input: { isMember: boolean; role?: string; displayOrder?: number }) => Promise<void>;
   getAdminBounties: () => Promise<AdminBounty[]>;
   saveAdminBounty: (bounty: AdminBounty, create: boolean) => Promise<{ id: string }>;
@@ -147,6 +149,8 @@ export type AdminApi = {
   getAdminNftJobs: (status: NftJobStatus, page: number) => Promise<AdminNftJobPage>;
   /** POST /admin/nft-jobs/:id/retry — 404 NFT_JOB_NOT_FOUND_OR_NOT_FAILED */
   retryAdminNftJob: (jobId: string) => Promise<void>;
+  /** GET /admin/audit-logs?entityType=&entityId=&page= (30/page, newest first) — 400 on a non-UUID entityId */
+  getAdminAuditLogs: (filter: AdminAuditLogFilter, page: number) => Promise<AdminAuditLogPage>;
 };
 
 export type ApiClient = AccountApi & AccountSettingsApi & BountyApi & AgentApi & WalletApi & OnboardingApi & AdminApi;

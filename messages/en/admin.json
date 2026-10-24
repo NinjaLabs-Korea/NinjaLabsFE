@@ -36,7 +36,8 @@
     "hallOfFame": "Hall of Fame",
     "notices": "Notices",
     "operations": "Operations",
-    "nftJobs": "NFT Jobs"
+    "nftJobs": "NFT Jobs",
+    "audit": "Audit log"
   },
   "gate": {
     "checking": "Checking admin access…",
@@ -100,7 +101,8 @@
       "roleGroupLabel": "Member role",
       "displayOrder": "Display order",
       "displayOrderInvalid": "Enter a whole number of 1 or more, or leave it empty."
-    }
+    },
+    "loadMore": "Load more"
   },
   "bounties": {
     "metaTitle": "Admin · Bounties | Ninja Labs",
@@ -625,6 +627,41 @@
       "retriedTitle": "Job queued again",
       "retriedDescription": "The worker will retry it within a minute.",
       "retryFailedTitle": "Retry failed"
+    }
+  },
+  "audit": {
+    "metaTitle": "Admin · Audit log | Ninja Labs",
+    "metaDescription": "Read-only review of payout approvals and ops-script actions recorded in the audit log.",
+    "title": "Audit log",
+    "description": "Read-only review of payout approvals and ops-script actions recorded in the audit log.",
+    "filterLabel": "Audit log filters",
+    "entityType": "Entity type",
+    "entityTypePlaceholder": "e.g. payout",
+    "entityId": "Entity ID",
+    "entityIdPlaceholder": "UUID",
+    "apply": "Search",
+    "reset": "Reset",
+    "invalidEntityId": "Entity ID must be a UUID.",
+    "columns": {
+      "time": "Time",
+      "actor": "Actor",
+      "action": "Action",
+      "entity": "Entity"
+    },
+    "actors": {
+      "script": "Ops script",
+      "agent": "Agent",
+      "unknown": "Unknown"
+    },
+    "empty": "No audit log entries match.",
+    "pagination": "Audit log pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "total": "{total} entries",
+    "toast": {
+      "loadFailedTitle": "Audit log unavailable",
+      "loadFailedDescription": "Could not load the audit log."
     }
   }
 }

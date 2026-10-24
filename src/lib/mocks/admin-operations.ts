@@ -1,3 +1,4 @@
+import { isAuditUuid, type AdminAuditLog } from "@/lib/admin-audit";
 import type { AdminApi } from "@/lib/contracts/api";
 import type { AdminBounty } from "@/lib/admin-helpers";
 import { MockApiError } from "@/lib/mocks/mock-error";
@@ -21,7 +22,7 @@ import {
 
 type OperationsApi = Pick<AdminApi,
   "getAdminOperations" | "reviewAdminApplication" | "reviewAdminSubmission" | "confirmAdminDeposit" | "requestAdminPayout"
-  | "approveAdminPayout" | "markAdminPayoutPaid" | "getAdminNftJobs" | "retryAdminNftJob">;
+  | "approveAdminPayout" | "markAdminPayoutPaid" | "getAdminNftJobs" | "retryAdminNftJob" | "getAdminAuditLogs">;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const iso = (offsetDays: number) => new Date(Date.now() + offsetDays * DAY_MS).toISOString();
@@ -130,6 +131,20 @@ function seedNftJobs(): AdminNftJob[] {
   ];
 }
 
+function seedAuditLogs(): AdminAuditLog[] {
+  const log = (n: number, overrides: Partial<AdminAuditLog>): AdminAuditLog => ({
+    id: `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`, actorUserId: MOCK_ADMIN_ID, actorAgentId: null, action: "PAYOUT_REQUESTED",
+    entityType: "payout", entityId: "11111111-1111-4111-8111-111111111111", createdAt: iso(-n / 24), ...overrides,
+  });
+  return [
+    log(1, { action: "PAYOUT_APPROVED" }),
+    log(2, { action: "PAYOUT_SELF_APPROVED" }),
+    log(3, { actorUserId: null, action: "PAYOUT_CORRECTED_MANUAL" }),
+    log(4, { actorUserId: null, action: "ADMIN_GRANTED", entityType: "user", entityId: "22222222-2222-4222-8222-222222222222" }),
+    log(5, { action: "PAYOUT_REQUESTED" }),
+  ];
+}
+
 /**
  * In-memory twin of the operations/NFT endpoints, with the BE's status checks and error codes, so the console behaves the
  * same in mock mode. `bounties` reads the manager's current list; `onStatus` writes a transition back to it.
@@ -140,6 +155,7 @@ export function createMockOperationsApi(options: {
 }): OperationsApi & { transitionOperations: (bountyId: string, to: string) => void } {
   const state = new Map<string, AdminOperations>();
   let nftJobs = seedNftJobs();
+  const auditLogs = seedAuditLogs();
   const opsFor = (bountyId: string): AdminOperations => {
     const cached = state.get(bountyId);
     if (cached) return cached;
@@ -245,6 +261,12 @@ export function createMockOperationsApi(options: {
       const pageSize = 30;
       const matching = nftJobs.filter((job) => job.status === status);
       return { items: matching.slice((page - 1) * pageSize, page * pageSize).map((job) => ({ ...job })), page, pageSize, total: matching.length };
+    },
+    getAdminAuditLogs: async (filter, page) => {
+      const pageSize = 30;
+      if (filter.entityId && !isAuditUuid(filter.entityId)) return fail(400, "VALIDATION_FAILED");
+      const matching = auditLogs.filter((log) => (!filter.entityType || log.entityType === filter.entityType) && (!filter.entityId || log.entityId === filter.entityId));
+      return { items: matching.slice((page - 1) * pageSize, page * pageSize).map((log) => ({ ...log })), page, pageSize, total: matching.length };
     },
     retryAdminNftJob: async (jobId) => {
       const job = nftJobs.find((item) => item.id === jobId && item.status === "FAILED");
