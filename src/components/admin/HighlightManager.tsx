@@ -7,7 +7,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { Badge } from "@/components/ui/Badge";
-import { highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight } from "@/lib/admin";
+import { highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight } from "@/lib/admin-helpers";
 import { HIGHLIGHT_TYPE_CODES, isHighlightTypeCode } from "@/lib/api/codecs";
 import { isHttpUrlOrMediaPath, isHttpUrlOrSitePath } from "@/lib/url-rules";
 import { useAdminApi } from "@/components/auth/FoundationProvider";

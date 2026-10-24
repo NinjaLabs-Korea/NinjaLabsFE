@@ -6,7 +6,7 @@ import { AdminTable } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { UserActions } from "@/components/admin/UserActions";
 import { Badge } from "@/components/ui/Badge";
-import type { AdminUser } from "@/lib/admin";
+import type { AdminUser } from "@/lib/admin-helpers";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const columns = [

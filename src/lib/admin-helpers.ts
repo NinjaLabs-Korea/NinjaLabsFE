@@ -1,0 +1,124 @@
+// Fixture-free admin types and pure helpers. Client islands (`components/admin/*`) import from here, never from
+// `lib/admin.ts`, whose mock registries (bounties/members/notices/hall-of-fame fixtures) would otherwise be bundled
+// into the shared client chunk. `lib/admin.ts` re-exports everything for server code and tests.
+import { HIGHLIGHT_TYPE_LABELS, type HighlightTypeCode } from "./api/codecs";
+
+export type AdminUser = {
+  slug: string;
+  nickname: string;
+  email: string;
+  joinedAt: string;
+  walletAddress: string | null;
+  walletStatus: "linked" | null;
+  isMember: boolean;
+  memberRole: "Core" | "Dev" | "Design" | "Ops" | null;
+  memberDisplayOrder: number | null;
+};
+
+export type AdminBounty = {
+  slug: string;
+  title: string;
+  sponsor: string;
+  reward: { amount: number; currency: "INJ" | "USDC" };
+  rewardContractAddress?: string;
+  rewardChainId?: number;
+  intakeEnabled: boolean;
+  submissionMode: "direct" | "agent";
+  coverImage: string | null;
+  status: "draft" | "funding" | "active" | "reviewing" | "closed";
+  /** BE `submission_deadline` ISO 원문. mock fixture도 ISO — `bountyToForm`은 ISO가 아닌 값을 조용히 받지 않는다. */
+  deadline: string;
+  /** BE `application_deadline` — 폼에 입력란이 없으므로 수정 시 그대로 되돌려 준다 */
+  applicationDeadline: string | null;
+  /** BE `max_winners` — PATCH는 불러온 값을 유지하고, 신규는 1을 보낸다 (폼에 입력란 없음) */
+  maxWinners: number;
+  tags: Array<"Dev" | "Design" | "Content" | "Other">;
+  description: string;
+  submissionGuide: string;
+  /**
+   * BE `requirements` 원문(markdown). `deliverables`는 이 값에서 표시용으로만 파생한다 — PATCH는 어드민이 산출물/제출 가이드
+   * 입력란을 고치지 않은 한 이 문자열을 바이트 그대로 되돌려 보낸다 (줄바꿈/들여쓰기를 잃는 join/split 왕복 금지).
+   */
+  requirements: string;
+  /** 표시용: `requirements`의 비어 있지 않은 줄 (trim). 저장은 `requirements`가 기준이다. */
+  deliverables: string[];
+  reviewProcess: string;
+};
+
+/**
+ * `type`은 BE 코드 그대로 (`MILESTONE` … `OTHER`, `lib/api/codecs.ts HIGHLIGHT_TYPE_LABELS`). 모르는 코드도 원문을 유지한다:
+ * 화면은 코드를 그대로 보여 주고, PATCH는 어드민이 유형을 바꾼 경우에만 `type`을 보낸다.
+ */
+export type AdminHighlight = {
+  id: string;
+  type: HighlightTypeCode | (string & {});
+  title: string;
+  order: number;
+  link?: string;
+  image: string | null;
+  description?: string;
+  published?: boolean;
+};
+
+export type AdminPost = {
+  slug: string;
+  title: string;
+  category: "Ninja Labs" | "Injective ecosystem" | "Events" | "Recruitment" | "Other";
+  status: "draft" | "published";
+  publishedAt: string | null;
+  bodyMarkdown: string;
+  thumbnail: string | null;
+  externalUrl: string | null;
+};
+
+/**
+ * `publish` option for `saveAdminPost`: always sent on create (derived from the chosen status); on edit only when the
+ * status toggled. A plain edit omits it so the BE keeps the existing `published_at` - omission is the contract.
+ */
+export function publishOptionFor(
+  previousStatus: AdminPost["status"] | undefined,
+  nextStatus: AdminPost["status"],
+  mode: "create" | "edit",
+): { publish: boolean } | undefined {
+  if (mode === "edit" && previousStatus === nextStatus) return undefined;
+  return { publish: nextStatus === "published" };
+}
+
+/** Same contract for highlights (`is_published` boolean): `publish` only on create or when the published state toggled. */
+export function highlightPublishOptionFor(
+  previousPublished: boolean | undefined,
+  nextPublished: boolean,
+  mode: "create" | "edit",
+): { publish: boolean } | undefined {
+  const toStatus = (published: boolean | undefined): AdminPost["status"] | undefined =>
+    published === undefined ? undefined : published ? "published" : "draft";
+  return publishOptionFor(toStatus(previousPublished), toStatus(nextPublished) ?? "draft", mode);
+}
+
+// Message keys (admin namespace `hallOfFame.highlights.types`) for displayed enum labels; the codes themselves stay API-facing.
+export const highlightTypeLabelKeys: Record<HighlightTypeCode, string> = {
+  MILESTONE: "milestone",
+  FEATURED_BOUNTY: "featuredBounty",
+  PROJECT: "project",
+  PARTNERSHIP: "partnership",
+  AWARD: "award",
+  OTHER: "other",
+};
+
+/** Message key for a highlight type code, or null for a code this FE does not know (render the raw code instead). */
+export function highlightTypeLabelKey(type: string): string | null {
+  return type in HIGHLIGHT_TYPE_LABELS ? highlightTypeLabelKeys[type as HighlightTypeCode] : null;
+}
+
+/** Deliverables shown for a BE `requirements` string: its non-empty lines, trimmed. Display only - never re-joined for saving. */
+export function deliverablesFromRequirements(requirements: string): string[] {
+  return requirements.split("\n").map((line) => line.trim()).filter(Boolean);
+}
+
+export const postCategoryLabelKeys: Record<AdminPost["category"], string> = {
+  "Ninja Labs": "ninjaLabs",
+  "Injective ecosystem": "injectiveEcosystem",
+  Events: "events",
+  Recruitment: "recruitment",
+  Other: "other",
+};

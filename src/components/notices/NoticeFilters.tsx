@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 
 import { NoticeRow } from "@/components/cards/NoticeRow";
 import { Badge } from "@/components/ui/Badge";
-import { noticeCategoryKeys } from "@/lib/notices";
+import { noticeCategoryKeys } from "@/lib/notice-categories";
 import type { Notice } from "@/lib/types";
 
 type NoticeFiltersProps = { notices: Notice[] };

@@ -8,7 +8,7 @@ import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
-import type { AdminBounty } from "@/lib/admin";
+import type { AdminBounty } from "@/lib/admin-helpers";
 import { BOUNTY_SPONSOR_MAX, BOUNTY_TITLE_MAX, bountyToForm, emptyBountyForm, formToBounty, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 

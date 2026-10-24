@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { safeHttpUrl } from "@/lib/api/codecs";
 import { imageProps } from "@/lib/image";
-import { noticeCategoryKeys } from "@/lib/notices";
+import { noticeCategoryKeys } from "@/lib/notice-categories";
 import type { Notice } from "@/lib/types";
 
 type NoticeRowProps = {

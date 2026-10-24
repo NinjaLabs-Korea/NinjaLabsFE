@@ -1,6 +1,6 @@
 import type { ApiHttp } from "@/lib/api/http";
 import type { AdminApi } from "@/lib/contracts/api";
-import { deliverablesFromRequirements, type AdminBounty, type AdminHighlight, type AdminPost, type AdminUser } from "@/lib/admin";
+import { deliverablesFromRequirements, type AdminBounty, type AdminHighlight, type AdminPost, type AdminUser } from "@/lib/admin-helpers";
 import { formatIsoDate, rewardFromBaseUnits, rewardToBaseUnits, toCategoryCode, toCategoryLabel, toMemberRoleCode, toMemberRoleLabel, toNoticeCategoryCode, toNoticeCategoryLabel, type CategoryCode, type MemberRoleCode } from "@/lib/api/codecs";
 
 type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: MemberRoleCode | null; member_display_order: number | null; created_at: string; wallet_address: string | null };

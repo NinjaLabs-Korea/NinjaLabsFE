@@ -7,7 +7,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { Badge } from "@/components/ui/Badge";
-import { postCategoryLabelKeys, publishOptionFor, type AdminPost } from "@/lib/admin";
+import { postCategoryLabelKeys, publishOptionFor, type AdminPost } from "@/lib/admin-helpers";
 import { isHttpUrl, isHttpUrlOrMediaPath } from "@/lib/url-rules";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 

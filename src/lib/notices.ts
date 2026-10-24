@@ -52,14 +52,7 @@ export const notices: Notice[] = [
   },
 ];
 
-// Display-label keys (messages `notices.categories`); the category value itself stays English for matching.
-export const noticeCategoryKeys: Record<Notice["category"], string> = {
-  "Ninja Labs": "ninjaLabs",
-  "Injective ecosystem": "injectiveEcosystem",
-  Events: "events",
-  Recruitment: "recruitment",
-  Other: "other",
-};
+export { noticeCategoryKeys } from "./notice-categories";
 
 export function getNotices() {
   return notices;
