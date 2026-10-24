@@ -1,6 +1,7 @@
 import type { ApiHttp } from "@/lib/api/http";
 import type { AdminApi } from "@/lib/contracts/api";
 import { deliverablesFromRequirements, type AdminBounty, type AdminHighlight, type AdminPost, type AdminUser } from "@/lib/admin-helpers";
+import { markdownToPlainSummary } from "@/lib/markdown-summary";
 import { formatIsoDate, rewardFromBaseUnits, rewardToBaseUnits, toCategoryCode, toCategoryLabel, toMemberRoleCode, toMemberRoleLabel, toNoticeCategoryCode, toNoticeCategoryLabel, type CategoryCode, type MemberRoleCode } from "@/lib/api/codecs";
 
 type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: MemberRoleCode | null; member_display_order: number | null; created_at: string; wallet_address: string | null };
@@ -91,7 +92,7 @@ export function createAdminApi(http: ApiHttp): AdminApi {
       // BE resets published_at whenever `publish` is present, so edits send it only when the status was toggled.
       const publish = create ? post.status === "published" : options?.publish;
       // Cleared optional URLs go as null: the BE's `?? null` on create and its `!== undefined` filter on PATCH both write null, an omitted key would keep the old value.
-      return http.fetchJson(create ? "/admin/notices" : `/admin/notices/${encodeURIComponent(post.slug)}`, { method: create ? "POST" : "PATCH", body: { title: post.title, summary: post.bodyMarkdown.slice(0, 240), body: post.bodyMarkdown, category: toNoticeCategoryCode(post.category), thumbnailUrl: post.thumbnail ?? null, externalUrl: post.externalUrl ?? null, ...(publish === undefined ? {} : { publish }) } });
+      return http.fetchJson(create ? "/admin/notices" : `/admin/notices/${encodeURIComponent(post.slug)}`, { method: create ? "POST" : "PATCH", body: { title: post.title, summary: markdownToPlainSummary(post.bodyMarkdown), body: post.bodyMarkdown, category: toNoticeCategoryCode(post.category), thumbnailUrl: post.thumbnail ?? null, externalUrl: post.externalUrl ?? null, ...(publish === undefined ? {} : { publish }) } });
     },
     deleteAdminPost: async (id: string) => { await http.fetchJson(`/admin/notices/${encodeURIComponent(id)}`, { method: "DELETE" }); },
     getAdminHighlights: async (): Promise<AdminHighlight[]> => {

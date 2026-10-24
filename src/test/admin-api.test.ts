@@ -45,6 +45,13 @@ describe("admin notice save payload", () => {
     expect(calls[1][1]).toMatchObject({ method: "POST", body: { publish: false } });
   });
 
+  it("sends a plain-text summary derived from the markdown body", async () => {
+    const { http, fetchJson } = createHttp();
+    await createAdminApi(http).saveAdminPost({ ...post, bodyMarkdown: "## Kickoff\n\nJoin the **hackathon** at [Injective](https://injective.com).\n\n- Prizes\n- `code`" }, true);
+    const [, init] = fetchJson.mock.calls[0] as unknown as [string, { body: Record<string, unknown> }];
+    expect(init.body.summary).toBe("Kickoff Join the hackathon at Injective. Prizes code");
+  });
+
   it("sends cleared thumbnail/external URLs as null so the BE clears the columns (never an omitted key)", async () => {
     const { http, fetchJson } = createHttp();
     await createAdminApi(http).saveAdminPost({ ...post, thumbnail: null, externalUrl: null }, false);
