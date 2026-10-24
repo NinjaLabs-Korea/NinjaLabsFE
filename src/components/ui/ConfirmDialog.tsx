@@ -17,6 +17,10 @@ type ConfirmDialogProps = {
   destructive?: boolean;
   /** See `Modal.returnFocusTo`: focus target after close when the opener was removed/disabled by the confirmed action. */
   returnFocusTo?: () => HTMLElement | null | undefined;
+  /** Extra content between the callout and the actions, e.g. a typed-confirmation field. */
+  children?: ReactNode;
+  /** Disables the confirm action (typed confirmation not matched yet, request in flight). */
+  confirmDisabled?: boolean;
 };
 
 export function ConfirmDialog({
@@ -30,6 +34,8 @@ export function ConfirmDialog({
   confirmLabel,
   destructive = false,
   returnFocusTo,
+  children,
+  confirmDisabled = false,
 }: ConfirmDialogProps) {
   const t = useTranslations("common.confirmDialog");
   const titleId = useId();
@@ -63,6 +69,7 @@ export function ConfirmDialog({
           {calloutText}
         </div>
       ) : null}
+      {children}
       <div className="mt-6 flex justify-end gap-3">
         <button
           type="button"
@@ -73,9 +80,10 @@ export function ConfirmDialog({
         </button>
         <button
           type="button"
-          className={`rounded-control px-5 py-3 text-sm font-semibold leading-[21px] text-on-inverse focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+          className={`rounded-control px-5 py-3 text-sm font-semibold leading-[21px] text-on-inverse focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${
             destructive ? "bg-danger" : "bg-primary"
           }`}
+          disabled={confirmDisabled}
           onClick={onConfirm}
         >
           {confirmLabel}
