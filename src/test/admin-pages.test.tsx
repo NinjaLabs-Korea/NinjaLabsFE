@@ -103,7 +103,7 @@ describe("AdminGate", () => {
 });
 
 describe("AdminTabs", () => {
-  it("links every admin section in order", () => {
+  it("links every admin section and marks only the active one as the current page", () => {
     renderWithIntl(<AdminTabs active="hall-of-fame" />);
     const links = within(screen.getByRole("navigation")).getAllByRole("link");
     expect(links.map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
@@ -112,6 +112,7 @@ describe("AdminTabs", () => {
       ["Hall of Fame", "/admin/hall-of-fame"],
       ["Notices", "/admin/notices"],
     ]);
+    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual([null, null, "page", null]);
   });
 });
 
@@ -168,6 +169,7 @@ describe("admin pages", () => {
     renderWithIntl(await UsersPage({ params } as never));
     expect(screen.getByRole("heading", { level: 1, name: "User Management & Member Assignment" })).toBeTruthy();
     expect(screen.getByText("jaemin@example.com")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "User Mgmt" }).getAttribute("aria-current")).toBe("page");
   });
 
   it("starts empty in api mode and fills from the client request", async () => {
@@ -177,6 +179,7 @@ describe("admin pages", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Bounty Registration & Management" })).toBeTruthy();
     expect(screen.getAllByRole("row")).toHaveLength(1);
     await waitFor(() => expect(screen.getByText("Build an iAsset price widget")).toBeTruthy());
+    expect(screen.getByRole("link", { name: "Bounty Mgmt" }).getAttribute("aria-current")).toBe("page");
   });
 
   it("renders the notices page heading and its tab", async () => {
@@ -185,6 +188,7 @@ describe("admin pages", () => {
     renderWithIntl(await NoticesPage({ params } as never));
     expect(screen.getByRole("heading", { level: 1, name: "Notices / News Management" })).toBeTruthy();
     expect(screen.getByText("Q3 roadmap preview")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Notices" }).getAttribute("aria-current")).toBe("page");
   });
 
   it("shows the hall-of-fame stats in mock mode and an unavailable status panel when the BE fetch fails", async () => {
