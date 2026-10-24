@@ -10,6 +10,7 @@ import {
 } from "react";
 import type {
   AccountApi,
+  AccountSettingsApi,
   AdminApi,
   AgentApi,
   ApiClient,
@@ -164,6 +165,7 @@ export const useBountyApi = (): BountyApi => useFoundationContext().apiClient;
 export const useAgentApi = (): AgentApi => useFoundationContext().apiClient;
 export const useWalletApi = (): WalletApi => useFoundationContext().apiClient;
 export const useOnboardingApi = (): OnboardingApi => useFoundationContext().apiClient;
+export const useAccountSettingsApi = (): AccountSettingsApi => useFoundationContext().apiClient;
 export const useAdminApi = (): AdminApi => useFoundationContext().apiClient;
 
 export function useFoundationMode(): FoundationConfig["mode"] {

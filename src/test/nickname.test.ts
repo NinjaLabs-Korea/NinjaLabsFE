@@ -44,7 +44,7 @@ describe("nickname rule (mirror of BE users/nickname.ts)", () => {
     expect(validateNickname(`${astral.repeat(49)}😀`)).toBe("chars");
   });
 
-  it.each(["me", "ME", "Me", "check-nickname", "Check-Nickname", "admin", "ADMIN", "new", "New", "edit", "EDIT", "  me  "])(
+  it.each(["me", "ME", "Me", "check-nickname", "Check-Nickname", "admin", "ADMIN", "new", "New", "edit", "EDIT", "  me  ", "withdrawn_1a2b3c4d", "Withdrawn_x"])(
     "rejects the reserved route word %p (case-insensitive)",
     (nickname) => {
       expect(isReservedNickname(nickname)).toBe(true);

@@ -6,6 +6,7 @@
  *   - 처음과 끝은 문자/숫자 (`.ninja`, `ninja-`, `..`, `--` 불가)
  *   - 길이 2~50 (trim 후, **코드 포인트** 기준 — BE `@Length`/validator `isLength`는 서로게이트 쌍을 한 글자로 센다)
  *   - 라우트와 충돌하는 예약어는 대소문자 무관 거부
+ *   - 탈퇴 익명화 이름의 접두사 `withdrawn_`도 대소문자 무관 거부 (BE `WITHDRAWN_NICKNAME_PREFIX` — 탈퇴자 사칭 방지)
  */
 export const NICKNAME = /^[\p{L}\p{N}][\p{L}\p{N}_.-]*[\p{L}\p{N}]$/u;
 export const NICKNAME_MIN = 2;
@@ -14,8 +15,12 @@ export const RESERVED_NICKNAMES: readonly string[] = ["me", "check-nickname", "a
 
 const ALLOWED_CHARS = /^[\p{L}\p{N}_.-]+$/u;
 
+/** 탈퇴한 유저의 익명화 닉네임 접두사 (`withdrawn_<id 8hex>`) — 공개 프로필이 없으므로 상세 URL도 될 수 없다 */
+export const WITHDRAWN_NICKNAME_PREFIX = "withdrawn_";
+
 export function isReservedNickname(value: string): boolean {
-  return RESERVED_NICKNAMES.includes(value.trim().toLowerCase());
+  const normalized = value.trim().toLowerCase();
+  return RESERVED_NICKNAMES.includes(normalized) || normalized.startsWith(WITHDRAWN_NICKNAME_PREFIX);
 }
 
 /** 실패 사유. 화면 문구는 messages `signup.profile.form.nicknameErrors.<사유>`에 있다. */

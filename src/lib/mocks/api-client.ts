@@ -180,6 +180,12 @@ export function createMockApiClient(seed = "default"): ApiClient {
     checkNickname: async () => ({ available: true }),
     completeProfile: async () => undefined,
     completeOnboarding: async () => undefined,
+    // BE compares trimmed, case-insensitive; the preview session's nickname is its handle.
+    withdrawAccount: async (confirmNickname) => {
+      if (confirmNickname.trim().toLowerCase() !== fixtureSnapshot.account.user.handle.toLowerCase()) {
+        throw new MockApiError(400, "CONFIRM_NICKNAME_MISMATCH");
+      }
+    },
     ...createMockAdminApi(nextId),
   };
 }

@@ -96,6 +96,15 @@ export type OnboardingApi = {
   completeOnboarding: () => Promise<void>;
 };
 
+/** 계정 설정 (본인 전용) */
+export type AccountSettingsApi = {
+  /**
+   * `DELETE /users/me` `{confirmNickname}` — 회원 탈퇴. 성공하면 BE가 refresh 세션을 전부 폐기하므로 호출자는 이어서 signOut()한다.
+   * 400 `CONFIRM_NICKNAME_MISMATCH` / 409 `WITHDRAWAL_BLOCKED_OPEN_PAYOUTS`(지급 진행 중) / 404 `USER_NOT_FOUND`.
+   */
+  withdrawAccount: (confirmNickname: string) => Promise<void>;
+};
+
 /** 운영자 콘솔 (AdminGuard 보호 엔드포인트) */
 export type AdminApi = {
   uploadAdminMedia: (file: File) => Promise<{ id: string; url: string }>;
@@ -119,4 +128,4 @@ export type AdminApi = {
   deleteAdminHighlight: (highlightId: string) => Promise<void>;
 };
 
-export type ApiClient = AccountApi & BountyApi & AgentApi & WalletApi & OnboardingApi & AdminApi;
+export type ApiClient = AccountApi & AccountSettingsApi & BountyApi & AgentApi & WalletApi & OnboardingApi & AdminApi;

@@ -222,6 +222,10 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
     completeOnboarding: async () => {
       await http.fetchJson("/users/me/complete-onboarding", { method: "POST" });
     },
+
+    withdrawAccount: async (confirmNickname) => {
+      await http.fetchJson("/users/me", { method: "DELETE", body: { confirmNickname } });
+    },
     ...createAdminApi(http),
   };
 }

@@ -40,6 +40,7 @@
     "myProfile": "我的主页",
     "myApplications": "我的申请",
     "myAgents": "我的智能体",
+    "accountSettings": "账户设置",
     "signOut": "退出登录",
     "sessionPreview": "会话预览",
     "walletAddress": "钱包地址：{wallet}"
@@ -106,5 +107,11 @@
   },
   "reward": {
     "tbd": "奖励待定"
+  },
+  "flash": {
+    "accountDeleted": {
+      "title": "你的账户已删除",
+      "description": "你已退出登录。你可以随时使用同一个 Google 账户重新注册。"
+    }
   }
 }

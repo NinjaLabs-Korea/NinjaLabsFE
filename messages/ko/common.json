@@ -40,6 +40,7 @@
     "myProfile": "내 프로필",
     "myApplications": "내 지원 내역",
     "myAgents": "내 에이전트",
+    "accountSettings": "계정 설정",
     "signOut": "로그아웃",
     "sessionPreview": "세션 미리보기",
     "walletAddress": "지갑 주소: {wallet}"
@@ -106,5 +107,11 @@
   },
   "reward": {
     "tbd": "보상 미정"
+  },
+  "flash": {
+    "accountDeleted": {
+      "title": "계정이 삭제되었습니다",
+      "description": "로그아웃되었습니다. 같은 Google 계정으로 언제든 다시 가입할 수 있어요."
+    }
   }
 }

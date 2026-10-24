@@ -32,7 +32,7 @@ describe("detail id shape", () => {
     for (const nickname of ["ninja.inj", "first.last", "jaemin", "닌자", "a_b-c"]) {
       expect(isValidDetailId("members", nickname, "api"), nickname).toBe(true);
     }
-    for (const garbage of ["\u0000", "", "a b", "a/b", "x".repeat(65), "<script>"]) {
+    for (const garbage of ["\u0000", "", "a b", "a/b", "x".repeat(65), "<script>", "withdrawn_1a2b3c4d"]) {
       expect(isValidDetailId("members", garbage, "api"), JSON.stringify(garbage)).toBe(false);
     }
   });
