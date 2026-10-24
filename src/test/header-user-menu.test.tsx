@@ -84,11 +84,11 @@ describe("UserMenu", () => {
     expect(trigger().getAttribute("aria-controls")).toBe(menu.id);
 
     const items = within(menu).getAllByRole("menuitem");
-    expect(items.map((item) => item.textContent)).toEqual(["My profile", "My applications", "My agents", "Sign out"]);
-    expect(items.slice(0, 3).map((item) => item.getAttribute("href"))).toEqual(["/members/jaemin", "/applications", "/agents"]);
+    expect(items.map((item) => item.textContent)).toEqual(["My profile", "My applications", "My agents", "Account settings", "Sign out"]);
+    expect(items.slice(0, 4).map((item) => item.getAttribute("href"))).toEqual(["/members/jaemin", "/applications", "/agents", "/account"]);
     expect(document.activeElement).toBe(items[0]);
     // Roving tabindex: only the active item is in the tab order.
-    expect(items.map((item) => item.tabIndex)).toEqual([0, -1, -1, -1]);
+    expect(items.map((item) => item.tabIndex)).toEqual([0, -1, -1, -1, -1]);
   });
 
   it("wraps arrow navigation, jumps with Home/End and closes on Escape with focus back on the trigger", () => {
@@ -97,12 +97,12 @@ describe("UserMenu", () => {
     const items = () => screen.getAllByRole("menuitem");
 
     fireEvent.keyDown(items()[0], { key: "ArrowUp" });
-    expect(document.activeElement).toBe(items()[3]);
-    fireEvent.keyDown(items()[3], { key: "ArrowDown" });
+    expect(document.activeElement).toBe(items()[4]);
+    fireEvent.keyDown(items()[4], { key: "ArrowDown" });
     expect(document.activeElement).toBe(items()[0]);
     fireEvent.keyDown(items()[0], { key: "End" });
     expect(document.activeElement?.textContent).toBe("Sign out");
-    fireEvent.keyDown(items()[3], { key: "Home" });
+    fireEvent.keyDown(items()[4], { key: "Home" });
     expect(document.activeElement?.textContent).toBe("My profile");
 
     fireEvent.keyDown(items()[0], { key: "Escape" });
