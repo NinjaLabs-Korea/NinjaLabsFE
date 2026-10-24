@@ -1,7 +1,8 @@
 import type { Notice } from "@/lib/types";
 import { formatIsoDate, toNoticeCategoryLabel } from "@/lib/api/codecs";
 import { fetchAllPublicPages } from "@/lib/api/paging";
-import { fetchPublicJson, loadFromRuntime } from "@/lib/api/public";
+import { cache } from "react";
+import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH } from "@/lib/api/public";
 
 export const notices: Notice[] = [
   {
@@ -95,15 +96,17 @@ export function getRuntimeNotices(): Promise<Notice[]> {
   });
 }
 
-export function getRuntimeNotice(id: string): Promise<Notice | undefined> {
-  return loadFromRuntime({
+/** Detail loader: `undefined` only on a BE 404, otherwise rethrows; `cache()` shares one BE request per render (see `getRuntimeBounty`). */
+export const getRuntimeNotice = cache((id: string): Promise<Notice | undefined> =>
+  loadFromRuntime({
     mock: () => getNotice(id),
     api: async () => {
       try {
-        return toNotice(await fetchPublicJson<NoticeRow>(`/notices/${encodeURIComponent(id)}`));
-      } catch {
-        return undefined;
+        return toNotice(await fetchPublicJson<NoticeRow>(`/notices/${encodeURIComponent(id)}`, PUBLIC_DETAIL_FETCH));
+      } catch (caught) {
+        if (isPublicNotFound(caught)) return undefined;
+        throw caught;
       }
     },
-  });
-}
+  }),
+);

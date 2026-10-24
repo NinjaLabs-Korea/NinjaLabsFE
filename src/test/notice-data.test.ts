@@ -1,13 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const fetchPublicJson = vi.fn();
-vi.mock("@/lib/api/public", () => ({
+vi.mock("@/lib/api/public", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/public")>()),
   fetchPublicJson: (path: string) => fetchPublicJson(path),
   loadFromRuntime: (sources: { api: () => unknown }) => sources.api(),
 }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
-const { getRuntimeNotices } = await import("@/lib/notices");
+const { PublicApiError } = await import("@/lib/api/public");
+const { getRuntimeNotice, getRuntimeNotices } = await import("@/lib/notices");
 
 const row = (id: string, published_at = "2026-06-20T15:30:00Z") => ({
   id, title: id, summary: null, category: "NINJALABS", thumbnail_url: null, external_url: null, published_at,
@@ -48,5 +50,29 @@ describe("notice list loading", () => {
     const [notice] = await getRuntimeNotices();
     expect(notice.publishedAt).toBe("2026.06.20");
     expect(new Date(notice.publishedAt.replaceAll(".", "-")).toISOString()).toBe("2026-06-20T00:00:00.000Z");
+  });
+});
+
+describe("notice detail loader failure modes", () => {
+  afterEach(() => fetchPublicJson.mockReset());
+
+  it("maps the detail row and requests the encoded id", async () => {
+    fetchPublicJson.mockResolvedValueOnce({ ...row("n1"), body: "B" });
+    await expect(getRuntimeNotice("n 1")).resolves.toMatchObject({ slug: "n1", bodyMarkdown: "B" });
+    expect(fetchPublicJson).toHaveBeenCalledWith("/notices/n%201");
+  });
+
+  it("returns undefined (→ notFound) only when the BE answers 404", async () => {
+    fetchPublicJson.mockRejectedValueOnce(new PublicApiError(404, "/notices/x"));
+    await expect(getRuntimeNotice("x")).resolves.toBeUndefined();
+  });
+
+  it.each([
+    ["a BE 500", new PublicApiError(500, "/notices/x")],
+    ["the 8s timeout", new DOMException("The operation was aborted due to timeout", "TimeoutError")],
+    ["a network failure", new TypeError("fetch failed")],
+  ])("rethrows %s", async (_label, failure) => {
+    fetchPublicJson.mockRejectedValueOnce(failure);
+    await expect(getRuntimeNotice("x")).rejects.toBe(failure);
   });
 });

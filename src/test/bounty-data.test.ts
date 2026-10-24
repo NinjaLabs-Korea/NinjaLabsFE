@@ -2,12 +2,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { rewardToBaseUnits as toBaseUnits, toReward, toRewards } from "@/lib/api/codecs";
 
 const fetchPublicJson = vi.fn();
-vi.mock("@/lib/api/public", () => ({
+vi.mock("@/lib/api/public", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/public")>()),
   fetchPublicJson: (path: string) => fetchPublicJson(path),
   loadFromRuntime: (sources: { api: () => unknown }) => sources.api(),
 }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
+const { PublicApiError } = await import("@/lib/api/public");
 const { deliverablesFromMarkdown, getBounties, getRuntimeBounties, getRuntimeBounty, loadRuntimeBounties, toBountyStatus, toPublicBountyStatus } = await import("@/lib/bounties");
 
 const row = (id: string, rewards = [{ symbol: "INJ", amount: "1500000000000000000", tokenType: "NATIVE" }]) => ({
@@ -99,5 +101,24 @@ describe("bounty mapping", () => {
   it("reports an unavailable API instead of throwing", async () => {
     fetchPublicJson.mockRejectedValue(new Error("down"));
     await expect(loadRuntimeBounties("en")).resolves.toEqual({ bounties: [], unavailable: true });
+  });
+});
+
+describe("bounty detail loader failure modes", () => {
+  afterEach(() => fetchPublicJson.mockReset());
+
+  it("returns undefined (→ notFound) only when the BE answers 404", async () => {
+    fetchPublicJson.mockRejectedValueOnce(new PublicApiError(404, "/bounties/x"));
+    await expect(getRuntimeBounty("x", "en")).resolves.toBeUndefined();
+  });
+
+  it.each([
+    ["a BE 500", new PublicApiError(500, "/bounties/x")],
+    ["a BE 503 during a restart", new PublicApiError(503, "/bounties/x")],
+    ["the 8s timeout", new DOMException("The operation was aborted due to timeout", "TimeoutError")],
+    ["a network failure", new TypeError("fetch failed")],
+  ])("rethrows %s so the error boundary renders instead of a false 404", async (_label, failure) => {
+    fetchPublicJson.mockRejectedValueOnce(failure);
+    await expect(getRuntimeBounty("x", "en")).rejects.toBe(failure);
   });
 });

@@ -1,7 +1,8 @@
 import { formatUtcDate, toCategoryLabel, toRewards, type RewardRow } from "./api/codecs";
 import type { Bounty } from "./types";
 import { fetchAllPublicPages } from "./api/paging";
-import { fetchPublicJson, loadFromRuntime } from "./api/public";
+import { cache } from "react";
+import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH } from "./api/public";
 
 export const bounties: Bounty[] = [
   {
@@ -161,15 +162,20 @@ export async function loadRuntimeBounties(locale: string): Promise<{ bounties: B
   }
 }
 
-export function getRuntimeBounty(id: string, locale: string): Promise<Bounty | undefined> {
-  return loadFromRuntime({
+/**
+ * Detail loader shared by generateMetadata, layout and page. `undefined` means the BE said 404 (→ `notFound()`); any
+ * other failure throws so the error boundary renders. `cache()` makes the three call sites share one BE request.
+ */
+export const getRuntimeBounty = cache((id: string, locale: string): Promise<Bounty | undefined> =>
+  loadFromRuntime({
     mock: () => getBounty(id),
     api: async () => {
       try {
-        return toBounty(await fetchPublicJson<BountyDetailRow>(`/bounties/${encodeURIComponent(id)}`), locale);
-      } catch {
-        return undefined;
+        return toBounty(await fetchPublicJson<BountyDetailRow>(`/bounties/${encodeURIComponent(id)}`, PUBLIC_DETAIL_FETCH), locale);
+      } catch (caught) {
+        if (isPublicNotFound(caught)) return undefined;
+        throw caught;
       }
     },
-  });
-}
+  }),
+);

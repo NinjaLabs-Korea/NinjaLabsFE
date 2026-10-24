@@ -1,7 +1,8 @@
 import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toPayoutStatus, toReward, type RewardRow } from "./api/codecs";
 import type { Completion, Member, PayoutStatus, Profile, ProfileNft, Reward } from "./types";
 import { onboardingLog } from "./onboarding-log";
-import { fetchPublicJson, loadFromRuntime } from "./api/public";
+import { cache } from "react";
+import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH } from "./api/public";
 
 /** Mock fixture slugs used by demo affordances (Figma 05 / 05-Empty). */
 export const PROFILE_FILLED_EXAMPLE_ID = "jaemin";
@@ -187,9 +188,12 @@ export function portfolioBodyKey(completed: boolean, parent: ParentNftState) {
   return parent === "minted" ? ("bodyEmpty" as const) : parent === "pending" ? ("bodyEmptyPending" as const) : ("bodyEmptyNotMinted" as const);
 }
 
-/** `locale` formats API dates for display and comes from the server page; see `getRuntimeBounties` for why it is a parameter. */
-export function getRuntimeProfile(slug: string, locale: string): Promise<Profile | undefined> {
-  return loadFromRuntime({
+/**
+ * `locale` formats API dates for display and comes from the server page; see `getRuntimeBounties` for why it is a parameter.
+ * `undefined` only on a BE 404, otherwise rethrows; `cache()` shares one BE request per render (see `getRuntimeBounty`).
+ */
+export const getRuntimeProfile = cache((slug: string, locale: string): Promise<Profile | undefined> =>
+  loadFromRuntime({
     mock: () => {
       onboardingLog("public-profile.mock.resolved", { slug, found: Boolean(getProfile(slug)) });
       return getProfile(slug);
@@ -197,16 +201,19 @@ export function getRuntimeProfile(slug: string, locale: string): Promise<Profile
     api: async () => {
       try {
         onboardingLog("public-profile.fetch.started", { slug });
-        const data = await fetchPublicJson<PublicProfileResponse>(`/users/${encodeURIComponent(slug)}`);
+        const data = await fetchPublicJson<PublicProfileResponse>(`/users/${encodeURIComponent(slug)}`, PUBLIC_DETAIL_FETCH);
         onboardingLog("public-profile.fetch.completed", { slug });
         return toProfile(data, locale);
       } catch (caught) {
+        const notFound = isPublicNotFound(caught);
         onboardingLog("public-profile.fetch.failed", {
           slug,
+          notFound,
           errorName: caught instanceof Error ? caught.name : "UnknownError",
         });
-        return undefined;
+        if (notFound) return undefined;
+        throw caught;
       }
     },
-  });
-}
+  }),
+);

@@ -2,12 +2,14 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { formatUtcDate } from "@/lib/api/codecs";
 
 const fetchPublicJson = vi.fn();
-vi.mock("@/lib/api/public", () => ({
+vi.mock("@/lib/api/public", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/public")>()),
   fetchPublicJson: (path: string) => fetchPublicJson(path),
   loadFromRuntime: (sources: { api: () => unknown }) => sources.api(),
 }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
+const { PublicApiError } = await import("@/lib/api/public");
 const { getRuntimeProfile, parentNftState, payoutBadge, portfolioBodyKey, profiles, PROFILE_FILLED_EXAMPLE_ID, toCompletionReward } = await import("@/lib/members");
 const { loadRuntimeHallOfFame } = await import("@/lib/hall-of-fame");
 
@@ -156,5 +158,21 @@ describe("portfolio parent NFT copy", () => {
     });
     const profile = await getRuntimeProfile("kim", "en");
     expect(profile && parentNftState(profile.nfts)).toBe("pending");
+  });
+});
+
+describe("public profile loader failure modes", () => {
+  it("returns undefined (→ notFound) only when the BE answers 404", async () => {
+    fetchPublicJson.mockRejectedValueOnce(new PublicApiError(404, "/users/ghost"));
+    await expect(getRuntimeProfile("ghost", "en")).resolves.toBeUndefined();
+  });
+
+  it.each([
+    ["a BE 502", new PublicApiError(502, "/users/kim")],
+    ["the 8s timeout", new DOMException("The operation was aborted due to timeout", "TimeoutError")],
+    ["a network failure", new TypeError("fetch failed")],
+  ])("rethrows %s", async (_label, failure) => {
+    fetchPublicJson.mockRejectedValueOnce(failure);
+    await expect(getRuntimeProfile("kim", "en")).rejects.toBe(failure);
   });
 });
