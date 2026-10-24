@@ -5,6 +5,7 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 
 import { Badge } from "@/components/ui/Badge";
 import { BountyAgentPanel } from "@/components/agents/BountyAgentPanel";
+import { BountyAccessBadges } from "@/components/bounties/BountyAccessBadges";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import { Markdown } from "@/components/ui/Markdown";
 import { isRewardUnset, RewardPill } from "@/components/ui/RewardPill";
@@ -96,10 +97,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               : <Badge variant="neutral">{submissionMode === "agent" ? t("detail.agentSubmission") : t("detail.directSubmission")}</Badge>}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="success">{t("detail.publicView")}</Badge>
-          <Badge variant="danger">{t("detail.actionsRequireLogin")}</Badge>
-        </div>
+        <BountyAccessBadges />
       </section>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">

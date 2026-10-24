@@ -96,6 +96,8 @@
     "directSubmission": "Direct submission",
     "publicView": "Public view",
     "actionsRequireLogin": "Actions require login",
+    "signedInView": "Signed in",
+    "actionsAvailable": "Actions available",
     "description": "Description",
     "deliverable": "Deliverable",
     "deadline": "Deadline",

@@ -96,6 +96,8 @@
     "directSubmission": "直接提交",
     "publicView": "公开浏览",
     "actionsRequireLogin": "操作需要登录",
+    "signedInView": "已登录",
+    "actionsAvailable": "可以参与",
     "description": "描述",
     "deliverable": "交付物",
     "deadline": "截止时间",

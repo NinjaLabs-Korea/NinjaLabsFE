@@ -96,6 +96,8 @@
     "directSubmission": "직접 제출",
     "publicView": "공개 보기",
     "actionsRequireLogin": "참여하려면 로그인 필요",
+    "signedInView": "로그인됨",
+    "actionsAvailable": "참여 가능",
     "description": "설명",
     "deliverable": "결과물",
     "deadline": "마감",
