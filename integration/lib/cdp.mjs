@@ -128,10 +128,18 @@ export function badText(text) {
   return hits;
 }
 
+/**
+ * Chrome's console text for a CSP violation, enforced ("Refused to load ... because it violates the following Content Security
+ * Policy directive") or report-only ("[Report Only] Refused to ..."). The FE builds with NODE_ENV=production, so the policy
+ * from `next.config.ts contentSecurityPolicy()` is enforced here exactly as in production.
+ */
+export const CSP_VIOLATION = /Content Security Policy|Refused to (load|execute|connect|frame|apply|evaluate|create|send)/i;
+
 export async function report(page, label, extra = {}) {
   const text = await page.text().catch(() => '');
   const hydration = [...page.console, ...page.errors].filter((l) => /hydrat|did not match|Minified React error #4(18|19|23|25)/i.test(l));
-  const r = { label, url: await page.url().catch(() => ''), console: page.console, errors: page.errors, failed: page.failed, hydration, badText: badText(text), ...extra };
+  const csp = [...page.console, ...page.errors].filter((l) => CSP_VIOLATION.test(l));
+  const r = { label, url: await page.url().catch(() => ''), console: page.console, errors: page.errors, failed: page.failed, hydration, csp, badText: badText(text), ...extra };
   console.log(JSON.stringify(r));
   page.reset();
   return r;
