@@ -303,7 +303,8 @@ describe("BountyActionPanel", () => {
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
 
     const heading = await screen.findByRole("heading", { name: "Application under review" });
-    expect(document.activeElement).toBe(heading);
+    // The focus move is a passive effect: findByRole can observe the committed heading before it runs (seen under load).
+    await waitFor(() => expect(document.activeElement).toBe(heading));
     expect(heading.getAttribute("tabindex")).toBe("-1");
     const liveRegion = document.querySelector("[aria-live=\"polite\"]");
     await waitFor(() => expect(liveRegion?.textContent).toBe("Application received. You can track it from My applications."));
