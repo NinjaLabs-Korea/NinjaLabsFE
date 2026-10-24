@@ -19,10 +19,11 @@ import { renderWithIntl } from "@/test/intl";
 const signIn = vi.hoisted(() => vi.fn());
 const foundation = vi.hoisted(() => ({ mode: "api" as "api" | "mock" }));
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAuthActions: () => ({ signIn, signOut: vi.fn() }),
-  useFoundationMode: () => foundation.mode,
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAuthActions: () => ({ signIn, signOut: vi.fn() }),
+    useFoundationMode: () => foundation.mode,
+  }));
 vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const SITE_KEY = "1x00000000000000000000AA";

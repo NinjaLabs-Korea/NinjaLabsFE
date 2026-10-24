@@ -6,8 +6,7 @@ import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
-import { ApiHttpError } from "@/lib/api/http";
-import type { AccountAgentRef, SubmissionStatus } from "@/lib/contracts/account";
+import { bountyActionErrorCopy, deriveActionView, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
 import type { Bounty } from "@/lib/types";
 
 const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card";
@@ -19,22 +18,13 @@ const labelTextClass = "mb-1.5 block text-sm font-semibold text-ink";
 // Headings that receive focus after a successful apply/submit (tabIndex={-1}); the ring matches the focus recipe.
 const headingClass = "font-display text-2xl -tracking-[0.24px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
-// API error codes with localized copy under bounties.action.errors (BE bounties/rewards codes plus the FE transport
-// codes REFRESH_UNAVAILABLE / UNKNOWN_ERROR); anything else gets the generic "Something went wrong (CODE)".
-const knownErrorCodes = [
-  "ALREADY_APPLIED", "BOUNTY_NOT_OPEN", "APPLICATION_NOT_APPROVED", "DEADLINE_PASSED", "SUBMISSION_FINALIZED", "VALIDATION_FAILED",
-  "APPLICATION_DEADLINE_PASSED", "SUBMISSION_TYPE_BOUNTY", "AGENT_SUBMISSION_REQUIRED", "DIRECT_SUBMISSION_REQUIRED",
-  "REFRESH_UNAVAILABLE", "UNKNOWN_ERROR", "MAX_WINNERS_REACHED", "BOUNTY_NOT_FOUND", "INVALID_CHARACTER", "REFERENCE_NOT_FOUND",
-  "DATABASE_UNAVAILABLE",
-] as const;
-type KnownErrorCode = (typeof knownErrorCodes)[number];
-type ErrorTranslator = (key: "generic" | "unknown" | KnownErrorCode, values?: { code: string }) => string;
+// Which section renders is decided by `deriveActionView` (lib/bounty-action-state.ts); this file only draws each `view.kind`.
+// Error copy keys come from `bountyActionErrorCopy` (codes listed in lib/api/error-copy.ts `ERROR_COPY.bountyAction`).
+type ErrorTranslator = (key: BountyActionErrorCopy["key"], values?: { code: string }) => string;
 
 function errorText(error: unknown, t: ErrorTranslator): string {
-  if (!(error instanceof ApiHttpError)) return t("generic");
-  return (knownErrorCodes as readonly string[]).includes(error.code)
-    ? t(error.code as KnownErrorCode)
-    : t("unknown", { code: error.code });
+  const copy = bountyActionErrorCopy(error);
+  return copy.key === "unknown" ? t("unknown", { code: copy.code }) : t(copy.key);
 }
 
 /** Visible label above a form control (Figma 15/15v draw placeholders only; see docs/figma/design-gaps.md). */
@@ -65,13 +55,6 @@ function StatusPanel({ title, body, tone = "muted", feedback, link, headingRef }
       {feedback ? <p className="mt-3 text-sm text-success">{feedback}</p> : null}
     </section>
   );
-}
-
-const pendingSubmissionStatuses: readonly SubmissionStatus[] = ["submitted", "resubmitted", "in_review"];
-
-/** The owner's own row (`agent: null`) and, separately, an agent-made row on the same bounty. The two never stand in for each other. */
-function splitRows<T extends { agent: AccountAgentRef | null }>(rows: readonly T[] | undefined): { own: T | undefined; agent: T | undefined } {
-  return { own: rows?.find((row) => row.agent === null), agent: rows?.find((row) => row.agent !== null) };
 }
 
 /** Figma 15/15v public (signed-out) state: heading + LOGIN REQUIRED badge, "Sign in first", and a disabled preview of the form. */
@@ -145,18 +128,6 @@ function BountyActionPanelBody({ bountyId, applicationRequired, status, submissi
   const bountyApi = useBountyApi();
   const applicationsQuery = useAccountQuery(accountApi.getApplications);
   const submissionsQuery = useAccountQuery(accountApi.getSubmissions);
-  // Owner and agent rows can coexist on one bounty. This direct panel acts only on the owner's own row (`agent: null`):
-  // an agent-made row is never a stand-in for the owner's DIRECT apply/submit - it is shown as information only.
-  const { own: application, agent: agentApplication } = splitRows(applicationsQuery.data?.filter((item) => item.bountySlug === bountyId));
-  const { own: submission, agent: agentSubmission } = splitRows(submissionsQuery.data?.filter((item) => item.bountySlug === bountyId));
-  const acceptingNew = status === "active";
-  const closedPanel = (
-    <StatusPanel
-      body={status === "reviewing" ? t("reviewingBody") : t("closedBody")}
-      link={{ href: "/bounties", label: t("browseOther") }}
-      title={t("closedHeading")}
-    />
-  );
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [applied, setApplied] = useState(false);
@@ -173,53 +144,6 @@ function BountyActionPanelBody({ bountyId, applicationRequired, status, submissi
     announce(feedback.text);
     headingRef.current?.focus();
   }, [feedback, announce]);
-
-  // A reviewing/closed bounty needs no account state for agent-mode bounties or signed-out visitors (no endpoint
-  // instructions, no sign-in prompt); signed-in users fall through so a requested revision can still be resubmitted.
-  if (!acceptingNew && (submissionMode === "agent" || auth.status === "signed-out")) {
-    return closedPanel;
-  }
-
-  if (submissionMode === "agent") {
-    return (
-      <section className={panelClass}>
-        <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{t("agentHeading")}</h2>
-        <p className="mt-2 text-sm text-ink-muted">{t("agentBody")}</p>
-        <div className="mt-4 rounded-tile bg-surface-subtle p-4 text-sm text-ink-secondary">
-          <code className="break-all">POST /agent-api/v1/bounties/{bountyId}/{applicationRequired ? "applications" : "submissions"}</code>
-        </div>
-        <Link className={outlineLinkClass} href="/agents">{t("manageAgents")}</Link>
-      </section>
-    );
-  }
-
-  if (auth.status === "loading") {
-    return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingSession")}</p></section>;
-  }
-
-  if (auth.status !== "signed-in") {
-    return <SignedOutPanel applicationRequired={applicationRequired} />;
-  }
-
-  if (submissionsQuery.loading || (applicationRequired && applicationsQuery.loading)) {
-    return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingStatus")}</p></section>;
-  }
-  if (submissionsQuery.unavailable || (applicationRequired && applicationsQuery.unavailable)) {
-    return <section className={panelClass}><p className="text-sm text-danger">{t("statusUnavailable")}</p></section>;
-  }
-
-  // Only an agent acted on this bounty for the owner: say so, link to the agents page, and show no form - the owner's
-  // direct apply/submit would be a second, unrelated participation and the agent's row is managed through the Agent API.
-  const agentRow = agentSubmission ?? agentApplication;
-  if (!application && !submission && !applied && !submitted && agentRow?.agent) {
-    return (
-      <StatusPanel
-        body={agentSubmission ? t("agentSubmittedBody", { name: agentRow.agent.name }) : t("agentAppliedBody", { name: agentRow.agent.name })}
-        link={{ href: "/agents", label: t("manageAgents") }}
-        title={t("agentRowHeading")}
-      />
-    );
-  }
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -269,9 +193,52 @@ function BountyActionPanelBody({ bountyId, applicationRequired, status, submissi
     }
   };
 
-  if (applicationRequired) {
-    if (!application && !applied) {
-      if (!acceptingNew) return closedPanel;
+  // The rule for which section to show lives in lib/bounty-action-state.ts (documented by src/test/bounty-action-state.test.ts).
+  const view = deriveActionView({
+    bountyId, applicationRequired, status, submissionMode,
+    auth: auth.status,
+    applications: applicationsQuery,
+    submissions: submissionsQuery,
+    applied, submitted,
+  });
+
+  switch (view.kind) {
+    case "closed":
+      return (
+        <StatusPanel
+          body={view.reason === "reviewing" ? t("reviewingBody") : t("closedBody")}
+          link={{ href: "/bounties", label: t("browseOther") }}
+          title={t("closedHeading")}
+        />
+      );
+    case "agentMode":
+      return (
+        <section className={panelClass}>
+          <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{t("agentHeading")}</h2>
+          <p className="mt-2 text-sm text-ink-muted">{t("agentBody")}</p>
+          <div className="mt-4 rounded-tile bg-surface-subtle p-4 text-sm text-ink-secondary">
+            <code className="break-all">POST /agent-api/v1/bounties/{bountyId}/{view.endpoint}</code>
+          </div>
+          <Link className={outlineLinkClass} href="/agents">{t("manageAgents")}</Link>
+        </section>
+      );
+    case "checkingSession":
+      return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingSession")}</p></section>;
+    case "signedOut":
+      return <SignedOutPanel applicationRequired={applicationRequired} />;
+    case "checkingStatus":
+      return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingStatus")}</p></section>;
+    case "statusUnavailable":
+      return <section className={panelClass}><p className="text-sm text-danger">{t("statusUnavailable")}</p></section>;
+    case "agentRow":
+      return (
+        <StatusPanel
+          body={view.row === "submission" ? t("agentSubmittedBody", { name: view.agentName }) : t("agentAppliedBody", { name: view.agentName })}
+          link={{ href: "/agents", label: t("manageAgents") }}
+          title={t("agentRowHeading")}
+        />
+      );
+    case "applyForm":
       return (
         <section className={panelClass}>
           <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{t("applyHeading")}</h2>
@@ -287,55 +254,44 @@ function BountyActionPanelBody({ bountyId, applicationRequired, status, submissi
           {errorLine}
         </section>
       );
-    }
-    if (application?.status === "rejected") {
+    case "applicationRejected":
       return <StatusPanel title={t("applicationRejectedHeading")} body={t("applicationRejectedBody")} link={{ href: "/bounties", label: t("browseOther") }} />;
-    }
-    if (applied || application?.status === "open") {
+    case "applicationUnderReview":
       return <StatusPanel title={t("underReviewHeading")} body={t("underReviewBody")} feedback={feedback?.kind === "success" ? feedback.text : null} headingRef={headingRef} link={{ href: "/applications", label: t("viewApplications") }} />;
+    case "submissionApproved":
+      return <StatusPanel title={t("submissionApprovedHeading")} body={t("submissionApprovedBody")} tone="success" />;
+    case "submissionRejected":
+      return <StatusPanel title={t("submissionRejectedHeading")} body={t("submissionRejectedBody")} tone="danger" link={{ href: "/bounties", label: t("browseOther") }} />;
+    case "inReviewLocked":
+      return <StatusPanel title={t("inReviewHeading")} body={t("inReviewLockedNote")} link={applicationRequired ? { href: "/applications", label: t("viewApplications") } : undefined} />;
+    case "submitForm": {
+      const { revising, inReview } = view;
+      const heading = revising ? t("resubmitHeading") : inReview ? t("inReviewHeading") : t("submitHeading");
+      const actionLabel = revising ? t("resubmit") : inReview ? t("updateSubmission") : t("submit");
+      return (
+        <section className={panelClass}>
+          <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{heading}</h2>
+          {revising ? <p className="mt-2 text-sm text-warning">{t("revisionNote")}</p> : null}
+          {inReview ? <p className="mt-2 text-sm text-ink-muted">{t("inReviewNote")}</p> : null}
+          {inReview && applicationRequired ? <Link className={outlineLinkClass} href="/applications">{t("viewApplications")}</Link> : null}
+          <form className="mt-4 space-y-3" onSubmit={submit}>
+            <Field label={t("submissionUrl")}>
+              <input className={inputClass} name="submissionUrl" placeholder={t("submissionUrl")} required type="url" {...invalidProps} />
+            </Field>
+            <Field label={t("repositoryUrl")}>
+              <input className={inputClass} name="repositoryUrl" placeholder={t("repositoryUrl")} type="url" {...invalidProps} />
+            </Field>
+            <Field label={t("commitSha")}>
+              <input className={inputClass} name="commitSha" placeholder={t("commitSha")} type="text" {...invalidProps} />
+            </Field>
+            <Field label={t("submissionDescription")}>
+              <textarea className={`min-h-24 ${textareaClass}`} name="description" placeholder={t("submissionDescription")} required {...invalidProps} />
+            </Field>
+            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy} type="submit">{busy ? t("submitting") : actionLabel}</button>
+          </form>
+          {feedback?.kind === "success" ? <p className="mt-3 text-sm text-success">{feedback.text}</p> : errorLine}
+        </section>
+      );
     }
   }
-
-  if (submission?.status === "approved") {
-    return <StatusPanel title={t("submissionApprovedHeading")} body={t("submissionApprovedBody")} tone="success" />;
-  }
-  if (submission?.status === "rejected") {
-    return <StatusPanel title={t("submissionRejectedHeading")} body={t("submissionRejectedBody")} tone="danger" link={{ href: "/bounties", label: t("browseOther") }} />;
-  }
-
-  // BE accepts resubmission until the submission is approved or rejected (after the deadline, only on revision request)
-  // and only while the bounty is in progress (`isInProgress`: OPEN / SUBMISSION_CLOSED / IN_REVIEW) - a `closed`
-  // bounty (COMPLETED / CANCELLED) answers BOUNTY_REVIEW_CLOSED, so no resubmit form is offered there.
-  const revising = submission?.status === "revision_requested" && status !== "closed";
-  const inReview = submitted || (submission !== undefined && pendingSubmissionStatuses.includes(submission.status));
-  if (!acceptingNew && !revising) {
-    if (!inReview) return closedPanel;
-    return <StatusPanel title={t("inReviewHeading")} body={t("inReviewLockedNote")} link={applicationRequired ? { href: "/applications", label: t("viewApplications") } : undefined} />;
-  }
-  const heading = revising ? t("resubmitHeading") : inReview ? t("inReviewHeading") : t("submitHeading");
-  const actionLabel = revising ? t("resubmit") : inReview ? t("updateSubmission") : t("submit");
-  return (
-    <section className={panelClass}>
-      <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{heading}</h2>
-      {revising ? <p className="mt-2 text-sm text-warning">{t("revisionNote")}</p> : null}
-      {inReview ? <p className="mt-2 text-sm text-ink-muted">{t("inReviewNote")}</p> : null}
-      {inReview && applicationRequired ? <Link className={outlineLinkClass} href="/applications">{t("viewApplications")}</Link> : null}
-      <form className="mt-4 space-y-3" onSubmit={submit}>
-        <Field label={t("submissionUrl")}>
-          <input className={inputClass} name="submissionUrl" placeholder={t("submissionUrl")} required type="url" {...invalidProps} />
-        </Field>
-        <Field label={t("repositoryUrl")}>
-          <input className={inputClass} name="repositoryUrl" placeholder={t("repositoryUrl")} type="url" {...invalidProps} />
-        </Field>
-        <Field label={t("commitSha")}>
-          <input className={inputClass} name="commitSha" placeholder={t("commitSha")} type="text" {...invalidProps} />
-        </Field>
-        <Field label={t("submissionDescription")}>
-          <textarea className={`min-h-24 ${textareaClass}`} name="description" placeholder={t("submissionDescription")} required {...invalidProps} />
-        </Field>
-        <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy} type="submit">{busy ? t("submitting") : actionLabel}</button>
-      </form>
-      {feedback?.kind === "success" ? <p className="mt-3 text-sm text-success">{feedback.text}</p> : errorLine}
-    </section>
-  );
 }

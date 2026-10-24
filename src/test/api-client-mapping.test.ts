@@ -3,8 +3,9 @@ import { createApiApiClient, unavailableReason } from "@/lib/api/api-client";
 import { ApiHttpError, type ApiHttp } from "@/lib/api/http";
 import { toClientUser, type MeResponse } from "@/lib/api/me";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
+import { signedInWith } from "@/test/support/auth";
 
-const signedIn: AuthSnapshot = { status: "signed-in", user: { id: "u1", handle: "ninja", initials: "NI", profileSlug: "ninja" } };
+const signedIn = signedInWith({ id: "u1" });
 const signedOut: AuthSnapshot = { status: "signed-out", user: null };
 
 type Routes = Record<string, unknown>;

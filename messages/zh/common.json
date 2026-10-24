@@ -67,7 +67,15 @@
     "awaitingSignature": "等待签名…",
     "verify": "验证钱包",
     "disconnectAddress": "断开 {address}",
-    "verifyFailed": "钱包验证失败。请检查签名请求后重试。",
+    "verifyErrors": {
+      "generic": "钱包验证失败。请检查签名请求后重试。",
+      "INVALID_INJECTIVE_ADDRESS": "不支持该钱包地址。请连接兼容 Injective 的 EVM 钱包后重试。",
+      "CHALLENGE_NOT_FOUND": "未找到验证请求。请再次点击“验证钱包”获取新的请求。",
+      "CHALLENGE_EXPIRED": "验证请求已过期或已被使用。请再次点击“验证钱包”并签署新消息。",
+      "INVALID_SIGNATURE": "签名与该钱包不匹配。请使用已连接的地址签名后重试。",
+      "WALLET_ALREADY_LINKED": "该钱包已关联到其他账户，或您的账户已有关联钱包。请使用其他钱包，或登录拥有该钱包的账户。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
+    },
     "disconnectWalletLabel": "断开钱包 {address}",
     "unavailable": "钱包不可用",
     "unavailableHint": "请安装或解锁兼容的浏览器钱包以进行连接。",

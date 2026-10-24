@@ -11,6 +11,7 @@ import {
 } from "@/components/auth/FoundationProvider";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useRouter } from "@/i18n/navigation";
+import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { pushFlash } from "@/lib/flash";
 
 const focusClass =
@@ -22,16 +23,9 @@ export function confirmationMatches(nickname: string, typed: string): boolean {
   return typed.trim().length > 0 && typed.trim().toLowerCase() === nickname.trim().toLowerCase();
 }
 
-/** BE error codes with their own copy under `account.settings.deleteErrors`; anything else is `generic`. */
-const knownErrors = [
-  "CONFIRM_NICKNAME_MISMATCH",
-  "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS",
-  // 409: approved rewards not yet requested as a payout; withdrawing would forfeit them, so an admin must pay first.
-  "WITHDRAWAL_BLOCKED_PENDING_REWARDS",
-  // 503 from any endpoint when the BE cannot reach its database: transient, retry later.
-  "DATABASE_UNAVAILABLE",
-] as const;
-type KnownError = (typeof knownErrors)[number];
+/** BE error codes with their own copy under `account.settings.deleteErrors` (목록: `ERROR_COPY.accountDelete`); anything else is `generic`. */
+const deleteErrors = ERROR_COPY.accountDelete;
+type KnownError = (typeof deleteErrors.codes)[number];
 
 export function AccountSettingsView() {
   const t = useTranslations("account.settings");
@@ -77,8 +71,7 @@ export function AccountSettingsView() {
     try {
       await settingsApi.withdrawAccount(typed.trim());
     } catch (caught) {
-      const code = (caught as { code?: unknown }).code;
-      setError(knownErrors.includes(code as KnownError) ? (code as KnownError) : "generic");
+      setError(knownCode(caught, deleteErrors.codes) ?? deleteErrors.fallback);
       pendingRef.current = false;
       setBusy(false);
       return;

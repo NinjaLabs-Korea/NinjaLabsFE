@@ -12,6 +12,7 @@ import type { AdminApi } from "@/lib/contracts/api";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { enMessages, renderWithIntl } from "@/test/intl";
+import { signedInAs } from "@/test/support/auth";
 
 const redirect = vi.fn();
 vi.mock("@/i18n/navigation", () => ({
@@ -33,11 +34,12 @@ const state: { auth: AuthSnapshot; mode: "mock" | "api"; api: AdminApi } = {
   mode: "api",
   api: createMockApiClient(),
 };
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAuthSnapshot: () => state.auth,
-  useFoundationMode: () => state.mode,
-  useAdminApi: () => state.api,
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAuthSnapshot: () => state.auth,
+    useFoundationMode: () => state.mode,
+    useAdminApi: () => state.api,
+  }));
 
 const params = Promise.resolve({ locale: "en" });
 const mockEnv = { NINJA_DEPLOYMENT_TIER: "local", NINJA_RUNTIME_MODE: "mock", NINJA_APP_ORIGIN: "http://localhost:3000", NINJA_MOCK_SEED: "seed" };
@@ -82,7 +84,7 @@ describe("AdminGate", () => {
   });
 
   it("refuses a signed-in non-admin", () => {
-    state.auth = { status: "signed-in", user: { ...previewUser, isAdmin: false } };
+    state.auth = signedInAs({ ...previewUser, isAdmin: false });
     renderWithIntl(<AdminGate>{content}</AdminGate>);
     expect(screen.getByRole("heading", { level: 1, name: "Admin access only" })).toBeTruthy();
     expect(screen.getByText("Your account does not have administrator permission.")).toBeTruthy();
@@ -90,7 +92,7 @@ describe("AdminGate", () => {
   });
 
   it("renders the console for an admin, and always in mock mode", () => {
-    state.auth = { status: "signed-in", user: { ...previewUser, isAdmin: true } };
+    state.auth = signedInAs({ ...previewUser, isAdmin: true });
     const { unmount } = renderWithIntl(<AdminGate>{content}</AdminGate>);
     expect(screen.getByText("secret console")).toBeTruthy();
     unmount();

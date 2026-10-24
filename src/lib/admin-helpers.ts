@@ -2,19 +2,19 @@
 // `lib/admin.ts`, whose mock registries (bounties/members/notices/hall-of-fame fixtures) would otherwise be bundled
 // into the shared client chunk. `lib/admin.ts` re-exports everything for server code and tests.
 import { isHighlightTypeCode, type HighlightTypeCode } from "./api/codecs";
-import { ApiHttpError } from "./api/http";
+import { ERROR_COPY, knownCode } from "./api/error-copy";
+import { noticeCategoryKeys } from "./notice-categories";
+import type { Notice } from "./types";
 
-/** BE 400/404/409/503 codes an admin write can return that deserve their own copy (`admin.common.errors.<code>`). */
-export const ADMIN_API_ERROR_CODES = [
-  "INVALID_CHARACTER", "REFERENCE_NOT_FOUND", "BOUNTY_NOT_FOUND", "BOUNTY_HAS_OPEN_FUNDS",
-  // 503 from any endpoint when the BE cannot reach its database (transient).
-  "DATABASE_UNAVAILABLE",
-] as const;
+/**
+ * BE codes an admin write can return that deserve their own copy (`admin.common.errors.<code>`).
+ * 코드 목록은 `lib/api/error-copy.ts`의 `ERROR_COPY.adminWrite`가 소유한다 — 추가/삭제는 거기서.
+ */
+export const ADMIN_API_ERROR_CODES = ERROR_COPY.adminWrite.codes;
 export type AdminApiErrorCode = (typeof ADMIN_API_ERROR_CODES)[number];
 
 export function adminApiErrorCode(error: unknown): AdminApiErrorCode | null {
-  if (!(error instanceof ApiHttpError)) return null;
-  return (ADMIN_API_ERROR_CODES as readonly string[]).includes(error.code) ? (error.code as AdminApiErrorCode) : null;
+  return knownCode(error, ADMIN_API_ERROR_CODES);
 }
 
 /** Toast description for a failed admin write: the mapped BE code's copy, else the action's generic `fallback`. */
@@ -83,7 +83,8 @@ export type AdminHighlight = {
 export type AdminPost = {
   slug: string;
   title: string;
-  category: "Ninja Labs" | "Injective ecosystem" | "Events" | "Recruitment" | "Other";
+  /** 공지 카테고리와 같은 값 집합 — 정의는 `lib/types.ts Notice["category"]` 하나뿐이다. */
+  category: Notice["category"];
   status: "draft" | "published";
   publishedAt: string | null;
   bodyMarkdown: string;
@@ -135,10 +136,5 @@ export function deliverablesFromRequirements(requirements: string): string[] {
   return requirements.split("\n").map((line) => line.trim()).filter(Boolean);
 }
 
-export const postCategoryLabelKeys: Record<AdminPost["category"], string> = {
-  "Ninja Labs": "ninjaLabs",
-  "Injective ecosystem": "injectiveEcosystem",
-  Events: "events",
-  Recruitment: "recruitment",
-  Other: "other",
-};
+/** 어드민 공지 카테고리 라벨 키 = 공개 공지와 같은 표. 카테고리를 추가/개명할 때는 `lib/notice-categories.ts`만 고친다. */
+export const postCategoryLabelKeys: Record<AdminPost["category"], string> = noticeCategoryKeys;

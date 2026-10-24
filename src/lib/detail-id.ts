@@ -59,7 +59,7 @@ export function hasMockDetail(kind: DetailKind, id: string): boolean {
 /**
  * Proxy-side answer to "can this detail URL exist?": the id shape in both modes (plus the reserved-nickname list for
  * members) and the fixture registry in mock mode. api mode never calls the BE from the proxy: a probe per request would
- * block SSR on BE latency with no timeout and double the calls counted against the 120/min IP throttle. A well-formed
+ * block SSR on BE latency with no timeout and double the calls counted against the 600/min IP throttle. A well-formed
  * but missing id (bounty/notice UUID, member nickname) is left to the page's `notFound()` (status 404, client-rendered
  * boundary).
  */

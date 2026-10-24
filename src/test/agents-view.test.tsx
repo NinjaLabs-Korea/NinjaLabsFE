@@ -11,6 +11,7 @@ import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { renderWithIntl } from "@/test/intl";
+import { signedInAs } from "@/test/support/auth";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => (
@@ -20,16 +21,17 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 
-const signedIn: AuthSnapshot = { status: "signed-in", user: previewUser };
+const signedIn = signedInAs(previewUser);
 const state: { auth: AuthSnapshot } = { auth: signedIn };
 let apiClient: ApiClient;
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAuthSnapshot: () => state.auth,
-  useAccountApi: () => apiClient,
-  useAgentApi: () => apiClient,
-  useFoundationMode: () => "mock",
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAuthSnapshot: () => state.auth,
+    useAccountApi: () => apiClient,
+    useAgentApi: () => apiClient,
+    useFoundationMode: () => "mock",
+  }));
 
 describe("describeAgentKey", () => {
   const now = Date.parse("2026-10-22T00:00:00Z");

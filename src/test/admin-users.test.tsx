@@ -12,9 +12,10 @@ import { renderWithIntl } from "@/test/intl";
 
 let api: AdminApi;
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAdminApi: () => api,
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAdminApi: () => api,
+  }));
 
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute("open", ""); };

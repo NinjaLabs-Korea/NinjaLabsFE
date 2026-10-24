@@ -8,6 +8,7 @@ import {
 } from "@/components/auth/FoundationProvider";
 import { useRouter } from "@/i18n/navigation";
 import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
+import { ERROR_COPY, errorCopyKey, type ErrorCopyKey } from "@/lib/api/error-copy";
 import {
   maskWalletAddress,
   onboardingErrorDetails,
@@ -24,10 +25,13 @@ export function WalletConnectButton({
   disabled = false,
 }: WalletConnectButtonProps) {
   const t = useTranslations("common.wallet");
+  const tVerifyErrors = useTranslations(ERROR_COPY.walletVerify.messages);
   const router = useRouter();
   const apiClient = useWalletApi();
   const mode = useFoundationMode();
   const [verificationState, setVerificationState] = useState<"idle" | "pending" | "error">("idle");
+  // 실패 문구 키 (`common.wallet.verifyErrors.<key>`) — BE 코드별 안내, 그 외는 generic.
+  const [verifyErrorKey, setVerifyErrorKey] = useState<ErrorCopyKey<typeof ERROR_COPY.walletVerify>>("generic");
   const {
     address,
     connectedChainId,
@@ -73,6 +77,7 @@ export function WalletConnectButton({
         wallet,
         ...onboardingErrorDetails(caught),
       });
+      setVerifyErrorKey(errorCopyKey(caught, ERROR_COPY.walletVerify));
       setVerificationState("error");
     }
   };
@@ -134,7 +139,7 @@ export function WalletConnectButton({
           </button>
           {verificationState === "error" ? (
             <p className="text-xs text-danger" role="alert">
-              {t("verifyFailed")}
+              {tVerifyErrors(verifyErrorKey)}
             </p>
           ) : null}
         </div>

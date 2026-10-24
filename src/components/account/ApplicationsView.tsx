@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
-import { ApiHttpError } from "@/lib/api/http";
+import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
 import type { AccountApplication, ApplicationStatus } from "@/lib/contracts/account";
 
 const focusClass =
@@ -44,7 +44,7 @@ export function ApplicationsView() {
   const apiClient = useAccountApi();
   const bountyApi = useBountyApi();
   const { data: applications, unavailable, reason, refresh } = useAccountQuery(apiClient.getApplications);
-  const tErrors = useTranslations("account.applications.withdrawErrors");
+  const tErrors = useTranslations(ERROR_COPY.applicationWithdraw.messages);
   const [target, setTarget] = useState<AccountApplication | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -66,13 +66,10 @@ export function ApplicationsView() {
       setNotice(t("withdrawn"));
       refresh();
     } catch (error) {
-      const code = error instanceof ApiHttpError ? error.code : "";
-      setErrors((current) => ({
-        ...current,
-        [application.id]: code === "APPLICATION_NOT_FOUND_OR_NOT_PENDING" ? tErrors(code) : tErrors("generic"),
-      }));
+      const key = errorCopyKey(error, ERROR_COPY.applicationWithdraw);
+      setErrors((current) => ({ ...current, [application.id]: tErrors(key) }));
       // A stale row (already reviewed elsewhere) should refresh so the card reflects the real state.
-      if (code === "APPLICATION_NOT_FOUND_OR_NOT_PENDING") refresh();
+      if (key === "APPLICATION_NOT_FOUND_OR_NOT_PENDING") refresh();
     } finally {
       pendingRef.current.delete(application.id);
       setBusyId(null);

@@ -27,6 +27,9 @@
       "REFERENCE_NOT_FOUND": "该记录引用的对象已不存在。请刷新页面后重试。",
       "BOUNTY_NOT_FOUND": "该赏金已不存在。请刷新页面以更新列表。",
       "BOUNTY_HAS_OPEN_FUNDS": "该赏金在多签中仍有资金（已确认的存款未全部发放，或仍有进行中的付款）。请先完成付款或退款再删除。",
+      "DEADLINE_IN_PAST": "截止时间不能改到过去。请选择未来的日期和时间，或保留已保存的截止时间。",
+      "MEDIA_FILE_TOO_LARGE": "图片超过 5 MB。请选择更小的文件后重试。",
+      "MEDIA_FILE_TYPE_UNSUPPORTED": "仅支持上传 PNG、JPEG 和 WebP 图片。请选择其他文件后重试。",
       "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
     }
   },

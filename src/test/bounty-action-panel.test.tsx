@@ -9,6 +9,7 @@ import type { AccountApplication, AccountSubmission } from "@/lib/contracts/acco
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { renderWithIntl } from "@/test/intl";
+import { signedIn, signedOut } from "@/test/support/auth";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => (
@@ -17,12 +18,6 @@ vi.mock("@/i18n/navigation", () => ({
     </a>
   ),
 }));
-
-const signedIn: AuthSnapshot = {
-  status: "signed-in",
-  user: { id: "user-1", handle: "ninja", initials: "NI", profileSlug: "ninja" },
-};
-const signedOut: AuthSnapshot = { status: "signed-out", user: null };
 
 const state: { auth: AuthSnapshot; applications: AccountApplication[]; submissions: AccountSubmission[] } = {
   auth: signedIn,

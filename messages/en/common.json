@@ -67,7 +67,15 @@
     "awaitingSignature": "Waiting for signature…",
     "verify": "Verify wallet",
     "disconnectAddress": "Disconnect {address}",
-    "verifyFailed": "Wallet verification failed. Check the signature request and try again.",
+    "verifyErrors": {
+      "generic": "Wallet verification failed. Check the signature request and try again.",
+      "INVALID_INJECTIVE_ADDRESS": "This wallet address is not supported. Connect an Injective-compatible EVM wallet and try again.",
+      "CHALLENGE_NOT_FOUND": "The verification request was not found. Select Verify wallet again to get a new one.",
+      "CHALLENGE_EXPIRED": "The verification request expired or was already used. Select Verify wallet again and sign the new message.",
+      "INVALID_SIGNATURE": "The signature does not match this wallet. Sign with the connected address and try again.",
+      "WALLET_ALREADY_LINKED": "This wallet is already linked to another account, or your account already has a wallet. Use a different wallet, or sign in with the account that owns this one.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+    },
     "disconnectWalletLabel": "Disconnect wallet {address}",
     "unavailable": "Wallet unavailable",
     "unavailableHint": "Install or unlock a compatible browser wallet to connect.",

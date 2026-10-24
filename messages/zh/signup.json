@@ -103,11 +103,11 @@
       "saveErrors": {
         "network": "无法保存个人资料，请检查网络连接后重试。",
         "session": "您的会话已过期，请重新登录后继续。",
-        "nickname": "该昵称已被使用，请换一个。",
+        "NICKNAME_TAKEN": "该昵称已被使用，请换一个。",
         "invalid": "请检查所有字段：昵称需为 2-50 个字符，并且必须填写自我介绍和领域标签。",
-        "invalidCharacter": "昵称或简介包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
-        "referenceNotFound": "找不到您的账户记录。请刷新页面或重新登录。",
-        "unavailable": "服务暂时不可用，请稍后重试。",
+        "INVALID_CHARACTER": "昵称或简介包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
+        "REFERENCE_NOT_FOUND": "找不到您的账户记录。请刷新页面或重新登录。",
+        "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
         "generic": "无法保存个人资料，请重试。"
       },
       "nicknameHint": "2–50 个字符：字母、数字、_ . -，且开头和结尾必须是字母或数字。",
