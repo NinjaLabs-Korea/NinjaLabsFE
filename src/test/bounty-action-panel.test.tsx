@@ -19,7 +19,6 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 
-
 const state: { auth: AuthSnapshot; applications: AccountApplication[]; submissions: AccountSubmission[] } = {
   auth: signedIn,
   applications: [],
