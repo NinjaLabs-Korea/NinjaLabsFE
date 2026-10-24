@@ -254,6 +254,16 @@ describe("BountyManager flows", () => {
     expect(row("Build an iAsset price widget")).toBeTruthy();
   });
 
+  it("renders an unparseable deadline as a dash instead of Invalid Date", async () => {
+    const [first] = getAdminBounties();
+    const broken = { ...first, deadline: "07.14" };
+    vi.spyOn(api, "getAdminBounties").mockResolvedValue([broken]);
+    renderWithIntl(<BountyManager bounties={[broken]} tabs={null}>{null}</BountyManager>);
+    const cells = within(row(first.title)).getAllByRole("cell");
+    expect(cells[5].textContent).toBe("–");
+    expect(screen.queryByText(/Invalid/)).toBeNull();
+  });
+
   it("flags a stored non-ISO deadline as invalid on edit instead of silently saving it", async () => {
     const [first] = getAdminBounties();
     const broken = { ...first, deadline: "07.14" };

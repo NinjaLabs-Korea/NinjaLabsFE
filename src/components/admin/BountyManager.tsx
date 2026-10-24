@@ -9,7 +9,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { type AdminBounty, adminErrorDescription } from "@/lib/admin-helpers";
-import { BOUNTY_SPONSOR_MAX, BOUNTY_TITLE_MAX, bountyToForm, emptyBountyForm, formToBounty, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
+import { BOUNTY_SPONSOR_MAX, BOUNTY_TITLE_MAX, bountyToForm, emptyBountyForm, formToBounty, isIsoDateTime, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 
@@ -48,10 +48,10 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const coverInputRef = useRef<HTMLInputElement>(null);
   const editing = mode.kind === "edit";
 
-  const deadlineCell = (iso: string) => {
-    const date = new Date(iso);
-    return Number.isNaN(date.getTime()) ? "–" : format.dateTime(date, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone, timeZoneName: "short" });
-  };
+  // Same ISO gate as the edit field (`toLocalDateTimeInput`): V8 reads a stray "07.14" as 2001-07-14, which must not
+  // render as a real date in the table while the form treats it as invalid.
+  const deadlineCell = (iso: string) =>
+    !isIsoDateTime(iso) ? "–" : format.dateTime(new Date(iso), { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone, timeZoneName: "short" });
 
   /** Clears the stored cover and any picked file; the save then sends `coverImageUrl: null` so the BE drops it. */
   const removeCover = () => {
