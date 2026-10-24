@@ -15,6 +15,9 @@ export const alive = (pid) => {
 const groupAlive = (pgid) => {
   try { process.kill(-pgid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
 };
+const isPostgres = (pid) => {
+  try { return /postgres|postmaster/.test(execFileSync('ps', ['-p', String(pid), '-o', 'comm='], { encoding: 'utf8' })); } catch { return false; }
+};
 const sleepSync = (s) => { try { execFileSync('sleep', [String(s)]); } catch { /* interrupted */ } };
 
 export function readPids(dir) {
@@ -37,7 +40,7 @@ export function stopServices(dir, { log = () => {} } = {}) {
   const pidFile = path.join(pgData, 'postmaster.pid');
   if (fs.existsSync(pidFile)) {
     const pmPid = Number(fs.readFileSync(pidFile, 'utf8').split('\n')[0]);
-    if (pmPid && alive(pmPid)) {
+    if (pmPid && alive(pmPid) && isPostgres(pmPid)) { // a recycled pid must never be killed
       const pgCtl = pids.pgBin ? path.join(pids.pgBin, 'pg_ctl') : 'pg_ctl';
       try { execFileSync(pgCtl, ['-D', pgData, 'stop', '-m', 'immediate', '-w'], { stdio: 'ignore' }); did.push(`postgres ${pmPid} stopped`); }
       catch { try { process.kill(pmPid, 'SIGKILL'); did.push(`postgres ${pmPid} killed`); } catch { /* gone */ } }
@@ -58,7 +61,7 @@ export function stopServices(dir, { log = () => {} } = {}) {
 }
 
 /** Reaps every `ninja-it-*` dir under tmpdir whose harness is gone. Dirs of a live harness (another agent's run) are left alone. */
-export function reapStale({ tmp = os.tmpdir(), log = () => {} } = {}) {
+export function reapStale({ tmp = os.tmpdir(), log = () => {}, includeKept = false } = {}) {
   const reaped = [];
   let names = [];
   try { names = fs.readdirSync(tmp).filter((n) => n.startsWith(TMP_PREFIX)); } catch { /* unreadable tmp */ }
@@ -69,6 +72,7 @@ export function reapStale({ tmp = os.tmpdir(), log = () => {} } = {}) {
     if (!st.isDirectory()) continue;
     const pids = readPids(dir);
     if (pids?.harnessPid && alive(pids.harnessPid)) { log(`skip ${dir} (harness ${pids.harnessPid} is running)`); continue; }
+    if (pids?.kept && !includeKept) { log(`skip ${dir} (kept for debugging; --reap removes it)`); continue; }
     if (!pids && Date.now() - st.mtimeMs < 60_000) { log(`skip ${dir} (just created)`); continue; }
     log(`reaping ${dir}`);
     stopServices(dir, { log });

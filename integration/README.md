@@ -48,7 +48,7 @@ per-flow logs (`ASSERT PASS|FAIL ...` lines plus a JSON page report per screen),
    confirmation, notices and a highlight through the BE admin API so they pass real validation.
 6. Runs the flows in order, then dumps key tables and **always** tears everything down (process groups killed, Postgres
    stopped, temp dir removed), including on failure or Ctrl-C. A SIGKILL of the harness cannot run that code, so see
-   [Killed runs](#killed-runs). `NINJA_IT_KEEP_TMP=1` keeps the temp dir for debugging.
+   [Killed runs](#killed-runs). `NINJA_IT_KEEP_TMP=1` keeps the temp dir for debugging (marked `kept`: later runs skip it, `--reap` removes it).
 
 ### Ports and environment
 

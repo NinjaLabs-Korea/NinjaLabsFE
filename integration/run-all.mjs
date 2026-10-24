@@ -44,7 +44,7 @@ process.removeAllListeners('warning');
 // A harness that was SIGKILLed (e.g. by a tool timeout) leaves Postgres, BE, FE, proxies and Chrome running. Each run records
 // them in $TMPDIR/ninja-it-*/pids.json; reapStale() stops and deletes the ones whose harness is gone (never a live run's).
 if (REAP_ONLY) {
-  const reaped = reapStale({ log });
+  const reaped = reapStale({ log, includeKept: true });
   console.log(reaped.length ? `reaped ${reaped.length} stale run(s)` : 'nothing to reap');
   process.exit(0);
 }
@@ -133,7 +133,7 @@ function cleanup() {
   if (pgStarted) {
     try { execFileSync(pgBin('pg_ctl'), ['-D', path.join(TMP, 'pg'), 'stop', '-m', 'fast', '-w'], { stdio: 'ignore' }); } catch { /* not running */ }
   }
-  if (env.NINJA_IT_KEEP_TMP === '1') log(`kept temp dir ${TMP}`);
+  if (env.NINJA_IT_KEEP_TMP === '1') { writePids(TMP, { kept: true }); log(`kept temp dir ${TMP}`); }
   else fs.rmSync(TMP, { recursive: true, force: true });
 }
 function alive(pid) {
