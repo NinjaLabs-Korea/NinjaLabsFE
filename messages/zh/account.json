@@ -53,7 +53,10 @@
     "withdrawErrors": {
       "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "该申请已被审核或已撤回。",
       "generic": "无法撤回该申请,请稍后重试。"
-    }
+    },
+    "payoutPaid": "已支付",
+    "payoutPartial": "部分已支付",
+    "payoutPending": "待支付"
   },
   "settings": {
     "meta": {

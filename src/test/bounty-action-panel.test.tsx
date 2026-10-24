@@ -51,6 +51,7 @@ const application = (status: AccountApplication["status"], agent: AccountApplica
   status,
   agent,
   reviewComment: null,
+  paymentStatus: "NONE",
 });
 
 const submission = (status: AccountSubmission["status"], agent: AccountSubmission["agent"] = null, reviewComment: string | null = null): AccountSubmission => ({ bountySlug: "bounty-1", status, agent, paymentStatus: "NONE", reviewComment });
@@ -249,6 +250,25 @@ describe("BountyActionPanel", () => {
     renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
     expect(await screen.findByText("Reviewer comment: Add a README")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Resubmit" })).toBeTruthy();
+  });
+
+  describe("payout status on the approved panel", () => {
+    const approved = (paymentStatus: AccountSubmission["paymentStatus"]) => {
+      state.submissions = [{ ...submission("approved"), paymentStatus }];
+      renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    };
+
+    it.each([["PAID", "Paid"], ["PARTIALLY_PAID", "Partially paid"], ["PENDING", "Payout pending"]] as const)("%s -> %s", async (paymentStatus, label) => {
+      approved(paymentStatus);
+      expect(await screen.findByText("The sponsor approved your work for this bounty.")).toBeTruthy();
+      expect(screen.getByText(label)).toBeTruthy();
+    });
+
+    it("shows no payout badge for NONE", async () => {
+      approved("NONE");
+      await screen.findByText("The sponsor approved your work for this bounty.");
+      for (const label of ["Paid", "Partially paid", "Payout pending"]) expect(screen.queryByText(label)).toBeNull();
+    });
   });
 
   describe("reviewer text layout", () => {

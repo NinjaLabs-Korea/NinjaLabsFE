@@ -26,13 +26,13 @@ import { ApiHttpError } from "@/lib/api/http";
 import type { AccountAgentRef, AccountApplication, AccountSubmission, SubmissionStatus } from "@/lib/contracts/account";
 import type { AuthStatus } from "@/lib/contracts/auth";
 import { parseReviewComment, type ReviewNote } from "@/lib/review-comment";
-import type { Bounty } from "@/lib/types";
+import type { Bounty, PayoutStatus } from "@/lib/types";
 
 /** 심사 대기 중인 제출 상태 — 이 상태의 제출이 있으면 "심사 중" 화면/문구를 쓴다. */
 export const PENDING_SUBMISSION_STATUSES: readonly SubmissionStatus[] = ["submitted", "resubmitted", "in_review"];
 
 type ApplicationRow = Pick<AccountApplication, "bountySlug" | "status" | "agent">;
-type SubmissionRow = Pick<AccountSubmission, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountSubmission, "reviewComment">>;
+type SubmissionRow = Pick<AccountSubmission, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountSubmission, "reviewComment" | "paymentStatus">>;
 
 /** `useAccountQuery` 결과 중 이 규칙이 읽는 부분. `data`는 내 전체 행(모든 바운티)이다. */
 export type AccountRowsQuery<T> = { loading: boolean; unavailable: boolean; data: readonly T[] | null };
@@ -65,7 +65,8 @@ export type BountyActionView =
   | { kind: "applyForm" }
   | { kind: "applicationRejected" }
   | { kind: "applicationUnderReview" }
-  | { kind: "submissionApproved" }
+  /** `payout`: the submission's payout status (`lib/payout.ts payoutBadge` decides what shows); omitted when unknown. */
+  | { kind: "submissionApproved"; payout?: PayoutStatus }
   /** `review`: 심사자 코멘트 (없으면 생략). `forfeited`면 승인됐지만 수상이 몰수된 건이다. */
   | { kind: "submissionRejected"; review?: ReviewNote }
   /** 마감 후 심사 중 — 폼 없이 안내만 */
@@ -117,7 +118,7 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
   }
 
   // 7. 확정된 제출
-  if (submission?.status === "approved") return { kind: "submissionApproved" };
+  if (submission?.status === "approved") return submission.paymentStatus ? { kind: "submissionApproved", payout: submission.paymentStatus } : { kind: "submissionApproved" };
   if (submission?.status === "rejected") {
     const review = parseReviewComment(submission.reviewComment);
     return review ? { kind: "submissionRejected", review } : { kind: "submissionRejected" };

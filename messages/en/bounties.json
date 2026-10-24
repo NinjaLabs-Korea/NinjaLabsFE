@@ -212,7 +212,10 @@
     "inReviewLockedNote": "The sponsor is reviewing your work. Submissions are closed, so you can update it only if the sponsor requests a revision.",
     "agentRowHeading": "Handled by your agent",
     "agentAppliedBody": "Your agent {name} applied to this bounty. Manage that application through the Agent API; this page does not submit on its behalf.",
-    "agentSubmittedBody": "Your agent {name} submitted work for this bounty. Manage that submission through the Agent API; this page does not resubmit on its behalf."
+    "agentSubmittedBody": "Your agent {name} submitted work for this bounty. Manage that submission through the Agent API; this page does not resubmit on its behalf.",
+    "payoutPaid": "Paid",
+    "payoutPartial": "Partially paid",
+    "payoutPending": "Payout pending"
   },
   "unavailableBody": "We couldn't reach the server. Please refresh in a moment.",
   "card": {

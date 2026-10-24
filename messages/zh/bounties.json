@@ -212,7 +212,10 @@
     "inReviewLockedNote": "赞助方正在审核您的作品。提交已关闭，仅在赞助方要求修改时才能更新。",
     "agentRowHeading": "由你的代理处理",
     "agentAppliedBody": "你的代理 {name} 已申请此赏金。请通过 Agent API 管理该申请；本页面不会代为提交。",
-    "agentSubmittedBody": "你的代理 {name} 已为此赏金提交作品。请通过 Agent API 管理该提交；本页面不会代为重新提交。"
+    "agentSubmittedBody": "你的代理 {name} 已为此赏金提交作品。请通过 Agent API 管理该提交；本页面不会代为重新提交。",
+    "payoutPaid": "已支付",
+    "payoutPartial": "部分已支付",
+    "payoutPending": "待支付"
   },
   "unavailableBody": "无法连接服务器，请稍后刷新。",
   "card": {

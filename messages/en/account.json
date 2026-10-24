@@ -53,7 +53,10 @@
     "withdrawErrors": {
       "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "This application was already reviewed or withdrawn.",
       "generic": "We couldn’t withdraw this application. Please try again shortly."
-    }
+    },
+    "payoutPaid": "Paid",
+    "payoutPartial": "Partially paid",
+    "payoutPending": "Payout pending"
   },
   "settings": {
     "meta": {

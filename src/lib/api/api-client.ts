@@ -81,6 +81,7 @@ function toApplication(row: ApplicationRow): AccountApplication {
     status: row.status === "APPROVED" ? "approved" : row.status === "REJECTED" ? "rejected" : "open",
     agent: toAgentRef(row.agent),
     reviewComment: null,
+    paymentStatus: "NONE",
   };
 }
 
@@ -153,10 +154,10 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
               if (submission.status === "REVISION_REQUESTED") {
                 return { ...application, status: "revisionRequested" as const, reviewComment: submission.review_comment?.trim() || null };
               }
-              return {
-                ...application,
-                status: submission.status === "APPROVED" ? "completed" as const : "submitted" as const,
-              };
+              if (submission.status === "APPROVED") {
+                return { ...application, status: "completed" as const, paymentStatus: toSubmission(submission).paymentStatus };
+              }
+              return { ...application, status: "submitted" as const };
             }),
         };
       } catch (error) {

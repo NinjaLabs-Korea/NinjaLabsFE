@@ -104,6 +104,7 @@
     },
     "shareable": "공유 가능한 URL — 로그인 불필요",
     "payoutPending": "지급 대기",
-    "payoutPartial": "일부 지급"
+    "payoutPartial": "일부 지급",
+    "payoutPaid": "지급 완료"
   }
 }

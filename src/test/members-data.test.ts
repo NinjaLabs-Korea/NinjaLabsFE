@@ -75,6 +75,12 @@ describe("public profile payout status", () => {
     expect(payoutBadge("NONE")).toBeNull();
   });
 
+  it("reads PAID as a success badge only when the applicant view asks for it (shared rule in lib/payout)", () => {
+    expect(payoutBadge("PAID", { showPaid: true })).toEqual({ variant: "success", key: "payoutPaid" });
+    expect(payoutBadge("NONE", { showPaid: true })).toBeNull();
+    expect(payoutBadge("PENDING", { showPaid: true })).toEqual({ variant: "warning", key: "payoutPending" });
+  });
+
   it("keeps one PARTIALLY_PAID completion in the mock fixture, visible among the first three cards", () => {
     const jaemin = profiles[PROFILE_FILLED_EXAMPLE_ID];
     expect(jaemin?.completions.slice(0, 3).filter((completion) => completion.payoutStatus === "PARTIALLY_PAID")).toHaveLength(1);

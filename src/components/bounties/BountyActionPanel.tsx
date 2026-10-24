@@ -6,6 +6,7 @@ import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
+import { payoutBadge } from "@/lib/payout";
 import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 import { bountyActionErrorCopy, deriveActionView, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
 import type { Bounty } from "@/lib/types";
@@ -38,7 +39,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function StatusPanel({ title, body, note, tone = "muted", feedback, link, headingRef }: {
+function StatusPanel({ title, body, note, tone = "muted", feedback, link, headingRef, badge }: {
   title: string;
   body: string;
   /** Reviewer comment shown under the body. */
@@ -48,6 +49,8 @@ function StatusPanel({ title, body, note, tone = "muted", feedback, link, headin
   link?: { href: string; label: string };
   /** Focus target after a successful action (the panel replaces the form, so focus would otherwise fall to <body>). */
   headingRef?: Ref<HTMLHeadingElement>;
+  /** Small status badge under the body (payout status). */
+  badge?: { variant: "warning" | "success"; label: string } | null;
 }) {
   const bodyClass = tone === "danger" ? "text-danger" : tone === "success" ? "text-success" : "text-ink-muted";
   return (
@@ -55,6 +58,7 @@ function StatusPanel({ title, body, note, tone = "muted", feedback, link, headin
       <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{title}</h2>
       <p className={`mt-2 text-sm ${bodyClass} ${REVIEW_TEXT_CLASS}`}>{body}</p>
       {note ? <p className={`mt-2 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{note}</p> : null}
+      {badge ? <div className="mt-3"><Badge variant={badge.variant}>{badge.label}</Badge></div> : null}
       {link ? <Link className={outlineLinkClass} href={link.href}>{link.label}</Link> : null}
       {feedback ? <p className="mt-3 text-sm text-success">{feedback}</p> : null}
     </section>
@@ -262,8 +266,10 @@ function BountyActionPanelBody({ bountyId, applicationRequired, status, submissi
       return <StatusPanel title={t("applicationRejectedHeading")} body={t("applicationRejectedBody")} link={{ href: "/bounties", label: t("browseOther") }} />;
     case "applicationUnderReview":
       return <StatusPanel title={t("underReviewHeading")} body={t("underReviewBody")} feedback={feedback?.kind === "success" ? feedback.text : null} headingRef={headingRef} link={{ href: "/applications", label: t("viewApplications") }} />;
-    case "submissionApproved":
-      return <StatusPanel title={t("submissionApprovedHeading")} body={t("submissionApprovedBody")} tone="success" />;
+    case "submissionApproved": {
+      const payout = view.payout ? payoutBadge(view.payout, { showPaid: true }) : null;
+      return <StatusPanel title={t("submissionApprovedHeading")} body={t("submissionApprovedBody")} tone="success" badge={payout ? { variant: payout.variant, label: t(payout.key) } : null} />;
+    }
     case "submissionRejected": {
       const link = { href: "/bounties", label: t("browseOther") };
       if (view.review?.forfeited) {

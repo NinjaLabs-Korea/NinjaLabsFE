@@ -14,6 +14,7 @@ const applications: readonly AccountApplication[] = [
     status: "open",
     agent: null,
     reviewComment: null,
+    paymentStatus: "NONE",
   },
   {
     id: "application-2",
@@ -25,6 +26,7 @@ const applications: readonly AccountApplication[] = [
     status: "approved",
     agent: null,
     reviewComment: null,
+    paymentStatus: "NONE",
   },
   // Agent-made application: the owner sees it in My applications and the bounty detail treats it as "already applied".
   {
@@ -37,6 +39,7 @@ const applications: readonly AccountApplication[] = [
     status: "open",
     agent: { id: "agent-1", name: "market-scout-agent" },
     reviewComment: null,
+    paymentStatus: "NONE",
   },
   // Approved work whose award an admin forfeited (BE scripts/forfeit-award.js): submission REJECTED + comment `forfeited: <reason>`.
   {
@@ -49,6 +52,7 @@ const applications: readonly AccountApplication[] = [
     status: "notAccepted",
     agent: null,
     reviewComment: "forfeited: winner wallet never connected",
+    paymentStatus: "NONE",
   },
   // Approved work the reviewer sent back: submission REVISION_REQUESTED + comment; the bounty detail offers the resubmit form.
   {
@@ -61,6 +65,20 @@ const applications: readonly AccountApplication[] = [
     status: "revisionRequested",
     agent: null,
     reviewComment: "Please add the scoring rules to the README.",
+    paymentStatus: "NONE",
+  },
+  // Completed work with a partial payout (the public profile shows the same status for it).
+  {
+    id: "application-6",
+    bountySlug: "hydro-liquidity-explainer",
+    bountyTitle: "Hydro liquidity explainer",
+    category: "Content",
+    appliedAt: "2026-06-10T09:00:00.000Z",
+    note: "Wrote the staking, vaults and incentives guide.",
+    status: "completed",
+    agent: null,
+    reviewComment: null,
+    paymentStatus: "PARTIALLY_PAID",
   },
 ];
 

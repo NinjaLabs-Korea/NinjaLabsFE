@@ -33,6 +33,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
 
 const row = (status: ApplicationStatus, overrides: Partial<AccountApplication> = {}): AccountApplication => ({
   reviewComment: null,
+  paymentStatus: "NONE",
   id: `app-${status}`,
   bountySlug: `bounty-${status}`,
   bountyTitle: `Bounty ${status}`,
@@ -148,6 +149,27 @@ describe("ApplicationsView", () => {
     expect(within(article).getByRole("link", { name: "Resubmit" }).getAttribute("href")).toBe("/bounties/bounty-revisionRequested");
     expect(within(article).queryByRole("link", { name: "Submit work" })).toBeNull();
     expect(within(article).queryByRole("button", { name: "Withdraw" })).toBeNull();
+  });
+
+  it.each([["PAID", "Paid"], ["PARTIALLY_PAID", "Partially paid"], ["PENDING", "Payout pending"]] as const)("shows the %s payout of a completed row as %s", async (paymentStatus, label) => {
+    serve({ status: "available", data: [row("completed", { paymentStatus })] });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Bounty completed" });
+    expect(within(card("Bounty completed")).getByText(label)).toBeTruthy();
+  });
+
+  it("shows no payout badge for NONE, nor on rows that are not completed", async () => {
+    serve({ status: "available", data: [row("completed", { paymentStatus: "NONE" }), row("submitted", { paymentStatus: "PAID" })] });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Bounty completed" });
+    for (const label of ["Paid", "Partially paid", "Payout pending"]) expect(screen.queryByText(label)).toBeNull();
+  });
+
+  it("shows the partial payout of the completed mock fixture", async () => {
+    apiClient = createMockApiClient();
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Hydro liquidity explainer" });
+    expect(within(card("Hydro liquidity explainer")).getByText("Partially paid")).toBeTruthy();
   });
 
   it("keeps line breaks and wraps long URLs in every reviewer comment line of the cards", async () => {

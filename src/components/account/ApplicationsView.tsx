@@ -15,6 +15,8 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
 import type { AccountApplication, ApplicationStatus } from "@/lib/contracts/account";
+import type { PayoutStatus } from "@/lib/types";
+import { payoutBadge } from "@/lib/payout";
 import { parseReviewComment, REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 
 const focusClass =
@@ -46,6 +48,13 @@ function NotAcceptedNote({ application }: { application: AccountApplication }) {
       {review ? <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: review.text })}</p> : null}
     </>
   );
+}
+
+/** Payout status of a completed (APPROVED) submission: Paid / Partially paid / Payout pending; NONE shows nothing. */
+function PayoutLine({ status }: { status: PayoutStatus }) {
+  const t = useTranslations("account.applications");
+  const badge = payoutBadge(status, { showPaid: true });
+  return badge ? <div className="mt-3"><Badge variant={badge.variant}>{t(badge.key)}</Badge></div> : null;
 }
 
 /** Approved work the reviewer sent back: the reviewer comment and the way back to the resubmit form on the bounty page. */
@@ -207,6 +216,7 @@ export function ApplicationsView() {
                 </ol>
               )}
 
+              {application.status === "completed" && application.paymentStatus ? <PayoutLine status={application.paymentStatus} /> : null}
               {actionNeeded ? <RevisionNote application={application} /> : null}
               {application.status === "approved" || actionNeeded ? (
                 <Link

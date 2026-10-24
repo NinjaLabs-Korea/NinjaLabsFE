@@ -37,6 +37,7 @@ function toPreviewApplication(id: string, bountyId: string, message: string): Ac
     status: "open",
     agent: null,
     reviewComment: null,
+    paymentStatus: "NONE",
   };
 }
 
@@ -48,7 +49,7 @@ function fixtureSubmissions(applications: readonly AccountApplication[]): Accoun
       bountySlug: application.bountySlug,
       status: application.status === "completed" ? "approved" as const : application.status === "notAccepted" ? "rejected" as const : application.status === "revisionRequested" ? "revision_requested" as const : "submitted" as const,
       agent: application.agent,
-      paymentStatus: application.status === "completed" ? "PENDING" as const : "NONE" as const,
+      paymentStatus: application.status === "completed" ? application.paymentStatus : "NONE" as const,
       reviewComment: application.reviewComment,
     }));
 }

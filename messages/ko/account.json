@@ -53,7 +53,10 @@
     "withdrawErrors": {
       "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "이미 검토되었거나 철회된 지원입니다.",
       "generic": "지원을 철회하지 못했습니다. 잠시 후 다시 시도해 주세요."
-    }
+    },
+    "payoutPaid": "지급 완료",
+    "payoutPartial": "일부 지급",
+    "payoutPending": "지급 대기"
   },
   "settings": {
     "meta": {
