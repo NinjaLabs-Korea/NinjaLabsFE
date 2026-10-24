@@ -63,8 +63,10 @@ export type Member = {
 };
 
 /**
- * BE `/users/:nickname` `completedBounties[].payoutStatus` and `/submissions/me` `payment_status` (same rule): NONE = the
- * bounty has no reward, PAID = every payout PAID, PARTIALLY_PAID = some PAID and some still open, PENDING = nothing paid yet.
+ * BE `/users/:nickname` `completedBounties[].payoutStatus` and `/submissions/me` `payment_status` (same rule): PAID = every
+ * owed payout PAID, PARTIALLY_PAID = some PAID and some still open, PENDING = nothing paid yet, NONE = nothing is owed:
+ * no reward, a cancelled award, an exhausted pool (other winners took it all), a winner who withdrew without requesting, or a
+ * refunded reward. NONE can still come with paid `rewards` (e.g. after a refund); the FE then shows them as PAID.
  * Older BE rows omit it (derived from `rewards`); an unknown value is read as PENDING (`lib/api/codecs.ts toPayoutStatus`).
  */
 export type PayoutStatus = 'PAID' | 'PARTIALLY_PAID' | 'PENDING' | 'NONE';
