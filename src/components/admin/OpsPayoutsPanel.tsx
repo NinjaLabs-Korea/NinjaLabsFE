@@ -58,6 +58,8 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
     if (dialog.kind === "request") {
       const amount = humanToBaseUnits(dialog.amount, dialog.reward.symbol);
       const headroom = rewardHeadroom(dialog.reward);
+      // BE answers 404 APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND without an active primary wallet — say so before the round trip.
+      if (!ops.submissions.find((item) => item.id === dialog.submissionId)?.recipientWalletAddress) return setDialog({ ...dialog, error: t("submissions.noWallet") });
       if (!amount) return setDialog({ ...dialog, error: t("form.amountInvalid", { symbol: dialog.reward.symbol }) });
       if (headroom !== null && BigInt(amount) > BigInt(headroom)) return setDialog({ ...dialog, error: t("payouts.amountOverHeadroom", { amount: opsAmount(headroom, dialog.reward.symbol) }) });
       const ok = await run(`request:${dialog.reward.id}`, () => api.requestAdminPayout({ rewardId: dialog.reward.id, submissionId: dialog.submissionId, amount }), {
@@ -154,7 +156,7 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
           <>
             <div>
               <p className="text-sm font-semibold text-ink">{t("payouts.submission")}</p>
-              <div className="mt-2 w-fit"><AdminSelect formatOption={submissionName} label={t("payouts.submission")} onChange={(submissionId) => setDialog({ ...dialog, submissionId })} options={payoutCandidates(ops, dialog.reward.id).map((item) => item.id)} value={dialog.submissionId} /></div>
+              <div className="mt-2 w-fit"><AdminSelect formatOption={(id) => (ops.submissions.find((item) => item.id === id)?.recipientWalletAddress ? submissionName(id) : `${submissionName(id)} — ${t("submissions.noWallet")}`)} label={t("payouts.submission")} onChange={(submissionId) => setDialog({ ...dialog, submissionId })} options={payoutCandidates(ops, dialog.reward.id).map((item) => item.id)} value={dialog.submissionId} /></div>
             </div>
             <label className="block text-sm font-semibold text-ink">{t("payouts.amount", { symbol: dialog.reward.symbol })}
               <input aria-describedby={dialog.error ? "ops-payout-error" : "ops-payout-hint"} aria-invalid={dialog.error ? true : undefined} className={opsInput} inputMode="decimal" onChange={(event) => setDialog({ ...dialog, amount: event.target.value, error: undefined })} type="text" value={dialog.amount} />

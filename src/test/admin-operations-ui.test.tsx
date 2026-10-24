@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { BountyOperations } from "@/components/admin/BountyOperations";
 import { NftJobsManager } from "@/components/admin/NftJobsManager";
+import { OperationsConsole } from "@/components/admin/OperationsConsole";
 import type { AdminOperations } from "@/lib/admin-operations";
 import { ApiHttpError } from "@/lib/api/http";
 import { renderWithIntl } from "@/test/intl";
@@ -39,6 +40,7 @@ const adminApi = {
   transitionAdminBounty: vi.fn(async () => undefined),
   getAdminNftJobs: vi.fn(),
   retryAdminNftJob: vi.fn(async () => undefined),
+  getAdminBounties: vi.fn(),
 };
 
 vi.mock("@/components/auth/FoundationProvider", () => ({ useAdminApi: () => adminApi }));
@@ -161,6 +163,21 @@ describe("BountyOperations", () => {
   });
 });
 
+describe("payout request without a recipient wallet", () => {
+  it("explains the missing wallet instead of sending a request the BE answers with 404", async () => {
+    const base = operations();
+    adminApi.getAdminOperations.mockImplementation(async () => operations({
+      payouts: [], rewards: [{ ...base.rewards[0], allocated: "0" }],
+      submissions: [base.submissions[0], { ...base.submissions[1], recipientWalletAddress: null }],
+    }));
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Request payout" }));
+    fireEvent.submit(within(dialog()).getByRole("button", { name: "Request payout" }).closest("form")!);
+    expect(within(dialog()).getByRole("alert").textContent).toContain("No linked wallet");
+    expect(adminApi.requestAdminPayout).not.toHaveBeenCalled();
+  });
+});
+
 describe("NftJobsManager", () => {
   it("lists FAILED jobs and retries one, then re-reads the page", async () => {
     adminApi.getAdminNftJobs.mockResolvedValue({ page: 1, pageSize: 30, total: 1, items: [{ id: "j1", nftId: "n1", jobType: "MINT_CHILD", status: "FAILED", retryCount: 5, lastError: "out of gas", scheduledAt: null, updatedAt: "2026-10-01T00:00:00Z", nftType: "BOUNTY_COMPLETION_CHILD", nftStatus: "FAILED", bountyTitle: "Widget", ownerNickname: "juho", ownerWalletAddress: "inj1juho" }] });
@@ -211,5 +228,21 @@ describe("NftJobsManager", () => {
     renderWithIntl(<><NftJobsManager tabs={null}>{null}</NftJobsManager><AdminToastHost /></>);
     fireEvent.click(await screen.findByRole("button", { name: "Retry" }));
     expect(await screen.findByText("This job is no longer failed (it may already be retrying).")).toBeTruthy();
+  });
+});
+
+describe("OperationsConsole", () => {
+  it("api mode: shows loading (not 'no bounties yet') until GET /admin/bounties answers, and a retry when it fails", async () => {
+    let reject: (error: unknown) => void = () => undefined;
+    adminApi.getAdminBounties.mockImplementationOnce(() => new Promise((_, fail) => { reject = fail; }));
+    renderWithIntl(<><OperationsConsole bounties={[]} tabs={null}>{null}</OperationsConsole><AdminToastHost /></>);
+    expect(screen.getByText("Loading operations…")).toBeTruthy();
+    expect(screen.queryByText(/No bounties yet/)).toBeNull();
+    reject(new ApiHttpError(500, "INTERNAL"));
+    const retry = await screen.findByRole("button", { name: "Try again" });
+    expect(screen.queryByText(/No bounties yet/)).toBeNull();
+    adminApi.getAdminBounties.mockResolvedValueOnce([]);
+    fireEvent.click(retry);
+    expect(await screen.findByText(/No bounties yet/)).toBeTruthy();
   });
 });
