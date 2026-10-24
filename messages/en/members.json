@@ -104,6 +104,7 @@
     },
     "shareable": "Shareable URL — no login needed",
     "payoutPending": "Payout pending",
-    "payoutPartial": "Partially paid"
+    "payoutPartial": "Partially paid",
+    "payoutPaid": "Paid"
   }
 }

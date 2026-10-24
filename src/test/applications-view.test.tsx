@@ -33,6 +33,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
 
 const row = (status: ApplicationStatus, overrides: Partial<AccountApplication> = {}): AccountApplication => ({
   reviewComment: null,
+  paymentStatus: "NONE",
   id: `app-${status}`,
   bountySlug: `bounty-${status}`,
   bountyTitle: `Bounty ${status}`,
@@ -133,6 +134,74 @@ describe("ApplicationsView", () => {
     renderWithIntl(<ApplicationsView />);
     await screen.findByRole("link", { name: "Bounty notAccepted" });
     expect(within(card("Bounty notAccepted")).queryByText(/Reviewer comment/)).toBeNull();
+  });
+
+  it("shows a revision-requested application on the Submitted step with a warning badge, the reviewer comment and a Resubmit link", async () => {
+    serve({ status: "available", data: [row("revisionRequested", { reviewComment: "Add the scoring rules" })] });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Bounty revisionRequested" });
+    const article = card("Bounty revisionRequested");
+    const badge = within(article).getByText("Revision requested");
+    expect(badge.className).toContain("text-warning");
+    expect(currentStep(article)).toContain("Submitted");
+    expect(within(article).getByText("Action needed")).toBeTruthy();
+    expect(within(article).getByText("Reviewer comment: Add the scoring rules")).toBeTruthy();
+    expect(within(article).getByRole("link", { name: "Resubmit" }).getAttribute("href")).toBe("/bounties/bounty-revisionRequested");
+    expect(within(article).queryByRole("link", { name: "Submit work" })).toBeNull();
+    expect(within(article).queryByRole("button", { name: "Withdraw" })).toBeNull();
+  });
+
+  it.each([["PAID", "Paid"], ["PARTIALLY_PAID", "Partially paid"], ["PENDING", "Payout pending"]] as const)("shows the %s payout of a completed row as %s", async (paymentStatus, label) => {
+    serve({ status: "available", data: [row("completed", { paymentStatus })] });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Bounty completed" });
+    expect(within(card("Bounty completed")).getByText(label)).toBeTruthy();
+  });
+
+  it("shows no payout badge for NONE, nor on rows that are not completed", async () => {
+    serve({ status: "available", data: [row("completed", { paymentStatus: "NONE" }), row("submitted", { paymentStatus: "PAID" })] });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Bounty completed" });
+    for (const label of ["Paid", "Partially paid", "Payout pending"]) expect(screen.queryByText(label)).toBeNull();
+  });
+
+  it("shows the partial payout of the completed mock fixture", async () => {
+    apiClient = createMockApiClient();
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Hydro liquidity explainer" });
+    expect(within(card("Hydro liquidity explainer")).getByText("Partially paid")).toBeTruthy();
+  });
+
+  it("keeps line breaks and wraps long URLs in every reviewer comment line of the cards", async () => {
+    const url = `https://example.com/${"a".repeat(300)}`;
+    serve({
+      status: "available",
+      data: [
+        row("notAccepted", { id: "na", bountyTitle: "NA", reviewComment: `No\n${url}` }),
+        row("notAccepted", { id: "ff", bountyTitle: "FF", reviewComment: `forfeited: ${url}` }),
+        row("revisionRequested", { id: "rr", bountyTitle: "RR", reviewComment: `Fix\n${url}` }),
+      ],
+    });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "NA" });
+    const lines = [
+      within(card("NA")).getByText(`Reviewer comment: No\n${url}`, { normalizer: (text) => text }),
+      within(card("FF")).getByText(/the award was forfeited:/),
+      within(card("RR")).getByText(`Reviewer comment: Fix\n${url}`, { normalizer: (text) => text }),
+    ];
+    for (const line of lines) {
+      expect(line.textContent).toContain(url);
+      for (const token of ["whitespace-pre-line", "break-words", "[overflow-wrap:anywhere]"]) expect(line.classList.contains(token)).toBe(true);
+    }
+  });
+
+  it("shows the revision-requested fixture in the mock client", async () => {
+    apiClient = createMockApiClient();
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Agent skill benchmark suite" });
+    const article = card("Agent skill benchmark suite");
+    expect(await within(article).findByText("Revision requested")).toBeTruthy();
+    expect(within(article).getByText(/scoring rules to the README/)).toBeTruthy();
   });
 
   it("shows the forfeited fixture in the mock client", async () => {

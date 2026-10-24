@@ -120,12 +120,7 @@ export function toCompletionReward(row: Pick<PublicProfileResponse["completedBou
   return { reward: null, payoutStatus: "NONE" };
 }
 
-/** Badge under a completion card: an unfinished payout is flagged so a shown amount is never read as fully paid. */
-export function payoutBadge(status: PayoutStatus): { variant: "warning"; key: "payoutPending" | "payoutPartial" } | null {
-  if (status === "PENDING") return { variant: "warning", key: "payoutPending" };
-  if (status === "PARTIALLY_PAID") return { variant: "warning", key: "payoutPartial" };
-  return null;
-}
+export { payoutBadge } from "./payout";
 
 function toProfile(data: PublicProfileResponse, locale: string): Profile {
   const completions = data.completedBounties.flatMap((completion) => {

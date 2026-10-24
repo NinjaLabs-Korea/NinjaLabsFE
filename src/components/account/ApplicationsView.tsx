@@ -15,7 +15,9 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
 import type { AccountApplication, ApplicationStatus } from "@/lib/contracts/account";
-import { parseReviewComment } from "@/lib/review-comment";
+import type { PayoutStatus } from "@/lib/types";
+import { payoutBadge } from "@/lib/payout";
+import { parseReviewComment, REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -27,6 +29,7 @@ const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success
   completed: "success",
   rejected: "danger",
   notAccepted: "danger",
+  revisionRequested: "warning",
 };
 
 const outlineDangerClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
@@ -38,11 +41,30 @@ const applicationSteps: readonly ApplicationStatus[] = ["open", "approved", "sub
 function NotAcceptedNote({ application }: { application: AccountApplication }) {
   const t = useTranslations("account.applications");
   const review = parseReviewComment(application.reviewComment);
-  if (review?.forfeited) return <p className="mt-4 text-sm text-danger">{t("forfeitedNote", { reason: review.text })}</p>;
+  if (review?.forfeited) return <p className={`mt-4 text-sm text-danger ${REVIEW_TEXT_CLASS}`}>{t("forfeitedNote", { reason: review.text })}</p>;
   return (
     <>
       <p className="mt-4 text-sm text-ink-muted">{t("notAcceptedNote")}</p>
-      {review ? <p className="mt-1 text-sm text-ink-muted">{t("reviewerComment", { comment: review.text })}</p> : null}
+      {review ? <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: review.text })}</p> : null}
+    </>
+  );
+}
+
+/** Payout status of a completed (APPROVED) submission: Paid / Partially paid / Payout pending; NONE shows nothing. */
+function PayoutLine({ status }: { status: PayoutStatus }) {
+  const t = useTranslations("account.applications");
+  const badge = payoutBadge(status, { showPaid: true });
+  return badge ? <div className="mt-3"><Badge variant={badge.variant}>{t(badge.key)}</Badge></div> : null;
+}
+
+/** Approved work the reviewer sent back: the reviewer comment and the way back to the resubmit form on the bounty page. */
+function RevisionNote({ application }: { application: AccountApplication }) {
+  const t = useTranslations("account.applications");
+  const review = parseReviewComment(application.reviewComment);
+  return (
+    <>
+      <p className="mt-4 text-sm text-warning">{t("revisionNote")}</p>
+      {review ? <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: review.text })}</p> : null}
     </>
   );
 }
@@ -55,6 +77,7 @@ export function ApplicationsView() {
   const statusLabel = (application: AccountApplication): string => {
     const { status } = application;
     if (status === "approved") return t("approvedStatus");
+    if (status === "revisionRequested") return t("revisionRequestedStatus");
     if (status === "rejected") return t("rejectedStatus");
     if (status === "notAccepted") return parseReviewComment(application.reviewComment)?.forfeited ? t("forfeitedStatus") : t("notAcceptedStatus");
     return t(`steps.${status}`);
@@ -123,7 +146,9 @@ export function ApplicationsView() {
       <p className="sr-only" role="status">{notice}</p>
       <div className="space-y-5" ref={listRef} tabIndex={-1}>
         {applications.map((application) => {
-          const currentIndex = applicationSteps.indexOf(application.status);
+          const actionNeeded = application.status === "revisionRequested";
+          // A requested revision is still the "Submitted" step; the marker says the next move is the applicant's.
+          const currentIndex = applicationSteps.indexOf(actionNeeded ? "submitted" : application.status);
 
           return (
             <article
@@ -182,6 +207,7 @@ export function ApplicationsView() {
                       >
                         {t(`steps.${step}`)}
                       </span>
+                      {actionNeeded && index === currentIndex ? <Badge variant="warning">{t("actionNeeded")}</Badge> : null}
                       {index < applicationSteps.length - 1 ? (
                         <span aria-hidden="true" className="hidden h-px w-5 bg-primary-outline sm:block" />
                       ) : null}
@@ -190,12 +216,14 @@ export function ApplicationsView() {
                 </ol>
               )}
 
-              {application.status === "approved" ? (
+              {application.status === "completed" && application.paymentStatus ? <PayoutLine status={application.paymentStatus} /> : null}
+              {actionNeeded ? <RevisionNote application={application} /> : null}
+              {application.status === "approved" || actionNeeded ? (
                 <Link
                   className={`mt-4 inline-block rounded-control bg-primary px-4 py-2 text-sm font-semibold text-on-inverse ${focusClass}`}
                   href={`/bounties/${application.bountySlug}`}
                 >
-                  {t("submitWork")}
+                  {actionNeeded ? t("resubmit") : t("submitWork")}
                 </Link>
               ) : null}
               {application.status === "open" ? (

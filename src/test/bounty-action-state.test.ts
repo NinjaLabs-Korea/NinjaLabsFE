@@ -88,6 +88,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["application approved, bounty reviewing, nothing submitted", { applicationRequired: true, status: "reviewing", applications: loaded([app("approved")]) }, { kind: "closed", reason: "reviewing" }],
   // 7. 확정된 제출
   ["submission approved", { submissions: loaded([sub("approved")]) }, { kind: "submissionApproved" }],
+  ["submission approved carries its payout status", { submissions: loaded([{ ...sub("approved"), paymentStatus: "PARTIALLY_PAID" as const }]) }, { kind: "submissionApproved", payout: "PARTIALLY_PAID" }],
   ["submission approved on a closed bounty", { status: "closed", submissions: loaded([sub("approved")]) }, { kind: "submissionApproved" }],
   ["submission rejected", { submissions: loaded([sub("rejected")]) }, { kind: "submissionRejected" }],
   ["submission rejected after an approved application", { applicationRequired: true, applications: loaded([app("completed")]), submissions: loaded([sub("rejected")]) }, { kind: "submissionRejected" }],

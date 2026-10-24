@@ -73,7 +73,7 @@ describe("GET /applications/me + /submissions/me join", () => {
     const result = await createApiApiClient(http).getApplications(signedIn);
     expect(result).toEqual({
       status: "available",
-      data: [{ id: "a1", bountySlug: "b1", bountyTitle: "T", category: "Other", appliedAt: "2026-07-02T03:04:05.000Z", note: "hello", status: "open", agent: null, reviewComment: null }],
+      data: [{ id: "a1", bountySlug: "b1", bountyTitle: "T", category: "Other", appliedAt: "2026-07-02T03:04:05.000Z", note: "hello", status: "open", agent: null, reviewComment: null, paymentStatus: "NONE" }],
     });
   });
 
@@ -83,6 +83,61 @@ describe("GET /applications/me + /submissions/me join", () => {
     const { http } = createHttp({ "/applications/me": [legacy], "/submissions/me": [{ status: "APPROVED", bounty_id: "b1" }] });
     const result = await createApiApiClient(http).getApplications(signedIn);
     expect(result.status === "available" && result.data[0]).toMatchObject({ status: "completed", agent: null });
+  });
+});
+
+describe("payout status join", () => {
+  it("carries the APPROVED submission's payment_status onto the completed row (NONE for older BE and other states)", async () => {
+    const { http } = createHttp({
+      "/applications/me": [
+        application({ id: "paid", status: "APPROVED", bounty_id: "b-paid" }),
+        application({ id: "partial", status: "APPROVED", bounty_id: "b-partial" }),
+        application({ id: "old", status: "APPROVED", bounty_id: "b-old" }),
+        application({ id: "weird", status: "APPROVED", bounty_id: "b-weird" }),
+        application({ id: "review", status: "APPROVED", bounty_id: "b-review" }),
+      ],
+      "/submissions/me": [
+        { status: "APPROVED", bounty_id: "b-paid", agent: null, payment_status: "PAID" },
+        { status: "APPROVED", bounty_id: "b-partial", agent: null, payment_status: "PARTIALLY_PAID" },
+        { status: "APPROVED", bounty_id: "b-old", agent: null },
+        { status: "APPROVED", bounty_id: "b-weird", agent: null, payment_status: "REFUNDED" },
+        { status: "IN_REVIEW", bounty_id: "b-review", agent: null, payment_status: "PAID" },
+      ],
+    });
+    const result = await createApiApiClient(http).getApplications(signedIn);
+    const rows = result.status === "available" ? result.data : [];
+    expect(rows.map((row) => [row.id, row.status, row.paymentStatus])).toEqual([
+      ["paid", "completed", "PAID"],
+      ["partial", "completed", "PARTIALLY_PAID"],
+      ["old", "completed", "NONE"],
+      ["weird", "completed", "PENDING"],
+      ["review", "submitted", "NONE"],
+    ]);
+  });
+});
+
+describe("revision-requested join", () => {
+  it("maps an approved application whose submission is REVISION_REQUESTED, carrying the trimmed reviewer comment", async () => {
+    const { http } = createHttp({
+      "/applications/me": [
+        application({ id: "rev", status: "APPROVED", bounty_id: "b-rev" }),
+        application({ id: "rev-nocomment", status: "APPROVED", bounty_id: "b-rev2" }),
+        application({ id: "rev-pending", status: "PENDING", bounty_id: "b-rev3" }),
+      ],
+      "/submissions/me": [
+        { status: "REVISION_REQUESTED", bounty_id: "b-rev", agent: null, review_comment: "  Add tests\nand docs  " },
+        { status: "REVISION_REQUESTED", bounty_id: "b-rev2", agent: null },
+        { status: "REVISION_REQUESTED", bounty_id: "b-rev3", agent: null, review_comment: "x" },
+      ],
+    });
+    const result = await createApiApiClient(http).getApplications(signedIn);
+    const rows = result.status === "available" ? result.data : [];
+    expect(rows.map((row) => [row.id, row.status, row.reviewComment])).toEqual([
+      ["rev", "revisionRequested", "Add tests\nand docs"],
+      ["rev-nocomment", "revisionRequested", null],
+      // An unapproved application is never promoted by a submission row.
+      ["rev-pending", "open", null],
+    ]);
   });
 });
 

@@ -104,6 +104,7 @@
     },
     "shareable": "可分享链接 — 无需登录",
     "payoutPending": "待支付",
-    "payoutPartial": "部分已支付"
+    "payoutPartial": "部分已支付",
+    "payoutPaid": "已支付"
   }
 }

@@ -29,6 +29,10 @@
     },
     "approvedStatus": "승인됨: 제출 가능",
     "submitWork": "작업 제출하기",
+    "resubmit": "다시 제출",
+    "revisionRequestedStatus": "수정 요청됨",
+    "revisionNote": "심사자가 제출물 수정을 요청했습니다. 내용을 고쳐 다시 제출해 주세요.",
+    "actionNeeded": "조치 필요",
     "rejectedStatus": "미선정",
     "rejectedNote": "스폰서가 이 지원을 선정하지 않았습니다. 다른 진행 중인 바운티를 둘러보세요.",
     "notAcceptedStatus": "제출 미채택",
@@ -49,7 +53,10 @@
     "withdrawErrors": {
       "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "이미 검토되었거나 철회된 지원입니다.",
       "generic": "지원을 철회하지 못했습니다. 잠시 후 다시 시도해 주세요."
-    }
+    },
+    "payoutPaid": "지급 완료",
+    "payoutPartial": "일부 지급",
+    "payoutPending": "지급 대기"
   },
   "settings": {
     "meta": {

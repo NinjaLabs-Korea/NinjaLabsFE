@@ -101,7 +101,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
       </section>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           <article className="rounded-card border border-border bg-surface p-[21px] shadow-card">
             <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("detail.description")}</p>
             <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">{applicationRequired ? t("detail.descriptionHeadingApply") : t("detail.descriptionHeading")}</h2>

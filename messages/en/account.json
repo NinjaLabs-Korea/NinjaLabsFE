@@ -29,6 +29,10 @@
     },
     "approvedStatus": "Approved: submit unlocked",
     "submitWork": "Submit work",
+    "resubmit": "Resubmit",
+    "revisionRequestedStatus": "Revision requested",
+    "revisionNote": "The reviewer asked for changes to your submission. Update it and resubmit.",
+    "actionNeeded": "Action needed",
     "rejectedStatus": "Not selected",
     "rejectedNote": "The sponsor did not select this application. Browse other open bounties to keep building.",
     "notAcceptedStatus": "Submission not accepted",
@@ -49,7 +53,10 @@
     "withdrawErrors": {
       "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "This application was already reviewed or withdrawn.",
       "generic": "We couldn’t withdraw this application. Please try again shortly."
-    }
+    },
+    "payoutPaid": "Paid",
+    "payoutPartial": "Partially paid",
+    "payoutPending": "Payout pending"
   },
   "settings": {
     "meta": {

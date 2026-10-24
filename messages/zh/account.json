@@ -29,6 +29,10 @@
     },
     "approvedStatus": "已批准：可以提交",
     "submitWork": "提交作品",
+    "resubmit": "重新提交",
+    "revisionRequestedStatus": "已要求修改",
+    "revisionNote": "审核人要求修改您的提交。请更新后重新提交。",
+    "actionNeeded": "需要操作",
     "rejectedStatus": "未入选",
     "rejectedNote": "赞助方未选择此申请。浏览其他进行中的赏金，继续创作吧。",
     "notAcceptedStatus": "提交未被采纳",
@@ -49,7 +53,10 @@
     "withdrawErrors": {
       "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "该申请已被审核或已撤回。",
       "generic": "无法撤回该申请,请稍后重试。"
-    }
+    },
+    "payoutPaid": "已支付",
+    "payoutPartial": "部分已支付",
+    "payoutPending": "待支付"
   },
   "settings": {
     "meta": {
