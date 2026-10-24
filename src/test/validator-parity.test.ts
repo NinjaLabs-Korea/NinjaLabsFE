@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { safeHttpUrl } from "@/lib/api/codecs";
 import { isReservedNickname, isValidNickname, NICKNAME, validateNickname } from "@/lib/nickname";
 import { isHttpUrl, isMediaPath, isSitePath } from "@/lib/url-rules";
 
 /**
  * FE ↔ BE validator parity. The case tables below are copied VERBATIM from NinjaLabsBE (branch fix/wiki-audit-findings):
- *   - `src/common/validation/url.spec.ts`  (isHttpUrl / isMediaPath / isSitePath)
+ *   - `src/common/validation/url.spec.ts`  (isHttpUrl / isMediaPath / isSitePath / isSafeUrl)
  *   - `src/users/users.dto.spec.ts`        (CompleteProfileDto nickname / isSavableNickname)
  * Each table keeps the BE expectation, so a drift in either repo shows up as a failing row here. When a BE table
  * changes, paste the new rows here unchanged; do not "fix" an expectation to make the FE pass.
@@ -93,6 +94,53 @@ describe("BE url.spec.ts tables against FE url-rules", () => {
   ])("isSitePath rejects %s: %p", (_label, value) => {
     expect(isSitePath(value)).toBe(false);
   });
+});
+
+/**
+ * BE `isSafeUrl` (the lenient PATCH rule) has no FE validator: the FE never writes with it. What it guards on the FE side
+ * is rendering - `safeHttpUrl` decides whether an admin-entered value becomes an href/src. The invariant: anything the BE
+ * refuses to store even under its most lenient rule is never rendered by the FE either. (The FE is deliberately
+ * stricter on the accept side: legacy bare hosts and dot segments are stored but not rendered.) "too long" and the
+ * non-string rows are left out: rendering a long same-origin path is harmless and `safeHttpUrl` is typed for strings.
+ */
+describe("BE isSafeUrl reject table against FE safeHttpUrl (render side at least as strict)", () => {
+  it.each([
+    ["javascript scheme", "javascript:alert(1)"],
+    ["javascript scheme, mixed case", "JavaScript:alert(1)"],
+    ["data scheme", "data:text/html,hi"],
+    ["vbscript scheme", "vbscript:msgbox(1)"],
+    ["other scheme", "ftp://ninjalabs.xyz/x"],
+    ["protocol-relative", "//evil.com/x"],
+    ["protocol-relative via backslash", "/\\evil.com/x"],
+    ["host without a dot (reads as a scheme)", "localhost:3000/x"],
+    ["bare host with whitespace", "cdn.example/a b.png"],
+    ["bare host with a backslash", "cdn.example\\evil"],
+    ["bare host with userinfo", "user@cdn.example/x"],
+    ["numeric last label", "127.0.0.1/x"],
+    ["userinfo", "https://ninjalabs.xyz@evil.com/x"],
+    ["no host", "https://"],
+    ["NUL", "/x\u0000y"],
+    ["newline", "https://ninjalabs.xyz/\nx"],
+    ["tab before scheme", "\tjavascript:alert(1)"],
+    ["leading space", " /uploads/x.png"],
+    ["empty", ""],
+  ])("does not render %s: %p", (_label, value) => {
+    expect(safeHttpUrl(value)).toBeNull();
+  });
+
+  it.each(["https://user:pw@ninjalabs.xyz/x", "https://:pw@ninjalabs.xyz", "http://user@ninjalabs.xyz"])(
+    "does not render any userinfo form either: %p",
+    (value) => {
+      expect(safeHttpUrl(value)).toBeNull();
+    },
+  );
+
+  it.each(["https://ninjalabs.xyz/bounties/1", "http://localhost:3000/x", "HTTPS://cdn.example/a.png?x=1#y", mediaPath, "/uploads/legacy-cover.png", "/", "/bounties?page=2"])(
+    "still renders the BE-accepted value %p unchanged",
+    (value) => {
+      expect(safeHttpUrl(value)).toBe(value);
+    },
+  );
 });
 
 describe("BE users.dto.spec.ts tables against FE nickname rule", () => {

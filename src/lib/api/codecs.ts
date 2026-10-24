@@ -46,7 +46,9 @@ export function safeHttpUrl(value: string | null | undefined): string | null {
     return value[1] === "/" || /\/\.{1,2}(\/|$)/.test(value) ? null : value;
   }
   try {
-    const { protocol } = new URL(value);
+    const { protocol, username, password } = new URL(value);
+    // Userinfo (`https://ninjalabs.xyz@evil.com`) disguises the real host; the BE refuses it under every URL rule.
+    if (username || password) return null;
     return protocol === "http:" || protocol === "https:" ? value : null;
   } catch {
     return null;
