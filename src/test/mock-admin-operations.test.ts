@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { createMockApiClient, MockApiError } from "@/lib/mocks/api-client";
 import { getAdminBounties } from "@/lib/admin";
-import { lifecycleFor } from "@/lib/mocks/admin-operations";
+import { bountyHasOpenFunds, lifecycleFor } from "@/lib/mocks/admin-operations";
+import type { OpsPayout, OpsReward } from "@/lib/admin-operations";
 
 const HASH = "cd".repeat(32);
 const codeOf = async (promise: Promise<unknown>) => {
@@ -140,5 +141,59 @@ describe("mock lifecycle blockers mirror BountyLifecycleService (UNPAID_WINNERS)
     const resubmitted = ops.submissions.find((s) => s.status === "RESUBMITTED")!;
     await client.reviewAdminSubmission(resubmitted.id, { decision: "APPROVE", revisionNo: 2 });
     expect(await codeOf(client.transitionAdminBounty(slug, "CANCELLED"))).toEqual([400, "VALIDATION_FAILED"]);
+  });
+});
+
+describe("mock deleteAdminBounty mirrors BOUNTY_HAS_OPEN_FUNDS (BE BountyAdminService.remove)", () => {
+  const reward = (overrides: Partial<OpsReward> = {}): OpsReward => ({
+    id: "r1", status: "FUNDED", symbol: "INJ", amount: "100", depositedAmount: "100", depositedAt: null, depositTxHash: null, custodyAddress: null, cap: "100", allocated: "0", ...overrides,
+  });
+  const payout = (status: OpsPayout["status"], amount = "100"): OpsPayout => ({
+    id: `p-${status}`, rewardId: "r1", submissionId: "s1", status, amount, symbol: "INJ", txHash: null, recipientAddress: "inj1x", requestedBy: "a", requestedByNickname: null,
+    requestedAt: "", approvedByNickname: null, approvedAt: null, paidAt: null, requestedByMe: false,
+  });
+
+  it.each<[string, OpsReward[], OpsPayout[], boolean]>([
+    ["DEPOSIT_PENDING reward (nothing deposited)", [reward({ status: "DEPOSIT_PENDING", depositedAmount: null })], [], false],
+    ["REFUNDED reward", [reward({ status: "REFUNDED" })], [], false],
+    ["CANCELLED reward", [reward({ status: "CANCELLED", depositedAmount: null })], [], false],
+    ["no rewards at all", [], [], false],
+    ["REFUND_PENDING reward", [reward({ status: "REFUND_PENDING" })], [], true],
+    ["FUNDED, nothing paid yet", [reward()], [], true],
+    ["PARTIALLY_PAID, PAID total below the deposit", [reward({ status: "PARTIALLY_PAID" })], [payout("PAID", "60")], true],
+    ["PAID in full", [reward({ status: "PAID" })], [payout("PAID", "100")], false],
+    ["PAID in full across two payouts", [reward({ status: "PAID" })], [payout("PAID", "40"), payout("PAID", "60")], false],
+    ["PAID up to the cap but the deposit was larger (surplus is still owed back)", [reward({ status: "PAID", depositedAmount: "120" })], [payout("PAID", "100")], true],
+    ["fully paid but another payout is still open", [reward({ status: "PAID" })], [payout("PAID", "100"), payout("REQUESTED", "1")], true],
+    ["open payout statuses", [reward({ status: "PAID" })], [payout("PAID", "100"), payout("AWAITING_MULTISIG_APPROVAL", "1")], true],
+    ["APPROVED payout", [reward({ status: "PAID" })], [payout("PAID", "100"), payout("APPROVED", "1")], true],
+    ["BROADCASTING payout", [reward({ status: "PAID" })], [payout("PAID", "100"), payout("BROADCASTING", "1")], true],
+    ["fully paid plus terminal CANCELLED/FAILED payouts only", [reward({ status: "PAID" })], [payout("PAID", "100"), payout("CANCELLED", "5"), payout("FAILED", "5")], false],
+  ])("%s", (_label, rewards, payouts, blocked) => {
+    expect(bountyHasOpenFunds({ rewards, payouts })).toBe(blocked);
+  });
+
+  it("answers 409 for an opened bounty that holds funds and keeps it, even after one winner is paid", async () => {
+    const client = createMockApiClient();
+    const slug = activeBounty().slug;
+    const ops = await client.getAdminOperations(slug);
+    expect(await codeOf(client.deleteAdminBounty(slug))).toEqual([409, "BOUNTY_HAS_OPEN_FUNDS"]);
+    expect((await client.getAdminBounties()).some((bounty) => bounty.slug === slug)).toBe(true);
+
+    // The only payout is paid, but it is one share of the deposit: the rest is still in the multisig.
+    await client.approveAdminPayout(ops.payouts[0].id);
+    await client.markAdminPayoutPaid(ops.payouts[0].id, HASH);
+    expect(await codeOf(client.deleteAdminBounty(slug))).toEqual([409, "BOUNTY_HAS_OPEN_FUNDS"]);
+  });
+
+  it("deletes an opened draft whose reward is still DEPOSIT_PENDING, and 404s a missing bounty", async () => {
+    const client = createMockApiClient();
+    const { id } = await client.saveAdminBounty({ ...activeBounty(), slug: "", title: "Unfunded draft", status: "draft" }, true);
+    const draft = { slug: id };
+    const ops = await client.getAdminOperations(draft.slug);
+    expect(ops.rewards[0]).toMatchObject({ status: "DEPOSIT_PENDING" });
+    await client.deleteAdminBounty(draft.slug);
+    expect((await client.getAdminBounties()).some((bounty) => bounty.slug === draft.slug)).toBe(false);
+    expect(await codeOf(client.deleteAdminBounty("missing"))).toEqual([404, "BOUNTY_NOT_FOUND"]);
   });
 });

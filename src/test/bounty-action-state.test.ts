@@ -15,12 +15,12 @@ import type { AccountApplication, AccountSubmission } from "@/lib/contracts/acco
 import { MockApiError } from "@/lib/mocks/mock-error";
 
 type AppRow = Pick<AccountApplication, "bountySlug" | "status" | "agent">;
-type SubRow = Pick<AccountSubmission, "bountySlug" | "status" | "agent">;
+type SubRow = Pick<AccountSubmission, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountSubmission, "reviewComment">>;
 
 const BOUNTY = "bounty-1";
 const bot = { id: "agent-1", name: "Scout" };
 const app = (status: AppRow["status"], agent: AppRow["agent"] = null, bountySlug = BOUNTY): AppRow => ({ bountySlug, status, agent });
-const sub = (status: SubRow["status"], agent: SubRow["agent"] = null, bountySlug = BOUNTY): SubRow => ({ bountySlug, status, agent });
+const sub = (status: SubRow["status"], agent: SubRow["agent"] = null, bountySlug = BOUNTY, reviewComment?: string | null): SubRow => ({ bountySlug, status, agent, reviewComment });
 const loaded = <T,>(data: T[]) => ({ loading: false, unavailable: false, data });
 const loading = { loading: true, unavailable: false, data: null };
 const unavailable = { loading: false, unavailable: true, data: null };
@@ -91,6 +91,9 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["submission approved on a closed bounty", { status: "closed", submissions: loaded([sub("approved")]) }, { kind: "submissionApproved" }],
   ["submission rejected", { submissions: loaded([sub("rejected")]) }, { kind: "submissionRejected" }],
   ["submission rejected after an approved application", { applicationRequired: true, applications: loaded([app("completed")]), submissions: loaded([sub("rejected")]) }, { kind: "submissionRejected" }],
+  ["submission rejected with a reviewer comment", { submissions: loaded([sub("rejected", null, BOUNTY, "does not meet the brief")]) }, { kind: "submissionRejected", review: { forfeited: false, text: "does not meet the brief" } }],
+  ["submission rejected, forfeited award (prefix stripped)", { submissions: loaded([sub("rejected", null, BOUNTY, "forfeited: winner wallet never connected")]) }, { kind: "submissionRejected", review: { forfeited: true, text: "winner wallet never connected" } }],
+  ["submission rejected with a blank comment", { submissions: loaded([sub("rejected", null, BOUNTY, "   ")]) }, { kind: "submissionRejected" }],
   // 8. 진행 중이 아님
   ["reviewing, submission pending", { status: "reviewing", submissions: loaded([sub("in_review")]) }, { kind: "inReviewLocked" }],
   ["closed, submission resubmitted", { status: "closed", submissions: loaded([sub("resubmitted")]) }, { kind: "inReviewLocked" }],
@@ -103,6 +106,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["submission in review → update form", { submissions: loaded([sub("in_review")]) }, updateSubmit],
   ["just submitted (server row not re-read yet)", { submitted: true }, updateSubmit],
   ["revision requested", { submissions: loaded([sub("revision_requested")]) }, resubmit],
+  ["revision requested with a reviewer comment", { submissions: loaded([sub("revision_requested", null, BOUNTY, "add a README")]) }, { kind: "submitForm", revising: true, inReview: false, revisionComment: "add a README" }],
   ["revision requested on a reviewing bounty (BE still accepts it)", { status: "reviewing", submissions: loaded([sub("revision_requested")]) }, resubmit],
   ["revision requested and just resubmitted", { submitted: true, submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: true }],
 ];

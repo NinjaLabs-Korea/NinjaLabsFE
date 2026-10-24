@@ -1,8 +1,11 @@
 import type { ClientUser } from "@/lib/contracts/auth";
 import type { PayoutStatus } from "@/lib/types";
 
-/** FE steps of an application; `open` = BE PENDING (applied, awaiting the sponsor), `submitted`/`completed` come from the submission join. */
-export type ApplicationStatus = "open" | "approved" | "submitted" | "completed" | "rejected";
+/**
+ * FE steps of an application; `open` = BE PENDING (applied, awaiting the sponsor), `submitted`/`completed` come from the submission join.
+ * `notAccepted` = approved application whose submission was finally REJECTED (including a forfeited award): a final state, not a step.
+ */
+export type ApplicationStatus = "open" | "approved" | "submitted" | "completed" | "rejected" | "notAccepted";
 
 export type SubmissionStatus =
   | "submitted"
@@ -21,6 +24,8 @@ export type AccountSubmission = {
   agent: AccountAgentRef | null;
   /** BE `payment_status` (same rule as the public profile's `payoutStatus`); NONE when an older BE omits it. */
   paymentStatus: PayoutStatus;
+  /** BE `review_comment`: the latest reviewer comment (revision request, rejection, or `forfeited: <reason>`); null when none. */
+  reviewComment: string | null;
 };
 
 export type AccountApplication = {
@@ -33,6 +38,8 @@ export type AccountApplication = {
   note: string;
   status: ApplicationStatus;
   agent: AccountAgentRef | null;
+  /** Reviewer comment of the joined submission (set for `notAccepted`, e.g. `forfeited: <reason>`); null otherwise. */
+  reviewComment: string | null;
 };
 
 export type AgentStatus = "PENDING_VERIFICATION" | "ACTIVE" | "SUSPENDED" | "REVOKED";

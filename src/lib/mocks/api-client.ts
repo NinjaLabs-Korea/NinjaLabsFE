@@ -36,18 +36,20 @@ function toPreviewApplication(id: string, bountyId: string, message: string): Ac
     // BE PENDING → FE "open" (Applied), the same first step the api client maps to.
     status: "open",
     agent: null,
+    reviewComment: null,
   };
 }
 
 /** Fixture submissions mirror the api client's join: a submitted/completed application has a submission row. */
 function fixtureSubmissions(applications: readonly AccountApplication[]): AccountSubmission[] {
   return applications
-    .filter((application) => application.status === "submitted" || application.status === "completed")
+    .filter((application) => application.status === "submitted" || application.status === "completed" || application.status === "notAccepted")
     .map((application) => ({
       bountySlug: application.bountySlug,
-      status: application.status === "completed" ? "approved" as const : "submitted" as const,
+      status: application.status === "completed" ? "approved" as const : application.status === "notAccepted" ? "rejected" as const : "submitted" as const,
       agent: application.agent,
       paymentStatus: application.status === "completed" ? "PENDING" as const : "NONE" as const,
+      reviewComment: application.reviewComment,
     }));
 }
 
@@ -118,7 +120,7 @@ export function createMockApiClient(seed = "default"): ApiClient {
       const existing = submissions.find((submission) => submission.bountySlug === bountyId && submission.agent === null);
       submissions = existing
         ? submissions.map((submission) => (submission === existing ? { ...submission, status: "submitted" as const } : submission))
-        : [{ bountySlug: bountyId, status: "submitted", agent: null, paymentStatus: "NONE" }, ...submissions];
+        : [{ bountySlug: bountyId, status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null }, ...submissions];
       // Like the api client's /applications/me + /submissions/me join: an approved application is now "submitted".
       applications = applications.map((application) =>
         application.bountySlug === bountyId && application.agent === null && application.status === "approved"
@@ -213,7 +215,7 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
   // Operations console twin: per-bounty applications/submissions/rewards/payouts seeded on first open, with the BE's checks.
   const operations = createMockOperationsApi({ findBounty: (bountyId) => bounties.find((item) => item.slug === bountyId), nextId });
   const openedOperations = new Set<string>();
-  const { transitionOperations, getAdminOperations, ...operationWrites } = operations;
+  const { transitionOperations, hasOpenFunds, getAdminOperations, ...operationWrites } = operations;
   return {
     ...operationWrites,
     getAdminOperations: async (bountyId) => {
@@ -261,6 +263,8 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
     },
     deleteAdminBounty: async (bountyId) => {
       requireOne(bounties, (item) => item.slug === bountyId, "BOUNTY_NOT_FOUND");
+      // Like the transition above, the BE's money rule applies to a bounty whose operations rows exist (opened in the console).
+      if (openedOperations.has(bountyId) && hasOpenFunds(bountyId)) throw new MockApiError(409, "BOUNTY_HAS_OPEN_FUNDS");
       bounties = bounties.filter((item) => item.slug !== bountyId);
     },
     getAdminPosts: async () => posts.map((post) => ({ ...post })),

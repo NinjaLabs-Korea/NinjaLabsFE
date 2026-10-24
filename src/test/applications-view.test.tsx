@@ -32,6 +32,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
   }));
 
 const row = (status: ApplicationStatus, overrides: Partial<AccountApplication> = {}): AccountApplication => ({
+  reviewComment: null,
   id: `app-${status}`,
   bountySlug: `bounty-${status}`,
   bountyTitle: `Bounty ${status}`,
@@ -102,6 +103,45 @@ describe("ApplicationsView", () => {
     expect(within(article).getByText(/did not select this application/)).toBeTruthy();
     expect(within(article).queryByRole("list", { name: "Application progress" })).toBeNull();
     expect(within(article).queryByRole("link", { name: "Submit work" })).toBeNull();
+  });
+
+  it("shows an approved application with a rejected submission as a final danger state, not Submitted", async () => {
+    serve({ status: "available", data: [row("notAccepted", { reviewComment: "Not production ready" })] });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Bounty notAccepted" });
+    const article = card("Bounty notAccepted");
+    expect(within(article).getByText("Submission not accepted")).toBeTruthy();
+    expect(within(article).queryByText("Submitted")).toBeNull();
+    expect(within(article).getByText(/did not accept it/)).toBeTruthy();
+    expect(within(article).getByText("Reviewer comment: Not production ready")).toBeTruthy();
+    expect(within(article).queryByRole("list", { name: "Application progress" })).toBeNull();
+    expect(within(article).queryByRole("link", { name: "Submit work" })).toBeNull();
+  });
+
+  it("shows the award-forfeited badge and note with the reason", async () => {
+    serve({ status: "available", data: [row("notAccepted", { reviewComment: "forfeited: winner wallet never connected" })] });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Bounty notAccepted" });
+    const article = card("Bounty notAccepted");
+    expect(within(article).getByText("Award forfeited")).toBeTruthy();
+    expect(within(article).getByText("Your work was approved, but the award was forfeited: winner wallet never connected. Contact the admins if this is a mistake.")).toBeTruthy();
+    expect(within(article).queryByText(/did not accept it/)).toBeNull();
+  });
+
+  it("shows a not-accepted application without any comment line", async () => {
+    serve({ status: "available", data: [row("notAccepted")] });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Bounty notAccepted" });
+    expect(within(card("Bounty notAccepted")).queryByText(/Reviewer comment/)).toBeNull();
+  });
+
+  it("shows the forfeited fixture in the mock client", async () => {
+    apiClient = createMockApiClient();
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Quest copy refresh" });
+    const article = card("Quest copy refresh");
+    expect(await within(article).findByText("Award forfeited")).toBeTruthy();
+    expect(within(article).getByText(/winner wallet never connected/)).toBeTruthy();
   });
 
   it("labels applications an agent made on the owner's behalf", async () => {

@@ -51,7 +51,7 @@ describe("mock api client parity", () => {
 
     const first = await client.submitBounty("wallet-onboarding-states", { submissionUrl: "https://x.test", description: "Done" });
     expect(first).toMatchObject({ revisionNo: 1, status: "SUBMITTED" });
-    expect(available(await client.getSubmissions(owner))).toContainEqual({ bountySlug: "wallet-onboarding-states", status: "submitted", agent: null, paymentStatus: "NONE" });
+    expect(available(await client.getSubmissions(owner))).toContainEqual({ bountySlug: "wallet-onboarding-states", status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null });
     // The approved fixture application on that bounty moves to "submitted", like the api client's join.
     expect(available(await client.getApplications(owner)).find((application) => application.bountySlug === "wallet-onboarding-states")?.status).toBe("submitted");
 
@@ -64,7 +64,7 @@ describe("mock api client parity", () => {
     const client = createMockApiClient();
     await client.applyToBounty("helix-volume-analytics", { message: "QA approach" });
     const statuses = new Set(available(await client.getApplications(owner)).map((application) => application.status));
-    for (const status of statuses) expect(["open", "approved", "submitted", "completed", "rejected"]).toContain(status);
+    for (const status of statuses) expect(["open", "approved", "submitted", "completed", "rejected", "notAccepted"]).toContain(status);
   });
 
   it("keeps agent-made rows on the same bounty when the owner applies directly", async () => {
