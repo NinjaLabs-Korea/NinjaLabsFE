@@ -82,6 +82,13 @@ describe("hall of fame rewards paid stat", () => {
     expect(formatPaidTotals(undefined, "en")).toBeNull();
   });
 
+  it("merges entries that share a symbol and decimals across token types instead of repeating the symbol", () => {
+    const cw20Inj = { ...inj, tokenType: "CW20", amount: "5000000000000000000" };
+    expect(formatPaidTotals([inj, cw20Inj, usdc], "en")).toBe("305 INJ · 12,500 USDC");
+    // different decimals stay separate rather than being summed in mixed units
+    expect(formatPaidTotals([inj, { ...cw20Inj, decimals: 6, amount: "5000000" }], "en")).toBe("300 INJ · 5 INJ");
+  });
+
   it("appends the rewards paid stat after the counts when the API reports paid totals", async () => {
     fetchPublicJson.mockImplementation(async (path: string) => (path.endsWith("/stats") ? { ...counts, paidTotals: [usdc, inj] } : []));
     const { hallOfFame } = await loadRuntimeHallOfFame("en");

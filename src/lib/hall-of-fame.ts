@@ -63,12 +63,21 @@ const PAID_TOTAL_FRACTION_DIGITS = 2;
  * `paidTotals` → one display string, e.g. "12,500 USDC · 300 INJ" (API order). Entries the client cannot scale
  * (unknown `decimals`, non-integer amount, zero) are skipped rather than shown in the wrong unit; null when nothing is left,
  * so the "Rewards paid" stat is hidden instead of showing a placeholder.
+ * The BE groups by (symbol, token type), so one symbol can arrive twice (e.g. INJ as NATIVE and CW20). The display has no
+ * token type, so entries with the same symbol and decimals are summed into one part instead of rendering "300 INJ · 5 INJ".
  */
 export function formatPaidTotals(rows: readonly PaidTotalRow[] | undefined, locale: string): string | null {
-  const parts = (rows ?? []).flatMap(({ symbol, decimals, amount }) => {
-    if (decimals === null || !Number.isInteger(decimals) || decimals < 0 || !/^\d+$/.test(amount) || BigInt(amount) === BigInt(0)) return [];
-    return [`${formatTokenAmount(formatUnits(BigInt(amount), decimals), locale, PAID_TOTAL_FRACTION_DIGITS)} ${symbol}`];
-  });
+  const totals = new Map<string, { symbol: string; decimals: number; amount: bigint }>();
+  for (const { symbol, decimals, amount } of rows ?? []) {
+    if (decimals === null || !Number.isInteger(decimals) || decimals < 0 || !/^\d+$/.test(amount)) continue;
+    const key = `${symbol}\u0000${decimals}`;
+    const entry = totals.get(key) ?? { symbol, decimals, amount: BigInt(0) };
+    entry.amount += BigInt(amount);
+    totals.set(key, entry);
+  }
+  const parts = [...totals.values()]
+    .filter(({ amount }) => amount > BigInt(0))
+    .map(({ symbol, decimals, amount }) => `${formatTokenAmount(formatUnits(amount, decimals), locale, PAID_TOTAL_FRACTION_DIGITS)} ${symbol}`);
   return parts.length > 0 ? parts.join(" · ") : null;
 }
 
