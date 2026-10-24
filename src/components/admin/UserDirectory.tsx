@@ -35,7 +35,13 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   }, [api, t]);
 
   async function restoreMember(user: AdminUser) {
-    await api.setAdminMember(user.slug, { isMember: user.isMember, ...(user.memberRole ? { role: user.memberRole } : {}), ...(user.memberDisplayOrder !== null ? { displayOrder: user.memberDisplayOrder } : {}) });
+    // Called from the toast's Undo action, which does not await it: a rejection must become a toast, not an unhandled error.
+    try {
+      await api.setAdminMember(user.slug, { isMember: user.isMember, ...(user.memberRole ? { role: user.memberRole } : {}), ...(user.memberDisplayOrder !== null ? { displayOrder: user.memberDisplayOrder } : {}) });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: adminErrorDescription(error, tCommon, t("toast.removeFailedDescription")) });
+      return;
+    }
     setDirectoryUsers((currentUsers) => currentUsers.map((currentUser) => (
       currentUser.slug === user.slug
         ? {

@@ -19,6 +19,7 @@ export function AdminTabs({ active }: { active: AdminTab }) {
     <nav className="flex flex-wrap gap-2 h-auto min-h-[66px] items-center rounded-card border border-border bg-surface p-[21px] shadow-card">
       {tabs.map((tab) => (
         <Link
+          // The active tab was conveyed by color alone; expose it to assistive tech too.
           aria-current={tab.active === active ? "page" : undefined}
           className={`inline-flex h-6 items-center rounded-full px-2.5 text-xs font-semibold ${tab.active === active ? "bg-primary text-primary-soft" : "bg-primary-soft text-primary-strong"}`}
           href={tab.href}
