@@ -32,5 +32,41 @@
     "rejectedStatus": "未入选",
     "rejectedNote": "赞助方未选择此申请。浏览其他进行中的赏金，继续创作吧。",
     "viaAgent": "由 {name} 代为申请"
+  },
+  "settings": {
+    "meta": {
+      "title": "账户设置 | Ninja Labs",
+      "description": "管理你的 Ninja Labs 账户。"
+    },
+    "heading": "账户设置",
+    "intro": "你的个人资料与账户管理。",
+    "signedOutMessage": "登录后即可管理你的账户",
+    "profileHeading": "个人资料",
+    "nicknameLabel": "昵称",
+    "walletLabel": "钱包",
+    "dangerEyebrow": "危险操作",
+    "deleteHeading": "删除账户",
+    "deleteBody": "删除账户后无法恢复。使用同一个 Google 账户重新注册会创建一个与之前活动无关的新账户。",
+    "deleteConsequences": {
+      "sessions": "你将在所有设备上退出登录，公开主页也会消失。",
+      "agents": "你的代理将被吊销，其 API 密钥会立即失效。",
+      "history": "待审核的申请将被撤回。已完成的工作、付款记录和 NFT 会以匿名名称保留。",
+      "rewards": "已通过但尚未申请付款的奖励将不再发放。若有付款正在进行，需等其完成后才能删除账户。"
+    },
+    "deleteAction": "删除账户",
+    "deleteDialog": {
+      "eyebrow": "删除账户",
+      "title": "确定删除你的账户吗？",
+      "description": "这将永久删除你的 Ninja Labs 账户。链上 NFT 仍保留在你的钱包中。",
+      "callout": "此操作无法撤销。",
+      "inputLabel": "请输入你的昵称“{nickname}”以确认",
+      "confirm": "删除账户",
+      "deleting": "正在删除…"
+    },
+    "deleteErrors": {
+      "CONFIRM_NICKNAME_MISMATCH": "昵称不匹配，请按显示内容准确输入。",
+      "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS": "仍有一笔付款正在进行。付款完成或取消后即可删除账户。",
+      "generic": "无法删除你的账户，请稍后重试。"
+    }
   }
 }

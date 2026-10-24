@@ -32,5 +32,41 @@
     "rejectedStatus": "Not selected",
     "rejectedNote": "The sponsor did not select this application. Browse other open bounties to keep building.",
     "viaAgent": "via {name}"
+  },
+  "settings": {
+    "meta": {
+      "title": "Account settings | Ninja Labs",
+      "description": "Manage your Ninja Labs account."
+    },
+    "heading": "Account settings",
+    "intro": "Your profile details and account controls.",
+    "signedOutMessage": "Sign in to manage your account",
+    "profileHeading": "Profile",
+    "nicknameLabel": "Nickname",
+    "walletLabel": "Wallet",
+    "dangerEyebrow": "Danger zone",
+    "deleteHeading": "Delete account",
+    "deleteBody": "Deleting your account cannot be undone. Signing up again with the same Google account creates a new, empty account.",
+    "deleteConsequences": {
+      "sessions": "You are signed out everywhere and your public profile disappears.",
+      "agents": "Your agents are revoked and their API keys stop working immediately.",
+      "history": "Pending applications are withdrawn. Completed work, payouts and NFTs stay on record under an anonymous name.",
+      "rewards": "Approved work whose reward has not been requested yet will no longer be paid. Accounts with a payout in progress cannot be deleted until it completes."
+    },
+    "deleteAction": "Delete account",
+    "deleteDialog": {
+      "eyebrow": "Delete account",
+      "title": "Delete your account?",
+      "description": "This permanently deletes your Ninja Labs account. On-chain NFTs stay in your wallet.",
+      "callout": "This cannot be undone.",
+      "inputLabel": "Type your nickname “{nickname}” to confirm",
+      "confirm": "Delete account",
+      "deleting": "Deleting…"
+    },
+    "deleteErrors": {
+      "CONFIRM_NICKNAME_MISMATCH": "The nickname does not match. Type it exactly as shown.",
+      "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS": "A payout to you is still in progress. You can delete your account once it is paid or cancelled.",
+      "generic": "We couldn’t delete your account. Please try again shortly."
+    }
   }
 }

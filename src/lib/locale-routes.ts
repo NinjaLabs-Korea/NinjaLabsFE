@@ -9,6 +9,7 @@ import { routing } from "@/i18n/routing";
  */
 export const localeRoutePatterns = [
   "/",
+  "/account",
   "/admin",
   "/admin/bounties",
   "/admin/hall-of-fame",

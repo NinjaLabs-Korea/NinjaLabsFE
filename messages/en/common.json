@@ -40,6 +40,7 @@
     "myProfile": "My profile",
     "myApplications": "My applications",
     "myAgents": "My agents",
+    "accountSettings": "Account settings",
     "signOut": "Sign out",
     "sessionPreview": "Session preview",
     "walletAddress": "Wallet address: {wallet}"
@@ -101,5 +102,11 @@
   },
   "reward": {
     "tbd": "Reward TBD"
+  },
+  "flash": {
+    "accountDeleted": {
+      "title": "Your account was deleted",
+      "description": "You have been signed out. You can sign up again with the same Google account at any time."
+    }
   }
 }
