@@ -16,7 +16,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { seedDatabase } from './lib/seed.mjs';
-import { reapStale, writePids, TMP_PREFIX } from './lib/reaper.mjs';
+import { alive, reapStale, reapDir, writePids, TMP_PREFIX } from './lib/reaper.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FE_DIR = path.resolve(HERE, '..');
@@ -96,6 +96,8 @@ let cleaned = false;
 /** Starts a long-running child in its own process group so the whole tree can be killed. */
 function startProc(name, cmd, args, opts) {
   const out = fs.openSync(path.join(LOGS, `${name}.log`), 'a');
+  // detached = own session/process group (pgid == child.pid); recorded in pids.json synchronously right after the spawn. A kill
+  // landing in that gap is covered by the process-table scan in lib/reaper.mjs (cwd/command line inside the run dir).
   const child = spawn(cmd, args, { ...opts, stdio: ['ignore', out, out], detached: true });
   child.on('exit', (code, signal) => { child.exited = true; if (!cleaned) log(`${name} exited (${code ?? signal})`); });
   children.push({ name, child });
@@ -133,11 +135,13 @@ function cleanup() {
   if (pgStarted) {
     try { execFileSync(pgBin('pg_ctl'), ['-D', path.join(TMP, 'pg'), 'stop', '-m', 'fast', '-w'], { stdio: 'ignore' }); } catch { /* not running */ }
   }
-  if (env.NINJA_IT_KEEP_TMP === '1') { writePids(TMP, { kept: true }); log(`kept temp dir ${TMP}`); }
-  else fs.rmSync(TMP, { recursive: true, force: true });
-}
-function alive(pid) {
-  try { process.kill(pid, 0); return true; } catch { return false; }
+  // Last line of defence: also kills anything that escaped its group (found by cwd/command line in $TMPDIR/ninja-it-*), and
+  // deletes the temp dir only once every recorded group and stray process is confirmed dead (otherwise it stays for --reap).
+  const keep = env.NINJA_IT_KEEP_TMP === '1';
+  if (keep) writePids(TMP, { kept: true });
+  const deleted = reapDir(TMP, { keep, log });
+  if (keep) log(`kept temp dir ${TMP}`);
+  else if (!deleted) log(`temp dir ${TMP} kept: processes would not die; run "npm run test:integration -- --reap"`);
 }
 process.on('exit', cleanup);
 for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sig, () => { log(`${sig}: cleaning up`); cleanup(); process.exit(130); });
