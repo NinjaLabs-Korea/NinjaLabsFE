@@ -25,13 +25,14 @@ import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
 import type { AccountAgentRef, AccountApplication, AccountSubmission, SubmissionStatus } from "@/lib/contracts/account";
 import type { AuthStatus } from "@/lib/contracts/auth";
+import { parseReviewComment, type ReviewNote } from "@/lib/review-comment";
 import type { Bounty } from "@/lib/types";
 
 /** 심사 대기 중인 제출 상태 — 이 상태의 제출이 있으면 "심사 중" 화면/문구를 쓴다. */
 export const PENDING_SUBMISSION_STATUSES: readonly SubmissionStatus[] = ["submitted", "resubmitted", "in_review"];
 
 type ApplicationRow = Pick<AccountApplication, "bountySlug" | "status" | "agent">;
-type SubmissionRow = Pick<AccountSubmission, "bountySlug" | "status" | "agent">;
+type SubmissionRow = Pick<AccountSubmission, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountSubmission, "reviewComment">>;
 
 /** `useAccountQuery` 결과 중 이 규칙이 읽는 부분. `data`는 내 전체 행(모든 바운티)이다. */
 export type AccountRowsQuery<T> = { loading: boolean; unavailable: boolean; data: readonly T[] | null };
@@ -65,14 +66,15 @@ export type BountyActionView =
   | { kind: "applicationRejected" }
   | { kind: "applicationUnderReview" }
   | { kind: "submissionApproved" }
-  | { kind: "submissionRejected" }
+  /** `review`: 심사자 코멘트 (없으면 생략). `forfeited`면 승인됐지만 수상이 몰수된 건이다. */
+  | { kind: "submissionRejected"; review?: ReviewNote }
   /** 마감 후 심사 중 — 폼 없이 안내만 */
   | { kind: "inReviewLocked" }
   /**
    * 제출 폼. `revising`(수정 요청 재제출)이 제목/버튼에서 `inReview`(심사 중 수정)보다 우선하고, 둘 다 false면 첫 제출이다.
    * 안내 문구는 각각 독립적으로 붙는다 (방금 제출한 직후의 수정 요청 행처럼 둘 다 true일 수 있다).
    */
-  | { kind: "submitForm"; revising: boolean; inReview: boolean };
+  | { kind: "submitForm"; revising: boolean; inReview: boolean; revisionComment?: string };
 
 export type BountyActionViewKind = BountyActionView["kind"];
 
@@ -116,14 +118,18 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
 
   // 7. 확정된 제출
   if (submission?.status === "approved") return { kind: "submissionApproved" };
-  if (submission?.status === "rejected") return { kind: "submissionRejected" };
+  if (submission?.status === "rejected") {
+    const review = parseReviewComment(submission.reviewComment);
+    return review ? { kind: "submissionRejected", review } : { kind: "submissionRejected" };
+  }
 
   // 8~9. BE는 승인/거절 전까지 재제출을 받는다(마감 후엔 수정 요청일 때만). 단 바운티가 진행 중일 때만(`isInProgress`:
   // OPEN / SUBMISSION_CLOSED / IN_REVIEW) — `closed`(COMPLETED / CANCELLED)는 BOUNTY_REVIEW_CLOSED이므로 재제출 폼을 주지 않는다.
   const revising = submission?.status === "revision_requested" && status !== "closed";
   const inReview = submitted || (submission !== undefined && PENDING_SUBMISSION_STATUSES.includes(submission.status));
   if (!acceptingNew && !revising) return inReview ? { kind: "inReviewLocked" } : closed;
-  return { kind: "submitForm", revising, inReview };
+  const revisionComment = revising ? parseReviewComment(submission?.reviewComment)?.text : undefined;
+  return revisionComment ? { kind: "submitForm", revising, inReview, revisionComment } : { kind: "submitForm", revising, inReview };
 }
 
 /**

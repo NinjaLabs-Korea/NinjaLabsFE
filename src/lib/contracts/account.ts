@@ -21,6 +21,8 @@ export type AccountSubmission = {
   agent: AccountAgentRef | null;
   /** BE `payment_status` (same rule as the public profile's `payoutStatus`); NONE when an older BE omits it. */
   paymentStatus: PayoutStatus;
+  /** BE `review_comment`: the latest reviewer comment (revision request, rejection, or `forfeited: <reason>`); null when none. */
+  reviewComment: string | null;
 };
 
 export type AccountApplication = {

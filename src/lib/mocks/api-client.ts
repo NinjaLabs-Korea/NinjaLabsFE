@@ -41,14 +41,17 @@ function toPreviewApplication(id: string, bountyId: string, message: string): Ac
 
 /** Fixture submissions mirror the api client's join: a submitted/completed application has a submission row. */
 function fixtureSubmissions(applications: readonly AccountApplication[]): AccountSubmission[] {
-  return applications
+  const derived = applications
     .filter((application) => application.status === "submitted" || application.status === "completed")
     .map((application) => ({
       bountySlug: application.bountySlug,
       status: application.status === "completed" ? "approved" as const : "submitted" as const,
       agent: application.agent,
       paymentStatus: application.status === "completed" ? "PENDING" as const : "NONE" as const,
+      reviewComment: null,
     }));
+  // Approved work whose award was forfeited by an admin (BE scripts/forfeit-award.js): REJECTED + comment `forfeited: <reason>`.
+  return [...derived, { bountySlug: "quest-copy-refresh", status: "rejected", agent: null, paymentStatus: "NONE", reviewComment: "forfeited: winner wallet never connected" }];
 }
 
 /**
@@ -118,7 +121,7 @@ export function createMockApiClient(seed = "default"): ApiClient {
       const existing = submissions.find((submission) => submission.bountySlug === bountyId && submission.agent === null);
       submissions = existing
         ? submissions.map((submission) => (submission === existing ? { ...submission, status: "submitted" as const } : submission))
-        : [{ bountySlug: bountyId, status: "submitted", agent: null, paymentStatus: "NONE" }, ...submissions];
+        : [{ bountySlug: bountyId, status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null }, ...submissions];
       // Like the api client's /applications/me + /submissions/me join: an approved application is now "submitted".
       applications = applications.map((application) =>
         application.bountySlug === bountyId && application.agent === null && application.status === "approved"

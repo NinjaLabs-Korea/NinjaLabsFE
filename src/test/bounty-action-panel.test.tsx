@@ -51,7 +51,7 @@ const application = (status: AccountApplication["status"], agent: AccountApplica
   agent,
 });
 
-const submission = (status: AccountSubmission["status"], agent: AccountSubmission["agent"] = null): AccountSubmission => ({ bountySlug: "bounty-1", status, agent, paymentStatus: "NONE" });
+const submission = (status: AccountSubmission["status"], agent: AccountSubmission["agent"] = null, reviewComment: string | null = null): AccountSubmission => ({ bountySlug: "bounty-1", status, agent, paymentStatus: "NONE", reviewComment });
 
 describe("BountyActionPanel", () => {
   beforeEach(() => {
@@ -218,6 +218,37 @@ describe("BountyActionPanel", () => {
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
   });
 
+  it("shows a plain rejection with the reviewer comment, without the forfeit copy", async () => {
+    state.submissions = [submission("rejected", null, "Does not meet the brief")];
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    expect(await screen.findByText("Submission not accepted")).toBeTruthy();
+    expect(screen.getByText(/did not accept it/)).toBeTruthy();
+    expect(screen.getByText("Reviewer comment: Does not meet the brief")).toBeTruthy();
+    expect(screen.queryByText(/forfeited/)).toBeNull();
+  });
+
+  it("shows the forfeited copy with the reason (prefix stripped) instead of 'did not accept it'", async () => {
+    state.submissions = [submission("rejected", null, "forfeited: winner wallet never connected")];
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" submissionMode="direct" />);
+    expect(await screen.findByText("Award forfeited")).toBeTruthy();
+    expect(screen.getByText("Your work was approved, but the award was forfeited: winner wallet never connected. Contact the admins if this is a mistake.")).toBeTruthy();
+    expect(screen.queryByText(/did not accept it/)).toBeNull();
+  });
+
+  it("shows the plain rejection copy alone when there is no reviewer comment", async () => {
+    state.submissions = [submission("rejected")];
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    expect(await screen.findByText(/did not accept it/)).toBeTruthy();
+    expect(screen.queryByText(/Reviewer comment/)).toBeNull();
+  });
+
+  it("shows the reviewer's comment on a requested revision", async () => {
+    state.submissions = [submission("revision_requested", null, "Add a README")];
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    expect(await screen.findByText("Reviewer comment: Add a README")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Resubmit" })).toBeTruthy();
+  });
+
   it("unlocks submission after approval", async () => {
     state.applications = [application("approved")];
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
@@ -354,9 +385,9 @@ describe("api client application mapping", () => {
     await expect(client.getSubmissions(signedIn)).resolves.toEqual({
       status: "available",
       data: [
-        { bountySlug: "b4", status: "revision_requested", agent: null, paymentStatus: "NONE" },
-        { bountySlug: "b5", status: "submitted", agent: { id: "agent-1", name: "scout" }, paymentStatus: "NONE" },
-        { bountySlug: "b6", status: "approved", agent: { id: "agent-1", name: "scout" }, paymentStatus: "PARTIALLY_PAID" },
+        { bountySlug: "b4", status: "revision_requested", agent: null, paymentStatus: "NONE", reviewComment: null },
+        { bountySlug: "b5", status: "submitted", agent: { id: "agent-1", name: "scout" }, paymentStatus: "NONE", reviewComment: null },
+        { bountySlug: "b6", status: "approved", agent: { id: "agent-1", name: "scout" }, paymentStatus: "PARTIALLY_PAID", reviewComment: null },
       ],
     });
   });

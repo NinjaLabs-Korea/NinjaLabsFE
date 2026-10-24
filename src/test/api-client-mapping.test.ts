@@ -99,7 +99,7 @@ describe("GET /submissions/me mapping", () => {
     const { http } = createHttp({ "/submissions/me": [{ status, bounty_id: "b1", agent: { id: "ag", name: "Bot" } }] });
     expect(await createApiApiClient(http).getSubmissions(signedIn)).toEqual({
       status: "available",
-      data: [{ bountySlug: "b1", status: expected, agent: { id: "ag", name: "Bot" }, paymentStatus: "NONE" }],
+      data: [{ bountySlug: "b1", status: expected, agent: { id: "ag", name: "Bot" }, paymentStatus: "NONE", reviewComment: null }],
     });
   });
 

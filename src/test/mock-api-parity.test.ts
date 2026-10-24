@@ -47,6 +47,19 @@ describe("mock and api clients implement the same contract", () => {
     }
   });
 
+  it("maps review_comment to reviewComment, and the mock fixtures carry a forfeited submission", async () => {
+    const api = apiClient({ "/submissions/me": [
+      { status: "REJECTED", bounty_id: "b", agent: null, review_comment: " forfeited: x " },
+      { status: "SUBMITTED", bounty_id: "c", agent: null },
+    ] });
+    const result = await api.getSubmissions(owner());
+    if (result.status !== "available") throw new Error("unavailable");
+    expect(result.data.map((row) => row.reviewComment)).toEqual(["forfeited: x", null]);
+    const mock = await createMockApiClient().getSubmissions(owner());
+    if (mock.status !== "available") throw new Error("unavailable");
+    expect(mock.data).toContainEqual(expect.objectContaining({ status: "rejected", reviewComment: "forfeited: winner wallet never connected" }));
+  });
+
   it("withholds the fixture account from any other signed-in user", async () => {
     const mock = createMockApiClient();
     expect(await mock.getAccount(stranger)).toEqual({ status: "available", data: null });
@@ -119,7 +132,7 @@ describe("mock submission revisions", () => {
     expect(await mock.submitBounty("b1", input)).toMatchObject({ revisionNo: 2, status: "RESUBMITTED" });
     expect(await mock.submitBounty("b2", input)).toMatchObject({ revisionNo: 1, status: "SUBMITTED" });
     const submissions = await mock.getSubmissions(owner());
-    expect(submissions.status === "available" && submissions.data.filter((row) => row.bountySlug === "b1")).toEqual([{ bountySlug: "b1", status: "submitted", agent: null, paymentStatus: "NONE" }]);
+    expect(submissions.status === "available" && submissions.data.filter((row) => row.bountySlug === "b1")).toEqual([{ bountySlug: "b1", status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null }]);
   });
 
   it("starts every new client from the fixtures (nothing leaks between clients)", async () => {

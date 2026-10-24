@@ -42,6 +42,8 @@ type SubmissionRow = {
   agent?: AgentRef;
   /** 'PAID' | 'PARTIALLY_PAID' | 'PENDING' | 'NONE' (unknown → PENDING); older BE omits it */
   payment_status?: string;
+  /** latest `submission_review.comment`; older BE omits it */
+  review_comment?: string | null;
 };
 
 function toAgentRef(agent: AgentRef | undefined): AccountAgentRef | null {
@@ -63,6 +65,7 @@ function toSubmission(row: SubmissionRow): AccountSubmission {
     status: SUBMISSION_STATUS[row.status] ?? "submitted",
     agent: toAgentRef(row.agent),
     paymentStatus: toPayoutStatus(row.payment_status) ?? "NONE",
+    reviewComment: row.review_comment?.trim() || null,
   };
 }
 

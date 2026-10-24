@@ -37,9 +37,11 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function StatusPanel({ title, body, tone = "muted", feedback, link, headingRef }: {
+function StatusPanel({ title, body, note, tone = "muted", feedback, link, headingRef }: {
   title: string;
   body: string;
+  /** Reviewer comment shown under the body. */
+  note?: string;
   tone?: "muted" | "danger" | "success";
   feedback?: string | null;
   link?: { href: string; label: string };
@@ -51,6 +53,7 @@ function StatusPanel({ title, body, tone = "muted", feedback, link, headingRef }
     <section className={panelClass}>
       <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{title}</h2>
       <p className={`mt-2 text-sm ${bodyClass}`}>{body}</p>
+      {note ? <p className="mt-2 text-sm text-ink-muted">{note}</p> : null}
       {link ? <Link className={outlineLinkClass} href={link.href}>{link.label}</Link> : null}
       {feedback ? <p className="mt-3 text-sm text-success">{feedback}</p> : null}
     </section>
@@ -260,18 +263,24 @@ function BountyActionPanelBody({ bountyId, applicationRequired, status, submissi
       return <StatusPanel title={t("underReviewHeading")} body={t("underReviewBody")} feedback={feedback?.kind === "success" ? feedback.text : null} headingRef={headingRef} link={{ href: "/applications", label: t("viewApplications") }} />;
     case "submissionApproved":
       return <StatusPanel title={t("submissionApprovedHeading")} body={t("submissionApprovedBody")} tone="success" />;
-    case "submissionRejected":
-      return <StatusPanel title={t("submissionRejectedHeading")} body={t("submissionRejectedBody")} tone="danger" link={{ href: "/bounties", label: t("browseOther") }} />;
+    case "submissionRejected": {
+      const link = { href: "/bounties", label: t("browseOther") };
+      if (view.review?.forfeited) {
+        return <StatusPanel title={t("submissionForfeitedHeading")} body={t("submissionForfeitedBody", { reason: view.review.text })} tone="danger" link={link} />;
+      }
+      return <StatusPanel title={t("submissionRejectedHeading")} body={t("submissionRejectedBody")} note={view.review ? t("reviewerComment", { comment: view.review.text }) : undefined} tone="danger" link={link} />;
+    }
     case "inReviewLocked":
       return <StatusPanel title={t("inReviewHeading")} body={t("inReviewLockedNote")} link={applicationRequired ? { href: "/applications", label: t("viewApplications") } : undefined} />;
     case "submitForm": {
-      const { revising, inReview } = view;
+      const { revising, inReview, revisionComment } = view;
       const heading = revising ? t("resubmitHeading") : inReview ? t("inReviewHeading") : t("submitHeading");
       const actionLabel = revising ? t("resubmit") : inReview ? t("updateSubmission") : t("submit");
       return (
         <section className={panelClass}>
           <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{heading}</h2>
           {revising ? <p className="mt-2 text-sm text-warning">{t("revisionNote")}</p> : null}
+          {revising && revisionComment ? <p className="mt-2 text-sm text-ink-muted">{t("reviewerComment", { comment: revisionComment })}</p> : null}
           {inReview ? <p className="mt-2 text-sm text-ink-muted">{t("inReviewNote")}</p> : null}
           {inReview && applicationRequired ? <Link className={outlineLinkClass} href="/applications">{t("viewApplications")}</Link> : null}
           <form className="mt-4 space-y-3" onSubmit={submit}>
