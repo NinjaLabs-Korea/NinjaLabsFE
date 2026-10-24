@@ -90,7 +90,7 @@ const nextConfig: NextConfig = {
     remotePatterns: optimizedImagePrefixes.map((prefix) => new URL(`${prefix}**`)),
   },
   async headers() {
-    // Every route, including `/skill.md` (download) and the `/media/*` rewrite: none of these
+    // Every route, including `/skill.md` (download) and the `/media/*` + `/api/auth/*` rewrites: none of these
     // headers change how a download or an image response is consumed.
     return [
       {
@@ -118,8 +118,15 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
+    // `/api/auth/*` is the cookie-mode auth proxy (exchange/refresh/logout, `lib/api/http.ts`): the browser talks to
+    // the FE origin, so the BE's HttpOnly `ninja_rt` refresh cookie (Path=/api/auth) is first-party and never readable
+    // by JS. `src/proxy.ts` excludes `/api/` so the locale middleware never redirects it. Mock mode has no API URL,
+    // so there is no rewrite and the path is a plain 404.
     return apiUrl
-      ? [{ source: "/media/:path*", destination: `${apiUrl}/media/:path*` }]
+      ? [
+          { source: "/media/:path*", destination: `${apiUrl}/media/:path*` },
+          { source: "/api/auth/:path*", destination: `${apiUrl}/auth/:path*` },
+        ]
       : [];
   },
 };

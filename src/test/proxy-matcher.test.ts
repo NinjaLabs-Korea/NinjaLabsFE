@@ -10,7 +10,7 @@ const runsProxy = (pathname: string) => matcher.test(pathname);
 
 describe("proxy matcher", () => {
   it("locale-redirects app paths, including dotted member handles", () => {
-    for (const pathname of ["/", "/bounties", "/members/ninja.inj", "/members/first.last", "/ko/members/ninja.inj", "/notices/v1.2-release", "/skill.md.html"]) {
+    for (const pathname of ["/", "/bounties", "/members/ninja.inj", "/members/first.last", "/ko/members/ninja.inj", "/notices/v1.2-release", "/skill.md.html", "/apiary", "/members/api"]) {
       expect(runsProxy(pathname), pathname).toBe(true);
     }
   });
@@ -18,6 +18,7 @@ describe("proxy matcher", () => {
   it("skips Next internals, persisted media, the unprefixed skill.md download, and real static files", () => {
     for (const pathname of [
       "/_next/static/chunks/app.js", "/_next/image?url=x", "/_vercel/insights/script.js", "/media/uploads/logo.png", "/skill.md",
+      "/api/auth/refresh", "/api/auth/exchange", "/api/auth/logout",
       "/icon.png", "/favicon.ico", "/figma/injective-token.svg", "/robots.txt", "/sitemap.xml", "/manifest.json",
       "/fonts/inter.woff2", "/fonts/inter.woff", "/fonts/inter.ttf", "/app.css", "/app.js.map", "/photo.jpeg", "/photo.jpg", "/photo.gif", "/photo.webp", "/photo.avif",
     ]) {

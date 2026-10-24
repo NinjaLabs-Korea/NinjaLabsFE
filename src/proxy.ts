@@ -33,10 +33,11 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skip Next internals, persisted media, the unprefixed /skill.md download, and real static files (by extension).
+  // Skip Next internals, persisted media, the same-origin auth proxy (/api/auth/* rewrite to the BE - a locale redirect
+  // would break the cookie-mode refresh), the unprefixed /skill.md download, and real static files (by extension).
   // Dotted segments such as /members/ninja.inj (BE nicknames allow dots, Injective handles end in .inj) must still
   // locale-redirect, so only a known static-file extension is excluded. Keep this a literal: Next parses it at build time.
   matcher: [
-    "/((?!_next|_vercel|media|skill\\.md$|.*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|txt|xml|json|js|css|map|woff|woff2|ttf)$).*)",
+    "/((?!_next|_vercel|media|api/|skill\\.md$|.*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|txt|xml|json|js|css|map|woff|woff2|ttf)$).*)",
   ],
 };
