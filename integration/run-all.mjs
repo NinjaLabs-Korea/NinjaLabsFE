@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Real-browser integration run: builds the BE (from $NINJA_BE_DIR) and this FE checkout into a temp dir, starts a private
-// Postgres, BE, FE, two TLS proxies and headless Chrome on configurable ports, seeds, runs flows 1-8 in order, and always
+// Postgres, BE, FE, two TLS proxies and headless Chrome on configurable ports, seeds, runs flows 1-10 in order, and always
 // tears everything down. Never writes into either checkout (FE logs go to integration/.logs, which is git-ignored).
 //
 //   NINJA_BE_DIR=/path/to/NinjaLabsBE npm run test:integration            # all flows
 //   NINJA_BE_DIR=... npm run test:integration -- 1 2 3                     # a subset (7 and 8 need 4 and 5)
+//   npm run test:integration -- --reap     # stop + delete the leftovers of dead runs
 //
 // See integration/README.md for prerequisites and environment variables.
 import { spawn, execFileSync } from 'node:child_process';
@@ -15,10 +16,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { seedDatabase } from './lib/seed.mjs';
+import { reapStale, writePids, TMP_PREFIX } from './lib/reaper.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FE_DIR = path.resolve(HERE, '..');
-const ALL_FLOWS = ['1', '2', '3', '4', '5', '6', '7', '8'];
+// Flow 10 runs last: it leaves an open payout on the funded bounty B1.
+const ALL_FLOWS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 const FLOW_TIMEOUT_MS = 6 * 60_000;
 
 const env = process.env;
@@ -27,12 +30,25 @@ const P = { pg: port('PG', 54390), be: port('BE', 4390), beTls: port('BE_TLS', 4
 const FE_ORIGIN = `https://localhost:${P.feTls}`;
 const API_ORIGIN = `https://localhost:${P.beTls}`;
 const pgBin = (name) => (env.PG_BIN ? path.join(env.PG_BIN, name) : name);
-const flows = process.argv.slice(2).length ? process.argv.slice(2) : ALL_FLOWS;
+const args = process.argv.slice(2);
+const REAP_ONLY = args.includes('--reap');
+const flowArgs = args.filter((a) => a !== '--reap');
+const flows = flowArgs.length ? flowArgs : ALL_FLOWS;
 
 const log = (...a) => console.log(`[it ${new Date().toISOString().slice(11, 19)}]`, ...a);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 process.removeAllListeners('warning');
+
+// ---------------------------------------------------------------- stale runs
+// A harness that was SIGKILLed (e.g. by a tool timeout) leaves Postgres, BE, FE, proxies and Chrome running. Each run records
+// them in $TMPDIR/ninja-it-*/pids.json; reapStale() stops and deletes the ones whose harness is gone (never a live run's).
+if (REAP_ONLY) {
+  const reaped = reapStale({ log });
+  console.log(reaped.length ? `reaped ${reaped.length} stale run(s)` : 'nothing to reap');
+  process.exit(0);
+}
+reapStale({ log });
 
 // ---------------------------------------------------------------- prerequisites
 function fail(msg) {
@@ -67,7 +83,10 @@ if (!CHROME) fail('Chrome/Chromium not found (set CHROME_PATH)');
 for (const f of flows) if (!ALL_FLOWS.includes(f)) fail(`unknown flow "${f}" (expected ${ALL_FLOWS.join(' ')})`);
 
 // ---------------------------------------------------------------- process + cleanup bookkeeping
-const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'ninja-it-'));
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), TMP_PREFIX));
+writePids(TMP, { harnessPid: process.pid, pgBin: env.PG_BIN ?? null, pgData: path.join(TMP, 'pg'), groups: [] });
+// Detached watchdog: tears everything down if this process dies without running cleanup() (SIGKILL).
+spawn(process.execPath, [path.join(HERE, 'lib/watchdog.mjs'), String(process.pid), TMP, env.NINJA_IT_KEEP_TMP === '1' ? '1' : '0'], { detached: true, stdio: 'ignore' }).unref();
 const LOGS = path.resolve(env.NINJA_IT_LOG_DIR ?? path.join(HERE, '.logs', new Date().toISOString().replace(/[:.]/g, '-')));
 fs.mkdirSync(LOGS, { recursive: true });
 const children = [];
@@ -80,6 +99,7 @@ function startProc(name, cmd, args, opts) {
   const child = spawn(cmd, args, { ...opts, stdio: ['ignore', out, out], detached: true });
   child.on('exit', (code, signal) => { child.exited = true; if (!cleaned) log(`${name} exited (${code ?? signal})`); });
   children.push({ name, child });
+  writePids(TMP, { groups: children.map((c) => c.child.pid) });
   return child;
 }
 /** Runs a build/setup command to completion, logging to LOGS/<name>.log; throws with the log tail on failure. */
@@ -127,7 +147,7 @@ async function assertPortsFree() {
   for (const [name, p] of Object.entries(P)) {
     await new Promise((resolve) => {
       const s = net.createServer();
-      s.once('error', () => fail(`port ${p} (${name}) is in use: set NINJA_IT_${name.replace(/[A-Z]/g, (c) => '_' + c).toUpperCase()}_PORT`));
+      s.once('error', () => fail(`port ${p} (${name}) is in use: set NINJA_IT_${name.replace(/[A-Z]/g, (c) => '_' + c).toUpperCase()}_PORT, or run "npm run test:integration -- --reap" if it is a leftover of a killed run`));
       s.listen(p, '127.0.0.1', () => s.close(resolve));
     });
   }
@@ -218,10 +238,12 @@ async function main() {
   log('seeding');
   const seeded = await seedDatabase({ sql: sqlOn('ninja'), apiOrigin: API_ORIGIN, feOrigin: FE_ORIGIN, jwtSecret });
 
-  startProc('fe', process.execPath, [path.join(feBuild, 'node_modules/next/dist/bin/next'), 'start', '-p', String(P.fe), '-H', '127.0.0.1'], { cwd: feBuild, env: feEnv });
+  // No `-H 127.0.0.1`: with an explicit hostname Next treats the x-forwarded-proto=https request as foreign and answers the
+  // proxy.ts 404 rewrite with a 500 ("write EPROTO"). Same as the stack the flows were written against.
+  startProc('fe', process.execPath, [path.join(feBuild, 'node_modules/next/dist/bin/next'), 'start', '-p', String(P.fe)], { cwd: feBuild, env: feEnv });
   startProc('tls-fe', process.execPath, [path.join(HERE, 'lib/tls-proxy.mjs'), String(P.feTls), String(P.fe), tls], { env: baseEnv() });
   startProc('chrome', CHROME, ['--headless=new', `--remote-debugging-port=${P.cdp}`, '--remote-debugging-address=127.0.0.1', '--ignore-certificate-errors',
-    `--user-data-dir=${path.join(TMP, 'chrome')}`, '--no-first-run', '--no-default-browser-check', 'about:blank'], { env: baseEnv() });
+    `--user-data-dir=${path.join(TMP, 'chrome')}`, '--no-first-run', '--no-default-browser-check', ...(env.NINJA_IT_CHROME_FLAGS ?? '').split(/\s+/).filter(Boolean), 'about:blank'], { env: baseEnv() });
   await waitFor('FE /en', async () => (await fetch(`${FE_ORIGIN}/en`)).status === 200);
   await waitFor('Chrome CDP', async () => (await fetch(`http://127.0.0.1:${P.cdp}/json/version`)).ok);
 
@@ -269,7 +291,7 @@ function dumpDb(sql) {
     `select 'notice', title, status, published_at is not null from notice order by created_at`,
     `select 'highlight', title, coalesce(link_url,'NULL') from platform_highlight order by created_at`,
     `select 'agent', name, status from agent order by created_at`,
-    `select 'application', b.title, a.status from bounty_application a join bounty b on b.id=a.bounty_id order by a.created_at`,
+    `select 'application', b.title, a.status from bounty_application a join bounty b on b.id=a.bounty_id order by b.created_at, a.status`,
     `select 'sessions', count(*), count(*) filter (where revoked_at is null) from auth_session`,
   ];
   const out = queries.map((q) => { try { return sql(q); } catch (e) { return `ERR ${e.message}`; } }).join('\n');
