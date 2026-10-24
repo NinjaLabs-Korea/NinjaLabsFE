@@ -129,6 +129,8 @@ describe("wallet chain / RPC pairing", () => {
     ["1776", "https://TESTNET.rpc.ninjalabs.example/", "NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1776 (mainnet) cannot use a testnet RPC URL."],
     ["1439", "https://mainnet.json-rpc.injective.network/", "NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1439 (testnet) cannot use a mainnet RPC URL."],
     ["1439", "https://mainnet.rpc.ninjalabs.example/", "NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1439 (testnet) cannot use a mainnet RPC URL."],
+    // The public mainnet RPC named in .env.example has neither word in its host; it is still not a testnet endpoint.
+    ["1439", "https://sentry.evm-rpc.injective.network/", "NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1439 (testnet) cannot use a mainnet RPC URL."],
   ])("refuses chain %s with %s", (chainId, rpcUrl, message) => {
     expect(() => wallet(chainId, rpcUrl)).toThrow(error(message));
   });

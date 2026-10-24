@@ -158,10 +158,12 @@ function parseWalletConfig(environment: RuntimeEnvironment): WalletConfig | null
  */
 function assertChainRpcPairing(chainId: WalletChainId, rpcUrl: string): void {
   const host = new URL(rpcUrl).hostname.toLowerCase();
+  // Injective's own RPC hosts name only the testnet (`sentry.evm-rpc.injective.network` is mainnet with neither word).
+  const injectiveMainnetHost = (host === "injective.network" || host.endsWith(".injective.network")) && !host.includes("testnet");
   if (chainId === 1776 && host.includes("testnet")) {
     throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1776 (mainnet) cannot use a testnet RPC URL.");
   }
-  if (chainId === 1439 && host.includes("mainnet")) {
+  if (chainId === 1439 && (host.includes("mainnet") || injectiveMainnetHost)) {
     throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1439 (testnet) cannot use a mainnet RPC URL.");
   }
 }
