@@ -1,16 +1,20 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
+import { useRef, useState } from "react";
 import { SignedOutPanel } from "@/components/account/SignedOutPanel";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import {
   useAuthSnapshot,
   useAccountApi,
+  useBountyApi,
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
-import type { ApplicationStatus } from "@/lib/contracts/account";
+import { ApiHttpError } from "@/lib/api/http";
+import type { AccountApplication, ApplicationStatus } from "@/lib/contracts/account";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -22,6 +26,8 @@ const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success
   completed: "success",
   rejected: "danger",
 };
+
+const outlineDangerClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
 
 // Step labels live under account.applications.steps, keyed by status.
 const applicationSteps: readonly ApplicationStatus[] = ["open", "approved", "submitted", "completed"];
@@ -36,7 +42,42 @@ export function ApplicationsView() {
   const mode = useFoundationMode();
   const authSnapshot = useAuthSnapshot();
   const apiClient = useAccountApi();
-  const { data: applications, unavailable, reason } = useAccountQuery(apiClient.getApplications);
+  const bountyApi = useBountyApi();
+  const { data: applications, unavailable, reason, refresh } = useAccountQuery(apiClient.getApplications);
+  const tErrors = useTranslations("account.applications.withdrawErrors");
+  const [target, setTarget] = useState<AccountApplication | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [notice, setNotice] = useState("");
+  const pendingRef = useRef(new Set<string>());
+  const listRef = useRef<HTMLDivElement>(null);
+  // The withdrawn card disappears with its button, so focus moves to the list instead of <body>.
+  const focusList = () => listRef.current;
+
+  const withdraw = async (application: AccountApplication) => {
+    setTarget(null);
+    if (pendingRef.current.has(application.id)) return;
+    pendingRef.current.add(application.id);
+    setBusyId(application.id);
+    setNotice("");
+    setErrors((current) => ({ ...current, [application.id]: "" }));
+    try {
+      await bountyApi.withdrawApplication(application.id);
+      setNotice(t("withdrawn"));
+      refresh();
+    } catch (error) {
+      const code = error instanceof ApiHttpError ? error.code : "";
+      setErrors((current) => ({
+        ...current,
+        [application.id]: code === "APPLICATION_NOT_FOUND_OR_NOT_PENDING" ? tErrors(code) : tErrors("generic"),
+      }));
+      // A stale row (already reviewed elsewhere) should refresh so the card reflects the real state.
+      if (code === "APPLICATION_NOT_FOUND_OR_NOT_PENDING") refresh();
+    } finally {
+      pendingRef.current.delete(application.id);
+      setBusyId(null);
+    }
+  };
 
   // The BE rejected the session (401/403 after refresh): ask to sign in again instead of blaming the server.
   if (unavailable && reason === "unauthorized") {
@@ -62,7 +103,8 @@ export function ApplicationsView() {
 
   return (
     <>
-      <div className="space-y-5">
+      <p className="sr-only" role="status">{notice}</p>
+      <div className="space-y-5" ref={listRef} tabIndex={-1}>
         {applications.map((application) => {
           const currentIndex = applicationSteps.indexOf(application.status);
 
@@ -137,10 +179,37 @@ export function ApplicationsView() {
                   {t("submitWork")}
                 </Link>
               ) : null}
+              {application.status === "open" ? (
+                <div className="mt-4">
+                  <button
+                    className={outlineDangerClass}
+                    disabled={busyId === application.id}
+                    onClick={() => setTarget(application)}
+                    type="button"
+                  >
+                    {busyId === application.id ? t("withdrawing") : t("withdraw")}
+                  </button>
+                </div>
+              ) : null}
+              {errors[application.id] ? (
+                <p className="mt-3 text-sm text-danger" role="alert">{errors[application.id]}</p>
+              ) : null}
             </article>
           );
         })}
       </div>
+
+      <ConfirmDialog
+        confirmLabel={t("withdrawDialog.confirm")}
+        description={t("withdrawDialog.description")}
+        destructive
+        eyebrow={t("withdrawDialog.eyebrow")}
+        onCancel={() => setTarget(null)}
+        onConfirm={() => { if (target) void withdraw(target); }}
+        open={target !== null}
+        returnFocusTo={focusList}
+        title={t("withdrawDialog.title", { title: target?.bountyTitle ?? "" })}
+      />
 
       {mode === "mock" ? (
         <p className="mt-3 text-xs text-ink-muted">{tAccount("mockNote")}</p>

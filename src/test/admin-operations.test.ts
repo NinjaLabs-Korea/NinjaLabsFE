@@ -100,6 +100,26 @@ describe("operations API mapping (lib/api/admin.ts)", () => {
   });
 });
 
+describe("audit log api", () => {
+  const row = { id: "l1", actor_user_id: null, actor_agent_id: null, action: "ADMIN_GRANTED", entity_type: "user", entity_id: "u1", created_at: "2026-10-01T00:00:00Z" };
+
+  it("maps rows and sends only the filters that are set, always with the page", async () => {
+    const audit = createHttp({ items: [row], page: 2, pageSize: 30, total: 31 });
+    const page = await createAdminApi(audit.http).getAdminAuditLogs({ entityType: "payout", entityId: "11111111-1111-4111-8111-111111111111" }, 2);
+    expect(calls(audit.fetchJson)[0][0]).toBe("/admin/audit-logs?entityType=payout&entityId=11111111-1111-4111-8111-111111111111&page=2");
+    expect(page).toEqual({ page: 2, pageSize: 30, total: 31, items: [{ id: "l1", actorUserId: null, actorAgentId: null, action: "ADMIN_GRANTED", entityType: "user", entityId: "u1", createdAt: "2026-10-01T00:00:00Z" }] });
+    const bare = createHttp({ items: [], page: 1, pageSize: 30, total: 0 });
+    await createAdminApi(bare.http).getAdminAuditLogs({}, 1);
+    expect(calls(bare.fetchJson)[0][0]).toBe("/admin/audit-logs?page=1");
+  });
+
+  it("requests the next users page only past page 1", async () => {
+    const users = createHttp([]);
+    await createAdminApi(users.http).getAdminUsers("", 2);
+    expect(calls(users.fetchJson)[0][0]).toBe("/admin/users?q=&page=2");
+  });
+});
+
 describe("token amount codecs", () => {
   it("converts operator input to base units, refusing what the BE TOKEN_AMOUNT would refuse", () => {
     expect(humanToBaseUnits("12.5", "INJ")).toBe("12500000000000000000");

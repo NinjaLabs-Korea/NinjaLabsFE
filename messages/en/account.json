@@ -31,7 +31,20 @@
     "submitWork": "Submit work",
     "rejectedStatus": "Not selected",
     "rejectedNote": "The sponsor did not select this application. Browse other open bounties to keep building.",
-    "viaAgent": "via {name}"
+    "viaAgent": "via {name}",
+    "withdraw": "Withdraw",
+    "withdrawing": "Withdrawing…",
+    "withdrawn": "Application withdrawn. You can apply again while the bounty is open.",
+    "withdrawDialog": {
+      "eyebrow": "Withdraw application",
+      "title": "Withdraw your application to “{title}”?",
+      "description": "The sponsor will no longer see this application. You can apply again later while the bounty is open.",
+      "confirm": "Withdraw application"
+    },
+    "withdrawErrors": {
+      "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "This application was already reviewed or withdrawn.",
+      "generic": "We couldn’t withdraw this application. Please try again shortly."
+    }
   },
   "settings": {
     "meta": {

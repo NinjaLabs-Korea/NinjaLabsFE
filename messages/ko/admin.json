@@ -36,7 +36,8 @@
     "hallOfFame": "명예의 전당",
     "notices": "공지사항",
     "operations": "운영",
-    "nftJobs": "NFT 잡"
+    "nftJobs": "NFT 잡",
+    "audit": "감사 로그"
   },
   "gate": {
     "checking": "관리자 권한을 확인하는 중…",
@@ -100,7 +101,8 @@
       "roleGroupLabel": "멤버 역할",
       "displayOrder": "표시 순서",
       "displayOrderInvalid": "1 이상의 정수를 입력하거나 비워 두세요."
-    }
+    },
+    "loadMore": "더 보기"
   },
   "bounties": {
     "metaTitle": "관리자 · 바운티 | Ninja Labs",
@@ -625,6 +627,41 @@
       "retriedTitle": "잡을 다시 대기열에 넣음",
       "retriedDescription": "워커가 1분 안에 다시 시도합니다.",
       "retryFailedTitle": "재시도 실패"
+    }
+  },
+  "audit": {
+    "metaTitle": "어드민 · 감사 로그 | Ninja Labs",
+    "metaDescription": "지급 승인과 운영 스크립트 작업의 감사 기록을 읽기 전용으로 검토합니다.",
+    "title": "감사 로그",
+    "description": "지급 승인과 운영 스크립트 작업의 감사 기록을 읽기 전용으로 검토합니다.",
+    "filterLabel": "감사 로그 필터",
+    "entityType": "엔티티 유형",
+    "entityTypePlaceholder": "예: payout",
+    "entityId": "엔티티 ID",
+    "entityIdPlaceholder": "UUID",
+    "apply": "조회",
+    "reset": "초기화",
+    "invalidEntityId": "엔티티 ID는 UUID여야 합니다.",
+    "columns": {
+      "time": "시각",
+      "actor": "수행자",
+      "action": "작업",
+      "entity": "대상"
+    },
+    "actors": {
+      "script": "운영 스크립트",
+      "agent": "에이전트",
+      "unknown": "알 수 없음"
+    },
+    "empty": "조건에 맞는 감사 로그가 없습니다.",
+    "pagination": "감사 로그 페이지",
+    "previous": "이전",
+    "next": "다음",
+    "pageOf": "{pages}쪽 중 {page}쪽",
+    "total": "총 {total}건",
+    "toast": {
+      "loadFailedTitle": "감사 로그를 사용할 수 없음",
+      "loadFailedDescription": "감사 로그를 불러오지 못했습니다."
     }
   }
 }

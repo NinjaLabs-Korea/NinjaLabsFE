@@ -128,4 +128,20 @@ describe("mock submission revisions", () => {
     const fresh = await createMockApiClient().getApplications(owner());
     expect(fresh.status === "available" && fresh.data.some((row) => row.bountySlug === "helix-volume-analytics")).toBe(false);
   });
+
+  it("withdraws a pending application like the BE: removes the row, rejects a second or non-pending withdraw", async () => {
+    const mock = createMockApiClient();
+    const { id } = await mock.applyToBounty("helix-volume-analytics", { message: "m" });
+    expect(await mock.withdrawApplication(id)).toEqual({ id, status: "WITHDRAWN" });
+    const after = await mock.getApplications(owner());
+    expect(after.status === "available" && after.data.some((row) => row.id === id)).toBe(false);
+    await expect(mock.withdrawApplication(id)).rejects.toMatchObject({ status: 404, code: "APPLICATION_NOT_FOUND_OR_NOT_PENDING" });
+  });
+
+  it("api client posts the withdraw to the application's withdraw route", async () => {
+    const fetchJson = vi.fn(async () => ({ id: "a/1", status: "WITHDRAWN" }));
+    const api = createApiApiClient({ fetchJson, fetchForm: vi.fn(), hasSession: () => true } as unknown as ApiHttp);
+    await api.withdrawApplication("a/1");
+    expect(fetchJson).toHaveBeenCalledWith("/applications/a%2F1/withdraw", { method: "POST" });
+  });
 });

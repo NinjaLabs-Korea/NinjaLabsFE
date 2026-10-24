@@ -113,8 +113,9 @@ describe("AdminTabs", () => {
       ["NFT Jobs", "/admin/nft-jobs"],
       ["Hall of Fame", "/admin/hall-of-fame"],
       ["Notices", "/admin/notices"],
+      ["Audit log", "/admin/audit"],
     ]);
-    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual([null, null, null, null, "page", null]);
+    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual([null, null, null, null, "page", null, null]);
   });
 });
 
