@@ -14,7 +14,6 @@ import { composeFoundationRuntime } from "@/lib/runtime/config";
 import { localeAlternates } from "@/i18n/alternates";
 
 const { wallet: walletConnectionConfig } = composeFoundationRuntime(previewUser);
-const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
 // Keys under agents.register.steps / agents.register.verificationItems.
 const steps = ["doc", "publicKey", "ownership", "apiKey"] as const;
@@ -93,7 +92,6 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
           <WalletProvider
             chainId={walletConnectionConfig.chainId}
             rpcUrl={walletConnectionConfig.rpcUrl}
-            walletConnectProjectId={walletConnectProjectId}
           >
             <AgentRegisterForm chainId={walletConnectionConfig.chainId} />
           </WalletProvider>

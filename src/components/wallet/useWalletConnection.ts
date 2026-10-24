@@ -2,18 +2,14 @@
 
 import { useSyncExternalStore } from "react";
 import {
-  useAccount,
   useConfig,
   useConnect,
+  useConnection,
+  useConnectors,
   useDisconnect,
   useSignMessage,
   useSwitchChain,
 } from "wagmi";
-
-type WalletConnectionOptions = {
-  /** true면 브라우저 확장 지갑만 사용 (WalletConnect QR 대체 경로 없음) */
-  injectedOnly?: boolean;
-};
 
 /** 체인 전환 실패 분류: 사용자가 거절했는지(rejected) 그 외 실패인지(failed) */
 export type SwitchChainErrorKind = "rejected" | "failed";
@@ -77,23 +73,24 @@ export function switchChainErrorKind(error: unknown): SwitchChainErrorKind | nul
 /**
  * Injective EVM 지갑 연결 상태와 동작을 한곳에 모은 훅.
  * 커넥터 선택, 네트워크 불일치 판단, 체인 전환 규칙은 여기서만 정한다.
+ * 브라우저 확장(injected) 지갑만 지원한다 — 확장이 없으면 `connector`가 undefined (WalletConnect 경로는 wagmi 3 업그레이드에서 제거, AGENTS.md 참고).
  */
-export function useWalletConnection(chainId: number, { injectedOnly = false }: WalletConnectionOptions = {}) {
+export function useWalletConnection(chainId: number) {
   const hasInjectedWallet = useSyncExternalStore(
     () => () => undefined,
     () => "ethereum" in window,
     () => false,
   );
   const config = useConfig();
-  const { address, chainId: connectedChainId, isConnected } = useAccount();
-  const { connect, connectors, error: connectError, isPending: isConnecting } = useConnect();
-  const { disconnect } = useDisconnect();
-  const { signMessageAsync } = useSignMessage();
-  const { switchChain, isPending: isSwitching, error: switchChainError } = useSwitchChain();
+  const { address, chainId: connectedChainId, isConnected } = useConnection();
+  const connectors = useConnectors();
+  const connectMutation = useConnect();
+  const disconnectMutation = useDisconnect();
+  const signMessageMutation = useSignMessage();
+  const switchChainMutation = useSwitchChain();
 
   const injectedConnector = connectors.find((candidate) => candidate.type === "injected");
-  const walletConnectConnector = connectors.find((candidate) => candidate.type === "walletConnect");
-  const connector = injectedOnly || hasInjectedWallet ? injectedConnector : walletConnectConnector;
+  const connector = hasInjectedWallet ? injectedConnector : undefined;
   const targetChain = config.chains.find((chain) => chain.id === chainId);
   const rpcUrls = targetChain?.rpcUrls.default.http ?? [];
   // Without an RPC URL (mock mode) the wallet could not add the chain, so the switch is never requested; the UI shows guidance instead.
@@ -107,21 +104,21 @@ export function useWalletConnection(chainId: number, { injectedOnly = false }: W
     isWrongNetwork: isConnected && connectedChainId !== chainId,
     connector,
     connect: () => {
-      if (connector) connect({ connector });
+      if (connector) connectMutation.mutate({ connector });
     },
-    connectError,
-    isConnecting,
-    disconnect,
-    signMessageAsync,
+    connectError: connectMutation.error,
+    isConnecting: connectMutation.isPending,
+    disconnect: () => disconnectMutation.mutate(),
+    signMessageAsync: signMessageMutation.mutateAsync,
     /** false when the configured chain has no RPC URL: `switchToTargetChain` is a no-op and the UI asks the user to switch manually. */
     canSwitch,
     switchToTargetChain: () => {
       const addEthereumChainParameter = addEthereumChainParameterFor(chainId, rpcUrls);
       if (!addEthereumChainParameter) return;
-      switchChain({ chainId, addEthereumChainParameter });
+      switchChainMutation.mutate({ chainId, addEthereumChainParameter });
     },
-    isSwitching,
+    isSwitching: switchChainMutation.isPending,
     /** null while no switch failed; "rejected" when the user declined in the wallet, "failed" otherwise. */
-    switchError: switchChainErrorKind(switchChainError),
+    switchError: switchChainErrorKind(switchChainMutation.error),
   };
 }

@@ -68,7 +68,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
     switchToTargetChain,
     isSwitching,
     switchError,
-  } = useWalletConnection(chainId, { injectedOnly: true });
+  } = useWalletConnection(chainId);
   const isBusy = submissionState !== "idle";
   const ownerWallet = auth.user?.walletAddress?.toLowerCase();
   const isOwnerWallet = Boolean(address && ownerWallet === address.toLowerCase());

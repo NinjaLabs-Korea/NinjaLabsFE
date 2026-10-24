@@ -19,13 +19,6 @@ vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-// The App Router build aliases `next/dynamic` to `app-dynamic` (render-time BailoutToCSR for `ssr: false`); the
-// package entry vitest would resolve is the pages-dir variant, so use the same module the app uses.
-vi.mock("next/dynamic", async () => {
-  const mod = await import("next/dist/shared/lib/app-dynamic");
-  return { default: mod.default };
-});
-
 const wagmi = vi.hoisted(() => ({
   account: {
     address: undefined as string | undefined,
@@ -49,29 +42,26 @@ const wagmi = vi.hoisted(() => ({
 
 const walletPrimitives = vi.hoisted(() => ({
   injected: vi.fn(() => () => ({ id: "injected", name: "injected", type: "injected" })),
-  injectedWallet: vi.fn(),
-  walletConnectWallet: vi.fn(),
-  connectorsForWallets: vi.fn(() => [() => ({ id: "rainbow", name: "rainbow", type: "rainbow" })]),
   http: vi.fn((url?: string) => ({ url })),
-  rainbowKitProvider: vi.fn(),
   queryClientProvider: vi.fn(),
 }));
 
 vi.mock("wagmi", async (importOriginal) => {
   const actual = await importOriginal<typeof import("wagmi")>();
   wagmi.createConfig.mockImplementation(actual.createConfig as never);
+  // wagmi 3 shapes: `useConnection` (was useAccount), `useConnectors`, and TanStack-style `mutate`/`mutateAsync` mutations.
   return {
-  useAccount: () => wagmi.account,
+  useConnection: () => wagmi.account,
+  useConnectors: () => wagmi.connectors,
   useConnect: () => ({
-    connect: wagmi.connect,
-    connectors: wagmi.connectors,
+    mutate: wagmi.connect,
     error: wagmi.connectError,
     isPending: wagmi.isConnecting,
   }),
-  useDisconnect: () => ({ disconnect: wagmi.disconnect }),
-  useSignMessage: () => ({ signMessageAsync: wagmi.signMessage }),
+  useDisconnect: () => ({ mutate: wagmi.disconnect }),
+  useSignMessage: () => ({ mutateAsync: wagmi.signMessage }),
   useSwitchChain: () => ({
-    switchChain: wagmi.switchChain,
+    mutate: wagmi.switchChain,
     isPending: wagmi.isSwitching,
     error: wagmi.switchError,
   }),
@@ -100,26 +90,7 @@ vi.mock("@tanstack/react-query", () => ({
   },
 }));
 
-vi.mock("@rainbow-me/rainbowkit", () => ({
-  connectorsForWallets: walletPrimitives.connectorsForWallets,
-  RainbowKitProvider: ({
-    children,
-    initialChain,
-  }: {
-    children: ReactNode;
-    initialChain: number;
-  }) => {
-    walletPrimitives.rainbowKitProvider(initialChain);
-    return children;
-  },
-}));
-vi.mock("@rainbow-me/rainbowkit/wallets", () => ({
-  injectedWallet: walletPrimitives.injectedWallet,
-  walletConnectWallet: walletPrimitives.walletConnectWallet,
-}));
-
 const injectedConnector = { type: "injected" };
-const walletConnectConnector = { type: "walletConnect" };
 const previewUser = {
   id: "demo-user",
   handle: "demo",
@@ -165,47 +136,23 @@ describe("WalletProvider", () => {
     wagmi.createConfig.mockClear();
     wagmi.providerConfig.mockClear();
     walletPrimitives.injected.mockClear();
-    walletPrimitives.injectedWallet.mockClear();
-    walletPrimitives.walletConnectWallet.mockClear();
-    walletPrimitives.connectorsForWallets.mockClear();
     walletPrimitives.http.mockClear();
-    walletPrimitives.rainbowKitProvider.mockClear();
     walletPrimitives.queryClientProvider.mockClear();
   });
 
-  it("constructs an SSR-safe RainbowKit configuration with injected and WalletConnect wallet metadata", async () => {
+  it("builds an SSR-safe injected-only wagmi config for the Injective chain", () => {
     renderWithIntl(
-      <WalletProvider
-        chainId={1439}
-        rpcUrl="https://rpc.ninjalabs.example"
-        walletConnectProjectId="project-id"
-      >
+      <WalletProvider chainId={1439} rpcUrl="https://rpc.ninjalabs.example">
         <span>Wallet content</span>
       </WalletProvider>,
     );
 
-    // The RainbowKit provider is a client-only next/dynamic chunk: until it resolves (and on the server) the children
-    // render inside the injected-only shell, so the content is there from the first paint.
     expect(screen.getByText("Wallet content")).toBeTruthy();
     expect(walletPrimitives.injected).toHaveBeenCalledOnce();
-    await waitFor(() => expect(walletPrimitives.rainbowKitProvider).toHaveBeenCalledWith(1439));
-    expect(screen.getByText("Wallet content")).toBeTruthy();
-    expect(walletPrimitives.connectorsForWallets).toHaveBeenCalledWith(
-      [
-        {
-          groupName: "Supported wallets",
-          wallets: [walletPrimitives.injectedWallet, walletPrimitives.walletConnectWallet],
-        },
-      ],
-      {
-        appName: "Ninja Labs",
-        projectId: "project-id",
-      },
-    );
     expect(walletPrimitives.http).toHaveBeenCalledWith("https://rpc.ninjalabs.example");
-    // Two configs: the injected shell first, then RainbowKit's (the one the provider ends up with).
-    expect(wagmi.createConfig).toHaveBeenCalledTimes(2);
-    // wagmi's real createConfig output: one Injective chain, its transport keyed by chain id, SSR mode, RainbowKit connectors.
+    expect(wagmi.createConfig).toHaveBeenCalledOnce();
+    expect(walletPrimitives.queryClientProvider).toHaveBeenCalled();
+    // wagmi's real createConfig output: one Injective chain, its transport keyed by chain id, SSR mode, injected connector.
     const config = providedConfig();
     expect(config.chains.map((chain) => chain.id)).toEqual([1439]);
     expect(config.chains[0].rpcUrls.default.http).toEqual(["https://rpc.ninjalabs.example"]);
@@ -213,23 +160,41 @@ describe("WalletProvider", () => {
     expect(Object.keys(config._internal.transports)).toEqual(["1439"]);
     expect(config._internal.transports[1439]).toEqual({ url: "https://rpc.ninjalabs.example" });
     expect(config._internal.ssr).toBe(true);
-    expect(config.connectors.map((connector) => connector.type)).toEqual(["rainbow"]);
-    expect(walletPrimitives.rainbowKitProvider).toHaveBeenCalledWith(1439);
+    expect(config.connectors.map((connector) => connector.type)).toEqual(["injected"]);
   });
 
-  it("hydrates the RainbowKit branch without a mismatch: server HTML equals the client's first render (injected shell)", async () => {
+  it("keeps the chain RPC list empty without an RPC URL (mock mode)", () => {
+    renderWithIntl(
+      <WalletProvider chainId={1439}>
+        <span>Wallet content</span>
+      </WalletProvider>,
+    );
+    expect(screen.getByText("Wallet content")).toBeTruthy();
+
+    expect(walletPrimitives.http).toHaveBeenCalledWith(undefined);
+    const config = providedConfig();
+    expect(config.chains.map((chain) => chain.id)).toEqual([1439]);
+    expect(config.chains[0].rpcUrls.default.http).toEqual([]);
+    expect(Object.keys(config._internal.transports)).toEqual(["1439"]);
+    expect(config._internal.ssr).toBe(true);
+    expect(config.connectors.map((connector) => connector.type)).toEqual(["injected"]);
+  });
+
+  it("hydrates without a mismatch: server HTML equals the client's first render", async () => {
+    wagmi.connectors = [injectedConnector];
     const tree = (
       <IntlWrapper>
         <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
-          <WalletProvider chainId={1439} rpcUrl="https://rpc.ninjalabs.example" walletConnectProjectId="project-id">
+          <WalletProvider chainId={1439} rpcUrl="https://rpc.ninjalabs.example">
             <WalletConnectButton chainId={1439} />
           </WalletProvider>
         </FoundationProvider>
       </IntlWrapper>
     );
-    // Server (`typeof window === "undefined"` for next/dynamic's bailout): `ssr: false` keeps the RainbowKit chunk out of
-    // the HTML and renders the loading shell - the injected-only provider around the very same children.
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    // The browser has an extension, but the server cannot see it: both the server HTML and the hydrating render use the
+    // server snapshot (no injected wallet), so they agree; the post-hydration render then offers the connect button.
+    setInjectedWallet(true);
     vi.stubGlobal("window", undefined);
     let html: string;
     try {
@@ -238,7 +203,6 @@ describe("WalletProvider", () => {
       vi.unstubAllGlobals();
     }
     expect(html).toContain("Wallet unavailable");
-    expect(walletPrimitives.connectorsForWallets).not.toHaveBeenCalled();
 
     const container = document.createElement("div");
     container.innerHTML = html;
@@ -248,48 +212,21 @@ describe("WalletProvider", () => {
       await act(async () => {
         hydrateRoot(container, tree, { onRecoverableError: recoverable });
       });
-      // The only recoverable error is next/dynamic's own bailout ("Switched to client rendering because the server
-      // rendering errored: Bail out to client-side rendering" - the boundary Next resumes on the client and filters in
-      // its own onRecoverableError); no hydration mismatch was recovered from and React logged no hydration warning.
-      const recovered = recoverable.mock.calls.map(([error]) => (error as Error).message);
-      expect(recovered.length).toBeGreaterThan(0);
-      expect(recovered.every((entry) => /Bail out to client-side rendering: next\/dynamic/.test(entry))).toBe(true);
-      expect(recovered.join("\n")).not.toMatch(/hydrat|did not match/i);
+      expect(recoverable).not.toHaveBeenCalled();
       expect(consoleError.mock.calls.flat().map(String).join("\n")).not.toMatch(/hydrat|did not match/i);
-      // After hydration the real RainbowKit branch takes over (client only) and the button is still there.
-      await waitFor(() => expect(walletPrimitives.rainbowKitProvider).toHaveBeenCalledWith(1439));
-      expect(container.textContent).toContain("Wallet unavailable");
+      await waitFor(() => expect(container.textContent).toContain("Connect wallet"));
     } finally {
       consoleError.mockRestore();
       container.remove();
+      setInjectedWallet(false);
     }
-  });
-
-  it("uses injected-only Wagmi without RainbowKit when no project ID is configured", () => {
-    renderWithIntl(
-      <WalletProvider chainId={1439}>
-        <span>Wallet content</span>
-      </WalletProvider>,
-    );
-    expect(screen.getByText("Wallet content")).toBeTruthy();
-
-    expect(walletPrimitives.injected).toHaveBeenCalledOnce();
-    expect(walletPrimitives.connectorsForWallets).not.toHaveBeenCalled();
-    expect(walletPrimitives.rainbowKitProvider).not.toHaveBeenCalled();
-    expect(walletPrimitives.http).toHaveBeenCalledWith(undefined);
-    const config = providedConfig();
-    expect(config.chains.map((chain) => chain.id)).toEqual([1439]);
-    expect(config.chains[0].rpcUrls.default.http).toEqual([]);
-    expect(Object.keys(config._internal.transports)).toEqual(["1439"]);
-    expect(config._internal.ssr).toBe(true);
-    expect(config.connectors.map((connector) => connector.type)).toEqual(["injected"]);
   });
 });
 
 describe("WalletConnectButton", () => {
   beforeEach(() => {
     wagmi.account = { address: undefined, chainId: undefined, isConnected: false };
-    wagmi.connectors = [injectedConnector, walletConnectConnector];
+    wagmi.connectors = [injectedConnector];
     wagmi.connectError = null;
     wagmi.switchError = null;
     wagmi.isConnecting = false;
@@ -313,11 +250,14 @@ describe("WalletConnectButton", () => {
     expect(screen.getByTestId("auth-status").textContent).toBe("signed-out");
   });
 
-  it("falls back to WalletConnect when no injected wallet is available", () => {
+  it("shows the no-extension state when no injected wallet is available (no WalletConnect fallback)", () => {
     renderWalletButton();
-    fireEvent.click(screen.getByRole("button", { name: "Connect wallet" }));
 
-    expect(wagmi.connect).toHaveBeenCalledWith({ connector: walletConnectConnector });
+    expect(
+      (screen.getByRole("button", { name: "Wallet unavailable" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(screen.queryByRole("button", { name: "Connect wallet" })).toBeNull();
+    expect(wagmi.connect).not.toHaveBeenCalled();
   });
 
   it("masks the connected address and disconnects on click", () => {
@@ -440,6 +380,7 @@ describe("WalletConnectButton", () => {
   });
 
   it("shows a stable connector error message", () => {
+    setInjectedWallet(true);
     wagmi.connectError = new Error("Connector rejected request");
 
     renderWalletButton();
@@ -450,6 +391,7 @@ describe("WalletConnectButton", () => {
   });
 
   it("reports an unavailable state when no compatible connector exists", () => {
+    setInjectedWallet(true);
     wagmi.connectors = [];
 
     renderWalletButton();
