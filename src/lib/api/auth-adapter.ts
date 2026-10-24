@@ -137,7 +137,8 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       const params = new URLSearchParams({ returnTo: window.location.origin, codeChallenge });
       if (traceId) params.set("trace", traceId);
       onboardingLog("oauth.redirect.started", { returnOrigin: window.location.origin });
-      window.location.assign(`${apiUrl.replace(/\/$/, "")}/auth/google?${params}`);
+      // `new URL` keeps this an absolute cross-origin navigation (BE -> Google), which next/no-location-assign-relative-destination cannot infer from a template literal
+      window.location.assign(new URL(`${apiUrl.replace(/\/$/, "")}/auth/google?${params}`));
       // 페이지가 구글로 떠나므로 이 Promise는 결과를 낼 필요가 없다
       return new Promise<AuthSnapshot>(() => {});
     },
