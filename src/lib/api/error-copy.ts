@@ -13,8 +13,6 @@
  * - **코드 철자**: `be-error-codes.ts`(BE 스냅샷) 또는 `FE_ERROR_CODES`에 있는 코드만 넣을 수 있다 — 아니면 tsc가 실패한다.
  *   BE에 새 코드가 생겼으면 먼저 `be-error-codes.ts`를 BE 카탈로그와 맞춘다.
  * - **새 화면**: `ERROR_COPY`에 항목을 추가하면 테스트가 자동으로 그 화면도 검사한다.
- *
- * 아직 이 레지스트리를 쓰지 않는 곳: `components/bounties/BountyActionPanel.tsx`(자체 목록, 별도 작업에서 이전 예정).
  */
 import { BE_ERROR_CODES, type BeErrorCode } from "./be-error-codes";
 import { ApiHttpError } from "./http";
@@ -62,6 +60,21 @@ export const ERROR_COPY = {
       "INVALID_SIGNATURE",
       // 409: 이 주소가 다른 계정에 연결됐거나, 내 계정에 이미 대표 지갑이 있다.
       "WALLET_ALREADY_LINKED",
+      "DATABASE_UNAVAILABLE",
+    ],
+    fallback: "generic",
+  },
+  /**
+   * 바운티 상세 → 직접 지원/제출 — `bounties/BountyActionPanel.tsx` (키 선택은 `lib/bounty-action-state.ts bountyActionErrorCopy`).
+   * BE bounties/rewards 코드와 FE 전송 코드(REFRESH_UNAVAILABLE / UNKNOWN_ERROR). 목록 밖 BE 코드는 `unknown`(원 코드를 `{code}`로),
+   * HTTP 응답이 아닌 실패는 `generic`이다.
+   */
+  bountyAction: {
+    messages: "bounties.action.errors",
+    codes: [
+      "ALREADY_APPLIED", "BOUNTY_NOT_OPEN", "APPLICATION_NOT_APPROVED", "DEADLINE_PASSED", "SUBMISSION_FINALIZED", "VALIDATION_FAILED",
+      "APPLICATION_DEADLINE_PASSED", "SUBMISSION_TYPE_BOUNTY", "AGENT_SUBMISSION_REQUIRED", "DIRECT_SUBMISSION_REQUIRED",
+      "REFRESH_UNAVAILABLE", "UNKNOWN_ERROR", "MAX_WINNERS_REACHED", "BOUNTY_NOT_FOUND", "INVALID_CHARACTER", "REFERENCE_NOT_FOUND",
       "DATABASE_UNAVAILABLE",
     ],
     fallback: "generic",
