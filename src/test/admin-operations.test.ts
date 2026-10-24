@@ -166,6 +166,7 @@ describe("operations rules (mirror of the BE review/payout checks)", () => {
 describe("operations error codes", () => {
   it("normalizes transport and BE errors to message codes", () => {
     expect(opsErrorCode(new ApiHttpError(403, "PAYOUT_SELF_APPROVAL"))).toEqual({ code: "PAYOUT_SELF_APPROVAL", known: true });
+    expect(opsErrorCode(new ApiHttpError(503, "DATABASE_UNAVAILABLE"))).toEqual({ code: "DATABASE_UNAVAILABLE", known: true });
     expect(opsErrorCode(new ApiHttpError(400, "INVALID_TRANSITION:OPEN->COMPLETED"))).toEqual({ code: "INVALID_TRANSITION", known: true });
     expect(opsErrorCode(new ApiHttpError(400, "VALIDATION_FAILED", ["Resolve 1 pending application(s)."]), "transition")).toEqual({ code: "TRANSITION_BLOCKED", known: true });
     expect(opsErrorCode(new ApiHttpError(400, "VALIDATION_FAILED", ["amount must match"]))).toEqual({ code: "VALIDATION_FAILED", known: true });

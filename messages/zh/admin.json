@@ -26,7 +26,8 @@
       "INVALID_CHARACTER": "某个字段包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
       "REFERENCE_NOT_FOUND": "该记录引用的对象已不存在。请刷新页面后重试。",
       "BOUNTY_NOT_FOUND": "该赏金已不存在。请刷新页面以更新列表。",
-      "BOUNTY_HAS_OPEN_FUNDS": "该赏金在多签中仍有资金（已确认的存款未全部发放，或仍有进行中的付款）。请先完成付款或退款再删除。"
+      "BOUNTY_HAS_OPEN_FUNDS": "该赏金在多签中仍有资金（已确认的存款未全部发放，或仍有进行中的付款）。请先完成付款或退款再删除。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
     }
   },
   "tabs": {
@@ -572,7 +573,8 @@
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。",
       "REFRESH_UNAVAILABLE": "无法刷新会话。请重新登录。",
       "NETWORK_ERROR": "无法连接服务器。请检查网络后重试。",
-      "unknown": "出现问题（{code}）。"
+      "unknown": "出现问题（{code}）。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
     }
   },
   "nftJobs": {

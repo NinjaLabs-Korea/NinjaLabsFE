@@ -101,7 +101,7 @@ export type OnboardingApi = {
 export type AccountSettingsApi = {
   /**
    * `DELETE /users/me` `{confirmNickname}` — 회원 탈퇴. 성공하면 BE가 refresh 세션을 전부 폐기하므로 호출자는 이어서 signOut()한다.
-   * 400 `CONFIRM_NICKNAME_MISMATCH` / 409 `WITHDRAWAL_BLOCKED_OPEN_PAYOUTS`(지급 진행 중) / 404 `USER_NOT_FOUND`.
+   * 400 `CONFIRM_NICKNAME_MISMATCH` / 409 `WITHDRAWAL_BLOCKED_OPEN_PAYOUTS`(지급 진행 중) / 409 `WITHDRAWAL_BLOCKED_PENDING_REWARDS`(승인됐지만 지급 요청 전인 보상) / 404 `USER_NOT_FOUND` / 503 `DATABASE_UNAVAILABLE`.
    */
   withdrawAccount: (confirmNickname: string) => Promise<void>;
 };

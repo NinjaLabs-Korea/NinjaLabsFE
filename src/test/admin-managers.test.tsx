@@ -250,6 +250,7 @@ describe("admin BE error codes", () => {
     expect(adminApiErrorCode(new ApiHttpError(400, "INVALID_CHARACTER"))).toBe("INVALID_CHARACTER");
     expect(adminApiErrorCode(new ApiHttpError(400, "REFERENCE_NOT_FOUND"))).toBe("REFERENCE_NOT_FOUND");
     expect(adminApiErrorCode(new ApiHttpError(404, "BOUNTY_NOT_FOUND"))).toBe("BOUNTY_NOT_FOUND");
+    expect(adminApiErrorCode(new ApiHttpError(503, "DATABASE_UNAVAILABLE"))).toBe("DATABASE_UNAVAILABLE");
     expect(adminApiErrorCode(new ApiHttpError(400, "VALIDATION_FAILED"))).toBeNull();
     expect(adminApiErrorCode(new Error("INVALID_CHARACTER"))).toBeNull();
   });

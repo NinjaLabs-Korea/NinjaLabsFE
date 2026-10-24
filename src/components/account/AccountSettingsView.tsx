@@ -23,7 +23,14 @@ export function confirmationMatches(nickname: string, typed: string): boolean {
 }
 
 /** BE error codes with their own copy under `account.settings.deleteErrors`; anything else is `generic`. */
-const knownErrors = ["CONFIRM_NICKNAME_MISMATCH", "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS"] as const;
+const knownErrors = [
+  "CONFIRM_NICKNAME_MISMATCH",
+  "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS",
+  // 409: approved rewards not yet requested as a payout; withdrawing would forfeit them, so an admin must pay first.
+  "WITHDRAWAL_BLOCKED_PENDING_REWARDS",
+  // 503 from any endpoint when the BE cannot reach its database: transient, retry later.
+  "DATABASE_UNAVAILABLE",
+] as const;
 type KnownError = (typeof knownErrors)[number];
 
 export function AccountSettingsView() {

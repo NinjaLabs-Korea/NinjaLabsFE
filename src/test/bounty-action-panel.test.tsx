@@ -270,6 +270,7 @@ describe("BountyActionPanel", () => {
     ["INVALID_CHARACTER", 400, "Your text contains characters that cannot be saved (for example a NUL byte). Remove them and try again."],
     ["REFERENCE_NOT_FOUND", 400, "Something this request refers to no longer exists. Reload the page and try again."],
     ["BOUNTY_NOT_FOUND", 404, "This bounty no longer exists."],
+    ["DATABASE_UNAVAILABLE", 503, "The service is temporarily unavailable. Please try again in a moment."],
   ])("maps the BE %s code to localized copy", async (code, status, copy) => {
     const applyToBounty = vi.fn(async () => { throw new ApiHttpError(status, code); });
     Object.assign(apiClient, { applyToBounty });

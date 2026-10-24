@@ -4,6 +4,22 @@ export { isAuthCallbackPath };
 
 const VERIFIER_KEY = "ninja.oauthVerifier";
 
+/**
+ * `#error=<CODE>` codes the callback page has its own copy for (`signup.authCallback.errors.<CODE>`). Today the BE only
+ * redirects with `#error=AUTH_FAILED` (generic copy); `TURNSTILE_FAILED`/`TURNSTILE_UNAVAILABLE` are answered as a JSON
+ * 400/503 on the full-page `GET /auth/google` navigation itself, which the FE never sees. They are mapped here in case
+ * the BE starts redirecting them to the callback.
+ */
+export const LOGIN_CALLBACK_ERROR_CODES = ["TURNSTILE_FAILED", "TURNSTILE_UNAVAILABLE", "DATABASE_UNAVAILABLE"] as const;
+export type LoginCallbackErrorCode = (typeof LOGIN_CALLBACK_ERROR_CODES)[number];
+
+/** The mapped `#error=` code of this page load's callback (the fragment itself is stripped before any network work). */
+let loginCallbackError: LoginCallbackErrorCode | null = null;
+
+export function getLoginCallbackError(): LoginCallbackErrorCode | null {
+  return loginCallbackError;
+}
+
 /** A sign-in round trip (BE → Google consent → callback) that takes longer than this is abandoned. */
 export const LOGIN_VERIFIER_TTL_MS = 10 * 60 * 1000;
 
@@ -70,6 +86,7 @@ export async function createLoginChallenge(): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
   // Fail before redirect if sessionStorage is unavailable: the callback would be unusable.
   window.sessionStorage.setItem(VERIFIER_KEY, JSON.stringify({ verifier, createdAt: Date.now() } satisfies StoredVerifier));
+  loginCallbackError = null;
   return base64url(new Uint8Array(digest));
 }
 
@@ -89,6 +106,9 @@ export async function exchangeLoginCodeFromLocation(): Promise<boolean> {
   const code = params.get("loginCode");
   const error = params.get("error");
   window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+  loginCallbackError = (LOGIN_CALLBACK_ERROR_CODES as readonly string[]).includes(error ?? "")
+    ? (error as LoginCallbackErrorCode)
+    : null;
   const codeVerifier = takeFreshVerifier();
   if (error || !code || !codeVerifier) {
     throw new LoginExchangeError("Login could not be completed. Please sign in again.", false);

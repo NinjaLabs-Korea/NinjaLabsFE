@@ -66,6 +66,8 @@
     "deleteErrors": {
       "CONFIRM_NICKNAME_MISMATCH": "昵称不匹配，请按显示内容准确输入。",
       "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS": "仍有一笔付款正在进行。付款完成或取消后即可删除账户。",
+      "WITHDRAWAL_BLOCKED_PENDING_REWARDS": "你还有已批准但尚未发放的奖励，因此目前无法删除账户（删除后将无法领取）。请联系 Ninja Labs 管理员完成发放后再试。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
       "generic": "无法删除你的账户，请稍后重试。"
     }
   }

@@ -7,6 +7,7 @@ import { FakeBroadcastChannel } from "./fake-broadcast-channel";
 import {
   createLoginChallenge,
   exchangeLoginCodeFromLocation,
+  getLoginCallbackError,
   LOGIN_VERIFIER_TTL_MS,
   LoginExchangeError,
 } from "@/lib/api/oauth";
@@ -154,6 +155,21 @@ function stubCurrentSession(exchange: () => Response = () => new Response(null, 
 }
 
 const urls = (request: ReturnType<typeof vi.fn>) => request.mock.calls.map(([url]) => url as string);
+
+describe("callback #error codes", () => {
+  it("remembers a mapped #error code, ignores unmapped ones and forgets it when a new sign-in starts", async () => {
+    window.history.replaceState(null, "", "/en/auth/callback#error=TURNSTILE_UNAVAILABLE");
+    await expect(exchangeLoginCodeFromLocation()).rejects.toMatchObject({ attempted: false });
+    expect(window.location.hash).toBe("");
+    expect(getLoginCallbackError()).toBe("TURNSTILE_UNAVAILABLE");
+    await createLoginChallenge();
+    expect(getLoginCallbackError()).toBeNull();
+
+    window.history.replaceState(null, "", "/en/auth/callback#error=AUTH_FAILED");
+    await expect(exchangeLoginCodeFromLocation()).rejects.toBeInstanceOf(LoginExchangeError);
+    expect(getLoginCallbackError()).toBeNull();
+  });
+});
 
 describe("API auth adapter login handoff", () => {
   it("keeps the current session when a page outside the callback carries an error fragment", async () => {

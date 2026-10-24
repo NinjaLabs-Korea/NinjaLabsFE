@@ -6,6 +6,8 @@ import { ApiKeyReveal } from "@/components/agents/ApiKeyReveal";
 import { CompleteOnboarding } from "@/components/signup/CompleteOnboarding";
 import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
 import { SignupGate } from "@/components/signup/SignupGate";
+import AuthCallbackPage from "@/app/[locale]/auth/callback/page";
+import { exchangeLoginCodeFromLocation } from "@/lib/api/oauth";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { renderWithIntl } from "@/test/intl";
 
@@ -28,6 +30,34 @@ vi.mock("@/components/auth/FoundationProvider", () => ({
   useFoundationMode: () => state.mode,
   useOnboardingApi: () => onboardingApi,
 }));
+
+describe("AuthCallbackPage #error mapping", () => {
+  async function landOnCallback(fragment: string) {
+    window.history.replaceState(null, "", `/en/auth/callback#${fragment}`);
+    await exchangeLoginCodeFromLocation().catch(() => undefined);
+  }
+
+  it.each([
+    ["error=TURNSTILE_FAILED", "The bot check did not pass. Go back to the sign-in page, complete the check again and retry."],
+    ["error=TURNSTILE_UNAVAILABLE", "The bot check service is temporarily unavailable. Please try signing in again in a moment."],
+    ["error=DATABASE_UNAVAILABLE", "The service is temporarily unavailable. Please try again in a moment."],
+    ["error=AUTH_FAILED", "Please try signing in again in this browser tab."],
+    ["error=%3Cscript%3E", "Please try signing in again in this browser tab."],
+  ])("shows the copy for #%s once the sign-in failed", async (fragment, copy) => {
+    await landOnCallback(fragment);
+    state.auth = { status: "signed-out", user: null };
+    renderWithIntl(<AuthCallbackPage />);
+    expect(screen.getByRole("status").textContent).toBe(copy);
+    expect(screen.getByRole("link", { name: "Back to sign in" })).toBeTruthy();
+  });
+
+  it("keeps the restoring copy while the session is still loading", async () => {
+    await landOnCallback("error=TURNSTILE_FAILED");
+    state.auth = { status: "loading", user: null };
+    renderWithIntl(<AuthCallbackPage />);
+    expect(screen.getByRole("status").textContent).toBe("Restoring your account. You will be redirected shortly.");
+  });
+});
 
 describe("SignupGate", () => {
   beforeEach(() => {

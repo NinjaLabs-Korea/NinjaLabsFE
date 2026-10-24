@@ -107,6 +107,7 @@
         "invalid": "Check every field: the nickname must be 2-50 characters, and a bio and field tag are required.",
         "invalidCharacter": "Your nickname or bio contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
         "referenceNotFound": "Your account record could not be found. Reload the page or sign in again.",
+        "unavailable": "The service is temporarily unavailable. Please try again in a moment.",
         "generic": "We couldn't save your profile. Please try again."
       },
       "nicknameHint": "2–50 characters: letters, digits, _ . - — starting and ending with a letter or digit.",
@@ -168,6 +169,11 @@
     "restoring": "Restoring your account. You will be redirected shortly.",
     "failedTitle": "Sign-in could not be completed",
     "failedBody": "Please try signing in again in this browser tab.",
+    "errors": {
+      "TURNSTILE_FAILED": "The bot check did not pass. Go back to the sign-in page, complete the check again and retry.",
+      "TURNSTILE_UNAVAILABLE": "The bot check service is temporarily unavailable. Please try signing in again in a moment.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+    },
     "backToSignIn": "Back to sign in"
   }
 }

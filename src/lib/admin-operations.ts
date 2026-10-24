@@ -223,6 +223,7 @@ export const OPS_ERROR_CODES = [
   "UNAUTHORIZED",
   "TOO_MANY_REQUESTS",
   "REFRESH_UNAVAILABLE",
+  "DATABASE_UNAVAILABLE",
   "NETWORK_ERROR",
 ] as const;
 export type OpsErrorCode = (typeof OPS_ERROR_CODES)[number];

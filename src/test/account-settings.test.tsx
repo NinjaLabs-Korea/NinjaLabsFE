@@ -100,6 +100,19 @@ describe("AccountSettingsView", () => {
     expect((confirmButton() as HTMLButtonElement).disabled).toBe(false); // can retry later
   });
 
+  it.each([
+    [409, "WITHDRAWAL_BLOCKED_PENDING_REWARDS", /approved rewards that have not been paid out yet[\s\S]*contact the Ninja Labs admins/],
+    [503, "DATABASE_UNAVAILABLE", /^The service is temporarily unavailable. Please try again in a moment.$/],
+  ])("explains a %i %s withdrawal failure and stays signed in", async (status, code, copy) => {
+    Object.assign(apiClient, { withdrawAccount: vi.fn(async () => { throw new MockApiError(status, code); }) });
+    renderWithIntl(<AccountSettingsView />);
+    fireEvent.change(openDialog(), { target: { value: "jaemin.inj" } });
+    fireEvent.click(confirmButton());
+    expect((await screen.findByRole("alert")).textContent).toMatch(copy);
+    expect(signOut).not.toHaveBeenCalled();
+    expect((confirmButton() as HTMLButtonElement).disabled).toBe(false);
+  });
+
   it("maps a nickname mismatch and unknown failures to their own copy", async () => {
     Object.assign(apiClient, { withdrawAccount: vi.fn(async () => { throw new MockApiError(400, "CONFIRM_NICKNAME_MISMATCH"); }) });
     const { unmount } = renderWithIntl(<AccountSettingsView />);

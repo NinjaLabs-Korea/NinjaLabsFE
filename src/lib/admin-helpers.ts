@@ -4,8 +4,12 @@
 import { isHighlightTypeCode, type HighlightTypeCode } from "./api/codecs";
 import { ApiHttpError } from "./api/http";
 
-/** BE 400/404/409 codes an admin write can return that deserve their own copy (`admin.common.errors.<code>`). */
-export const ADMIN_API_ERROR_CODES = ["INVALID_CHARACTER", "REFERENCE_NOT_FOUND", "BOUNTY_NOT_FOUND", "BOUNTY_HAS_OPEN_FUNDS"] as const;
+/** BE 400/404/409/503 codes an admin write can return that deserve their own copy (`admin.common.errors.<code>`). */
+export const ADMIN_API_ERROR_CODES = [
+  "INVALID_CHARACTER", "REFERENCE_NOT_FOUND", "BOUNTY_NOT_FOUND", "BOUNTY_HAS_OPEN_FUNDS",
+  // 503 from any endpoint when the BE cannot reach its database (transient).
+  "DATABASE_UNAVAILABLE",
+] as const;
 export type AdminApiErrorCode = (typeof ADMIN_API_ERROR_CODES)[number];
 
 export function adminApiErrorCode(error: unknown): AdminApiErrorCode | null {

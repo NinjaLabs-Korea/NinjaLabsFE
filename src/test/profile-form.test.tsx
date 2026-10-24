@@ -89,8 +89,9 @@ describe("ProfileForm nickname rule + availability check", () => {
   it.each([
     ["INVALID_CHARACTER", "Your nickname or bio contains characters that cannot be saved (for example a NUL byte). Remove them and try again."],
     ["REFERENCE_NOT_FOUND", "Your account record could not be found. Reload the page or sign in again."],
+    ["DATABASE_UNAVAILABLE", "The service is temporarily unavailable. Please try again in a moment."],
   ])("maps the BE %s code to its own save error", async (code, copy) => {
-    completeProfile.mockRejectedValue(new ApiHttpError(400, code));
+    completeProfile.mockRejectedValue(new ApiHttpError(code === "DATABASE_UNAVAILABLE" ? 503 : 400, code));
     renderWithIntl(<ProfileForm />);
     typeNickname("ninja_dev");
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));

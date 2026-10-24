@@ -26,7 +26,8 @@
       "INVALID_CHARACTER": "A field contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
       "REFERENCE_NOT_FOUND": "This record points to something that no longer exists. Reload the page and try again.",
       "BOUNTY_NOT_FOUND": "The bounty no longer exists. Reload the page to refresh the list.",
-      "BOUNTY_HAS_OPEN_FUNDS": "This bounty still holds funds in the multisig (a confirmed deposit not fully paid out, or an open payout). Finish or refund the payouts before deleting it."
+      "BOUNTY_HAS_OPEN_FUNDS": "This bounty still holds funds in the multisig (a confirmed deposit not fully paid out, or an open payout). Finish or refund the payouts before deleting it.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
     }
   },
   "tabs": {
@@ -572,7 +573,8 @@
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
       "REFRESH_UNAVAILABLE": "Your session could not be refreshed. Sign in again.",
       "NETWORK_ERROR": "The server could not be reached. Check your connection and try again.",
-      "unknown": "Something went wrong ({code})."
+      "unknown": "Something went wrong ({code}).",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
     }
   },
   "nftJobs": {

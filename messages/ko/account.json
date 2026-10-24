@@ -66,6 +66,8 @@
     "deleteErrors": {
       "CONFIRM_NICKNAME_MISMATCH": "닉네임이 일치하지 않습니다. 표시된 그대로 입력하세요.",
       "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS": "진행 중인 지급이 있습니다. 지급이 완료되거나 취소된 뒤에 계정을 삭제할 수 있어요.",
+      "WITHDRAWAL_BLOCKED_PENDING_REWARDS": "승인되었지만 아직 지급 요청되지 않은 보상이 남아 있어 지금은 계정을 삭제할 수 없습니다(삭제하면 보상을 받을 수 없게 됩니다). Ninja Labs 운영자에게 연락해 지급을 마친 뒤 다시 시도해 주세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
       "generic": "계정을 삭제하지 못했습니다. 잠시 후 다시 시도하세요."
     }
   }
