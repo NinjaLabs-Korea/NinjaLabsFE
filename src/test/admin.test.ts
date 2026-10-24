@@ -6,6 +6,7 @@ import { PostManager } from "@/components/admin/PostManager";
 import { getAdminBounties, getAdminHighlights, getAdminPosts, highlightPublishOptionFor, highlightTypeLabelKey, highlightTypeLabelKeys, postCategoryLabelKeys, publishOptionFor, type AdminPost } from "@/lib/admin";
 import { HIGHLIGHT_TYPE_CODES } from "@/lib/api/codecs";
 import { bounties } from "@/lib/bounties";
+import { noticeCategoryKeys } from "@/lib/notice-categories";
 import { renderWithIntl } from "@/test/intl";
 import en from "../../messages/en/admin.json";
 import ko from "../../messages/ko/admin.json";
@@ -153,6 +154,10 @@ describe("admin label keys", () => {
     for (const key of Object.values(postCategoryLabelKeys)) {
       expect(messages.notices.categories).toHaveProperty(key);
     }
+  });
+
+  it("reuses the public notice category label table instead of a copy", () => {
+    expect(postCategoryLabelKeys).toBe(noticeCategoryKeys);
   });
 });
 

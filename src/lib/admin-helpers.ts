@@ -3,6 +3,8 @@
 // into the shared client chunk. `lib/admin.ts` re-exports everything for server code and tests.
 import { isHighlightTypeCode, type HighlightTypeCode } from "./api/codecs";
 import { ERROR_COPY, knownCode } from "./api/error-copy";
+import { noticeCategoryKeys } from "./notice-categories";
+import type { Notice } from "./types";
 
 /**
  * BE codes an admin write can return that deserve their own copy (`admin.common.errors.<code>`).
@@ -81,7 +83,8 @@ export type AdminHighlight = {
 export type AdminPost = {
   slug: string;
   title: string;
-  category: "Ninja Labs" | "Injective ecosystem" | "Events" | "Recruitment" | "Other";
+  /** 공지 카테고리와 같은 값 집합 — 정의는 `lib/types.ts Notice["category"]` 하나뿐이다. */
+  category: Notice["category"];
   status: "draft" | "published";
   publishedAt: string | null;
   bodyMarkdown: string;
@@ -133,10 +136,5 @@ export function deliverablesFromRequirements(requirements: string): string[] {
   return requirements.split("\n").map((line) => line.trim()).filter(Boolean);
 }
 
-export const postCategoryLabelKeys: Record<AdminPost["category"], string> = {
-  "Ninja Labs": "ninjaLabs",
-  "Injective ecosystem": "injectiveEcosystem",
-  Events: "events",
-  Recruitment: "recruitment",
-  Other: "other",
-};
+/** 어드민 공지 카테고리 라벨 키 = 공개 공지와 같은 표. 카테고리를 추가/개명할 때는 `lib/notice-categories.ts`만 고친다. */
+export const postCategoryLabelKeys: Record<AdminPost["category"], string> = noticeCategoryKeys;
