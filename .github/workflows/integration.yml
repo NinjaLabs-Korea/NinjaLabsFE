@@ -1,0 +1,68 @@
+name: Integration (real browser)
+
+# Full 10-flow run of the FE (api mode) against a real NinjaLabsBE, a private Postgres and headless Chrome.
+# Not a required check: it is slow (~15-20 min) and meant for manual runs and a nightly sanity pass.
+# See integration/README.md.
+on:
+  workflow_dispatch:
+    inputs:
+      be_ref:
+        description: NinjaLabsBE branch, tag or SHA to test against
+        required: false
+        default: main
+  schedule:
+    - cron: '17 19 * * *'
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    name: 10 flows
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      # Both repos are public, so no token is needed to check out the BE.
+      - uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository_owner }}/NinjaLabsBE
+          ref: ${{ inputs.be_ref || 'main' }}
+          path: be
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm ci
+        working-directory: be
+      - name: Locate Postgres and Chrome
+        run: |
+          PG_BIN="$(ls -d /usr/lib/postgresql/*/bin | sort -V | tail -n1)"
+          test -x "$PG_BIN/initdb" || { echo "no Postgres server binaries under /usr/lib/postgresql"; exit 1; }
+          CHROME_PATH="$(command -v google-chrome || command -v chromium || true)"
+          test -n "$CHROME_PATH" || { echo "no Chrome on the runner"; exit 1; }
+          echo "PG_BIN=$PG_BIN" >> "$GITHUB_ENV"
+          echo "CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+          echo "postgres: $PG_BIN, chrome: $CHROME_PATH"
+      - name: Run the flows
+        env:
+          NINJA_BE_DIR: ${{ github.workspace }}/be
+          # The runner's user namespaces forbid Chrome's sandbox.
+          NINJA_IT_CHROME_FLAGS: --no-sandbox --disable-dev-shm-usage
+          NINJA_IT_LOG_DIR: ${{ github.workspace }}/integration/.logs/ci
+        run: npm run test:integration
+      - name: Stop leftovers
+        if: always()
+        run: npm run test:integration -- --reap
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-logs
+          path: integration/.logs
+          if-no-files-found: ignore
