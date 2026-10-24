@@ -2,7 +2,7 @@
  * BE가 응답 `message`로 던지는 에러 코드 목록 — **BE 카탈로그의 그대로 복사본(snapshot)**이다. 손으로 코드를 지어내지 말 것.
  *
  * 원본: NinjaLabsBE `src/common/http/error-codes.ts` (`ERROR_CODES`의 키, 같은 순서·같은 묶음).
- * 스냅샷 기준: BE `fix/wiki-audit-findings` @ `c3c2a08` (카탈로그 마지막 변경 `9e55829`) · 82개.
+ * 스냅샷 기준: BE `fix/wiki-audit-findings` @ `bc15e45` (카탈로그 마지막 변경 `731e0f5`) · 83개.
  * 줄 끝 주석은 "HTTP 상태 — BE 카탈로그의 한 줄 의미"이고 사용자 문구가 아니다 (사용자 문구는 `messages/<locale>/*.json`).
  *
  * ## 어디를 고치나
@@ -48,6 +48,7 @@ export const BE_ERROR_CODES = [
   // ── 에이전트 ──
   "INVALID_AGENT_WALLET_ADDRESS", // 400 — 에이전트 지갑 주소 형식이 올바르지 않다
   "AGENT_PUBLIC_KEY_REQUIRED", // 400 — 에이전트 공개키가 필요하다
+  "AGENT_PUBLIC_KEY_MISMATCH", // 400 — inj1 에이전트의 공개키가 그 지갑 주소의 키가 아니다
   "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED", // 409 — 같은 공개키 또는 지갑으로 이미 등록된 에이전트가 있다
   "AGENT_NOT_FOUND", // 404 — 내 에이전트가 아니거나 없다
   "AGENT_ALREADY_VERIFIED", // 409 — 이미 검증이 끝난 에이전트다
