@@ -63,7 +63,6 @@ describe("BountyManager", () => {
     const save = screen.getByRole("button", { name: "Save" }) as HTMLButtonElement;
     // ISO fixture deadline renders through the formatter, not as the raw string.
     expect(screen.queryByText("2026-07-14T23:59:00.000Z")).toBeNull();
-    expect(screen.getByText("Jul 14, 2026, 11:59 PM")).toBeTruthy();
 
     fireEvent.submit(save.closest("form") as HTMLFormElement);
     await waitFor(() => expect(save.disabled).toBe(true));
@@ -75,6 +74,50 @@ describe("BountyManager", () => {
     expect(adminApi.saveAdminBounty).toHaveBeenCalledWith(expect.objectContaining({ requirements: "- Repo\n\n  note", coverImage: bounty.coverImage }), false);
     pending.resolve();
     await waitFor(() => expect((screen.getByRole("button", { name: "Create" }) as HTMLButtonElement).disabled).toBe(false));
+  });
+
+  it("shows the table deadline in the admin's local zone with its abbreviation, matching the edit field", async () => {
+    const previous = process.env.TZ;
+    process.env.TZ = "Asia/Seoul";
+    try {
+      // Admin entered 18:00 KST = 09:00Z.
+      const kst = { ...bounty, deadline: "2026-07-14T09:00:00.000Z" };
+      adminApi.getAdminBounties.mockResolvedValueOnce([kst]);
+      renderWithIntl(<BountyManager bounties={[kst]} tabs={null}>{null}</BountyManager>);
+      await waitFor(() => expect(adminApi.getAdminBounties).toHaveBeenCalled());
+      expect(screen.getByText("Jul 14, 2026, 6:00 PM GMT+9")).toBeTruthy();
+      expect(screen.queryByText(/9:00 AM/)).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+      expect((screen.getByLabelText("Deadline") as HTMLInputElement).value).toBe("2026-07-14T18:00");
+    } finally {
+      if (previous === undefined) delete process.env.TZ;
+      else process.env.TZ = previous;
+    }
+  });
+
+  it("server-renders the table deadline in UTC with an explicit label and hydrates without a mismatch", async () => {
+    const { renderToString } = await import("react-dom/server");
+    const { hydrateRoot } = await import("react-dom/client");
+    const { act } = await import("react");
+    const { IntlWrapper } = await import("@/test/intl");
+    const previous = process.env.TZ;
+    process.env.TZ = "Asia/Seoul";
+    try {
+      const kst = { ...bounty, deadline: "2026-07-14T09:00:00.000Z" };
+      adminApi.getAdminBounties.mockResolvedValue([kst]);
+      const ui = <IntlWrapper><BountyManager bounties={[kst]} tabs={null}>{null}</BountyManager></IntlWrapper>;
+      const container = document.createElement("div");
+      container.innerHTML = renderToString(ui);
+      expect(container.textContent).toContain("Jul 14, 2026, 9:00 AM UTC");
+      const recoverable: unknown[] = [];
+      await act(async () => { hydrateRoot(container, ui, { onRecoverableError: (error) => recoverable.push(error) }); });
+      await waitFor(() => expect(container.textContent).toContain("Jul 14, 2026, 6:00 PM GMT+9"));
+      expect(recoverable).toEqual([]);
+    } finally {
+      adminApi.getAdminBounties.mockImplementation(async () => [bounty]);
+      if (previous === undefined) delete process.env.TZ;
+      else process.env.TZ = previous;
+    }
   });
 
   it("sends coverImage null after the admin removes the cover", async () => {

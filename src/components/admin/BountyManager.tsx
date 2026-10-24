@@ -11,6 +11,7 @@ import { RewardPill } from "@/components/ui/RewardPill";
 import type { AdminBounty } from "@/lib/admin-helpers";
 import { BOUNTY_SPONSOR_MAX, BOUNTY_TITLE_MAX, bountyToForm, emptyBountyForm, formToBounty, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
+import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 
 const columns = [
   { id: "title", widthClass: "w-[244px]" },
@@ -31,8 +32,10 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const api = useAdminApi();
   const t = useTranslations("admin.bounties");
   const tCommon = useTranslations("admin.common");
-  // UTC-pinned via src/i18n/request.ts; the model keeps the BE ISO string (mock fixtures are ISO too).
+  // The app formatter is UTC-pinned (src/i18n/request.ts); the deadline cell overrides it with the admin's own zone so it
+  // reads like the datetime-local edit field (which is browser-local), and always prints the zone abbreviation.
   const format = useFormatter();
+  const timeZone = useBrowserTimeZone();
   const [records, setRecords] = useState(bounties);
   const [mode, setMode] = useState<Mode>({ kind: "create" });
   const [form, setForm] = useState<BountyFormValues>(emptyBountyForm);
@@ -47,7 +50,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   const deadlineCell = (iso: string) => {
     const date = new Date(iso);
-    return Number.isNaN(date.getTime()) ? "–" : format.dateTime(date, { dateStyle: "medium", timeStyle: "short" });
+    return Number.isNaN(date.getTime()) ? "–" : format.dateTime(date, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone, timeZoneName: "short" });
   };
 
   /** Clears the stored cover and any picked file; the save then sends `coverImageUrl: null` so the BE drops it. */
