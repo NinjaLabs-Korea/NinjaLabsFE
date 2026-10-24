@@ -11,7 +11,8 @@ Pages are ported 1:1 from the Figma design file below. Read this whole file befo
 
 ## Stack (pinned - do not upgrade without team decision)
 
-- Next.js 16.2.10 (App Router, Turbopack) / React 19.2.4 / TypeScript 5.9.3
+- Next.js 16.4.2 (App Router, Turbopack) / React 19.2.4 / TypeScript 5.9.3; `eslint-config-next` is pinned to the same version as `next`.
+  - 2026-10-24 owner decision: bumped from 16.2.10 to clear critical Next.js advisories (RCE in the Image Optimization API, `next/og` ImageResponse and `use cache`; all fixed by <=16.4.1). 16.4.2 was the newest 16.x release at least 7 days old on that date. wagmi/viem/RainbowKit stay on their current majors (wagmi 3 is a breaking upgrade, still pending a decision).
 - Tailwind CSS 4.3.3 (v4 - CSS-first config, **no** `tailwind.config.js`)
 - Node >= 24 (`.nvmrc`), npm 11 only. **Never** use bun/pnpm/yarn here; `package-lock.json` is the single lockfile.
 - All deps are exact-pinned; `.npmrc` has `save-exact=true`. Never introduce `^`/`~` ranges.
@@ -22,7 +23,7 @@ Pages are ported 1:1 from the Figma design file below. Read this whole file befo
 - `npm run test:unit` - focused foundation unit tests (includes `src/test/messages-parity.test.ts`: every `messages/<locale>/<ns>.json` must have identical key sets and ICU placeholder names across en/ko/zh)
 - `npm run build` - production build; **must pass before any work is considered done**
 - `npm run lint` - ESLint
-- CI (`.github/workflows/ci.yml`) runs lint, `next typegen` + `tsc --noEmit`, unit tests, and the production build on every PR/push to `develop` and `main`. The dependency audit job is report-only until the pinned Next.js/wagmi upgrades are decided.
+- CI (`.github/workflows/ci.yml`) runs lint, `next typegen` + `tsc --noEmit`, unit tests, and the production build on every PR/push to `develop` and `main`. The dependency audit job is report-only until the pending wagmi 3 upgrade (which carries the remaining high advisories) is decided.
 
 ## Git flow
 
