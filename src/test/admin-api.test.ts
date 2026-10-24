@@ -61,6 +61,18 @@ describe("admin notice save payload", () => {
     const [user] = await createAdminApi(http).getAdminUsers();
     expect(user.joinedAt).toBe("2026-06-20");
   });
+
+  it("shows the notice publish date as an ISO day, not the raw timestamp", async () => {
+    const { http, fetchJson } = createHttp();
+    const row = { id: "n1", title: "T", body: "B", category: "EVENT", thumbnail_url: null, external_url: null };
+    fetchJson.mockResolvedValueOnce([
+      { ...row, status: "PUBLISHED", published_at: "2026-10-24T07:43:03.996Z" },
+      { ...row, id: "n2", status: "DRAFT", published_at: null },
+    ] as never);
+    const [published, draft] = await createAdminApi(http).getAdminPosts();
+    expect(published.publishedAt).toBe("2026-10-24");
+    expect(draft.publishedAt).toBeNull();
+  });
 });
 
 const bounty: AdminBounty = {

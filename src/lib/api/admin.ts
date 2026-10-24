@@ -85,7 +85,7 @@ export function createAdminApi(http: ApiHttp): AdminApi {
     deleteAdminBounty: async (bountyId: string) => { await http.fetchJson(`/admin/bounties/${encodeURIComponent(bountyId)}`, { method: "DELETE" }); },
     getAdminPosts: async (): Promise<AdminPost[]> => {
       const rows = await http.fetchJson<NoticeRow[]>("/admin/notices");
-      return rows.map((row) => ({ slug: row.id, title: row.title, category: toNoticeCategoryLabel(row.category) ?? "Other", status: row.status === "PUBLISHED" ? "published" : "draft", publishedAt: row.published_at, bodyMarkdown: row.body, thumbnail: row.thumbnail_url, externalUrl: row.external_url }));
+      return rows.map((row) => ({ slug: row.id, title: row.title, category: toNoticeCategoryLabel(row.category) ?? "Other", status: row.status === "PUBLISHED" ? "published" : "draft", publishedAt: formatIsoDate(row.published_at) || null, bodyMarkdown: row.body, thumbnail: row.thumbnail_url, externalUrl: row.external_url }));
     },
     saveAdminPost: (post: AdminPost, create: boolean, options?: { publish?: boolean }): Promise<{ id: string }> => {
       // BE resets published_at whenever `publish` is present, so edits send it only when the status was toggled.
