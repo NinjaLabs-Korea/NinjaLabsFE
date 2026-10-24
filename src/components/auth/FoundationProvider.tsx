@@ -81,7 +81,7 @@ function createPendingFoundation(ready: Promise<FoundationContextValue>): Founda
     adapter: {
       getSnapshot: () => pendingSnapshot,
       subscribe: () => noopUnsubscribe,
-      signIn: async () => (await ready).adapter.signIn(),
+      signIn: async (options) => (await ready).adapter.signIn(options),
       signOut: async () => (await ready).adapter.signOut(),
     },
     apiClient,

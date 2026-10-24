@@ -52,7 +52,12 @@
     "mockIdle": "Mock mode: this local preview does not contact Google or create an account.",
     "redirectNotice": "You will be redirected to Google to sign in.",
     "failed": "Google sign-in failed. Please try again.",
-    "previewFailure": "Preview failed sign-in"
+    "previewFailure": "Preview failed sign-in",
+    "turnstileLabel": "Human verification",
+    "turnstileVerifying": "Checking that you're human…",
+    "turnstileExpired": "Verification expired. Refreshing the check…",
+    "turnstileError": "We couldn't verify that you're human. Please retry the check.",
+    "turnstileRetry": "Retry check"
   },
   "wallet": {
     "switching": "Switching network…",

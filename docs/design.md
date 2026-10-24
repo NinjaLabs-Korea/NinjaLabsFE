@@ -148,6 +148,10 @@ with a `next/image` `object-contain` logo in an `h-12` box; linked tiles add `tr
 
 **Admin persistence disclosure:** API-mode Create/Save forms state that changes are saved immediately. Destructive actions require confirmation and failures surface a danger toast.
 
+## Third-party widgets
+
+**Cloudflare Turnstile** (`components/auth/TurnstileWidget.tsx`, sign-in only, when `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set): the iframe is Cloudflare's own UI (`theme: "auto"`, `language` from the locale) and cannot use our tokens. Its container is centered under the Google button with `mt-4` and reserves `min-h-[65px]` - Cloudflare's fixed "normal" widget height - so the card does not jump when the iframe mounts. Status copy uses the existing helper-text recipe (`text-sm text-ink-muted`, `role="status"`); the error uses `text-danger` in a `role="alert"` with a text-link retry (same recipe as the mock "Preview failed sign-in" link). No Figma frame (docs/figma/design-gaps.md).
+
 ## Navigation loading
 
 Primary public navigation (including Home and Browse) uses `prefetch={true}` so dynamic page content can load before a click. Keep full prefetching limited to these few high-traffic links; card lists retain the default behavior. Public API requests remain `no-store`; prefetched route payloads are held in Next.js's client router cache.

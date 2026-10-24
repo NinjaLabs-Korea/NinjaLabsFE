@@ -43,6 +43,9 @@ const optimizedImagePrefixes = [
  * `x-nonce` header, replace `'unsafe-inline'`/`'unsafe-eval'` with `'nonce-…' 'strict-dynamic'`,
  * audit the remaining inline styles, and only then rename this header to `Content-Security-Policy`.
  */
+/** Cloudflare Turnstile (sign-in bot check, `lib/turnstile.ts`): api.js, the challenge iframe and its fetches. */
+const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
+
 function contentSecurityPolicy(): string {
   // The wallet stack is injected-only since the wagmi 3 upgrade (2026-10-24): the browser extension talks to its own
   // RPC, and the page only reaches the configured Injective JSON-RPC through viem's http transport. RainbowKit /
@@ -54,16 +57,17 @@ function contentSecurityPolicy(): string {
     "https://*.injective.network",
     "wss://*.injective.network",
     "https://k8s.testnet.json-rpc.injective.network",
+    TURNSTILE_ORIGIN,
   ].filter((source): source is string => source !== null);
   return [
     "default-src 'self'",
     "object-src 'none'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${TURNSTILE_ORIGIN}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
     `connect-src ${connectSrc.join(" ")}`,
-    "frame-src 'none'",
+    `frame-src ${TURNSTILE_ORIGIN}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

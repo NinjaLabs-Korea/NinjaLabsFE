@@ -38,7 +38,7 @@ export default async function SignupPage({ params }: PageProps<"/[locale]/signup
             <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] text-ink">{t("title")}</h1>
             <p className="mt-3 text-base text-ink-muted">{t("description")}</p>
           </div>
-          <GoogleLoginButton />
+          <GoogleLoginButton turnstileSiteKey={loadRuntimeConfig().turnstileSiteKey} />
           <div className="mt-5 rounded-tile border border-border bg-primary-soft p-4 text-center text-sm text-ink-notice">
             {t("disclosure")}
           </div>
