@@ -22,6 +22,8 @@ export function StepIndicator({ current }: StepIndicatorProps) {
 
         return (
           <li
+            // The current step is otherwise conveyed by color alone (WCAG 1.3.1).
+            aria-current={stepNumber === current ? "step" : undefined}
             key={step}
             className={`grid h-[45px] min-w-[140px] flex-1 place-items-center rounded-control text-sm leading-[21px] font-semibold ${stateClass}`}
           >
