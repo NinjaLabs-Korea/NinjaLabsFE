@@ -1,67 +1,113 @@
 /**
- * BE(NinjaLabsBE) HTTP 전송 계층.
+ * BE(NinjaLabsBE) HTTP 전송 계층 — cookie 세션 모드.
  *
- * - 로그인 토큰은 POST /auth/exchange 응답 본문으로만 받는다 (lib/api/oauth.ts).
- *   URL fragment로 토큰을 받는 경로는 없다 — 링크로 세션을 심는 공격면을 만들지 않는다.
- * - access token은 15분 JWT, refresh는 회전(rotation) 방식. 401을 받으면
- *   refresh로 재발급을 1회 시도한다. refresh가 401/403으로 거부될 때만 세션을
- *   비우고, 429·5xx·네트워크 오류 같은 일시 장애에서는 토큰을 그대로 둔 채
- *   `REFRESH_UNAVAILABLE`로 실패시킨다 (BE throttle 버킷이 공유될 때 대량 로그아웃 방지).
- * - 저장소는 localStorage(사용 불가 환경 대비 try/catch). 서버 렌더 중에는
- *   어떤 저장소/네트워크 접근도 하지 않는다.
- * - refresh는 탭 간에도 직렬화한다(Web Locks `ninja.auth.refresh`, 없으면 인스턴스 내
- *   single-flight만). BE가 refresh 토큰을 조건부 UPDATE로 회전시키므로 두 탭이 같은 토큰으로
- *   refresh하면 진 쪽이 401을 받는다: 락 안에서 저장소를 다시 읽어 이미 회전됐으면 네트워크를
- *   건너뛰고, 401이어도 저장된 토큰이 우리가 보낸 것일 때만 세션을 비운다.
- * - refresh가 끝난 뒤 저장소에 refresh 토큰이 없으면(거부되어 비웠거나 다른 탭이 로그아웃함)
- *   `onSessionEnded`를 부른다. 인증 어댑터가 이걸로 스냅샷을 즉시 signed-out으로 바꾼다(정지된 사용자 등).
- * - `clearTokens()`(로그아웃 포함)는 `sessionEpoch`를 올린다. 진행 중이던 refresh가 끝나도
- *   epoch가 바뀌었으면 새 토큰을 심지 않고 best-effort로 `/auth/logout`에 넘겨 폐기한다.
+ * - refresh 토큰은 JS가 절대 만지지 않는다: BE가 `ninja_rt` HttpOnly; Secure; SameSite=Strict; Path=/api/auth
+ *   쿠키로 심는다. `/api/auth/*`는 `next.config.ts` rewrite로 BE `/auth/*`에 프록시되므로 브라우저 입장에서는
+ *   FE와 같은 출처(first-party) 쿠키다. exchange/refresh/logout만 이 같은 출처 경로로 `credentials: "include"` +
+ *   `X-Ninja-Session: cookie`(CSRF 방어용 opt-in 헤더)를 붙여 보낸다. 나머지 API 호출은 지금처럼 BE 출처로
+ *   직접 `Authorization: Bearer <accessToken>`을 붙인다.
+ * - access token(15분 JWT)은 이 모듈의 메모리에만 있다. localStorage/sessionStorage에 어떤 토큰도 쓰지 않는다.
+ *   새로 고침/새 탭은 `initSession()`이 `POST /api/auth/refresh`를 한 번 보내 복원한다(쿠키 있으면 200, 없으면 401).
+ * - 401을 받으면 refresh를 1회 시도한다. refresh가 401/403일 때만 세션을 끝내고, 429·5xx·네트워크 오류는
+ *   `REFRESH_UNAVAILABLE`로 실패시키고 쿠키(서버 세션)는 그대로 둔다 — 다음 401에서 다시 시도한다.
+ * - refresh는 탭 간에도 직렬화한다(Web Locks `ninja.auth.refresh`, 없으면 탭 안 single-flight만). 쿠키 저장소는
+ *   탭이 공유하므로 직렬화된 두 번째 탭은 이미 회전된 쿠키를 보내 경쟁 401을 받지 않는다(락이 없을 때의 경쟁은
+ *   BE의 30초 reuse grace가 흡수한다). access token은 탭마다 메모리에 있으므로 각 탭은 자기 refresh를 한다.
+ * - 로그아웃(`signOutRemote`, `endLocalSession`)은 `sessionEpoch`를 올린다. 진행 중이던 refresh가 끝나도 epoch가
+ *   바뀌었으면 새 access token을 버리고, 그 응답이 다시 심은 쿠키는 best-effort `POST /api/auth/logout`으로 폐기한다.
+ * - 1회성 마이그레이션: 예전 빌드가 남긴 `localStorage["ninja.refreshToken"]`이 있으면 `initSession()`이 그 값을
+ *   refresh 본문에 실어 보내(BE가 쿠키를 심는다) 결과와 무관하게 `ninja.accessToken`/`ninja.refreshToken`을 지운다.
+ * - 서버 렌더 중에는 어떤 저장소/네트워크 접근도 하지 않는다.
  */
 
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
 
-const ACCESS_KEY = "ninja.accessToken";
-const REFRESH_KEY = "ninja.refreshToken";
-/** localStorage key whose removal in another tab means that tab signed out (`storage` event). */
-export const REFRESH_TOKEN_STORAGE_KEY = REFRESH_KEY;
+/** Same-origin prefix that `next.config.ts` rewrites to `${NINJA_API_BASE_URL}/auth`. */
+export const AUTH_PROXY_PATH = "/api/auth";
+/** Opt-in header the BE requires on every cookie-mode auth request (a cross-site form or simple request cannot set it). */
+export const SESSION_MODE_HEADER = "x-ninja-session";
+export const SESSION_MODE_VALUE = "cookie";
+/** Keys written by builds before cookie mode; read once for migration and then deleted. */
+export const LEGACY_ACCESS_TOKEN_KEY = "ninja.accessToken";
+export const LEGACY_REFRESH_TOKEN_KEY = "ninja.refreshToken";
 const REFRESH_LOCK = "ninja.auth.refresh";
 
-/** Bumped by every `clearTokens()`; a refresh that resolves after a sign-out must not re-plant tokens. */
+/**
+ * What this tab knows about the refresh cookie (it cannot read it). `absent` after a rejected refresh or a sign-out:
+ * later 401s do not trigger a refresh (which could otherwise re-plant a cookie racing the logout). `unknown` at start
+ * and after another tab signed in.
+ */
+type CookieState = "unknown" | "present" | "absent";
+
+let accessToken: string | null = null;
+let cookieState: CookieState = "unknown";
+/** Bumped by every local session end; a refresh that resolves after a sign-out must not re-plant the session. */
 let sessionEpoch = 0;
 
 const isBrowser = () => typeof window !== "undefined";
 
-function storageGet(key: string): string | null {
+/** Deletes the pre-cookie-mode token keys (also called after a fresh login, which supersedes them). */
+export function discardLegacyTokens(): void {
   try {
-    return isBrowser() ? window.localStorage.getItem(key) : null;
+    if (!isBrowser()) return;
+    window.localStorage.removeItem(LEGACY_ACCESS_TOKEN_KEY);
+    window.localStorage.removeItem(LEGACY_REFRESH_TOKEN_KEY);
+  } catch {
+    // storage unavailable: nothing could have been stored either
+  }
+}
+
+function readLegacyRefreshToken(): string | null {
+  try {
+    return isBrowser() ? window.localStorage.getItem(LEGACY_REFRESH_TOKEN_KEY) : null;
   } catch {
     return null;
   }
 }
 
-function storageSet(key: string, value: string | null): void {
-  try {
-    if (!isBrowser()) return;
-    if (value === null) window.localStorage.removeItem(key);
-    else window.localStorage.setItem(key, value);
-  } catch {
-    // storage가 막힌 환경(시크릿 모드 등)에서는 세션이 탭 수명으로 축소될 뿐이다
-  }
+export function getAccessToken(): string | null {
+  return accessToken;
 }
 
-export function getTokens(): { accessToken: string | null; refreshToken: string | null } {
-  return { accessToken: storageGet(ACCESS_KEY), refreshToken: storageGet(REFRESH_KEY) };
+/** A login exchange succeeded: the access token stays in memory, the BE already set the refresh cookie. */
+export function installSession(token: string): void {
+  accessToken = token;
+  cookieState = "present";
 }
 
-export function setTokens(accessToken: string | null, refreshToken: string | null): void {
-  storageSet(ACCESS_KEY, accessToken);
-  storageSet(REFRESH_KEY, refreshToken);
-}
-
-export function clearTokens(): void {
+/** This tab's session is over (local sign-out, or another tab signed out). Does not call the BE. */
+export function endLocalSession(): void {
   sessionEpoch += 1;
-  setTokens(null, null);
+  accessToken = null;
+  cookieState = "absent";
+}
+
+/** Another tab signed in: the shared cookie jar may hold a session again, so the next 401 may refresh. */
+export function allowSessionRefresh(): void {
+  if (cookieState === "absent") cookieState = "unknown";
+}
+
+/** Back to the page-load state (tests only; a real page load starts here). */
+export function resetSessionState(): void {
+  sessionEpoch += 1;
+  accessToken = null;
+  cookieState = "unknown";
+}
+
+/** Headers + credentials for a same-origin cookie-mode auth request. */
+export function cookieAuthInit(body: unknown): RequestInit {
+  const traceId = getOnboardingTraceId();
+  return {
+    method: "POST",
+    cache: "no-store",
+    credentials: "include",
+    headers: {
+      "content-type": "application/json",
+      [SESSION_MODE_HEADER]: SESSION_MODE_VALUE,
+      ...(traceId ? { "x-onboarding-trace-id": traceId } : {}),
+    },
+    body: JSON.stringify(body),
+  };
 }
 
 /** Runs `task` under the cross-tab refresh lock when the Web Locks API exists; otherwise inline. */
@@ -110,22 +156,27 @@ export type ApiHttp = {
   /** 인증 헤더를 붙여 요청. 401이면 refresh 회전 후 1회 재시도. */
   fetchJson: <T>(path: string, init?: { method?: string; body?: unknown }) => Promise<T>;
   fetchForm: <T>(path: string, form: FormData) => Promise<T>;
+  /** True while this tab holds an access token (after a login exchange or a successful refresh). */
   hasSession: () => boolean;
+  /** Page-load restore: legacy migration if needed, then one `POST /api/auth/refresh`. */
+  initSession: () => Promise<RefreshResult>;
   signOutRemote: () => Promise<void>;
 };
 
 /**
- * refresh 결과. `rejected`(401/403)만 세션을 비운다; `unavailable`은 토큰을 유지한다;
- * `signed-out`은 refresh 도중 로그아웃되어 새 토큰을 버린 경우다.
+ * refresh 결과. `rejected`(401/403)만 세션을 끝낸다; `unavailable`은 쿠키를 유지하고 다음 401에서 재시도한다;
+ * `signed-out`은 refresh 도중 로그아웃되어 새 토큰을 버린 경우; `no-session`은 이 탭이 이미 세션 종료를 안 경우다.
  */
-type RefreshResult =
+export type RefreshResult =
   | { ok: true }
-  | { ok: false; reason: "no-token" | "rejected" | "signed-out" }
+  | { ok: false; reason: "no-session" | "rejected" | "signed-out" }
   | { ok: false; reason: "unavailable"; status: number };
 
 export type ApiHttpOptions = {
-  /** A request's refresh failed and no refresh token is left: this tab's session is over. */
+  /** A request's refresh failed and this tab holds no access token: this tab's session is over. */
   onSessionEnded?: () => void;
+  /** Cross-tab notification hook (`lib/api/auth-events.ts`): sign-out and rejected refresh post `signed-out`. */
+  broadcast?: (event: "signed-out" | "signed-in") => void;
 };
 
 export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): ApiHttp {
@@ -133,14 +184,14 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
   let refreshing: Promise<RefreshResult> | null = null;
 
   async function rawFetch(path: string, init?: { method?: string; body?: unknown }) {
-    const { accessToken } = getTokens();
+    const token = accessToken;
     const traceId = getOnboardingTraceId();
     return fetch(`${base}${path}`, {
       method: init?.method ?? "GET",
       cache: "no-store",
       headers: {
         ...(init?.body !== undefined ? { "content-type": "application/json" } : {}),
-        ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
         ...(traceId ? { "x-onboarding-trace-id": traceId } : {}),
       },
       body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
@@ -148,97 +199,84 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
   }
 
   async function rawFormFetch(path: string, form: FormData) {
-    const { accessToken } = getTokens();
+    const token = accessToken;
     const traceId = getOnboardingTraceId();
     return fetch(`${base}${path}`, {
       method: "POST",
       cache: "no-store",
       headers: {
-        ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
         ...(traceId ? { "x-onboarding-trace-id": traceId } : {}),
       },
       body: form,
     });
   }
 
-  function postLogout(refreshToken: string): Promise<void> {
-    const traceId = getOnboardingTraceId();
-    // 서버 세션 폐기는 best-effort. 실패해도 로컬 로그아웃은 완료된 상태
-    return fetch(`${base}/auth/logout`, {
-      method: "POST",
-      cache: "no-store",
-      headers: {
-        "content-type": "application/json",
-        ...(traceId ? { "x-onboarding-trace-id": traceId } : {}),
-      },
-      body: JSON.stringify({ refreshToken }),
-    })
+  function postLogout(): Promise<void> {
+    // 서버 세션 폐기는 best-effort. 실패해도 로컬 로그아웃은 완료된 상태. 쿠키는 BE가 지운다(Set-Cookie 만료).
+    return fetch(`${AUTH_PROXY_PATH}/logout`, cookieAuthInit({}))
       .then((response) => onboardingLog("session.logout.completed", { status: response.status }))
       .catch(() => onboardingLog("session.logout.failed", { reason: "NETWORK_ERROR" }));
   }
 
-  /** 락 안에서 실행되는 실제 회전. `sentToken`은 401을 받았을 때 저장돼 있던 refresh 토큰이다. */
-  async function performRefresh(sentToken: string, epoch: number): Promise<RefreshResult> {
+  /** 락 안에서 실행되는 실제 회전. `migrate`면 락 안에서 레거시 refresh 토큰을 다시 읽는다(다른 탭이 이미 옮겼을 수 있다). */
+  async function performRefresh(epoch: number, migrate: boolean): Promise<RefreshResult> {
+    const legacyToken = migrate ? readLegacyRefreshToken() : null;
     try {
-      // 락을 기다리는 동안 다른 탭이 이미 회전(또는 로그아웃)했을 수 있다: 저장소를 다시 읽는다.
-      const stored = getTokens();
-      if (!stored.refreshToken) {
-        onboardingLog("http.refresh.skipped", { reason: "NO_REFRESH_TOKEN" });
-        return { ok: false, reason: "no-token" };
-      }
-      if (stored.refreshToken !== sentToken) {
-        onboardingLog("http.refresh.skipped", { reason: "ROTATED_ELSEWHERE" });
-        return { ok: true };
-      }
-      onboardingLog("http.refresh.requested");
-      const traceId = getOnboardingTraceId();
-      const res = await fetch(`${base}/auth/refresh`, {
-        method: "POST",
-        cache: "no-store",
-        headers: {
-          "content-type": "application/json",
-          ...(traceId ? { "x-onboarding-trace-id": traceId } : {}),
-        },
-        body: JSON.stringify({ refreshToken: sentToken }),
-      });
+      onboardingLog("http.refresh.requested", { migrate: legacyToken !== null });
+      const res = await fetch(`${AUTH_PROXY_PATH}/refresh`, cookieAuthInit(legacyToken ? { refreshToken: legacyToken } : {}));
       if (res.status === 401 || res.status === 403) {
-        // refresh 토큰이 만료·폐기·회전됨: 세션은 끝났다 — 단, 그 사이 다른 탭이 새 토큰을
-        // 저장했다면(락 없는 환경의 경쟁) 그 탭의 세션을 지우면 안 된다.
+        // refresh 쿠키가 없음·만료·폐기됨: 이 탭의 세션은 끝났다.
         onboardingLog("http.refresh.failed", { status: res.status, reason: "REJECTED" });
-        if (getTokens().refreshToken === sentToken) clearTokens();
+        if (sessionEpoch === epoch) {
+          const hadSession = accessToken !== null || cookieState === "present";
+          endLocalSession();
+          // A page-load probe without a cookie is not news for the other tabs; a session that just died is.
+          if (hadSession) options.broadcast?.("signed-out");
+        }
         return { ok: false, reason: "rejected" };
       }
       if (!res.ok) {
-        // 429/5xx: BE 쪽 일시 장애. 토큰을 지우면 throttle 한 번에 전원이 로그아웃된다.
+        // 429/5xx: BE 쪽 일시 장애. 세션을 끝내면 throttle 한 번에 전원이 로그아웃된다.
         onboardingLog("http.refresh.failed", { status: res.status, reason: "UNAVAILABLE" });
         return { ok: false, reason: "unavailable", status: res.status };
       }
-      const body = (await res.json()) as { accessToken: string; refreshToken: string };
+      const body: unknown = await res.json();
+      const token = body && typeof body === "object" && "accessToken" in body && typeof body.accessToken === "string"
+        ? body.accessToken
+        : "";
+      if (!token) {
+        onboardingLog("http.refresh.failed", { status: res.status, reason: "INVALID_RESPONSE" });
+        return { ok: false, reason: "unavailable", status: res.status };
+      }
       if (sessionEpoch !== epoch) {
-        // refresh 도중 로그아웃됨: 새 세션을 심지 않고 서버에서도 폐기한다.
+        // refresh 도중 로그아웃됨: 새 access token을 버리고, 이 응답이 다시 심은 쿠키도 서버에서 폐기한다.
         onboardingLog("http.refresh.discarded", { reason: "SIGNED_OUT" });
-        void postLogout(body.refreshToken);
+        void postLogout();
         return { ok: false, reason: "signed-out" };
       }
-      setTokens(body.accessToken, body.refreshToken);
+      accessToken = token;
+      cookieState = "present";
       onboardingLog("http.refresh.succeeded", { status: res.status });
       return { ok: true };
     } catch {
       onboardingLog("http.refresh.failed", { status: 0, reason: "NETWORK_ERROR" });
       return { ok: false, reason: "unavailable", status: 0 };
+    } finally {
+      // 마이그레이션은 1회성: 결과와 무관하게 레거시 토큰을 지운다(실패하면 사용자는 다시 로그인한다).
+      if (migrate) discardLegacyTokens();
     }
   }
 
   /** refresh 회전: 동시 401은 하나의 refresh만 수행하도록 합쳐진다 (탭 안은 single-flight, 탭 간은 락) */
-  function refreshSession(): Promise<RefreshResult> {
+  function refreshSession(migrate = false): Promise<RefreshResult> {
     if (refreshing) return refreshing;
-    const { refreshToken } = getTokens();
-    if (!refreshToken) {
-      onboardingLog("http.refresh.skipped", { reason: "NO_REFRESH_TOKEN" });
-      return Promise.resolve({ ok: false, reason: "no-token" });
+    if (cookieState === "absent") {
+      onboardingLog("http.refresh.skipped", { reason: "NO_SESSION" });
+      return Promise.resolve({ ok: false, reason: "no-session" });
     }
     const epoch = sessionEpoch;
-    refreshing = withRefreshLock(() => performRefresh(refreshToken, epoch)).finally(() => {
+    refreshing = withRefreshLock(() => performRefresh(epoch, migrate)).finally(() => {
       refreshing = null;
     });
     return refreshing;
@@ -253,13 +291,21 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
     const refresh = await refreshSession();
     if (refresh.ok) return true;
     if (refresh.reason === "unavailable") throw new ApiHttpError(refresh.status, "REFRESH_UNAVAILABLE");
-    // `rejected` with another tab's fresh token still stored is not the end of this session.
-    if (getTokens().refreshToken === null) options.onSessionEnded?.();
+    if (accessToken === null) options.onSessionEnded?.();
     return false;
   }
 
   return {
-    hasSession: () => getTokens().refreshToken !== null,
+    hasSession: () => accessToken !== null,
+
+    initSession: () => {
+      if (readLegacyRefreshToken() === null) {
+        // A stray legacy access token alone is useless (and a secret at rest): drop it without a migration call.
+        discardLegacyTokens();
+        return refreshSession(false);
+      }
+      return refreshSession(true);
+    },
 
     fetchJson: async <T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> => {
       onboardingLog("http.request.started", { method: init?.method ?? "GET", path });
@@ -291,14 +337,11 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
     },
 
     signOutRemote: async () => {
-      const { refreshToken } = getTokens();
-      clearTokens();
-      if (!refreshToken) {
-        onboardingLog("session.logout.local-only");
-        return;
-      }
+      endLocalSession();
+      options.broadcast?.("signed-out");
       onboardingLog("session.logout.requested");
-      await postLogout(refreshToken);
+      // Always sent: this tab cannot see whether the HttpOnly cookie exists.
+      await postLogout();
     },
   };
 }

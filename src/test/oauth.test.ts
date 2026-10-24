@@ -2,7 +2,8 @@
 import { webcrypto, createHash } from "node:crypto";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { createApiAuthAdapter } from "@/lib/api/auth-adapter";
-import { getTokens, setTokens } from "@/lib/api/http";
+import { getAccessToken, installSession, resetSessionState } from "@/lib/api/http";
+import { FakeBroadcastChannel } from "./fake-broadcast-channel";
 import {
   createLoginChallenge,
   exchangeLoginCodeFromLocation,
@@ -10,9 +11,16 @@ import {
   LoginExchangeError,
 } from "@/lib/api/oauth";
 
+const API = "https://api.example";
+const REFRESH = "/api/auth/refresh";
+const EXCHANGE = "/api/auth/exchange";
+
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
+  resetSessionState();
+  FakeBroadcastChannel.instances = [];
+  vi.stubGlobal("BroadcastChannel", FakeBroadcastChannel);
   window.history.replaceState({ marker: "router" }, "", "/auth/callback");
   vi.stubGlobal("crypto", webcrypto);
 });
@@ -36,17 +44,21 @@ describe("OAuth code handoff", () => {
     const request = vi.fn(async (url: string, init: RequestInit) => {
       expect(window.location.hash).toBe("");
       expect(window.history.state).toEqual({ marker: "router" });
-      expect(url).toBe("https://api.example/auth/exchange");
+      // Same-origin cookie mode: the rewrite proxies it to the BE, which sets the HttpOnly refresh cookie.
+      expect(url).toBe(EXCHANGE);
       expect(init.method).toBe("POST");
       expect(init.cache).toBe("no-store");
+      expect(init.credentials).toBe("include");
+      expect(new Headers(init.headers).get("x-ninja-session")).toBe("cookie");
       expect(JSON.parse(init.body as string)).toEqual({ code: "test-code", codeVerifier: verifier });
-      return Response.json({ accessToken: "test-access", refreshToken: "test-refresh" });
+      return Response.json({ accessToken: "test-access" });
     });
     vi.stubGlobal("fetch", request);
-    expect(await exchangeLoginCodeFromLocation("https://api.example/")).toBe(true);
+    expect(await exchangeLoginCodeFromLocation()).toBe(true);
     expect(sessionStorage.getItem("ninja.oauthVerifier")).toBeNull();
-    expect(getTokens()).toEqual({ accessToken: "test-access", refreshToken: "test-refresh" });
-    expect(await exchangeLoginCodeFromLocation("https://api.example")).toBe(false);
+    expect(getAccessToken()).toBe("test-access");
+    expect(localStorage.length).toBe(0);
+    expect(await exchangeLoginCodeFromLocation()).toBe(false);
     expect(request).toHaveBeenCalledTimes(1);
   });
 
@@ -54,118 +66,149 @@ describe("OAuth code handoff", () => {
     window.history.replaceState(null, "", "/auth/callback#loginCode=copied-code");
     const request = vi.fn();
     vi.stubGlobal("fetch", request);
-    await expect(exchangeLoginCodeFromLocation("https://api.example")).rejects.toThrow();
+    await expect(exchangeLoginCodeFromLocation()).rejects.toThrow();
     expect(window.location.hash).toBe("");
     expect(request).not.toHaveBeenCalled();
-    expect(getTokens().accessToken).toBeNull();
+    expect(getAccessToken()).toBeNull();
   });
 
   it("does not install a session when exchange fails", async () => {
     await createLoginChallenge();
     window.history.replaceState(null, "", "/auth/callback#loginCode=expired-code");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 401 })));
-    await expect(exchangeLoginCodeFromLocation("https://api.example")).rejects.toThrow();
+    await expect(exchangeLoginCodeFromLocation()).rejects.toThrow();
     expect(window.location.hash).toBe("");
-    expect(getTokens().refreshToken).toBeNull();
+    expect(getAccessToken()).toBeNull();
   });
 
   it("leaves ordinary anchors untouched", async () => {
     window.history.replaceState(null, "", "/#faq");
-    expect(await exchangeLoginCodeFromLocation("https://api.example")).toBe(false);
+    expect(await exchangeLoginCodeFromLocation()).toBe(false);
     expect(window.location.hash).toBe("#faq");
   });
 
   it("ignores legacy token fragments instead of installing a session from the URL", async () => {
     window.history.replaceState(null, "", "/?from=login#accessToken=planted&refreshToken=planted");
-    expect(await exchangeLoginCodeFromLocation("https://api.example")).toBe(false);
-    expect(getTokens()).toEqual({ accessToken: null, refreshToken: null });
+    expect(await exchangeLoginCodeFromLocation()).toBe(false);
+    expect(getAccessToken()).toBeNull();
   });
 
   it("accepts the localized callback route", async () => {
     await createLoginChallenge();
     window.history.replaceState(null, "", "/ko/auth/callback#loginCode=test-code");
-    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ accessToken: "test-access", refreshToken: "test-refresh" })));
-    expect(await exchangeLoginCodeFromLocation("https://api.example")).toBe(true);
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ accessToken: "test-access" })));
+    expect(await exchangeLoginCodeFromLocation()).toBe(true);
     expect(window.location.hash).toBe("");
-    expect(getTokens().refreshToken).toBe("test-refresh");
+    expect(getAccessToken()).toBe("test-access");
   });
 
   it.each(["/en/notices#loginCode=planted", "/en/bounties#error=access_denied", "/#loginCode=planted&error=x"])(
     "leaves login fragments alone outside the callback route: %s",
     async (url) => {
-      setTokens("current-access", "current-refresh");
+      installSession("current-access");
       await createLoginChallenge();
       window.history.replaceState(null, "", url);
       const request = vi.fn();
       vi.stubGlobal("fetch", request);
-      expect(await exchangeLoginCodeFromLocation("https://api.example")).toBe(false);
+      expect(await exchangeLoginCodeFromLocation()).toBe(false);
       expect(window.location.hash).toBe(`#${url.split("#")[1]}`);
       expect(request).not.toHaveBeenCalled();
-      expect(getTokens()).toEqual({ accessToken: "current-access", refreshToken: "current-refresh" });
+      expect(getAccessToken()).toBe("current-access");
       expect(sessionStorage.getItem("ninja.oauthVerifier")).not.toBeNull();
     },
   );
 
   it("reports whether an exchange was actually attempted", async () => {
     window.history.replaceState(null, "", "/en/auth/callback#error=access_denied");
-    const denied = await exchangeLoginCodeFromLocation("https://api.example").catch((caught: unknown) => caught);
+    const denied = await exchangeLoginCodeFromLocation().catch((caught: unknown) => caught);
     expect(denied).toBeInstanceOf(LoginExchangeError);
     expect((denied as LoginExchangeError).attempted).toBe(false);
 
     await createLoginChallenge();
     window.history.replaceState(null, "", "/en/auth/callback#loginCode=expired-code");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 401 })));
-    const failed = await exchangeLoginCodeFromLocation("https://api.example").catch((caught: unknown) => caught);
+    const failed = await exchangeLoginCodeFromLocation().catch((caught: unknown) => caught);
     expect(failed).toBeInstanceOf(LoginExchangeError);
     expect((failed as LoginExchangeError).attempted).toBe(true);
   });
 });
 
-describe("API auth adapter login handoff", () => {
-  const me = { id: "u1", nickname: "ninja", onboardingStep: 4, onboardingCompleted: true, isAdmin: false };
+const me = { id: "u1", nickname: "ninja", onboardingStep: 4, onboardingCompleted: true, isAdmin: false };
 
+/**
+ * The browser still holds the refresh cookie of the current session: `/api/auth/refresh` answers with a new access
+ * token, `/auth/me` with the user, the exchange (if any) with `exchange`, everything else 500.
+ */
+function stubCurrentSession(exchange: () => Response = () => new Response(null, { status: 500 })) {
+  const request = vi.fn(async (url: string) => {
+    if (url === REFRESH) return Response.json({ accessToken: "current-access" });
+    if (url === EXCHANGE) return exchange();
+    if (url === `${API}/auth/me`) return Response.json(me);
+    return new Response(null, { status: url === "/api/auth/logout" ? 204 : 500 });
+  });
+  vi.stubGlobal("fetch", request);
+  return request;
+}
+
+const urls = (request: ReturnType<typeof vi.fn>) => request.mock.calls.map(([url]) => url as string);
+
+describe("API auth adapter login handoff", () => {
   it("keeps the current session when a page outside the callback carries an error fragment", async () => {
-    setTokens("current-access", "current-refresh");
     window.history.replaceState(null, "", "/en/bounties#error=access_denied");
-    const request = vi.fn(async (url: string) => (url.endsWith("/auth/me") ? Response.json(me) : new Response(null, { status: 500 })));
-    vi.stubGlobal("fetch", request);
-    const adapter = createApiAuthAdapter("https://api.example");
+    const request = stubCurrentSession();
+    const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
-    expect(getTokens()).toEqual({ accessToken: "current-access", refreshToken: "current-refresh" });
+    expect(getAccessToken()).toBe("current-access");
     expect(window.location.hash).toBe("#error=access_denied");
-    expect(request.mock.calls.map(([url]) => url)).toEqual(["https://api.example/auth/me"]);
+    expect(urls(request)).toEqual([REFRESH, `${API}/auth/me`]);
   });
 
   it("restores the current session when the callback carries a planted code without this tab's verifier", async () => {
-    setTokens("current-access", "current-refresh");
     window.history.replaceState(null, "", "/en/auth/callback#loginCode=planted");
-    const request = vi.fn(async (url: string) => (url.endsWith("/auth/me") ? Response.json(me) : new Response(null, { status: 500 })));
-    vi.stubGlobal("fetch", request);
-    const adapter = createApiAuthAdapter("https://api.example");
+    const request = stubCurrentSession();
+    vi.stubGlobal("location", { ...window.location, replace: vi.fn() });
+    const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
-    // No exchange was attempted: the planted code is ignored and the existing session is re-read once.
-    expect(request.mock.calls.map(([url]) => url)).toEqual(["https://api.example/auth/me"]);
+    // No exchange was attempted: the planted code is ignored and the existing cookie session is restored once.
+    expect(urls(request)).toEqual([REFRESH, `${API}/auth/me`]);
     expect(adapter.getSnapshot().user?.handle).toBe("ninja");
-    expect(getTokens()).toEqual({ accessToken: "current-access", refreshToken: "current-refresh" });
+    expect(getAccessToken()).toBe("current-access");
   });
 
-  it("clears the session only after an attempted exchange fails", async () => {
-    setTokens("current-access", "current-refresh");
+  it("ends (and revokes) the session only after an attempted exchange fails", async () => {
     await createLoginChallenge();
     window.history.replaceState(null, "", "/en/auth/callback#loginCode=expired-code");
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 401 })));
-    const adapter = createApiAuthAdapter("https://api.example");
+    const request = stubCurrentSession(() => new Response(null, { status: 401 }));
+    const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
-    expect(getTokens()).toEqual({ accessToken: null, refreshToken: null });
+    expect(getAccessToken()).toBeNull();
+    await vi.waitFor(() => expect(urls(request)).toEqual([EXCHANGE, "/api/auth/logout"]));
+  });
+
+  it("a successful exchange drops legacy tokens and tells other tabs a session exists again", async () => {
+    localStorage.setItem("ninja.accessToken", "old-access");
+    localStorage.setItem("ninja.refreshToken", "old-refresh");
+    await createLoginChallenge();
+    window.history.replaceState(null, "", "/en/auth/callback#loginCode=good-code");
+    const request = stubCurrentSession(() => Response.json({ accessToken: "new-access", refreshToken: "ignored-refresh" }));
+    vi.stubGlobal("location", { ...window.location, replace: vi.fn() });
+    const otherTab = new FakeBroadcastChannel("ninja-auth");
+    const received: unknown[] = [];
+    otherTab.addEventListener("message", (event) => received.push((event as MessageEvent).data));
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    expect(urls(request)).toEqual([EXCHANGE, `${API}/auth/me`]);
+    expect(getAccessToken()).toBe("new-access");
+    expect(localStorage.length).toBe(0);
+    expect(received).toEqual([{ type: "signed-in" }]);
   });
 });
 
 describe("PKCE verifier hygiene", () => {
-  const me = { id: "u1", nickname: "ninja", onboardingStep: 4, onboardingCompleted: true, isAdmin: false };
-
   afterEach(() => vi.useRealTimers());
 
   it("does not exchange with a verifier older than the TTL and removes it", async () => {
@@ -175,7 +218,7 @@ describe("PKCE verifier hygiene", () => {
     window.history.replaceState(null, "", "/en/auth/callback#loginCode=late-code");
     const request = vi.fn();
     vi.stubGlobal("fetch", request);
-    const error = await exchangeLoginCodeFromLocation("https://api.example").catch((caught: unknown) => caught);
+    const error = await exchangeLoginCodeFromLocation().catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(LoginExchangeError);
     expect((error as LoginExchangeError).attempted).toBe(false);
     expect(request).not.toHaveBeenCalled();
@@ -187,8 +230,8 @@ describe("PKCE verifier hygiene", () => {
     await createLoginChallenge();
     vi.setSystemTime(Date.now() + LOGIN_VERIFIER_TTL_MS - 1_000);
     window.history.replaceState(null, "", "/en/auth/callback#loginCode=code");
-    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ accessToken: "a", refreshToken: "r" })));
-    expect(await exchangeLoginCodeFromLocation("https://api.example")).toBe(true);
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ accessToken: "a" })));
+    expect(await exchangeLoginCodeFromLocation()).toBe(true);
   });
 
   it.each(["legacy-plain-string", "{\"verifier\":\"\"}", "{\"verifier\":\"v\"}", "not json {"])(
@@ -198,7 +241,7 @@ describe("PKCE verifier hygiene", () => {
       window.history.replaceState(null, "", "/en/auth/callback#loginCode=code");
       const request = vi.fn();
       vi.stubGlobal("fetch", request);
-      await expect(exchangeLoginCodeFromLocation("https://api.example")).rejects.toMatchObject({ attempted: false });
+      await expect(exchangeLoginCodeFromLocation()).rejects.toMatchObject({ attempted: false });
       expect(request).not.toHaveBeenCalled();
     },
   );
@@ -207,7 +250,7 @@ describe("PKCE verifier hygiene", () => {
     await createLoginChallenge();
     window.history.replaceState(null, "", "/en/bounties");
     vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 401 })));
-    const adapter = createApiAuthAdapter("https://api.example");
+    const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     expect(sessionStorage.getItem("ninja.oauthVerifier")).toBeNull();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
@@ -216,50 +259,47 @@ describe("PKCE verifier hygiene", () => {
   it("keeps the verifier for the callback page that consumes it", async () => {
     await createLoginChallenge();
     window.history.replaceState(null, "", "/en/auth/callback#loginCode=good-code");
-    const request = vi.fn(async (url: string) =>
-      url.endsWith("/auth/exchange") ? Response.json({ accessToken: "new-access", refreshToken: "new-refresh" }) : Response.json(me));
-    vi.stubGlobal("fetch", request);
+    const request = stubCurrentSession(() => Response.json({ accessToken: "new-access" }));
     vi.stubGlobal("location", { ...window.location, replace: vi.fn() });
-    const adapter = createApiAuthAdapter("https://api.example");
+    const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
-    expect(request.mock.calls[0][0]).toBe("https://api.example/auth/exchange");
+    expect(request.mock.calls[0][0]).toBe(EXCHANGE);
   });
 
   it("a planted #loginCode after an abandoned sign-in neither exchanges nor clears the current session", async () => {
-    setTokens("current-access", "current-refresh");
     await createLoginChallenge();
     // The user backs out of Google consent and lands on an ordinary page: the verifier is dropped.
     window.history.replaceState(null, "", "/en/bounties");
-    vi.stubGlobal("fetch", vi.fn(async () => Response.json(me)));
-    const abandoned = createApiAuthAdapter("https://api.example");
+    stubCurrentSession();
+    const abandoned = createApiAuthAdapter(API);
     abandoned.initialize?.();
     expect(sessionStorage.getItem("ninja.oauthVerifier")).toBeNull();
     await vi.waitFor(() => expect(abandoned.getSnapshot().status).toBe("signed-in"));
 
-    // Later a link plants a code on the callback route.
+    // Later a link plants a code on the callback route (a fresh page load).
+    resetSessionState();
     window.history.replaceState(null, "", "/en/auth/callback#loginCode=planted");
-    const request = vi.fn(async (url: string) => (url.endsWith("/auth/me") ? Response.json(me) : new Response(null, { status: 500 })));
-    vi.stubGlobal("fetch", request);
-    const adapter = createApiAuthAdapter("https://api.example");
+    const request = stubCurrentSession(() => Response.json({ accessToken: "attacker-access" }));
+    vi.stubGlobal("location", { ...window.location, replace: vi.fn() });
+    const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
-    expect(request.mock.calls.map(([url]) => url)).toEqual(["https://api.example/auth/me"]);
-    expect(getTokens()).toEqual({ accessToken: "current-access", refreshToken: "current-refresh" });
+    expect(urls(request)).toEqual([REFRESH, `${API}/auth/me`]);
+    expect(getAccessToken()).toBe("current-access");
   });
 
   it("a planted #loginCode with only a stale verifier keeps the current session", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
-    setTokens("current-access", "current-refresh");
     await createLoginChallenge();
     vi.setSystemTime(Date.now() + LOGIN_VERIFIER_TTL_MS + 60_000);
     window.history.replaceState(null, "", "/en/auth/callback#loginCode=planted");
-    const request = vi.fn(async (url: string) => (url.endsWith("/auth/me") ? Response.json(me) : new Response(null, { status: 500 })));
-    vi.stubGlobal("fetch", request);
-    const adapter = createApiAuthAdapter("https://api.example");
+    const request = stubCurrentSession(() => Response.json({ accessToken: "attacker-access" }));
+    vi.stubGlobal("location", { ...window.location, replace: vi.fn() });
+    const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
-    expect(request.mock.calls.map(([url]) => url)).toEqual(["https://api.example/auth/me"]);
-    expect(getTokens()).toEqual({ accessToken: "current-access", refreshToken: "current-refresh" });
+    expect(urls(request)).toEqual([REFRESH, `${API}/auth/me`]);
+    expect(getAccessToken()).toBe("current-access");
   });
 });

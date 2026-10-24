@@ -1,5 +1,12 @@
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
-import { clearTokens, createApiHttp, REFRESH_TOKEN_STORAGE_KEY, type ApiHttp } from "@/lib/api/http";
+import { createAuthEventBus } from "@/lib/api/auth-events";
+import {
+  allowSessionRefresh,
+  createApiHttp,
+  discardLegacyTokens,
+  endLocalSession,
+  type ApiHttp,
+} from "@/lib/api/http";
 import {
   createLoginChallenge,
   discardLoginVerifier,
@@ -33,7 +40,11 @@ export function shouldRedirectToOnboarding(
  *
  * - signIn: BE `/auth/google`로 전체 페이지 리다이렉트. 구글 동의 후 BE가
  *   `/auth/callback#loginCode=..`로 돌려보낸다. 코드를 지운 뒤 브라우저의
- *   verifier와 POST /auth/exchange로 교환하고 `/auth/me`로 세션을 복원한다.
+ *   verifier와 같은 출처 POST /api/auth/exchange로 교환하고(BE가 HttpOnly refresh 쿠키를 심는다)
+ *   `/auth/me`로 세션을 복원한다.
+ * - 그 외 페이지 로드는 `http.initSession()`이 POST /api/auth/refresh를 한 번 보내 쿠키로 세션을 복원한다
+ *   (401 → signed-out, 429/5xx → signed-out으로 보이되 쿠키는 남고 다음 401에서 재시도).
+ * - 탭 간 로그아웃은 `BroadcastChannel("ninja-auth")`(`lib/api/auth-events.ts`)로 전달된다.
  * - 서버 렌더 중에는 항상 "loading". 브라우저에서만 토큰/네트워크에 접근한다.
  */
 export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiHttp } {
@@ -44,14 +55,15 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     listeners.forEach((listener) => listener());
     return snapshot;
   };
-  /** The tokens are gone (refresh rejected here, or another tab signed out): stop showing a signed-in UI now. */
+  /** The session is gone (refresh rejected here, or another tab signed out): stop showing a signed-in UI now. */
   const endSignedInSession = () => {
     if (snapshot.status !== "signed-in") return;
-    onboardingLog("session.ended", { reason: "TOKENS_CLEARED" });
+    onboardingLog("session.ended", { reason: "SESSION_CLEARED" });
     setSnapshot({ status: "signed-out", user: null });
   };
 
-  const http = createApiHttp(apiUrl, { onSessionEnded: endSignedInSession });
+  const events = createAuthEventBus();
+  const http = createApiHttp(apiUrl, { onSessionEnded: endSignedInSession, broadcast: events.broadcast });
 
   async function restoreSession(): Promise<AuthSnapshot> {
     onboardingLog("session.restore.started", {
@@ -79,15 +91,25 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       path: window.location.pathname,
       hasHash: Boolean(window.location.hash),
     });
-    // Sign-out in another tab removes the shared refresh token; `key === null` is a `localStorage.clear()`.
-    window.addEventListener("storage", (event) => {
-      if (event.key !== REFRESH_TOKEN_STORAGE_KEY && event.key !== null) return;
-      if (!http.hasSession()) endSignedInSession();
+    // Another tab signed out (its logout already cleared the shared cookie) or signed in (the cookie may be back).
+    events.subscribe((event) => {
+      if (event === "signed-in") {
+        allowSessionRefresh();
+        return;
+      }
+      endLocalSession();
+      endSignedInSession();
     });
     // Any page load other than the OAuth callback means the sign-in that stored a PKCE verifier was abandoned.
     if (!isAuthCallbackPath(window.location.pathname)) discardLoginVerifier();
     void (async () => {
-      await exchangeLoginCodeFromLocation(apiUrl);
+      if (await exchangeLoginCodeFromLocation()) {
+        // A fresh login supersedes any token a pre-cookie build left behind.
+        discardLegacyTokens();
+        events.broadcast("signed-in");
+      } else {
+        await http.initSession();
+      }
       return restoreSession();
     })().then((restored) => {
       const onboardingPath = shouldRedirectToOnboarding(
@@ -110,16 +132,18 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
         window.location.replace(targetPath);
       }
     }).catch((error: unknown) => {
-      // 교환을 실제로 시도했다가 실패한 경우에만 기존 세션을 비운다. `#error=`나 verifier 없는
-      // `#loginCode=`(링크로 심을 수 있는 값)로는 로그인 중이던 세션을 잃지 않고 그대로 복원한다.
+      // 교환을 실제로 시도했다가 실패한 경우에만 기존 세션을 끝낸다(쿠키도 폐기). `#error=`나 verifier 없는
+      // `#loginCode=`(링크로 심을 수 있는 값)로는 로그인 중이던 세션을 잃지 않고 쿠키로 그대로 복원한다.
       const attempted = error instanceof LoginExchangeError && error.attempted;
       onboardingLog("oauth.exchange.failed", { attempted });
       if (attempted) {
-        clearTokens();
-        setSnapshot({ status: "signed-out", user: null });
-        return;
+        const signedOut = http.signOutRemote();
+        const snapshotAfter = setSnapshot({ status: "signed-out", user: null });
+        return signedOut.then(() => snapshotAfter);
       }
-      return restoreSession().catch(() => setSnapshot({ status: "signed-out", user: null }));
+      return http.initSession()
+        .then(() => restoreSession())
+        .catch(() => setSnapshot({ status: "signed-out", user: null }));
     });
   };
 

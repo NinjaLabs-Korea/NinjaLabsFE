@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { screen, waitFor } from "@testing-library/react";
 import { useEffect, useState } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { FoundationProvider, useAccountApi, useAuthSnapshot } from "@/components/auth/FoundationProvider";
 import { pickMessages } from "@/i18n/messages";
 import { renderWithIntl } from "@/test/intl";
+import { FakeBroadcastChannel } from "@/test/fake-broadcast-channel";
 
 const previewUser = { id: "demo-user", handle: "demo", initials: "DU", profileSlug: "demo" };
 
@@ -40,6 +41,8 @@ describe("pickMessages", () => {
 });
 
 describe("useAuthSnapshot hydration", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
   function Status() {
     return <output>{useAuthSnapshot().status}</output>;
   }
@@ -50,6 +53,10 @@ describe("useAuthSnapshot hydration", () => {
     const { hydrateRoot } = await import("react-dom/client");
     const config = { mode: "api", apiUrl: "https://api.example.test" } as const;
     localStorage.clear();
+    vi.stubGlobal("BroadcastChannel", FakeBroadcastChannel);
+    // No refresh cookie: the page-load probe to the same-origin auth proxy answers 401.
+    const request = vi.fn(async (url: string) => new Response(url === "/api/auth/refresh" ? null : "unexpected", { status: 401 }));
+    vi.stubGlobal("fetch", request);
 
     const container = document.createElement("div");
     container.innerHTML = renderToString(
@@ -84,5 +91,7 @@ describe("useAuthSnapshot hydration", () => {
 
     await waitFor(() => expect(container.textContent).toBe("signed-out"));
     expect(recoverable).toEqual([]);
+    expect(request.mock.calls.map(([url]) => url)).toEqual(["/api/auth/refresh"]);
+    expect(localStorage.length).toBe(0);
   });
 });

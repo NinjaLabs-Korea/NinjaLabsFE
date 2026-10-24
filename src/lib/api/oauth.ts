@@ -1,4 +1,4 @@
-import { setTokens } from "@/lib/api/http";
+import { AUTH_PROXY_PATH, cookieAuthInit, installSession } from "@/lib/api/http";
 import { stripLocale } from "@/i18n/routing";
 
 const VERIFIER_KEY = "ninja.oauthVerifier";
@@ -51,7 +51,7 @@ export function isAuthCallbackPath(pathname: string): boolean {
 
 /**
  * `attempted` is true only when POST /auth/exchange was actually sent. The auth adapter
- * clears stored tokens only in that case; a missing verifier or an `#error=` fragment must
+ * ends the current session only in that case; a missing verifier or an `#error=` fragment must
  * not log the current session out (a link could plant either one).
  */
 export class LoginExchangeError extends Error {
@@ -81,8 +81,12 @@ export async function createLoginChallenge(): Promise<string> {
  * Only the callback route processes the fragment: anywhere else `#loginCode=`/`#error=` is an
  * ordinary anchor and is left alone. Callback parameters are removed before any asynchronous
  * network work.
+ *
+ * The exchange goes to the same-origin `/api/auth/exchange` (rewritten to the BE `/auth/exchange`) in cookie mode:
+ * the BE answers `{ accessToken }` and sets the HttpOnly `ninja_rt` refresh cookie on the FE origin. Only the access
+ * token is kept, in memory (`lib/api/http.ts`); a `refreshToken` in the body (older BE) is ignored, never stored.
  */
-export async function exchangeLoginCodeFromLocation(apiUrl: string): Promise<boolean> {
+export async function exchangeLoginCodeFromLocation(): Promise<boolean> {
   if (!isAuthCallbackPath(window.location.pathname)) return false;
   const params = new URLSearchParams(window.location.hash.slice(1));
   if (!params.has("loginCode") && !params.has("error")) return false;
@@ -94,19 +98,13 @@ export async function exchangeLoginCodeFromLocation(apiUrl: string): Promise<boo
     throw new LoginExchangeError("Login could not be completed. Please sign in again.", false);
   }
 
-  const response = await fetch(`${apiUrl.replace(/\/$/, "")}/auth/exchange`, {
-    method: "POST",
-    cache: "no-store",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ code, codeVerifier }),
-  });
+  const response = await fetch(`${AUTH_PROXY_PATH}/exchange`, cookieAuthInit({ code, codeVerifier }));
   if (!response.ok) throw new LoginExchangeError("Login could not be completed. Please sign in again.", true);
   const tokens: unknown = await response.json();
   if (!tokens || typeof tokens !== "object" ||
-      !("accessToken" in tokens) || typeof tokens.accessToken !== "string" || !tokens.accessToken ||
-      !("refreshToken" in tokens) || typeof tokens.refreshToken !== "string" || !tokens.refreshToken) {
+      !("accessToken" in tokens) || typeof tokens.accessToken !== "string" || !tokens.accessToken) {
     throw new LoginExchangeError("Invalid login response.", true);
   }
-  setTokens(tokens.accessToken, tokens.refreshToken);
+  installSession(tokens.accessToken);
   return true;
 }

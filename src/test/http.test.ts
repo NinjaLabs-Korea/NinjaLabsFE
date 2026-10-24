@@ -1,85 +1,154 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApiAuthAdapter } from "@/lib/api/auth-adapter";
-import { ApiHttpError, clearTokens, createApiHttp, getTokens, setTokens } from "@/lib/api/http";
+import { AUTH_CHANNEL_NAME, AUTH_EVENT_STORAGE_KEY } from "@/lib/api/auth-events";
+import {
+  ApiHttpError,
+  createApiHttp,
+  endLocalSession,
+  getAccessToken,
+  installSession,
+  resetSessionState,
+} from "@/lib/api/http";
+import { FakeBroadcastChannel } from "./fake-broadcast-channel";
 
 const API = "https://api.example";
+const REFRESH = "/api/auth/refresh";
+const LOGOUT = "/api/auth/logout";
+const me = { id: "u1", nickname: "ninja", onboardingStep: 4, onboardingCompleted: true, isAdmin: false };
 
-/** First /auth/me answers 401; /auth/refresh answers `refresh`; a retried /auth/me succeeds. */
-function stubRefreshFlow(refresh: () => Response | Promise<Response>) {
+type Handler = (url: string, init?: RequestInit) => Response | Promise<Response>;
+
+/** /auth/me answers 401 unless it carries `Bearer fresh-access`; /api/auth/refresh answers `refresh`. */
+function stubRefreshFlow(refresh: Handler, extra?: Handler) {
   const request = vi.fn(async (url: string, init?: RequestInit) => {
-    if (url === `${API}/auth/refresh`) return refresh();
+    if (url === REFRESH) return refresh(url, init);
+    if (extra && !url.startsWith(API)) return extra(url, init);
     const authorization = new Headers(init?.headers).get("authorization");
-    return authorization === "Bearer fresh-access"
-      ? Response.json({ id: "u1", nickname: "ninja", onboardingStep: 4, onboardingCompleted: true, isAdmin: false })
-      : new Response(null, { status: 401 });
+    return authorization === "Bearer fresh-access" ? Response.json(me) : new Response(null, { status: 401 });
   });
   vi.stubGlobal("fetch", request);
   return request;
 }
 
+const urls = (request: ReturnType<typeof vi.fn>) => request.mock.calls.map(([url]) => url as string);
+const refreshCalls = (request: ReturnType<typeof vi.fn>) => request.mock.calls.filter(([url]) => url === REFRESH);
+
+/** Every key Web Storage holds must be non-secret: no token-shaped value is ever written. */
+function expectNoTokensInStorage() {
+  for (const storage of [localStorage, sessionStorage]) {
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index)!;
+      expect(key).not.toMatch(/token/i);
+      expect(storage.getItem(key)).not.toMatch(/access|refresh/);
+    }
+  }
+}
+
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
-  setTokens("stale-access", "refresh-1");
+  resetSessionState();
+  window.history.replaceState(null, "", "/en/bounties");
+  // Node's real BroadcastChannel would deliver asynchronously to adapters left over from earlier tests.
+  FakeBroadcastChannel.instances = [];
+  vi.stubGlobal("BroadcastChannel", FakeBroadcastChannel);
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  expectNoTokensInStorage();
+  vi.unstubAllGlobals();
+});
 
-describe("API refresh rotation", () => {
-  it("rotates tokens and retries the request once after a 401", async () => {
-    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access", refreshToken: "refresh-2" }));
+describe("cookie-mode refresh request", () => {
+  it("posts {} to the same-origin /api/auth/refresh with credentials and the session header, keeping the token in memory", async () => {
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
     const http = createApiHttp(API);
-    await expect(http.fetchJson<{ id: string }>("/auth/me")).resolves.toMatchObject({ id: "u1" });
-    expect(getTokens()).toEqual({ accessToken: "fresh-access", refreshToken: "refresh-2" });
-    expect(request.mock.calls.map(([url]) => url)).toEqual([`${API}/auth/me`, `${API}/auth/refresh`, `${API}/auth/me`]);
+    await expect(http.initSession()).resolves.toEqual({ ok: true });
+    const [url, init] = request.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(REFRESH);
+    expect(init.method).toBe("POST");
+    expect(init.credentials).toBe("include");
+    expect(init.cache).toBe("no-store");
+    expect(new Headers(init.headers).get("x-ninja-session")).toBe("cookie");
+    expect(JSON.parse(String(init.body))).toEqual({});
+    expect(getAccessToken()).toBe("fresh-access");
+    expect(http.hasSession()).toBe(true);
+    expect(localStorage.length).toBe(0);
   });
 
-  it.each([401, 403])("clears the session when /auth/refresh rejects the refresh token with %i", async (status) => {
+  it("sends API calls cross-origin with the Bearer access token and no cookie credentials", async () => {
+    installSession("fresh-access");
+    const request = stubRefreshFlow(() => new Response(null, { status: 500 }));
+    await expect(createApiHttp(`${API}/`).fetchJson("/auth/me")).resolves.toMatchObject({ id: "u1" });
+    const [url, init] = request.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`${API}/auth/me`);
+    expect(init.credentials).toBeUndefined();
+    expect(new Headers(init.headers).get("x-ninja-session")).toBeNull();
+  });
+
+  it("ignores a refreshToken in the refresh body (older BE) and never stores it", async () => {
+    stubRefreshFlow(() => Response.json({ accessToken: "fresh-access", refreshToken: "leaked-refresh" }));
+    await createApiHttp(API).initSession();
+    expect(getAccessToken()).toBe("fresh-access");
+    expect(JSON.stringify({ ...localStorage })).not.toContain("leaked-refresh");
+  });
+});
+
+describe("API refresh rotation", () => {
+  it("refreshes and retries the request once after a 401", async () => {
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+    const http = createApiHttp(API);
+    await expect(http.fetchJson<{ id: string }>("/auth/me")).resolves.toMatchObject({ id: "u1" });
+    expect(getAccessToken()).toBe("fresh-access");
+    expect(urls(request)).toEqual([`${API}/auth/me`, REFRESH, `${API}/auth/me`]);
+  });
+
+  it.each([401, 403])("ends the session when /api/auth/refresh answers %i", async (status) => {
+    installSession("stale-access");
     stubRefreshFlow(() => new Response(null, { status }));
     const http = createApiHttp(API);
     const error = await http.fetchJson("/auth/me").catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(ApiHttpError);
     expect((error as ApiHttpError).status).toBe(401);
-    expect(getTokens()).toEqual({ accessToken: null, refreshToken: null });
+    expect(getAccessToken()).toBeNull();
     expect(http.hasSession()).toBe(false);
   });
 
-  it.each([429, 500, 503])("keeps the session when /auth/refresh answers %i and reports REFRESH_UNAVAILABLE", async (status) => {
+  it("does not refresh again after the session was rejected", async () => {
+    const request = stubRefreshFlow(() => new Response(null, { status: 401 }));
+    const http = createApiHttp(API);
+    await expect(http.fetchJson("/auth/me")).rejects.toMatchObject({ status: 401 });
+    await expect(http.fetchJson("/auth/me")).rejects.toMatchObject({ status: 401 });
+    expect(refreshCalls(request)).toHaveLength(1);
+  });
+
+  it.each([429, 500, 503])("keeps the access token when /api/auth/refresh answers %i and reports REFRESH_UNAVAILABLE", async (status) => {
+    installSession("stale-access");
     const request = stubRefreshFlow(() => new Response(null, { status }));
     const http = createApiHttp(API);
     const error = await http.fetchJson("/auth/me").catch((caught: unknown) => caught);
-    expect(error).toBeInstanceOf(ApiHttpError);
     expect(error).toMatchObject({ status, code: "REFRESH_UNAVAILABLE" });
-    expect(getTokens()).toEqual({ accessToken: "stale-access", refreshToken: "refresh-1" });
-    expect(http.hasSession()).toBe(true);
-    // No retry with the same stale token.
-    expect(request.mock.calls.map(([url]) => url)).toEqual([`${API}/auth/me`, `${API}/auth/refresh`]);
+    expect(getAccessToken()).toBe("stale-access");
+    expect(urls(request)).toEqual([`${API}/auth/me`, REFRESH]);
   });
 
-  it("keeps the session when /auth/refresh is unreachable", async () => {
+  it("keeps the session when /api/auth/refresh is unreachable", async () => {
+    installSession("stale-access");
     stubRefreshFlow(() => Promise.reject(new TypeError("Failed to fetch")));
-    const http = createApiHttp(API);
-    await expect(http.fetchJson("/auth/me")).rejects.toMatchObject({ status: 0, code: "REFRESH_UNAVAILABLE" });
-    expect(getTokens()).toEqual({ accessToken: "stale-access", refreshToken: "refresh-1" });
+    await expect(createApiHttp(API).fetchJson("/auth/me")).rejects.toMatchObject({ status: 0, code: "REFRESH_UNAVAILABLE" });
+    expect(getAccessToken()).toBe("stale-access");
   });
 
   it("merges concurrent 401s into a single refresh", async () => {
-    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access", refreshToken: "refresh-2" }));
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
     const http = createApiHttp(API);
     await Promise.all([http.fetchJson("/auth/me"), http.fetchJson("/auth/me")]);
-    expect(request.mock.calls.filter(([url]) => url === `${API}/auth/refresh`)).toHaveLength(1);
-  });
-
-  it("surfaces the original 401 without calling refresh when there is no refresh token", async () => {
-    setTokens("stale-access", null);
-    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access", refreshToken: "refresh-2" }));
-    await expect(createApiHttp(API).fetchJson("/auth/me")).rejects.toMatchObject({ status: 401 });
-    expect(request.mock.calls.map(([url]) => url)).toEqual([`${API}/auth/me`]);
+    expect(refreshCalls(request)).toHaveLength(1);
   });
 
   it("refreshes once on a 401 from fetchForm and retries the upload with the new access token", async () => {
     const request = vi.fn(async (url: string, init?: RequestInit) => {
-      if (url === `${API}/auth/refresh`) return Response.json({ accessToken: "fresh-access", refreshToken: "refresh-2" });
+      if (url === REFRESH) return Response.json({ accessToken: "fresh-access" });
       const authorization = new Headers(init?.headers).get("authorization");
       return authorization === "Bearer fresh-access" && init?.body instanceof FormData
         ? Response.json({ url: "/media/x.png" })
@@ -89,20 +158,69 @@ describe("API refresh rotation", () => {
     const form = new FormData();
     form.set("file", new Blob(["x"]), "x.png");
     await expect(createApiHttp(API).fetchForm<{ url: string }>("/admin/media", form)).resolves.toEqual({ url: "/media/x.png" });
-    expect(getTokens()).toEqual({ accessToken: "fresh-access", refreshToken: "refresh-2" });
-    expect(request.mock.calls.map(([url]) => url)).toEqual([`${API}/admin/media`, `${API}/auth/refresh`, `${API}/admin/media`]);
+    expect(urls(request)).toEqual([`${API}/admin/media`, REFRESH, `${API}/admin/media`]);
   });
 
-  it("keeps the rotated tokens when the retried request answers 401 again", async () => {
+  it("keeps the new access token when the retried request answers 401 again", async () => {
     const request = vi.fn(async (url: string) =>
-      url === `${API}/auth/refresh`
-        ? Response.json({ accessToken: "fresh-access", refreshToken: "refresh-2" })
+      url === REFRESH
+        ? Response.json({ accessToken: "fresh-access" })
         : new Response(JSON.stringify({ message: "FORBIDDEN_SCOPE" }), { status: 401 }),
     );
     vi.stubGlobal("fetch", request);
     await expect(createApiHttp(API).fetchJson("/auth/me")).rejects.toMatchObject({ status: 401, code: "FORBIDDEN_SCOPE" });
-    expect(getTokens()).toEqual({ accessToken: "fresh-access", refreshToken: "refresh-2" });
-    expect(request.mock.calls.map(([url]) => url)).toEqual([`${API}/auth/me`, `${API}/auth/refresh`, `${API}/auth/me`]);
+    expect(getAccessToken()).toBe("fresh-access");
+    expect(urls(request)).toEqual([`${API}/auth/me`, REFRESH, `${API}/auth/me`]);
+  });
+});
+
+describe("legacy localStorage migration", () => {
+  it("sends the legacy refresh token once in the body, then deletes both legacy keys", async () => {
+    localStorage.setItem("ninja.accessToken", "old-access");
+    localStorage.setItem("ninja.refreshToken", "old-refresh");
+    const request = stubRefreshFlow(() => {
+      // The keys are still there while the BE converts the token into the cookie.
+      expect(localStorage.getItem("ninja.refreshToken")).toBe("old-refresh");
+      return Response.json({ accessToken: "fresh-access" });
+    });
+    await expect(createApiHttp(API).initSession()).resolves.toEqual({ ok: true });
+    const [url, init] = request.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(REFRESH);
+    expect(init.credentials).toBe("include");
+    expect(new Headers(init.headers).get("x-ninja-session")).toBe("cookie");
+    expect(JSON.parse(String(init.body))).toEqual({ refreshToken: "old-refresh" });
+    expect(localStorage.getItem("ninja.accessToken")).toBeNull();
+    expect(localStorage.getItem("ninja.refreshToken")).toBeNull();
+    expect(getAccessToken()).toBe("fresh-access");
+  });
+
+  it.each([401, 500])("deletes the legacy keys even when the migration answers %i", async (status) => {
+    localStorage.setItem("ninja.accessToken", "old-access");
+    localStorage.setItem("ninja.refreshToken", "old-refresh");
+    stubRefreshFlow(() => new Response(null, { status }));
+    const result = await createApiHttp(API).initSession();
+    expect(result.ok).toBe(false);
+    expect(localStorage.getItem("ninja.accessToken")).toBeNull();
+    expect(localStorage.getItem("ninja.refreshToken")).toBeNull();
+    expect(getAccessToken()).toBeNull();
+  });
+
+  it("drops a stray legacy access token and probes the cookie with an empty body", async () => {
+    localStorage.setItem("ninja.accessToken", "old-access");
+    const request = stubRefreshFlow(() => new Response(null, { status: 401 }));
+    await createApiHttp(API).initSession();
+    expect(JSON.parse(String((request.mock.calls[0] as [string, RequestInit])[1].body))).toEqual({});
+    expect(localStorage.getItem("ninja.accessToken")).toBeNull();
+  });
+
+  it("a second tab that waited for the lock uses the cookie the first tab's migration planted", async () => {
+    stubWebLocks();
+    localStorage.setItem("ninja.refreshToken", "old-refresh");
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+    await Promise.all([createApiHttp(API).initSession(), createApiHttp(API).initSession()]);
+    const bodies = refreshCalls(request).map(([, init]) => JSON.parse(String((init as RequestInit).body)));
+    expect(bodies).toEqual([{ refreshToken: "old-refresh" }, {}]);
+    Reflect.deleteProperty(window.navigator, "locks");
   });
 });
 
@@ -130,177 +248,272 @@ describe("API refresh across tabs", () => {
     Reflect.deleteProperty(window.navigator, "locks");
   });
 
-  it("serializes refresh through the Web Lock and lets the second tab reuse the rotated tokens", async () => {
+  it("serializes refreshes through the Web Lock so two tabs never race the same cookie", async () => {
     const locks = stubWebLocks();
-    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access", refreshToken: "refresh-2" }));
-    // Two tabs share localStorage but not the in-memory single-flight.
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const request = stubRefreshFlow(async () => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight -= 1;
+      return Response.json({ accessToken: "fresh-access" });
+    });
+    // Two tabs share the cookie jar but not the in-memory single-flight (each needs its own access token).
     const tabA = createApiHttp(API);
     const tabB = createApiHttp(API);
     await expect(Promise.all([tabA.fetchJson("/auth/me"), tabB.fetchJson("/auth/me")])).resolves.toHaveLength(2);
-    expect(locks).toHaveBeenCalledTimes(2);
     expect(locks.mock.calls.map(([name]) => name)).toEqual(["ninja.auth.refresh", "ninja.auth.refresh"]);
-    // The loser re-read storage inside the lock, saw the rotated refresh token, and skipped the network call.
-    expect(request.mock.calls.filter(([url]) => url === `${API}/auth/refresh`)).toHaveLength(1);
-    expect(getTokens()).toEqual({ accessToken: "fresh-access", refreshToken: "refresh-2" });
+    expect(refreshCalls(request)).toHaveLength(2);
+    expect(maxInFlight).toBe(1);
   });
 
-  it("does not clear the winner's rotated tokens when a racing refresh with the stale token is rejected", async () => {
-    // No Web Locks: both tabs send refresh-1; the BE's conditional UPDATE accepts the first and rejects the second.
-    const pendingRefreshes: Array<(response: Response) => void> = [];
-    const request = stubRefreshFlow(() => new Promise<Response>((resolve) => { pendingRefreshes.push(resolve); }));
-    const tabA = createApiHttp(API);
-    const tabB = createApiHttp(API);
-    const winner = tabA.fetchJson("/auth/me");
-    const loser = tabB.fetchJson("/auth/me");
-    await vi.waitFor(() => expect(pendingRefreshes).toHaveLength(2));
-    pendingRefreshes[0](Response.json({ accessToken: "fresh-access", refreshToken: "refresh-2" }));
-    await vi.waitFor(() => expect(getTokens().refreshToken).toBe("refresh-2"));
-    pendingRefreshes[1](new Response(null, { status: 401 }));
-    await expect(winner).resolves.toMatchObject({ id: "u1" });
-    await expect(loser).rejects.toMatchObject({ status: 401 });
-    expect(request.mock.calls.filter(([url]) => url === `${API}/auth/refresh`)).toHaveLength(2);
-    // The loser's refresh-1 is no longer the stored token, so it must not wipe the winner's session.
-    expect(getTokens()).toEqual({ accessToken: "fresh-access", refreshToken: "refresh-2" });
-    expect(tabB.hasSession()).toBe(true);
-  });
-
-  it("still clears the session when the rejected refresh token is the one in storage", async () => {
+  it("dedupes concurrent refreshes inside one tab even with the lock", async () => {
     stubWebLocks();
-    stubRefreshFlow(() => new Response(null, { status: 401 }));
-    await expect(createApiHttp(API).fetchJson("/auth/me")).rejects.toMatchObject({ status: 401 });
-    expect(getTokens()).toEqual({ accessToken: null, refreshToken: null });
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+    const http = createApiHttp(API);
+    await Promise.all([http.fetchJson("/auth/me"), http.fetchJson("/auth/me"), http.fetchJson("/auth/me")]);
+    expect(refreshCalls(request)).toHaveLength(1);
   });
 });
 
 describe("API refresh vs sign-out", () => {
-  it("discards tokens from a refresh that resolves after sign-out and revokes them remotely", async () => {
+  it("discards an access token from a refresh that resolves after sign-out and revokes the re-planted cookie", async () => {
     let resolveRefresh!: (response: Response) => void;
     const refreshResponse = new Promise<Response>((resolve) => { resolveRefresh = resolve; });
-    const request = vi.fn(async (url: string, init?: RequestInit) => {
-      if (url === `${API}/auth/refresh`) return refreshResponse;
-      if (url === `${API}/auth/logout`) return new Response(null, { status: 204 });
-      const authorization = new Headers(init?.headers).get("authorization");
-      return authorization === "Bearer fresh-access" ? Response.json({ id: "u1" }) : new Response(null, { status: 401 });
-    });
-    vi.stubGlobal("fetch", request);
+    const request = stubRefreshFlow(() => refreshResponse, (url) =>
+      url === LOGOUT ? new Response(null, { status: 204 }) : new Response(null, { status: 404 }));
     const http = createApiHttp(API);
     const pending = http.fetchJson("/auth/me");
-    await vi.waitFor(() => expect(request.mock.calls.some(([url]) => url === `${API}/auth/refresh`)).toBe(true));
+    await vi.waitFor(() => expect(refreshCalls(request)).toHaveLength(1));
 
     await http.signOutRemote();
-    expect(getTokens()).toEqual({ accessToken: null, refreshToken: null });
+    expect(getAccessToken()).toBeNull();
 
-    resolveRefresh(Response.json({ accessToken: "fresh-access", refreshToken: "refresh-2" }));
+    resolveRefresh(Response.json({ accessToken: "fresh-access" }));
     await expect(pending).rejects.toMatchObject({ status: 401 });
-    expect(getTokens()).toEqual({ accessToken: null, refreshToken: null });
+    expect(getAccessToken()).toBeNull();
     expect(http.hasSession()).toBe(false);
-    const logouts = request.mock.calls.filter(([url]) => url === `${API}/auth/logout`).map(([, init]) => JSON.parse(String(init?.body)));
-    expect(logouts).toEqual([{ refreshToken: "refresh-1" }, { refreshToken: "refresh-2" }]);
+    const logouts = request.mock.calls.filter(([url]) => url === LOGOUT) as Array<[string, RequestInit]>;
+    expect(logouts).toHaveLength(2);
+    for (const [, init] of logouts) {
+      expect(init.credentials).toBe("include");
+      expect(new Headers(init.headers).get("x-ninja-session")).toBe("cookie");
+      expect(JSON.parse(String(init.body))).toEqual({});
+    }
   });
 
-  it("treats a local clearTokens() during refresh the same way", async () => {
+  it("treats a local session end during refresh the same way", async () => {
     let resolveRefresh!: (response: Response) => void;
-    const request = stubRefreshFlow(() => new Promise<Response>((resolve) => { resolveRefresh = resolve; }));
+    const request = stubRefreshFlow(() => new Promise<Response>((resolve) => { resolveRefresh = resolve; }),
+      () => new Response(null, { status: 204 }));
     const http = createApiHttp(API);
     const pending = http.fetchJson("/auth/me");
-    await vi.waitFor(() => expect(request.mock.calls.some(([url]) => url === `${API}/auth/refresh`)).toBe(true));
-    clearTokens();
-    resolveRefresh(Response.json({ accessToken: "fresh-access", refreshToken: "refresh-2" }));
+    await vi.waitFor(() => expect(refreshCalls(request)).toHaveLength(1));
+    endLocalSession();
+    resolveRefresh(Response.json({ accessToken: "fresh-access" }));
     await expect(pending).rejects.toMatchObject({ status: 401 });
-    expect(getTokens()).toEqual({ accessToken: null, refreshToken: null });
+    expect(getAccessToken()).toBeNull();
+  });
+
+  it("does not refresh after sign-out, so a racing refresh cannot re-plant the cookie", async () => {
+    installSession("fresh-access");
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }), () => new Response(null, { status: 204 }));
+    const http = createApiHttp(API);
+    await http.signOutRemote();
+    await expect(http.fetchJson("/bounties/mine")).rejects.toMatchObject({ status: 401 });
+    expect(refreshCalls(request)).toHaveLength(0);
   });
 });
 
 describe("API auth adapter session restore", () => {
-  it("ends signed-out but keeps the refresh token when refresh is throttled during initialize", async () => {
-    window.history.replaceState(null, "", "/en/bounties");
-    stubRefreshFlow(() => new Response(null, { status: 429 }));
-    const adapter = createApiAuthAdapter(API);
-    expect(adapter.getSnapshot().status).toBe("loading");
-    adapter.initialize?.();
-    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
-    expect(getTokens()).toEqual({ accessToken: "stale-access", refreshToken: "refresh-1" });
-    expect(adapter.http.hasSession()).toBe(true);
-  });
-
-  it("restores the session through a successful refresh", async () => {
-    window.history.replaceState(null, "", "/en/bounties");
-    stubRefreshFlow(() => Response.json({ accessToken: "fresh-access", refreshToken: "refresh-2" }));
+  it("restores the session through the init refresh and then /auth/me", async () => {
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
     const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
     expect(adapter.getSnapshot().user?.handle).toBe("ninja");
+    expect(urls(request)).toEqual([REFRESH, `${API}/auth/me`]);
+  });
+
+  it("is signed-out after a 401 init refresh without calling /auth/me", async () => {
+    const request = stubRefreshFlow(() => new Response(null, { status: 401 }));
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
+    expect(urls(request)).toEqual([REFRESH]);
+  });
+
+  it.each([429, 503])("ends signed-out when the init refresh answers %i and retries the refresh on the next action", async (status) => {
+    let refreshStatus = status;
+    const request = stubRefreshFlow(() =>
+      refreshStatus === 200 ? Response.json({ accessToken: "fresh-access" }) : new Response(null, { status: refreshStatus }));
+    const adapter = createApiAuthAdapter(API);
+    expect(adapter.getSnapshot().status).toBe("loading");
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
+    expect(adapter.http.hasSession()).toBe(false);
+    expect(urls(request)).toEqual([REFRESH]);
+
+    // The BE recovered: the next authenticated call's 401 tries the cookie again instead of giving up.
+    refreshStatus = 200;
+    await expect(adapter.http.fetchJson("/auth/me")).resolves.toMatchObject({ id: "u1" });
+    expect(refreshCalls(request)).toHaveLength(2);
+  });
+
+  it("does not crash when the init refresh is unreachable", async () => {
+    stubRefreshFlow(() => Promise.reject(new TypeError("Failed to fetch")));
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
+  });
+
+  it("migrates a legacy refresh token during initialize and never leaves tokens in localStorage", async () => {
+    localStorage.setItem("ninja.accessToken", "old-access");
+    localStorage.setItem("ninja.refreshToken", "old-refresh");
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    expect(JSON.parse(String((request.mock.calls[0] as [string, RequestInit])[1].body))).toEqual({ refreshToken: "old-refresh" });
+    expect(localStorage.length).toBe(0);
+  });
+
+  it("signs out through the same-origin logout and leaves nothing in storage", async () => {
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }), () => new Response(null, { status: 204 }));
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    await expect(adapter.signOut()).resolves.toEqual({ status: "signed-out", user: null });
+    expect(urls(request)).toContain(LOGOUT);
+    expect(getAccessToken()).toBeNull();
+  });
+});
+
+describe("API auth adapter cross-tab sign-out", () => {
+  async function signedInTab() {
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    return adapter;
+  }
+
+  it("moves another tab to signed-out through BroadcastChannel('ninja-auth') on sign-out", async () => {
+    const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }), () => new Response(null, { status: 204 }));
+    const tabA = await signedInTab();
+    const tabB = await signedInTab();
+    const listener = vi.fn();
+    tabB.subscribe(listener);
+    await tabA.signOut();
+    expect(FakeBroadcastChannel.instances.map((channel) => channel.name)).toEqual([AUTH_CHANNEL_NAME, AUTH_CHANNEL_NAME]);
+    expect(tabB.getSnapshot()).toEqual({ status: "signed-out", user: null });
+    expect(listener).toHaveBeenCalled();
+    // The receiving tab dropped its access token and does not refresh into the revoked cookie.
+    await expect(tabB.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ status: 401 });
+    expect(refreshCalls(request)).toHaveLength(2);
+    expect(localStorage.getItem(AUTH_EVENT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("moves another tab to signed-out when this tab's refresh is rejected mid-session", async () => {
+    let reject = false;
+    stubRefreshFlow(() => (reject ? new Response(null, { status: 401 }) : Response.json({ accessToken: "fresh-access" })));
+    const tabA = await signedInTab();
+    const tabB = await signedInTab();
+    reject = true;
+    installSession("expired-access");
+    await expect(tabA.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ status: 401 });
+    expect(tabA.getSnapshot().status).toBe("signed-out");
+    expect(tabB.getSnapshot().status).toBe("signed-out");
+  });
+
+  it("does not broadcast a sign-out for a signed-out page-load probe", async () => {
+    let answer = 200;
+    stubRefreshFlow(() => (answer === 200 ? Response.json({ accessToken: "fresh-access" }) : new Response(null, { status: answer })));
+    const tabA = await signedInTab();
+    answer = 401;
+    // A new tab starts with fresh module state (the tests share one module instance between "tabs").
+    resetSessionState();
+    const tabB = createApiAuthAdapter(API);
+    tabB.initialize?.();
+    await vi.waitFor(() => expect(tabB.getSnapshot().status).toBe("signed-out"));
+    expect(tabA.getSnapshot().status).toBe("signed-in");
+  });
+
+  it("ignores unrelated channel messages", async () => {
+    stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+    const tab = await signedInTab();
+    new FakeBroadcastChannel(AUTH_CHANNEL_NAME).postMessage({ type: "something-else" });
+    new FakeBroadcastChannel(AUTH_CHANNEL_NAME).postMessage("signed-out");
+    expect(tab.getSnapshot().status).toBe("signed-in");
+  });
+
+  it("falls back to a timestamp-only storage event when BroadcastChannel is unavailable", async () => {
+    vi.stubGlobal("BroadcastChannel", undefined);
+    stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }), () => new Response(null, { status: 204 }));
+    const tabA = await signedInTab();
+    const tabB = await signedInTab();
+    await tabA.signOut();
+    const value = localStorage.getItem(AUTH_EVENT_STORAGE_KEY);
+    expect(value).toMatch(/^\d+$/);
+    // jsdom does not fire `storage` in the same document; deliver what another tab would receive.
+    window.dispatchEvent(new StorageEvent("storage", { key: AUTH_EVENT_STORAGE_KEY, oldValue: null, newValue: value }));
+    expect(tabB.getSnapshot().status).toBe("signed-out");
+  });
+
+  it("ignores unrelated storage keys in the fallback", async () => {
+    vi.stubGlobal("BroadcastChannel", undefined);
+    stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+    const tab = await signedInTab();
+    window.dispatchEvent(new StorageEvent("storage", { key: "ninja.locale", newValue: "ko" }));
+    window.dispatchEvent(new StorageEvent("storage", { key: null }));
+    expect(tab.getSnapshot().status).toBe("signed-in");
   });
 });
 
 describe("API auth adapter session end without reload", () => {
-  const me = { id: "u1", nickname: "ninja", onboardingStep: 4, onboardingCompleted: true, isAdmin: false };
-
-  async function signedInAdapter(handler: (url: string, init?: RequestInit) => Response | Promise<Response>) {
-    window.history.replaceState(null, "", "/en/bounties");
-    setTokens("fresh-access", "refresh-1");
-    const request = vi.fn(async (url: string, init?: RequestInit) => (url === `${API}/auth/me` ? Response.json(me) : handler(url, init)));
+  async function signedInAdapter(handler: Handler) {
+    const request = vi.fn(async (url: string, init?: RequestInit) => {
+      if (url === `${API}/auth/me`) return Response.json(me);
+      return handler(url, init);
+    });
     vi.stubGlobal("fetch", request);
+    installSession("fresh-access");
     const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
     return { adapter, request };
   }
 
-  it("moves to signed-out when another tab removes the refresh token", async () => {
-    const { adapter } = await signedInAdapter(() => new Response(null, { status: 500 }));
-    const listener = vi.fn();
-    adapter.subscribe(listener);
-    // Another tab signed out: shared localStorage is already empty when this tab's `storage` event fires.
-    localStorage.removeItem("ninja.accessToken");
-    localStorage.removeItem("ninja.refreshToken");
-    window.dispatchEvent(new StorageEvent("storage", { key: "ninja.refreshToken", oldValue: "refresh-1", newValue: null }));
-    expect(adapter.getSnapshot()).toEqual({ status: "signed-out", user: null });
-    expect(listener).toHaveBeenCalled();
-  });
-
-  it("treats localStorage.clear() in another tab the same way", async () => {
-    const { adapter } = await signedInAdapter(() => new Response(null, { status: 500 }));
-    localStorage.clear();
-    window.dispatchEvent(new StorageEvent("storage", { key: null }));
-    expect(adapter.getSnapshot().status).toBe("signed-out");
-  });
-
-  it("ignores unrelated keys and a rotation that keeps a refresh token", async () => {
-    const { adapter } = await signedInAdapter(() => new Response(null, { status: 500 }));
-    window.dispatchEvent(new StorageEvent("storage", { key: "ninja.locale", newValue: "ko" }));
-    setTokens("rotated-access", "refresh-2");
-    window.dispatchEvent(new StorageEvent("storage", { key: "ninja.refreshToken", oldValue: "refresh-1", newValue: "refresh-2" }));
-    expect(adapter.getSnapshot().status).toBe("signed-in");
-  });
-
   it.each([401, 403])("moves to signed-out as soon as a mid-session refresh is rejected with %i", async (status) => {
+    let initDone = false;
     const { adapter } = await signedInAdapter((url) => {
-      if (url === `${API}/auth/refresh`) return new Response(null, { status });
-      return new Response(null, { status: 401 });
-    });
-    await expect(adapter.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ status: 401 });
-    expect(getTokens()).toEqual({ accessToken: null, refreshToken: null });
-    expect(adapter.getSnapshot()).toEqual({ status: "signed-out", user: null });
-  });
-
-  it("stays signed-in when the refresh is only throttled", async () => {
-    const { adapter } = await signedInAdapter((url) =>
-      url === `${API}/auth/refresh` ? new Response(null, { status: 429 }) : new Response(null, { status: 401 }));
-    await expect(adapter.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ code: "REFRESH_UNAVAILABLE" });
-    expect(adapter.getSnapshot().status).toBe("signed-in");
-  });
-
-  it("stays signed-in when a lock-less race left another tab's newer token in storage", async () => {
-    const { adapter } = await signedInAdapter((url) => {
-      if (url === `${API}/auth/refresh`) {
-        setTokens("other-tab-access", "refresh-other");
-        return new Response(null, { status: 401 });
+      if (url === REFRESH) {
+        if (!initDone) {
+          initDone = true;
+          return Response.json({ accessToken: "fresh-access" });
+        }
+        return new Response(null, { status });
       }
       return new Response(null, { status: 401 });
     });
     await expect(adapter.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ status: 401 });
-    expect(getTokens().refreshToken).toBe("refresh-other");
+    expect(getAccessToken()).toBeNull();
+    expect(adapter.getSnapshot()).toEqual({ status: "signed-out", user: null });
+  });
+
+  it("stays signed-in when the refresh is only throttled", async () => {
+    let initDone = false;
+    const { adapter } = await signedInAdapter((url) => {
+      if (url === REFRESH) {
+        if (!initDone) {
+          initDone = true;
+          return Response.json({ accessToken: "fresh-access" });
+        }
+        return new Response(null, { status: 429 });
+      }
+      return new Response(null, { status: 401 });
+    });
+    await expect(adapter.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ code: "REFRESH_UNAVAILABLE" });
     expect(adapter.getSnapshot().status).toBe("signed-in");
   });
 });

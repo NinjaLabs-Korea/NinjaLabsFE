@@ -35,7 +35,7 @@ export async function fetchMe(http: ApiHttp): Promise<MeResponse | null> {
     return await http.fetchJson<MeResponse>("/auth/me");
   } catch {
     // 만료·폐기된 세션은 로그아웃 상태로 취급. refresh가 일시 장애(REFRESH_UNAVAILABLE)여도
-    // 토큰은 http.ts가 보존하므로 UI만 signed-out이 되고 다음 로드에서 세션이 복원된다.
+    // refresh 쿠키는 남아 있으므로 UI만 signed-out이 되고 다음 401/다음 로드에서 세션이 복원된다.
     return null;
   }
 }
