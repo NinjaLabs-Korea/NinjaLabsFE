@@ -13,10 +13,11 @@ const walletApi = {
   createWalletChallenge: vi.fn(async () => ({ message: "Sign in to Ninja Labs: nonce" })),
   verifyWallet: vi.fn(async (): Promise<unknown> => ({})),
 };
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useWalletApi: () => walletApi,
-  useFoundationMode: () => "api",
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useWalletApi: () => walletApi,
+    useFoundationMode: () => "api",
+  }));
 
 const signMessageAsync = vi.fn(async () => "0xsignature");
 vi.mock("@/components/wallet/useWalletConnection", () => ({

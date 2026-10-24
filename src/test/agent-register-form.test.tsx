@@ -10,6 +10,7 @@ import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { ApiHttpError } from "@/lib/api/http";
 import { AGENT_DESCRIPTION_MAX, AGENT_NAME_MAX, validateAgentRegisterForm } from "@/lib/agent-register-form";
 import { renderWithIntl } from "@/test/intl";
+import { signedInWith } from "@/test/support/auth";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => (
@@ -20,10 +21,7 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 
 const agentWallet = "0xA9e1000000000000000000000000000000000001";
-const signedIn: AuthSnapshot = {
-  status: "signed-in",
-  user: { id: "user-1", handle: "ninja", initials: "NI", profileSlug: "ninja", walletAddress: "0x0000000000000000000000000000000000000009" },
-};
+const signedIn = signedInWith({ walletAddress: "0x0000000000000000000000000000000000000009" });
 
 const state: { agents: AccountAgent[] } = { agents: [] };
 const registerAgent = vi.fn();
@@ -57,11 +55,12 @@ const wallet = { ...walletDefaults };
 
 // Mutable so a test can sign the user out while the form stays mounted.
 const authState: { current: AuthSnapshot } = { current: signedIn };
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAuthSnapshot: () => authState.current,
-  useAccountApi: () => apiClient,
-  useAgentApi: () => apiClient,
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAuthSnapshot: () => authState.current,
+    useAccountApi: () => apiClient,
+    useAgentApi: () => apiClient,
+  }));
 
 vi.mock("@/components/wallet/useWalletConnection", () => ({
   shortWalletAddress: (address: string) => address,

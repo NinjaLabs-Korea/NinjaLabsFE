@@ -10,6 +10,7 @@ import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { renderWithIntl } from "@/test/intl";
+import { signedInAs } from "@/test/support/auth";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => (
@@ -19,15 +20,16 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 
-const state: { auth: AuthSnapshot; mode: "mock" | "api" } = { auth: { status: "signed-in", user: previewUser }, mode: "api" };
+const state: { auth: AuthSnapshot; mode: "mock" | "api" } = { auth: signedInAs(previewUser), mode: "api" };
 let apiClient: ApiClient;
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAuthSnapshot: () => state.auth,
-  useAccountApi: () => apiClient,
-  useBountyApi: () => apiClient,
-  useFoundationMode: () => state.mode,
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAuthSnapshot: () => state.auth,
+    useAccountApi: () => apiClient,
+    useBountyApi: () => apiClient,
+    useFoundationMode: () => state.mode,
+  }));
 
 const row = (status: ApplicationStatus, overrides: Partial<AccountApplication> = {}): AccountApplication => ({
   id: `app-${status}`,
@@ -61,7 +63,7 @@ describe("ApplicationsView", () => {
   });
 
   beforeEach(() => {
-    state.auth = { status: "signed-in", user: previewUser };
+    state.auth = signedInAs(previewUser);
     state.mode = "api";
   });
 

@@ -13,7 +13,8 @@ const log = (n: number, overrides: Partial<AdminAuditLog> = {}): AdminAuditLog =
 });
 
 const adminApi = { getAdminAuditLogs: vi.fn(), getAdminUsers: vi.fn() };
-vi.mock("@/components/auth/FoundationProvider", () => ({ useAdminApi: () => adminApi }));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({ useAdminApi: () => adminApi }));
 
 const render = () => renderWithIntl(<AuditLogViewer tabs={null}><h1>Audit</h1></AuditLogViewer>);
 

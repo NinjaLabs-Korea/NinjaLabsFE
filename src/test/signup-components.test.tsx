@@ -10,6 +10,7 @@ import AuthCallbackPage from "@/app/[locale]/auth/callback/page";
 import { exchangeLoginCodeFromLocation } from "@/lib/api/oauth";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { renderWithIntl } from "@/test/intl";
+import { signedInAs } from "@/test/support/auth";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => (
@@ -25,11 +26,12 @@ const completeOnboarding = vi.fn<() => Promise<void>>();
 // Stable like the provider's client: CompleteOnboarding keys its effect on the client identity.
 const onboardingApi = { completeOnboarding };
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAuthSnapshot: () => state.auth,
-  useFoundationMode: () => state.mode,
-  useOnboardingApi: () => onboardingApi,
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAuthSnapshot: () => state.auth,
+    useFoundationMode: () => state.mode,
+    useOnboardingApi: () => onboardingApi,
+  }));
 
 describe("AuthCallbackPage #error mapping", () => {
   async function landOnCallback(fragment: string) {
@@ -65,7 +67,7 @@ describe("SignupGate", () => {
   });
 
   it("renders the step for a signed-in session", () => {
-    state.auth = { status: "signed-in", user };
+    state.auth = signedInAs(user);
     renderWithIntl(<SignupGate><p>Step content</p></SignupGate>);
     expect(screen.getByText("Step content")).toBeTruthy();
   });
@@ -99,7 +101,7 @@ describe("CompleteOnboarding", () => {
   });
 
   it("completes onboarding once for a signed-in user and shows nothing on success", async () => {
-    state.auth = { status: "signed-in", user };
+    state.auth = signedInAs(user);
     completeOnboarding.mockResolvedValue(undefined);
     const { container } = renderWithIntl(<CompleteOnboarding />);
     await waitFor(() => expect(completeOnboarding).toHaveBeenCalledTimes(1));
@@ -110,14 +112,14 @@ describe("CompleteOnboarding", () => {
     state.auth = { status: "signed-out", user: null };
     const first = renderWithIntl(<CompleteOnboarding />);
     first.unmount();
-    state.auth = { status: "signed-in", user: { ...user, onboardingCompleted: true } };
+    state.auth = signedInAs({ ...user, onboardingCompleted: true });
     renderWithIntl(<CompleteOnboarding />);
     await act(async () => undefined);
     expect(completeOnboarding).not.toHaveBeenCalled();
   });
 
   it("shows an alert with Retry on failure and clears it once the retry succeeds", async () => {
-    state.auth = { status: "signed-in", user };
+    state.auth = signedInAs(user);
     completeOnboarding.mockRejectedValueOnce(new Error("boom")).mockResolvedValueOnce(undefined);
     renderWithIntl(<CompleteOnboarding />);
     const alert = await screen.findByRole("alert");

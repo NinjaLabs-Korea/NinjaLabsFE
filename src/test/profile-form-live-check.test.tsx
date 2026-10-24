@@ -9,10 +9,11 @@ const completeProfile = vi.fn();
 // Stable like the provider's client, so the debounce effect only re-runs when the nickname changes.
 const onboardingApi = { checkNickname, completeProfile, completeOnboarding: vi.fn() };
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useOnboardingApi: () => onboardingApi,
-  useFoundationMode: () => "api",
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useOnboardingApi: () => onboardingApi,
+    useFoundationMode: () => "api",
+  }));
 
 const nicknameInput = () => screen.getByLabelText("Nickname*") as HTMLInputElement;
 const typeNickname = (value: string) => fireEvent.change(nicknameInput(), { target: { value } });

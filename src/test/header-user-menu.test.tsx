@@ -7,6 +7,7 @@ import { NavLinks } from "@/components/layout/NavLinks";
 import { UserMenu } from "@/components/layout/UserMenu";
 import type { AuthSnapshot, ClientUser } from "@/lib/contracts/auth";
 import { renderWithIntl } from "@/test/intl";
+import { signedInAs } from "@/test/support/auth";
 
 const nav = vi.hoisted(() => ({ pathname: "/" }));
 const signOut = vi.hoisted(() => vi.fn(async () => undefined));
@@ -29,13 +30,14 @@ const user: ClientUser = {
   profileSlug: "jaemin",
   walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
 };
-const state: { auth: AuthSnapshot; mode: "mock" | "api" } = { auth: { status: "signed-in", user }, mode: "api" };
+const state: { auth: AuthSnapshot; mode: "mock" | "api" } = { auth: signedInAs(user), mode: "api" };
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAuthSnapshot: () => state.auth,
-  useAuthActions: () => ({ signOut }),
-  useFoundationMode: () => state.mode,
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAuthSnapshot: () => state.auth,
+    useAuthActions: () => ({ signOut }),
+    useFoundationMode: () => state.mode,
+  }));
 
 const links = [
   { href: "/bounties", label: "Bounties" },
@@ -59,7 +61,7 @@ describe("NavLinks", () => {
 
 describe("UserMenu", () => {
   beforeEach(() => {
-    state.auth = { status: "signed-in", user };
+    state.auth = signedInAs(user);
     state.mode = "api";
     signOut.mockClear();
   });
@@ -147,7 +149,7 @@ describe("UserMenu", () => {
   });
 
   it("keeps a short wallet as-is and labels the mock session", () => {
-    state.auth = { status: "signed-in", user: { ...user, walletAddress: "inj1…9k4d" } };
+    state.auth = signedInAs({ ...user, walletAddress: "inj1…9k4d" });
     state.mode = "mock";
     renderWithIntl(<UserMenu />);
     fireEvent.click(trigger());
@@ -189,7 +191,7 @@ describe("Header", () => {
     expect(screen.queryByRole("button", { name: /jaemin\.inj/ })).toBeNull();
     view.unmount();
 
-    state.auth = { status: "signed-in", user };
+    state.auth = signedInAs(user);
     renderWithIntl(<Header />);
     expect(screen.queryByRole("link", { name: "Get Started" })).toBeNull();
     expect(screen.getByRole("button", { name: /jaemin\.inj/ }).getAttribute("aria-haspopup")).toBe("menu");

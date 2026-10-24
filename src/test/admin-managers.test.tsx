@@ -37,9 +37,10 @@ const adminApi = {
   saveAdminPost: vi.fn(),
 };
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAdminApi: () => adminApi,
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAdminApi: () => adminApi,
+  }));
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: Omit<ComponentProps<"a">, "href"> & { href: string | { pathname: string; query?: Record<string, string> } }) => (

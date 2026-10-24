@@ -8,6 +8,7 @@ import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { enMessages, renderWithIntl } from "@/test/intl";
+import { signedInAs } from "@/test/support/auth";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => (
@@ -30,13 +31,14 @@ vi.mock("next-intl/server", () => ({
 const state: { auth: AuthSnapshot } = { auth: { status: "signed-out", user: null } };
 let apiClient: ApiClient;
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAuthSnapshot: () => state.auth,
-  useAccountApi: () => apiClient,
-  useBountyApi: () => apiClient,
-  useAgentApi: () => apiClient,
-  useFoundationMode: () => "mock",
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAuthSnapshot: () => state.auth,
+    useAccountApi: () => apiClient,
+    useBountyApi: () => apiClient,
+    useAgentApi: () => apiClient,
+    useFoundationMode: () => "mock",
+  }));
 
 const { default: ApplicationsPage } = await import("@/app/[locale]/applications/page");
 const { default: AgentsPage } = await import("@/app/[locale]/agents/page");
@@ -69,7 +71,7 @@ describe("owner-private account pages", () => {
   });
 
   it("formats the ISO timestamps at render instead of printing them verbatim", async () => {
-    state.auth = { status: "signed-in", user: previewUser };
+    state.auth = signedInAs(previewUser);
     renderWithIntl(await ApplicationsPage({ params }));
     expect(await screen.findByText("Applied Jul 12, 2026")).toBeTruthy();
     expect(screen.queryByText(/2026-07-12T/)).toBeNull();
@@ -77,7 +79,7 @@ describe("owner-private account pages", () => {
   });
 
   it("walks a four-step progress (applied → approved → submitted → completed) with no under-review step", async () => {
-    state.auth = { status: "signed-in", user: previewUser };
+    state.auth = signedInAs(previewUser);
     renderWithIntl(await ApplicationsPage({ params }));
     const progress = (await screen.findAllByRole("list", { name: "Application progress" }))[0];
     expect(Array.from(progress.querySelectorAll("li")).map((item) => item.textContent?.replace(/^\d/, ""))).toEqual(["Applied", "Approved", "Submitted", "Completed"]);
@@ -85,7 +87,7 @@ describe("owner-private account pages", () => {
   });
 
   it("asks to sign in again when the API rejects the session, and keeps the unavailable copy for server errors", async () => {
-    state.auth = { status: "signed-in", user: previewUser };
+    state.auth = signedInAs(previewUser);
     Object.assign(apiClient, { getApplications: async () => ({ status: "unavailable" as const, reason: "unauthorized" as const }) });
     renderWithIntl(await ApplicationsPage({ params }));
     expect(await screen.findByText("Your session has expired. Sign in again to continue.")).toBeTruthy();
@@ -106,7 +108,7 @@ describe("owner-private account pages", () => {
   });
 
   it("formats the agent registration date at render", async () => {
-    state.auth = { status: "signed-in", user: previewUser };
+    state.auth = signedInAs(previewUser);
     renderWithIntl(await AgentsPage({ params }));
     expect(await screen.findByText("Jun 28, 2026")).toBeTruthy();
     expect(screen.queryByText(/2026-06-28T/)).toBeNull();

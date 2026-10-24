@@ -12,6 +12,7 @@ import { FLASH_STORAGE_KEY, pushFlash, takeFlash } from "@/lib/flash";
 import { createMockApiClient, MockApiError } from "@/lib/mocks/api-client";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { renderWithIntl } from "@/test/intl";
+import { signedInAs } from "@/test/support/auth";
 
 const replace = vi.fn();
 vi.mock("@/i18n/navigation", () => ({
@@ -21,17 +22,18 @@ vi.mock("@/i18n/navigation", () => ({
 
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ origin: "https://ninjalabs.test" }) }));
 
-const signedIn: AuthSnapshot = { status: "signed-in", user: previewUser };
+const signedIn = signedInAs(previewUser);
 const state: { auth: AuthSnapshot } = { auth: signedIn };
 let apiClient: ApiClient;
 const signOut = vi.fn(async () => ({ status: "signed-out", user: null }) as AuthSnapshot);
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAuthSnapshot: () => state.auth,
-  useAccountSettingsApi: () => apiClient,
-  useAuthActions: () => ({ signIn: vi.fn(), signOut }),
-  useFoundationMode: () => "mock",
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAuthSnapshot: () => state.auth,
+    useAccountSettingsApi: () => apiClient,
+    useAuthActions: () => ({ signIn: vi.fn(), signOut }),
+    useFoundationMode: () => "mock",
+  }));
 
 describe("AccountSettingsView", () => {
   beforeAll(() => {

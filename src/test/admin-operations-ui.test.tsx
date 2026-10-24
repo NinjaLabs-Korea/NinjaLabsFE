@@ -43,7 +43,8 @@ const adminApi = {
   getAdminBounties: vi.fn(),
 };
 
-vi.mock("@/components/auth/FoundationProvider", () => ({ useAdminApi: () => adminApi }));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({ useAdminApi: () => adminApi }));
 
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute("open", ""); };

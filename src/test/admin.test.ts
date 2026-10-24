@@ -55,9 +55,10 @@ const adminApi = {
   deleteAdminPost: vi.fn(),
 };
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAdminApi: () => adminApi,
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAdminApi: () => adminApi,
+  }));
 
 describe("PostManager publish option (render)", () => {
   beforeAll(() => {

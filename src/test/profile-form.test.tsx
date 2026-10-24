@@ -8,10 +8,11 @@ import { renderWithIntl } from "@/test/intl";
 const checkNickname = vi.fn();
 const completeProfile = vi.fn();
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useOnboardingApi: () => ({ checkNickname, completeProfile, completeOnboarding: vi.fn() }),
-  useFoundationMode: () => "api",
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useOnboardingApi: () => ({ checkNickname, completeProfile, completeOnboarding: vi.fn() }),
+    useFoundationMode: () => "api",
+  }));
 
 const nicknameInput = () => screen.getByLabelText("Nickname*") as HTMLInputElement;
 const typeNickname = (value: string) => fireEvent.change(nicknameInput(), { target: { value } });

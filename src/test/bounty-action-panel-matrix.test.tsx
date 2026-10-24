@@ -8,6 +8,7 @@ import type { ApiClient, ApiResult } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { Bounty } from "@/lib/types";
 import { renderWithIntl } from "@/test/intl";
+import { signedIn } from "@/test/support/auth";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => (
@@ -18,7 +19,7 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 
 const auths: Record<AuthSnapshot["status"], AuthSnapshot> = {
-  "signed-in": { status: "signed-in", user: { id: "user-1", handle: "ninja", initials: "NI", profileSlug: "ninja" } },
+  "signed-in": signedIn,
   "signed-out": { status: "signed-out", user: null },
   loading: { status: "loading", user: null },
 };
@@ -42,11 +43,12 @@ const apiClient = {
   submitBounty,
 } as unknown as ApiClient;
 
-vi.mock("@/components/auth/FoundationProvider", () => ({
-  useAuthSnapshot: () => state.auth,
-  useAccountApi: () => apiClient,
-  useBountyApi: () => apiClient,
-}));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({
+    useAuthSnapshot: () => state.auth,
+    useAccountApi: () => apiClient,
+    useBountyApi: () => apiClient,
+  }));
 
 type Status = Bounty["status"];
 type Mode = "direct" | "agent";
