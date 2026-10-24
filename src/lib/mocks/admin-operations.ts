@@ -74,17 +74,21 @@ function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string)
       reviews: [{ revisionNo: 1, decision: "APPROVE", comment: "Great work", createdAt: iso(-2) }],
     },
   ] : [];
+  const maxWinners = Math.max(bounty.maxWinners, 2);
   const payouts: OpsPayout[] = [];
   if (live && rewards[0] && submissions[1]) {
+    // One winner's share, not the whole reward: the rest stays allocatable so approving the resubmitted entry and
+    // requesting its payout (then hitting the two-person rule on it) is demonstrable in mock mode.
+    const share = (BigInt(rewards[0].amount) / BigInt(maxWinners)).toString();
     payouts.push({
-      id: nextId("preview-payout"), rewardId: rewards[0].id, submissionId: submissions[1].id, status: "REQUESTED", amount: rewards[0].amount, symbol,
+      id: nextId("preview-payout"), rewardId: rewards[0].id, submissionId: submissions[1].id, status: "REQUESTED", amount: share, symbol,
       txHash: null, recipientAddress: "inj1...8c1v", requestedBy: OTHER_ADMIN.id, requestedByNickname: OTHER_ADMIN.nickname, requestedAt: iso(-1),
       approvedByNickname: null, approvedAt: null, paidAt: null, requestedByMe: false,
     });
-    rewards[0].allocated = rewards[0].amount;
+    rewards[0].allocated = share;
   }
   return {
-    bounty: { id: bounty.slug, title: bounty.title, status, submissionDeadline: live ? iso(14) : bounty.deadline, maxWinners: Math.max(bounty.maxWinners, 2), applicationRequired: bounty.intakeEnabled },
+    bounty: { id: bounty.slug, title: bounty.title, status, submissionDeadline: live ? iso(14) : bounty.deadline, maxWinners, applicationRequired: bounty.intakeEnabled },
     lifecycle: { blockers: {}, allowedTransitions: [] },
     applications, submissions, rewards, payouts,
     policy: { payoutSelfApprovalAllowed: false },

@@ -50,8 +50,17 @@ describe("mock operations parity (lib/mocks/admin-operations.ts)", () => {
     const resubmitted = ops.submissions.find((s) => s.status === "RESUBMITTED")!;
     await client.reviewAdminSubmission(resubmitted.id, { decision: "APPROVE", revisionNo: 2 });
     const reward = ops.rewards[0];
-    expect(await codeOf(client.requestAdminPayout({ rewardId: reward.id, submissionId: resubmitted.id, amount: "1" }))).toEqual([400, "PAYOUT_EXCEEDS_AVAILABLE_REWARD"]);
+    // The seeded request takes one winner's share, so the rest of the reward is still allocatable.
+    const headroom = (BigInt(reward.cap!) - BigInt(seeded.amount)).toString();
+    expect(BigInt(headroom) > BigInt(0)).toBe(true);
+    expect(await codeOf(client.requestAdminPayout({ rewardId: reward.id, submissionId: resubmitted.id, amount: (BigInt(headroom) + BigInt(1)).toString() }))).toEqual([400, "PAYOUT_EXCEEDS_AVAILABLE_REWARD"]);
     expect(await codeOf(client.requestAdminPayout({ rewardId: reward.id, submissionId: seeded.submissionId, amount: "1" }))).toEqual([409, "PAYOUT_ALREADY_REQUESTED"]);
+    await client.requestAdminPayout({ rewardId: reward.id, submissionId: resubmitted.id, amount: headroom });
+    ops = await client.getAdminOperations(slug);
+    const mine = ops.payouts.find((p) => p.submissionId === resubmitted.id)!;
+    expect(mine).toMatchObject({ status: "REQUESTED", requestedByMe: true, amount: headroom });
+    expect(ops.rewards[0].allocated).toBe(reward.cap);
+    expect(await codeOf(client.approveAdminPayout(mine.id))).toEqual([403, "PAYOUT_SELF_APPROVAL"]);
   });
 
   it("transitions an opened bounty through the BE table and its blockers", async () => {
