@@ -49,6 +49,23 @@ export type ErrorCopySurface = {
 };
 
 export const ERROR_COPY = {
+  /**
+   * 온보딩 지갑 연결 (challenge → 서명 → verify) — `wallet/WalletConnectButton.tsx`. BE `wallets.service.ts`가 던지는 코드 전부.
+   * 서명 거절 등 지갑 쪽 실패는 `ApiHttpError`가 아니므로 `generic`이다.
+   */
+  walletVerify: {
+    messages: "common.wallet.verifyErrors",
+    codes: [
+      "INVALID_INJECTIVE_ADDRESS",
+      "CHALLENGE_NOT_FOUND",
+      "CHALLENGE_EXPIRED",
+      "INVALID_SIGNATURE",
+      // 409: 이 주소가 다른 계정에 연결됐거나, 내 계정에 이미 대표 지갑이 있다.
+      "WALLET_ALREADY_LINKED",
+      "DATABASE_UNAVAILABLE",
+    ],
+    fallback: "generic",
+  },
   /** 내 정보 → 계정 삭제 (`DELETE /users/me`) — `account/AccountSettingsView.tsx` */
   accountDelete: {
     messages: "account.settings.deleteErrors",
@@ -166,10 +183,12 @@ export function knownCode<const C extends string>(error: unknown, codes: readonl
   return error instanceof ApiHttpError ? listedCode(error.code, codes) : null;
 }
 
+type SurfaceWithFallback = { readonly codes: readonly string[]; readonly fallback: string };
+
+/** 화면 `S`의 문구 키 타입 (코드 | fallback) — 컴포넌트 state 타입으로 쓴다. */
+export type ErrorCopyKey<S extends SurfaceWithFallback> = S["codes"][number] | S["fallback"];
+
 /** 화면의 문구 키: 목록에 있는 코드면 그 코드, 아니면 화면의 `fallback`. `t(errorCopyKey(...))`로 쓴다. */
-export function errorCopyKey<S extends { readonly codes: readonly string[]; readonly fallback: string }>(
-  error: unknown,
-  surface: S,
-): S["codes"][number] | S["fallback"] {
+export function errorCopyKey<S extends SurfaceWithFallback>(error: unknown, surface: S): ErrorCopyKey<S> {
   return knownCode(error, surface.codes) ?? surface.fallback;
 }
