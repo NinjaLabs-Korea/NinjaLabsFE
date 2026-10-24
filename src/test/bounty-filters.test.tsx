@@ -24,7 +24,8 @@ const bounties: Bounty[] = [
     status: "active",
     reward: { amount: 100, currency: "USDC" },
     sponsor: "Ninja Labs",
-    deadline: "D-5",
+    deadline: "Open",
+    daysLeft: 5,
     coverImage: "",
   },
   {
@@ -46,7 +47,8 @@ const bounties: Bounty[] = [
     status: "active",
     reward: { amount: 75, currency: "USDC" },
     sponsor: "Ninja Labs",
-    deadline: "D-7",
+    deadline: "Open",
+    daysLeft: 1,
     coverImage: "",
   },
 ];
@@ -84,5 +86,14 @@ describe("BountyFilters", () => {
     renderWithIntl(<BountyFilters bounties={bounties} />);
     const categoryGroup = screen.getByRole("group", { name: "Category" });
     expect(within(categoryGroup).getAllByRole("button").map((button) => button.textContent)).toEqual(["Dev", "Design"]);
+  });
+
+  it("exposes the chip row as a named group and localizes the days-left countdown", () => {
+    renderWithIntl(<BountyFilters bounties={bounties} />);
+    expect(screen.getByRole("group", { name: "Bounty filters" })).toBeTruthy();
+    expect(screen.getByText("5 days left · Ninja Labs")).toBeTruthy();
+    expect(screen.getByText("1 day left · Ninja Labs")).toBeTruthy();
+    expect(screen.getByText("Closed · Ninja Labs")).toBeTruthy();
+    expect(screen.queryByText(/D-\d/)).toBeNull();
   });
 });

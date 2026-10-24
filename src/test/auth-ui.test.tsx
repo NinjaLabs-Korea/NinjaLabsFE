@@ -81,6 +81,7 @@ describe("AuthArea", () => {
       "/applications",
     );
     expect(screen.getByRole("link", { name: "My agents" }).getAttribute("href")).toBe("/agents");
+    expect(screen.getByRole("link", { name: "Account settings" }).getAttribute("href")).toBe("/account");
 
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 

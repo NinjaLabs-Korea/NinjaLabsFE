@@ -14,8 +14,10 @@ export function BountyAgentPanel({ copy }: { copy: string }) {
   const t = useTranslations("agents.panel");
   const auth = useAuthSnapshot();
   const apiClient = useAccountApi();
-  const { data: agents, loading, unavailable } = useAccountQuery(apiClient.getAgents);
+  const { data: agents, loading, unavailable, reason } = useAccountQuery(apiClient.getAgents);
   const verifiedCount = agents?.filter((agent) => agent.verified).length ?? 0;
+  // Only PENDING_VERIFICATION agents can still be finished; a REVOKED-only owner starts over with the register CTA.
+  const pendingCount = agents?.filter((agent) => agent.status === "PENDING_VERIFICATION").length ?? 0;
 
   let title = t("title");
   let body = copy;
@@ -27,6 +29,11 @@ export function BountyAgentPanel({ copy }: { copy: string }) {
   } else if (loading || auth.status === "loading") {
     body = t("checkingBody");
     action = t("checkingAction");
+  } else if (unavailable && reason === "unauthorized") {
+    // Session rejected by the BE (401/403 after refresh): a sign-in prompt, not the "temporarily unavailable" copy.
+    body = t("sessionExpiredBody");
+    href = "/signup";
+    action = t("signIn");
   } else if (unavailable) {
     body = t("unavailableBody");
     href = "/agents";
@@ -36,7 +43,7 @@ export function BountyAgentPanel({ copy }: { copy: string }) {
     body = t("verifiedBody", { count: verifiedCount });
     href = "/agents";
     action = t("viewAgents");
-  } else if (agents?.length) {
+  } else if (pendingCount > 0) {
     title = t("pendingTitle");
     body = t("pendingBody");
     action = t("finish");

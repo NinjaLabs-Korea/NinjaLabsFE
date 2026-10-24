@@ -1,40 +1,112 @@
 import type { Account, AccountAgent, AccountApplication } from "@/lib/contracts/account";
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const daysFromNow = (days: number): string => new Date(Date.now() + days * DAY_MS).toISOString();
+
 const applications: readonly AccountApplication[] = [
   {
+    id: "application-1",
     bountySlug: "contract-security-audit",
     bountyTitle: "Smart contract audit for reward vault",
     category: "Dev",
-    appliedAt: "07.12",
+    appliedAt: "2026-07-12T09:00:00.000Z",
     note: "Summarized audit approach with CosmWasm experience.",
-    status: "under_review",
+    status: "open",
+    agent: null,
+    reviewComment: null,
+    paymentStatus: "NONE",
   },
   {
+    id: "application-2",
     bountySlug: "wallet-onboarding-states",
     bountyTitle: "Design a wallet onboarding flow",
     category: "Design",
-    appliedAt: "07.08",
+    appliedAt: "2026-07-08T09:00:00.000Z",
     note: "Proposed state-machine driven onboarding screens.",
     status: "approved",
+    agent: null,
+    reviewComment: null,
+    paymentStatus: "NONE",
+  },
+  // Agent-made application: the owner sees it in My applications and the bounty detail treats it as "already applied".
+  {
+    id: "application-3",
+    bountySlug: "neptune-api-docs",
+    bountyTitle: "Neptune API docs structure",
+    category: "Design",
+    appliedAt: "2026-07-14T09:00:00.000Z",
+    note: "Proposed a navigation restructure with verified request examples.",
+    status: "open",
+    agent: { id: "agent-1", name: "market-scout-agent" },
+    reviewComment: null,
+    paymentStatus: "NONE",
+  },
+  // Approved work whose award an admin forfeited (BE scripts/forfeit-award.js): submission REJECTED + comment `forfeited: <reason>`.
+  {
+    id: "application-4",
+    bountySlug: "quest-copy-refresh",
+    bountyTitle: "Quest copy refresh",
+    category: "Content",
+    appliedAt: "2026-06-20T09:00:00.000Z",
+    note: "Rewrote the onboarding quests with a shorter first-step flow.",
+    status: "notAccepted",
+    agent: null,
+    reviewComment: "forfeited: winner wallet never connected",
+    paymentStatus: "NONE",
+  },
+  // Approved work the reviewer sent back: submission REVISION_REQUESTED + comment; the bounty detail offers the resubmit form.
+  {
+    id: "application-5",
+    bountySlug: "agent-skill-benchmark",
+    bountyTitle: "Agent skill benchmark suite",
+    category: "Dev",
+    appliedAt: "2026-06-26T09:00:00.000Z",
+    note: "Proposed a harness with reproducible task definitions.",
+    status: "revisionRequested",
+    agent: null,
+    reviewComment: "Please add the scoring rules to the README.",
+    paymentStatus: "NONE",
+  },
+  // Completed work with a partial payout (the public profile shows the same status for it).
+  {
+    id: "application-6",
+    bountySlug: "hydro-liquidity-explainer",
+    bountyTitle: "Hydro liquidity explainer",
+    category: "Content",
+    appliedAt: "2026-06-10T09:00:00.000Z",
+    note: "Wrote the staking, vaults and incentives guide.",
+    status: "completed",
+    agent: null,
+    reviewComment: null,
+    paymentStatus: "PARTIALLY_PAID",
   },
 ];
 
 const agents: readonly AccountAgent[] = [
   {
+    id: "agent-1",
     name: "market-scout-agent",
     walletAddress: "inj1…9k4d",
+    status: "ACTIVE",
     verified: true,
     completedBounties: 3,
     apiKeyMasked: "nl_live_····…3f2a",
-    registeredAt: "06.28",
+    keyExpiresAt: daysFromNow(60),
+    keyStatus: "ACTIVE",
+    registeredAt: "2026-06-28T09:00:00.000Z",
   },
+  // Key expiring within the 14-day warning window (exercises the rotate prompt).
   {
+    id: "agent-2",
     name: "proof-collector",
     walletAddress: "inj1…4r2m",
+    status: "ACTIVE",
     verified: true,
     completedBounties: 2,
     apiKeyMasked: "nl_live_····…8c1d",
-    registeredAt: "07.02",
+    keyExpiresAt: daysFromNow(7),
+    keyStatus: "ACTIVE",
+    registeredAt: "2026-07-02T09:00:00.000Z",
   },
 ];
 

@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/integration/.logs/
 
 # next.js
 /.next/

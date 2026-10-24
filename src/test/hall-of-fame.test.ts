@@ -7,7 +7,7 @@ vi.mock("@/lib/api/public", () => ({
 }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
-const { loadRuntimeHallOfFame } = await import("@/lib/hall-of-fame");
+const { formatPaidTotals, hallOfFame: hallOfFameFixture, loadRuntimeHallOfFame } = await import("@/lib/hall-of-fame");
 
 const highlight = (type: string, title: string, image_url: string | null, link_url: string | null = null) => ({
   id: title, type, title, description: "", image_url, link_url, published_at: null,
@@ -26,16 +26,90 @@ describe("hall of fame partner wall", () => {
             highlight("MILESTONE", "Launch", "/media/launch.png"),
           ],
     );
-    const { hallOfFame, unavailable } = await loadRuntimeHallOfFame();
+    const { hallOfFame, unavailable } = await loadRuntimeHallOfFame("en");
     expect(unavailable).toBe(false);
     expect(hallOfFame.partners).toEqual([{ name: "Injective", logo: "/media/injective.png", href: "https://injective.com" }]);
   });
 
+  it("drops unsafe admin-entered link and image URLs instead of rendering them", async () => {
+    fetchPublicJson.mockImplementation(async (path: string) =>
+      path.endsWith("/stats")
+        ? { completedBounties: 0, builders: 0, completionNfts: 0, sponsors: 0 }
+        : [
+            highlight("PARTNERSHIP", "Script link", "/media/ok.png", "javascript:alert(1)"),
+            highlight("PARTNERSHIP", "Data logo", "data:image/svg+xml,<svg/>", "https://ok.test"),
+            highlight("MILESTONE", "Protocol-relative", "//evil.test/x.png", "//evil.test"),
+          ],
+    );
+    const { hallOfFame } = await loadRuntimeHallOfFame("en");
+    expect(hallOfFame.partners).toEqual([{ name: "Script link", logo: "/media/ok.png", href: null }]);
+    expect(hallOfFame.highlights.map(({ href, image }) => [href, image])).toEqual([
+      ["/notices", "/media/ok.png"],
+      ["https://ok.test", null],
+      ["/notices", null],
+    ]);
+  });
+
   it("returns an empty, unavailable result when the API fails", async () => {
     fetchPublicJson.mockRejectedValue(new Error("down"));
-    const { hallOfFame, unavailable } = await loadRuntimeHallOfFame();
+    const { hallOfFame, unavailable } = await loadRuntimeHallOfFame("en");
     expect(unavailable).toBe(true);
     expect(hallOfFame.partners).toEqual([]);
     expect(hallOfFame.stats).toEqual([]);
+  });
+});
+
+const counts = { completedBounties: 3, builders: 5, completionNfts: 2, sponsors: 1 };
+const usdc = { symbol: "USDC", tokenType: "ERC20", decimals: 6, amount: "12500000000" };
+const inj = { symbol: "INJ", tokenType: "NATIVE", decimals: 18, amount: "300000000000000000000" };
+
+describe("hall of fame rewards paid stat", () => {
+  afterEach(() => fetchPublicJson.mockReset());
+
+  it("formats per-token base-unit totals with their decimals and the locale", () => {
+    expect(formatPaidTotals([usdc, inj], "en")).toBe("12,500 USDC · 300 INJ");
+    expect(formatPaidTotals([{ ...inj, amount: "1234567800000000000000" }], "ko")).toBe("1,234.57 INJ");
+    // beyond Number precision the integer part stays exact
+    expect(formatPaidTotals([{ ...inj, amount: "123456789012345678901234567000000000000000000" }], "en")).toBe(
+      "123,456,789,012,345,678,901,234,567 INJ",
+    );
+  });
+
+  it("skips entries it cannot scale and returns null when nothing is left", () => {
+    expect(formatPaidTotals([{ ...usdc, symbol: "ATOM", decimals: null }, inj], "en")).toBe("300 INJ");
+    expect(formatPaidTotals([{ ...usdc, amount: "1.5" }, { ...inj, amount: "0" }], "en")).toBeNull();
+    expect(formatPaidTotals([], "en")).toBeNull();
+    expect(formatPaidTotals(undefined, "en")).toBeNull();
+  });
+
+  it("merges entries that share a symbol and decimals across token types instead of repeating the symbol", () => {
+    const cw20Inj = { ...inj, tokenType: "CW20", amount: "5000000000000000000" };
+    expect(formatPaidTotals([inj, cw20Inj, usdc], "en")).toBe("305 INJ · 12,500 USDC");
+    // different decimals stay separate rather than being summed in mixed units
+    expect(formatPaidTotals([inj, { ...cw20Inj, decimals: 6, amount: "5000000" }], "en")).toBe("300 INJ · 5 INJ");
+  });
+
+  it("appends the rewards paid stat after the counts when the API reports paid totals", async () => {
+    fetchPublicJson.mockImplementation(async (path: string) => (path.endsWith("/stats") ? { ...counts, paidTotals: [usdc, inj] } : []));
+    const { hallOfFame } = await loadRuntimeHallOfFame("en");
+    expect(hallOfFame.stats).toEqual([
+      { value: "3", labelKey: "bountiesCompleted" },
+      { value: "5", labelKey: "buildersRewarded" },
+      { value: "2", labelKey: "completionNfts" },
+      { value: "12,500 USDC · 300 INJ", labelKey: "rewardsPaid" },
+    ]);
+  });
+
+  it("hides the stat when nothing has been paid or the BE predates the field", async () => {
+    for (const stats of [{ ...counts, paidTotals: [] }, counts]) {
+      fetchPublicJson.mockImplementation(async (path: string) => (path.endsWith("/stats") ? stats : []));
+      const { hallOfFame } = await loadRuntimeHallOfFame("en");
+      expect(hallOfFame.stats.map((stat) => stat.labelKey)).not.toContain("rewardsPaid");
+    }
+  });
+
+  it("ships an API-shaped mock fixture instead of a placeholder value", () => {
+    expect(hallOfFameFixture.stats.map((stat) => stat.value)).not.toContain("$-");
+    expect(formatPaidTotals(hallOfFameFixture.paidTotals, "en")).toBe("12,500 USDC · 300 INJ");
   });
 });

@@ -25,7 +25,10 @@
     "categories": {
       "milestone": "里程碑",
       "featuredBounty": "精选赏金",
-      "partnership": "合作伙伴"
+      "partnership": "合作伙伴",
+      "project": "项目",
+      "award": "奖项",
+      "other": "其他"
     }
   },
   "timeline": {

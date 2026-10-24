@@ -96,14 +96,33 @@
       "errors": {
         "nickname": "Enter a nickname of at least 2 characters.",
         "tags": "Choose at least one field tag.",
-        "bio": "Write a short intro."
+        "bio": "Write a short intro.",
+        "nicknameRejected": "The server rejected this nickname. Check the rules above.",
+        "bioRejected": "The server rejected this bio. Keep it under 1000 characters."
       },
       "saveErrors": {
         "network": "We couldn't save your profile. Check your connection and try again.",
         "session": "Your session has ended. Sign in again to continue.",
-        "nickname": "That nickname is already in use. Choose another one.",
+        "NICKNAME_TAKEN": "That nickname is already in use. Choose another one.",
         "invalid": "Check every field: the nickname must be 2-50 characters, and a bio and field tag are required.",
+        "INVALID_CHARACTER": "Your nickname or bio contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
+        "REFERENCE_NOT_FOUND": "Your account record could not be found. Reload the page or sign in again.",
+        "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
         "generic": "We couldn't save your profile. Please try again."
+      },
+      "nicknameHint": "2–50 characters: letters, digits, _ . - — starting and ending with a letter or digit.",
+      "nicknameErrors": {
+        "tooShort": "Use at least 2 characters.",
+        "tooLong": "Use at most 50 characters.",
+        "reserved": "This word is reserved. Choose another nickname.",
+        "chars": "Use only letters, digits, and _ . - (no spaces).",
+        "edge": "Start and end with a letter or digit.",
+        "staticExtension": "Nicknames can't end with a file extension like .js."
+      },
+      "nicknameCheck": {
+        "checking": "Checking availability…",
+        "available": "Nickname is available.",
+        "taken": "That nickname is already taken."
       }
     },
     "eyebrow": "Profile",
@@ -151,6 +170,11 @@
     "restoring": "Restoring your account. You will be redirected shortly.",
     "failedTitle": "Sign-in could not be completed",
     "failedBody": "Please try signing in again in this browser tab.",
+    "errors": {
+      "TURNSTILE_FAILED": "The bot check did not pass. Go back to the sign-in page, complete the check again and retry.",
+      "TURNSTILE_UNAVAILABLE": "The bot check service is temporarily unavailable. Please try signing in again in a moment.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+    },
     "backToSignIn": "Back to sign in"
   }
 }

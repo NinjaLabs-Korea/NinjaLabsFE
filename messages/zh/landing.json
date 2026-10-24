@@ -24,5 +24,8 @@
     "unavailable": "暂时无法加载最新动态。",
     "empty": "暂无动态，请稍后再来查看。"
   },
-  "unavailableBody": "无法连接服务器，请稍后刷新。"
+  "unavailableBody": "无法连接服务器，请稍后刷新。",
+  "stats": {
+    "unavailable": "暂时无法加载社区统计数据。"
+  }
 }

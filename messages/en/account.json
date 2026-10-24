@@ -2,7 +2,9 @@
   "common": {
     "eyebrow": "Account",
     "unavailableBody": "We couldn’t reach the server. Please try again shortly.",
-    "mockNote": "Session preview: demo data, resets on reload."
+    "mockNote": "Session preview: demo data, resets on reload.",
+    "loading": "Loading your account…",
+    "sessionExpired": "Your session has expired. Sign in again to continue."
   },
   "signedOut": {
     "body": "Complete the sign-up flow to preview your account.",
@@ -21,14 +23,77 @@
     "progressLabel": "Application progress",
     "steps": {
       "open": "Applied",
-      "under_review": "Under review",
       "approved": "Approved",
       "submitted": "Submitted",
       "completed": "Completed"
     },
     "approvedStatus": "Approved: submit unlocked",
     "submitWork": "Submit work",
+    "resubmit": "Resubmit",
+    "revisionRequestedStatus": "Revision requested",
+    "revisionNote": "The reviewer asked for changes to your submission. Update it and resubmit.",
+    "actionNeeded": "Action needed",
     "rejectedStatus": "Not selected",
-    "rejectedNote": "The sponsor did not select this application. Browse other open bounties to keep building."
+    "rejectedNote": "The sponsor did not select this application. Browse other open bounties to keep building.",
+    "notAcceptedStatus": "Submission not accepted",
+    "forfeitedStatus": "Award forfeited",
+    "notAcceptedNote": "The sponsor reviewed your submission and did not accept it. This result is final.",
+    "forfeitedNote": "Your work was approved, but the award was forfeited: {reason}. Contact the admins if this is a mistake.",
+    "reviewerComment": "Reviewer comment: {comment}",
+    "viaAgent": "via {name}",
+    "withdraw": "Withdraw",
+    "withdrawing": "Withdrawing…",
+    "withdrawn": "Application withdrawn. You can apply again while the bounty is open.",
+    "withdrawDialog": {
+      "eyebrow": "Withdraw application",
+      "title": "Withdraw your application to “{title}”?",
+      "description": "The sponsor will no longer see this application. You can apply again later while the bounty is open.",
+      "confirm": "Withdraw application"
+    },
+    "withdrawErrors": {
+      "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "This application was already reviewed or withdrawn.",
+      "generic": "We couldn’t withdraw this application. Please try again shortly."
+    },
+    "payoutPaid": "Paid",
+    "payoutPartial": "Partially paid",
+    "payoutPending": "Payout pending"
+  },
+  "settings": {
+    "meta": {
+      "title": "Account settings | Ninja Labs",
+      "description": "Manage your Ninja Labs account."
+    },
+    "heading": "Account settings",
+    "intro": "Your profile details and account controls.",
+    "signedOutMessage": "Sign in to manage your account",
+    "profileHeading": "Profile",
+    "nicknameLabel": "Nickname",
+    "walletLabel": "Wallet",
+    "dangerEyebrow": "Danger zone",
+    "deleteHeading": "Delete account",
+    "deleteBody": "Deleting your account cannot be undone. Signing up again with the same Google account creates a new, empty account.",
+    "deleteConsequences": {
+      "sessions": "You are signed out everywhere and your public profile disappears.",
+      "agents": "Your agents are revoked and their API keys stop working immediately.",
+      "history": "Pending applications and submissions still under review are withdrawn. Completed work, payouts and NFTs stay on record under an anonymous name.",
+      "rewards": "Approved work whose reward has not been requested yet will no longer be paid. Accounts with a payout in progress cannot be deleted until it completes."
+    },
+    "deleteAction": "Delete account",
+    "deleteDialog": {
+      "eyebrow": "Delete account",
+      "title": "Delete your account?",
+      "description": "This permanently deletes your Ninja Labs account. On-chain NFTs stay in your wallet.",
+      "callout": "This cannot be undone.",
+      "inputLabel": "Type your nickname “{nickname}” to confirm",
+      "confirm": "Delete account",
+      "deleting": "Deleting…"
+    },
+    "deleteErrors": {
+      "CONFIRM_NICKNAME_MISMATCH": "The nickname does not match. Type it exactly as shown.",
+      "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS": "A payout to you is still in progress. You can delete your account once it is paid or cancelled.",
+      "WITHDRAWAL_BLOCKED_PENDING_REWARDS": "You have approved rewards that have not been paid out yet, so your account can’t be deleted right now (it would forfeit them). Please contact the Ninja Labs admins to complete the payout, then try again.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "generic": "We couldn’t delete your account. Please try again shortly."
+    }
   }
 }

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { createSessionPreviewAuthAdapter, SESSION_PREVIEW_STORAGE_KEY } from "@/lib/foundation/auth-adapter";
-import { createUnavailableApiClient } from "@/lib/foundation/api-client";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import { getMockFixtureSnapshot, mockFixtureSeed } from "@/lib/mocks/fixtures";
 import {
@@ -45,6 +44,16 @@ describe("runtime configuration", () => {
         NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://rpc.ninjalabs.example",
       }).wallet,
     ).toEqual({ chainId: 1776, rpcUrl: "https://rpc.ninjalabs.example/" });
+    // Chain id / RPC network pairing guard: 1776 is mainnet, 1439 is testnet.
+    expect(() =>
+      readRuntimeConfig({ ...validMockEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1776", NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://k8s.testnet.json-rpc.injective.network/" }),
+    ).toThrow(new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1776 (mainnet) cannot use a testnet RPC URL."));
+    expect(() =>
+      readRuntimeConfig({ ...validMockEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1439", NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://Mainnet.evm-rpc.injective.network/" }),
+    ).toThrow(new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1439 (testnet) cannot use a mainnet RPC URL."));
+    expect(
+      readRuntimeConfig({ ...validMockEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1439", NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://k8s.testnet.json-rpc.injective.network/" }).wallet,
+    ).toEqual({ chainId: 1439, rpcUrl: "https://k8s.testnet.json-rpc.injective.network/" });
     expect(() =>
       readRuntimeConfig({ ...validMockEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "injective-1439" }),
     ).toThrow(new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID must be a supported numeric chain ID."));
@@ -106,6 +115,7 @@ describe("runtime configuration", () => {
       NINJA_APP_ORIGIN: "https://test.ninjalabs.example",
       NINJA_API_BASE_URL: "https://api.ninjalabs.example/v1",
       NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1439",
+      NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://rpc.ninjalabs.example",
     });
 
     expect(apiConfig).toMatchObject({
@@ -121,6 +131,7 @@ describe("runtime configuration", () => {
         NINJA_RUNTIME_MODE: "api",
         NINJA_APP_ORIGIN: "https://test.ninjalabs.example",
         NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1439",
+        NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://rpc.ninjalabs.example",
       }),
     ).toThrow(new RuntimeConfigError("NINJA_API_BASE_URL is required in api mode."));
     expect(() =>
@@ -129,6 +140,26 @@ describe("runtime configuration", () => {
         NINJA_API_BASE_URL: "https://api.ninjalabs.example/v1",
       }),
     ).toThrow(new RuntimeConfigError("NINJA_API_BASE_URL is allowed only in api mode."));
+  });
+
+  it("fails fast in api mode when a wallet chain has no RPC URL, but keeps the mock-mode fallback", () => {
+    const apiEnvironment = {
+      NINJA_DEPLOYMENT_TIER: "test",
+      NINJA_RUNTIME_MODE: "api",
+      NINJA_APP_ORIGIN: "https://test.ninjalabs.example",
+      NINJA_API_BASE_URL: "https://api.ninjalabs.example/v1",
+      NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1439",
+    };
+    expect(() => readRuntimeConfig(apiEnvironment)).toThrow(
+      new RuntimeConfigError(
+        "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL is required in api mode when NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID is set.",
+      ),
+    );
+    expect(
+      readRuntimeConfig({ ...apiEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://rpc.ninjalabs.example" }).wallet,
+    ).toEqual({ chainId: 1439, rpcUrl: "https://rpc.ninjalabs.example/" });
+    expect(readRuntimeConfig({ ...apiEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: undefined }).wallet).toBeNull();
+    expect(readRuntimeConfig(validMockEnvironment).wallet).toEqual({ chainId: 1439 });
   });
 });
 
@@ -161,28 +192,7 @@ describe("mock data isolation", () => {
   });
 });
 
-describe("placeholder adapters", () => {
-  it("never returns fixture success from the API placeholder", async () => {
-    const client = createUnavailableApiClient();
-    const signedIn = {
-      status: "signed-in",
-      user: mockFixtureSeed.account.user,
-    } as const;
-
-    await expect(client.getAccount(signedIn)).resolves.toEqual({
-      status: "unavailable",
-      reason: "api-mode-placeholder",
-    });
-    await expect(client.getApplications(signedIn)).resolves.toEqual({
-      status: "unavailable",
-      reason: "api-mode-placeholder",
-    });
-    await expect(client.getAgents(signedIn)).resolves.toEqual({
-      status: "unavailable",
-      reason: "api-mode-placeholder",
-    });
-  });
-
+describe("mock session preview", () => {
   it("lists a mock application right after applying to a bounty", async () => {
     const client = createMockApiClient();
     const owner = { status: "signed-in" as const, user: getMockFixtureSnapshot().account.user };
@@ -194,7 +204,7 @@ describe("placeholder adapters", () => {
     expect(result.status === "available" ? result.data[0] : null).toMatchObject({
       bountySlug: "helix-volume-analytics",
       note: "QA approach",
-      status: "under_review",
+      status: "open",
     });
   });
 

@@ -6,6 +6,7 @@ import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { signup } from "@/lib/signup";
 import { loadRuntimeConfig } from "@/lib/runtime/config";
+import { localeAlternates } from "@/i18n/alternates";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/signup">): Promise<Metadata> {
   const { locale } = await params;
@@ -13,6 +14,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/signup">
   const mode = loadRuntimeConfig().runtimeMode;
 
   return {
+    alternates: localeAlternates(locale, "/signup"),
     title: t("pageTitle", { title: t(`${mode}.title`) }),
     description: t(`${mode}.description`),
   };
@@ -36,7 +38,7 @@ export default async function SignupPage({ params }: PageProps<"/[locale]/signup
             <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] text-ink">{t("title")}</h1>
             <p className="mt-3 text-base text-ink-muted">{t("description")}</p>
           </div>
-          <GoogleLoginButton />
+          <GoogleLoginButton turnstileSiteKey={loadRuntimeConfig().turnstileSiteKey} />
           <div className="mt-5 rounded-tile border border-border bg-primary-soft p-4 text-center text-sm text-ink-notice">
             {t("disclosure")}
           </div>

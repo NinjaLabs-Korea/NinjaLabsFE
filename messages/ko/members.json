@@ -59,6 +59,8 @@
       "headingEmpty": "트로피 선반은 여기서 시작됩니다",
       "bodyCompleted": "Ninja NFT는 부모 아이덴티티입니다. 승인된 바운티마다 그 아래 자식 NFT가 발행되어, 완료한 작업이 이동 가능한 빌더 포트폴리오가 됩니다.",
       "bodyEmpty": "Ninja NFT는 이미 부모 아이덴티티로 발행되어 있습니다. 첫 번째 승인된 바운티가 이 공개 컬렉션에 자식 NFT를 추가합니다.",
+      "bodyEmptyPending": "Ninja NFT 부모 아이덴티티를 발행하는 중입니다. 발행이 끝나면 첫 번째 승인된 바운티가 이 공개 컬렉션에 자식 NFT를 추가합니다.",
+      "bodyEmptyNotMinted": "Ninja NFT 부모 아이덴티티는 아직 발행되지 않았습니다. 온보딩 후 발행되며, 이후 승인된 바운티가 이 공개 컬렉션에 자식 NFT를 추가합니다.",
       "token": "토큰 {id}",
       "tx": "Tx {hash}",
       "next": "+ 다음",
@@ -87,7 +89,8 @@
       "emptyBody": "다음에 완료하는 작업은 제목, 완료일, 보상, 발행된 자식 NFT 증명과 함께 표시됩니다.",
       "findFirst": "첫 바운티 찾기",
       "headingEmpty": "완료한 바운티",
-      "browseMore": "더 둘러보기"
+      "browseMore": "더 둘러보기",
+      "completedDate": "{date} 완료"
     },
     "agents": {
       "eyebrow": "보유 에이전트",
@@ -99,6 +102,9 @@
       "register": "에이전트 등록",
       "wallet": "등록된 지갑 공개 키: {wallet}"
     },
-    "shareable": "공유 가능한 URL — 로그인 불필요"
+    "shareable": "공유 가능한 URL — 로그인 불필요",
+    "payoutPending": "지급 대기",
+    "payoutPartial": "일부 지급",
+    "payoutPaid": "지급 완료"
   }
 }

@@ -4,11 +4,13 @@ import { SignupGate } from "@/components/signup/SignupGate";
 import { ProfileForm } from "@/components/signup/ProfileForm";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { signup } from "@/lib/signup";
+import { localeAlternates } from "@/i18n/alternates";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/signup/profile">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "signup.profile.metadata" });
   return {
+    alternates: localeAlternates(locale, "/signup/profile"),
     title: t("title"),
     description: t("description"),
   };

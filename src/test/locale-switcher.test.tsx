@@ -26,6 +26,19 @@ describe("LocaleSwitcher", () => {
     expect(screen.queryByRole("menu")).toBeNull();
   });
 
+  it("keeps the query string and hash when switching locale", () => {
+    replace.mockClear();
+    window.history.replaceState(null, "", "/en/auth/callback?next=%2Fbounties#loginCode=abc123");
+    try {
+      renderWithIntl(<LocaleSwitcher />);
+      fireEvent.click(screen.getByRole("button", { name: "Language" }));
+      act(() => fireEvent.click(screen.getAllByRole("menuitemradio")[2]));
+      expect(replace).toHaveBeenCalledWith("/bounties?next=%2Fbounties#loginCode=abc123", { locale: "zh" });
+    } finally {
+      window.history.replaceState(null, "", "/");
+    }
+  });
+
   it("closes on Escape without switching", () => {
     replace.mockClear();
     renderWithIntl(<LocaleSwitcher />);

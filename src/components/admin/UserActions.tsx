@@ -84,7 +84,7 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("actions.roleEyebrow")}</p>
         <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink" id={assignTitleId}>{t("actions.assignTitle")}</h2>
         <p className="mt-2 text-sm text-ink-muted">{t.rich("actions.assignDescription", { nickname: user.nickname, b: (chunks) => <b>{chunks}</b> })}</p>
-        <div className="mt-4 flex flex-wrap gap-2" aria-label={t("actions.roleGroupLabel")}>
+        <div className="mt-4 flex flex-wrap gap-2" aria-label={t("actions.roleGroupLabel")} role="group">
           {roles.map((item) => (
             <button
               aria-pressed={role === item}

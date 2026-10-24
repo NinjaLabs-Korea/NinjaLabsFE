@@ -1,8 +1,9 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
+import { ApiKeyReveal } from "@/components/agents/ApiKeyReveal";
 import {
   useAuthSnapshot,
   useAccountApi,
@@ -11,7 +12,15 @@ import {
 import { Link } from "@/i18n/navigation";
 import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
 import type { AgentVerification } from "@/lib/contracts/api";
-import { ApiHttpError } from "@/lib/api/http";
+import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
+import { validationFieldsFromError } from "@/lib/api/validation";
+import {
+  AGENT_DESCRIPTION_MAX,
+  AGENT_NAME_MAX,
+  agentErrorsFromValidationFields,
+  validateAgentRegisterForm,
+  type AgentRegisterErrors,
+} from "@/lib/agent-register-form";
 import {
   maskWalletAddress,
   onboardingErrorDetails,
@@ -23,16 +32,29 @@ type SubmissionState = "idle" | "registering" | "signing" | "verifying";
 
 export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const t = useTranslations("agents.form");
-  const locale = useLocale();
+  const tRegisterErrors = useTranslations(ERROR_COPY.agentRegister.messages);
+  const tWallet = useTranslations("common.wallet");
+  // UTC-pinned via src/i18n/request.ts, like AgentsView's key expiry.
+  const format = useFormatter();
   const auth = useAuthSnapshot();
   const accountApi = useAccountApi();
   const agentApi = useAgentApi();
-  const { data: agents, loading: agentsLoading } = useAccountQuery(accountApi.getAgents);
+  const { data: agents, loading: agentsLoading, refresh: refreshAgents } = useAccountQuery(accountApi.getAgents);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [submissionState, setSubmissionState] = useState<SubmissionState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // 필드 검증 에러 (BE RegisterAgentDto 한도의 거울, `lib/agent-register-form.ts`). 요청 실패 문구(errorMessage)와는 따로 표시한다.
+  const [fieldErrors, setFieldErrors] = useState<AgentRegisterErrors>({});
   const [verification, setVerification] = useState<AgentVerification | null>(null);
+  // The one-time key belongs to the session that received it: signing out (or switching account) on this page must drop
+  // it from state and the DOM, not leave it on screen for the next person at the machine.
+  const sessionUserId = auth.status === "signed-in" ? auth.user.id : null;
+  const [verificationOwner, setVerificationOwner] = useState(sessionUserId);
+  if (verificationOwner !== sessionUserId) {
+    setVerificationOwner(sessionUserId);
+    setVerification(null);
+  }
   const {
     hasInjectedWallet,
     address,
@@ -43,15 +65,19 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
     isConnecting,
     disconnect,
     signMessageAsync,
+    canSwitch,
     switchToTargetChain,
     isSwitching,
-  } = useWalletConnection(chainId, { injectedOnly: true });
+    switchError,
+  } = useWalletConnection(chainId);
   const isBusy = submissionState !== "idle";
   const ownerWallet = auth.user?.walletAddress?.toLowerCase();
   const isOwnerWallet = Boolean(address && ownerWallet === address.toLowerCase());
+  // A REVOKED agent no longer claims its wallet: registering it again replaces it with a fresh pending agent (the BE soft-deletes the old row).
   const existingAgent = address
-    ? agents?.find((agent) => agent.walletAddress.toLowerCase() === address.toLowerCase())
+    ? agents?.find((agent) => agent.status !== "REVOKED" && agent.walletAddress.toLowerCase() === address.toLowerCase())
     : undefined;
+  const isPendingAgent = existingAgent?.status === "PENDING_VERIFICATION";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,8 +92,16 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       return;
     }
 
+    const nextErrors = validateAgentRegisterForm({ name, description });
+    if (nextErrors.name || nextErrors.description) {
+      setFieldErrors(nextErrors);
+      setErrorMessage(t("errorInvalid"));
+      return;
+    }
+
     const agentAddress = address;
     setErrorMessage(null);
+    setFieldErrors({});
     setVerification(null);
     try {
       setSubmissionState("registering");
@@ -94,6 +128,8 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       setSubmissionState("verifying");
       const verified = await agentApi.verifyAgent(registration.agentId, signature);
       setVerification(verified);
+      // Re-read /agents/me so the "pending verification" banner (derived from the list) disappears with the new ACTIVE row.
+      refreshAgents();
       onboardingLog("agent.registration.succeeded", {
         wallet: maskWalletAddress(agentAddress),
         agentId: verified.agentId,
@@ -103,15 +139,27 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         wallet: address ? maskWalletAddress(address) : null,
         ...onboardingErrorDetails(caught),
       });
-      setErrorMessage(
-        caught instanceof ApiHttpError && caught.code === "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED"
-          ? t("errorAlreadyRegistered")
-          : t("errorFailed"),
-      );
+      // BE 400 VALIDATION_FAILED: message[]가 가리키는 필드를 인라인 에러로 돌려준다.
+      const rejected = agentErrorsFromValidationFields(validationFieldsFromError(caught), { name, description });
+      if (rejected.name || rejected.description) {
+        setFieldErrors(rejected);
+        setErrorMessage(t("errorInvalid"));
+      } else {
+        setErrorMessage(tRegisterErrors(errorCopyKey(caught, ERROR_COPY.agentRegister)));
+      }
     } finally {
       setSubmissionState("idle");
     }
   }
+
+  const fieldErrorText = (field: keyof AgentRegisterErrors) => {
+    const reason = fieldErrors[field];
+    if (!reason) return null;
+    const key = `errors.${field}${reason.charAt(0).toUpperCase()}${reason.slice(1)}`;
+    return t(key, { max: field === "name" ? AGENT_NAME_MAX : AGENT_DESCRIPTION_MAX });
+  };
+  const nameError = fieldErrorText("name");
+  const descriptionError = fieldErrorText("description");
 
   const buttonLabel =
     submissionState === "registering"
@@ -136,28 +184,44 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         {t("nameLabel")}
       </label>
       <input
-        className="mt-2 h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder"
+        aria-describedby={nameError ? "agent-name-error" : undefined}
+        aria-invalid={nameError ? true : undefined}
+        className="mt-2 h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder aria-[invalid]:border-danger"
         disabled={isBusy || Boolean(verification)}
         id="agent-name"
-        maxLength={100}
-        onChange={(event) => setName(event.target.value)}
+        maxLength={AGENT_NAME_MAX}
+        onChange={(event) => {
+          setName(event.target.value);
+          setFieldErrors((current) => ({ ...current, name: undefined }));
+        }}
         placeholder={t("namePlaceholder")}
         required
         type="text"
         value={name}
       />
+      {nameError ? <p className="mt-1 text-xs text-danger" id="agent-name-error" role="alert">{nameError}</p> : null}
 
       <label className="mt-4 block text-sm font-semibold text-ink" htmlFor="agent-description">
         {t("descriptionLabel")} <span className="font-normal text-ink-muted">{t("optional")}</span>
       </label>
       <textarea
-        className="mt-2 min-h-24 w-full rounded-control border border-border bg-surface p-3 text-sm text-ink placeholder:text-ink-placeholder"
+        aria-describedby={descriptionError ? "agent-description-error agent-description-counter" : "agent-description-counter"}
+        aria-invalid={descriptionError ? true : undefined}
+        className="mt-2 min-h-24 w-full rounded-control border border-border bg-surface p-3 text-sm text-ink placeholder:text-ink-placeholder aria-[invalid]:border-danger"
         disabled={isBusy || Boolean(verification)}
         id="agent-description"
-        onChange={(event) => setDescription(event.target.value)}
+        maxLength={AGENT_DESCRIPTION_MAX}
+        onChange={(event) => {
+          setDescription(event.target.value);
+          setFieldErrors((current) => ({ ...current, description: undefined }));
+        }}
         placeholder={t("descriptionPlaceholder")}
         value={description}
       />
+      <p className="mt-1 text-right text-xs text-ink-muted" id="agent-description-counter">
+        {t("counter", { count: description.length, max: AGENT_DESCRIPTION_MAX })}
+      </p>
+      {descriptionError ? <p className="mt-1 text-xs text-danger" id="agent-description-error" role="alert">{descriptionError}</p> : null}
 
       <div className="mt-4 rounded-tile border border-border bg-surface-subtle p-4">
         <p className="text-sm font-semibold text-ink">{t("walletLabel")}</p>
@@ -196,12 +260,22 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
           </Link>
         </div>
       ) : null}
-      {existingAgent && !existingAgent.verified ? (
+      {isPendingAgent ? (
         <p className="mt-3 text-sm text-warning" role="status">
           {t("pending")}
         </p>
       ) : null}
       {errorMessage ? <p className="mt-3 text-sm text-danger" role="alert">{errorMessage}</p> : null}
+      {isWrongNetwork && switchError ? (
+        <p className="mt-3 text-sm text-danger" role="alert">
+          {tWallet(switchError === "rejected" ? "switchRejected" : "switchFailed")}
+        </p>
+      ) : null}
+      {isWrongNetwork && !canSwitch ? (
+        <p className="mt-3 text-sm text-warning" role="status">
+          {tWallet("switchUnavailable")}
+        </p>
+      ) : null}
 
       {!isConnected ? (
         <button
@@ -215,7 +289,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       ) : isWrongNetwork ? (
         <button
           className="mt-5 h-[46px] w-full rounded-control bg-warning-soft px-5 text-sm font-semibold text-warning disabled:opacity-60"
-          disabled={isSwitching}
+          disabled={isSwitching || !canSwitch}
           onClick={switchToTargetChain}
           type="button"
         >
@@ -240,18 +314,13 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       )}
 
       {verification ? (
-        <div className="mt-5 rounded-tile border border-success-soft bg-success-soft p-4" role="status">
-          <p className="text-sm font-semibold text-success">{t("verified")}</p>
-          <p className="mt-2 text-xs text-ink-secondary">
-            {t("copyKey")}
-          </p>
-          <code className="mt-2 block break-all rounded-control bg-surface p-3 text-xs text-ink">
-            {verification.apiKey}
-          </code>
-          <p className="mt-2 text-xs text-ink-muted">
-            {t("expires", { date: new Date(verification.expiresAt).toLocaleString(locale) })}
-          </p>
-        </div>
+        <ApiKeyReveal
+          apiKey={verification.apiKey}
+          className="mt-5"
+          copy={t("copyKey")}
+          expiresLabel={t("expires", { date: format.dateTime(new Date(verification.expiresAt), { dateStyle: "medium", timeStyle: "short" }) })}
+          title={t("verified")}
+        />
       ) : null}
     </form>
   );

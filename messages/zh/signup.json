@@ -96,14 +96,33 @@
       "errors": {
         "nickname": "请输入至少 2 个字符的昵称。",
         "tags": "请至少选择一个领域标签。",
-        "bio": "请填写简短的自我介绍。"
+        "bio": "请填写简短的自我介绍。",
+        "nicknameRejected": "服务器拒绝了此昵称，请检查上述规则。",
+        "bioRejected": "服务器拒绝了此简介，请控制在 1000 个字符以内。"
       },
       "saveErrors": {
         "network": "无法保存个人资料，请检查网络连接后重试。",
         "session": "您的会话已过期，请重新登录后继续。",
-        "nickname": "该昵称已被使用，请换一个。",
+        "NICKNAME_TAKEN": "该昵称已被使用，请换一个。",
         "invalid": "请检查所有字段：昵称需为 2-50 个字符，并且必须填写自我介绍和领域标签。",
+        "INVALID_CHARACTER": "昵称或简介包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
+        "REFERENCE_NOT_FOUND": "找不到您的账户记录。请刷新页面或重新登录。",
+        "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
         "generic": "无法保存个人资料，请重试。"
+      },
+      "nicknameHint": "2–50 个字符：字母、数字、_ . -，且开头和结尾必须是字母或数字。",
+      "nicknameErrors": {
+        "tooShort": "至少 2 个字符。",
+        "tooLong": "最多 50 个字符。",
+        "reserved": "该词为保留字，请换一个昵称。",
+        "chars": "只能使用字母、数字和 _ . -（不能有空格）。",
+        "edge": "开头和结尾必须是字母或数字。",
+        "staticExtension": "昵称不能以 .js 等文件扩展名结尾。"
+      },
+      "nicknameCheck": {
+        "checking": "正在检查是否可用…",
+        "available": "该昵称可用。",
+        "taken": "该昵称已被使用。"
       }
     },
     "eyebrow": "个人资料",
@@ -151,6 +170,11 @@
     "restoring": "正在恢复您的账户，即将跳转。",
     "failedTitle": "登录未能完成",
     "failedBody": "请在此浏览器标签页中重新登录。",
+    "errors": {
+      "TURNSTILE_FAILED": "人机验证未通过。请返回登录页面，重新完成验证后再试。",
+      "TURNSTILE_UNAVAILABLE": "人机验证服务暂时不可用，请稍后重新登录。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
+    },
     "backToSignIn": "返回登录"
   }
 }

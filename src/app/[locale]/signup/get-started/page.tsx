@@ -7,11 +7,13 @@ import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
 import { CompleteOnboarding } from "@/components/signup/CompleteOnboarding";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { signup } from "@/lib/signup";
+import { localeAlternates } from "@/i18n/alternates";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/signup/get-started">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "signup.getStarted.metadata" });
   return {
+    alternates: localeAlternates(locale, "/signup/get-started"),
     title: t("title"),
     description: t("description"),
   };

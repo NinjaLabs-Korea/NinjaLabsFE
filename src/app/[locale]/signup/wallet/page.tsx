@@ -9,10 +9,10 @@ import { StepIndicator } from "@/components/ui/StepIndicator";
 import { Link } from "@/i18n/navigation";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { composeFoundationRuntime } from "@/lib/runtime/config";
+import { localeAlternates } from "@/i18n/alternates";
 
 const { foundationConfig, wallet: walletConnectionConfig } = composeFoundationRuntime(previewUser);
 const isApiMode = foundationConfig.mode === "api";
-const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
 // Keys under messages `signup.wallet.steps`.
 const walletSteps = ["connection", "signing", "gas", "accountLinking", "nft"];
@@ -21,6 +21,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/signup/w
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "signup.wallet.metadata" });
   return {
+    alternates: localeAlternates(locale, "/signup/wallet"),
     title: t("title"),
     description: isApiMode ? t("descriptionApi") : t("descriptionMock"),
   };
@@ -54,7 +55,6 @@ export default async function SignupWalletPage({ params }: PageProps<"/[locale]/
                     <WalletProvider
                       chainId={walletConnectionConfig.chainId}
                       rpcUrl={walletConnectionConfig.rpcUrl}
-                      walletConnectProjectId={walletConnectProjectId}
                     >
                       <WalletConnectButton chainId={walletConnectionConfig.chainId} />
                     </WalletProvider>

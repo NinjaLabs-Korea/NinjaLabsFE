@@ -25,7 +25,10 @@
     "categories": {
       "milestone": "Milestone",
       "featuredBounty": "Featured bounty",
-      "partnership": "Partnership"
+      "partnership": "Partnership",
+      "project": "Project",
+      "award": "Award",
+      "other": "Other"
     }
   },
   "timeline": {

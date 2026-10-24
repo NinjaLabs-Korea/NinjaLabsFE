@@ -3,12 +3,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NoticeFilters } from "@/components/notices/NoticeFilters";
 import { Badge } from "@/components/ui/Badge";
 import { getRuntimeNotices } from "@/lib/notices";
+import { localeAlternates } from "@/i18n/alternates";
 
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/notices">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "notices.metadata" });
   return {
+    alternates: localeAlternates(locale, "/notices"),
     title: t("title"),
     description: t("description"),
   };

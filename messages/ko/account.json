@@ -2,7 +2,9 @@
   "common": {
     "eyebrow": "계정",
     "unavailableBody": "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
-    "mockNote": "세션 미리보기: 데모 데이터이며 새로고침하면 초기화됩니다."
+    "mockNote": "세션 미리보기: 데모 데이터이며 새로고침하면 초기화됩니다.",
+    "loading": "계정 정보를 불러오는 중…",
+    "sessionExpired": "세션이 만료되었습니다. 다시 로그인해 주세요."
   },
   "signedOut": {
     "body": "가입 절차를 완료하면 내 계정을 미리 볼 수 있습니다.",
@@ -21,14 +23,77 @@
     "progressLabel": "지원 진행 상황",
     "steps": {
       "open": "지원 완료",
-      "under_review": "검토 중",
       "approved": "승인됨",
       "submitted": "제출됨",
       "completed": "완료"
     },
     "approvedStatus": "승인됨: 제출 가능",
     "submitWork": "작업 제출하기",
+    "resubmit": "다시 제출",
+    "revisionRequestedStatus": "수정 요청됨",
+    "revisionNote": "심사자가 제출물 수정을 요청했습니다. 내용을 고쳐 다시 제출해 주세요.",
+    "actionNeeded": "조치 필요",
     "rejectedStatus": "미선정",
-    "rejectedNote": "스폰서가 이 지원을 선정하지 않았습니다. 다른 진행 중인 바운티를 둘러보세요."
+    "rejectedNote": "스폰서가 이 지원을 선정하지 않았습니다. 다른 진행 중인 바운티를 둘러보세요.",
+    "notAcceptedStatus": "제출 미채택",
+    "forfeitedStatus": "수상 몰수",
+    "notAcceptedNote": "스폰서가 제출물을 검토한 뒤 채택하지 않았습니다. 이 결과는 최종입니다.",
+    "forfeitedNote": "작업물은 승인되었지만 수상이 몰수되었습니다: {reason}. 잘못된 처리라고 생각되면 운영진에게 문의하세요.",
+    "reviewerComment": "심사자 코멘트: {comment}",
+    "viaAgent": "{name} 대행",
+    "withdraw": "철회",
+    "withdrawing": "철회 중…",
+    "withdrawn": "지원을 철회했습니다. 바운티가 진행 중이면 다시 지원할 수 있습니다.",
+    "withdrawDialog": {
+      "eyebrow": "지원 철회",
+      "title": "“{title}” 지원을 철회할까요?",
+      "description": "스폰서가 더 이상 이 지원을 볼 수 없습니다. 바운티가 진행 중이면 나중에 다시 지원할 수 있습니다.",
+      "confirm": "지원 철회"
+    },
+    "withdrawErrors": {
+      "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "이미 검토되었거나 철회된 지원입니다.",
+      "generic": "지원을 철회하지 못했습니다. 잠시 후 다시 시도해 주세요."
+    },
+    "payoutPaid": "지급 완료",
+    "payoutPartial": "일부 지급",
+    "payoutPending": "지급 대기"
+  },
+  "settings": {
+    "meta": {
+      "title": "계정 설정 | Ninja Labs",
+      "description": "Ninja Labs 계정을 관리하세요."
+    },
+    "heading": "계정 설정",
+    "intro": "프로필 정보와 계정 관리 기능입니다.",
+    "signedOutMessage": "계정을 관리하려면 로그인하세요",
+    "profileHeading": "프로필",
+    "nicknameLabel": "닉네임",
+    "walletLabel": "지갑",
+    "dangerEyebrow": "위험 구역",
+    "deleteHeading": "계정 삭제",
+    "deleteBody": "계정 삭제는 되돌릴 수 없습니다. 같은 Google 계정으로 다시 가입하면 이전 활동과 연결되지 않은 새 계정이 만들어집니다.",
+    "deleteConsequences": {
+      "sessions": "모든 기기에서 로그아웃되고 공개 프로필이 사라집니다.",
+      "agents": "내 에이전트가 폐기되고 API 키는 즉시 사용할 수 없게 됩니다.",
+      "history": "대기 중인 지원과 아직 심사 중인 제출은 철회됩니다. 완료한 작업, 지급 내역, NFT 기록은 익명 이름으로 남습니다.",
+      "rewards": "승인됐지만 아직 지급 요청되지 않은 보상은 더 이상 지급되지 않습니다. 지급이 진행 중이면 완료될 때까지 계정을 삭제할 수 없습니다."
+    },
+    "deleteAction": "계정 삭제",
+    "deleteDialog": {
+      "eyebrow": "계정 삭제",
+      "title": "계정을 삭제할까요?",
+      "description": "Ninja Labs 계정이 영구적으로 삭제됩니다. 온체인 NFT는 지갑에 그대로 남습니다.",
+      "callout": "이 작업은 되돌릴 수 없습니다.",
+      "inputLabel": "확인을 위해 닉네임 “{nickname}”을(를) 입력하세요",
+      "confirm": "계정 삭제",
+      "deleting": "삭제 중…"
+    },
+    "deleteErrors": {
+      "CONFIRM_NICKNAME_MISMATCH": "닉네임이 일치하지 않습니다. 표시된 그대로 입력하세요.",
+      "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS": "진행 중인 지급이 있습니다. 지급이 완료되거나 취소된 뒤에 계정을 삭제할 수 있어요.",
+      "WITHDRAWAL_BLOCKED_PENDING_REWARDS": "승인되었지만 아직 지급 요청되지 않은 보상이 남아 있어 지금은 계정을 삭제할 수 없습니다(삭제하면 보상을 받을 수 없게 됩니다). Ninja Labs 운영자에게 연락해 지급을 마친 뒤 다시 시도해 주세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "generic": "계정을 삭제하지 못했습니다. 잠시 후 다시 시도하세요."
+    }
   }
 }

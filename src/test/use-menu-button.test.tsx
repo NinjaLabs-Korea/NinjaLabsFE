@@ -45,6 +45,34 @@ describe("useMenuButton", () => {
     expect(document.activeElement).toBe(item("Two"));
   });
 
+  it("stays open through a blur with relatedTarget null (Safari/Firefox-macOS mousedown) so the following click lands", () => {
+    render(<Menu />);
+    fireEvent.keyDown(screen.getByRole("button", { name: "Open" }), { key: "ArrowDown" });
+    const two = item("Two");
+    // Those browsers do not focus a button on mousedown: the root blurs with no relatedTarget before the click event.
+    fireEvent.pointerDown(two);
+    fireEvent.blur(item("One"), { relatedTarget: null });
+    expect(screen.queryByRole("menuitem", { name: "Two" })).toBeTruthy();
+    fireEvent.click(two);
+    expect(screen.getByRole("menuitem", { name: "Two" })).toBe(two);
+  });
+
+  it("closes on an outside pointerdown and when focus moves to an element outside the menu", () => {
+    render(
+      <>
+        <Menu />
+        <button type="button">Elsewhere</button>
+      </>,
+    );
+    fireEvent.keyDown(screen.getByRole("button", { name: "Open" }), { key: "ArrowDown" });
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByRole("menuitem")).toBeNull();
+
+    fireEvent.keyDown(screen.getByRole("button", { name: "Open" }), { key: "ArrowDown" });
+    fireEvent.blur(item("One"), { relatedTarget: screen.getByRole("button", { name: "Elsewhere" }) });
+    expect(screen.queryByRole("menuitem")).toBeNull();
+  });
+
   it("closes on Escape and returns focus to the trigger", () => {
     render(<Menu />);
     const trigger = screen.getByRole("button", { name: "Open" });
