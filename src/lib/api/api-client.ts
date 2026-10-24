@@ -179,6 +179,9 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
         body: input,
       }),
 
+    withdrawApplication: (applicationId) =>
+      http.fetchJson(`/applications/${encodeURIComponent(applicationId)}/withdraw`, { method: "POST" }),
+
     submitBounty: (bountyId, input) =>
       http.fetchJson(`/bounties/${encodeURIComponent(bountyId)}/submissions`, {
         method: "POST",

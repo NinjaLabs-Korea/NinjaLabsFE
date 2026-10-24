@@ -33,6 +33,7 @@ let apiClient: ApiClient;
 vi.mock("@/components/auth/FoundationProvider", () => ({
   useAuthSnapshot: () => state.auth,
   useAccountApi: () => apiClient,
+  useBountyApi: () => apiClient,
   useAgentApi: () => apiClient,
   useFoundationMode: () => "mock",
 }));

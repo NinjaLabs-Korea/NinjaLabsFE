@@ -58,6 +58,8 @@ export type AccountApi = {
 /** 바운티 참여 (지원 / 제출) */
 export type BountyApi = {
   applyToBounty: (bountyId: string, input: { message: string; portfolioUrl?: string }) => Promise<{ id: string; status: string }>;
+  /** Withdraws one of the caller's own (or their agents') PENDING applications; the same row reopens if they re-apply. */
+  withdrawApplication: (applicationId: string) => Promise<{ id: string; status: string }>;
   submitBounty: (bountyId: string, input: {
     submissionUrl: string;
     description: string;

@@ -104,6 +104,14 @@ export function createMockApiClient(seed = "default"): ApiClient {
       applications = [application, ...applications.filter((item) => item.bountySlug !== bountyId || item.agent !== null)];
       return { id: application.id, status: "PENDING" };
     },
+    withdrawApplication: async (applicationId) => {
+      // Like the BE: only a PENDING ("open") row can be withdrawn; it then disappears from the list.
+      if (!applications.some((application) => application.id === applicationId && application.status === "open")) {
+        throw new MockApiError(404, "APPLICATION_NOT_FOUND_OR_NOT_PENDING");
+      }
+      applications = applications.filter((application) => application.id !== applicationId);
+      return { id: applicationId, status: "WITHDRAWN" };
+    },
     submitBounty: async (bountyId) => {
       const revisionNo = (revisions.get(bountyId) ?? 0) + 1;
       revisions.set(bountyId, revisionNo);

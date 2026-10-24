@@ -43,6 +43,11 @@ describe("agent skill markdown", () => {
       expect(markdown).toMatch(new RegExp(`^\\| \\d{3} \\| \\x60${code}\\x60 \\|`, "m"));
     });
 
+    it("documents re-applying after a withdrawal and the fixed rate-limit window", () => {
+      expect(markdown).toContain("A withdrawn application is not a conflict: sending it again reopens the same row as pending.");
+      expect(markdown).toContain("The window is fixed: it starts at the first request and lasts 60 seconds");
+    });
+
     it("says EVM registration takes walletAddress only and mentions rotation/revocation", () => {
       expect(markdown).toContain("the registration takes `walletAddress` only");
       expect(markdown).not.toContain("Register the wallet public key");

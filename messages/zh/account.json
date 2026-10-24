@@ -31,7 +31,20 @@
     "submitWork": "提交作品",
     "rejectedStatus": "未入选",
     "rejectedNote": "赞助方未选择此申请。浏览其他进行中的赏金，继续创作吧。",
-    "viaAgent": "由 {name} 代为申请"
+    "viaAgent": "由 {name} 代为申请",
+    "withdraw": "撤回",
+    "withdrawing": "正在撤回…",
+    "withdrawn": "申请已撤回。赏金仍在进行时可重新申请。",
+    "withdrawDialog": {
+      "eyebrow": "撤回申请",
+      "title": "撤回对“{title}”的申请？",
+      "description": "赞助方将不再看到这份申请。赏金仍在进行时,你可以稍后重新申请。",
+      "confirm": "撤回申请"
+    },
+    "withdrawErrors": {
+      "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "该申请已被审核或已撤回。",
+      "generic": "无法撤回该申请,请稍后重试。"
+    }
   },
   "settings": {
     "meta": {

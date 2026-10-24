@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApplicationsView } from "@/components/account/ApplicationsView";
+import { ApiHttpError } from "@/lib/api/http";
 import type { AccountApplication, ApplicationStatus } from "@/lib/contracts/account";
 import type { ApiClient, ApiResult } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
@@ -24,6 +25,7 @@ let apiClient: ApiClient;
 vi.mock("@/components/auth/FoundationProvider", () => ({
   useAuthSnapshot: () => state.auth,
   useAccountApi: () => apiClient,
+  useBountyApi: () => apiClient,
   useFoundationMode: () => state.mode,
 }));
 
@@ -52,6 +54,12 @@ const currentStep = (article: HTMLElement) => {
 };
 
 describe("ApplicationsView", () => {
+  beforeAll(() => {
+    // jsdom has no <dialog> implementation; ConfirmDialog only needs open/close bookkeeping here.
+    HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute("open", ""); };
+    HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) { this.removeAttribute("open"); };
+  });
+
   beforeEach(() => {
     state.auth = { status: "signed-in", user: previewUser };
     state.mode = "api";
@@ -144,5 +152,80 @@ describe("ApplicationsView", () => {
     state.mode = "mock";
     renderWithIntl(<ApplicationsView />);
     expect(await screen.findByText("Session preview: demo data, resets on reload.")).toBeTruthy();
+  });
+
+  describe("withdraw", () => {
+    const rows = () => [
+      row("open"), row("approved"), row("submitted"), row("completed"), row("rejected"),
+      row("open", { id: "agent-open", bountyTitle: "Agent open", agent: { id: "ag1", name: "Scout" } }),
+    ];
+    // A stateful stand-in for the BE: withdrawing removes the row from the next read.
+    function serveWithWithdraw(withdraw: (id: string) => Promise<{ id: string; status: string }>) {
+      let current = rows();
+      apiClient = createMockApiClient();
+      const withdrawApplication = vi.fn(async (id: string) => {
+        const result = await withdraw(id);
+        current = current.filter((item) => item.id !== id);
+        return result;
+      });
+      const getApplications = vi.fn(async () => ({ status: "available" as const, data: current.map((item) => ({ ...item })) }));
+      Object.assign(apiClient, { getApplications, withdrawApplication });
+      return { withdrawApplication, getApplications };
+    }
+
+    it("offers Withdraw only on pending rows, including agent-made ones", async () => {
+      serveWithWithdraw(async (id) => ({ id, status: "WITHDRAWN" }));
+      renderWithIntl(<ApplicationsView />);
+      await screen.findByRole("link", { name: "Bounty open" });
+      expect(screen.getAllByRole("button", { name: "Withdraw" })).toHaveLength(2);
+      expect(within(card("Bounty open")).getByRole("button", { name: "Withdraw" })).toBeTruthy();
+      expect(within(card("Agent open")).getByRole("button", { name: "Withdraw" })).toBeTruthy();
+      for (const title of ["Bounty approved", "Bounty submitted", "Bounty completed", "Bounty rejected"]) {
+        expect(within(card(title)).queryByRole("button", { name: "Withdraw" })).toBeNull();
+      }
+    });
+
+    it("confirms, calls withdraw, refetches and announces the result", async () => {
+      const { withdrawApplication, getApplications } = serveWithWithdraw(async (id) => ({ id, status: "WITHDRAWN" }));
+      renderWithIntl(<ApplicationsView />);
+      await screen.findByRole("link", { name: "Agent open" });
+      fireEvent.click(within(card("Agent open")).getByRole("button", { name: "Withdraw" }));
+      const dialog = screen.getByRole("alertdialog", { hidden: true });
+      expect(within(dialog).getByText("Withdraw your application to “Agent open”?")).toBeTruthy();
+      expect(withdrawApplication).not.toHaveBeenCalled();
+      fireEvent.click(within(dialog).getByRole("button", { name: "Withdraw application" }));
+      await waitFor(() => expect(withdrawApplication).toHaveBeenCalledExactlyOnceWith("agent-open"));
+      await waitFor(() => expect(screen.queryByRole("link", { name: "Agent open" })).toBeNull());
+      expect(getApplications.mock.calls.length).toBeGreaterThanOrEqual(2);
+      expect(screen.getByRole("status", { hidden: true }).textContent).toContain("Application withdrawn.");
+      expect(screen.getByRole("link", { name: "Bounty open" })).toBeTruthy();
+    });
+
+    it("does not call withdraw when the confirmation is cancelled", async () => {
+      const { withdrawApplication } = serveWithWithdraw(async (id) => ({ id, status: "WITHDRAWN" }));
+      renderWithIntl(<ApplicationsView />);
+      await screen.findByRole("link", { name: "Bounty open" });
+      fireEvent.click(within(card("Bounty open")).getByRole("button", { name: "Withdraw" }));
+      fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+      expect(withdrawApplication).not.toHaveBeenCalled();
+      expect(screen.getByRole("link", { name: "Bounty open" })).toBeTruthy();
+    });
+
+    it("localizes APPLICATION_NOT_FOUND_OR_NOT_PENDING and a generic failure", async () => {
+      let code: string | null = "APPLICATION_NOT_FOUND_OR_NOT_PENDING";
+      serveWithWithdraw(async () => {
+        throw code ? new ApiHttpError(404, code) : new Error("boom");
+      });
+      renderWithIntl(<ApplicationsView />);
+      await screen.findByRole("link", { name: "Bounty open" });
+      fireEvent.click(within(card("Bounty open")).getByRole("button", { name: "Withdraw" }));
+      fireEvent.click(screen.getByRole("button", { name: "Withdraw application" }));
+      expect((await screen.findByRole("alert")).textContent).toBe("This application was already reviewed or withdrawn.");
+
+      code = null;
+      fireEvent.click(within(card("Bounty open")).getByRole("button", { name: "Withdraw" }));
+      fireEvent.click(screen.getByRole("button", { name: "Withdraw application" }));
+      await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("We couldn’t withdraw this application. Please try again shortly."));
+    });
   });
 });
