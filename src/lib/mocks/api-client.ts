@@ -2,10 +2,11 @@ import type { AdminApi, ApiClient } from "@/lib/contracts/api";
 import type { AccountAgent, AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
-import { ApiHttpError } from "@/lib/api/http";
+import { MockApiError } from "@/lib/mocks/mock-error";
 import { getBounty } from "@/lib/bounties";
 import { createMockFixtures, getMockFixtureSnapshot, type MockAccountFixtures } from "@/lib/mocks/fixtures";
 import { getAdminBounties, getAdminHighlights, getAdminPosts, getAdminUsers } from "@/lib/admin";
+import { ADMIN_STATUS_FROM_CODE, createMockOperationsApi } from "@/lib/mocks/admin-operations";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const daysFromNow = (days: number): string => new Date(Date.now() + days * DAY_MS).toISOString();
@@ -20,16 +21,7 @@ function createSequence() {
   return (prefix: string) => `${prefix}-${++sequence}`;
 }
 
-/**
- * BE 오류 응답을 흉내 내는 mock 오류. `ApiHttpError`를 상속하므로 컴포넌트의 `instanceof ApiHttpError` /
- * `error.code` 분기가 mock 모드에서도 api 모드와 같은 경로를 탄다.
- */
-export class MockApiError extends ApiHttpError {
-  constructor(status: number, code: string) {
-    super(status, code);
-    this.name = "MockApiError";
-  }
-}
+export { MockApiError };
 
 /** mock 모드에서 bountyId는 slug다. 지원형 바운티는 상세 화면과 같은 applicationTitle을 쓴다. */
 function toPreviewApplication(id: string, bountyId: string, message: string): AccountApplication {
@@ -203,7 +195,17 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
     if (!found) throw new MockApiError(404, code);
     return found;
   };
+  // Operations console twin: per-bounty applications/submissions/rewards/payouts seeded on first open, with the BE's checks.
+  const operations = createMockOperationsApi({ findBounty: (bountyId) => bounties.find((item) => item.slug === bountyId), nextId });
+  const openedOperations = new Set<string>();
+  const { transitionOperations, getAdminOperations, ...operationWrites } = operations;
   return {
+    ...operationWrites,
+    getAdminOperations: async (bountyId) => {
+      const result = await getAdminOperations(bountyId);
+      openedOperations.add(bountyId);
+      return result;
+    },
     uploadAdminMedia: async (file) => ({ id: `preview-${file.name}`, url: URL.createObjectURL(file) }),
     getAdminUsers: async (query = "") => {
       const needle = query.trim().toLowerCase();
@@ -236,7 +238,9 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
     },
     transitionAdminBounty: async (bountyId, to) => {
       requireOne(bounties, (item) => item.slug === bountyId, "BOUNTY_NOT_FOUND");
-      const status = ADMIN_BOUNTY_STATUS[to] ?? "closed";
+      // A bounty opened in the operations console enforces the BE transition table + lifecycle blockers on its mock rows.
+      if (openedOperations.has(bountyId)) transitionOperations(bountyId, to);
+      const status = ADMIN_BOUNTY_STATUS[to] ?? ADMIN_STATUS_FROM_CODE[to] ?? "closed";
       bounties = bounties.map((item) => (item.slug === bountyId ? { ...item, status } : item));
     },
     deleteAdminBounty: async (bountyId) => {
