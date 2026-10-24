@@ -93,7 +93,8 @@ export function bountyToForm(bounty: AdminBounty): BountyFormValues {
     title: bounty.title,
     sponsor: bounty.sponsor,
     deadline: toLocalDateTimeInput(bounty.deadline),
-    amount: String(bounty.reward.amount),
+    // A bounty without a reward row maps to `{ amount: 0 }`; prefilling "0" would trip `amountInvalid` and block every edit of it.
+    amount: bounty.reward.amount > 0 ? String(bounty.reward.amount) : "",
     currency: bounty.reward.currency,
     intake: bounty.intakeEnabled ? "ON" : "OFF",
     submissionMode: bounty.submissionMode === "agent" ? "Agent" : "Direct",

@@ -30,6 +30,15 @@ describe("admin bounty form mapping", () => {
     });
   });
 
+  it("leaves the amount empty for a bounty without a reward so its other fields can still be edited", () => {
+    const bounty = { ...getAdminBounties()[0], deadline: "2020-01-01T00:00:00.000Z", reward: { amount: 0, currency: "INJ" as const } };
+    const form = bountyToForm(bounty);
+    expect(form.amount).toBe("");
+    // Past deadline left untouched + title edited: nothing blocks the save.
+    expect(validateBountyForm({ ...form, title: "Renamed" }, { now: new Date("2026-10-24T00:00:00.000Z") })).toEqual({});
+    expect(formToBounty({ ...form, title: "Renamed" }, { slug: bounty.slug, coverImage: null, existingStatus: bounty.status }).reward).toEqual({ amount: 0, currency: "INJ" });
+  });
+
   it("starts new bounties as funding only when a reward amount is set", () => {
     const base = { ...emptyBountyForm(), deadline: "2026-07-14T23:59" };
     expect(formToBounty(base, { slug: "", coverImage: null }).status).toBe("draft");
