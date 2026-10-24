@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createMockApiClient, MockApiError } from "@/lib/mocks/api-client";
 import { getAdminBounties } from "@/lib/admin";
+import { lifecycleFor } from "@/lib/mocks/admin-operations";
 
 const HASH = "cd".repeat(32);
 const codeOf = async (promise: Promise<unknown>) => {
@@ -99,5 +100,45 @@ describe("mock operations parity (lib/mocks/admin-operations.ts)", () => {
     expect(await codeOf(client.retryAdminNftJob(failed.items[0].id))).toEqual([404, "NFT_JOB_NOT_FOUND_OR_NOT_FAILED"]);
     expect((await client.getAdminNftJobs("FAILED", 1)).total).toBe(1);
     expect((await client.getAdminNftJobs("PENDING", 1)).items.map((job) => job.id)).toContain(failed.items[0].id);
+  });
+});
+
+describe("mock lifecycle blockers mirror BountyLifecycleService (UNPAID_WINNERS)", () => {
+  const reward = { id: "rw", status: "FUNDED", cap: "100", allocated: "50" };
+  const sub = { id: "s1", status: "APPROVED" };
+  const payout = (status: string) => ({ id: "p1", rewardId: "rw", submissionId: "s1", status });
+  const make = (over: { reward?: object; payouts?: object[] }) => ({
+    bounty: { status: "IN_REVIEW", submissionDeadline: new Date(Date.now() + 1e9).toISOString() },
+    applications: [], submissions: [sub], rewards: [{ ...reward, ...over.reward }], payouts: over.payouts ?? [],
+  }) as unknown as Parameters<typeof lifecycleFor>[0];
+  const codes = (ops: Parameters<typeof lifecycleFor>[0]) => {
+    const { blockers } = lifecycleFor(ops);
+    return [blockers.COMPLETED!.map((b) => b.code), blockers.CANCELLED!.map((b) => b.code)];
+  };
+
+  it("an owed winner with headroom blocks COMPLETED and CANCELLED", () => {
+    expect(codes(make({}))).toEqual([["UNPAID_WINNERS"], ["UNPAID_WINNERS"]]);
+  });
+
+  it("a winner with only a CANCELLED payout, or an exhausted pool, blocks neither", () => {
+    expect(codes(make({ payouts: [payout("CANCELLED")] }))).toEqual([[], []]);
+    expect(codes(make({ reward: { allocated: "100" } }))).toEqual([[], []]);
+  });
+
+  it("open payouts block, FAILED counts as owed but not as an open payout, PAID blocks nothing", () => {
+    expect(codes(make({ reward: { allocated: "100" }, payouts: [payout("APPROVED")] }))[1]).toEqual(["UNPAID_WINNERS"]);
+    expect(codes(make({ reward: { allocated: "100" }, payouts: [payout("PAID")] }))).toEqual([[], []]);
+    const ops = make({ reward: { allocated: "100" }, payouts: [payout("FAILED")] });
+    expect(ops.payouts.filter((p) => ["REQUESTED", "AWAITING_MULTISIG_APPROVAL", "APPROVED", "BROADCASTING"].includes(p.status))).toHaveLength(0);
+    expect(codes(ops)).toEqual([["UNPAID_WINNERS"], ["UNPAID_WINNERS"]]);
+  });
+
+  it("cancel is rejected with the BE 400 while a winner is owed", async () => {
+    const client = createMockApiClient();
+    const slug = activeBounty().slug;
+    const ops = await client.getAdminOperations(slug);
+    const resubmitted = ops.submissions.find((s) => s.status === "RESUBMITTED")!;
+    await client.reviewAdminSubmission(resubmitted.id, { decision: "APPROVE", revisionNo: 2 });
+    expect(await codeOf(client.transitionAdminBounty(slug, "CANCELLED"))).toEqual([400, "VALIDATION_FAILED"]);
   });
 });
