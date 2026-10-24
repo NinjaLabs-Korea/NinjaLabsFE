@@ -15,6 +15,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
 import type { AccountApplication, ApplicationStatus } from "@/lib/contracts/account";
+import { parseReviewComment } from "@/lib/review-comment";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -25,6 +26,7 @@ const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success
   submitted: "primary-soft",
   completed: "success",
   rejected: "danger",
+  notAccepted: "danger",
 };
 
 const outlineDangerClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
@@ -32,13 +34,31 @@ const outlineDangerClass = `rounded-control border border-danger-soft bg-danger-
 // Step labels live under account.applications.steps, keyed by status.
 const applicationSteps: readonly ApplicationStatus[] = ["open", "approved", "submitted", "completed"];
 
+/** Final state of an approved application whose submission was rejected; a forfeited award names the reason. */
+function NotAcceptedNote({ application }: { application: AccountApplication }) {
+  const t = useTranslations("account.applications");
+  const review = parseReviewComment(application.reviewComment);
+  if (review?.forfeited) return <p className="mt-4 text-sm text-danger">{t("forfeitedNote", { reason: review.text })}</p>;
+  return (
+    <>
+      <p className="mt-4 text-sm text-ink-muted">{t("notAcceptedNote")}</p>
+      {review ? <p className="mt-1 text-sm text-ink-muted">{t("reviewerComment", { comment: review.text })}</p> : null}
+    </>
+  );
+}
+
 export function ApplicationsView() {
   const t = useTranslations("account.applications");
   const tAccount = useTranslations("account.common");
   const tBounties = useTranslations("bounties.categories");
   const format = useFormatter();
-  const statusLabel = (status: ApplicationStatus): string =>
-    status === "approved" ? t("approvedStatus") : status === "rejected" ? t("rejectedStatus") : t(`steps.${status}`);
+  const statusLabel = (application: AccountApplication): string => {
+    const { status } = application;
+    if (status === "approved") return t("approvedStatus");
+    if (status === "rejected") return t("rejectedStatus");
+    if (status === "notAccepted") return parseReviewComment(application.reviewComment)?.forfeited ? t("forfeitedStatus") : t("notAcceptedStatus");
+    return t(`steps.${status}`);
+  };
   const mode = useFoundationMode();
   const authSnapshot = useAuthSnapshot();
   const apiClient = useAccountApi();
@@ -114,7 +134,7 @@ export function ApplicationsView() {
                 <span className="flex flex-wrap gap-2">
                   <Badge variant="primary-soft">{tBounties(application.category)}</Badge>
                   <Badge variant={statusVariants[application.status]}>
-                    {statusLabel(application.status)}
+                    {statusLabel(application)}
                   </Badge>
                   {application.agent ? (
                     <Badge variant="neutral">{t("viaAgent", { name: application.agent.name })}</Badge>
@@ -133,6 +153,8 @@ export function ApplicationsView() {
 
               {application.status === "rejected" ? (
                 <p className="mt-4 text-sm text-ink-muted">{t("rejectedNote")}</p>
+              ) : application.status === "notAccepted" ? (
+                <NotAcceptedNote application={application} />
               ) : (
                 <ol
                   aria-label={t("progressLabel")}

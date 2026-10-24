@@ -49,6 +49,7 @@ const application = (status: AccountApplication["status"], agent: AccountApplica
   note: "",
   status,
   agent,
+  reviewComment: null,
 });
 
 const submission = (status: AccountSubmission["status"], agent: AccountSubmission["agent"] = null, reviewComment: string | null = null): AccountSubmission => ({ bountySlug: "bounty-1", status, agent, paymentStatus: "NONE", reviewComment });
@@ -357,8 +358,15 @@ describe("api client application mapping", () => {
       // Owner and agent rows on the same bounty: only the agent has submitted.
       { id: "a6", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b6", bounty_title: "B6", category: "DEV", agent: null },
       { id: "a7", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b6", bounty_title: "B6", category: "DEV", agent: { id: "agent-1", name: "scout" } },
+      // Approved applications whose submission was finally rejected (b8 forfeited, b9 plain, b10 plain without comment).
+      { id: "a8", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b8", bounty_title: "B8", category: "DEV", agent: null },
+      { id: "a9", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b9", bounty_title: "B9", category: "DEV", agent: null },
+      { id: "a10", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b10", bounty_title: "B10", category: "DEV", agent: null },
     ],
     "/submissions/me": [
+      { status: "REJECTED", bounty_id: "b8", review_comment: "forfeited: winner wallet never connected" },
+      { status: "REJECTED", bounty_id: "b9", review_comment: "Not production ready" },
+      { status: "REJECTED", bounty_id: "b10" },
       { status: "REVISION_REQUESTED", bounty_id: "b4" },
       { status: "SUBMITTED", bounty_id: "b5", agent: { id: "agent-1", name: "scout" } },
       { status: "APPROVED", bounty_id: "b6", agent: { id: "agent-1", name: "scout" }, payment_status: "PARTIALLY_PAID" },
@@ -381,10 +389,20 @@ describe("api client application mapping", () => {
       // The agent's submission does not complete the owner's own application.
       ["b6", "approved", null],
       ["b6", "completed", "scout"],
+      ["b8", "notAccepted", null],
+      ["b9", "notAccepted", null],
+      ["b10", "notAccepted", null],
+    ]);
+    // The reviewer comment travels with the final state; other states carry none.
+    expect(applications.status === "available" && applications.data.map((item) => item.reviewComment)).toEqual([
+      null, null, null, null, null, null, "forfeited: winner wallet never connected", "Not production ready", null,
     ]);
     await expect(client.getSubmissions(signedIn)).resolves.toEqual({
       status: "available",
       data: [
+        { bountySlug: "b8", status: "rejected", agent: null, paymentStatus: "NONE", reviewComment: "forfeited: winner wallet never connected" },
+        { bountySlug: "b9", status: "rejected", agent: null, paymentStatus: "NONE", reviewComment: "Not production ready" },
+        { bountySlug: "b10", status: "rejected", agent: null, paymentStatus: "NONE", reviewComment: null },
         { bountySlug: "b4", status: "revision_requested", agent: null, paymentStatus: "NONE", reviewComment: null },
         { bountySlug: "b5", status: "submitted", agent: { id: "agent-1", name: "scout" }, paymentStatus: "NONE", reviewComment: null },
         { bountySlug: "b6", status: "approved", agent: { id: "agent-1", name: "scout" }, paymentStatus: "PARTIALLY_PAID", reviewComment: null },

@@ -36,22 +36,21 @@ function toPreviewApplication(id: string, bountyId: string, message: string): Ac
     // BE PENDING → FE "open" (Applied), the same first step the api client maps to.
     status: "open",
     agent: null,
+    reviewComment: null,
   };
 }
 
 /** Fixture submissions mirror the api client's join: a submitted/completed application has a submission row. */
 function fixtureSubmissions(applications: readonly AccountApplication[]): AccountSubmission[] {
-  const derived = applications
-    .filter((application) => application.status === "submitted" || application.status === "completed")
+  return applications
+    .filter((application) => application.status === "submitted" || application.status === "completed" || application.status === "notAccepted")
     .map((application) => ({
       bountySlug: application.bountySlug,
-      status: application.status === "completed" ? "approved" as const : "submitted" as const,
+      status: application.status === "completed" ? "approved" as const : application.status === "notAccepted" ? "rejected" as const : "submitted" as const,
       agent: application.agent,
       paymentStatus: application.status === "completed" ? "PENDING" as const : "NONE" as const,
-      reviewComment: null,
+      reviewComment: application.reviewComment,
     }));
-  // Approved work whose award was forfeited by an admin (BE scripts/forfeit-award.js): REJECTED + comment `forfeited: <reason>`.
-  return [...derived, { bountySlug: "quest-copy-refresh", status: "rejected", agent: null, paymentStatus: "NONE", reviewComment: "forfeited: winner wallet never connected" }];
 }
 
 /**

@@ -64,7 +64,7 @@ describe("mock api client parity", () => {
     const client = createMockApiClient();
     await client.applyToBounty("helix-volume-analytics", { message: "QA approach" });
     const statuses = new Set(available(await client.getApplications(owner)).map((application) => application.status));
-    for (const status of statuses) expect(["open", "approved", "submitted", "completed", "rejected"]).toContain(status);
+    for (const status of statuses) expect(["open", "approved", "submitted", "completed", "rejected", "notAccepted"]).toContain(status);
   });
 
   it("keeps agent-made rows on the same bounty when the owner applies directly", async () => {

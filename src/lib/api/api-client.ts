@@ -80,6 +80,7 @@ function toApplication(row: ApplicationRow): AccountApplication {
     // BE PENDING = 지원 완료(심사 대기) → FE 첫 단계 "open"(Applied)
     status: row.status === "APPROVED" ? "approved" : row.status === "REJECTED" ? "rejected" : "open",
     agent: toAgentRef(row.agent),
+    reviewComment: null,
   };
 }
 
@@ -145,6 +146,10 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
               const application = toApplication(row);
               const submission = submissionsByRow.get(submissionKey(row.bounty_id, row.agent));
               if (!submission || application.status !== "approved") return application;
+              // REJECTED is final (also a forfeited award: approved work, no payout) — not another "Submitted" step.
+              if (submission.status === "REJECTED") {
+                return { ...application, status: "notAccepted" as const, reviewComment: submission.review_comment?.trim() || null };
+              }
               return {
                 ...application,
                 status: submission.status === "APPROVED" ? "completed" as const : "submitted" as const,

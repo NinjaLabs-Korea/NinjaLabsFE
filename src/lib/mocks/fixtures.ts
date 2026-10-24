@@ -13,6 +13,7 @@ const applications: readonly AccountApplication[] = [
     note: "Summarized audit approach with CosmWasm experience.",
     status: "open",
     agent: null,
+    reviewComment: null,
   },
   {
     id: "application-2",
@@ -23,6 +24,7 @@ const applications: readonly AccountApplication[] = [
     note: "Proposed state-machine driven onboarding screens.",
     status: "approved",
     agent: null,
+    reviewComment: null,
   },
   // Agent-made application: the owner sees it in My applications and the bounty detail treats it as "already applied".
   {
@@ -34,6 +36,19 @@ const applications: readonly AccountApplication[] = [
     note: "Proposed a navigation restructure with verified request examples.",
     status: "open",
     agent: { id: "agent-1", name: "market-scout-agent" },
+    reviewComment: null,
+  },
+  // Approved work whose award an admin forfeited (BE scripts/forfeit-award.js): submission REJECTED + comment `forfeited: <reason>`.
+  {
+    id: "application-4",
+    bountySlug: "quest-copy-refresh",
+    bountyTitle: "Quest copy refresh",
+    category: "Content",
+    appliedAt: "2026-06-20T09:00:00.000Z",
+    note: "Rewrote the onboarding quests with a shorter first-step flow.",
+    status: "notAccepted",
+    agent: null,
+    reviewComment: "forfeited: winner wallet never connected",
   },
 ];
 
