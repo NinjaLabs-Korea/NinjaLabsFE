@@ -266,6 +266,19 @@ describe("BountyActionPanel", () => {
     expect(alert.id).not.toBe("");
   });
 
+  it.each([
+    ["INVALID_CHARACTER", 400, "Your text contains characters that cannot be saved (for example a NUL byte). Remove them and try again."],
+    ["REFERENCE_NOT_FOUND", 400, "Something this request refers to no longer exists. Reload the page and try again."],
+    ["BOUNTY_NOT_FOUND", 404, "This bounty no longer exists."],
+  ])("maps the BE %s code to localized copy", async (code, status, copy) => {
+    const applyToBounty = vi.fn(async () => { throw new ApiHttpError(status, code); });
+    Object.assign(apiClient, { applyToBounty });
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
+    expect((await screen.findByRole("alert")).textContent).toBe(copy);
+  });
+
   it("labels the submit form and falls back to a localized generic message for unknown codes", async () => {
     state.applications = [application("approved")];
     const submitBounty = vi.fn(async () => { throw new ApiHttpError(418, "TEAPOT_BUSY"); });

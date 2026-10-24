@@ -6,6 +6,8 @@ import { HighlightManager } from "@/components/admin/HighlightManager";
 import { PostManager } from "@/components/admin/PostManager";
 import type { AdminBounty, AdminHighlight, AdminPost } from "@/lib/admin";
 import { renderWithIntl } from "@/test/intl";
+import { ApiHttpError } from "@/lib/api/http";
+import { adminApiErrorCode } from "@/lib/admin-helpers";
 
 type Deferred = { resolve: () => void; promise: Promise<{ id: string }> };
 function deferred(id: string): Deferred {
@@ -208,5 +210,38 @@ describe("PostManager", () => {
     expect(adminApi.saveAdminPost).toHaveBeenCalledWith(expect.objectContaining({ slug: "n1", externalUrl: null, thumbnail: null }), false, undefined);
     pending.resolve();
     await waitFor(() => expect(save.disabled).toBe(false));
+  });
+});
+
+describe("admin BE error codes", () => {
+  it("recognizes only the mapped codes", () => {
+    expect(adminApiErrorCode(new ApiHttpError(400, "INVALID_CHARACTER"))).toBe("INVALID_CHARACTER");
+    expect(adminApiErrorCode(new ApiHttpError(400, "REFERENCE_NOT_FOUND"))).toBe("REFERENCE_NOT_FOUND");
+    expect(adminApiErrorCode(new ApiHttpError(404, "BOUNTY_NOT_FOUND"))).toBe("BOUNTY_NOT_FOUND");
+    expect(adminApiErrorCode(new ApiHttpError(400, "VALIDATION_FAILED"))).toBeNull();
+    expect(adminApiErrorCode(new Error("INVALID_CHARACTER"))).toBeNull();
+  });
+
+  it.each([
+    ["INVALID_CHARACTER", "A field contains characters that cannot be saved (for example a NUL byte). Remove them and try again."],
+    ["BOUNTY_NOT_FOUND", "The bounty no longer exists. Reload the page to refresh the list."],
+  ])("shows the localized %s copy in the bounty save toast", async (code, copy) => {
+    adminApi.saveAdminBounty.mockRejectedValue(new ApiHttpError(code === "BOUNTY_NOT_FOUND" ? 404 : 400, code));
+    const { AdminToastHost } = await import("@/components/admin/AdminToastHost");
+    renderWithIntl(<><BountyManager bounties={[bounty]} tabs={null}>{null}</BountyManager><AdminToastHost /></>);
+    await waitFor(() => expect(adminApi.getAdminBounties).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.submit((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).closest("form") as HTMLFormElement);
+    expect(await screen.findByText(copy)).toBeTruthy();
+  });
+
+  it("maps REFERENCE_NOT_FOUND in the highlight save toast", async () => {
+    adminApi.saveAdminHighlight.mockRejectedValue(new ApiHttpError(400, "REFERENCE_NOT_FOUND"));
+    const { AdminToastHost } = await import("@/components/admin/AdminToastHost");
+    renderWithIntl(<><HighlightManager highlights={[highlight]} /><AdminToastHost /></>);
+    await waitFor(() => expect(adminApi.getAdminHighlights).toHaveBeenCalled());
+    fireEvent.click(screen.getAllByRole("button", { name: "Edit" })[0]);
+    fireEvent.submit((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).closest("form") as HTMLFormElement);
+    expect(await screen.findByText("This record points to something that no longer exists. Reload the page and try again.")).toBeTruthy();
   });
 });

@@ -86,4 +86,17 @@ describe("ProfileForm nickname rule + availability check", () => {
     expect(screen.getByText("The server rejected this bio. Keep it under 1000 characters.")).toBeTruthy();
     expect(nicknameInput().getAttribute("aria-describedby")).toContain("nickname-error");
   });
+  it.each([
+    ["INVALID_CHARACTER", "Your nickname or bio contains characters that cannot be saved (for example a NUL byte). Remove them and try again."],
+    ["REFERENCE_NOT_FOUND", "Your account record could not be found. Reload the page or sign in again."],
+  ])("maps the BE %s code to its own save error", async (code, copy) => {
+    completeProfile.mockRejectedValue(new ApiHttpError(400, code));
+    renderWithIntl(<ProfileForm />);
+    typeNickname("ninja_dev");
+    fireEvent.click(screen.getByRole("button", { name: "Dev" }));
+    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.submit(nicknameInput().closest("form")!);
+    await waitFor(() => expect(completeProfile).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText(copy)).toBeTruthy();
+  });
 });

@@ -21,7 +21,12 @@
     "required": "此项为必填项。",
     "fixFields": "请先修正标出的字段再保存。",
     "saving": "保存中…",
-    "removeImage": "移除图片"
+    "removeImage": "移除图片",
+    "errors": {
+      "INVALID_CHARACTER": "某个字段包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
+      "REFERENCE_NOT_FOUND": "该记录引用的对象已不存在。请刷新页面后重试。",
+      "BOUNTY_NOT_FOUND": "该赏金已不存在。请刷新页面以更新列表。"
+    }
   },
   "tabs": {
     "users": "用户管理",

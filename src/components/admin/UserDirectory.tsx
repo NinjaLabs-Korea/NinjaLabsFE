@@ -6,7 +6,7 @@ import { AdminTable } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { UserActions } from "@/components/admin/UserActions";
 import { Badge } from "@/components/ui/Badge";
-import type { AdminUser } from "@/lib/admin-helpers";
+import { type AdminUser, adminErrorDescription } from "@/lib/admin-helpers";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const columns = [
@@ -56,8 +56,8 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   async function handleRemove(user: AdminUser) {
     try {
       await api.setAdminMember(user.slug, { isMember: false });
-    } catch {
-      pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: t("toast.removeFailedDescription") });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: adminErrorDescription(error, tCommon, t("toast.removeFailedDescription")) });
       return;
     }
     setDirectoryUsers((currentUsers) => currentUsers.map((currentUser) => (
@@ -81,8 +81,8 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   ) {
     try {
       await api.setAdminMember(user.slug, { isMember: true, role, ...(displayOrder !== null ? { displayOrder } : {}) });
-    } catch {
-      pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: t("toast.assignFailedDescription") });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: adminErrorDescription(error, tCommon, t("toast.assignFailedDescription")) });
       return;
     }
     setDirectoryUsers((currentUsers) => currentUsers.map((currentUser) => (

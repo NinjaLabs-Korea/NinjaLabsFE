@@ -8,7 +8,7 @@ import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
-import type { AdminBounty } from "@/lib/admin-helpers";
+import { type AdminBounty, adminErrorDescription } from "@/lib/admin-helpers";
 import { BOUNTY_SPONSOR_MAX, BOUNTY_TITLE_MAX, bountyToForm, emptyBountyForm, formToBounty, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
@@ -125,8 +125,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       setRecords(await api.getAdminBounties());
       pushAdminToast({ variant: "success", title: mode.kind === "edit" ? t("toast.updatedTitle") : t("toast.createdTitle"), description: tCommon("savedDescription", { title: form.title }) });
       startCreate();
-    } catch {
-      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("toast.saveFailedDescription") });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
       setSaving(false);
     }
@@ -138,8 +138,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       await api.transitionAdminBounty(bounty.slug, to);
       setRecords(await api.getAdminBounties());
       pushAdminToast({ variant: "success", title: t("toast.statusUpdatedTitle"), description: t("toast.statusUpdatedDescription", { title: bounty.title, to }) });
-    } catch {
-      pushAdminToast({ variant: "danger", title: t("toast.transitionFailedTitle"), description: t("toast.transitionFailedDescription") });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: t("toast.transitionFailedTitle"), description: adminErrorDescription(error, tCommon, t("toast.transitionFailedDescription")) });
     }
   };
 
@@ -149,8 +149,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       await api.deleteAdminBounty(bounty.slug);
       setRecords((current) => current.filter((item) => item.slug !== bounty.slug));
       pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: bounty.title });
-    } catch {
-      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: t("toast.deleteFailedDescription") });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
     }
   };
 

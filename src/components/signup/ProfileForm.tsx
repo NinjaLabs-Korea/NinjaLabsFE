@@ -19,7 +19,7 @@ const fieldTags = [
   { labelKey: "other", value: "OTHER" },
 ] as const;
 
-type SaveErrorKey = "network" | "session" | "nickname" | "invalid" | "generic";
+type SaveErrorKey = "network" | "session" | "nickname" | "invalid" | "invalidCharacter" | "referenceNotFound" | "generic";
 
 /** 닉네임 입력 후 중복 검사까지 기다리는 시간 (ms) — BE `check-nickname`은 30/min throttle이다 */
 export const NICKNAME_CHECK_DEBOUNCE_MS = 400;
@@ -34,6 +34,8 @@ function saveErrorKey(error: unknown): SaveErrorKey {
   if (!(error instanceof ApiHttpError)) return "network";
   if (error.status === 401) return "session";
   if (error.status === 409 || error.code.includes("NICKNAME")) return "nickname";
+  if (error.code === "INVALID_CHARACTER") return "invalidCharacter";
+  if (error.code === "REFERENCE_NOT_FOUND") return "referenceNotFound";
   if (error.status === 400 || error.status === 422) return "invalid";
   return "generic";
 }

@@ -21,7 +21,12 @@
     "required": "This field is required.",
     "fixFields": "Fix the highlighted fields before saving.",
     "saving": "Saving…",
-    "removeImage": "Remove image"
+    "removeImage": "Remove image",
+    "errors": {
+      "INVALID_CHARACTER": "A field contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
+      "REFERENCE_NOT_FOUND": "This record points to something that no longer exists. Reload the page and try again.",
+      "BOUNTY_NOT_FOUND": "The bounty no longer exists. Reload the page to refresh the list."
+    }
   },
   "tabs": {
     "users": "User Mgmt",

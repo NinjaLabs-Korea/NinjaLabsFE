@@ -177,6 +177,8 @@
       "UNKNOWN_ERROR": "服务器返回了意外响应，请重试。",
       "MAX_WINNERS_REACHED": "此赏金已达到最大获胜者数量。",
       "BOUNTY_NOT_FOUND": "此赏金已不存在。",
+      "INVALID_CHARACTER": "您的内容包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
+      "REFERENCE_NOT_FOUND": "此请求引用的对象已不存在。请刷新页面后重试。",
       "unknown": "出了点问题（{code}），请重试。"
     },
     "checkingSession": "正在检查会话…",

@@ -7,7 +7,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { Badge } from "@/components/ui/Badge";
-import { highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight } from "@/lib/admin-helpers";
+import { highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminErrorDescription } from "@/lib/admin-helpers";
 import { HIGHLIGHT_TYPE_CODES, isHighlightTypeCode } from "@/lib/api/codecs";
 import { isHttpUrlOrMediaPath, isHttpUrlOrSitePath } from "@/lib/url-rules";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
@@ -156,8 +156,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
       setRecords(sortHighlights(await api.getAdminHighlights()));
       pushAdminToast({ variant: "success", title: isEditing ? t("toast.updatedTitle") : t("toast.addedTitle"), description: tCommon("savedDescription", { title }) });
       resetForm();
-    } catch {
-      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("toast.saveFailedDescription") });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
       setSaving(false);
     }
@@ -169,8 +169,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
       await api.deleteAdminHighlight(highlight.id);
       setRecords((current) => current.filter((item) => item.id !== highlight.id));
       pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: highlight.title });
-    } catch {
-      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: t("toast.deleteFailedDescription") });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
     }
   }
 

@@ -177,6 +177,8 @@
       "UNKNOWN_ERROR": "The server returned an unexpected response. Please try again.",
       "MAX_WINNERS_REACHED": "This bounty has already reached its maximum number of winners.",
       "BOUNTY_NOT_FOUND": "This bounty no longer exists.",
+      "INVALID_CHARACTER": "Your text contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
+      "REFERENCE_NOT_FOUND": "Something this request refers to no longer exists. Reload the page and try again.",
       "unknown": "Something went wrong ({code}). Please try again."
     },
     "checkingSession": "Checking your session…",

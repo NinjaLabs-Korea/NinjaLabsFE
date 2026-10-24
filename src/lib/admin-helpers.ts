@@ -2,6 +2,22 @@
 // `lib/admin.ts`, whose mock registries (bounties/members/notices/hall-of-fame fixtures) would otherwise be bundled
 // into the shared client chunk. `lib/admin.ts` re-exports everything for server code and tests.
 import { HIGHLIGHT_TYPE_LABELS, type HighlightTypeCode } from "./api/codecs";
+import { ApiHttpError } from "./api/http";
+
+/** BE 400/404 codes an admin write can return that deserve their own copy (`admin.common.errors.<code>`). */
+export const ADMIN_API_ERROR_CODES = ["INVALID_CHARACTER", "REFERENCE_NOT_FOUND", "BOUNTY_NOT_FOUND"] as const;
+export type AdminApiErrorCode = (typeof ADMIN_API_ERROR_CODES)[number];
+
+export function adminApiErrorCode(error: unknown): AdminApiErrorCode | null {
+  if (!(error instanceof ApiHttpError)) return null;
+  return (ADMIN_API_ERROR_CODES as readonly string[]).includes(error.code) ? (error.code as AdminApiErrorCode) : null;
+}
+
+/** Toast description for a failed admin write: the mapped BE code's copy, else the action's generic `fallback`. */
+export function adminErrorDescription(error: unknown, translate: (key: `errors.${AdminApiErrorCode}`) => string, fallback: string): string {
+  const code = adminApiErrorCode(error);
+  return code ? translate(`errors.${code}`) : fallback;
+}
 
 export type AdminUser = {
   slug: string;

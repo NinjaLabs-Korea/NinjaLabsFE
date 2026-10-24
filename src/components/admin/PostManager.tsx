@@ -7,7 +7,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { Badge } from "@/components/ui/Badge";
-import { postCategoryLabelKeys, publishOptionFor, type AdminPost } from "@/lib/admin-helpers";
+import { postCategoryLabelKeys, publishOptionFor, type AdminPost, adminErrorDescription } from "@/lib/admin-helpers";
 import { isHttpUrl, isHttpUrlOrMediaPath } from "@/lib/url-rules";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
@@ -127,8 +127,8 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       setRecords(await api.getAdminPosts());
       pushAdminToast({ variant: "success", title: mode === "create" ? t("toast.createdTitle") : t("toast.updatedTitle"), description: tCommon("savedDescription", { title: form.title }) });
       startNew();
-    } catch {
-      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("toast.saveFailedDescription") });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
       setSaving(false);
     }
@@ -140,8 +140,8 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       await api.deleteAdminPost(post.slug);
       setRecords((current) => current.filter((item) => item.slug !== post.slug));
       pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: post.title });
-    } catch {
-      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: t("toast.deleteFailedDescription") });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
     }
   };
 

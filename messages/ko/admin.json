@@ -21,7 +21,12 @@
     "required": "필수 항목입니다.",
     "fixFields": "표시된 항목을 수정한 뒤 저장하세요.",
     "saving": "저장 중…",
-    "removeImage": "이미지 제거"
+    "removeImage": "이미지 제거",
+    "errors": {
+      "INVALID_CHARACTER": "저장할 수 없는 문자(예: NUL 문자)가 들어 있습니다. 해당 문자를 지우고 다시 시도하세요.",
+      "REFERENCE_NOT_FOUND": "이 항목이 가리키는 대상이 더 이상 없습니다. 페이지를 새로고침한 뒤 다시 시도하세요.",
+      "BOUNTY_NOT_FOUND": "바운티가 더 이상 존재하지 않습니다. 페이지를 새로고침해 목록을 갱신하세요."
+    }
   },
   "tabs": {
     "users": "사용자 관리",

@@ -24,7 +24,7 @@ const headingClass = "font-display text-2xl -tracking-[0.24px] text-ink focus-vi
 const knownErrorCodes = [
   "ALREADY_APPLIED", "BOUNTY_NOT_OPEN", "APPLICATION_NOT_APPROVED", "DEADLINE_PASSED", "SUBMISSION_FINALIZED", "VALIDATION_FAILED",
   "APPLICATION_DEADLINE_PASSED", "SUBMISSION_TYPE_BOUNTY", "AGENT_SUBMISSION_REQUIRED", "DIRECT_SUBMISSION_REQUIRED",
-  "REFRESH_UNAVAILABLE", "UNKNOWN_ERROR", "MAX_WINNERS_REACHED", "BOUNTY_NOT_FOUND",
+  "REFRESH_UNAVAILABLE", "UNKNOWN_ERROR", "MAX_WINNERS_REACHED", "BOUNTY_NOT_FOUND", "INVALID_CHARACTER", "REFERENCE_NOT_FOUND",
 ] as const;
 type KnownErrorCode = (typeof knownErrorCodes)[number];
 type ErrorTranslator = (key: "generic" | "unknown" | KnownErrorCode, values?: { code: string }) => string;
