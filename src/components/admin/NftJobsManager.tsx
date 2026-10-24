@@ -25,17 +25,31 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
   const [failed, setFailed] = useState(false);
   const [retrying, setRetrying] = useState<ReadonlySet<string>>(new Set());
   const inFlight = useRef(new Set<string>());
+  // Only the newest request may write state: a slow FAILED page must not overwrite the PENDING page the operator switched to.
+  const latestRequest = useRef(0);
 
-  const load = useCallback(() => api.getAdminNftJobs(status, page).then(
-    (next) => {
-      setData(next);
-      setFailed(false);
-    },
-    () => {
-      setFailed(true);
-      pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") });
-    },
-  ), [api, page, status, t]);
+  const load = useCallback(() => {
+    const request = ++latestRequest.current;
+    return api.getAdminNftJobs(status, page).then(
+      (next) => {
+        if (request !== latestRequest.current) return;
+        // Retrying the last row of the last page shrinks the total: step back to the new last page instead of an empty page
+        // whose pager is hidden (pages === 1) and would strand the operator.
+        const lastPage = Math.max(1, Math.ceil(next.total / next.pageSize));
+        if (next.items.length === 0 && page > lastPage) {
+          setPage(lastPage);
+          return;
+        }
+        setData(next);
+        setFailed(false);
+      },
+      () => {
+        if (request !== latestRequest.current) return;
+        setFailed(true);
+        pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") });
+      },
+    );
+  }, [api, page, status, t]);
 
   useEffect(() => {
     void load();
