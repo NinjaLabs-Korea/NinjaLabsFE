@@ -12,7 +12,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "test:integration": "node integration/run-all.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "5.101.2",
