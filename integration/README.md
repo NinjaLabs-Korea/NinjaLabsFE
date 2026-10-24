@@ -89,7 +89,8 @@ refresh tokens rotate. Calls outside the browser (seeding, admin approval) use a
 
 ## Flows
 
-Each flow also asserts, on every screen it visits: no hydration error, no uncaught exception, no forbidden body text
+Each flow also asserts, on every screen it visits: no hydration error, no uncaught exception, no CSP violation (the FE is a
+production build, so `next.config.ts` sends the enforced `Content-Security-Policy`), no forbidden body text
 (`undefined`, `NaN`, `Invalid Date`, raw ISO timestamps, `[object Object]`, untranslated `a.b.c` keys) and no unexpected
 failed request.
 

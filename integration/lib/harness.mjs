@@ -89,13 +89,15 @@ export function check(label, ok, detail = '') {
   console.log(`ASSERT ${ok ? 'PASS' : 'FAIL'} ${label}${detail !== '' ? ' :: ' + (typeof detail === 'string' ? detail : JSON.stringify(detail)) : ''}`);
   return !!ok;
 }
-/** Asserts the page reported no hydration errors, uncaught exceptions or forbidden body text. */
 /** Cookie mode: a page load without a session sends one POST /api/auth/refresh that the BE answers 401 (no cookie). */
 export const SIGNED_OUT_PROBE = /^401 POST .*\/api\/auth\/refresh$/;
+/** Asserts the page reported no hydration errors, uncaught exceptions, CSP violations or forbidden body text. */
 export function clean(r, { allowFailed = [], signedOut = false } = {}) {
   if (signedOut) allowFailed = [...allowFailed, SIGNED_OUT_PROBE];
   check(`${r.label}: no hydration error`, r.hydration.length === 0, r.hydration);
   check(`${r.label}: no uncaught exception`, r.errors.length === 0, r.errors);
+  // 새 외부 오리진 때문에 여기서 실패하면 `next.config.ts contentSecurityPolicy()`의 해당 지시어를 고친다.
+  check(`${r.label}: no CSP violation`, r.csp.length === 0, r.csp);
   check(`${r.label}: no forbidden body text`, r.badText.length === 0, r.badText);
   const unexpected = r.failed.filter((f) => !allowFailed.some((re) => re.test(f)));
   check(`${r.label}: no unexpected failed request`, unexpected.length === 0, unexpected);

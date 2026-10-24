@@ -57,6 +57,7 @@ const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
  *
  * 새 외부 오리진(스크립트, iframe, fetch 대상)을 붙이면 아래 `contentSecurityPolicy()`의 해당 지시어에 추가하고,
  * `npm run build && npm run start`로 띄운 화면의 브라우저 콘솔에 "Refused to ..." 가 없는지 확인한다.
+ * integration 하네스(`integration/lib/harness.mjs clean()`)도 방문하는 모든 화면에서 CSP 위반 0건을 검사한다.
  */
 type CspMode = "enforce" | "report-only";
 
