@@ -232,3 +232,75 @@ describe("API auth adapter session restore", () => {
     expect(adapter.getSnapshot().user?.handle).toBe("ninja");
   });
 });
+
+describe("API auth adapter session end without reload", () => {
+  const me = { id: "u1", nickname: "ninja", onboardingStep: 4, onboardingCompleted: true, isAdmin: false };
+
+  async function signedInAdapter(handler: (url: string, init?: RequestInit) => Response | Promise<Response>) {
+    window.history.replaceState(null, "", "/en/bounties");
+    setTokens("fresh-access", "refresh-1");
+    const request = vi.fn(async (url: string, init?: RequestInit) => (url === `${API}/auth/me` ? Response.json(me) : handler(url, init)));
+    vi.stubGlobal("fetch", request);
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    return { adapter, request };
+  }
+
+  it("moves to signed-out when another tab removes the refresh token", async () => {
+    const { adapter } = await signedInAdapter(() => new Response(null, { status: 500 }));
+    const listener = vi.fn();
+    adapter.subscribe(listener);
+    // Another tab signed out: shared localStorage is already empty when this tab's `storage` event fires.
+    localStorage.removeItem("ninja.accessToken");
+    localStorage.removeItem("ninja.refreshToken");
+    window.dispatchEvent(new StorageEvent("storage", { key: "ninja.refreshToken", oldValue: "refresh-1", newValue: null }));
+    expect(adapter.getSnapshot()).toEqual({ status: "signed-out", user: null });
+    expect(listener).toHaveBeenCalled();
+  });
+
+  it("treats localStorage.clear() in another tab the same way", async () => {
+    const { adapter } = await signedInAdapter(() => new Response(null, { status: 500 }));
+    localStorage.clear();
+    window.dispatchEvent(new StorageEvent("storage", { key: null }));
+    expect(adapter.getSnapshot().status).toBe("signed-out");
+  });
+
+  it("ignores unrelated keys and a rotation that keeps a refresh token", async () => {
+    const { adapter } = await signedInAdapter(() => new Response(null, { status: 500 }));
+    window.dispatchEvent(new StorageEvent("storage", { key: "ninja.locale", newValue: "ko" }));
+    setTokens("rotated-access", "refresh-2");
+    window.dispatchEvent(new StorageEvent("storage", { key: "ninja.refreshToken", oldValue: "refresh-1", newValue: "refresh-2" }));
+    expect(adapter.getSnapshot().status).toBe("signed-in");
+  });
+
+  it.each([401, 403])("moves to signed-out as soon as a mid-session refresh is rejected with %i", async (status) => {
+    const { adapter } = await signedInAdapter((url) => {
+      if (url === `${API}/auth/refresh`) return new Response(null, { status });
+      return new Response(null, { status: 401 });
+    });
+    await expect(adapter.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ status: 401 });
+    expect(getTokens()).toEqual({ accessToken: null, refreshToken: null });
+    expect(adapter.getSnapshot()).toEqual({ status: "signed-out", user: null });
+  });
+
+  it("stays signed-in when the refresh is only throttled", async () => {
+    const { adapter } = await signedInAdapter((url) =>
+      url === `${API}/auth/refresh` ? new Response(null, { status: 429 }) : new Response(null, { status: 401 }));
+    await expect(adapter.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ code: "REFRESH_UNAVAILABLE" });
+    expect(adapter.getSnapshot().status).toBe("signed-in");
+  });
+
+  it("stays signed-in when a lock-less race left another tab's newer token in storage", async () => {
+    const { adapter } = await signedInAdapter((url) => {
+      if (url === `${API}/auth/refresh`) {
+        setTokens("other-tab-access", "refresh-other");
+        return new Response(null, { status: 401 });
+      }
+      return new Response(null, { status: 401 });
+    });
+    await expect(adapter.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ status: 401 });
+    expect(getTokens().refreshToken).toBe("refresh-other");
+    expect(adapter.getSnapshot().status).toBe("signed-in");
+  });
+});

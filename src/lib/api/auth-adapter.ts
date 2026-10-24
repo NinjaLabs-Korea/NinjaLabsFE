@@ -1,5 +1,5 @@
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
-import { clearTokens, createApiHttp, type ApiHttp } from "@/lib/api/http";
+import { clearTokens, createApiHttp, REFRESH_TOKEN_STORAGE_KEY, type ApiHttp } from "@/lib/api/http";
 import {
   createLoginChallenge,
   discardLoginVerifier,
@@ -37,8 +37,6 @@ export function shouldRedirectToOnboarding(
  * - 서버 렌더 중에는 항상 "loading". 브라우저에서만 토큰/네트워크에 접근한다.
  */
 export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiHttp } {
-  const http = createApiHttp(apiUrl);
-
   let snapshot: AuthSnapshot = { status: "loading", user: null };
   const listeners = new Set<() => void>();
   const setSnapshot = (next: AuthSnapshot): AuthSnapshot => {
@@ -46,6 +44,14 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     listeners.forEach((listener) => listener());
     return snapshot;
   };
+  /** The tokens are gone (refresh rejected here, or another tab signed out): stop showing a signed-in UI now. */
+  const endSignedInSession = () => {
+    if (snapshot.status !== "signed-in") return;
+    onboardingLog("session.ended", { reason: "TOKENS_CLEARED" });
+    setSnapshot({ status: "signed-out", user: null });
+  };
+
+  const http = createApiHttp(apiUrl, { onSessionEnded: endSignedInSession });
 
   async function restoreSession(): Promise<AuthSnapshot> {
     onboardingLog("session.restore.started", {
@@ -72,6 +78,11 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     onboardingLog("auth.adapter.initialized", {
       path: window.location.pathname,
       hasHash: Boolean(window.location.hash),
+    });
+    // Sign-out in another tab removes the shared refresh token; `key === null` is a `localStorage.clear()`.
+    window.addEventListener("storage", (event) => {
+      if (event.key !== REFRESH_TOKEN_STORAGE_KEY && event.key !== null) return;
+      if (!http.hasSession()) endSignedInSession();
     });
     // Any page load other than the OAuth callback means the sign-in that stored a PKCE verifier was abandoned.
     if (!isAuthCallbackPath(window.location.pathname)) discardLoginVerifier();

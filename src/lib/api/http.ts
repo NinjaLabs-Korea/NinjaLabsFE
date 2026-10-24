@@ -13,6 +13,8 @@
  *   single-flight만). BE가 refresh 토큰을 조건부 UPDATE로 회전시키므로 두 탭이 같은 토큰으로
  *   refresh하면 진 쪽이 401을 받는다: 락 안에서 저장소를 다시 읽어 이미 회전됐으면 네트워크를
  *   건너뛰고, 401이어도 저장된 토큰이 우리가 보낸 것일 때만 세션을 비운다.
+ * - refresh가 끝난 뒤 저장소에 refresh 토큰이 없으면(거부되어 비웠거나 다른 탭이 로그아웃함)
+ *   `onSessionEnded`를 부른다. 인증 어댑터가 이걸로 스냅샷을 즉시 signed-out으로 바꾼다(정지된 사용자 등).
  * - `clearTokens()`(로그아웃 포함)는 `sessionEpoch`를 올린다. 진행 중이던 refresh가 끝나도
  *   epoch가 바뀌었으면 새 토큰을 심지 않고 best-effort로 `/auth/logout`에 넘겨 폐기한다.
  */
@@ -21,6 +23,8 @@ import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
 
 const ACCESS_KEY = "ninja.accessToken";
 const REFRESH_KEY = "ninja.refreshToken";
+/** localStorage key whose removal in another tab means that tab signed out (`storage` event). */
+export const REFRESH_TOKEN_STORAGE_KEY = REFRESH_KEY;
 const REFRESH_LOCK = "ninja.auth.refresh";
 
 /** Bumped by every `clearTokens()`; a refresh that resolves after a sign-out must not re-plant tokens. */
@@ -119,7 +123,12 @@ type RefreshResult =
   | { ok: false; reason: "no-token" | "rejected" | "signed-out" }
   | { ok: false; reason: "unavailable"; status: number };
 
-export function createApiHttp(apiUrl: string): ApiHttp {
+export type ApiHttpOptions = {
+  /** A request's refresh failed and no refresh token is left: this tab's session is over. */
+  onSessionEnded?: () => void;
+};
+
+export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): ApiHttp {
   const base = apiUrl.replace(/\/$/, "");
   let refreshing: Promise<RefreshResult> | null = null;
 
@@ -244,6 +253,8 @@ export function createApiHttp(apiUrl: string): ApiHttp {
     const refresh = await refreshSession();
     if (refresh.ok) return true;
     if (refresh.reason === "unavailable") throw new ApiHttpError(refresh.status, "REFRESH_UNAVAILABLE");
+    // `rejected` with another tab's fresh token still stored is not the end of this session.
+    if (getTokens().refreshToken === null) options.onSessionEnded?.();
     return false;
   }
 
