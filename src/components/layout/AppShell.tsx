@@ -26,8 +26,9 @@ const { foundationConfig } = composeFoundationRuntime(previewUser);
 
 /**
  * The whole document: `<html lang>`, fonts, skip link, shell `NextIntlClientProvider` (`common` only) and
- * `FoundationProvider` around Header / main / Footer. Rendered by `app/[locale]/layout.tsx` for every page and by
- * the root `app/not-found.tsx` for router-level 404s, which render outside the `[locale]` segment.
+ * `FoundationProvider` around Header / main / Footer. Rendered by `app/[locale]/layout.tsx` for every page (after
+ * `setRequestLocale`). Never render it from the root `app/not-found.tsx`: Header/Footer and the server intl provider
+ * read the request locale, which would call `headers()` there and make every route dynamic.
  */
 export async function AppShell({ locale, children }: { locale: Locale; children: ReactNode }) {
   const t = await getTranslations({ locale, namespace: "common.layout" });

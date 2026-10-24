@@ -1,22 +1,41 @@
-import { hasLocale } from "next-intl";
-import { getLocale, getTranslations } from "next-intl/server";
-import { AppShell } from "@/components/layout/AppShell";
-import { NotFoundSection } from "@/components/layout/NotFoundSection";
-import { routing } from "@/i18n/routing";
+import { Inter, Space_Grotesk } from "next/font/google";
+import { getTranslations } from "next-intl/server";
+import { ClientIntlProvider } from "@/components/layout/ClientIntlProvider";
+import { getNotFoundCopy } from "@/components/layout/NotFoundSection";
+import { RootNotFoundCopy } from "@/components/layout/RootNotFoundCopy";
+import { type Locale, routing } from "@/i18n/routing";
+import "./globals.css";
 
-// Router-level 404 (`/_not-found`): URLs that match no route, including the proxy's rewrites for unknown detail ids.
-// It renders outside app/[locale]/layout.tsx, so it supplies the whole document through AppShell. The locale comes
-// from the `x-next-intl-locale` request header the proxy sets (`src/i18n/request.ts` falls back to the default).
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
+
+// Root not-found (`/_not-found`): only paths outside the `[locale]` routes reach it (proxy-excluded files such as
+// `/logo.svg` or `/ko/missing.png`) - in-locale misses are rewritten by `src/proxy.ts` to the static, localized
+// `[locale]/page-not-found` page. This component is part of EVERY page's render (it is the root not-found boundary), so
+// it must stay fully static: never call `headers()`, `getLocale()`, `setRequestLocale()` or a locale-less next-intl API
+// (`useTranslations`/`getTranslations()` without a locale, the server `NextIntlClientProvider`, the shell Header/Footer)
+// here or in app/layout.tsx - one request-time read turns every route dynamic. It renders a minimal English document
+// and `RootNotFoundCopy` swaps the copy, `<html lang>` and the title to the URL's locale after hydration.
 export default async function RootNotFound() {
-  const requested = await getLocale();
-  const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
-  const t = await getTranslations({ locale, namespace: "common.notFound" });
+  const entries = await Promise.all(
+    routing.locales.map(async (locale) => {
+      const t = await getTranslations({ locale, namespace: "common.notFound" });
+      return [locale, { ...(await getNotFoundCopy(locale)), metaTitle: t("metaTitle") }] as const;
+    }),
+  );
+  const copies = Object.fromEntries(entries) as Record<Locale, (typeof entries)[number][1]>;
 
   return (
-    <AppShell locale={locale}>
-      {/* not-found.tsx cannot export metadata; React hoists this <title> into <head>. */}
-      <title>{t("metaTitle")}</title>
-      <NotFoundSection />
-    </AppShell>
+    <html className={`${inter.variable} ${spaceGrotesk.variable}`} lang="en">
+      <body className="bg-page text-ink font-sans antialiased min-h-dvh flex flex-col">
+        {/* not-found.tsx cannot export metadata; React hoists this <title> into <head>. */}
+        <title>{copies[routing.defaultLocale].metaTitle}</title>
+        <ClientIntlProvider locale={routing.defaultLocale} messages={{}} timeZone="UTC">
+          <main className="flex-1" id="main-content">
+            <RootNotFoundCopy copies={copies} />
+          </main>
+        </ClientIntlProvider>
+      </body>
+    </html>
   );
 }
