@@ -196,3 +196,33 @@ export function rewardFromBaseUnits(row: RewardRow | undefined): Reward {
 export function rewardToBaseUnits(reward: Reward): string {
   return parseUnits(String(reward.amount), TOKEN_DECIMALS[reward.currency]).toString();
 }
+
+/** 심볼의 소수 자릿수 (대소문자 무시). 모르는 토큰은 null — 금액을 다른 자릿수로 잘못 환산하지 않는다. */
+export function tokenDecimalsFor(symbol: string): number | null {
+  const upper = symbol.toUpperCase();
+  return isRewardCurrency(upper) ? TOKEN_DECIMALS[upper] : null;
+}
+
+/**
+ * BE 최소 단위 정수 문자열 → 사람 단위 10진 문자열 (`formatUnits`, 지수 표기 없음 — 표시는 `lib/format.ts formatTokenAmount`).
+ * 모르는 토큰·정수가 아닌 값·null은 null.
+ */
+export function baseUnitsToHuman(base: string | null | undefined, symbol: string): string | null {
+  const decimals = tokenDecimalsFor(symbol);
+  if (decimals === null || !base || !/^\d+$/.test(base)) return null;
+  return formatUnits(BigInt(base), decimals);
+}
+
+/**
+ * 운영자가 입력한 사람 단위 금액(`12.5`) → BE에 보낼 최소 단위 정수 문자열. BE `TOKEN_AMOUNT`(양의 정수, 선행 0 없음)를
+ * 만족하지 못하는 값 — 빈 값, 음수, 지수 표기, 토큰 자릿수보다 긴 소수, 0 — 과 모르는 토큰은 null.
+ */
+export function humanToBaseUnits(value: string, symbol: string): string | null {
+  const decimals = tokenDecimalsFor(symbol);
+  const trimmed = value.trim();
+  if (decimals === null || !/^\d+(\.\d+)?$/.test(trimmed)) return null;
+  const fraction = trimmed.split(".")[1] ?? "";
+  if (fraction.length > decimals) return null;
+  const base = parseUnits(trimmed, decimals);
+  return base > BigInt(0) ? base.toString() : null;
+}
