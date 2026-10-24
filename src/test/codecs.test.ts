@@ -96,3 +96,29 @@ describe("imageProps", () => {
     vi.unstubAllEnvs();
   });
 });
+
+describe("label lookups ignore inherited Object.prototype keys", () => {
+  it.each(["constructor", "toString", "__proto__", "hasOwnProperty"])("%s is an unknown code everywhere", async (key) => {
+    const codecs = await import("@/lib/api/codecs");
+    const { highlightTypeLabelKey } = await import("@/lib/admin-helpers");
+    expect(codecs.toCategoryLabel(key)).toBeUndefined();
+    expect(codecs.toMemberRoleLabel(key)).toBeUndefined();
+    expect(codecs.toMemberRoleCode(key)).toBeUndefined();
+    expect(codecs.toNoticeCategoryLabel(key)).toBeUndefined();
+    expect(codecs.isHighlightTypeCode(key)).toBe(false);
+    expect(codecs.toHighlightTypeLabel(key)).toBeUndefined();
+    expect(highlightTypeLabelKey(key)).toBeNull();
+    expect(codecs.toReward({ symbol: key, amount: "1" })).toBeNull();
+  });
+
+  it("still maps the known codes", async () => {
+    const codecs = await import("@/lib/api/codecs");
+    const { highlightTypeLabelKey } = await import("@/lib/admin-helpers");
+    expect(codecs.toCategoryLabel("DEV")).toBe("Dev");
+    expect(codecs.toMemberRoleLabel("CORE")).toBe("Core");
+    expect(codecs.toMemberRoleCode("Ops")).toBe("OPS");
+    expect(codecs.toNoticeCategoryLabel("EVENT")).toBe("Events");
+    expect(codecs.toHighlightTypeLabel("AWARD")).toBe("Award");
+    expect(highlightTypeLabelKey("FEATURED_BOUNTY")).toBe("featuredBounty");
+  });
+});

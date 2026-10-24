@@ -69,7 +69,7 @@ const CATEGORY_CODES = Object.fromEntries(
 
 /** 알 수 없는 코드는 undefined — 호출부에서 기본값(보통 "Other")을 정한다 */
 export function toCategoryLabel(code: string): BountyCategory | undefined {
-  return CATEGORY_LABELS[code as CategoryCode];
+  return Object.hasOwn(CATEGORY_LABELS, code) ? CATEGORY_LABELS[code as CategoryCode] : undefined;
 }
 
 export function toCategoryCode(label: BountyCategory): CategoryCode {
@@ -91,11 +91,11 @@ const MEMBER_ROLE_CODES = Object.fromEntries(
 ) as Record<Member["role"], MemberRoleCode>;
 
 export function toMemberRoleLabel(code: string): Member["role"] | undefined {
-  return MEMBER_ROLE_LABELS[code as MemberRoleCode];
+  return Object.hasOwn(MEMBER_ROLE_LABELS, code) ? MEMBER_ROLE_LABELS[code as MemberRoleCode] : undefined;
 }
 
 export function toMemberRoleCode(label: string): MemberRoleCode | undefined {
-  return MEMBER_ROLE_CODES[label as Member["role"]];
+  return Object.hasOwn(MEMBER_ROLE_CODES, label) ? MEMBER_ROLE_CODES[label as Member["role"]] : undefined;
 }
 
 // ── 공지 카테고리 ──────────────────────────────────────────
@@ -115,7 +115,7 @@ const NOTICE_CATEGORY_CODES = Object.fromEntries(
 
 /** 알 수 없는 코드는 undefined — 호출부에서 기본값(보통 "Other")을 정한다 */
 export function toNoticeCategoryLabel(code: string): Notice["category"] | undefined {
-  return NOTICE_CATEGORY_LABELS[code as NoticeCategoryCode];
+  return Object.hasOwn(NOTICE_CATEGORY_LABELS, code) ? NOTICE_CATEGORY_LABELS[code as NoticeCategoryCode] : undefined;
 }
 
 export function toNoticeCategoryCode(label: Notice["category"]): NoticeCategoryCode {
@@ -143,7 +143,7 @@ const HIGHLIGHT_TYPE_CODE_BY_LABEL = Object.fromEntries(
 ) as Record<HighlightTypeLabel, HighlightTypeCode>;
 
 export function isHighlightTypeCode(code: string): code is HighlightTypeCode {
-  return code in HIGHLIGHT_TYPE_LABELS;
+  return Object.hasOwn(HIGHLIGHT_TYPE_LABELS, code);
 }
 
 /** 알 수 없는 코드는 undefined — 공개 화면은 "Other"로 표시하고, 어드민은 원문 코드를 그대로 보여 주며 다른 유형으로 바꿔 보내지 않는다 */
@@ -165,7 +165,7 @@ export const TOKEN_DECIMALS: Record<Reward["currency"], number> = {
 export type RewardRow = { symbol: string; amount: string };
 
 function isRewardCurrency(symbol: string): symbol is Reward["currency"] {
-  return symbol in TOKEN_DECIMALS;
+  return Object.hasOwn(TOKEN_DECIMALS, symbol);
 }
 
 /** BE 보상 행(최소 단위) → 표시용 Reward. 모르는 토큰이나 정수가 아닌 금액은 null (다른 토큰으로 잘못 표시하지 않는다). */

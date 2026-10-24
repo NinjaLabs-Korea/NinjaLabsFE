@@ -1,7 +1,7 @@
 // Fixture-free admin types and pure helpers. Client islands (`components/admin/*`) import from here, never from
 // `lib/admin.ts`, whose mock registries (bounties/members/notices/hall-of-fame fixtures) would otherwise be bundled
 // into the shared client chunk. `lib/admin.ts` re-exports everything for server code and tests.
-import { HIGHLIGHT_TYPE_LABELS, type HighlightTypeCode } from "./api/codecs";
+import { isHighlightTypeCode, type HighlightTypeCode } from "./api/codecs";
 import { ApiHttpError } from "./api/http";
 
 /** BE 400/404 codes an admin write can return that deserve their own copy (`admin.common.errors.<code>`). */
@@ -123,7 +123,7 @@ export const highlightTypeLabelKeys: Record<HighlightTypeCode, string> = {
 
 /** Message key for a highlight type code, or null for a code this FE does not know (render the raw code instead). */
 export function highlightTypeLabelKey(type: string): string | null {
-  return type in HIGHLIGHT_TYPE_LABELS ? highlightTypeLabelKeys[type as HighlightTypeCode] : null;
+  return isHighlightTypeCode(type) ? highlightTypeLabelKeys[type] : null;
 }
 
 /** Deliverables shown for a BE `requirements` string: its non-empty lines, trimmed. Display only - never re-joined for saving. */
