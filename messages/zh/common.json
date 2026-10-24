@@ -52,7 +52,12 @@
     "mockIdle": "模拟模式：此本地预览不会连接 Google，也不会创建账户。",
     "redirectNotice": "你将被重定向到 Google 进行登录。",
     "failed": "Google 登录失败，请重试。",
-    "previewFailure": "预览登录失败"
+    "previewFailure": "预览登录失败",
+    "turnstileLabel": "人机验证",
+    "turnstileVerifying": "正在验证你是否为真人…",
+    "turnstileExpired": "验证已过期，正在重新验证…",
+    "turnstileError": "无法验证你是否为真人，请重试。",
+    "turnstileRetry": "重新验证"
   },
   "wallet": {
     "switching": "正在切换网络…",

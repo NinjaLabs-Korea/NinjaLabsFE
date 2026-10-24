@@ -20,6 +20,8 @@ export type PublicRuntimeConfig = {
   mockAvailable: boolean;
   apiAvailable: boolean;
   wallet: WalletConfig | null;
+  /** Cloudflare Turnstile site key (public). Set → the sign-in button requires a widget token (BE `TURNSTILE_SECRET_KEY`). */
+  turnstileSiteKey?: string;
 };
 
 export type RuntimeConfig = PublicRuntimeConfig & {
@@ -35,6 +37,7 @@ export type RuntimeEnvironment = {
   NINJA_MOCK_SEED?: string;
   NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID?: string;
   NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL?: string;
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY?: string;
 };
 
 export type FoundationConfig =
@@ -167,6 +170,15 @@ function assertChainRpcPairing(chainId: WalletChainId, rpcUrl: string): void {
 }
 
 
+/** Site keys are short public identifiers (`0x4AAAAAAA…`, Cloudflare test keys `1x00000000000000000000AA`); reject anything else at build time. */
+function parseTurnstileSiteKey(environment: RuntimeEnvironment): string | undefined {
+  const siteKey = optionalValue(environment, "NEXT_PUBLIC_TURNSTILE_SITE_KEY");
+  if (siteKey && !/^[A-Za-z0-9_-]{8,128}$/.test(siteKey)) {
+    throw new RuntimeConfigError("NEXT_PUBLIC_TURNSTILE_SITE_KEY must be a Cloudflare Turnstile site key (letters, digits, '-' or '_').");
+  }
+  return siteKey;
+}
+
 export function readRuntimeConfig(environment: RuntimeEnvironment): RuntimeConfig {
 
   const deploymentTier = parseChoice(
@@ -225,6 +237,8 @@ export function readRuntimeConfig(environment: RuntimeEnvironment): RuntimeConfi
     throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL is required in api mode when NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID is set.");
   }
 
+  const turnstileSiteKey = parseTurnstileSiteKey(environment);
+
   return {
     deploymentTier,
     runtimeMode,
@@ -232,6 +246,7 @@ export function readRuntimeConfig(environment: RuntimeEnvironment): RuntimeConfi
     mockAvailable,
     apiAvailable,
     wallet,
+    ...(turnstileSiteKey ? { turnstileSiteKey } : {}),
     ...(apiUrl
       ? {
           apiUrl: requireHttps(
@@ -253,6 +268,7 @@ export function loadRuntimeConfig(): RuntimeConfig {
     NINJA_MOCK_SEED: process.env.NINJA_MOCK_SEED,
     NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: process.env.NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID,
     NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: process.env.NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL,
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
   });
 }
 
@@ -277,5 +293,6 @@ export function toPublicRuntimeConfig(config: RuntimeConfig): PublicRuntimeConfi
     mockAvailable: config.mockAvailable,
     apiAvailable: config.apiAvailable,
     wallet: config.wallet ? { ...config.wallet } : null,
+    ...(config.turnstileSiteKey ? { turnstileSiteKey: config.turnstileSiteKey } : {}),
   };
 }

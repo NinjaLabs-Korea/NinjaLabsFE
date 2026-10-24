@@ -155,12 +155,14 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    signIn: async () => {
+    signIn: async (options) => {
       const traceId = getOnboardingTraceId();
       const codeChallenge = await createLoginChallenge();
       const params = new URLSearchParams({ returnTo: window.location.origin, codeChallenge });
       if (traceId) params.set("trace", traceId);
-      onboardingLog("oauth.redirect.started", { returnOrigin: window.location.origin });
+      // Cloudflare Turnstile 위젯 토큰 (NEXT_PUBLIC_TURNSTILE_SITE_KEY가 있을 때만) — BE가 TURNSTILE_SECRET_KEY로 siteverify한다.
+      if (options?.turnstileToken) params.set("turnstileToken", options.turnstileToken);
+      onboardingLog("oauth.redirect.started", { returnOrigin: window.location.origin, turnstile: Boolean(options?.turnstileToken) });
       // `new URL` keeps this an absolute cross-origin navigation (BE -> Google), which next/no-location-assign-relative-destination cannot infer from a template literal
       window.location.assign(new URL(`${apiUrl.replace(/\/$/, "")}/auth/google?${params}`));
       // 페이지가 구글로 떠나므로 이 Promise는 결과를 낼 필요가 없다

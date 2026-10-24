@@ -52,7 +52,12 @@
     "mockIdle": "목업 모드: 이 로컬 미리보기는 Google에 연결하거나 계정을 만들지 않습니다.",
     "redirectNotice": "로그인을 위해 Google로 이동합니다.",
     "failed": "Google 로그인에 실패했습니다. 다시 시도해 주세요.",
-    "previewFailure": "로그인 실패 미리보기"
+    "previewFailure": "로그인 실패 미리보기",
+    "turnstileLabel": "사람 확인",
+    "turnstileVerifying": "사람인지 확인하는 중…",
+    "turnstileExpired": "확인이 만료되었습니다. 다시 확인하는 중…",
+    "turnstileError": "사람인지 확인하지 못했습니다. 다시 시도해 주세요.",
+    "turnstileRetry": "다시 확인"
   },
   "wallet": {
     "switching": "네트워크 전환 중…",
