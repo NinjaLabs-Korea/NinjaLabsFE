@@ -35,18 +35,41 @@ const optimizedImagePrefixes = [
   appOrigin() ? `${appOrigin()}/` : null,
 ].filter((prefix): prefix is string => prefix !== null);
 
-/**
- * Report-only CSP: it is NOT enforced, so a violation only logs to the browser console
- * (no `report-to`/`report-uri` endpoint yet). Enforcing it today would break the app because
- * Next.js emits inline bootstrap scripts (`'unsafe-inline'` in script-src) and inline styles; dev mode also needs `'unsafe-eval'`. To enforce it, generate a per-request
- * nonce in `src/proxy.ts`, pass it to `<Script>`/`next/script` and the root layout via the
- * `x-nonce` header, replace `'unsafe-inline'`/`'unsafe-eval'` with `'nonce-…' 'strict-dynamic'`,
- * audit the remaining inline styles, and only then rename this header to `Content-Security-Policy`.
- */
 /** Cloudflare Turnstile (sign-in bot check, `lib/turnstile.ts`): api.js, the challenge iframe and its fetches. */
 const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
 
-function contentSecurityPolicy(): string {
+/**
+ * CSP 모드 - 바꿀 곳은 여기 한 군데다. `src/test/next-config.test.ts`가 모드별 헤더 이름과 지시어를 고정한다.
+ *
+ * - production (`next build` / `next start`, Vercel 포함. Next가 NODE_ENV=production으로 고정한다):
+ *   헤더 이름이 `Content-Security-Policy`라서 브라우저가 실제로 차단한다. `'unsafe-eval'` 없음.
+ * - 그 외 (`next dev`, vitest): `Content-Security-Policy-Report-Only`. 위반은 콘솔에만 찍힌다.
+ *   dev 서버의 React Refresh / 에러 오버레이가 `eval`을 쓰므로 `'unsafe-eval'`을 허용한다.
+ * - 어느 모드든 `report-to`/`report-uri` 수집 엔드포인트는 아직 없다 (위반은 브라우저 콘솔에만 남는다).
+ *
+ * Why enforce with `'unsafe-inline'` still in script-src: the access token lives in JS memory, so an injected script
+ * must not be able to pull more code from another origin (script-src), fetch/beacon to an unknown origin (connect-src),
+ * post a form off-site (form-action), embed a plugin (object-src), rebase relative URLs (base-uri) or have the page
+ * framed (frame-ancestors). Next.js emits inline bootstrap scripts and inline styles, so `'unsafe-inline'` stays.
+ *
+ * Next step (post-launch, deliberately not done here): a per-request nonce in `src/proxy.ts`, passed to the root layout
+ * via an `x-nonce` header, replacing script-src `'unsafe-inline'` with `'nonce-…' 'strict-dynamic'`.
+ *
+ * 새 외부 오리진(스크립트, iframe, fetch 대상)을 붙이면 아래 `contentSecurityPolicy()`의 해당 지시어에 추가하고,
+ * `npm run build && npm run start`로 띄운 화면의 브라우저 콘솔에 "Refused to ..." 가 없는지 확인한다.
+ */
+type CspMode = "enforce" | "report-only";
+
+function cspMode(): CspMode {
+  return process.env.NODE_ENV === "production" ? "enforce" : "report-only";
+}
+
+const CSP_HEADER_NAME: Record<CspMode, string> = {
+  enforce: "Content-Security-Policy",
+  "report-only": "Content-Security-Policy-Report-Only",
+};
+
+function contentSecurityPolicy(mode: CspMode): string {
   // The wallet stack is injected-only since the wagmi 3 upgrade (2026-10-24): the browser extension talks to its own
   // RPC, and the page only reaches the configured Injective JSON-RPC through viem's http transport. RainbowKit /
   // WalletConnect origins (relay websockets, web3modal, rainbow.me) were dropped with them; re-add them if WalletConnect
@@ -59,10 +82,13 @@ function contentSecurityPolicy(): string {
     "https://k8s.testnet.json-rpc.injective.network",
     TURNSTILE_ORIGIN,
   ].filter((source): source is string => source !== null);
+  const scriptSrc = ["'self'", "'unsafe-inline'", mode === "report-only" ? "'unsafe-eval'" : null, TURNSTILE_ORIGIN].filter(
+    (source): source is string => source !== null,
+  );
   return [
     "default-src 'self'",
     "object-src 'none'",
-    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${TURNSTILE_ORIGIN}`,
+    `script-src ${scriptSrc.join(" ")}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
@@ -72,6 +98,12 @@ function contentSecurityPolicy(): string {
     "base-uri 'self'",
     "form-action 'self'",
   ].join("; ");
+}
+
+/** The CSP header for this build: enforced in production, report-only otherwise (see `cspMode`). */
+function cspHeader(): { key: string; value: string } {
+  const mode = cspMode();
+  return { key: CSP_HEADER_NAME[mode], value: contentSecurityPolicy(mode) };
 }
 
 const nextConfig: NextConfig = {
@@ -92,7 +124,7 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-          { key: "Content-Security-Policy-Report-Only", value: contentSecurityPolicy() },
+          cspHeader(),
         ],
       },
     ];
