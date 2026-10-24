@@ -122,6 +122,24 @@ describe("BountyManager", () => {
     }
   });
 
+  it("treats the field chips as one category: picking another replaces it and the selected one cannot be cleared", async () => {
+    adminApi.saveAdminBounty.mockResolvedValue({ id: "b1" });
+    renderWithIntl(<BountyManager bounties={[bounty]} tabs={null}>{null}</BountyManager>);
+    await waitFor(() => expect(adminApi.getAdminBounties).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const group = screen.getByRole("group", { name: "Field tags" });
+    const chip = (name: string) => [...group.querySelectorAll("button")].find((button) => button.textContent === name) as HTMLButtonElement;
+    expect(chip("Dev").getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(chip("Design"));
+    expect(chip("Design").getAttribute("aria-pressed")).toBe("true");
+    expect(chip("Dev").getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(chip("Design"));
+    expect(chip("Design").getAttribute("aria-pressed")).toBe("true");
+    fireEvent.submit(screen.getByRole("button", { name: "Save" }).closest("form") as HTMLFormElement);
+    await waitFor(() => expect(adminApi.saveAdminBounty).toHaveBeenCalledTimes(1));
+    expect(adminApi.saveAdminBounty.mock.calls[0][0]).toMatchObject({ tags: ["Design"] });
+  });
+
   it("sends coverImage null after the admin removes the cover", async () => {
     adminApi.saveAdminBounty.mockResolvedValue({ id: "b1" });
     renderWithIntl(<BountyManager bounties={[bounty]} tabs={null}>{null}</BountyManager>);

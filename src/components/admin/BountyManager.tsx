@@ -98,11 +98,10 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const toggleTag = (tag: AdminBounty["tags"][number]) => {
-    setForm((current) => ({
-      ...current,
-      tags: current.tags.includes(tag) ? current.tags.filter((currentTag) => currentTag !== tag) : [...current.tags, tag],
-    }));
+  // The BE stores one `category` (`formToBounty` → `tags[0]`), so the chips are single-select: a multi-toggle let
+  // "Design" be added behind the default "Dev" and saved as DEV, and deselecting every chip silently saved OTHER.
+  const selectTag = (tag: AdminBounty["tags"][number]) => {
+    setForm((current) => ({ ...current, tags: [tag] }));
   };
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
@@ -224,9 +223,9 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               {form.coverImage || coverFile ? <button className="mt-2 text-xs font-semibold text-danger hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={removeCover} type="button">{tCommon("removeImage")}</button> : null}
             </div>
             <div>
-              <p className="text-sm font-semibold text-ink">{t("form.tags")}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {tags.map((tag) => <button aria-pressed={form.tags.includes(tag)} className={form.tags.includes(tag) ? "inline-flex h-6 items-center rounded-full bg-primary px-2.5 text-xs font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" : "inline-flex h-6 items-center rounded-full bg-primary-soft px-2.5 text-xs font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"} key={tag} onClick={() => toggleTag(tag)} type="button">{t(`tags.${tag}`)}</button>)}
+              <p className="text-sm font-semibold text-ink" id="bounty-tags-label">{t("form.tags")}</p>
+              <div aria-labelledby="bounty-tags-label" className="mt-2 flex flex-wrap gap-2" role="group">
+                {tags.map((tag) => <button aria-pressed={form.tags.includes(tag)} className={form.tags.includes(tag) ? "inline-flex h-6 items-center rounded-full bg-primary px-2.5 text-xs font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" : "inline-flex h-6 items-center rounded-full bg-primary-soft px-2.5 text-xs font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"} key={tag} onClick={() => selectTag(tag)} type="button">{t(`tags.${tag}`)}</button>)}
               </div>
             </div>
             <label className="block text-sm font-semibold text-ink">{t("form.description")}
