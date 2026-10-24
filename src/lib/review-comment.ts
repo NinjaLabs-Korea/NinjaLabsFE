@@ -4,6 +4,12 @@
  */
 export type ReviewNote = { forfeited: boolean; text: string };
 
+/**
+ * Classes for every element that prints reviewer text (comment, forfeit reason): keeps the reviewer's line breaks and
+ * wraps unbroken strings such as long URLs inside the card instead of widening the page. Pair with `min-w-0` on a grid/flex parent.
+ */
+export const REVIEW_TEXT_CLASS = "whitespace-pre-line break-words [overflow-wrap:anywhere]";
+
 const FORFEIT_PREFIX = /^forfeited:\s*/i;
 
 /** 빈 값/공백만 있으면 null. 몰수 코멘트는 접두사를 떼고 사유만 `text`에 담는다. */

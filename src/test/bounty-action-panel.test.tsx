@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -248,6 +249,41 @@ describe("BountyActionPanel", () => {
     renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
     expect(await screen.findByText("Reviewer comment: Add a README")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Resubmit" })).toBeTruthy();
+  });
+
+  describe("reviewer text layout", () => {
+    const url = `https://example.com/${"a".repeat(300)}`;
+    const wraps = (element: HTMLElement) => {
+      for (const token of ["whitespace-pre-line", "break-words", "[overflow-wrap:anywhere]"]) expect(element.classList.contains(token)).toBe(true);
+    };
+
+    it("keeps line breaks and wraps a 300-char URL in the rejection comment", async () => {
+      const comment = `Line one\nLine two ${url}`;
+      state.submissions = [submission("rejected", null, comment)];
+      renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+      const line = await screen.findByText(`Reviewer comment: ${comment}`, { normalizer: (text) => text });
+      expect(line.textContent).toContain("Line one\nLine two");
+      wraps(line);
+    });
+
+    it("applies the wrapping classes to the revision comment line", async () => {
+      state.submissions = [submission("revision_requested", null, `Fix\n${url}`)];
+      renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+      wraps(await screen.findByText(`Reviewer comment: Fix\n${url}`, { normalizer: (text) => text }));
+    });
+
+    it("applies the wrapping classes to the forfeited body", async () => {
+      state.submissions = [submission("rejected", null, `forfeited: ${url}`)];
+      renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" submissionMode="direct" />);
+      const body = await screen.findByText(/the award was forfeited:/);
+      expect(body.textContent).toContain(url);
+      wraps(body);
+    });
+
+    it("lets the bounty detail grid column shrink below its content width (min-w-0)", () => {
+      const page = readFileSync("src/app/[locale]/bounties/[id]/page.tsx", "utf8");
+      expect(page).toContain('<div className="min-w-0 space-y-6 lg:col-span-2">');
+    });
   });
 
   it("unlocks submission after approval", async () => {

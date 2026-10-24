@@ -15,7 +15,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
 import type { AccountApplication, ApplicationStatus } from "@/lib/contracts/account";
-import { parseReviewComment } from "@/lib/review-comment";
+import { parseReviewComment, REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -39,11 +39,11 @@ const applicationSteps: readonly ApplicationStatus[] = ["open", "approved", "sub
 function NotAcceptedNote({ application }: { application: AccountApplication }) {
   const t = useTranslations("account.applications");
   const review = parseReviewComment(application.reviewComment);
-  if (review?.forfeited) return <p className="mt-4 text-sm text-danger">{t("forfeitedNote", { reason: review.text })}</p>;
+  if (review?.forfeited) return <p className={`mt-4 text-sm text-danger ${REVIEW_TEXT_CLASS}`}>{t("forfeitedNote", { reason: review.text })}</p>;
   return (
     <>
       <p className="mt-4 text-sm text-ink-muted">{t("notAcceptedNote")}</p>
-      {review ? <p className="mt-1 text-sm text-ink-muted">{t("reviewerComment", { comment: review.text })}</p> : null}
+      {review ? <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: review.text })}</p> : null}
     </>
   );
 }
@@ -55,7 +55,7 @@ function RevisionNote({ application }: { application: AccountApplication }) {
   return (
     <>
       <p className="mt-4 text-sm text-warning">{t("revisionNote")}</p>
-      {review ? <p className="mt-1 text-sm text-ink-muted">{t("reviewerComment", { comment: review.text })}</p> : null}
+      {review ? <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: review.text })}</p> : null}
     </>
   );
 }

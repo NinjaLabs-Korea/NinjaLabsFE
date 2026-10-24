@@ -150,6 +150,29 @@ describe("ApplicationsView", () => {
     expect(within(article).queryByRole("button", { name: "Withdraw" })).toBeNull();
   });
 
+  it("keeps line breaks and wraps long URLs in every reviewer comment line of the cards", async () => {
+    const url = `https://example.com/${"a".repeat(300)}`;
+    serve({
+      status: "available",
+      data: [
+        row("notAccepted", { id: "na", bountyTitle: "NA", reviewComment: `No\n${url}` }),
+        row("notAccepted", { id: "ff", bountyTitle: "FF", reviewComment: `forfeited: ${url}` }),
+        row("revisionRequested", { id: "rr", bountyTitle: "RR", reviewComment: `Fix\n${url}` }),
+      ],
+    });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "NA" });
+    const lines = [
+      within(card("NA")).getByText(`Reviewer comment: No\n${url}`, { normalizer: (text) => text }),
+      within(card("FF")).getByText(/the award was forfeited:/),
+      within(card("RR")).getByText(`Reviewer comment: Fix\n${url}`, { normalizer: (text) => text }),
+    ];
+    for (const line of lines) {
+      expect(line.textContent).toContain(url);
+      for (const token of ["whitespace-pre-line", "break-words", "[overflow-wrap:anywhere]"]) expect(line.classList.contains(token)).toBe(true);
+    }
+  });
+
   it("shows the revision-requested fixture in the mock client", async () => {
     apiClient = createMockApiClient();
     renderWithIntl(<ApplicationsView />);

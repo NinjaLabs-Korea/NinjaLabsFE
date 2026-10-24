@@ -6,6 +6,7 @@ import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
+import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 import { bountyActionErrorCopy, deriveActionView, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
 import type { Bounty } from "@/lib/types";
 
@@ -52,8 +53,8 @@ function StatusPanel({ title, body, note, tone = "muted", feedback, link, headin
   return (
     <section className={panelClass}>
       <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{title}</h2>
-      <p className={`mt-2 text-sm ${bodyClass}`}>{body}</p>
-      {note ? <p className="mt-2 text-sm text-ink-muted">{note}</p> : null}
+      <p className={`mt-2 text-sm ${bodyClass} ${REVIEW_TEXT_CLASS}`}>{body}</p>
+      {note ? <p className={`mt-2 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{note}</p> : null}
       {link ? <Link className={outlineLinkClass} href={link.href}>{link.label}</Link> : null}
       {feedback ? <p className="mt-3 text-sm text-success">{feedback}</p> : null}
     </section>
@@ -280,7 +281,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, status, submissi
         <section className={panelClass}>
           <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{heading}</h2>
           {revising ? <p className="mt-2 text-sm text-warning">{t("revisionNote")}</p> : null}
-          {revising && revisionComment ? <p className="mt-2 text-sm text-ink-muted">{t("reviewerComment", { comment: revisionComment })}</p> : null}
+          {revising && revisionComment ? <p className={`mt-2 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: revisionComment })}</p> : null}
           {inReview ? <p className="mt-2 text-sm text-ink-muted">{t("inReviewNote")}</p> : null}
           {inReview && applicationRequired ? <Link className={outlineLinkClass} href="/applications">{t("viewApplications")}</Link> : null}
           <form className="mt-4 space-y-3" onSubmit={submit}>
