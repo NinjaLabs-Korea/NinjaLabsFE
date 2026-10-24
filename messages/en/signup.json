@@ -116,7 +116,8 @@
         "tooLong": "Use at most 50 characters.",
         "reserved": "This word is reserved. Choose another nickname.",
         "chars": "Use only letters, digits, and _ . - (no spaces).",
-        "edge": "Start and end with a letter or digit."
+        "edge": "Start and end with a letter or digit.",
+        "staticExtension": "Nicknames can't end with a file extension like .js."
       },
       "nicknameCheck": {
         "checking": "Checking availability…",

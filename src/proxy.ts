@@ -37,6 +37,8 @@ export const config = {
   // would break the cookie-mode refresh), the unprefixed /skill.md download, and real static files (by extension).
   // Dotted segments such as /members/ninja.inj (BE nicknames allow dots, Injective handles end in .inj) must still
   // locale-redirect, so only a known static-file extension is excluded. Keep this a literal: Next parses it at build time.
+  // The extension group must equal `lib/static-extensions.ts STATIC_FILE_EXTENSIONS` (nicknames ending in one are rejected
+  // because their profile URL would be skipped here); `src/test/proxy-matcher.test.ts` asserts the two are identical.
   matcher: [
     "/((?!_next|_vercel|media|api/|skill\\.md$|.*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|txt|xml|json|js|css|map|woff|woff2|ttf)$).*)",
   ],

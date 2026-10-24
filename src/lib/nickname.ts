@@ -1,3 +1,5 @@
+import { endsWithStaticFileExtension } from "@/lib/static-extensions";
+
 /**
  * 닉네임 규칙 — NinjaLabsBE `src/users/nickname.ts` + `CompleteProfileDto`(@Trim @Length(2,50) @Matches @IsNotReservedNickname)의 거울.
  * BE 규칙이 바뀌면 여기와 `src/test/nickname.test.ts`를 함께 고칠 것. `/users/:nickname` 경로에 그대로 쓰이는 값이다.
@@ -7,6 +9,8 @@
  *   - 길이 2~50 (trim 후, **코드 포인트** 기준 — BE `@Length`/validator `isLength`는 서로게이트 쌍을 한 글자로 센다)
  *   - 라우트와 충돌하는 예약어는 대소문자 무관 거부
  *   - 탈퇴 익명화 이름의 접두사 `withdrawn_`도 대소문자 무관 거부 (BE `WITHDRAWN_NICKNAME_PREFIX` — 탈퇴자 사칭 방지)
+ *   - 정적 파일 확장자(`.js`, `.JSON` …)로 끝나면 대소문자 무관 거부 — proxy matcher가 건너뛰는 경로라 `/members/<닉네임>`이
+ *     페이지가 아닌 파일 요청이 된다. 목록은 `lib/static-extensions.ts` 한 곳 (`.inj`는 허용)
  */
 export const NICKNAME = /^[\p{L}\p{N}][\p{L}\p{N}_.-]*[\p{L}\p{N}]$/u;
 export const NICKNAME_MIN = 2;
@@ -24,14 +28,14 @@ export function isReservedNickname(value: string): boolean {
 }
 
 /** 실패 사유. 화면 문구는 messages `signup.profile.form.nicknameErrors.<사유>`에 있다. */
-export type NicknameError = "tooShort" | "tooLong" | "reserved" | "chars" | "edge";
+export type NicknameError = "tooShort" | "tooLong" | "reserved" | "chars" | "edge" | "staticExtension";
 
 /** 코드 포인트 수 (`"𝐀".length === 2`지만 한 글자). `<input maxLength>`는 UTF-16 단위라 더 엄격할 뿐, 검증은 이 값으로 한다. */
 export function nicknameLength(value: string): number {
   return [...value].length;
 }
 
-/** BE와 같은 순서로 검사한다: trim → 길이 → 예약어 → 문자 집합 → 양 끝. 통과하면 null. */
+/** BE와 같은 순서로 검사한다: trim → 길이 → 예약어 → 문자 집합 → 양 끝 → 정적 파일 확장자. 통과하면 null. */
 export function validateNickname(raw: string): NicknameError | null {
   const value = raw.trim();
   const length = nicknameLength(value);
@@ -40,6 +44,7 @@ export function validateNickname(raw: string): NicknameError | null {
   if (isReservedNickname(value)) return "reserved";
   if (!ALLOWED_CHARS.test(value)) return "chars";
   if (!NICKNAME.test(value)) return "edge";
+  if (endsWithStaticFileExtension(value)) return "staticExtension";
   return null;
 }
 

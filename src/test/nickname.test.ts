@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ApiHttpError } from "@/lib/api/http";
 import { validationFieldsFromError, validationFieldsFromMessages } from "@/lib/api/validation";
 import { isReservedNickname, isValidNickname, NICKNAME, nicknameLength, validateNickname } from "@/lib/nickname";
+import { STATIC_FILE_EXTENSIONS } from "@/lib/static-extensions";
 
 // Probe cases mirror NinjaLabsBE `src/users/users.dto.spec.ts` (CompleteProfileDto) - keep the two files in step.
 describe("nickname rule (mirror of BE users/nickname.ts)", () => {
@@ -51,6 +52,26 @@ describe("nickname rule (mirror of BE users/nickname.ts)", () => {
       expect(validateNickname(nickname)).toBe("reserved");
     },
   );
+  it.each(["ninja.js", "ninja.JSON", "ninja.Png", "a.woff2", "first.last.css", "닌자.svg", "x.map"])(
+    "rejects %p: ends in a static-file extension the proxy skips (case-insensitive)",
+    (nickname) => {
+      expect(validateNickname(nickname)).toBe("staticExtension");
+    },
+  );
+
+  it.each(["ninja.inj", "ninja.jsx", "ninja.json5", "ninjajs", "ninja-js", "ninja_json", "js.ninja", "ninja.js2"])(
+    "accepts %p: not a dot followed by an exact static-file extension at the end",
+    (nickname) => {
+      expect(validateNickname(nickname)).toBeNull();
+    },
+  );
+
+  it("checks the extension against every entry of lib/static-extensions.ts", () => {
+    for (const extension of STATIC_FILE_EXTENSIONS) {
+      expect(validateNickname(`ninja.${extension}`), extension).toBe("staticExtension");
+      expect(validateNickname(`ninja.${extension.toUpperCase()}`), extension).toBe("staticExtension");
+    }
+  });
 });
 
 describe("BE VALIDATION_FAILED message[] → field hints", () => {

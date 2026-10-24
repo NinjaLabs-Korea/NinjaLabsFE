@@ -188,4 +188,13 @@ describe("BE users.dto.spec.ts tables against FE nickname rule", () => {
   it.each(["", " ", "a", "n".repeat(51), ".ninja", "ninja-", "has space", "Admin", " me "])("isSavableNickname rejects %p, so does the FE", (nickname) => {
     expect(isValidNickname(nickname)).toBe(false);
   });
+
+  // BE nickname rule: a nickname ending in a static-file extension (the proxy matcher's group, `/\.(…)$/i`) is rejected.
+  it.each(["ninja.js", "ninja.JSON", "ninja.css", "ninja.Woff2"])("rejects nickname %p (ends in a static-file extension)", (nickname) => {
+    expect(validateNickname(nickname)).toBe("staticExtension");
+  });
+
+  it.each(["ninja.inj", "ninja.jsx", "ninjajs"])("accepts nickname %p (not a static-file extension)", (nickname) => {
+    expect(validateNickname(nickname)).toBeNull();
+  });
 });

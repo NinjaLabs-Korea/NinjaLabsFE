@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("next-intl/middleware", () => ({ default: () => () => undefined }));
 
 const { config } = await import("@/proxy");
+const { STATIC_FILE_EXTENSIONS } = await import("@/lib/static-extensions");
 
 // Next compiles the matcher with path-to-regexp; for this single custom group the anchored RegExp is equivalent.
 const matcher = new RegExp(`^${config.matcher[0]}$`);
@@ -24,5 +25,11 @@ describe("proxy matcher", () => {
     ]) {
       expect(runsProxy(pathname), pathname).toBe(false);
     }
+  });
+
+  it("keeps the literal extension group identical to lib/static-extensions.ts (the nickname rule's source)", () => {
+    const group = /\.\*\\\.\(\?:([a-z0-9|]+)\)\$/.exec(config.matcher[0])?.[1];
+    expect(group?.split("|")).toEqual([...STATIC_FILE_EXTENSIONS]);
+    for (const extension of STATIC_FILE_EXTENSIONS) expect(runsProxy(`/members/ninja.${extension}`), extension).toBe(false);
   });
 });
