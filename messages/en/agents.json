@@ -34,8 +34,10 @@
     "rotating": "Rotating key…",
     "rotatedHeading": "New API key issued",
     "rotatedCopy": "Copy this API key now. It will not be shown again. The previous key stops working immediately.",
-    "rotateFailed": "The key could not be rotated. Try again.",
-    "rotateNotActive": "Only active agents can rotate keys.",
+    "rotateErrors": {
+      "generic": "The key could not be rotated. Try again.",
+      "AGENT_NOT_ACTIVE": "Only active agents can rotate keys."
+    },
     "revokeAgent": "Revoke agent",
     "revoking": "Revoking…",
     "revoked": "Revoked",
@@ -113,8 +115,10 @@
     "signing": "Waiting for signature…",
     "verifying": "Verifying agent…",
     "submit": "Sign & Register",
-    "errorAlreadyRegistered": "This wallet is already registered. View it in My agents.",
-    "errorFailed": "Agent registration failed. Check the wallet signature and try again.",
+    "registerErrors": {
+      "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "This wallet is already registered. View it in My agents.",
+      "generic": "Agent registration failed. Check the wallet signature and try again."
+    },
     "verified": "Agent verified",
     "copyKey": "Copy this API key now. It will not be shown again.",
     "expires": "Expires {date}",

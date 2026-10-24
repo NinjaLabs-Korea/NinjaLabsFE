@@ -12,7 +12,7 @@ import {
 import { Link } from "@/i18n/navigation";
 import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
 import type { AgentVerification } from "@/lib/contracts/api";
-import { ApiHttpError } from "@/lib/api/http";
+import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
 import { validationFieldsFromError } from "@/lib/api/validation";
 import {
   AGENT_DESCRIPTION_MAX,
@@ -32,6 +32,7 @@ type SubmissionState = "idle" | "registering" | "signing" | "verifying";
 
 export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const t = useTranslations("agents.form");
+  const tRegisterErrors = useTranslations(ERROR_COPY.agentRegister.messages);
   const tWallet = useTranslations("common.wallet");
   // UTC-pinned via src/i18n/request.ts, like AgentsView's key expiry.
   const format = useFormatter();
@@ -144,11 +145,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         setFieldErrors(rejected);
         setErrorMessage(t("errorInvalid"));
       } else {
-        setErrorMessage(
-          caught instanceof ApiHttpError && caught.code === "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED"
-            ? t("errorAlreadyRegistered")
-            : t("errorFailed"),
-        );
+        setErrorMessage(tRegisterErrors(errorCopyKey(caught, ERROR_COPY.agentRegister)));
       }
     } finally {
       setSubmissionState("idle");

@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { describeAgentKey } from "@/lib/agent-keys";
+import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
 import type { AccountAgent } from "@/lib/contracts/account";
 import type { AgentKeyRotation } from "@/lib/contracts/api";
 
@@ -30,6 +31,7 @@ type AgentAction =
 
 export function AgentsView() {
   const t = useTranslations("agents.list");
+  const tRotateErrors = useTranslations(ERROR_COPY.agentRotate.messages);
   const tAccount = useTranslations("account.common");
   const format = useFormatter();
   const mode = useFoundationMode();
@@ -105,8 +107,7 @@ export function AgentsView() {
       setAgentAction(agent.id, null);
       refresh();
     } catch (error) {
-      const code = (error as { code?: unknown }).code;
-      setAgentAction(agent.id, { kind: "error", message: code === "AGENT_NOT_ACTIVE" ? t("rotateNotActive") : t("rotateFailed") });
+      setAgentAction(agent.id, { kind: "error", message: tRotateErrors(errorCopyKey(error, ERROR_COPY.agentRotate)) });
     } finally {
       pendingRef.current.delete(agent.id);
     }

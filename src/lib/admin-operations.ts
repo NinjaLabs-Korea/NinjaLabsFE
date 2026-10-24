@@ -2,6 +2,7 @@
 // Client islands import from here; the BE mapping lives in `lib/api/admin.ts`, the in-memory twin in `lib/mocks/api-client.ts`.
 // Status values stay the BE codes verbatim (the console shows operators the real state machine); copy lives under
 // `admin.operations.*` / `admin.nftJobs.*`.
+import { ERROR_COPY, listedCode } from "./api/error-copy";
 import { ApiHttpError } from "./api/http";
 
 /** BE `bounty.status` (NinjaLabsBE/src/bounties/bounty-status.ts). */
@@ -190,42 +191,9 @@ export type AdminNftJobPage = { items: AdminNftJob[]; page: number; pageSize: nu
 /**
  * Every BE code the operations/NFT endpoints answer with (plus the FE transport codes) — each has
  * `admin.operations.errors.<CODE>` in all three locales; anything else renders `errors.unknown` with the raw code.
+ * 코드 목록은 `lib/api/error-copy.ts`의 `ERROR_COPY.adminOperations`가 소유한다 — 추가/삭제는 거기서.
  */
-export const OPS_ERROR_CODES = [
-  "BOUNTY_NOT_FOUND",
-  "BOUNTY_REVIEW_CLOSED",
-  "APPLICATION_NOT_FOUND_OR_NOT_PENDING",
-  "APPLICATION_APPROVAL_CLOSED",
-  "SUBMISSION_NOT_FOUND",
-  "SUBMISSION_NOT_REVIEWABLE",
-  "SUBMISSION_REVISION_CHANGED",
-  "REVISION_COMMENT_REQUIRED",
-  "MAX_WINNERS_REACHED",
-  "INVALID_DECISION",
-  "REWARD_NOT_FOUND",
-  "REWARD_NOT_FOUND_OR_NOT_PENDING",
-  "REWARD_NOT_FUNDED",
-  "INVALID_TX_HASH",
-  "INVALID_TOKEN_AMOUNT",
-  "TX_HASH_ALREADY_USED",
-  "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND",
-  "APPROVED_SUBMISSION_NOT_FOUND",
-  "PAYOUT_ALREADY_REQUESTED",
-  "PAYOUT_EXCEEDS_AVAILABLE_REWARD",
-  "PAYOUT_NOT_FOUND_OR_WRONG_STATUS",
-  "PAYOUT_SELF_APPROVAL",
-  "NFT_JOB_NOT_FOUND_OR_NOT_FAILED",
-  "INVALID_TRANSITION",
-  "TRANSITION_BLOCKED",
-  "VALIDATION_FAILED",
-  "INVALID_CHARACTER",
-  "ADMIN_ONLY",
-  "UNAUTHORIZED",
-  "TOO_MANY_REQUESTS",
-  "REFRESH_UNAVAILABLE",
-  "DATABASE_UNAVAILABLE",
-  "NETWORK_ERROR",
-] as const;
+export const OPS_ERROR_CODES = ERROR_COPY.adminOperations.codes;
 export type OpsErrorCode = (typeof OPS_ERROR_CODES)[number];
 
 /**
@@ -241,5 +209,5 @@ export function opsErrorCode(error: unknown, context: "transition" | "other" = "
   else if (code === "VALIDATION_FAILED" && context === "transition") code = "TRANSITION_BLOCKED";
   else if (error.status === 429) code = "TOO_MANY_REQUESTS";
   else if (error.status === 401) code = "UNAUTHORIZED";
-  return { code, known: (OPS_ERROR_CODES as readonly string[]).includes(code) };
+  return { code, known: listedCode(code, OPS_ERROR_CODES) !== null };
 }

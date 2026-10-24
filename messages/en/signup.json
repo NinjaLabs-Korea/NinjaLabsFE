@@ -103,11 +103,11 @@
       "saveErrors": {
         "network": "We couldn't save your profile. Check your connection and try again.",
         "session": "Your session has ended. Sign in again to continue.",
-        "nickname": "That nickname is already in use. Choose another one.",
+        "NICKNAME_TAKEN": "That nickname is already in use. Choose another one.",
         "invalid": "Check every field: the nickname must be 2-50 characters, and a bio and field tag are required.",
-        "invalidCharacter": "Your nickname or bio contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
-        "referenceNotFound": "Your account record could not be found. Reload the page or sign in again.",
-        "unavailable": "The service is temporarily unavailable. Please try again in a moment.",
+        "INVALID_CHARACTER": "Your nickname or bio contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
+        "REFERENCE_NOT_FOUND": "Your account record could not be found. Reload the page or sign in again.",
+        "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
         "generic": "We couldn't save your profile. Please try again."
       },
       "nicknameHint": "2–50 characters: letters, digits, _ . - — starting and ending with a letter or digit.",

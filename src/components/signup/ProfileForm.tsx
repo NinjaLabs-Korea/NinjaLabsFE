@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useState, type FormEvent } from "react";
 import { useOnboardingApi, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
 import { validationFieldsFromError } from "@/lib/api/validation";
 import { Badge } from "@/components/ui/Badge";
@@ -19,7 +20,8 @@ const fieldTags = [
   { labelKey: "other", value: "OTHER" },
 ] as const;
 
-type SaveErrorKey = "network" | "session" | "nickname" | "invalid" | "invalidCharacter" | "referenceNotFound" | "unavailable" | "generic";
+/** 저장 실패 문구 키 (`signup.profile.form.saveErrors.<key>`): 코드 키는 `ERROR_COPY.profileSave`, 나머지는 아래 상태 규칙. */
+type SaveErrorKey = (typeof ERROR_COPY.profileSave.codes)[number] | "network" | "session" | "invalid" | "generic";
 
 /** 닉네임 입력 후 중복 검사까지 기다리는 시간 (ms) — BE `check-nickname`은 30/min throttle이다 */
 export const NICKNAME_CHECK_DEBOUNCE_MS = 400;
@@ -29,20 +31,23 @@ type FieldErrors = Partial<Record<"nickname" | "tags" | "bio", string>>;
 /** 마지막으로 끝난 중복 검사. `available: null`은 요청 실패(429 등) — 막지 않고 BE 저장에 맡긴다. */
 type NicknameCheck = { nickname: string; available: boolean | null };
 
-/** 저장 실패 원인 → messages `signup.profile.form.saveErrors.<key>` */
-function saveErrorKey(error: unknown): SaveErrorKey {
+/**
+ * 저장 실패 원인 → messages `signup.profile.form.saveErrors.<key>`. 순서가 규칙이다:
+ * 네트워크 → 401 세션 만료 → 전용 문구가 있는 BE 코드 → 코드 없는 409(닉네임 충돌로 간주) → 400/422 입력 오류 → 그 외.
+ */
+export function saveErrorKey(error: unknown): SaveErrorKey {
   if (!(error instanceof ApiHttpError)) return "network";
   if (error.status === 401) return "session";
-  if (error.code === "DATABASE_UNAVAILABLE") return "unavailable";
-  if (error.status === 409 || error.code.includes("NICKNAME")) return "nickname";
-  if (error.code === "INVALID_CHARACTER") return "invalidCharacter";
-  if (error.code === "REFERENCE_NOT_FOUND") return "referenceNotFound";
+  const code = knownCode(error, ERROR_COPY.profileSave.codes);
+  if (code) return code;
+  if (error.status === 409) return "NICKNAME_TAKEN";
   if (error.status === 400 || error.status === 422) return "invalid";
-  return "generic";
+  return ERROR_COPY.profileSave.fallback;
 }
 
 export function ProfileForm() {
   const t = useTranslations("signup.profile.form");
+  const tSaveErrors = useTranslations(ERROR_COPY.profileSave.messages);
   const apiClient = useOnboardingApi();
   const mode = useFoundationMode();
   const [nickname, setNickname] = useState(mode === "mock" ? signup.profile.nickname : "");
@@ -134,9 +139,9 @@ export function ProfileForm() {
         ...("nickname" in rejected ? { nickname: nicknameRuleError ? `nicknameErrors.${nicknameRuleError}` : "errors.nicknameRejected" } : {}),
         ...("bio" in rejected ? { bio: bio.trim() ? "errors.bioRejected" : "errors.bio" } : {}),
         ...("tags" in rejected ? { tags: "errors.tags" } : {}),
-        ...(key === "nickname" ? { nickname: "nicknameCheck.taken" } : {}),
+        ...(key === "NICKNAME_TAKEN" ? { nickname: "nicknameCheck.taken" } : {}),
       });
-      if (key === "nickname") setNicknameCheck({ nickname: trimmedNickname, available: false });
+      if (key === "NICKNAME_TAKEN") setNicknameCheck({ nickname: trimmedNickname, available: false });
       setSaveError(key);
       setState("error");
     }
@@ -225,7 +230,7 @@ export function ProfileForm() {
       </button>
       {state === "error" ? (
         <p className="text-sm text-danger" role="alert">
-          {t(`saveErrors.${saveError}`)}
+          {tSaveErrors(saveError)}
         </p>
       ) : null}
     </form>

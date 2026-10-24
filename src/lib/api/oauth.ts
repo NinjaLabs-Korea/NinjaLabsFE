@@ -1,3 +1,4 @@
+import { ERROR_COPY, listedCode } from "@/lib/api/error-copy";
 import { AUTH_PROXY_PATH, cookieAuthInit, installSession, isAuthCallbackPath } from "@/lib/api/http";
 
 export { isAuthCallbackPath };
@@ -6,11 +7,10 @@ const VERIFIER_KEY = "ninja.oauthVerifier";
 
 /**
  * `#error=<CODE>` codes the callback page has its own copy for (`signup.authCallback.errors.<CODE>`). Today the BE only
- * redirects with `#error=AUTH_FAILED` (generic copy); `TURNSTILE_FAILED`/`TURNSTILE_UNAVAILABLE` are answered as a JSON
- * 400/503 on the full-page `GET /auth/google` navigation itself, which the FE never sees. They are mapped here in case
- * the BE starts redirecting them to the callback.
+ * redirects with `#error=AUTH_FAILED` (generic copy); see `ERROR_COPY.loginCallback` in `lib/api/error-copy.ts`, which
+ * owns the list (추가/삭제는 거기서).
  */
-export const LOGIN_CALLBACK_ERROR_CODES = ["TURNSTILE_FAILED", "TURNSTILE_UNAVAILABLE", "DATABASE_UNAVAILABLE"] as const;
+export const LOGIN_CALLBACK_ERROR_CODES = ERROR_COPY.loginCallback.codes;
 export type LoginCallbackErrorCode = (typeof LOGIN_CALLBACK_ERROR_CODES)[number];
 
 /** The mapped `#error=` code of this page load's callback (the fragment itself is stripped before any network work). */
@@ -106,9 +106,7 @@ export async function exchangeLoginCodeFromLocation(): Promise<boolean> {
   const code = params.get("loginCode");
   const error = params.get("error");
   window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
-  loginCallbackError = (LOGIN_CALLBACK_ERROR_CODES as readonly string[]).includes(error ?? "")
-    ? (error as LoginCallbackErrorCode)
-    : null;
+  loginCallbackError = listedCode(error, LOGIN_CALLBACK_ERROR_CODES);
   const codeVerifier = takeFreshVerifier();
   if (error || !code || !codeVerifier) {
     throw new LoginExchangeError("Login could not be completed. Please sign in again.", false);
