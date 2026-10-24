@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useFormatter } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 
 type RewardPillProps = {
   reward: {
@@ -18,16 +18,23 @@ function TokenIcon({ currency }: { currency: RewardPillProps["reward"]["currency
   );
 }
 
+/** A bounty with no reward row is mapped to `{ amount: 0 }`; it has no token yet, so it reads "Reward TBD" instead of "0 INJ". */
+export function isRewardUnset(reward: RewardPillProps["reward"]): boolean {
+  return !(reward.amount > 0);
+}
+
 export function RewardPill({ reward, variant = "pill" }: RewardPillProps) {
   const format = useFormatter();
+  const t = useTranslations("common.reward");
+  const unset = isRewardUnset(reward);
   if (variant === "icon") {
-    return <TokenIcon currency={reward.currency} />;
+    return unset ? null : <TokenIcon currency={reward.currency} />;
   }
   return (
     <span className="inline-flex items-center gap-1.5 rounded-control border border-primary-soft-border bg-primary-soft px-[13px] py-1.5">
-      <TokenIcon currency={reward.currency} />
+      {unset ? null : <TokenIcon currency={reward.currency} />}
       <span className="font-display text-sm font-bold text-ink">
-        {format.number(reward.amount, { maximumFractionDigits: 6 })} {reward.currency}
+        {unset ? t("tbd") : `${format.number(reward.amount, { maximumFractionDigits: 6 })} ${reward.currency}`}
       </span>
     </span>
   );

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { BountyAgentPanel } from "@/components/agents/BountyAgentPanel";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import { Markdown } from "@/components/ui/Markdown";
-import { RewardPill } from "@/components/ui/RewardPill";
+import { isRewardUnset, RewardPill } from "@/components/ui/RewardPill";
 import { getPathname, Link } from "@/i18n/navigation";
 import { getRuntimeBounty } from "@/lib/bounties";
 import { validateDetailId } from "@/lib/detail-id";
@@ -53,6 +53,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   setRequestLocale(locale);
   const t = await getTranslations("bounties");
   const tAgents = await getTranslations("agents.panel");
+  const tReward = await getTranslations("common.reward");
   const format = await getFormatter();
   // Shape check before the fetch (api: UUID, mock: slug); the layout already did it, this keeps the page self-contained.
   if (!(await validateDetailId("bounties", id))) notFound();
@@ -157,7 +158,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
           <section className="rounded-card border border-primary-soft-border bg-primary-soft p-[21px]">
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("detail.rewardInfo")}</p>
-              {rewards.map((reward) => <SponsorPaysPill key={reward.currency} label={t("detail.sponsorPays", { reward: `${format.number(reward.amount, { maximumFractionDigits: 6 })} ${reward.currency}` })} reward={reward} />)}
+              {rewards.map((reward) => <SponsorPaysPill key={reward.currency} label={t("detail.sponsorPays", { reward: isRewardUnset(reward) ? tReward("tbd") : `${format.number(reward.amount, { maximumFractionDigits: 6 })} ${reward.currency}` })} reward={reward} />)}
             </div>
             <ol className="mt-4 space-y-3">
               {(["flow", "token", "noSwap"] as const).map((note, index) => (

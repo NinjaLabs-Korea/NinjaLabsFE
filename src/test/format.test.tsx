@@ -29,6 +29,16 @@ describe("RewardPill", () => {
     expect(screen.getByText("150,000 USDC")).toBeTruthy();
   });
 
+  it("renders a bounty without a reward row as Reward TBD, not 0 INJ", () => {
+    // lib/bounties maps `rewards: []` to { amount: 0, currency: "INJ" }.
+    const { container } = renderWithIntl(<RewardPill reward={{ amount: 0, currency: "INJ" }} />);
+    expect(screen.getByText("Reward TBD")).toBeTruthy();
+    expect(container.textContent).not.toContain("0 INJ");
+    expect(container.querySelector("img")).toBeNull();
+    const icon = renderWithIntl(<RewardPill reward={{ amount: 0, currency: "INJ" }} variant="icon" />);
+    expect(icon.container.innerHTML).toBe("");
+  });
+
   it("renders 1e23 wei INJ as 100,000 INJ", () => {
     const reward = toReward({ symbol: "INJ", amount: "100000000000000000000000" });
     expect(reward).toEqual({ amount: 100000, currency: "INJ" });
