@@ -204,7 +204,7 @@ describe("admin pages", () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("down", { status: 503 })));
     renderWithIntl(await HallPage({ params } as never));
     const status = screen.getByRole("status");
-    expect(status.textContent).toContain(enMessages.hallOfFame && (enMessages.hallOfFame as { unavailable: { title: string } }).unavailable.title);
+    expect(status.textContent).toContain((enMessages.hallOfFame as { unavailable: { title: string } }).unavailable.title);
     // The curation manager still renders below the panel.
     expect(screen.getByRole("heading", { name: "Highlight curation" })).toBeTruthy();
   });
