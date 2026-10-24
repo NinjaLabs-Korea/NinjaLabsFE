@@ -3,7 +3,12 @@ import { webcrypto, createHash } from "node:crypto";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { createApiAuthAdapter } from "@/lib/api/auth-adapter";
 import { getTokens, setTokens } from "@/lib/api/http";
-import { createLoginChallenge, exchangeLoginCodeFromLocation, LoginExchangeError } from "@/lib/api/oauth";
+import {
+  createLoginChallenge,
+  exchangeLoginCodeFromLocation,
+  LOGIN_VERIFIER_TTL_MS,
+  LoginExchangeError,
+} from "@/lib/api/oauth";
 
 beforeEach(() => {
   localStorage.clear();
@@ -16,7 +21,9 @@ afterEach(() => vi.unstubAllGlobals());
 describe("OAuth code handoff", () => {
   it("keeps the verifier in this tab and sends only its SHA-256 challenge", async () => {
     const challenge = await createLoginChallenge();
-    const verifier = sessionStorage.getItem("ninja.oauthVerifier")!;
+    const stored = JSON.parse(sessionStorage.getItem("ninja.oauthVerifier")!) as { verifier: string; createdAt: number };
+    const verifier = stored.verifier;
+    expect(Math.abs(Date.now() - stored.createdAt)).toBeLessThan(5_000);
     expect(verifier).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(challenge).toBe(createHash("sha256").update(verifier).digest("base64url"));
     expect(localStorage.getItem("ninja.oauthVerifier")).toBeNull();
@@ -24,7 +31,7 @@ describe("OAuth code handoff", () => {
 
   it("clears the URL before exchanging the code by POST and preserves router state", async () => {
     await createLoginChallenge();
-    const verifier = sessionStorage.getItem("ninja.oauthVerifier");
+    const verifier = (JSON.parse(sessionStorage.getItem("ninja.oauthVerifier")!) as { verifier: string }).verifier;
     window.history.replaceState({ marker: "router" }, "", "/auth/callback#loginCode=test-code");
     const request = vi.fn(async (url: string, init: RequestInit) => {
       expect(window.location.hash).toBe("");
@@ -153,5 +160,106 @@ describe("API auth adapter login handoff", () => {
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
     expect(getTokens()).toEqual({ accessToken: null, refreshToken: null });
+  });
+});
+
+describe("PKCE verifier hygiene", () => {
+  const me = { id: "u1", nickname: "ninja", onboardingStep: 4, onboardingCompleted: true, isAdmin: false };
+
+  afterEach(() => vi.useRealTimers());
+
+  it("does not exchange with a verifier older than the TTL and removes it", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    await createLoginChallenge();
+    vi.setSystemTime(Date.now() + LOGIN_VERIFIER_TTL_MS + 1);
+    window.history.replaceState(null, "", "/en/auth/callback#loginCode=late-code");
+    const request = vi.fn();
+    vi.stubGlobal("fetch", request);
+    const error = await exchangeLoginCodeFromLocation("https://api.example").catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(LoginExchangeError);
+    expect((error as LoginExchangeError).attempted).toBe(false);
+    expect(request).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem("ninja.oauthVerifier")).toBeNull();
+  });
+
+  it("still exchanges inside the TTL", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    await createLoginChallenge();
+    vi.setSystemTime(Date.now() + LOGIN_VERIFIER_TTL_MS - 1_000);
+    window.history.replaceState(null, "", "/en/auth/callback#loginCode=code");
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ accessToken: "a", refreshToken: "r" })));
+    expect(await exchangeLoginCodeFromLocation("https://api.example")).toBe(true);
+  });
+
+  it.each(["legacy-plain-string", "{\"verifier\":\"\"}", "{\"verifier\":\"v\"}", "not json {"])(
+    "treats a malformed stored verifier as absent: %s",
+    async (raw) => {
+      sessionStorage.setItem("ninja.oauthVerifier", raw);
+      window.history.replaceState(null, "", "/en/auth/callback#loginCode=code");
+      const request = vi.fn();
+      vi.stubGlobal("fetch", request);
+      await expect(exchangeLoginCodeFromLocation("https://api.example")).rejects.toMatchObject({ attempted: false });
+      expect(request).not.toHaveBeenCalled();
+    },
+  );
+
+  it("drops the verifier when a non-callback page initializes after sign-in started", async () => {
+    await createLoginChallenge();
+    window.history.replaceState(null, "", "/en/bounties");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 401 })));
+    const adapter = createApiAuthAdapter("https://api.example");
+    adapter.initialize?.();
+    expect(sessionStorage.getItem("ninja.oauthVerifier")).toBeNull();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
+  });
+
+  it("keeps the verifier for the callback page that consumes it", async () => {
+    await createLoginChallenge();
+    window.history.replaceState(null, "", "/en/auth/callback#loginCode=good-code");
+    const request = vi.fn(async (url: string) =>
+      url.endsWith("/auth/exchange") ? Response.json({ accessToken: "new-access", refreshToken: "new-refresh" }) : Response.json(me));
+    vi.stubGlobal("fetch", request);
+    vi.stubGlobal("location", { ...window.location, replace: vi.fn() });
+    const adapter = createApiAuthAdapter("https://api.example");
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    expect(request.mock.calls[0][0]).toBe("https://api.example/auth/exchange");
+  });
+
+  it("a planted #loginCode after an abandoned sign-in neither exchanges nor clears the current session", async () => {
+    setTokens("current-access", "current-refresh");
+    await createLoginChallenge();
+    // The user backs out of Google consent and lands on an ordinary page: the verifier is dropped.
+    window.history.replaceState(null, "", "/en/bounties");
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json(me)));
+    const abandoned = createApiAuthAdapter("https://api.example");
+    abandoned.initialize?.();
+    expect(sessionStorage.getItem("ninja.oauthVerifier")).toBeNull();
+    await vi.waitFor(() => expect(abandoned.getSnapshot().status).toBe("signed-in"));
+
+    // Later a link plants a code on the callback route.
+    window.history.replaceState(null, "", "/en/auth/callback#loginCode=planted");
+    const request = vi.fn(async (url: string) => (url.endsWith("/auth/me") ? Response.json(me) : new Response(null, { status: 500 })));
+    vi.stubGlobal("fetch", request);
+    const adapter = createApiAuthAdapter("https://api.example");
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    expect(request.mock.calls.map(([url]) => url)).toEqual(["https://api.example/auth/me"]);
+    expect(getTokens()).toEqual({ accessToken: "current-access", refreshToken: "current-refresh" });
+  });
+
+  it("a planted #loginCode with only a stale verifier keeps the current session", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    setTokens("current-access", "current-refresh");
+    await createLoginChallenge();
+    vi.setSystemTime(Date.now() + LOGIN_VERIFIER_TTL_MS + 60_000);
+    window.history.replaceState(null, "", "/en/auth/callback#loginCode=planted");
+    const request = vi.fn(async (url: string) => (url.endsWith("/auth/me") ? Response.json(me) : new Response(null, { status: 500 })));
+    vi.stubGlobal("fetch", request);
+    const adapter = createApiAuthAdapter("https://api.example");
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    expect(request.mock.calls.map(([url]) => url)).toEqual(["https://api.example/auth/me"]);
+    expect(getTokens()).toEqual({ accessToken: "current-access", refreshToken: "current-refresh" });
   });
 });

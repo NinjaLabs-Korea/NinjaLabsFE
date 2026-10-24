@@ -2,6 +2,7 @@ import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
 import { clearTokens, createApiHttp, type ApiHttp } from "@/lib/api/http";
 import {
   createLoginChallenge,
+  discardLoginVerifier,
   exchangeLoginCodeFromLocation,
   isAuthCallbackPath,
   LoginExchangeError,
@@ -72,6 +73,8 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       path: window.location.pathname,
       hasHash: Boolean(window.location.hash),
     });
+    // Any page load other than the OAuth callback means the sign-in that stored a PKCE verifier was abandoned.
+    if (!isAuthCallbackPath(window.location.pathname)) discardLoginVerifier();
     void (async () => {
       await exchangeLoginCodeFromLocation(apiUrl);
       return restoreSession();
