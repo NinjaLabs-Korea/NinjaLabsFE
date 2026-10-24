@@ -23,7 +23,8 @@ function rpcOrigin(): string | null {
   if (!value) return null;
   try {
     const url = new URL(value);
-    return url.protocol === "https:" ? url.origin : null;
+    // Same protocols runtime/config.ts accepts (http only survives there for local/test tiers).
+    return url.protocol === "https:" || url.protocol === "http:" ? url.origin : null;
   } catch {
     return null;
   }

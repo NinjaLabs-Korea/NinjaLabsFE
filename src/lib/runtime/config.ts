@@ -116,6 +116,12 @@ function requireHttps(value: string, name: string): string {
   }
   return value;
 }
+
+function isPlaintextTier(environment: RuntimeEnvironment): boolean {
+  const tier = environment.NINJA_DEPLOYMENT_TIER?.trim();
+  return tier === "local" || tier === "test";
+}
+
 function optionalValue(environment: RuntimeEnvironment, name: keyof RuntimeEnvironment): string | undefined {
   return environment[name]?.trim() || undefined;
 }
@@ -147,6 +153,11 @@ function parseWalletConfig(environment: RuntimeEnvironment): WalletConfig | null
 
   const parsedRpcUrl = rpcUrl ? parseHttpUrl(rpcUrl, "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", false) : undefined;
   if (parsedRpcUrl) assertChainRpcPairing(chainId as WalletChainId, parsedRpcUrl);
+  // A plaintext RPC is fine for local/test (e.g. a local anvil); staging/production api builds fail fast, mirroring
+  // the NINJA_API_BASE_URL rule. `next.config.ts rpcOrigin()` admits whatever this function accepts.
+  if (parsedRpcUrl && environment.NINJA_RUNTIME_MODE?.trim() === "api" && !isPlaintextTier(environment)) {
+    requireHttps(parsedRpcUrl, "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL");
+  }
 
   return {
     chainId: chainId as WalletChainId,

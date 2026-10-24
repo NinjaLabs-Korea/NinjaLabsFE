@@ -135,6 +135,17 @@ describe("wallet chain / RPC pairing", () => {
     expect(() => wallet(chainId, rpcUrl)).toThrow(error(message));
   });
 
+  it.each(["production", "staging"] as const)("rejects an http RPC URL in api mode on the %s tier", (tier) => {
+    expect(() =>
+      readRuntimeConfig({ ...apiEnv, NINJA_DEPLOYMENT_TIER: tier, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1776", NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "http://rpc.ninjalabs.example/" }),
+    ).toThrow(error("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL must use HTTPS."));
+  });
+
+  it("keeps an http RPC URL valid in api mode on the test tier", () => {
+    const config = readRuntimeConfig({ ...apiEnv, NINJA_DEPLOYMENT_TIER: "test", NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1776", NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "http://127.0.0.1:8545/" });
+    expect(config.wallet).toEqual({ chainId: 1776, rpcUrl: "http://127.0.0.1:8545/" });
+  });
+
   it("only judges the host, never the path", () => {
     expect(wallet("1776", "https://rpc.ninjalabs.example/testnet")).toEqual({ chainId: 1776, rpcUrl: "https://rpc.ninjalabs.example/testnet" });
   });

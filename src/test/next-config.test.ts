@@ -114,8 +114,13 @@ describe("next.config security headers", () => {
       expect((await cspFor(nodeEnv)).directive("connect-src")).toContain("https://rpc.example.com");
     });
 
-    it("adds nothing when the variable is unset or not https", async () => {
-      vi.stubEnv("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", "http://rpc.example.com");
+    it("includes an http origin, since runtime config accepts it for local/test tiers", async () => {
+      vi.stubEnv("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", "http://127.0.0.1:8545/rpc");
+      expect((await cspFor("production")).directive("connect-src")).toContain("http://127.0.0.1:8545");
+    });
+
+    it("adds nothing for an unset or non-http(s) value", async () => {
+      vi.stubEnv("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", "ftp://rpc.example.com");
       expect((await cspFor("production")).value).not.toContain("rpc.example.com");
     });
   });
