@@ -58,7 +58,7 @@ describe("deployment tier x runtime mode matrix", () => {
 });
 
 describe("origin and API URL rules", () => {
-  it.each(["http://localhost:3000", "http://127.0.0.1:3000"])("mock mode accepts the loopback origin %s", (origin) => {
+  it.each(["http://localhost:3000", "http://127.0.0.1:3000", "http://[::1]:3000"])("mock mode accepts the loopback origin %s", (origin) => {
     expect(readRuntimeConfig({ ...mockEnv, NINJA_APP_ORIGIN: origin }).origin).toBe(origin);
   });
 

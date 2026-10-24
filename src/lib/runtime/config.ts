@@ -199,8 +199,9 @@ export function readRuntimeConfig(environment: RuntimeEnvironment): RuntimeConfi
   const mockSeed = optionalValue(environment, "NINJA_MOCK_SEED");
 
   if (runtimeMode === "mock") {
+    // WHATWG URL keeps the brackets on an IPv6 hostname (`http://[::1]:3000` -> "[::1]").
     const originHostname = new URL(origin).hostname;
-    if (originHostname !== "localhost" && originHostname !== "127.0.0.1" && originHostname !== "::1") {
+    if (originHostname !== "localhost" && originHostname !== "127.0.0.1" && originHostname !== "[::1]") {
       throw new RuntimeConfigError("mock mode requires a localhost NINJA_APP_ORIGIN.");
     }
     if (!mockSeed) {
