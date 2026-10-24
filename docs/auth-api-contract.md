@@ -30,16 +30,12 @@ Why: a refresh token in `localStorage` is readable by any script that runs on th
 - **Sign-out races.** Sign-out bumps a module `sessionEpoch` and marks the session ended: a refresh that resolves afterwards is discarded and its re-planted cookie revoked with a best-effort `POST /api/auth/logout`, and later 401s no longer trigger a refresh.
 - **Local development.** `Secure` cookies are accepted on `http://localhost` by current browsers; other plain-HTTP hosts will drop the cookie.
 - The Google button performs real Google OAuth in API mode (full-page redirect via the backend, as above). Mock mode still signs into the local preview and advances to `/signup/wallet`.
-- In API mode RainbowKit connects an Injective EVM wallet, requests a backend nonce challenge, signs it with EIP-191 `personal_sign`, and verifies it through `/wallets/verify`. The backend stores the corresponding `inj1` address and queues the parent NFT mint. Connection alone never authenticates the user; wallet verification remains optional.
+- In API mode the injected (browser extension) wallet connector connects an Injective EVM wallet, requests a backend nonce challenge, signs it with EIP-191 `personal_sign`, and verifies it through `/wallets/verify`. The backend stores the corresponding `inj1` address and queues the parent NFT mint. Connection alone never authenticates the user; wallet verification remains optional.
 - The profile form persists nickname, bio, and tags through `/users/me/profile`; the completion screen calls `/users/me/complete-onboarding`. Public profile routes load `/users/:nickname` in API mode.
 - Agent verification returns the usable API key once; the registration UI shows it only in that response. Later owner views receive and display only the masked prefix.
 - Owner/account and admin interactions use durable backend APIs. Backend `AdminGuard` enforces admin reads and mutations; frontend route visibility is not treated as authorization.
 - Admin image fields upload validated JPEG/PNG/WebP files to `/admin/media`; the returned immutable `/media/:id` URL is stored on the related bounty, notice, or highlight.
 - Production bounty mode is backend-owned. `DIRECT` accepts the signed-in user endpoints, while `AGENT` accepts API-key-authenticated `/agent-api/v1/bounties/:id/applications|submissions` calls.
-
-### RainbowKit CSS exception
-
-The project normally has one application stylesheet, `src/app/globals.css`. Its `@import "@rainbow-me/rainbowkit/styles.css";` line is the single dependency-CSS exception required for the wallet connection UI.
 
 ## Runtime environment contract
 
@@ -56,7 +52,7 @@ Runtime configuration is mandatory and fail-closed. Missing, partial, malformed,
 | `NINJA_API_BASE_URL` | API only | Required HTTPS backend base URL (NinjaLabsBE). Passed to the client through `FoundationConfig`; the API client fetches it directly (Bearer). Also read at build time by `next.config.ts` for the `/media/*` and `/api/auth/*` rewrites - set it for `next build`, not only at runtime. |
 | `NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID` | No | Optional Injective EVM `1776` (mainnet) or `1439` (testnet). Omitting wallet variables renders the unavailable connection state. |
 | `NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL` | API mode with a chain ID | Public JSON-RPC URL; requires a configured chain ID. Required in API mode whenever a chain ID is set (without it the wagmi chain has no transport and RPC reads fail silently); optional in mock mode. |
-| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | No | Optional public WalletConnect project identifier. Without it, the connection UI remains injected-wallet-only. |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | No | Currently ignored: since the wagmi 3 upgrade (2026-10-24) the connection UI is injected-wallet-only, because no RainbowKit release supports wagmi 3 and the WalletConnect provider tree still has high advisories. |
 
 | Deployment tier | Allowed runtime mode |
 |---|---|
