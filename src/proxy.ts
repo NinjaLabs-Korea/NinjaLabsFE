@@ -15,6 +15,10 @@ const handleLocale = createMiddleware(routing);
  * prerendered. A `notFound()` thrown while rendering cannot do that: React SSR has no error boundaries, so Next answers
  * with the bare `<html id="__next_error__">` shell and the boundary only appears after hydration. The `[id]` pages
  * keep their own existence check for well-formed ids the proxy cannot judge.
+ *
+ * The rewritten response carries `x-middleware-rewrite: /<locale>/page-not-found`. Next's router adds that header after
+ * this function returns (`next/dist/server/lib/router-utils/resolve-routes.js`), so it cannot be removed here, and
+ * `next.config.ts headers()` can only set headers. It reveals nothing but that internal path; left as is.
  */
 export default async function proxy(request: NextRequest) {
   const response = handleLocale(request);
