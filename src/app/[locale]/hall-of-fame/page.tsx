@@ -65,10 +65,11 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
 
       {hallOfFame.stats.length > 0 ? (
         <section className="mt-10 rounded-panel bg-[linear-gradient(160deg,var(--color-hero-from)_0%,var(--color-hero-via)_55%,var(--color-hero-to)_100%)] p-6 shadow-frame sm:p-10">
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className={`grid gap-5 ${hallOfFame.stats.length === 4 ? "sm:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3"}`}>
             {hallOfFame.stats.map((stat) => (
               <div key={stat.labelKey} className="rounded-card border border-on-inverse/15 bg-on-inverse/5 p-5 text-center">
-                <p className="font-display text-4xl font-bold text-on-inverse">{/^\d+$/.test(stat.value) ? format.number(Number(stat.value)) : stat.value}</p>
+                {/* The paid total is a multi-token string ("12,500 USDC · 300 INJ"), so it steps down a size and may wrap. */}
+                <p className={`font-display font-bold text-on-inverse ${stat.labelKey === "rewardsPaid" ? "break-words text-2xl" : "text-4xl"}`}>{/^\d+$/.test(stat.value) ? format.number(Number(stat.value)) : stat.value}</p>
                 <p className="mt-2 text-sm text-on-inverse/70">{t(`stats.${stat.labelKey}`)}</p>
               </div>
             ))}

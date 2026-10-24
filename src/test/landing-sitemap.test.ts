@@ -34,6 +34,19 @@ describe("landing and sitemap with a partially unavailable API", () => {
     expect(landing.hero.stats).toEqual([]);
   });
 
+  it("passes the hall of fame stats, including the rewards paid total, through to the hero", async () => {
+    sources.bounties.mockResolvedValue([]);
+    sources.notices.mockResolvedValue([]);
+    const stats = [
+      { value: "3", labelKey: "bountiesCompleted" },
+      { value: "12,500 USDC · 300 INJ", labelKey: "rewardsPaid" },
+    ];
+    sources.hall.mockResolvedValue({ stats, highlights: [], milestones: [], partners: [] });
+    const landing = await getRuntimeLanding("en");
+    expect(landing.hero.stats).toEqual(stats);
+    expect(landing.hero.portfolio.totalCompleted).toBe(3);
+  });
+
   it("lists static routes and the sources that loaded", async () => {
     sources.bounties.mockRejectedValue(new Error("down"));
     sources.members.mockResolvedValue([{ slug: "ninja" }]);

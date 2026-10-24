@@ -1,5 +1,7 @@
+import { formatUnits } from "viem";
 import { formatUtcDate, safeHttpUrl, toHighlightTypeLabel, type HighlightTypeLabel } from "@/lib/api/codecs";
 import { fetchPublicJson, loadFromRuntime } from "@/lib/api/public";
+import { formatTokenAmount } from "@/lib/format";
 
 // Stat labels are UI copy: `labelKey` resolves under messages `hallOfFame.stats`.
 export type HallStatKey =
@@ -11,12 +13,19 @@ export type HallStatKey =
   | "buildersRewarded"
   | "completionNfts";
 
+/** One `GET /hall-of-fame/stats` `paidTotals` entry: PAID payouts summed per token, `amount` in base units. */
+export type PaidTotalRow = { symbol: string; tokenType: string; decimals: number | null; amount: string };
+
 export const hallOfFame = {
   stats: [
     { value: "128", labelKey: "bountiesRun" },
     { value: "412", labelKey: "buildersOnboarded" },
-    { value: "$-", labelKey: "rewardsPaid" },
   ],
+  /** Mock-mode `paidTotals`, shaped like the API so both modes share `formatPaidTotals`. */
+  paidTotals: [
+    { symbol: "USDC", tokenType: "ERC20", decimals: 6, amount: "12500000000" },
+    { symbol: "INJ", tokenType: "NATIVE", decimals: 18, amount: "300000000000000000000" },
+  ] satisfies PaidTotalRow[],
   highlights: [
     { category: "Milestone", title: "100th builder onboarded", body: "New sign-ups completed Google, wallet, NFT, and profile setup in one month.", href: "/notices" },
     { category: "Featured bounty", title: "Helix analytics module shipped", body: "A bounty deliverable became a reusable market activity card for the DEX team.", href: "/bounties/helix-volume-analytics" },
@@ -38,7 +47,35 @@ type HighlightRow = {
   link_url: string | null;
   published_at: string | null;
 };
-type StatsRow = { completedBounties: number; builders: number; completionNfts: number; sponsors: number };
+type StatsRow = {
+  completedBounties: number;
+  builders: number;
+  completionNfts: number;
+  sponsors: number;
+  /** Optional so an older BE without the field still renders (the stat is just hidden). */
+  paidTotals?: PaidTotalRow[];
+};
+
+/** Paid totals show with at most this many fraction digits — a headline stat, not a ledger. */
+const PAID_TOTAL_FRACTION_DIGITS = 2;
+
+/**
+ * `paidTotals` → one display string, e.g. "12,500 USDC · 300 INJ" (API order). Entries the client cannot scale
+ * (unknown `decimals`, non-integer amount, zero) are skipped rather than shown in the wrong unit; null when nothing is left,
+ * so the "Rewards paid" stat is hidden instead of showing a placeholder.
+ */
+export function formatPaidTotals(rows: readonly PaidTotalRow[] | undefined, locale: string): string | null {
+  const parts = (rows ?? []).flatMap(({ symbol, decimals, amount }) => {
+    if (decimals === null || !Number.isInteger(decimals) || decimals < 0 || !/^\d+$/.test(amount) || BigInt(amount) === BigInt(0)) return [];
+    return [`${formatTokenAmount(formatUnits(BigInt(amount), decimals), locale, PAID_TOTAL_FRACTION_DIGITS)} ${symbol}`];
+  });
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+function withPaidTotal(stats: RuntimeHallOfFame["stats"], rows: readonly PaidTotalRow[] | undefined, locale: string): RuntimeHallOfFame["stats"] {
+  const value = formatPaidTotals(rows, locale);
+  return value ? [...stats, { value, labelKey: "rewardsPaid" }] : stats;
+}
 
 export type RuntimeHallOfFame = {
   stats: Array<{ value: string; labelKey: HallStatKey }>;
@@ -53,12 +90,12 @@ export const emptyHallOfFame: RuntimeHallOfFame = { stats: [], highlights: [], m
 
 /** `locale` formats API dates for display and comes from the server page; see `getRuntimeBounties` for why it is a parameter. */
 export function getRuntimeHallOfFame(locale: string): Promise<RuntimeHallOfFame> {
-  return loadFromRuntime({ mock: mockHallOfFame, api: () => fetchHallOfFame(locale) });
+  return loadFromRuntime({ mock: () => mockHallOfFame(locale), api: () => fetchHallOfFame(locale) });
 }
 
-function mockHallOfFame(): RuntimeHallOfFame {
+function mockHallOfFame(locale: string): RuntimeHallOfFame {
   return {
-    stats: [...hallOfFame.stats],
+    stats: withPaidTotal([...hallOfFame.stats], hallOfFame.paidTotals, locale),
     highlights: hallOfFame.highlights.map((item) => ({ ...item, image: null })),
     milestones: [...hallOfFame.milestones],
     partners: [],
@@ -72,11 +109,15 @@ async function fetchHallOfFame(locale: string): Promise<RuntimeHallOfFame> {
   ]);
   const category = (type: string): HighlightTypeLabel => toHighlightTypeLabel(type) ?? "Other";
   return {
-    stats: [
-      { value: String(stats.completedBounties), labelKey: "bountiesCompleted" },
-      { value: String(stats.builders), labelKey: "buildersRewarded" },
-      { value: String(stats.completionNfts), labelKey: "completionNfts" },
-    ],
+    stats: withPaidTotal(
+      [
+        { value: String(stats.completedBounties), labelKey: "bountiesCompleted" },
+        { value: String(stats.builders), labelKey: "buildersRewarded" },
+        { value: String(stats.completionNfts), labelKey: "completionNfts" },
+      ],
+      stats.paidTotals,
+      locale,
+    ),
     // Admin-entered link/image URLs are rendered as href/src on the page: unsafe ones fall back to no link / placeholder.
     highlights: rows.map((row) => ({
       category: category(row.type),
