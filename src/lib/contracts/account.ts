@@ -3,9 +3,10 @@ import type { PayoutStatus } from "@/lib/types";
 
 /**
  * FE steps of an application; `open` = BE PENDING (applied, awaiting the sponsor), `submitted`/`completed` come from the submission join.
+ * `revisionRequested` = approved application whose submission needs changes: still the "Submitted" step, with an action-needed marker and a resubmit link.
  * `notAccepted` = approved application whose submission was finally REJECTED (including a forfeited award): a final state, not a step.
  */
-export type ApplicationStatus = "open" | "approved" | "submitted" | "completed" | "rejected" | "notAccepted";
+export type ApplicationStatus = "open" | "approved" | "submitted" | "completed" | "rejected" | "notAccepted" | "revisionRequested";
 
 export type SubmissionStatus =
   | "submitted"
@@ -38,7 +39,7 @@ export type AccountApplication = {
   note: string;
   status: ApplicationStatus;
   agent: AccountAgentRef | null;
-  /** Reviewer comment of the joined submission (set for `notAccepted`, e.g. `forfeited: <reason>`); null otherwise. */
+  /** Reviewer comment of the joined submission (set for `notAccepted`/`revisionRequested`, e.g. `forfeited: <reason>`); null otherwise. */
   reviewComment: string | null;
 };
 

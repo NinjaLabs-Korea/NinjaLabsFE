@@ -384,7 +384,7 @@ describe("api client application mapping", () => {
     expect(applications.status === "available" && applications.data.map((item) => [item.bountySlug, item.status, item.agent?.name ?? null])).toEqual([
       ["b1", "open", null],
       ["b2", "rejected", null],
-      ["b4", "submitted", null],
+      ["b4", "revisionRequested", null],
       ["b5", "open", "scout"],
       // The agent's submission does not complete the owner's own application.
       ["b6", "approved", null],

@@ -150,6 +150,9 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
               if (submission.status === "REJECTED") {
                 return { ...application, status: "notAccepted" as const, reviewComment: submission.review_comment?.trim() || null };
               }
+              if (submission.status === "REVISION_REQUESTED") {
+                return { ...application, status: "revisionRequested" as const, reviewComment: submission.review_comment?.trim() || null };
+              }
               return {
                 ...application,
                 status: submission.status === "APPROVED" ? "completed" as const : "submitted" as const,

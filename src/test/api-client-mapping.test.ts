@@ -86,6 +86,31 @@ describe("GET /applications/me + /submissions/me join", () => {
   });
 });
 
+describe("revision-requested join", () => {
+  it("maps an approved application whose submission is REVISION_REQUESTED, carrying the trimmed reviewer comment", async () => {
+    const { http } = createHttp({
+      "/applications/me": [
+        application({ id: "rev", status: "APPROVED", bounty_id: "b-rev" }),
+        application({ id: "rev-nocomment", status: "APPROVED", bounty_id: "b-rev2" }),
+        application({ id: "rev-pending", status: "PENDING", bounty_id: "b-rev3" }),
+      ],
+      "/submissions/me": [
+        { status: "REVISION_REQUESTED", bounty_id: "b-rev", agent: null, review_comment: "  Add tests\nand docs  " },
+        { status: "REVISION_REQUESTED", bounty_id: "b-rev2", agent: null },
+        { status: "REVISION_REQUESTED", bounty_id: "b-rev3", agent: null, review_comment: "x" },
+      ],
+    });
+    const result = await createApiApiClient(http).getApplications(signedIn);
+    const rows = result.status === "available" ? result.data : [];
+    expect(rows.map((row) => [row.id, row.status, row.reviewComment])).toEqual([
+      ["rev", "revisionRequested", "Add tests\nand docs"],
+      ["rev-nocomment", "revisionRequested", null],
+      // An unapproved application is never promoted by a submission row.
+      ["rev-pending", "open", null],
+    ]);
+  });
+});
+
 describe("GET /submissions/me mapping", () => {
   it.each([
     ["SUBMITTED", "submitted"],

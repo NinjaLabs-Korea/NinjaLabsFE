@@ -43,10 +43,10 @@ function toPreviewApplication(id: string, bountyId: string, message: string): Ac
 /** Fixture submissions mirror the api client's join: a submitted/completed application has a submission row. */
 function fixtureSubmissions(applications: readonly AccountApplication[]): AccountSubmission[] {
   return applications
-    .filter((application) => application.status === "submitted" || application.status === "completed" || application.status === "notAccepted")
+    .filter((application) => application.status === "submitted" || application.status === "revisionRequested" || application.status === "completed" || application.status === "notAccepted")
     .map((application) => ({
       bountySlug: application.bountySlug,
-      status: application.status === "completed" ? "approved" as const : application.status === "notAccepted" ? "rejected" as const : "submitted" as const,
+      status: application.status === "completed" ? "approved" as const : application.status === "notAccepted" ? "rejected" as const : application.status === "revisionRequested" ? "revision_requested" as const : "submitted" as const,
       agent: application.agent,
       paymentStatus: application.status === "completed" ? "PENDING" as const : "NONE" as const,
       reviewComment: application.reviewComment,

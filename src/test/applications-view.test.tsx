@@ -135,6 +135,30 @@ describe("ApplicationsView", () => {
     expect(within(card("Bounty notAccepted")).queryByText(/Reviewer comment/)).toBeNull();
   });
 
+  it("shows a revision-requested application on the Submitted step with a warning badge, the reviewer comment and a Resubmit link", async () => {
+    serve({ status: "available", data: [row("revisionRequested", { reviewComment: "Add the scoring rules" })] });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Bounty revisionRequested" });
+    const article = card("Bounty revisionRequested");
+    const badge = within(article).getByText("Revision requested");
+    expect(badge.className).toContain("text-warning");
+    expect(currentStep(article)).toContain("Submitted");
+    expect(within(article).getByText("Action needed")).toBeTruthy();
+    expect(within(article).getByText("Reviewer comment: Add the scoring rules")).toBeTruthy();
+    expect(within(article).getByRole("link", { name: "Resubmit" }).getAttribute("href")).toBe("/bounties/bounty-revisionRequested");
+    expect(within(article).queryByRole("link", { name: "Submit work" })).toBeNull();
+    expect(within(article).queryByRole("button", { name: "Withdraw" })).toBeNull();
+  });
+
+  it("shows the revision-requested fixture in the mock client", async () => {
+    apiClient = createMockApiClient();
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Agent skill benchmark suite" });
+    const article = card("Agent skill benchmark suite");
+    expect(await within(article).findByText("Revision requested")).toBeTruthy();
+    expect(within(article).getByText(/scoring rules to the README/)).toBeTruthy();
+  });
+
   it("shows the forfeited fixture in the mock client", async () => {
     apiClient = createMockApiClient();
     renderWithIntl(<ApplicationsView />);

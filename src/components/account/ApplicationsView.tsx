@@ -27,6 +27,7 @@ const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success
   completed: "success",
   rejected: "danger",
   notAccepted: "danger",
+  revisionRequested: "warning",
 };
 
 const outlineDangerClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
@@ -47,6 +48,18 @@ function NotAcceptedNote({ application }: { application: AccountApplication }) {
   );
 }
 
+/** Approved work the reviewer sent back: the reviewer comment and the way back to the resubmit form on the bounty page. */
+function RevisionNote({ application }: { application: AccountApplication }) {
+  const t = useTranslations("account.applications");
+  const review = parseReviewComment(application.reviewComment);
+  return (
+    <>
+      <p className="mt-4 text-sm text-warning">{t("revisionNote")}</p>
+      {review ? <p className="mt-1 text-sm text-ink-muted">{t("reviewerComment", { comment: review.text })}</p> : null}
+    </>
+  );
+}
+
 export function ApplicationsView() {
   const t = useTranslations("account.applications");
   const tAccount = useTranslations("account.common");
@@ -55,6 +68,7 @@ export function ApplicationsView() {
   const statusLabel = (application: AccountApplication): string => {
     const { status } = application;
     if (status === "approved") return t("approvedStatus");
+    if (status === "revisionRequested") return t("revisionRequestedStatus");
     if (status === "rejected") return t("rejectedStatus");
     if (status === "notAccepted") return parseReviewComment(application.reviewComment)?.forfeited ? t("forfeitedStatus") : t("notAcceptedStatus");
     return t(`steps.${status}`);
@@ -123,7 +137,9 @@ export function ApplicationsView() {
       <p className="sr-only" role="status">{notice}</p>
       <div className="space-y-5" ref={listRef} tabIndex={-1}>
         {applications.map((application) => {
-          const currentIndex = applicationSteps.indexOf(application.status);
+          const actionNeeded = application.status === "revisionRequested";
+          // A requested revision is still the "Submitted" step; the marker says the next move is the applicant's.
+          const currentIndex = applicationSteps.indexOf(actionNeeded ? "submitted" : application.status);
 
           return (
             <article
@@ -182,6 +198,7 @@ export function ApplicationsView() {
                       >
                         {t(`steps.${step}`)}
                       </span>
+                      {actionNeeded && index === currentIndex ? <Badge variant="warning">{t("actionNeeded")}</Badge> : null}
                       {index < applicationSteps.length - 1 ? (
                         <span aria-hidden="true" className="hidden h-px w-5 bg-primary-outline sm:block" />
                       ) : null}
@@ -190,12 +207,13 @@ export function ApplicationsView() {
                 </ol>
               )}
 
-              {application.status === "approved" ? (
+              {actionNeeded ? <RevisionNote application={application} /> : null}
+              {application.status === "approved" || actionNeeded ? (
                 <Link
                   className={`mt-4 inline-block rounded-control bg-primary px-4 py-2 text-sm font-semibold text-on-inverse ${focusClass}`}
                   href={`/bounties/${application.bountySlug}`}
                 >
-                  {t("submitWork")}
+                  {actionNeeded ? t("resubmit") : t("submitWork")}
                 </Link>
               ) : null}
               {application.status === "open" ? (

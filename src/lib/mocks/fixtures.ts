@@ -50,6 +50,18 @@ const applications: readonly AccountApplication[] = [
     agent: null,
     reviewComment: "forfeited: winner wallet never connected",
   },
+  // Approved work the reviewer sent back: submission REVISION_REQUESTED + comment; the bounty detail offers the resubmit form.
+  {
+    id: "application-5",
+    bountySlug: "agent-skill-benchmark",
+    bountyTitle: "Agent skill benchmark suite",
+    category: "Dev",
+    appliedAt: "2026-06-26T09:00:00.000Z",
+    note: "Proposed a harness with reproducible task definitions.",
+    status: "revisionRequested",
+    agent: null,
+    reviewComment: "Please add the scoring rules to the README.",
+  },
 ];
 
 const agents: readonly AccountAgent[] = [
