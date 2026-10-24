@@ -90,4 +90,33 @@ describe("next.config security headers", () => {
     expect(csp.value).not.toMatch(/walletconnect|web3modal|rainbow\.me/);
     expect(csp.directives).toContain("frame-src https://challenges.cloudflare.com");
   });
+
+  describe("Vercel preview toolbar", () => {
+    const DIRECTIVES = ["script-src", "connect-src", "img-src", "frame-src", "style-src", "font-src"];
+
+    it("allows vercel.live only when VERCEL_ENV=preview", async () => {
+      vi.stubEnv("VERCEL_ENV", "preview");
+      const csp = await cspFor("production");
+      for (const name of DIRECTIVES) expect(csp.directive(name)).toContain("https://vercel.live");
+      expect(csp.directive("connect-src")).toContain("wss://ws-us3.pusher.com");
+    });
+
+    it.each(["production", "development", ""])("keeps vercel.live out when VERCEL_ENV=%j", async (vercelEnv) => {
+      vi.stubEnv("VERCEL_ENV", vercelEnv);
+      const csp = await cspFor("production");
+      expect(csp.value).not.toMatch(/vercel\.live|pusher/);
+    });
+  });
+
+  describe("configured JSON-RPC origin", () => {
+    it.each(ALL_ENVS)("adds the NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL origin to connect-src (%s)", async (nodeEnv) => {
+      vi.stubEnv("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", "https://rpc.example.com/path?k=1");
+      expect((await cspFor(nodeEnv)).directive("connect-src")).toContain("https://rpc.example.com");
+    });
+
+    it("adds nothing when the variable is unset or not https", async () => {
+      vi.stubEnv("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", "http://rpc.example.com");
+      expect((await cspFor("production")).value).not.toContain("rpc.example.com");
+    });
+  });
 });
