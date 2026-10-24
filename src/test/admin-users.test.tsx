@@ -129,6 +129,22 @@ describe("UserDirectory", () => {
     expect(screen.getAllByText("Update failed")).toHaveLength(2);
   });
 
+  it("reports a failed Undo instead of leaving an unhandled rejection, and keeps the member removed", async () => {
+    const setMember = vi.spyOn(api, "setAdminMember");
+    renderDirectory();
+    fireEvent.click(within(row("juho")).getByRole("button", { name: "Remove" }));
+    fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Remove member" }));
+    await waitFor(() => expect(cells("juho")[4]).toBe("-"));
+
+    setMember.mockRejectedValueOnce(new ApiHttpError(500, "INTERNAL"));
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain("Update failed");
+    expect(alert.textContent).toContain("The member assignment was not changed.");
+    expect(cells("juho").slice(4, 7)).toEqual(["-", "-", "Assign"]);
+    expect(screen.queryByText("juho was restored.")).toBeNull();
+  });
+
   it("shows the load-failed toast when the directory request rejects", async () => {
     vi.spyOn(api, "getAdminUsers").mockRejectedValue(new Error("down"));
     renderDirectory();
