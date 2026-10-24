@@ -48,6 +48,7 @@ Created 2026-07-19 via Figma MCP (`generate_diagram`, team "Alex kim's team" - t
 
 | Item | Evidence (implementation) |
 |---|---|
+| Admin operations console + NFT job console (2026-10-24) | No Figma node exists for bounty operations (deposits, application/submission review, payouts, lifecycle) or NFT job retry. FE-designed from the existing admin recipes (`docs/design.md` "Admin operations console"): `src/components/admin/{OperationsConsole,BountyOperations,Ops*Panel,OpsFormModal,OpsActorCell,NftJobsManager}.tsx`, routes `/admin/operations`, `/admin/nft-jobs`. Needs a design pass (capture as FE frames like 22-31). |
 | Branded 404 / error pages | `src/app/not-found.tsx`, `src/app/error.tsx`, `src/app/global-error.tsx` |
 | Filter empty states + Reset | `src/components/bounties/BountyFilters.tsx`, `src/components/notices/NoticeFilters.tsx`, `src/components/members/MemberFilters.tsx` |
 | Active nav highlight | `src/components/layout/NavLinks.tsx` |

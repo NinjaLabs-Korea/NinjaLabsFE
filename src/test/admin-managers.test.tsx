@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { BountyManager } from "@/components/admin/BountyManager";
 import { HighlightManager } from "@/components/admin/HighlightManager";
@@ -40,6 +41,12 @@ vi.mock("@/components/auth/FoundationProvider", () => ({
   useAdminApi: () => adminApi,
 }));
 
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ children, href, ...props }: Omit<ComponentProps<"a">, "href"> & { href: string | { pathname: string; query?: Record<string, string> } }) => (
+    <a href={typeof href === "string" ? href : `${href.pathname}?${new URLSearchParams(href.query).toString()}`} {...props}>{children}</a>
+  ),
+}));
+
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute("open", ""); };
   HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) { this.removeAttribute("open"); };
@@ -56,6 +63,13 @@ beforeEach(() => {
 });
 
 describe("BountyManager", () => {
+  it("links every row to its operations view (/admin/operations?bounty=<id>)", async () => {
+    renderWithIntl(<BountyManager bounties={[bounty]} tabs={null}>{null}</BountyManager>);
+    await waitFor(() => expect(adminApi.getAdminBounties).toHaveBeenCalled());
+    expect(screen.getByRole("link", { name: "Operations" }).getAttribute("href")).toBe("/admin/operations?bounty=b1");
+  });
+
+
   it("disables the save button while a save is in flight and never double-posts", async () => {
     const pending = deferred("b1");
     adminApi.saveAdminBounty.mockReturnValue(pending.promise);

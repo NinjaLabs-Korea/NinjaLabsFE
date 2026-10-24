@@ -1,6 +1,7 @@
 import type { Account, AccountAgent, AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
+import type { AdminNftJobPage, AdminOperations, NftJobStatus, SubmissionDecision } from "@/lib/admin-operations";
 
 export type ApiAvailable<T> = {
   status: "available";
@@ -126,6 +127,24 @@ export type AdminApi = {
    */
   saveAdminHighlight: (highlight: AdminHighlight, create: boolean, options?: { publish?: boolean; typeChanged?: boolean }) => Promise<{ id: string }>;
   deleteAdminHighlight: (highlightId: string) => Promise<void>;
+  /** GET /admin/bounties/:id/operations — amounts stay BE base-unit strings (see `lib/admin-operations.ts`). */
+  getAdminOperations: (bountyId: string) => Promise<AdminOperations>;
+  /** POST /admin/applications/:id/review — an empty note is omitted. */
+  reviewAdminApplication: (applicationId: string, input: { decision: "APPROVED" | "REJECTED"; note?: string }) => Promise<void>;
+  /** POST /admin/submissions/:id/review — `revisionNo` is the revision the admin looked at (SUBMISSION_REVISION_CHANGED otherwise). */
+  reviewAdminSubmission: (submissionId: string, input: { decision: SubmissionDecision; revisionNo: number; comment?: string }) => Promise<void>;
+  /** POST /admin/rewards/:id/confirm-deposit — `depositedAmount` in base units (`lib/api/codecs.ts humanToBaseUnits`). */
+  confirmAdminDeposit: (rewardId: string, input: { txHash: string; depositedAmount: string }) => Promise<void>;
+  /** POST /admin/payouts — `amount` in base units. */
+  requestAdminPayout: (input: { rewardId: string; submissionId: string; amount: string }) => Promise<void>;
+  /** POST /admin/payouts/:id/approve — 403 PAYOUT_SELF_APPROVAL when the requesting admin approves (two-person rule). */
+  approveAdminPayout: (payoutId: string) => Promise<void>;
+  /** POST /admin/payouts/:id/paid */
+  markAdminPayoutPaid: (payoutId: string, txHash: string) => Promise<void>;
+  /** GET /admin/nft-jobs?status=&page= (30/page) */
+  getAdminNftJobs: (status: NftJobStatus, page: number) => Promise<AdminNftJobPage>;
+  /** POST /admin/nft-jobs/:id/retry — 404 NFT_JOB_NOT_FOUND_OR_NOT_FAILED */
+  retryAdminNftJob: (jobId: string) => Promise<void>;
 };
 
 export type ApiClient = AccountApi & AccountSettingsApi & BountyApi & AgentApi & WalletApi & OnboardingApi & AdminApi;
