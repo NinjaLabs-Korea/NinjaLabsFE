@@ -10,6 +10,7 @@ import {
   canMarkPayoutPaid,
   isBountyInProgress,
   isRewardFunded,
+  rewardHeadroom,
   isTxHash,
   submissionCommentRequired,
   submissionDecisionsFor,
@@ -96,17 +97,37 @@ function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string)
   };
 }
 
-/** Same rules as BountyLifecycleService.blockers (counts from the in-memory rows). */
-function lifecycleFor(ops: AdminOperations): AdminOperations["lifecycle"] {
-  const blockers: Record<string, LifecycleBlocker[]> = { OPEN: [], SUBMISSION_CLOSED: [], IN_REVIEW: [], COMPLETED: [] };
+const OPEN_PAYOUT_STATUSES: readonly string[] = ["REQUESTED", "AWAITING_MULTISIG_APPROVAL", "APPROVED", "BROADCASTING"];
+
+/**
+ * BE `owesUnpaidRewardSql`: among the funded rewards this submission is owed from, one has no PAID payout. A reward is owed when the
+ * submission has a payout on it that is not CANCELLED (incl. FAILED), or has no payout on it at all and the reward still has headroom.
+ * A cancelled award, an exhausted pool, or no funded reward means nothing is owed.
+ */
+function owesUnpaidReward(ops: AdminOperations, submissionId: string): boolean {
+  return ops.rewards.filter(isRewardFunded).some((reward) => {
+    const mine = ops.payouts.filter((p) => p.rewardId === reward.id && p.submissionId === submissionId);
+    const owed = mine.some((p) => p.status !== "CANCELLED") || (mine.length === 0 && BigInt(rewardHeadroom(reward) ?? "0") > BigInt(0));
+    return owed && !mine.some((p) => p.status === "PAID");
+  });
+}
+
+/**
+ * Mirrors NinjaLabsBE `src/bounties/admin/bounty-lifecycle.service.ts BountyLifecycleService.blockers`, with the payout rules of
+ * `src/rewards/payout-status.ts` (`OPEN_PAYOUT_STATUSES`, `owesUnpaidRewardSql`), computed from the in-memory rows.
+ * The mock has no withdrawn recipients, so the BE's `recipientActiveSql` is always true here.
+ */
+export function lifecycleFor(ops: AdminOperations): AdminOperations["lifecycle"] {
+  const blockers: Record<string, LifecycleBlocker[]> = { OPEN: [], SUBMISSION_CLOSED: [], IN_REVIEW: [], COMPLETED: [], CANCELLED: [] };
   const deadline = ops.bounty.submissionDeadline ? new Date(ops.bounty.submissionDeadline).getTime() : Number.NaN;
   const expired = !(deadline > Date.now());
   const pending = ops.applications.filter((a) => a.status === "PENDING").length;
   const unsubmitted = ops.applications.filter((a) => a.status === "APPROVED" && !ops.submissions.some((s) => s.userId === a.userId && s.agentId === a.agentId)).length;
   const unresolved = ops.submissions.filter((s) => ["SUBMITTED", "RESUBMITTED", "IN_REVIEW", "REVISION_REQUESTED"].includes(s.status)).length;
   const unfunded = ops.rewards.filter((r) => !isRewardFunded(r)).length;
-  const unpaid = ops.payouts.filter((p) => p.status !== "PAID").length;
-  const unawarded = ops.rewards.length ? ops.submissions.filter((s) => s.status === "APPROVED" && !ops.payouts.some((p) => p.submissionId === s.id && p.status === "PAID")).length : 0;
+  // BE OPEN_PAYOUT_STATUSES: waiting for approval or for the transfer. FAILED/CANCELLED/PAID do not count.
+  const unpaid = ops.payouts.filter((p) => OPEN_PAYOUT_STATUSES.includes(p.status)).length;
+  const unawarded = ops.submissions.filter((s) => s.status === "APPROVED" && owesUnpaidReward(ops, s.id)).length;
   if (expired) blockers.OPEN.push({ code: "DEADLINE_PASSED" });
   if (unfunded) blockers.OPEN.push({ code: "REWARDS_UNFUNDED", count: unfunded });
   if (pending) {
@@ -115,7 +136,11 @@ function lifecycleFor(ops: AdminOperations): AdminOperations["lifecycle"] {
   }
   if (unsubmitted && !expired) blockers.SUBMISSION_CLOSED.push({ code: "UNSUBMITTED_PARTICIPANTS", count: unsubmitted });
   if (unresolved) blockers.COMPLETED.push({ code: "UNRESOLVED_SUBMISSIONS", count: unresolved });
-  if (unpaid || unawarded) blockers.COMPLETED.push({ code: "UNPAID_WINNERS" });
+  if (unpaid || unawarded) {
+    blockers.COMPLETED.push({ code: "UNPAID_WINNERS" });
+    // Cancelling would refund deposit minus PAID, handing an unpaid winner's share back to the sponsor — same rule, same code.
+    blockers.CANCELLED.push({ code: "UNPAID_WINNERS" });
+  }
   return { blockers, allowedTransitions: [...(BOUNTY_TRANSITIONS[ops.bounty.status as BountyStatusCode] ?? [])] };
 }
 

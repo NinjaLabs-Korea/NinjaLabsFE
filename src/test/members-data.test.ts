@@ -84,6 +84,12 @@ describe("public profile payout status", () => {
     expect(toCompletionReward({ rewards: [], postedRewards: posted, payoutStatus: "NONE" })).toEqual({ reward: null, payoutStatus: "NONE" });
   });
 
+  it("renders NONE with paid rewards as PAID (paid amount, no badge)", () => {
+    const result = toCompletionReward({ rewards: paid, postedRewards: posted, payoutStatus: "NONE" });
+    expect(result).toEqual({ reward: { amount: 1, currency: "INJ" }, payoutStatus: "PAID" });
+    expect(payoutBadge(result.payoutStatus)).toBeNull();
+  });
+
   it("falls back to `rewards` when an older BE omits payoutStatus/postedRewards", () => {
     expect(toCompletionReward({ rewards: paid })).toEqual({ reward: { amount: 1, currency: "INJ" }, payoutStatus: "PAID" });
     expect(toCompletionReward({ rewards: [] })).toEqual({ reward: null, payoutStatus: "NONE" });

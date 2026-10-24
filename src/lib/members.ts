@@ -108,13 +108,13 @@ const firstReward = (rows: readonly RewardRow[] | undefined): Reward | null => (
 
 /**
  * `payoutStatus` + `postedRewards` are newer BE fields: PAID shows the paid payout, PARTIALLY_PAID the paid payout so far
- * (badge), PENDING the posted reward (badge), NONE nothing. An unknown value is read as PENDING. An older BE only sends
+ * (badge), PENDING the posted reward (badge), NONE nothing — unless paid `rewards` exist, which renders as PAID. An unknown value is read as PENDING. An older BE only sends
  * `rewards` (paid payouts), so a missing `payoutStatus` is derived from whether anything was paid.
  */
 export function toCompletionReward(row: Pick<PublicProfileResponse["completedBounties"][number], "rewards" | "postedRewards" | "payoutStatus">): Pick<Completion, "reward" | "payoutStatus"> {
   const paid = firstReward(row.rewards);
   const status: PayoutStatus = toPayoutStatus(row.payoutStatus) ?? (paid ? "PAID" : "NONE");
-  if (status === "PAID") return { reward: paid, payoutStatus: paid ? "PAID" : "NONE" };
+  if (status === "PAID" || (status === "NONE" && paid)) return { reward: paid, payoutStatus: paid ? "PAID" : "NONE" };
   if (status === "PARTIALLY_PAID") return { reward: paid, payoutStatus: "PARTIALLY_PAID" };
   if (status === "PENDING") return { reward: firstReward(row.postedRewards), payoutStatus: "PENDING" };
   return { reward: null, payoutStatus: "NONE" };
