@@ -69,6 +69,7 @@ function contentSecurityPolicy(): string {
   ].filter((source): source is string => source !== null);
   return [
     "default-src 'self'",
+    "object-src 'none'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
@@ -82,6 +83,8 @@ function contentSecurityPolicy(): string {
 }
 
 const nextConfig: NextConfig = {
+  // No `X-Powered-By: Next.js`: it only advertises the framework to scanners.
+  poweredByHeader: false,
   env: { NINJA_OPTIMIZED_IMAGE_PREFIXES: optimizedImagePrefixes.join(",") },
   images: {
     remotePatterns: optimizedImagePrefixes.map((prefix) => new URL(`${prefix}**`)),
