@@ -1,5 +1,4 @@
 @import "tailwindcss";
-/* RainbowKit's stylesheet is imported by wallet/RainbowKitWalletProvider, which only loads on the WalletConnect branch. */
 
 @theme {
   /* palette */

@@ -1,6 +1,6 @@
 import type { Chain } from "viem";
 
-/** wagmi chain definition shared by the injected-only and RainbowKit wallet providers. */
+/** wagmi chain definition for `wallet/WalletProvider` (also read back by `useWalletConnection` for chain-add parameters). */
 export function createInjectiveChain(chainId: number, rpcUrl?: string): Chain {
   return {
     id: chainId,

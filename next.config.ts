@@ -38,31 +38,19 @@ const optimizedImagePrefixes = [
 /**
  * Report-only CSP: it is NOT enforced, so a violation only logs to the browser console
  * (no `report-to`/`report-uri` endpoint yet). Enforcing it today would break the app because
- * Next.js emits inline bootstrap scripts (`'unsafe-inline'` in script-src) and RainbowKit/wagmi
- * inject inline styles; dev mode also needs `'unsafe-eval'`. To enforce it, generate a per-request
+ * Next.js emits inline bootstrap scripts (`'unsafe-inline'` in script-src) and inline styles; dev mode also needs `'unsafe-eval'`. To enforce it, generate a per-request
  * nonce in `src/proxy.ts`, pass it to `<Script>`/`next/script` and the root layout via the
  * `x-nonce` header, replace `'unsafe-inline'`/`'unsafe-eval'` with `'nonce-…' 'strict-dynamic'`,
- * audit the RainbowKit inline styles, and only then rename this header to `Content-Security-Policy`.
+ * audit the remaining inline styles, and only then rename this header to `Content-Security-Policy`.
  */
 function contentSecurityPolicy(): string {
-  // Wallet origins from `grep -rhoE 'https://[^"/ ]+' node_modules/@rainbow-me/rainbowkit/dist node_modules/@walletconnect`
-  // (RainbowKit 2 + WalletConnect 2, only `injectedWallet`/`walletConnectWallet` are configured): the walletconnect
-  // wildcards cover rpc/pulse/verify/echo/secure(-mobile).walletconnect.{org,com} and the relay websockets (pulse =
-  // telemetry and verify = domain attestation are also listed by name so tightening the wildcards keeps them);
-  // api.web3modal.org (wallet list/config) and enhanced-provider.rainbow.me (RainbowKit ENS/provider proxy) are separate
-  // hosts. Docs/learn/app-store links in those bundles are navigation targets, not fetches, so they are not listed.
+  // The wallet stack is injected-only since the wagmi 3 upgrade (2026-10-24): the browser extension talks to its own
+  // RPC, and the page only reaches the configured Injective JSON-RPC through viem's http transport. RainbowKit /
+  // WalletConnect origins (relay websockets, web3modal, rainbow.me) were dropped with them; re-add them if WalletConnect
+  // returns (see AGENTS.md "Stack").
   const connectSrc = [
     "'self'",
     apiOrigin(),
-    "https://*.walletconnect.com",
-    "https://*.walletconnect.org",
-    "wss://*.walletconnect.com",
-    "wss://*.walletconnect.org",
-    "https://pulse.walletconnect.org",
-    "https://verify.walletconnect.org",
-    "https://verify.walletconnect.com",
-    "https://api.web3modal.org",
-    "https://enhanced-provider.rainbow.me",
     "https://*.injective.network",
     "wss://*.injective.network",
     "https://k8s.testnet.json-rpc.injective.network",
@@ -75,7 +63,7 @@ function contentSecurityPolicy(): string {
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
     `connect-src ${connectSrc.join(" ")}`,
-    "frame-src https://*.walletconnect.com https://*.walletconnect.org",
+    "frame-src 'none'",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
