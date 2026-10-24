@@ -38,3 +38,51 @@ describe("pickMessages", () => {
     expect(pickMessages({ common: { a: 1 } }, ["common", "signup"])).toEqual({ common: { a: 1 } });
   });
 });
+
+describe("useAuthSnapshot hydration", () => {
+  function Status() {
+    return <output>{useAuthSnapshot().status}</output>;
+  }
+
+  it("hydrates a late Suspense boundary against the server snapshot even after the session was restored", async () => {
+    const { Suspense, lazy, act } = await import("react");
+    const { renderToString } = await import("react-dom/server");
+    const { hydrateRoot } = await import("react-dom/client");
+    const config = { mode: "api", apiUrl: "https://api.example.test" } as const;
+    localStorage.clear();
+
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(
+      <FoundationProvider config={config}>
+        <Suspense fallback={null}><Status /></Suspense>
+      </FoundationProvider>,
+    );
+    expect(container.textContent).toBe("loading");
+
+    // The streamed page body hydrates only after the provider's effect restored a (signed-out) session.
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const LateStatus = lazy(async () => {
+      await gate;
+      return { default: Status };
+    });
+    const recoverable: unknown[] = [];
+    await act(async () => {
+      hydrateRoot(
+        container,
+        <FoundationProvider config={config}>
+          <Suspense fallback={null}><LateStatus /></Suspense>
+        </FoundationProvider>,
+        { onRecoverableError: (error) => recoverable.push(error) },
+      );
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      release();
+      await gate;
+    });
+
+    await waitFor(() => expect(container.textContent).toBe("signed-out"));
+    expect(recoverable).toEqual([]);
+  });
+});

@@ -141,10 +141,15 @@ function useFoundationContext(): FoundationContextValue {
   return context;
 }
 
+// The server always renders auth as `loading` (no tokens there). Hydration must see that same value: a Suspense
+// boundary that hydrates after the provider's effect has already restored the session (streamed page bodies do)
+// would otherwise read `signed-out`/`signed-in` and mismatch the server HTML (React #418).
+const getServerAuthSnapshot = (): AuthSnapshot => pendingSnapshot;
+
 export function useAuthSnapshot(): AuthSnapshot {
   const { adapter } = useFoundationContext();
 
-  return useSyncExternalStore(adapter.subscribe, adapter.getSnapshot, adapter.getSnapshot);
+  return useSyncExternalStore(adapter.subscribe, adapter.getSnapshot, getServerAuthSnapshot);
 }
 
 export function useAuthActions(): Pick<AuthAdapter, "signIn" | "signOut"> {
