@@ -7,12 +7,14 @@ import { Badge } from "@/components/ui/Badge";
 import { getAdminHighlights } from "@/lib/admin";
 import { loadFromRuntime } from "@/lib/api/public";
 import { loadRuntimeHallOfFame } from "@/lib/hall-of-fame";
+import { localeAlternates } from "@/i18n/alternates";
 
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/admin/hall-of-fame">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "admin.hallOfFame" });
   return {
+    alternates: localeAlternates(locale, "/admin/hall-of-fame"),
     title: t("metaTitle"),
     description: t("metaDescription"),
   };

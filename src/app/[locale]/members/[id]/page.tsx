@@ -9,6 +9,7 @@ import { Link } from "@/i18n/navigation";
 import { loadFromRuntime } from "@/lib/api/public";
 import { validateDetailId } from "@/lib/detail-id";
 import { getRuntimeProfile, PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
+import { localeAlternates } from "@/i18n/alternates";
 
 type MemberProfilePageProps = PageProps<"/[locale]/members/[id]">;
 
@@ -22,10 +23,11 @@ export async function generateMetadata({ params }: MemberProfilePageProps): Prom
   const profile = (await validateDetailId("members", id)) ? await getRuntimeProfile(id, locale) : undefined;
 
   if (!profile) {
-    return { title: t("notFoundTitle") };
+    return { alternates: {}, title: t("notFoundTitle") };
   }
 
   return {
+    alternates: localeAlternates(locale, `/members/${id}`),
     title: t("pageTitle", { handle: profile.handle }),
     description: profile.bio,
     openGraph: {

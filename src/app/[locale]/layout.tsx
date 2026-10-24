@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { localeTags, routing } from "@/i18n/routing";
 import { loadRuntimeConfig } from "@/lib/runtime/config";
+import { localeAlternates } from "@/i18n/alternates";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -21,10 +22,8 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
     metadataBase: new URL(loadRuntimeConfig().origin),
     title,
     description,
-    alternates: {
-      canonical: `/${locale}`,
-      languages: Object.fromEntries(routing.locales.map((l) => [localeTags[l].htmlLang, `/${l}`])),
-    },
+    // Right for the locale home only: every other page sets its own `alternates` (canonical = its own URL).
+    alternates: localeAlternates(locale, "/"),
     openGraph: {
       title,
       description,

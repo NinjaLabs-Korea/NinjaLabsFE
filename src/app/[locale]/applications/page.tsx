@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ApplicationsView } from "@/components/account/ApplicationsView";
+import { localeAlternates } from "@/i18n/alternates";
 
 type ApplicationsPageProps = {
   params: Promise<{ locale: string }>;
@@ -9,7 +10,7 @@ type ApplicationsPageProps = {
 export async function generateMetadata({ params }: ApplicationsPageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "account.applications.meta" });
-  return { title: t("title"), description: t("description") };
+  return { alternates: localeAlternates(locale, "/applications"), title: t("title"), description: t("description") };
 }
 
 export default async function ApplicationsPage({ params }: ApplicationsPageProps) {

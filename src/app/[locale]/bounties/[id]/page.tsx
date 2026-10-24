@@ -12,6 +12,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { getRuntimeBounty } from "@/lib/bounties";
 import { validateDetailId } from "@/lib/detail-id";
 import type { Reward } from "@/lib/types";
+import { localeAlternates } from "@/i18n/alternates";
 
 type BountyDetailPageProps = {
   params: Promise<{ locale: string; id: string }>;
@@ -34,12 +35,13 @@ export async function generateMetadata({ params }: BountyDetailPageProps): Promi
   const bounty = (await validateDetailId("bounties", id)) ? await getRuntimeBounty(id, locale) : undefined;
 
   if (!bounty) {
-    return { title: t("notFound") };
+    return { alternates: {}, title: t("notFound") };
   }
 
   const title = t("detailTitle", { title: bounty.applicationRequired && bounty.applicationTitle ? bounty.applicationTitle : bounty.title });
 
   return {
+    alternates: localeAlternates(locale, `/bounties/${bounty.slug}`),
     title,
     description: bounty.summary,
     openGraph: { title, description: bounty.summary, url: getPathname({ locale, href: `/bounties/${bounty.slug}` }) },

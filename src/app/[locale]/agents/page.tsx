@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AgentsView } from "@/components/account/AgentsView";
 import { Link } from "@/i18n/navigation";
+import { localeAlternates } from "@/i18n/alternates";
 
 type AgentsPageProps = {
   params: Promise<{ locale: string }>;
@@ -10,7 +11,7 @@ type AgentsPageProps = {
 export async function generateMetadata({ params }: AgentsPageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "agents.meta.list" });
-  return { title: t("title"), description: t("description") };
+  return { alternates: localeAlternates(locale, "/agents"), title: t("title"), description: t("description") };
 }
 
 export default async function AgentsPage({ params }: AgentsPageProps) {

@@ -10,6 +10,7 @@ import { safeHttpUrl } from "@/lib/api/codecs";
 import { validateDetailId } from "@/lib/detail-id";
 import { imageProps } from "@/lib/image";
 import { getRuntimeNotice, noticeCategoryKeys } from "@/lib/notices";
+import { localeAlternates } from "@/i18n/alternates";
 
 type NoticeDetailPageProps = PageProps<"/[locale]/notices/[id]">;
 
@@ -19,10 +20,11 @@ export async function generateMetadata({ params }: NoticeDetailPageProps): Promi
   const notice = (await validateDetailId("notices", id)) ? await getRuntimeNotice(id) : undefined;
 
   if (!notice) {
-    return { title: t("notFoundTitle") };
+    return { alternates: {}, title: t("notFoundTitle") };
   }
 
   return {
+    alternates: localeAlternates(locale, `/notices/${notice.slug}`),
     title: t("pageTitle", { title: notice.title }),
     description: notice.excerpt,
     openGraph: {

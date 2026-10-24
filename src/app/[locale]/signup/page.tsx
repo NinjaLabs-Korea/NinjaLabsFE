@@ -6,6 +6,7 @@ import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { signup } from "@/lib/signup";
 import { loadRuntimeConfig } from "@/lib/runtime/config";
+import { localeAlternates } from "@/i18n/alternates";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/signup">): Promise<Metadata> {
   const { locale } = await params;
@@ -13,6 +14,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/signup">
   const mode = loadRuntimeConfig().runtimeMode;
 
   return {
+    alternates: localeAlternates(locale, "/signup"),
     title: t("pageTitle", { title: t(`${mode}.title`) }),
     description: t(`${mode}.description`),
   };
