@@ -63,7 +63,9 @@ export function createAdminApi(http: ApiHttp): AdminApi {
     saveAdminBounty: async (bounty: AdminBounty, create: boolean): Promise<{ id: string }> => {
       const body = {
         title: bounty.title, sponsorName: bounty.sponsor,
-        summary: bounty.description.slice(0, 240), description: bounty.description,
+        // The public BountyCard and the apply page render `summary` as text: strip the markdown like notice summaries do.
+        // The BE refuses an empty summary, so a description with no text at all (an image only) falls back to the title.
+        summary: markdownToPlainSummary(bounty.description) || bounty.title, description: bounty.description,
         // Raw string from the form mapping: unchanged bytes unless the admin edited the deliverables / submission guide.
         requirements: bounty.requirements,
         evaluationCriteria: bounty.reviewProcess,

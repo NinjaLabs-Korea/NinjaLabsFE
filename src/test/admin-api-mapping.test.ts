@@ -104,6 +104,25 @@ describe("POST/PATCH /admin/bounties body", () => {
     expect(summary.trim()).not.toBe("");
   });
 
+  it("derives a plain-text summary from the markdown description (BountyCard renders the summary as text)", async () => {
+    const { http, fetchJson } = createHttp();
+    const api = createAdminApi(http);
+    await api.saveAdminBounty({ ...bounty, description: "## Goal\n\nShip a **production-ready** widget per the [docs](https://docs.injective.network)." }, true);
+    await api.saveAdminBounty({ ...bounty, description: "- one\n- two" }, false);
+    expect(calls(fetchJson)[0][1]?.body).toMatchObject({
+      summary: "Goal Ship a production-ready widget per the docs.",
+      // The description itself stays markdown.
+      description: "## Goal\n\nShip a **production-ready** widget per the [docs](https://docs.injective.network).",
+    });
+    expect(calls(fetchJson)[1][1]?.body?.summary).toBe("one two");
+  });
+
+  it("falls back to the title when the markdown has no text at all (the BE refuses an empty summary)", async () => {
+    const { http, fetchJson } = createHttp();
+    await createAdminApi(http).saveAdminBounty({ ...bounty, description: "![](/media/11111111-1111-4111-8111-111111111111)" }, true);
+    expect(calls(fetchJson)[0][1]?.body?.summary).toBe("Widget");
+  });
+
   it("encodes the bounty id in transition and delete paths", async () => {
     const { http, fetchJson } = createHttp();
     const api = createAdminApi(http);
