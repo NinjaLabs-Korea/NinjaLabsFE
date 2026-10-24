@@ -63,10 +63,11 @@ export default async function AdminHallOfFamePage({ params }: PageProps<"/[local
               <p className="mt-1 text-sm text-ink-muted">{tHall("body")}</p>
             </div>
           ) : null}
-          <div className="mt-6 grid gap-5 md:grid-cols-3">
+          <div className={`mt-6 grid gap-5 ${hall.stats.length === 4 ? "sm:grid-cols-2 lg:grid-cols-4" : "md:grid-cols-3"}`}>
             {hall.stats.map(({ value, labelKey }) => (
               <article key={labelKey} className="rounded-card border border-primary-soft-border bg-primary-soft p-5 text-center">
-                <p className="font-display text-4xl font-bold text-primary">{value}</p>
+                {/* Same sizing as the public page: the multi-token paid total steps down a size and may wrap. */}
+                <p className={`font-display font-bold text-primary ${labelKey === "rewardsPaid" ? "break-words text-2xl" : "text-4xl"}`}>{value}</p>
                 <p className="mt-2 text-sm text-ink-muted">{tStats(labelKey)}</p>
               </article>
             ))}
