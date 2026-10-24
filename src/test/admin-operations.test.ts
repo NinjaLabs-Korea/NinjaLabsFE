@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+import { createFormatter } from "next-intl";
 import enAdmin from "../../messages/en/admin.json";
+import { opsDateTime } from "@/components/admin/ops-ui";
 import {
   LIFECYCLE_BLOCKER_CODES,
   OPS_ERROR_CODES,
@@ -180,5 +182,17 @@ describe("operations error codes", () => {
     const blockers = enAdmin.operations.blockers as Record<string, string>;
     for (const code of LIFECYCLE_BLOCKER_CODES) expect(blockers[code], code).toBeTruthy();
     expect(enAdmin.common.errors.BOUNTY_HAS_OPEN_FUNDS).toBeTruthy();
+  });
+});
+
+describe("opsDateTime", () => {
+  const format = createFormatter({ locale: "en", timeZone: "UTC" });
+
+  it("formats a BE ISO timestamp in the given zone with the zone name", () => {
+    expect(opsDateTime(format, "2026-10-24T12:05:00.000Z", "UTC")).toBe("Oct 24, 2026, 12:05 PM UTC");
+  });
+
+  it.each([null, undefined, "", "07.14", "2026-10-24", "not a date"])("renders %p as a dash instead of a guessed date", (value) => {
+    expect(opsDateTime(format, value, "UTC")).toBe("–");
   });
 });

@@ -8,7 +8,7 @@ import { OpsLifecyclePanel } from "@/components/admin/OpsLifecyclePanel";
 import { OpsPayoutsPanel } from "@/components/admin/OpsPayoutsPanel";
 import { OpsRewardsPanel } from "@/components/admin/OpsRewardsPanel";
 import { OpsSubmissionsPanel } from "@/components/admin/OpsSubmissionsPanel";
-import { opsButton } from "@/components/admin/ops-ui";
+import { opsButton, opsDateTime } from "@/components/admin/ops-ui";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
@@ -74,11 +74,7 @@ export function BountyOperations({ bountyId, onStatusChange }: { bountyId: strin
     }
   };
 
-  const formatDate: OpsDateFormatter = (value) => {
-    if (!value) return "–";
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? "–" : format.dateTime(date, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone, timeZoneName: "short" });
-  };
+  const formatDate: OpsDateFormatter = (value) => opsDateTime(format, value, timeZone);
 
   if (!ops) {
     return (

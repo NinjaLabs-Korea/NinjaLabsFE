@@ -4,7 +4,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
-import { opsButton, opsCell, opsPrimaryButton, opsShort } from "@/components/admin/ops-ui";
+import { opsButton, opsDateTime, opsCell, opsPrimaryButton, opsShort } from "@/components/admin/ops-ui";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
@@ -72,11 +72,7 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
     }
   };
 
-  const formatDate = (value: string | null) => {
-    if (!value) return "–";
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? "–" : format.dateTime(date, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone, timeZoneName: "short" });
-  };
+  const formatDate = (value: string | null) => opsDateTime(format, value, timeZone);
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 
   return (

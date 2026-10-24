@@ -1,4 +1,6 @@
 // Shared Tailwind class strings and small pure formatters for the operations console islands (Ops* components).
+import type { useFormatter } from "next-intl";
+import { isIsoDateTime } from "@/lib/admin-bounty-form";
 import { baseUnitsToHuman } from "@/lib/api/codecs";
 
 export const opsButton = "rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60";
@@ -22,4 +24,13 @@ export function opsAmount(base: string | null | undefined, symbol: string): stri
 export function opsShort(value: string | null | undefined): string {
   if (!value) return "–";
   return value.length > 14 ? `${value.slice(0, 8)}…${value.slice(-4)}` : value;
+}
+
+/**
+ * BE timestamp -> browser-zone date/time with the zone name, or a dash. Same ISO gate as the Bounty Mgmt deadline cell
+ * (`isIsoDateTime`): V8 would read a stray non-ISO value such as "07.14" as a real (guessed) date.
+ */
+export function opsDateTime(format: ReturnType<typeof useFormatter>, value: string | null | undefined, timeZone: string): string {
+  if (!value || !isIsoDateTime(value)) return "–";
+  return format.dateTime(new Date(value), { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone, timeZoneName: "short" });
 }
