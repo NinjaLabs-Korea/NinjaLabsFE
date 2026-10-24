@@ -12,7 +12,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "test:integration": "node integration/run-all.mjs"
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "2.2.11",
