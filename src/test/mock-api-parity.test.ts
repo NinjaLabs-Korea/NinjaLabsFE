@@ -119,7 +119,7 @@ describe("mock submission revisions", () => {
     expect(await mock.submitBounty("b1", input)).toMatchObject({ revisionNo: 2, status: "RESUBMITTED" });
     expect(await mock.submitBounty("b2", input)).toMatchObject({ revisionNo: 1, status: "SUBMITTED" });
     const submissions = await mock.getSubmissions(owner());
-    expect(submissions.status === "available" && submissions.data.filter((row) => row.bountySlug === "b1")).toEqual([{ bountySlug: "b1", status: "submitted", agent: null }]);
+    expect(submissions.status === "available" && submissions.data.filter((row) => row.bountySlug === "b1")).toEqual([{ bountySlug: "b1", status: "submitted", agent: null, paymentStatus: "NONE" }]);
   });
 
   it("starts every new client from the fixtures (nothing leaks between clients)", async () => {

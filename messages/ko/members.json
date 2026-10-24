@@ -103,6 +103,7 @@
       "wallet": "등록된 지갑 공개 키: {wallet}"
     },
     "shareable": "공유 가능한 URL — 로그인 불필요",
-    "payoutPending": "지급 대기"
+    "payoutPending": "지급 대기",
+    "payoutPartial": "일부 지급"
   }
 }

@@ -8,7 +8,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { loadFromRuntime } from "@/lib/api/public";
 import { validateDetailId } from "@/lib/detail-id";
-import { getRuntimeProfile, parentNftState, portfolioBodyKey, PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
+import { getRuntimeProfile, parentNftState, payoutBadge, portfolioBodyKey, PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
 import { localeAlternates } from "@/i18n/alternates";
 
 type MemberProfilePageProps = PageProps<"/[locale]/members/[id]">;
@@ -119,7 +119,9 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
         />
         {completed ? (
           <div className="mt-6 grid gap-5 md:grid-cols-3">
-            {profile.completions.slice(0, 3).map((completion) => (
+            {profile.completions.slice(0, 3).map((completion) => {
+              const badge = payoutBadge(completion.payoutStatus);
+              return (
               <Link className="rounded-card border border-border bg-surface p-[21px] shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={completion.bountySlug ? `/bounties/${completion.bountySlug}` : "/bounties"} key={completion.title}>
                 <Badge>{t(`categories.${completion.category.toLowerCase()}`)}</Badge>
                 <h3 className="mt-3 font-display text-lg font-bold text-ink">{completion.title}</h3>
@@ -128,9 +130,10 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
                     ? t("history.completedOn", { date: completion.completedAt, reward: `${format.number(completion.reward.amount, { maximumFractionDigits: 6 })} ${completion.reward.currency}` })
                     : t("history.completedDate", { date: completion.completedAt })}
                 </p>
-                {completion.payoutStatus === "PENDING" ? <div className="mt-2"><Badge variant="warning">{t("payoutPending")}</Badge></div> : null}
+                {badge ? <div className="mt-2"><Badge variant={badge.variant}>{t(badge.key)}</Badge></div> : null}
               </Link>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="mt-6 flex min-h-72 flex-col items-center justify-center rounded-card border border-dashed border-border-dashed bg-surface-subtle p-6 text-center">

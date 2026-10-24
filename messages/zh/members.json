@@ -103,6 +103,7 @@
       "wallet": "已注册钱包公钥：{wallet}"
     },
     "shareable": "可分享链接 — 无需登录",
-    "payoutPending": "待支付"
+    "payoutPending": "待支付",
+    "payoutPartial": "部分已支付"
   }
 }

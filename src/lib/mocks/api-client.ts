@@ -47,6 +47,7 @@ function fixtureSubmissions(applications: readonly AccountApplication[]): Accoun
       bountySlug: application.bountySlug,
       status: application.status === "completed" ? "approved" as const : "submitted" as const,
       agent: application.agent,
+      paymentStatus: application.status === "completed" ? "PENDING" as const : "NONE" as const,
     }));
 }
 
@@ -109,7 +110,7 @@ export function createMockApiClient(seed = "default"): ApiClient {
       const existing = submissions.find((submission) => submission.bountySlug === bountyId && submission.agent === null);
       submissions = existing
         ? submissions.map((submission) => (submission === existing ? { ...submission, status: "submitted" as const } : submission))
-        : [{ bountySlug: bountyId, status: "submitted", agent: null }, ...submissions];
+        : [{ bountySlug: bountyId, status: "submitted", agent: null, paymentStatus: "NONE" }, ...submissions];
       // Like the api client's /applications/me + /submissions/me join: an approved application is now "submitted".
       applications = applications.map((application) =>
         application.bountySlug === bountyId && application.agent === null && application.status === "approved"

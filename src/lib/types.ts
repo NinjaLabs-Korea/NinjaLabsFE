@@ -62,15 +62,22 @@ export type Member = {
   links: Partial<Record<'profile' | 'posts' | 'agents' | 'bounties' | 'notices', string>>;
 };
 
-/** BE `/users/:nickname` `completedBounties[].payoutStatus` — older BE rows omit it (derived from `rewards`). */
-export type PayoutStatus = 'PAID' | 'PENDING' | 'NONE';
+/**
+ * BE `/users/:nickname` `completedBounties[].payoutStatus` and `/submissions/me` `payment_status` (same rule): NONE = the
+ * bounty has no reward, PAID = every payout PAID, PARTIALLY_PAID = some PAID and some still open, PENDING = nothing paid yet.
+ * Older BE rows omit it (derived from `rewards`); an unknown value is read as PENDING (`lib/api/codecs.ts toPayoutStatus`).
+ */
+export type PayoutStatus = 'PAID' | 'PARTIALLY_PAID' | 'PENDING' | 'NONE';
 
 export type Completion = {
   bountySlug?: string;
   title: string;
   category: BountyCategory;
   completedAt: string;
-  /** PAID → the paid payout; PENDING → the posted bounty reward (shown with a "payout pending" badge); NONE → null (nothing shown). */
+  /**
+   * PAID → the paid payout; PARTIALLY_PAID → the paid payout so far (shown with a "partially paid" badge); PENDING → the
+   * posted bounty reward (shown with a "payout pending" badge); NONE → null (nothing shown).
+   */
   reward: Reward | null;
   payoutStatus: PayoutStatus;
   childNft?: { tokenId: string };

@@ -98,8 +98,22 @@ describe("GET /submissions/me mapping", () => {
     const { http } = createHttp({ "/submissions/me": [{ status, bounty_id: "b1", agent: { id: "ag", name: "Bot" } }] });
     expect(await createApiApiClient(http).getSubmissions(signedIn)).toEqual({
       status: "available",
-      data: [{ bountySlug: "b1", status: expected, agent: { id: "ag", name: "Bot" } }],
+      data: [{ bountySlug: "b1", status: expected, agent: { id: "ag", name: "Bot" }, paymentStatus: "NONE" }],
     });
+  });
+
+  it.each([
+    ["PAID", "PAID"],
+    ["PARTIALLY_PAID", "PARTIALLY_PAID"],
+    ["PENDING", "PENDING"],
+    ["NONE", "NONE"],
+    ["REFUNDED", "PENDING"],
+    [null, "NONE"],
+    [undefined, "NONE"],
+  ])("payment_status %p -> %s (unknown → PENDING, missing → NONE)", async (paymentStatus, expected) => {
+    const { http } = createHttp({ "/submissions/me": [{ status: "APPROVED", bounty_id: "b1", agent: null, payment_status: paymentStatus }] });
+    const result = await createApiApiClient(http).getSubmissions(signedIn);
+    expect(result.status === "available" ? result.data[0]?.paymentStatus : null).toBe(expected);
   });
 });
 

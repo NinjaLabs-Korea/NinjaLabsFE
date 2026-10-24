@@ -12,6 +12,7 @@ import {
   toMemberRoleLabel,
   toNoticeCategoryCode,
   toNoticeCategoryLabel,
+  toPayoutStatus,
 } from "@/lib/api/codecs";
 
 describe("api codecs", () => {
@@ -120,5 +121,14 @@ describe("label lookups ignore inherited Object.prototype keys", () => {
     expect(codecs.toNoticeCategoryLabel("EVENT")).toBe("Events");
     expect(codecs.toHighlightTypeLabel("AWARD")).toBe("Award");
     expect(highlightTypeLabelKey("FEATURED_BOUNTY")).toBe("featuredBounty");
+  });
+});
+
+describe("toPayoutStatus", () => {
+  it.each([
+    ["PAID", "PAID"], ["PARTIALLY_PAID", "PARTIALLY_PAID"], ["PENDING", "PENDING"], ["NONE", "NONE"],
+    ["REFUNDED", "PENDING"], ["paid", "PENDING"], [42, "PENDING"], [null, undefined], [undefined, undefined],
+  ])("%p -> %p (unknown → PENDING, missing → undefined)", (value, expected) => {
+    expect(toPayoutStatus(value)).toBe(expected);
   });
 });

@@ -56,7 +56,7 @@ const application = (status: AccountApplication["status"], agent: AccountApplica
   agent,
 });
 
-const submission = (status: AccountSubmission["status"], agent: AccountSubmission["agent"] = null): AccountSubmission => ({ bountySlug: "bounty-1", status, agent });
+const submission = (status: AccountSubmission["status"], agent: AccountSubmission["agent"] = null): AccountSubmission => ({ bountySlug: "bounty-1", status, agent, paymentStatus: "NONE" });
 
 describe("BountyActionPanel", () => {
   beforeEach(() => {
@@ -335,7 +335,7 @@ describe("api client application mapping", () => {
     "/submissions/me": [
       { status: "REVISION_REQUESTED", bounty_id: "b4" },
       { status: "SUBMITTED", bounty_id: "b5", agent: { id: "agent-1", name: "scout" } },
-      { status: "APPROVED", bounty_id: "b6", agent: { id: "agent-1", name: "scout" } },
+      { status: "APPROVED", bounty_id: "b6", agent: { id: "agent-1", name: "scout" }, payment_status: "PARTIALLY_PAID" },
     ],
     "/agents/me": [
       { id: "agent-1", name: "scout", description: null, status: "ACTIVE", wallet_address: "0xabc", verified_at: "2026-01-01T00:00:00Z", created_at: "2026-01-01T00:00:00Z", completed_bounties: 2, key_prefix: "nl_live_1234", key_status: "ACTIVE", key_expires_at: "2027-01-01T00:00:00Z" },
@@ -359,9 +359,9 @@ describe("api client application mapping", () => {
     await expect(client.getSubmissions(signedIn)).resolves.toEqual({
       status: "available",
       data: [
-        { bountySlug: "b4", status: "revision_requested", agent: null },
-        { bountySlug: "b5", status: "submitted", agent: { id: "agent-1", name: "scout" } },
-        { bountySlug: "b6", status: "approved", agent: { id: "agent-1", name: "scout" } },
+        { bountySlug: "b4", status: "revision_requested", agent: null, paymentStatus: "NONE" },
+        { bountySlug: "b5", status: "submitted", agent: { id: "agent-1", name: "scout" }, paymentStatus: "NONE" },
+        { bountySlug: "b6", status: "approved", agent: { id: "agent-1", name: "scout" }, paymentStatus: "PARTIALLY_PAID" },
       ],
     });
   });

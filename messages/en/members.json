@@ -103,6 +103,7 @@
       "wallet": "Registered wallet public key: {wallet}"
     },
     "shareable": "Shareable URL — no login needed",
-    "payoutPending": "Payout pending"
+    "payoutPending": "Payout pending",
+    "payoutPartial": "Partially paid"
   }
 }

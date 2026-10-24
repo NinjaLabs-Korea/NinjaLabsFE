@@ -8,7 +8,7 @@ vi.mock("@/lib/api/public", () => ({
 }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
-const { getRuntimeProfile, parentNftState, portfolioBodyKey, toCompletionReward } = await import("@/lib/members");
+const { getRuntimeProfile, parentNftState, payoutBadge, portfolioBodyKey, profiles, PROFILE_FILLED_EXAMPLE_ID, toCompletionReward } = await import("@/lib/members");
 const { loadRuntimeHallOfFame } = await import("@/lib/hall-of-fame");
 
 const previousTimeZone = process.env.TZ;
@@ -58,6 +58,26 @@ describe("public profile payout status", () => {
     expect(toCompletionReward({ rewards: [], postedRewards: posted, payoutStatus: "PENDING" })).toEqual({ reward: { amount: 500, currency: "USDC" }, payoutStatus: "PENDING" });
   });
 
+  it("shows the paid payout so far flagged as partially paid when PARTIALLY_PAID", () => {
+    expect(toCompletionReward({ rewards: paid, postedRewards: [...paid, ...posted], payoutStatus: "PARTIALLY_PAID" })).toEqual({ reward: { amount: 1, currency: "INJ" }, payoutStatus: "PARTIALLY_PAID" });
+  });
+
+  it("reads an unknown payoutStatus as PENDING (never claims a payout)", () => {
+    expect(toCompletionReward({ rewards: paid, postedRewards: posted, payoutStatus: "REFUNDED" })).toEqual({ reward: { amount: 500, currency: "USDC" }, payoutStatus: "PENDING" });
+  });
+
+  it("flags PENDING and PARTIALLY_PAID completions with a warning badge, nothing otherwise", () => {
+    expect(payoutBadge("PENDING")).toEqual({ variant: "warning", key: "payoutPending" });
+    expect(payoutBadge("PARTIALLY_PAID")).toEqual({ variant: "warning", key: "payoutPartial" });
+    expect(payoutBadge("PAID")).toBeNull();
+    expect(payoutBadge("NONE")).toBeNull();
+  });
+
+  it("keeps one PARTIALLY_PAID completion in the mock fixture, visible among the first three cards", () => {
+    const jaemin = profiles[PROFILE_FILLED_EXAMPLE_ID];
+    expect(jaemin?.completions.slice(0, 3).filter((completion) => completion.payoutStatus === "PARTIALLY_PAID")).toHaveLength(1);
+  });
+
   it("shows nothing when NONE, even if the bounty posted a reward", () => {
     expect(toCompletionReward({ rewards: [], postedRewards: posted, payoutStatus: "NONE" })).toEqual({ reward: null, payoutStatus: "NONE" });
   });
@@ -74,6 +94,7 @@ describe("public profile payout status", () => {
         { id: "b1", title: "Paid", category: "DEV", completed_at: "2026-06-30T23:59:00Z", rewards: paid, postedRewards: paid, payoutStatus: "PAID" },
         { id: "b2", title: "Pending", category: "DESIGN", completed_at: "2026-06-29T23:59:00Z", rewards: [], postedRewards: posted, payoutStatus: "PENDING" },
         { id: "b3", title: "None", category: "CONTENT", completed_at: "2026-06-28T23:59:00Z", rewards: [], postedRewards: posted, payoutStatus: "NONE" },
+        { id: "b4", title: "Partial", category: "DEV", completed_at: "2026-06-27T23:59:00Z", rewards: paid, postedRewards: [...paid, ...posted], payoutStatus: "PARTIALLY_PAID" },
       ],
       agents: [], nfts: [],
     });
@@ -82,6 +103,7 @@ describe("public profile payout status", () => {
       { reward: { amount: 1, currency: "INJ" }, payoutStatus: "PAID" },
       { reward: { amount: 500, currency: "USDC" }, payoutStatus: "PENDING" },
       { reward: null, payoutStatus: "NONE" },
+      { reward: { amount: 1, currency: "INJ" }, payoutStatus: "PARTIALLY_PAID" },
     ]);
   });
 });

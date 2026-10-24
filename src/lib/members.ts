@@ -1,4 +1,4 @@
-import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toReward, type RewardRow } from "./api/codecs";
+import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toPayoutStatus, toReward, type RewardRow } from "./api/codecs";
 import type { Completion, Member, PayoutStatus, Profile, ProfileNft, Reward } from "./types";
 import { onboardingLog } from "./onboarding-log";
 import { fetchPublicJson, loadFromRuntime } from "./api/public";
@@ -19,6 +19,8 @@ export const profiles: Record<string, Profile> = {
     slug: "jaemin", handle: "jaemin.inj", initials: "JM", bio: "Frontend builder focused on wallet onboarding, market data surfaces, and developer tools for Injective teams. Ships small, polished interfaces that sponsors can adopt without a long handoff.", skills: ["Dev", "Design"], joinedAt: "May 2026",
     completions: [
       { bountySlug: "iasset-price-widget", title: "Build an iAsset price widget", category: "Dev", completedAt: "July 2, 2026", reward: { amount: 500, currency: "INJ" }, payoutStatus: "PAID" },
+      // Some payouts PAID, one still open: the paid amount so far shows with the "partially paid" badge (FE-designed, like PENDING).
+      { bountySlug: "helix-volume-analytics", title: "Helix volume analytics", category: "Dev", completedAt: "June 28, 2026", reward: { amount: 250, currency: "INJ" }, payoutStatus: "PARTIALLY_PAID" },
       { bountySlug: "wallet-onboarding-states", title: "Design wallet onboarding states", category: "Design", completedAt: "June 24, 2026", reward: { amount: 300, currency: "USDC" }, payoutStatus: "PAID" },
       // Approved but not paid out yet: the posted reward shows with the "payout pending" badge (Figma 05 has no such state; FE-designed).
       { bountySlug: "hydro-liquidity-explainer", title: "Hydro liquidity explainer", category: "Content", completedAt: "June 18, 2026", reward: { amount: 180, currency: "INJ" }, payoutStatus: "PENDING" },
@@ -81,7 +83,8 @@ type PublicProfileResponse = {
     rewards: RewardRow[];
     /** the bounty's posted rewards — shown while the payout is PENDING (absent on older BE) */
     postedRewards?: RewardRow[];
-    payoutStatus?: PayoutStatus;
+    /** `PayoutStatus`; typed as string because a newer BE may add values (read as PENDING) */
+    payoutStatus?: string;
   }>;
   agents: Array<{
     name: string;
@@ -103,15 +106,24 @@ type PublicProfileResponse = {
 const firstReward = (rows: readonly RewardRow[] | undefined): Reward | null => (rows?.[0] ? toReward(rows[0]) : null);
 
 /**
- * `payoutStatus` + `postedRewards` are newer BE fields: PAID shows the paid payout, PENDING the posted reward (badge), NONE nothing.
- * An older BE only sends `rewards` (paid payouts), so a missing `payoutStatus` is derived from whether anything was paid.
+ * `payoutStatus` + `postedRewards` are newer BE fields: PAID shows the paid payout, PARTIALLY_PAID the paid payout so far
+ * (badge), PENDING the posted reward (badge), NONE nothing. An unknown value is read as PENDING. An older BE only sends
+ * `rewards` (paid payouts), so a missing `payoutStatus` is derived from whether anything was paid.
  */
 export function toCompletionReward(row: Pick<PublicProfileResponse["completedBounties"][number], "rewards" | "postedRewards" | "payoutStatus">): Pick<Completion, "reward" | "payoutStatus"> {
   const paid = firstReward(row.rewards);
-  const status: PayoutStatus = row.payoutStatus ?? (paid ? "PAID" : "NONE");
+  const status: PayoutStatus = toPayoutStatus(row.payoutStatus) ?? (paid ? "PAID" : "NONE");
   if (status === "PAID") return { reward: paid, payoutStatus: paid ? "PAID" : "NONE" };
+  if (status === "PARTIALLY_PAID") return { reward: paid, payoutStatus: "PARTIALLY_PAID" };
   if (status === "PENDING") return { reward: firstReward(row.postedRewards), payoutStatus: "PENDING" };
   return { reward: null, payoutStatus: "NONE" };
+}
+
+/** Badge under a completion card: an unfinished payout is flagged so a shown amount is never read as fully paid. */
+export function payoutBadge(status: PayoutStatus): { variant: "warning"; key: "payoutPending" | "payoutPartial" } | null {
+  if (status === "PENDING") return { variant: "warning", key: "payoutPending" };
+  if (status === "PARTIALLY_PAID") return { variant: "warning", key: "payoutPartial" };
+  return null;
 }
 
 function toProfile(data: PublicProfileResponse, locale: string): Profile {

@@ -3,7 +3,7 @@ import type { ApiClient, ApiResult, ApiUnavailable } from "@/lib/contracts/api";
 import { ApiHttpError, type ApiHttp } from "@/lib/api/http";
 import { fetchMe, toClientUser } from "@/lib/api/me";
 import { createAdminApi } from "@/lib/api/admin";
-import { toCategoryLabel, type CategoryCode } from "@/lib/api/codecs";
+import { toCategoryLabel, toPayoutStatus, type CategoryCode } from "@/lib/api/codecs";
 
 /** Agent that acted on the owner's behalf (null = the owner acted directly). Rows for agent-made entries are included in /me lists. */
 type AgentRef = { id: string; name: string } | null;
@@ -40,6 +40,8 @@ type SubmissionRow = {
   status: "SUBMITTED" | "RESUBMITTED" | "IN_REVIEW" | "REVISION_REQUESTED" | "APPROVED" | "REJECTED";
   bounty_id: string;
   agent?: AgentRef;
+  /** 'PAID' | 'PARTIALLY_PAID' | 'PENDING' | 'NONE' (unknown → PENDING); older BE omits it */
+  payment_status?: string;
 };
 
 function toAgentRef(agent: AgentRef | undefined): AccountAgentRef | null {
@@ -56,7 +58,12 @@ const SUBMISSION_STATUS: Record<SubmissionRow["status"], SubmissionStatus> = {
 };
 
 function toSubmission(row: SubmissionRow): AccountSubmission {
-  return { bountySlug: row.bounty_id, status: SUBMISSION_STATUS[row.status] ?? "submitted", agent: toAgentRef(row.agent) };
+  return {
+    bountySlug: row.bounty_id,
+    status: SUBMISSION_STATUS[row.status] ?? "submitted",
+    agent: toAgentRef(row.agent),
+    paymentStatus: toPayoutStatus(row.payment_status) ?? "NONE",
+  };
 }
 
 function toApplication(row: ApplicationRow): AccountApplication {
