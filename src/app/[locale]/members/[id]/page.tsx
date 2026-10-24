@@ -8,7 +8,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { loadFromRuntime } from "@/lib/api/public";
 import { validateDetailId } from "@/lib/detail-id";
-import { getRuntimeProfile, PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
+import { getRuntimeProfile, parentNftState, portfolioBodyKey, PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
 import { localeAlternates } from "@/i18n/alternates";
 
 type MemberProfilePageProps = PageProps<"/[locale]/members/[id]">;
@@ -77,7 +77,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
               {t("portfolio.eyebrow")}
             </Badge>
             <h2 className="mt-4 font-display text-4xl">{completed ? t("portfolio.headingCompleted") : t("portfolio.headingEmpty")}</h2>
-            <p className="mt-4 text-base text-on-inverse/70">{completed ? t("portfolio.bodyCompleted") : t("portfolio.bodyEmpty")}</p>
+            <p className="mt-4 text-base text-on-inverse/70">{t(`portfolio.${portfolioBodyKey(completed, parentNftState(profile.nfts))}`)}</p>
           </div>
           <div className="rounded-card border border-on-inverse/15 bg-on-inverse/10 p-[21px] backdrop-blur-sm lg:col-span-3">
             <div className="flex items-center gap-3">

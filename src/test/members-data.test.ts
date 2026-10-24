@@ -8,7 +8,7 @@ vi.mock("@/lib/api/public", () => ({
 }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
-const { getRuntimeProfile, toCompletionReward } = await import("@/lib/members");
+const { getRuntimeProfile, parentNftState, portfolioBodyKey, toCompletionReward } = await import("@/lib/members");
 const { loadRuntimeHallOfFame } = await import("@/lib/hall-of-fame");
 
 const previousTimeZone = process.env.TZ;
@@ -98,5 +98,41 @@ describe("hall of fame milestone dates", () => {
     );
     const { hallOfFame } = await loadRuntimeHallOfFame("en");
     expect(hallOfFame.milestones.map((milestone) => milestone.date)).toEqual(["May 31, 2026", ""]);
+  });
+});
+
+describe("portfolio parent NFT copy", () => {
+  const parent = (status: "PENDING" | "MINTING" | "MINTED" | "ATTACHING" | "ATTACHED" | "FAILED") => ({ type: "parent" as const, status });
+  const child = { type: "completion" as const, status: "ATTACHED" as const };
+
+  it("says the Ninja NFT is minted only when a MINTED/ATTACHED parent exists", async () => {
+    const en = (await import("../../messages/en/members.json")).default.profile.portfolio;
+    expect(portfolioBodyKey(false, parentNftState([parent("MINTED")]))).toBe("bodyEmpty");
+    expect(portfolioBodyKey(false, parentNftState([parent("ATTACHED")]))).toBe("bodyEmpty");
+    expect(en.bodyEmpty).toMatch(/already minted/);
+  });
+
+  it("never claims a mint for an empty list, a lone child, a failed or an in-flight parent", async () => {
+    const en = (await import("../../messages/en/members.json")).default.profile.portfolio;
+    expect(parentNftState([])).toBe("none");
+    expect(parentNftState([child])).toBe("none");
+    expect(parentNftState([parent("FAILED")])).toBe("none");
+    expect(parentNftState([parent("PENDING")])).toBe("pending");
+    expect(parentNftState([parent("MINTING")])).toBe("pending");
+    expect(portfolioBodyKey(false, "none")).toBe("bodyEmptyNotMinted");
+    expect(portfolioBodyKey(false, "pending")).toBe("bodyEmptyPending");
+    expect(en[portfolioBodyKey(false, "none")]).not.toMatch(/already minted/);
+    expect(en[portfolioBodyKey(false, "pending")]).not.toMatch(/already minted/);
+    // Completed profiles keep the generic parent/child explanation.
+    expect(portfolioBodyKey(true, "none")).toBe("bodyCompleted");
+  });
+
+  it("maps the API profile's NINJA_PARENT row into a parent the copy can read", async () => {
+    fetchPublicJson.mockResolvedValueOnce({
+      nickname: "kim", bio: "", tags: [], created_at: "2026-05-01T00:00:00Z", completedBounties: [], agents: [],
+      nfts: [{ id: "n1", nft_type: "NINJA_PARENT", status: "MINTING", contract_address: "inj1x", token_id: null, mint_tx_hash: null, bounty_title: null }],
+    });
+    const profile = await getRuntimeProfile("kim", "en");
+    expect(profile && parentNftState(profile.nfts)).toBe("pending");
   });
 });

@@ -1,5 +1,5 @@
 import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toReward, type RewardRow } from "./api/codecs";
-import type { Completion, Member, PayoutStatus, Profile, Reward } from "./types";
+import type { Completion, Member, PayoutStatus, Profile, ProfileNft, Reward } from "./types";
 import { onboardingLog } from "./onboarding-log";
 import { fetchPublicJson, loadFromRuntime } from "./api/public";
 
@@ -30,7 +30,7 @@ export const profiles: Record<string, Profile> = {
     nfts: ["iAsset widget", "Wallet flow", "Audit report", "Docs revamp", "Hydro guide", "Helix card", "Quest copy"].map((title, index) => ({ id: `preview-nft-${index}`, type: "completion" as const, title, status: "ATTACHED" as const, contractAddress: "preview", tokenId: String(index + 1), mintTxHash: null })),
     agents: [{ name: "market-scout-agent", wallet: "inj1...9k4d", verified: true, completedBounties: 3 }, { name: "docs-runner-agent", wallet: "inj1...x7ab", verified: true, completedBounties: 2 }],
   },
-  sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "New Injective builder exploring market data tasks, documentation bounties, and small UI components. This public profile is ready to become a portfolio as work is completed.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], nfts: [], agents: [] },
+  sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "New Injective builder exploring market data tasks, documentation bounties, and small UI components. This public profile is ready to become a portfolio as work is completed.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], nfts: [{ id: "sora-parent", type: "parent", title: "Ninja NFT", status: "MINTED", contractAddress: "preview", tokenId: "1", mintTxHash: null }], agents: [] },
   jinyoung: { slug: "jinyoung", handle: "jinyoung.inj", initials: "JP", bio: "Product lead building the bounty marketplace for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
   juho: { slug: "juho", handle: "juho.inj", initials: "JK", bio: "Protocol engineer making on-chain proof useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
   mina: { slug: "mina", handle: "mina.inj", initials: "MS", bio: "Experience designer creating clear paths from first task to lasting proof.", skills: ["Design"], joinedAt: "June 2026", completions: [], nfts: [], agents: [] },
@@ -154,6 +154,25 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
       completedBounties: agent.completed_bounties.length,
     })),
   };
+}
+
+export type ParentNftState = "minted" | "pending" | "none";
+
+/**
+ * Where the member's parent Ninja NFT stands, from the public profile's NFT list. Only a parent that is on chain
+ * (MINTED, or further along) counts as minted; PENDING/MINTING is in progress; no parent row or FAILED is "not minted".
+ */
+export function parentNftState(nfts: readonly Pick<ProfileNft, "type" | "status">[]): ParentNftState {
+  const parents = nfts.filter((nft) => nft.type === "parent");
+  if (parents.some((nft) => nft.status === "MINTED" || nft.status === "ATTACHING" || nft.status === "ATTACHED")) return "minted";
+  if (parents.some((nft) => nft.status === "PENDING" || nft.status === "MINTING")) return "pending";
+  return "none";
+}
+
+/** `members.profile.portfolio.*` key for the portfolio intro paragraph. */
+export function portfolioBodyKey(completed: boolean, parent: ParentNftState) {
+  if (completed) return "bodyCompleted" as const;
+  return parent === "minted" ? ("bodyEmpty" as const) : parent === "pending" ? ("bodyEmptyPending" as const) : ("bodyEmptyNotMinted" as const);
 }
 
 /** `locale` formats API dates for display and comes from the server page; see `getRuntimeBounties` for why it is a parameter. */

@@ -110,3 +110,9 @@ Figma only draws 1440px frames. Every route was checked at 390px and 768px (no h
 | Header mobile menu | No Figma interaction spec. The `<details>` menu now closes on link click, Escape (focus returns to "Menu") and outside click (`layout/MobileMenu`); markup and styling are unchanged. |
 | Open Graph image | Text and `alt` were English-only; now localized through `common.site.og.*` (ko/zh share the brand line "Ninja Labs"). No Figma artefact. |
 
+
+### Integration-test state fixes (2026-10-24, `fix/wiki-audit-findings`)
+
+| Item | Decision |
+|---|---|
+| Profile portfolio intro (Figma 05-Empty) | Figma 05-Empty always says the Ninja NFT "is already minted". The FE now prints that copy only when the profile's NFT list holds a parent that is MINTED (or ATTACHING/ATTACHED); a PENDING/MINTING parent reads "is being minted", and no parent (or FAILED) reads "is not minted yet" (`members.profile.portfolio.bodyEmptyPending` / `bodyEmptyNotMinted`). Same typography and slot; the mock `sora` profile carries a MINTED parent so the demo still matches the frame. |
