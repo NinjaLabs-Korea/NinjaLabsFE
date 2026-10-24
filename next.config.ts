@@ -17,6 +17,24 @@ function apiOrigin(): string | null {
   }
 }
 
+/** Origin of the configured Injective JSON-RPC (`NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL`), so `connect-src` follows the env var. */
+function rpcOrigin(): string | null {
+  const value = process.env.NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL;
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url.origin : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Vercel preview deployments inject the Vercel toolbar (vercel.live); production and local builds never do. */
+const VERCEL_LIVE = "https://vercel.live";
+function isVercelPreview(): boolean {
+  return process.env.VERCEL_ENV === "preview";
+}
+
 function appOrigin(): string | null {
   try {
     return process.env.NINJA_APP_ORIGIN ? new URL(process.env.NINJA_APP_ORIGIN).origin : null;
@@ -71,6 +89,7 @@ const CSP_HEADER_NAME: Record<CspMode, string> = {
 };
 
 function contentSecurityPolicy(mode: CspMode): string {
+  const preview = isVercelPreview();
   // The wallet stack is injected-only since the wagmi 3 upgrade (2026-10-24): the browser extension talks to its own
   // RPC, and the page only reaches the configured Injective JSON-RPC through viem's http transport. RainbowKit /
   // WalletConnect origins (relay websockets, web3modal, rainbow.me) were dropped with them; re-add them if WalletConnect
@@ -78,23 +97,31 @@ function contentSecurityPolicy(mode: CspMode): string {
   const connectSrc = [
     "'self'",
     apiOrigin(),
+    rpcOrigin(),
     "https://*.injective.network",
     "wss://*.injective.network",
     "https://k8s.testnet.json-rpc.injective.network",
     TURNSTILE_ORIGIN,
+    ...(preview ? [VERCEL_LIVE, "wss://ws-us3.pusher.com"] : []),
   ].filter((source): source is string => source !== null);
-  const scriptSrc = ["'self'", "'unsafe-inline'", mode === "report-only" ? "'unsafe-eval'" : null, TURNSTILE_ORIGIN].filter(
+  const scriptSrc = [
+    "'self'",
+    "'unsafe-inline'",
+    mode === "report-only" ? "'unsafe-eval'" : null,
+    TURNSTILE_ORIGIN,
+    preview ? VERCEL_LIVE : null,
+  ].filter(
     (source): source is string => source !== null,
   );
   return [
     "default-src 'self'",
     "object-src 'none'",
     `script-src ${scriptSrc.join(" ")}`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com data:",
-    "img-src 'self' data: blob: https:",
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com${preview ? ` ${VERCEL_LIVE}` : ""}`,
+    `font-src 'self' https://fonts.gstatic.com data:${preview ? ` ${VERCEL_LIVE} https://assets.vercel.com` : ""}`,
+    `img-src 'self' data: blob: https:${preview ? ` ${VERCEL_LIVE} https://vercel.com` : ""}`,
     `connect-src ${connectSrc.join(" ")}`,
-    `frame-src ${TURNSTILE_ORIGIN}`,
+    `frame-src ${TURNSTILE_ORIGIN}${preview ? ` ${VERCEL_LIVE}` : ""}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
