@@ -12,6 +12,7 @@ import { type AdminBounty, adminErrorDescription } from "@/lib/admin-helpers";
 import { BOUNTY_SPONSOR_MAX, BOUNTY_TITLE_MAX, bountyToForm, emptyBountyForm, formToBounty, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
+import { Link } from "@/i18n/navigation";
 
 const columns = [
   { id: "title", widthClass: "w-[244px]" },
@@ -174,7 +175,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <td className="px-5 py-4 text-sm text-ink-secondary">{t(`intake.${bounty.intakeEnabled ? "ON" : "OFF"}`)}<p className="mt-1 text-xs text-ink-muted">{t(`submissionModes.${bounty.submissionMode === "agent" ? "Agent" : "Direct"}`)}</p></td>
               <td className="px-5 py-4"><Badge variant={statusVariants[bounty.status]}>{t(`statuses.${bounty.status}`)}</Badge></td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{deadlineCell(bounty.deadline)}</td>
-              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<button className="rounded-control border border-danger px-3 py-2 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
+              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<Link className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={{ pathname: "/admin/operations", query: { bounty: bounty.slug } }}>{t("operations")}</Link><button className="rounded-control border border-danger px-3 py-2 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
             </tr>
           ))}
         </AdminTable>
