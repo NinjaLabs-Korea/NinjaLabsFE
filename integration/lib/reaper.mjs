@@ -5,7 +5,7 @@
 // pids.json alone is not enough: a process that escaped its recorded group (or was spawned between the spawn and the
 // pids.json write) keeps running after its temp dir is gone. So teardown ALSO scans the process table for anything whose cwd
 // or command line points into `<tmp>/ninja-it-*` (findStrayProcesses) and kills it. Where to change what:
-//   - which processes count as "ours"      -> isRunProcess() (pure, unit-tested in reaper.test.mjs)
+//   - which processes count as "ours"      -> runDirOf() (pure, pinned by src/test/integration-reaper-scan.test.ts)
 //   - how the process table is read        -> listProcesses() (ps + lsof on macOS, ps + /proc on Linux)
 //   - the temp dir is deleted only when everything is confirmed dead -> reapDir()
 import { execFileSync } from 'node:child_process';
