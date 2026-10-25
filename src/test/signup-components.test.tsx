@@ -7,6 +7,7 @@ import { CompleteOnboarding } from "@/components/signup/CompleteOnboarding";
 import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
 import { SignupGate } from "@/components/signup/SignupGate";
 import AuthCallbackPage from "@/app/[locale]/auth/callback/page";
+import { ApiHttpError } from "@/lib/api/http";
 import { exchangeLoginCodeFromLocation } from "@/lib/api/oauth";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { renderWithIntl } from "@/test/intl";
@@ -128,6 +129,21 @@ describe("CompleteOnboarding", () => {
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
     expect(completeOnboarding).toHaveBeenCalledTimes(2);
+  });
+
+  it("sends a user whose profile is not saved yet back to their onboarding step instead of offering a dead Retry", async () => {
+    // Opened /signup/get-started directly at step 3: the BE answers 409 PROFILE_REQUIRED on every attempt.
+    state.auth = signedInAs({ ...user, onboardingStep: 3, onboardingCompleted: false });
+    completeOnboarding.mockRejectedValue(new ApiHttpError(409, "PROFILE_REQUIRED"));
+    const assign = vi.fn();
+    vi.stubGlobal("location", { ...window.location, pathname: "/ko/signup/get-started", assign });
+    try {
+      const { container } = renderWithIntl(<CompleteOnboarding />);
+      await waitFor(() => expect(assign).toHaveBeenCalledWith("/ko/signup/profile"));
+      expect(container.textContent).toBe("");
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

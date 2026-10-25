@@ -2,7 +2,7 @@
  * BE가 응답 `message`로 던지는 에러 코드 목록 — **BE 카탈로그의 그대로 복사본(snapshot)**이다. 손으로 코드를 지어내지 말 것.
  *
  * 원본: NinjaLabsBE `src/common/http/error-codes.ts` (`ERROR_CODES`의 키, 같은 순서·같은 묶음).
- * 스냅샷 기준: BE `fix/module-audit-loop` @ `5e8c158` (카탈로그 마지막 변경 `6e3c130`) · 85개.
+ * 스냅샷 기준: BE `main` @ `ba5846f` (카탈로그 마지막 변경 `daee479`) · 86개.
  * 줄 끝 주석은 "HTTP 상태 — BE 카탈로그의 한 줄 의미"이고 사용자 문구가 아니다 (사용자 문구는 `messages/<locale>/*.json`).
  *
  * ## 어디를 고치나
@@ -33,6 +33,7 @@ export const BE_ERROR_CODES = [
 
   // ── 유저 / 탈퇴 ──
   "USER_NOT_FOUND", // 404 — 대상 유저가 없다 (탈퇴 포함)
+  "PROFILE_REQUIRED", // 409 — 프로필(닉네임·자기소개·태그)을 저장하기 전에는 온보딩을 완료할 수 없다
   "NICKNAME_TAKEN", // 409 — 이미 사용 중인 닉네임이다
   "CONFIRM_NICKNAME_MISMATCH", // 400 — 탈퇴 확인용 닉네임 입력이 현재 닉네임과 다르다
   "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS", // 409 — 진행 중인 지급(payout)이 있어 탈퇴할 수 없다
