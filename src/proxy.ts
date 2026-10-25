@@ -1,12 +1,32 @@
 import createMiddleware from "next-intl/middleware";
-import { type NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
+import { createNonce, contentSecurityPolicy, cspMode, CSP_HEADER_NAME, isNonceRoute } from "./lib/csp";
 import { detailMayExist, resolveDetailRoute } from "./lib/detail-id";
 import { inLocaleMiss, NOT_FOUND_SEGMENT } from "./lib/locale-routes";
 
 // Redirects unprefixed paths to /<locale>/... using the NEXT_LOCALE cookie,
 // then Accept-Language, then the default locale.
 const handleLocale = createMiddleware(routing);
+
+/**
+ * Nonce routes (`lib/csp.ts NONCE_ROUTE_PATTERNS`: account, admin, agents/register, auth/callback) render per request with
+ * a fresh nonce CSP. Next reads the nonce from the CSP header of the REQUEST (`getScriptNonceFromHeader`) and stamps it on
+ * its own scripts, so the policy goes on the forwarded request (next-intl copies `request.headers` into its
+ * `NextResponse.next({ request })`), with `x-nonce` for server code, and on the response for the browser.
+ */
+function withNonce(request: NextRequest) {
+  const nonce = createNonce();
+  const mode = cspMode();
+  const header = { key: CSP_HEADER_NAME[mode], value: contentSecurityPolicy(mode, nonce) };
+  const headers = new Headers(request.headers);
+  // A client-supplied CSP/nonce must never reach the renderer.
+  headers.delete("content-security-policy");
+  headers.delete("content-security-policy-report-only");
+  headers.set(header.key, header.value);
+  headers.set("x-nonce", nonce);
+  return { header, request: new NextRequest(request, { headers }) };
+}
 
 /**
  * `/<locale>/...` paths that match no route (`lib/locale-routes.ts`) or name a detail id that cannot exist
@@ -21,8 +41,10 @@ const handleLocale = createMiddleware(routing);
  * `next.config.ts headers()` can only set headers. It reveals nothing but that internal path; left as is.
  */
 export default async function proxy(request: NextRequest) {
-  const response = handleLocale(request);
   const { pathname } = request.nextUrl;
+  const nonced = isNonceRoute(pathname) ? withNonce(request) : null;
+  const response = handleLocale(nonced?.request ?? request);
+  if (nonced) response.headers.set(nonced.header.key, nonced.header.value);
   const detail = resolveDetailRoute(pathname);
   const locale = inLocaleMiss(pathname) ?? (detail && !(await detailMayExist(detail.kind, detail.id)) ? detail.locale : null);
   if (!locale) return response;

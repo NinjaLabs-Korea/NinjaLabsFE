@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { NONCE_ROUTE_HEADER_SOURCE } from "@/lib/csp";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /** next.config.ts reads its env at module load: import a fresh copy per env. */
@@ -17,8 +18,8 @@ const apiEnv = { NINJA_API_BASE_URL: "https://api.ninjalabs.example/", NINJA_APP
 
 async function headerMap(config: NextConfig) {
   const rules = await config.headers!();
-  expect(rules.map((rule) => rule.source)).toEqual(["/:path*"]);
-  return Object.fromEntries(rules[0].headers.map((header) => [header.key, header.value]));
+  expect(rules.map((rule) => rule.source)).toEqual(["/:path*", NONCE_ROUTE_HEADER_SOURCE]);
+  return Object.fromEntries(rules.flatMap((rule) => rule.headers).map((header) => [header.key, header.value]));
 }
 
 describe("rewrites", () => {

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { NONCE_ROUTE_HEADER_SOURCE } from "@/lib/csp";
 import nextConfig from "../../next.config";
 
 /**
@@ -14,7 +15,8 @@ const REPORT_ONLY = "Content-Security-Policy-Report-Only";
 async function headersFor(nodeEnv: "production" | "development" | "test") {
   vi.stubEnv("NODE_ENV", nodeEnv);
   const rules = await nextConfig.headers!();
-  return rules.find((rule) => rule.source === "/:path*")!.headers;
+  // The shared headers plus the CSP rule (everything but the nonce routes, see csp.test.ts).
+  return [rules.find((rule) => rule.source === "/:path*")!, rules.find((rule) => rule.source === NONCE_ROUTE_HEADER_SOURCE)!].flatMap((rule) => rule.headers);
 }
 
 /** The single CSP header of the build (asserts there is exactly one, under either name). */
