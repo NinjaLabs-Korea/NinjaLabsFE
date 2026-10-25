@@ -45,6 +45,9 @@ describe("api codecs", () => {
     expect(safeHttpUrl("//evil.test/x")).toBeNull();
     expect(safeHttpUrl("/\\evil.test/x")).toBeNull();
     expect(safeHttpUrl("evil.test")).toBeNull();
+    // Scheme without the authority marker parses as absolute but is a relative path in a browser.
+    expect(safeHttpUrl("https:evil.test")).toBeNull();
+    expect(safeHttpUrl("http:/evil.test")).toBeNull();
     // Whitespace/control characters and backslashes are rejected before parsing rather than normalized away.
     expect(safeHttpUrl("  /notices  ")).toBeNull();
     expect(safeHttpUrl(" https://x")).toBeNull();
