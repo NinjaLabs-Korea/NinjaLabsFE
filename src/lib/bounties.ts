@@ -101,7 +101,8 @@ const markdownListItem = /^\s*(?:[-*+]|\d+[.)])\s+(.+)$/;
 /** Deliverables are the list items of the requirements markdown, with inline formatting stripped. */
 export function deliverablesFromMarkdown(markdown: string | undefined): string[] {
   if (!markdown) return [];
-  return markdown.split("\n").flatMap((line) => {
+  // `.` in the item pattern does not match "\r", so a CRLF body (API-created bounties) would lose every item.
+  return markdown.split(/\r?\n/).flatMap((line) => {
     const item = markdownListItem.exec(line)?.[1];
     if (!item) return [];
     const text = item

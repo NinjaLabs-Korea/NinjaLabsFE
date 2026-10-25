@@ -44,6 +44,10 @@ describe("bounty mapping", () => {
     expect(deliverablesFromMarkdown(undefined)).toEqual([]);
   });
 
+  it("extracts deliverables from a CRLF body too", () => {
+    expect(deliverablesFromMarkdown("Intro\r\n\r\n- Repo\r\n- Preview URL\r\n")).toEqual(["Repo", "Preview URL"]);
+  });
+
   it("flags an application-required bounty whose application deadline has passed", async () => {
     const past = { ...row("late"), application_required: true, application_deadline: "2020-01-01T00:00:00Z" };
     const future = { ...row("early"), application_required: true, application_deadline: "2099-01-01T00:00:00Z" };
