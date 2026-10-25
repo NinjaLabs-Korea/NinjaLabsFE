@@ -4,7 +4,7 @@ import { MemberFilters } from "@/components/members/MemberFilters";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getRuntimeMembers } from "@/lib/members";
-import { localeAlternates } from "@/i18n/alternates";
+import { localeMetadata } from "@/i18n/alternates";
 
 // Keys under messages `members.list.rules`.
 const rules = ["registration", "adminEnables", "memberEdits", "unassign"];
@@ -12,11 +12,7 @@ const rules = ["registration", "adminEnables", "memberEdits", "unassign"];
 export async function generateMetadata({ params }: PageProps<"/[locale]/members">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "members.metadata" });
-  return {
-    alternates: localeAlternates(locale, "/members"),
-    title: t("title"),
-    description: t("description"),
-  };
+  return localeMetadata(locale, "/members", { title: t("title"), description: t("description") });
 }
 
 export default async function MembersPage({ params }: PageProps<"/[locale]/members">) {
