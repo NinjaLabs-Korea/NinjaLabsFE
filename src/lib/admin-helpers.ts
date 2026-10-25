@@ -3,6 +3,7 @@
 // into the shared client chunk. `lib/admin.ts` re-exports everything for server code and tests.
 import { isHighlightTypeCode, type HighlightTypeCode } from "./api/codecs";
 import { ERROR_COPY, knownCode } from "./api/error-copy";
+import { ApiHttpError } from "./api/http";
 import { noticeCategoryKeys } from "./notice-categories";
 import type { Notice } from "./types";
 
@@ -14,6 +15,11 @@ export const ADMIN_API_ERROR_CODES = ERROR_COPY.adminWrite.codes;
 export type AdminApiErrorCode = (typeof ADMIN_API_ERROR_CODES)[number];
 
 export function adminApiErrorCode(error: unknown): AdminApiErrorCode | null {
+  // Same status normalization as `opsErrorCode`: the throttler's 429 and a refused session carry no catalog code of their own.
+  if (error instanceof ApiHttpError) {
+    if (error.status === 429) return "TOO_MANY_REQUESTS";
+    if (error.status === 401) return "UNAUTHORIZED";
+  }
   return knownCode(error, ADMIN_API_ERROR_CODES);
 }
 

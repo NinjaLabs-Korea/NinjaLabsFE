@@ -142,6 +142,8 @@ export const ERROR_COPY = {
       "MEDIA_FILE_TOO_LARGE", "MEDIA_FILE_TYPE_UNSUPPORTED",
       // 503: BE가 DB에 닿지 못함 (일시 장애)
       "DATABASE_UNAVAILABLE",
+      // 403 (운영자 권한 회수) / 401 · 429는 `adminApiErrorCode`가 상태로 정규화한다 — 429 본문에는 코드가 없다
+      "ADMIN_ONLY", "UNAUTHORIZED", "TOO_MANY_REQUESTS",
     ],
   },
   /**
