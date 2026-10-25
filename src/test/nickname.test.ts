@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiHttpError } from "@/lib/api/http";
 import { validationFieldsFromError, validationFieldsFromMessages } from "@/lib/api/validation";
-import { isReservedNickname, isValidNickname, NICKNAME, nicknameLength, validateNickname } from "@/lib/nickname";
+import { isReservedNickname, isValidNickname, NICKNAME, nicknameLength, normalizeNickname, validateNickname } from "@/lib/nickname";
 import { STATIC_FILE_EXTENSIONS } from "@/lib/static-extensions";
 
 // Probe cases mirror NinjaLabsBE `src/users/users.dto.spec.ts` (CompleteProfileDto) - keep the two files in step.
@@ -10,6 +10,14 @@ describe("nickname rule (mirror of BE users/nickname.ts)", () => {
     expect(validateNickname("ninja_dev")).toBeNull();
     expect(validateNickname("닌자.개발자-01")).toBeNull();
     expect(validateNickname("  ninja  ")).toBeNull();
+  });
+
+  it("normalizes to NFC like the BE: decomposed accents and Hangul jamo are accepted and sent composed", () => {
+    const decomposed = "cafe\u0301";
+    expect(normalizeNickname(`  ${decomposed} `)).toBe("caf\u00e9");
+    expect(validateNickname(decomposed)).toBeNull();
+    expect(validateNickname("\u1112\u1161\u11ab\u1112\u1161\u11ab")).toBeNull();
+    expect(normalizeNickname("\u1112\u1161\u11ab\u1112\u1161\u11ab")).toBe("\ud55c\ud55c");
   });
 
   it.each([
