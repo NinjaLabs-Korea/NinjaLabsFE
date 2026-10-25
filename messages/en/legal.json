@@ -1,0 +1,171 @@
+{
+  "lastUpdated": "Last updated: {date}",
+  "privacy": {
+    "metadata": {
+      "title": "Privacy Policy | Ninja Labs",
+      "description": "What personal data Ninja Labs Korea collects and how it is used."
+    },
+    "title": "Privacy Policy",
+    "intro": "Ninja Labs Korea (\"we\") operates the Ninja Labs service (the \"Service\") and complies with the Personal Information Protection Act of Korea and other applicable laws. This policy explains what we collect, why, and how we store and use it.",
+    "sections": [
+      {
+        "heading": "1. Information we collect",
+        "items": [
+          "Google sign-in: your Google account identifier and email address. We never receive your password.",
+          "Profile: nickname, bio, interest tags and anything else you enter.",
+          "Wallet: the Injective wallet address you prove you own by signing a message.",
+          "Activity: bounty applications and submissions (links, repository URLs, descriptions), agents you register, reward payouts and NFT minting records.",
+          "Access data: IP address, browser information (User-Agent) and time of your login sessions. Sign-in tokens are kept in your browser's storage."
+        ]
+      },
+      {
+        "heading": "2. How we use it",
+        "items": [
+          "To identify you, keep you signed in and prevent abuse",
+          "To run bounty applications, submissions and reviews, pay rewards and mint completion NFTs",
+          "To provide community features such as public profiles and the Hall of Fame",
+          "To send service notices, answer inquiries and respond to security incidents"
+        ]
+      },
+      {
+        "heading": "3. Public information and blockchain records",
+        "paragraphs": [
+          "Your profile (nickname, bio, tags, completed bounties) is public. Your email address is not.",
+          "Reward payouts and NFT minting are recorded on the Injective blockchain, where wallet addresses and transactions are visible to anyone. By their nature we cannot change or delete blockchain records."
+        ]
+      },
+      {
+        "heading": "4. Service providers and international transfer",
+        "paragraphs": [
+          "We use the following providers to run the Service, so your data may be stored and processed on servers outside Korea."
+        ],
+        "items": [
+          "Google LLC: sign-in",
+          "Supabase Inc.: database",
+          "Railway Corp.: server hosting",
+          "Vercel Inc.: website hosting"
+        ]
+      },
+      {
+        "heading": "5. Retention and deletion",
+        "paragraphs": [
+          "We keep your data until you ask to delete your account and then delete it without delay. We may keep records for longer where the law requires it or where they are needed to handle disputes or abuse. Blockchain records are not deleted, as described in section 3."
+        ]
+      },
+      {
+        "heading": "6. Your rights",
+        "paragraphs": [
+          "You may ask to access, correct, delete or stop the processing of your personal data. You can edit your profile in the Service; send other requests to the contact below."
+        ]
+      },
+      {
+        "heading": "7. Children",
+        "paragraphs": [
+          "The Service is not directed at children under 14, and we do not knowingly collect their personal data."
+        ]
+      },
+      {
+        "heading": "8. Security",
+        "paragraphs": [
+          "We protect your data with measures such as encryption in transit (HTTPS), certificate-verified database connections and least-privilege access."
+        ]
+      },
+      {
+        "heading": "9. Changes",
+        "paragraphs": [
+          "When this policy changes we publish the new version here with its last-updated date, and announce significant changes in the Service."
+        ]
+      },
+      {
+        "heading": "10. Contact",
+        "paragraphs": [
+          "Privacy inquiries: Ninja Labs Korea, {email}"
+        ]
+      }
+    ]
+  },
+  "terms": {
+    "metadata": {
+      "title": "Terms of Service | Ninja Labs",
+      "description": "The terms for using the Ninja Labs service."
+    },
+    "title": "Terms of Service",
+    "intro": "These terms govern your use of the Ninja Labs service (the \"Service\") operated by Ninja Labs Korea (\"we\"). By signing up for or using the Service you agree to these terms.",
+    "sections": [
+      {
+        "heading": "1. The Service",
+        "paragraphs": [
+          "The Service is a builder community and bounty marketplace for the Injective ecosystem. You can apply to or submit work for sponsors' bounties and, once approved, receive rewards and completion NFTs."
+        ]
+      },
+      {
+        "heading": "2. Accounts and wallets",
+        "items": [
+          "You sign up with a Google account and are responsible for keeping your account information accurate.",
+          "You are solely responsible for your connected wallet and its private keys or recovery phrase. We cannot access your wallet or recover your assets.",
+          "Agent API keys are shown once when issued; you are responsible for anything done with a leaked key."
+        ]
+      },
+      {
+        "heading": "3. Bounties and rewards",
+        "items": [
+          "Each bounty's requirements, deadlines, rewards and review criteria are those stated on its page.",
+          "Rewards are paid in crypto after the sponsor's deposit is confirmed and your submission is approved. Applying or submitting alone does not create a right to a reward.",
+          "Rewards go to your registered, verified wallet; losses caused by incorrect wallet information are your responsibility.",
+          "You are responsible for reporting and paying any taxes on rewards you receive."
+        ]
+      },
+      {
+        "heading": "4. Rights in submissions",
+        "paragraphs": [
+          "Unless a bounty page says otherwise, you keep the rights to your submissions. You allow us and the bounty's sponsor to use them for review, presentation within the Service and community promotion. Do not submit work that infringes anyone else's rights."
+        ]
+      },
+      {
+        "heading": "5. Prohibited conduct",
+        "items": [
+          "Impersonating others or using multiple accounts to obtain rewards unfairly",
+          "Plagiarism or infringing others' copyrights, trademarks or other rights",
+          "Attacking the Service or other users, or overloading the system with automated tools",
+          "Anything that violates the law or public order"
+        ]
+      },
+      {
+        "heading": "6. Suspension",
+        "paragraphs": [
+          "If you breach these terms we may restrict your use of the Service or suspend your account, with notice beforehand or, in urgent cases, afterwards, and may refuse to pay rewards obtained improperly."
+        ]
+      },
+      {
+        "heading": "7. Public records",
+        "paragraphs": [
+          "Your profile, completed bounties and the reward payouts and NFT mints recorded on the blockchain are public, and blockchain records cannot be deleted. See the Privacy Policy for details."
+        ]
+      },
+      {
+        "heading": "8. Disclaimer",
+        "paragraphs": [
+          "The Service is provided as is. Crypto assets and blockchains carry risks such as price volatility, network outages and smart-contract bugs, and nothing in the Service is investment advice. Except for intentional misconduct or gross negligence, we are not liable for indirect or incidental damages arising from your use of the Service."
+        ]
+      },
+      {
+        "heading": "9. Changes to these terms",
+        "paragraphs": [
+          "We announce changes and their effective date in the Service at least 7 days before they take effect, or 30 days before for changes that are unfavorable to you. Continuing to use the Service after a change means you accept the updated terms."
+        ]
+      },
+      {
+        "heading": "10. Governing law and jurisdiction",
+        "paragraphs": [
+          "These terms are governed by the laws of the Republic of Korea, and disputes about the Service are resolved by the court with jurisdiction under the Korean Civil Procedure Act."
+        ]
+      },
+      {
+        "heading": "11. Contact",
+        "paragraphs": [
+          "Questions about the Service: Ninja Labs Korea, {email}"
+        ]
+      }
+    ]
+  }
+}

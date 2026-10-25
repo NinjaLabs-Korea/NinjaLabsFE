@@ -31,10 +31,12 @@ export const localeRoutePatterns = [
   "/notices",
   "/notices/[id]",
   "/opengraph-image/[id]",
+  "/privacy",
   "/signup",
   "/signup/get-started",
   "/signup/profile",
   "/signup/wallet",
+  "/terms",
 ] as const;
 
 /** The static in-locale 404 document the proxy rewrites misses to (`src/app/[locale]/page-not-found/page.tsx`). */
