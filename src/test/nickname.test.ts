@@ -27,6 +27,13 @@ describe("nickname rule (mirror of BE users/nickname.ts)", () => {
     expect(validateNickname(nickname)).toBe(reason);
   });
 
+  it.each(["\u115F\u1160", "\u3164\u3164", "ninja\uFFA0dev", "ab\u115F"])(
+    "rejects %j: Hangul filler letters render as blanks (mirrors the BE NICKNAME lookahead)",
+    (nickname) => {
+      expect(validateNickname(nickname)).toBe("chars");
+    },
+  );
+
   it.each([".ninja", "ninja.", "-ninja", "ninja-", "_ninja", "ninja_", "..", "...", "--", "-.", ".-", "_-_", ".a", "a."])(
     "rejects %p: must start and end with a letter or digit",
     (nickname) => {
