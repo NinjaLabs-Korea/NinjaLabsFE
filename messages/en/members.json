@@ -23,6 +23,8 @@
     "listAriaLabel": "Members",
     "emptyTitle": "No members match your filters",
     "emptyBody": "Try a different category or clear the search.",
+    "feedEmptyTitle": "No members yet",
+    "feedEmptyBody": "Members will appear here once the team designates them.",
     "reset": "Reset filters"
   },
   "roles": {

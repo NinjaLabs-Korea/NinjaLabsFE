@@ -36,8 +36,12 @@ export type BountyFormValues = {
 
 const pad2 = (value: number) => String(value).padStart(2, "0");
 
-/** BE `submission_deadline` 모양: ISO 8601 날짜+시각(+초/밀리초)+오프셋(Z 또는 ±hh:mm). `new Date("07.14")`처럼 V8이 관대하게 읽는 값은 거부한다. */
-const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/;
+/**
+ * BE 타임스탬프 모양: ISO 8601 날짜+시각(+초/소수 초)+오프셋(Z 또는 ±hh:mm). `new Date("07.14")`처럼 V8이 관대하게 읽는 값은 거부한다.
+ * 소수 초는 9자리까지 받는다: 컬럼을 JS Date로 직렬화하면 밀리초 3자리지만, 운영 화면 응답의 `json_build_object`(제출 리비전·심사 이력)는
+ * Postgres가 마이크로초(`2026-10-25T12:34:56.123456+00:00`)로 내보낸다.
+ */
+const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 export function isIsoDateTime(value: string): boolean {
   return ISO_DATE_TIME.test(value) && !Number.isNaN(new Date(value).getTime());

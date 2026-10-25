@@ -192,6 +192,12 @@ describe("MemberFilters", () => {
     expect(names()).toEqual(["Ana", "Ben", "Cho"]);
   });
 
+  it("says there are no members yet (no dead Reset button) when the feed is empty", () => {
+    renderWithIntl(<MemberFilters members={[]} />);
+    expect(screen.getByText("No members yet")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Reset filters" })).toBeNull();
+  });
+
   it("shows an empty state for a role with no members and resets back to everyone", () => {
     renderWithIntl(<MemberFilters members={members} />);
     fireEvent.click(screen.getByRole("button", { name: "Design" }));
@@ -224,7 +230,8 @@ describe("NoticeFilters", () => {
 
   it("shows the empty state for an empty feed", () => {
     renderWithIntl(<NoticeFilters notices={[]} />);
-    expect(screen.getByText("No notices match your filters")).toBeTruthy();
+    expect(screen.getByText("No notices yet")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Reset filters" })).toBeNull();
     expect(within(screen.getByRole("group", { name: "Notice categories" })).getAllByRole("button")).toHaveLength(1);
   });
 });

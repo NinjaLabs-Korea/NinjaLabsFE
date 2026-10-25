@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { ApiKeyReveal } from "@/components/agents/ApiKeyReveal";
 import {
@@ -51,6 +51,11 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   // it from state and the DOM, not leave it on screen for the next person at the machine.
   const sessionUserId = auth.status === "signed-in" ? auth.user.id : null;
   const [verificationOwner, setVerificationOwner] = useState(sessionUserId);
+  // ...and a key that arrives after the session changed (verify still in flight) must never be shown to the new session.
+  const sessionUserIdRef = useRef(sessionUserId);
+  useEffect(() => {
+    sessionUserIdRef.current = sessionUserId;
+  }, [sessionUserId]);
   if (verificationOwner !== sessionUserId) {
     setVerificationOwner(sessionUserId);
     setVerification(null);
@@ -100,6 +105,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
     }
 
     const agentAddress = address;
+    const requestingUserId = sessionUserId;
     setErrorMessage(null);
     setFieldErrors({});
     setVerification(null);
@@ -127,6 +133,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
 
       setSubmissionState("verifying");
       const verified = await agentApi.verifyAgent(registration.agentId, signature);
+      if (sessionUserIdRef.current !== requestingUserId) return;
       setVerification(verified);
       // Re-read /agents/me so the "pending verification" banner (derived from the list) disappears with the new ACTIVE row.
       refreshAgents();

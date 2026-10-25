@@ -23,6 +23,8 @@
     "listAriaLabel": "멤버",
     "emptyTitle": "필터에 맞는 멤버가 없습니다",
     "emptyBody": "다른 카테고리를 선택하거나 검색을 초기화해 보세요.",
+    "feedEmptyTitle": "아직 멤버가 없습니다",
+    "feedEmptyBody": "팀이 멤버를 지정하면 여기에 표시됩니다.",
     "reset": "필터 초기화"
   },
   "roles": {

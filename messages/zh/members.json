@@ -23,6 +23,8 @@
     "listAriaLabel": "成员",
     "emptyTitle": "没有符合筛选条件的成员",
     "emptyBody": "请尝试其他分类或清除搜索条件。",
+    "feedEmptyTitle": "暂无成员",
+    "feedEmptyBody": "团队指定成员后将显示在这里。",
     "reset": "重置筛选"
   },
   "roles": {

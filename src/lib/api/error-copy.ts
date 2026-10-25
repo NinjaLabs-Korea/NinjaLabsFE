@@ -119,9 +119,9 @@ export const ERROR_COPY = {
     fallback: "generic",
   },
   /**
-   * 로그인 콜백의 `#error=<CODE>` — `lib/api/oauth.ts` → `app/[locale]/auth/callback/page.tsx`. 오늘 BE는 `#error=AUTH_FAILED`만
-   * 리다이렉트한다(일반 문구 `failedBody`). Turnstile 코드는 `GET /auth/google` 자체의 JSON 400/503이라 FE가 보지 못하지만, BE가
-   * 콜백으로 보내기 시작할 때를 대비해 둔다.
+   * 로그인 콜백의 `#error=<CODE>` — `lib/api/oauth.ts` → `app/[locale]/auth/callback/page.tsx`. BE는 로그인 시작 실패(`GET /auth/google`)의
+   * `TURNSTILE_FAILED`/`TURNSTILE_UNAVAILABLE`과 콜백 중 DB 장애 `DATABASE_UNAVAILABLE`을 `#error=`로 돌려보낸다
+   * (BE `START_FAILURE_CODES`). 그 밖의 실패는 `AUTH_FAILED` → 일반 문구 `failedBody`.
    */
   loginCallback: {
     messages: "signup.authCallback.errors",

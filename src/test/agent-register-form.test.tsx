@@ -213,6 +213,34 @@ describe("AgentRegisterForm connected-wallet check", () => {
   });
 });
 
+describe("AgentRegisterForm session change mid-flight", () => {
+  it("never shows a key that arrives after the user signed out", async () => {
+    registerAgent.mockResolvedValue({ agentId: "agent-new", status: "PENDING_VERIFICATION", verificationMessage: "sign me" });
+    signMessageAsync.mockResolvedValue("0xsig");
+    let release: (value: unknown) => void = () => undefined;
+    verifyAgent.mockReset();
+    verifyAgent.mockImplementation(() => new Promise((resolve) => { release = resolve; }));
+    const view = renderWithIntl(<AgentRegisterForm chainId={1439} />);
+    const submit = (await screen.findByRole("button", { name: "Sign & Register" })) as HTMLButtonElement;
+    fireEvent.change(screen.getByLabelText("Agent name"), { target: { value: "fresh-agent" } });
+    await waitFor(() => expect(submit.disabled).toBe(false));
+    fireEvent.submit(submit.closest("form") as HTMLFormElement);
+    await waitFor(() => expect(verifyAgent).toHaveBeenCalled());
+
+    try {
+      authState.current = { status: "signed-out", user: null };
+      view.rerender(<AgentRegisterForm chainId={1439} />);
+      release({ agentId: "agent-new", status: "ACTIVE", apiKey: "nl_live_late_key", expiresAt: "2027-01-01T00:00:00Z" });
+      await waitFor(() => expect(submit.closest("form")).toBeTruthy());
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(screen.queryByLabelText("New API key")).toBeNull();
+      expect(view.container.innerHTML).not.toContain("nl_live_late_key");
+    } finally {
+      authState.current = signedIn;
+    }
+  });
+});
+
 describe("AgentRegisterForm field limits (mirror of BE RegisterAgentDto)", () => {
   beforeEach(() => {
     state.agents = [];
