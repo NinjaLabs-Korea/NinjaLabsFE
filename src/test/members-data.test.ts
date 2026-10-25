@@ -188,6 +188,17 @@ describe("portfolio parent NFT copy", () => {
   });
 });
 
+describe("public profile NFT titles", () => {
+  it("leaves the title empty for an NFT whose bounty is gone so the page can localize the fallback", async () => {
+    fetchPublicJson.mockResolvedValueOnce({
+      nickname: "kim", bio: "", tags: [], created_at: "2026-05-01T00:00:00Z", completedBounties: [], agents: [],
+      nfts: [{ id: "n2", nft_type: "BOUNTY_COMPLETION_CHILD", status: "ATTACHED", contract_address: "inj1x", token_id: "2", mint_tx_hash: null, bounty_title: null }],
+    });
+    const profile = await getRuntimeProfile("kim", "en");
+    expect(profile?.nfts[0]?.title).toBe("");
+  });
+});
+
 describe("public profile loader failure modes", () => {
   it("returns undefined (→ notFound) only when the BE answers 404", async () => {
     fetchPublicJson.mockRejectedValueOnce(new PublicApiError(404, "/users/ghost"));
