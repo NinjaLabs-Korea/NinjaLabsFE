@@ -125,9 +125,7 @@ export function FoundationProvider({
     };
   }, [ready]);
 
-  useEffect(() => {
-    value.adapter.initialize?.();
-  }, [value]);
+  useEffect(() => value.adapter.initialize?.(), [value]);
 
   return <FoundationContext.Provider value={value}>{children}</FoundationContext.Provider>;
 }

@@ -126,16 +126,11 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     }
   }
 
-  let initialized = false;
+  let bootstrapped = false;
   const initialize = () => {
-    if (initialized || typeof window === "undefined") return;
-    initialized = true;
-    onboardingLog("auth.adapter.initialized", {
-      path: window.location.pathname,
-      hasHash: Boolean(window.location.hash),
-    });
+    if (typeof window === "undefined") return;
     // Another tab signed out (its logout already cleared the shared cookie) or signed in (the cookie may be back).
-    events.subscribe((event) => {
+    const unsubscribe = events.subscribe((event) => {
       if (event === "signed-in") {
         allowSessionRefresh();
         void adoptOtherTabSession().catch(() => {});
@@ -143,6 +138,19 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       }
       endLocalSession();
       endSignedInSession();
+    });
+    // The provider remounts (a locale switch changes the `[locale]` layout, React StrictMode runs effects twice): the
+    // teardown drops the listener and channel of an adapter nobody renders any more, which would otherwise keep
+    // re-reading the session on every other tab's sign-in. The session bootstrap below still runs once per adapter.
+    const teardown = () => {
+      unsubscribe();
+      events.close();
+    };
+    if (bootstrapped) return teardown;
+    bootstrapped = true;
+    onboardingLog("auth.adapter.initialized", {
+      path: window.location.pathname,
+      hasHash: Boolean(window.location.hash),
     });
     // Any page load other than the OAuth callback means the sign-in that stored a PKCE verifier was abandoned.
     if (!isAuthCallbackPath(window.location.pathname)) discardLoginVerifier();
@@ -174,6 +182,7 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
         })
         .catch(() => setSnapshot({ status: "signed-out", user: null }));
     });
+    return teardown;
   };
 
   return {

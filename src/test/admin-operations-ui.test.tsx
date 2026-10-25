@@ -168,6 +168,17 @@ describe("BountyOperations", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
+  it("closes the cancel confirmation when a re-read shows the cancellation is blocked or no longer allowed", async () => {
+    const open = operations({ bounty: { ...operations().bounty, status: "OPEN" }, lifecycle: { blockers: {}, allowedTransitions: ["SUBMISSION_CLOSED", "CANCELLED"] } });
+    adminApi.getAdminOperations.mockImplementation(async () => open);
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel bounty" }));
+    expect(screen.getByRole("alertdialog")).toBeTruthy();
+    adminApi.getAdminOperations.mockImplementation(async () => ({ ...open, lifecycle: { blockers: { CANCELLED: [{ code: "UNPAID_WINNERS" }] }, allowedTransitions: ["SUBMISSION_CLOSED", "CANCELLED"] } }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+  });
+
   it("closes the deposit dialog when another admin already confirmed that deposit", async () => {
     const pending = operations({ rewards: [{ ...operations().rewards[0], status: "DEPOSIT_PENDING", depositedAmount: null, cap: null, allocated: "0" }] });
     adminApi.getAdminOperations.mockImplementation(async () => pending);

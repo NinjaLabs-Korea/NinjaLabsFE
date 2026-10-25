@@ -19,6 +19,10 @@ export function OpsLifecyclePanel({ ops, busy, run }: { ops: AdminOperations; bu
       ? t(`blockers.${blocker.code}`, { count: blocker.count ?? 0 })
       : t("blockers.unknown", { code: blocker.code });
 
+  // Like the other operations dialogs, the confirmation closes when a re-read shows the cancellation is no longer on offer (another admin moved
+  // the bounty on, or a payout is now owed): confirming it would only answer INVALID_TRANSITION / a blocker error.
+  const cancelAvailable = ops.lifecycle.allowedTransitions.includes("CANCELLED") && !ops.lifecycle.blockers.CANCELLED?.length;
+
   const transition = (to: string) =>
     run(`transition:${to}`, () => api.transitionAdminBounty(ops.bounty.id, to), {
       title: t("toast.transitionedTitle"),
@@ -71,7 +75,7 @@ export function OpsLifecyclePanel({ ops, busy, run }: { ops: AdminOperations; bu
         eyebrow={t("lifecycle.eyebrow")}
         onCancel={() => setConfirmCancel(false)}
         onConfirm={() => { setConfirmCancel(false); void transition("CANCELLED"); }}
-        open={confirmCancel}
+        open={confirmCancel && cancelAvailable}
         title={t("lifecycle.cancelTitle")}
       />
     </section>
