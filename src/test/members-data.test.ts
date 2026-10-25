@@ -188,3 +188,15 @@ describe("public profile loader failure modes", () => {
     await expect(getRuntimeProfile("kim", "en")).rejects.toBe(failure);
   });
 });
+
+describe("public profile agents", () => {
+  it("lists only ACTIVE agents: pending and revoked ones (and their wallets) stay off the public page", async () => {
+    const agent = (name: string, status: string, wallet: string) => ({ name, status, wallet_address: wallet, completed_bounties: [{}, {}] });
+    fetchPublicJson.mockResolvedValueOnce({
+      nickname: "kim", bio: "", tags: [], created_at: "2026-05-01T00:00:00Z", completedBounties: [], nfts: [],
+      agents: [agent("live", "ACTIVE", "0xaaa"), agent("draft", "PENDING_VERIFICATION", "0xbbb"), agent("gone", "REVOKED", "0xccc")],
+    });
+    const profile = await getRuntimeProfile("kim", "en");
+    expect(profile?.agents).toEqual([{ name: "live", wallet: "0xaaa", verified: true, completedBounties: 2 }]);
+  });
+});
