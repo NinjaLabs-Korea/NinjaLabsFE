@@ -150,7 +150,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
         {profile.agents.length ? (
           <div className="mt-6 grid gap-5 md:grid-cols-2">
             {profile.agents.map((agent) => (
-              <article key={agent.name} className="rounded-card border border-dashed border-border-dashed bg-surface p-6">
+              <article key={agent.wallet} className="rounded-card border border-dashed border-border-dashed bg-surface p-6">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-display text-xl font-bold text-ink">{agent.name}</h3>
                   {agent.verified ? <Badge variant="success">{t("agents.verified")}</Badge> : null}

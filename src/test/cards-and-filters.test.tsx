@@ -112,6 +112,11 @@ describe("MemberCard", () => {
     expect(screen.getByText("Building in the Injective ecosystem.")).toBeTruthy();
   });
 
+  it("shows the initials avatar for every member, not a hard-coded slug", () => {
+    renderWithIntl(<MemberCard member={member({ slug: "kim", initials: "KM" })} />);
+    expect(screen.getByText("KM")).toBeTruthy();
+  });
+
   it("renders no links when the member has none", () => {
     renderWithIntl(<MemberCard member={member({ links: {} })} />);
     expect(screen.queryByRole("link")).toBeNull();
