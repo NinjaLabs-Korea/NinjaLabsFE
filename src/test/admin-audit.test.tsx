@@ -79,6 +79,20 @@ describe("AuditLogViewer", () => {
     await screen.findByText("Page 1 of 3");
   });
 
+  it("steps back to the page on screen when fetching another page fails, instead of labelling old rows with the new page", async () => {
+    render();
+    await screen.findByText("Page 1 of 3");
+    adminApi.getAdminAuditLogs.mockRejectedValueOnce(new Error("down"));
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await waitFor(() => expect(adminApi.getAdminAuditLogs).toHaveBeenCalledWith({}, 2));
+    await waitFor(() => expect(adminApi.getAdminAuditLogs).toHaveBeenLastCalledWith({}, 1));
+    expect(await screen.findByText("Page 1 of 3")).toBeTruthy();
+    expect(screen.queryByText("Page 2 of 3")).toBeNull();
+    // The next click retries page 2 rather than doing nothing.
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await screen.findByText("Page 2 of 3");
+  });
+
   it("refuses a non-UUID entity ID without calling the API, then applies a valid filter from page 1", async () => {
     render();
     await screen.findByText("Page 1 of 3");

@@ -27,6 +27,8 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
   const inFlight = useRef(new Set<string>());
   // Only the newest request may write state: a slow FAILED page must not overwrite the PENDING page the operator switched to.
   const latestRequest = useRef(0);
+  // The page the rows on screen belong to: a failed fetch of another page steps back to it, so the pager never labels old rows with the new page.
+  const shownPage = useRef(1);
 
   const load = useCallback(() => {
     const request = ++latestRequest.current;
@@ -37,15 +39,18 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
         // whose pager is hidden (pages === 1) and would strand the operator.
         const lastPage = Math.max(1, Math.ceil(next.total / next.pageSize));
         if (next.items.length === 0 && page > lastPage) {
+          shownPage.current = lastPage;
           setPage(lastPage);
           return;
         }
+        shownPage.current = next.page;
         setData(next);
         setFailed(false);
       },
       () => {
         if (request !== latestRequest.current) return;
         setFailed(true);
+        setPage(shownPage.current);
         pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") });
       },
     );
@@ -89,6 +94,7 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
               // Another status is another list: drop the old rows so FAILED jobs (with Retry) never sit under the Pending tab while it loads.
               if (option === status) return;
               setStatus(option);
+              shownPage.current = 1;
               setPage(1);
               setData(null);
             }} type="button">
