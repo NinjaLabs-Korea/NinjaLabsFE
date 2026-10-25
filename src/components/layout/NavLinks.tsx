@@ -20,9 +20,12 @@ export function NavLinks({ links, variant }: NavLinksProps) {
     <>
       {links.map(({ href, label }) => {
         const isActive = pathname === href || pathname.startsWith(`${href}/`);
+        // One color per state: two `text-*` utilities on the same element are decided by stylesheet order, not by
+        // class order, and `text-ink-secondary` is emitted after `text-ink`, so the active color would never apply.
+        const focus = "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
         const className = isDesktop
-          ? `text-sm font-medium text-ink-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary${isActive ? " text-ink font-semibold" : ""}`
-          : `rounded-control px-3 py-2 text-sm font-medium text-ink-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary${isActive ? " bg-primary-soft text-primary-strong font-semibold" : ""}`;
+          ? `text-sm ${isActive ? "font-semibold text-ink" : "font-medium text-ink-secondary"} ${focus}`
+          : `rounded-control px-3 py-2 text-sm ${isActive ? "bg-primary-soft font-semibold text-primary-strong" : "font-medium text-ink-secondary"} ${focus}`;
 
         return (
           <Link aria-current={isActive ? "page" : undefined} className={className} href={href} key={href} prefetch={true}>

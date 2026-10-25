@@ -52,6 +52,14 @@ describe("NavLinks", () => {
     expect(screen.getByRole("link", { name: "Members" }).getAttribute("aria-current")).toBeNull();
   });
 
+  it.each(["desktop", "mobile"] as const)("gives the %s active link exactly one text color (same-property utilities are decided by stylesheet order)", (variant) => {
+    nav.pathname = "/bounties";
+    renderWithIntl(<NavLinks links={links} variant={variant} />);
+    const textColors = (name: string) => (screen.getByRole("link", { name }).className.match(/(?:^|\s)text-(?!sm\b)[\w-]+/g) ?? []).map((token) => token.trim());
+    expect(textColors("Bounties")).toEqual([variant === "desktop" ? "text-ink" : "text-primary-strong"]);
+    expect(textColors("Members")).toEqual(["text-ink-secondary"]);
+  });
+
   it("does not treat a shared prefix as the same section", () => {
     nav.pathname = "/members-archive";
     renderWithIntl(<NavLinks links={links} variant="mobile" />);
