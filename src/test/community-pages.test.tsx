@@ -92,6 +92,31 @@ describe("Hall of Fame page", () => {
     // A partner without a link is a plain tile, still labelled by its logo alt text.
     expect(screen.getByRole("img", { name: "NoLink" }).closest("a")).toBeNull();
   });
+
+  it("renders admin entries that share a title without duplicate-key warnings and shows undated milestones without a stray separator", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    data.hallOfFame.hallOfFame = {
+      stats: [],
+      highlights: [
+        { category: "Award", title: "Same", body: "One.", href: "/notices", image: null },
+        { category: "Award", title: "Same", body: "Two.", href: "/notices", image: null },
+      ],
+      milestones: [
+        { title: "Same", date: "", description: "Undated." },
+        { title: "Same", date: "May 3, 2026", description: "Dated." },
+      ],
+      partners: [
+        { name: "Dup", logo: "/logos/a.png", href: null },
+        { name: "Dup", logo: "/logos/b.png", href: null },
+      ],
+    };
+    renderWithIntl(await HallOfFamePage(pageProps));
+    expect(error.mock.calls.filter(([message]) => String(message).includes("same key"))).toEqual([]);
+    error.mockRestore();
+    expect(screen.getAllByRole("link", { name: /Same/ })).toHaveLength(2);
+    expect(screen.getByText("Undated.")).toBeTruthy();
+    expect(screen.getByText("May 3, 2026 · Dated.")).toBeTruthy();
+  });
 });
 
 describe("Members page", () => {

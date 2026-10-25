@@ -81,8 +81,9 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
         <section className="py-14">
           <SectionHeader eyebrow={t("highlights.eyebrow")} heading={t("highlights.heading")} action={{ label: t("highlights.readNotices"), href: "/notices" }} />
           <div className="mt-6 grid gap-5 md:grid-cols-3">
-            {hallOfFame.highlights.map((highlight) => (
-              <Link href={highlight.href} key={highlight.title} className="overflow-hidden rounded-card border border-border bg-surface shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+            {hallOfFame.highlights.map((highlight, index) => (
+              // Admin-entered titles are not unique: the index keeps React keys distinct.
+              <Link href={highlight.href} key={`${index}:${highlight.title}`} className="overflow-hidden rounded-card border border-border bg-surface shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
                 <div className="relative aspect-[16/9] bg-gradient-to-br from-primary-soft-border to-surface-subtle">
                   {highlight.image ? <Image {...imageProps(highlight.image)} alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 370px" /> : null}
                 </div>
@@ -101,11 +102,11 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
         <section>
           <SectionHeader eyebrow={t("timeline.eyebrow")} heading={t("timeline.heading")} />
           <ol className="relative mt-8 grid gap-8 md:grid-cols-3 md:before:absolute md:before:top-[17px] md:before:right-0 md:before:left-0 md:before:h-px md:before:bg-border">
-            {hallOfFame.milestones.map((milestone) => (
-              <li key={milestone.title} className="relative">
+            {hallOfFame.milestones.map((milestone, index) => (
+              <li key={`${index}:${milestone.title}`} className="relative">
                 <span aria-hidden className="block size-9 rounded-full border-4 border-primary-soft-border bg-primary" />
                 <h3 className="mt-5 font-display text-xl font-bold text-ink">{milestone.title}</h3>
-                <p className="mt-2 text-sm text-ink-muted">{t("timeline.entry", { date: milestone.date, description: milestone.description })}</p>
+                <p className="mt-2 text-sm text-ink-muted">{milestone.date ? t("timeline.entry", { date: milestone.date, description: milestone.description }) : milestone.description}</p>
               </li>
             ))}
           </ol>
@@ -116,11 +117,11 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
         <section className="mt-16">
           <SectionHeader eyebrow={t("partners.eyebrow")} heading={t("partners.heading")} />
           <ul className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-            {hallOfFame.partners.map((partner) => {
+            {hallOfFame.partners.map((partner, index) => {
               const logo = <span className="relative block h-12 w-full"><Image {...imageProps(partner.logo)} alt={partner.name} className="object-contain" fill sizes="(max-width: 640px) 50vw, 240px" /></span>;
               const tileClass = "flex h-28 items-center justify-center rounded-card border border-border bg-surface p-5 shadow-card";
               return (
-                <li key={partner.name}>
+                <li key={`${index}:${partner.name}`}>
                   {partner.href ? (
                     <a className={`${tileClass} transition-shadow hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`} href={partner.href} rel="noreferrer" target={partner.href.startsWith("http") ? "_blank" : undefined}>{logo}</a>
                   ) : (
