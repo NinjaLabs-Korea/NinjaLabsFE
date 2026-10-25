@@ -57,6 +57,17 @@ describe("member profile page", () => {
   });
 });
 
+describe("member profile completion NFT tiles", () => {
+  it("labels a completion NFT whose bounty was deleted with a localized fallback instead of a blank tile", async () => {
+    data.profile = {
+      slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", completions: [], agents: [],
+      nfts: [{ id: "n1", type: "completion", title: "", status: "ATTACHED", contractAddress: "inj1x", tokenId: "7", mintTxHash: null }],
+    };
+    renderWithIntl(await MemberProfilePage({ params: Promise.resolve({ locale: "en", id: "ninja" }) } as never));
+    expect(screen.getByText(enMessages.members.profile.portfolio.untitledNft)).toBeTruthy();
+  });
+});
+
 describe("landing page", () => {
   it("renders closed bounties that share a title without duplicate-key warnings", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);

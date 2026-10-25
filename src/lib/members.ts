@@ -157,7 +157,8 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
     nfts: data.nfts.map((nft) => ({
       id: nft.id,
       type: nft.nft_type === "NINJA_PARENT" ? "parent" : "completion",
-      title: nft.bounty_title ?? "Ninja NFT",
+      // "" when the NFT's bounty was deleted: the page shows a localized fallback (a literal here would be English on every locale).
+      title: nft.bounty_title ?? "",
       status: nft.status,
       contractAddress: nft.contract_address,
       tokenId: nft.token_id,
