@@ -86,7 +86,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
               <Image alt="" className="size-12 shrink-0 rounded-full" height={48} src="/figma/ninja-labs-mascot.png" width={48} />
               <div>
                 <p className="text-base font-semibold">{profile.handle}</p>
-                <p className="text-sm text-on-inverse/60">{t("portfolio.memberSince", { date: profile.joinedAt })}</p>
+                <p className="text-sm text-on-inverse/75">{t("portfolio.memberSince", { date: profile.joinedAt })}</p>
               </div>
             </div>
             {completionNfts.length ? (
