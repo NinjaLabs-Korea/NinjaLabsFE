@@ -193,6 +193,17 @@ describe("admin bounty form validation", () => {
     expect(validateBountyForm({ ...valid, currency: "INJ", amount: "abc" }, { now }).amount).toBe("amountInvalid");
   });
 
+  it("rejects amounts Number() reads as something else (hex, binary, a decimal comma) instead of sending a different reward", () => {
+    for (const amount of ["0x10", "0b11", "1,5", "1.5.2", "+5", "5 INJ"]) {
+      expect(validateBountyForm({ ...valid, currency: "INJ", amount }, { now }).amount, amount).toBe("amountInvalid");
+    }
+    // 18 significant digits do not fit a double: "0.123456789012345678" would be sent as 0.12345678901234568.
+    expect(validateBountyForm({ ...valid, currency: "INJ", amount: "0.123456789012345678" }, { now }).amount).toBe("amountInvalid");
+    expect(validateBountyForm({ ...valid, currency: "INJ", amount: "0.5" }, { now }).amount).toBeUndefined();
+    expect(validateBountyForm({ ...valid, currency: "INJ", amount: ".5" }, { now }).amount).toBeUndefined();
+    expect(validateBountyForm({ ...valid, currency: "INJ", amount: "5." }, { now }).amount).toBeUndefined();
+  });
+
   it("trims text fields when building the saved bounty", () => {
     const saved = formToBounty({ ...valid, title: "  Build a widget  " }, { slug: "", coverImage: null });
     expect(saved.title).toBe("Build a widget");
