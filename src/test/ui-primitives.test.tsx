@@ -141,7 +141,8 @@ describe("Markdown allowlist", () => {
     expect(ext.getAttribute("rel")).toBe("noreferrer");
     expect(screen.getByRole("link", { name: "proto" }).getAttribute("target")).toBe("_blank");
     const rel = screen.getByRole("link", { name: "rel" });
-    expect(rel.getAttribute("href")).toBe("/bounties/abc");
+    // Same-site paths keep the reader's locale (localePrefix "always").
+    expect(rel.getAttribute("href")).toBe("/en/bounties/abc");
     expect(rel.getAttribute("target")).toBeNull();
     expect(rel.getAttribute("rel")).toBeNull();
   });

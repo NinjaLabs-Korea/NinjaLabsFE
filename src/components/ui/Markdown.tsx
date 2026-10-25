@@ -1,10 +1,18 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { Link } from "@/i18n/navigation";
+
 // Deliberate long-form prose subset: tables, images, and task lists are unsupported by design
 // (unwrapDisallowed keeps their text content). See Bounty/Notice markdown contract in src/lib/types.ts.
 // Absolute (any scheme case) or protocol-relative: a bare `startsWith("http")` also matched relative paths like `http-guide`.
 const EXTERNAL_HREF = /^(https?:)?\/\//i;
+
+// A same-site path (`/bounties/abc`, not `//host`): rendered through the locale-aware Link, because under `localePrefix: "always"` a raw
+// `<a href="/bounties/abc">` drops the reader's locale (one redirect, and the proxy may pick another language).
+const SAME_SITE_PATH = /^\/(?!\/)/;
+
+const linkClass = "font-semibold text-primary-strong underline underline-offset-2 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 const allowedElements = ["p", "a", "strong", "em", "ul", "ol", "li", "h2", "h3", "code", "pre", "blockquote", "br", "del"];
 
@@ -18,9 +26,12 @@ export function Markdown({ children }: { children: string }) {
         p: ({ children }) => <p className="mt-4 first:mt-0 text-base text-ink-secondary">{children}</p>,
         a: ({ href, children }) => {
           const isExternal = typeof href === "string" && EXTERNAL_HREF.test(href);
+          if (typeof href === "string" && SAME_SITE_PATH.test(href)) {
+            return <Link className={linkClass} href={href}>{children}</Link>;
+          }
           return (
             <a
-              className="font-semibold text-primary-strong underline underline-offset-2 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className={linkClass}
               href={href}
               rel={isExternal ? "noreferrer" : undefined}
               target={isExternal ? "_blank" : undefined}
