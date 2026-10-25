@@ -10,6 +10,8 @@ import { APPLICATION_MESSAGE_MAX, COMMIT_SHA_MAX, SUBMISSION_DESCRIPTION_MAX } f
 import { payoutBadge } from "@/lib/payout";
 import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 import { bountyActionErrorCopy, deriveActionView, isStaleRowsError, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
+import type { AccountApplication } from "@/lib/contracts/account";
+import type { ApiResult } from "@/lib/contracts/api";
 import type { Bounty } from "@/lib/types";
 
 const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card";
@@ -107,6 +109,10 @@ function SignedOutPanel({ applicationRequired }: { applicationRequired: boolean 
   );
 }
 
+// A direct-submission bounty has no applications. `getApplications` also joins /submissions/me, so asking it anyway would
+// cost two extra authenticated requests on every detail view (the BE rate-limits per IP); this stub keeps the hook order.
+const noApplications = async (): Promise<ApiResult<readonly AccountApplication[]>> => ({ status: "available", data: [] });
+
 type BountyActionPanelProps = {
   bountyId: string;
   applicationRequired: boolean;
@@ -140,7 +146,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const auth = useAuthSnapshot();
   const accountApi = useAccountApi();
   const bountyApi = useBountyApi();
-  const applicationsQuery = useAccountQuery(accountApi.getApplications);
+  const applicationsQuery = useAccountQuery(applicationRequired ? accountApi.getApplications : noApplications);
   const submissionsQuery = useAccountQuery(accountApi.getSubmissions);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);

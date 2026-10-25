@@ -198,6 +198,16 @@ describe("BountyActionPanel", () => {
     expect(screen.queryByText("Application under review")).toBeNull();
   });
 
+  it("does not read /applications/me for a direct-submission bounty", async () => {
+    const getApplications = vi.fn(async () => ({ status: "available" as const, data: [] }));
+    const getSubmissions = vi.fn(async () => ({ status: "available" as const, data: [] }));
+    Object.assign(apiClient, { getApplications, getSubmissions });
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    expect(await screen.findByRole("button", { name: "Submit" })).toBeTruthy();
+    expect(getSubmissions).toHaveBeenCalledTimes(1);
+    expect(getApplications).not.toHaveBeenCalled();
+  });
+
   it("keeps the success state when the re-read after a successful apply fails", async () => {
     let reads = 0;
     const getApplications = vi.fn(async () =>
