@@ -114,7 +114,8 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
   if (applicationRequired) {
     if (!application && !applied) return acceptingNew ? { kind: "applyForm" } : closed;
     if (application?.status === "rejected") return { kind: "applicationRejected" };
-    if (applied || application?.status === "open") return { kind: "applicationUnderReview" };
+    // `applied` only bridges the gap until the server row arrives; a row that already moved on (approved...) wins.
+    if (application ? application.status === "open" : applied) return { kind: "applicationUnderReview" };
   }
 
   // 7. 확정된 제출
