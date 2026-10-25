@@ -6,6 +6,7 @@ import { NewsCard } from "@/components/cards/NewsCard";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
+import { formatStatValue } from "@/lib/hall-of-fame";
 import { getRuntimeLanding } from "@/lib/landing";
 
 export default async function Home({ params }: PageProps<"/[locale]">) {
@@ -60,7 +61,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
               <dl className="mt-12 flex flex-wrap gap-x-10 gap-y-5">
                 {hero.stats.map((stat) => (
                   <div key={stat.labelKey}>
-                    <dt className="font-display text-2xl font-bold text-on-inverse">{stat.value}</dt>
+                    <dt className="font-display text-2xl font-bold text-on-inverse">{formatStatValue(stat.value, locale)}</dt>
                     <dd className="text-sm text-on-inverse/50">{tStats(stat.labelKey)}</dd>
                   </div>
                 ))}

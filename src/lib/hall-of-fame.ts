@@ -56,6 +56,14 @@ type StatsRow = {
   paidTotals?: PaidTotalRow[];
 };
 
+/**
+ * Display form of a stat value: a plain count gets the locale's digit grouping ("1,234"), the already-formatted paid total
+ * ("12,500 USDC · 300 INJ") passes through. One rule for the landing hero and the Hall of Fame stat cards, which read the same stats.
+ */
+export function formatStatValue(value: string, locale: string): string {
+  return /^\d+$/.test(value) ? new Intl.NumberFormat(locale).format(Number(value)) : value;
+}
+
 /** Paid totals show with at most this many fraction digits — a headline stat, not a ledger. */
 const PAID_TOTAL_FRACTION_DIGITS = 2;
 
