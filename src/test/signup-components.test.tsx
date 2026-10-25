@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiKeyReveal } from "@/components/agents/ApiKeyReveal";
@@ -117,6 +117,35 @@ describe("CompleteOnboarding", () => {
     renderWithIntl(<CompleteOnboarding />);
     await act(async () => undefined);
     expect(completeOnboarding).not.toHaveBeenCalled();
+  });
+
+  it("sends a user who has not saved the profile yet back to the step they owe instead of calling the BE", async () => {
+    const replace = vi.fn();
+    const original = window.location;
+    Object.defineProperty(window, "location", { configurable: true, value: { ...original, pathname: "/en/signup/get-started", replace } });
+    try {
+      state.auth = signedInAs({ ...user, onboardingStep: 2, onboardingCompleted: false });
+      renderWithIntl(<CompleteOnboarding />);
+      await waitFor(() => expect(replace).toHaveBeenCalledWith("/en/signup/wallet"));
+      expect(completeOnboarding).not.toHaveBeenCalled();
+
+      replace.mockClear();
+      cleanup();
+      state.auth = signedInAs({ ...user, onboardingStep: 3, onboardingCompleted: false });
+      renderWithIntl(<CompleteOnboarding />);
+      await waitFor(() => expect(replace).toHaveBeenCalledWith("/en/signup/profile"));
+
+      // Step 4 (profile saved) completes normally and never redirects.
+      replace.mockClear();
+      cleanup();
+      completeOnboarding.mockResolvedValue(undefined);
+      state.auth = signedInAs({ ...user, onboardingStep: 4, onboardingCompleted: false });
+      renderWithIntl(<CompleteOnboarding />);
+      await waitFor(() => expect(completeOnboarding).toHaveBeenCalledTimes(1));
+      expect(replace).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(window, "location", { configurable: true, value: original });
+    }
   });
 
   it("shows an alert with Retry on failure and clears it once the retry succeeds", async () => {
