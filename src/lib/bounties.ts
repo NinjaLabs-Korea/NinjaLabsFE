@@ -69,6 +69,11 @@ function daysUntil(value: string): number {
   return Number.isNaN(remaining) ? 0 : remaining;
 }
 
+/** A set deadline that is already behind us (the BE refuses applications once `new Date(deadline) <= now`). */
+function isPast(deadline: string | null, now = Date.now()): boolean {
+  return deadline !== null && new Date(deadline).getTime() <= now;
+}
+
 /** BE lifecycle → public status. DRAFT/FUNDING_PENDING never reach the public list, so anything else that is not open or under review is closed. */
 export function toBountyStatus(status: string): Bounty["status"] {
   if (status === "OPEN") return "active";
@@ -136,6 +141,7 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     applicationRequired: row.application_required,
     applicationTitle: row.application_required ? row.title : undefined,
     applicationDescription: row.application_required ? row.summary : undefined,
+    ...(row.application_required && isPast(row.application_deadline) ? { applicationClosed: true } : {}),
   };
 }
 

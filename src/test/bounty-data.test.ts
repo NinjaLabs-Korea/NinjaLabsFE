@@ -44,6 +44,19 @@ describe("bounty mapping", () => {
     expect(deliverablesFromMarkdown(undefined)).toEqual([]);
   });
 
+  it("flags an application-required bounty whose application deadline has passed", async () => {
+    const past = { ...row("late"), application_required: true, application_deadline: "2020-01-01T00:00:00Z" };
+    const future = { ...row("early"), application_required: true, application_deadline: "2099-01-01T00:00:00Z" };
+    const direct = { ...row("direct"), application_deadline: "2020-01-01T00:00:00Z" };
+    fetchPublicJson.mockResolvedValue({ items: [past, future, direct, row("none")], page: 1, pageSize: 50, total: 4 });
+    const [late, early, notRequired, none] = await getRuntimeBounties("en");
+    expect(late.applicationClosed).toBe(true);
+    expect(late.status).toBe("active");
+    expect(early.applicationClosed).toBeUndefined();
+    expect(notRequired.applicationClosed).toBeUndefined();
+    expect(none.applicationClosed).toBeUndefined();
+  });
+
   it("loads every page and keeps all reward tokens", async () => {
     fetchPublicJson.mockImplementation(async (path: string) => {
       const page = Number(new URLSearchParams(path.split("?")[1]).get("page"));
