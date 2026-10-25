@@ -9,7 +9,7 @@ import { enMessages, renderWithIntl } from "@/test/intl";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => (
-    <a href={href} {...props}>
+    <a data-i18n-link="" href={href} {...props}>
       {children}
     </a>
   ),
@@ -89,6 +89,9 @@ describe("Hall of Fame page", () => {
     expect(external.getAttribute("target")).toBe("_blank");
     expect(external.getAttribute("rel")).toBe("noreferrer");
     expect(screen.getByRole("link", { name: "Local" }).getAttribute("target")).toBeNull();
+    // Only the same-site partner link is locale-aware; the external one is a plain anchor.
+    expect(screen.getByRole("link", { name: "Local" }).hasAttribute("data-i18n-link")).toBe(true);
+    expect(external.hasAttribute("data-i18n-link")).toBe(false);
     // A partner without a link is a plain tile, still labelled by its logo alt text.
     expect(screen.getByRole("img", { name: "NoLink" }).closest("a")).toBeNull();
   });

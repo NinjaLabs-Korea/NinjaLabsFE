@@ -27,13 +27,15 @@ export async function generateMetadata({ params }: MemberProfilePageProps): Prom
   }
 
   return {
-    alternates: localeAlternates(locale, `/members/${id}`),
+    // The BE looks nicknames up case-insensitively: canonicalize to the stored spelling so /members/JAEMIN and
+    // /members/jaemin are one indexed page, not duplicates.
+    alternates: localeAlternates(locale, `/members/${profile.slug}`),
     title: t("pageTitle", { handle: profile.handle }),
     description: profile.bio,
     openGraph: {
       title: t("pageTitle", { handle: profile.handle }),
       description: profile.bio,
-      url: `/${locale}/members/${id}`,
+      url: `/${locale}/members/${profile.slug}`,
     },
   };
 }

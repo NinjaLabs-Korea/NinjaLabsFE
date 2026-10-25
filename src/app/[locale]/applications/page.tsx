@@ -10,7 +10,8 @@ type ApplicationsPageProps = {
 export async function generateMetadata({ params }: ApplicationsPageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "account.applications.meta" });
-  return { alternates: localeAlternates(locale, "/applications"), title: t("title"), description: t("description") };
+  // Owner-private (robots.ts disallows /<locale>/applications); noindex as a second line, like the account page.
+  return { alternates: localeAlternates(locale, "/applications"), title: t("title"), description: t("description"), robots: { index: false, follow: false } };
 }
 
 export default async function ApplicationsPage({ params }: ApplicationsPageProps) {
