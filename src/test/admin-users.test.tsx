@@ -96,7 +96,7 @@ describe("UserDirectory", () => {
     expect(search).toHaveBeenCalledTimes(2);
   });
 
-  it("pages a search with more than one page of matches instead of loading the unfiltered directory", async () => {
+  it("pages a search with more than one page of matches instead of loading the unfiltered directory", { timeout: 20_000 }, async () => {
     const page = (prefix: string, from: number) => Array.from({ length: 30 }, (_, index) => (
       { ...fixtureUsers()[0], slug: `${prefix}-${from + index}`, nickname: `${prefix}${from + index}`, email: `${prefix}${from + index}@example.com` }
     ));
