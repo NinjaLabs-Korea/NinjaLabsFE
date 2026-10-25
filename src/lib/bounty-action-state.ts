@@ -148,6 +148,15 @@ export type BountyActionErrorCopy =
   | { key: "unknown"; code: string }
   | { key: typeof ERROR_COPY.bountyAction.fallback };
 
+/**
+ * BE answers that mean "your row for this bounty is not what this page shows" (applied or finalized from another tab or
+ * device): the panel re-reads /applications/me and /submissions/me so the right section replaces the stale form.
+ */
+export function isStaleRowsError(error: unknown): boolean {
+  const { key } = bountyActionErrorCopy(error);
+  return key === "ALREADY_APPLIED" || key === "APPLICATION_NOT_APPROVED" || key === "SUBMISSION_FINALIZED";
+}
+
 export function bountyActionErrorCopy(error: unknown): BountyActionErrorCopy {
   const code = knownCode(error, ERROR_COPY.bountyAction.codes);
   if (code) return { key: code };
