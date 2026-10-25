@@ -245,6 +245,10 @@ describe("AgentsView", () => {
     const buttons = (await screen.findAllByRole("button", { name: "Rotate key" })) as HTMLButtonElement[];
     expect(buttons.map((button) => button.disabled)).toEqual([true, false]);
     expect(screen.getByText("Unverified")).toBeTruthy();
+    // Without a hint the disabled button reads as a bug: the card points at the way to finish registration.
+    expect(screen.getByText(/^Registration is not finished/)).toBeTruthy();
+    expect(screen.getAllByRole("link", { name: "Finish verification" })).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "Finish verification" }).getAttribute("href")).toBe("/agents/register");
     // The pending agent can still be revoked.
     expect((screen.getAllByRole("button", { name: "Revoke agent" })[0] as HTMLButtonElement).disabled).toBe(false);
   });
