@@ -122,7 +122,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
             {profile.completions.slice(0, 3).map((completion) => {
               const badge = payoutBadge(completion.payoutStatus);
               return (
-              <Link className="rounded-card border border-border bg-surface p-[21px] shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={completion.bountySlug ? `/bounties/${completion.bountySlug}` : "/bounties"} key={completion.title}>
+              <Link className="rounded-card border border-border bg-surface p-[21px] shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={completion.bountySlug ? `/bounties/${completion.bountySlug}` : "/bounties"} key={`${completion.bountySlug ?? ""}:${completion.title}`}>
                 <Badge>{t(`categories.${completion.category.toLowerCase()}`)}</Badge>
                 <h3 className="mt-3 font-display text-lg font-bold text-ink">{completion.title}</h3>
                 <p className="mt-2 text-sm text-ink-muted">
