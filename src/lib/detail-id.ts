@@ -1,7 +1,7 @@
 import { loadFromRuntime } from "@/lib/api/public";
 import { getBounty } from "@/lib/bounties";
 import { getProfile } from "@/lib/members";
-import { isReservedNickname } from "@/lib/nickname";
+import { isReservedNickname, NICKNAME as NICKNAME_SHAPE } from "@/lib/nickname";
 import { getNotice } from "@/lib/notices";
 import type { RuntimeMode } from "@/lib/runtime/config";
 import { hasLocale } from "next-intl";
@@ -21,11 +21,13 @@ const MOCK_SLUG = /^[a-z0-9-]{1,64}$/;
 /** api mode: bounty and notice ids are BE UUIDs (anything else answers 400 before the lookup). */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /**
- * api mode: member ids are BE nicknames - dots allowed (`ninja.inj`), never whitespace, control characters or slashes.
- * Reserved route words (`lib/nickname.ts RESERVED_NICKNAMES`: `me`, `check-nickname`, `admin`, ...) can never be a
+ * api mode: member ids are BE nicknames - dots allowed inside (`ninja.inj`), never whitespace, control characters or
+ * slashes. The edges must be a letter or digit (`lib/nickname.ts NICKNAME`), so the dot segments `.` and `..` are never an
+ * id: `/members/%2e%2e` would otherwise make the server request `${api}/users/..`, the BE root. Reserved route words (`lib/nickname.ts RESERVED_NICKNAMES`: `me`, `check-nickname`, `admin`, ...) can never be a
  * profile, so they fail the shape check too.
  */
 const NICKNAME = /^[\p{L}\p{N}._-]{1,64}$/u;
+const isNicknameShape = (id: string) => NICKNAME.test(id) && NICKNAME_SHAPE.test(id);
 
 /**
  * Shape check only, before any fetch: a garbage id (`%00`, path noise, an overlong string) is a 404 without asking the
@@ -33,7 +35,7 @@ const NICKNAME = /^[\p{L}\p{N}._-]{1,64}$/u;
  */
 export function isValidDetailId(kind: DetailKind, id: string, mode: RuntimeMode): boolean {
   if (mode === "mock") return MOCK_SLUG.test(id);
-  return kind === "members" ? NICKNAME.test(id) && !isReservedNickname(id) : UUID.test(id);
+  return kind === "members" ? isNicknameShape(id) && !isReservedNickname(id) : UUID.test(id);
 }
 
 /** Runtime-mode shape check for the detail pages/layouts (`notFound()` when false, before the record fetch). */
