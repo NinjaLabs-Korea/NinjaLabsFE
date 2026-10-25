@@ -4,7 +4,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { UserActions } from "@/components/admin/UserActions";
 import { UserDirectory } from "@/components/admin/UserDirectory";
-import { getAdminUsers as getAdminUsers_ } from "@/lib/admin";
+import { getAdminUsers as fixtureUsers } from "@/lib/admin";
 import { ApiHttpError } from "@/lib/api/http";
 import type { AdminApi } from "@/lib/contracts/api";
 import { createMockApiClient } from "@/lib/mocks/api-client";
@@ -37,12 +37,12 @@ const cells = (nickname: string) => within(row(nickname)).getAllByRole("cell").m
 ));
 
 function renderDirectory() {
-  renderWithIntl(<><UserDirectory users={getAdminUsers_()} /><AdminToastHost /></>);
+  renderWithIntl(<><UserDirectory users={fixtureUsers()} /><AdminToastHost /></>);
 }
 
 describe("UserDirectory", () => {
   it("shows loading, then a retry on a failed first read, never the 'no users match' empty state", async () => {
-    const getAdminUsers = vi.fn().mockRejectedValueOnce(new Error("down")).mockResolvedValue(getAdminUsers_()).mockName("getAdminUsers");
+    const getAdminUsers = vi.fn().mockRejectedValueOnce(new Error("down")).mockResolvedValue(fixtureUsers()).mockName("getAdminUsers");
     api = { ...createMockApiClient(), getAdminUsers } as AdminApi;
     renderWithIntl(<><UserDirectory users={[]} /><AdminToastHost /></>);
     expect(screen.getByRole("status").textContent).toBe("Loading users…");
@@ -50,12 +50,12 @@ describe("UserDirectory", () => {
     const retry = await screen.findByRole("button", { name: "Try again" });
     expect(screen.queryByText("No users match your search")).toBeNull();
     fireEvent.click(retry);
-    await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(getAdminUsers_().length + 1));
+    await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(fixtureUsers().length + 1));
   });
 
   it("renders wallet/member/role columns with dashes for missing values", async () => {
     renderDirectory();
-    await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(getAdminUsers_().length + 1));
+    await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(fixtureUsers().length + 1));
     expect(cells("sora")).toEqual(["sora", "sora@example.com", "2026-07-01", "-", "-", "-", "Assign"]);
     expect(cells("jinyoung")).toEqual(["jinyoung", "jinyoung@example.com", "2026-05-03", "Linked", "Yes", "Core", "Remove"]);
   });
@@ -74,11 +74,11 @@ describe("UserDirectory", () => {
     expect(screen.getByText("No users match your search")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Reset search" }));
     expect((search as HTMLInputElement).value).toBe("");
-    expect(screen.getAllByRole("row")).toHaveLength(getAdminUsers_().length + 1);
+    expect(screen.getAllByRole("row")).toHaveLength(fixtureUsers().length + 1);
   });
 
   it("also searches the BE after a pause, so a user beyond the loaded pages shows up without Load more", async () => {
-    const beyond = { ...getAdminUsers_()[0], slug: "far-away", nickname: "zedmund", email: "zedmund@example.com" };
+    const beyond = { ...fixtureUsers()[0], slug: "far-away", nickname: "zedmund", email: "zedmund@example.com" };
     const search = vi.spyOn(api, "getAdminUsers");
     renderDirectory();
     await waitFor(() => expect(search).toHaveBeenCalledTimes(1));
