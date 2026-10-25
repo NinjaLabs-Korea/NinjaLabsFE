@@ -96,6 +96,11 @@ describe("UserDirectory", () => {
     expect(search).toHaveBeenCalledTimes(2);
   });
 
+  it("caps the search box at the BE limit (320 characters) so a pasted long term is not sent as a 400", async () => {
+    renderDirectory();
+    expect((screen.getByRole("searchbox", { name: "Search users" }) as HTMLInputElement).maxLength).toBe(320);
+  });
+
   it("reports a failed BE search with the load-failed toast and keeps the filtered rows", async () => {
     const search = vi.spyOn(api, "getAdminUsers");
     renderDirectory();
