@@ -54,11 +54,16 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const deadlineCell = (iso: string) =>
     !isIsoDateTime(iso) ? "–" : format.dateTime(new Date(iso), { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone, timeZoneName: "short" });
 
+  /** Forgets the picked file, including the native input's own selection (it would keep showing the name, and picking the same file again fires no change). */
+  const clearCoverFile = () => {
+    setCoverFile(null);
+    if (coverInputRef.current) coverInputRef.current.value = "";
+  };
+
   /** Clears the stored cover and any picked file; the save then sends `coverImageUrl: null` so the BE drops it. */
   const removeCover = () => {
     updateForm("coverImage", null);
-    setCoverFile(null);
-    if (coverInputRef.current) coverInputRef.current.value = "";
+    clearCoverFile();
   };
 
   // Re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
@@ -90,7 +95,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const startCreate = () => {
     setMode({ kind: "create" });
     setForm(emptyBountyForm());
-    setCoverFile(null);
+    clearCoverFile();
     setErrors({});
     setOriginalDeadline(undefined);
     formRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -100,7 +105,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     setMode({ kind: "edit", slug: bounty.slug });
     const initial = bountyToForm(bounty);
     setForm(initial);
-    setCoverFile(null);
+    clearCoverFile();
     setErrors({});
     setOriginalDeadline(initial.deadline);
     formRef.current?.scrollIntoView({ behavior: "smooth" });

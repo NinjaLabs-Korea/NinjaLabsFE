@@ -168,3 +168,37 @@ describe("highlight display order", () => {
     await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
   });
 });
+
+describe("picked image files across form resets", () => {
+  // jsdom cannot carry a real file selection, so watch the native input's own `value` being cleared (what drops the stale name).
+  const watchFileInput = () => {
+    const input = document.querySelector("input[type=file]") as HTMLInputElement;
+    const cleared = vi.fn();
+    Object.defineProperty(input, "value", { configurable: true, get: () => "", set: cleared });
+    return cleared;
+  };
+
+  it("bounty: opening another record clears the native file input", async () => {
+    renderWithIntl(<BountyManager bounties={getAdminBounties()} tabs={null}>{null}</BountyManager>);
+    await waitFor(() => expect(row("Quest copy refresh")).toBeTruthy());
+    const cleared = watchFileInput();
+    fireEvent.click(within(row("Quest copy refresh")).getByRole("button", { name: "Edit" }));
+    expect(cleared).toHaveBeenCalledWith("");
+  });
+
+  it("notice: opening another record clears the native file input", async () => {
+    renderWithIntl(<PostManager posts={getAdminPosts()} tabs={null}>{null}</PostManager>);
+    await waitFor(() => expect(row("Q3 roadmap preview")).toBeTruthy());
+    const cleared = watchFileInput();
+    fireEvent.click(within(row("Q3 roadmap preview")).getByRole("button", { name: "Edit" }));
+    expect(cleared).toHaveBeenCalledWith("");
+  });
+
+  it("highlight: opening another record clears the native file input", async () => {
+    renderWithIntl(<HighlightManager highlights={getAdminHighlights()} />);
+    await waitFor(() => expect(row("Hydro opens content bounties")).toBeTruthy());
+    const cleared = watchFileInput();
+    fireEvent.click(within(row("Hydro opens content bounties")).getByRole("button", { name: "Edit" }));
+    expect(cleared).toHaveBeenCalledWith("");
+  });
+});

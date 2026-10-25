@@ -86,13 +86,19 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
 
   const isEditing = mode !== "create";
 
+  /** Forgets the picked file, including the hidden input's own selection (picking the same file again would fire no change). */
+  function clearImageFile() {
+    setImageFile(null);
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  }
+
   function resetForm() {
     setMode("create");
     setType(DEFAULT_TYPE);
     setTitle("");
     setDescription("");
     setImage(null);
-    setImageFile(null);
+    clearImageFile();
     setLink("");
     setOrder(0);
     setPublished(true);
@@ -110,7 +116,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     setTitle(highlight.title);
     setDescription(highlight.description ?? "");
     setImage(highlight.image);
-    setImageFile(null);
+    clearImageFile();
     setLink(highlight.link ?? "");
     setOrder(highlight.order);
     setPublished(highlight.published ?? false);
@@ -126,8 +132,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   /** Clears both the stored URL and a picked file: the save then sends `imageUrl: null` so the BE drops the image. */
   function handleRemoveImage() {
     setImage(null);
-    setImageFile(null);
-    if (imageInputRef.current) imageInputRef.current.value = "";
+    clearImageFile();
     clearError("image");
   }
 

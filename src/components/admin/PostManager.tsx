@@ -82,10 +82,16 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     setErrors((current) => ({ ...current, [key]: undefined }));
   };
 
+  /** Forgets the picked file, including the native input's own selection (it would keep showing the name, and picking the same file again fires no change). */
+  const clearThumbnailFile = () => {
+    setThumbnailFile(null);
+    if (thumbnailInputRef.current) thumbnailInputRef.current.value = "";
+  };
+
   const startNew = () => {
     setMode("create");
     setForm(emptyForm);
-    setThumbnailFile(null);
+    clearThumbnailFile();
     setErrors({});
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -100,7 +106,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       bodyMarkdown: post.bodyMarkdown,
       status: post.status,
     });
-    setThumbnailFile(null);
+    clearThumbnailFile();
     setErrors({});
     formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -108,8 +114,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   /** Clears the stored URL and any picked file; the save then sends `thumbnailUrl: null` so the BE drops it. */
   const removeThumbnail = () => {
     updateForm("thumbnail", null);
-    setThumbnailFile(null);
-    if (thumbnailInputRef.current) thumbnailInputRef.current.value = "";
+    clearThumbnailFile();
   };
 
   const savePost = async () => {
