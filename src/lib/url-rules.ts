@@ -5,6 +5,7 @@
  *   isHttpUrl               외부 링크 (externalUrl, portfolioUrl, submissionUrl, repositoryUrl) — BE `IsHttpUrl`
  *   isHttpUrlOrMediaPath    이미지 — `POST /admin/media`가 돌려주는 `/media/<uuid>`도 허용 (thumbnailUrl, imageUrl, coverImageUrl)
  *   isHttpUrlOrSitePath     사이트 내부 라우트 `/bounties/<slug>`도 허용 (highlight linkUrl). `//host`는 거부
+ *   isSafeUrl               수정(PATCH) DTO의 완화 규칙 `IsSafeUrl` — 이미 저장된 레거시 값이 수정을 막는지 판정할 때만 쓴다 (입력 검증에는 위 엄격 규칙)
  *
  * BE의 isHttpUrl은 `new URL` 검사 뒤에 validator.js `isURL({ protocols: http/https, require_protocol, require_tld: false,
  * disallow_auth })`를 한 번 더 거친다. 의존성 없이 같은 결과를 내기 위해 그 검사가 추가로 거르는 것을 명시적으로 확인한다:
@@ -102,3 +103,24 @@ export function isSitePath(value: unknown): boolean {
 
 export const isHttpUrlOrMediaPath = (value: unknown): boolean => isHttpUrl(value) || isMediaPath(value);
 export const isHttpUrlOrSitePath = (value: unknown): boolean => isHttpUrl(value) || isSitePath(value);
+
+/** BE `LENIENT_SITE_PATH` / `BARE_HOST_URL` / `ABSOLUTE_AUTHORITY_BACKSLASH` (url.ts `isSafeUrl`). */
+const LENIENT_SITE_PATH = /^\/(?![/\\])/;
+const BARE_HOST_URL = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}(?::\d{1,5})?(?:[/?#][^\s\\]*)?$/i;
+const ABSOLUTE_AUTHORITY_BACKSLASH = /^[a-z]+:\/\/[^/?#]*\\/i;
+
+/**
+ * BE `isSafeUrl`: the relaxed rule of the PATCH DTOs - an http(s) URL with a host, any `/path`, or a scheme-less bare host (rows saved
+ * before the strict rules existed). A stored value that passes this is still accepted when an edit sends it back unchanged.
+ */
+export function isSafeUrl(value: unknown): boolean {
+  if (typeof value !== "string" || value.length === 0 || value.length > MAX_URL_LENGTH || CONTROL_CHARS.test(value)) return false;
+  if (LENIENT_SITE_PATH.test(value) || BARE_HOST_URL.test(value)) return true;
+  if (!HTTP_URL_PREFIX.test(value) || /\s/.test(value) || ABSOLUTE_AUTHORITY_BACKSLASH.test(value)) return false;
+  try {
+    const url = new URL(value);
+    return Boolean(url.hostname) && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}
