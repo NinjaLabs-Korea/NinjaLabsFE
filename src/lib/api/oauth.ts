@@ -6,9 +6,10 @@ export { isAuthCallbackPath };
 const VERIFIER_KEY = "ninja.oauthVerifier";
 
 /**
- * `#error=<CODE>` codes the callback page has its own copy for (`signup.authCallback.errors.<CODE>`). Today the BE only
- * redirects with `#error=AUTH_FAILED` (generic copy); see `ERROR_COPY.loginCallback` in `lib/api/error-copy.ts`, which
- * owns the list (추가/삭제는 거기서).
+ * `#error=<CODE>` codes the callback page has its own copy for (`signup.authCallback.errors.<CODE>`). The BE redirects
+ * with `TURNSTILE_FAILED` / `TURNSTILE_UNAVAILABLE` (failed login start) and `DATABASE_UNAVAILABLE` (callback during a DB
+ * outage); every other failure is `AUTH_FAILED` and gets the generic copy. `ERROR_COPY.loginCallback` in
+ * `lib/api/error-copy.ts` owns the list (추가/삭제는 거기서).
  */
 export const LOGIN_CALLBACK_ERROR_CODES = ERROR_COPY.loginCallback.codes;
 export type LoginCallbackErrorCode = (typeof LOGIN_CALLBACK_ERROR_CODES)[number];
