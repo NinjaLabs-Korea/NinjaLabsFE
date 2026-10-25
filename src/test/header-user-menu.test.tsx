@@ -92,6 +92,8 @@ describe("UserMenu", () => {
     const menu = screen.getByRole("menu");
     expect(trigger().getAttribute("aria-expanded")).toBe("true");
     expect(trigger().getAttribute("aria-controls")).toBe(menu.id);
+    // A menu role needs an accessible name (the locale menu has one too).
+    expect(menu.getAttribute("aria-label")).toBe("Account navigation");
 
     const items = within(menu).getAllByRole("menuitem");
     expect(items.map((item) => item.textContent)).toEqual(["My profile", "My applications", "My agents", "Account settings", "Sign out"]);

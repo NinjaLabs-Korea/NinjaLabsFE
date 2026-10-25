@@ -146,6 +146,13 @@ describe("Markdown allowlist", () => {
     expect(rel.getAttribute("rel")).toBeNull();
   });
 
+  it("treats only real absolute URLs as external: a relative path starting with 'http' stays in-tab, an uppercase scheme opens a new tab", () => {
+    renderMd("[guide](http-guide) [shout](HTTPS://injective.com) [mail](mailto:a@b.co)");
+    expect(screen.getByRole("link", { name: "guide" }).getAttribute("target")).toBeNull();
+    expect(screen.getByRole("link", { name: "shout" }).getAttribute("target")).toBe("_blank");
+    expect(screen.getByRole("link", { name: "mail" }).getAttribute("target")).toBeNull();
+  });
+
   it("does not render raw HTML, images, tables or h1 but keeps their text", () => {
     const { container } = renderMd(
       [

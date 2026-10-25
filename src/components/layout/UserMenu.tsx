@@ -44,7 +44,7 @@ export function UserMenu() {
       </button>
 
       {menu.open ? (
-        <div className={`${menuPanelClass} w-56`} {...menu.menuProps}>
+        <div aria-label={t("accountNavigation")} className={`${menuPanelClass} w-56`} {...menu.menuProps}>
           <div className="border-b border-border px-3 pt-2.5 pb-2">
             <p className="text-sm font-semibold text-ink">{user.handle}</p>
             {user.walletAddress ? (
