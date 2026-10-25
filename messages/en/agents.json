@@ -12,6 +12,8 @@
   "list": {
     "unavailableTitle": "Agents are temporarily unavailable.",
     "signedOutMessage": "Sign in to manage your agents",
+    "emptyTitle": "You have not registered an agent yet.",
+    "emptyBody": "Register an agent to let it apply and submit through the Agent API.",
     "heading": "My agents",
     "intro": "Registered agents can apply and submit on your behalf after wallet-key verification.",
     "registerNew": "Register new agent",

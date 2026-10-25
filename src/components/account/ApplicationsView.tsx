@@ -141,6 +141,23 @@ export function ApplicationsView() {
     return <p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p>;
   }
 
+  if (applications.length === 0) {
+    return (
+      <div className="rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center">
+        {/* Withdrawing the last application lands here: keep announcing the result. */}
+        <p className="sr-only" role="status">{notice}</p>
+        <p className="text-sm font-semibold text-ink">{t("emptyTitle")}</p>
+        <p className="mt-1 text-sm text-ink-muted">{t("emptyBody")}</p>
+        <Link
+          className={`mt-4 inline-block rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong ${focusClass}`}
+          href="/bounties"
+        >
+          {t("browseBounties")}
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <>
       <p className="sr-only" role="status">{notice}</p>

@@ -69,6 +69,13 @@ describe("ApplicationsView", () => {
     state.mode = "api";
   });
 
+  it("shows an empty state with a link to the bounty list when there are no applications", async () => {
+    serve({ status: "available", data: [] });
+    renderWithIntl(<ApplicationsView />);
+    expect(await screen.findByText("You have not applied to any bounty yet.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Browse bounties" }).getAttribute("href")).toBe("/bounties");
+  });
+
   it("marks the current step for each status and shows the status badge copy", async () => {
     serve({ status: "available", data: [row("open"), row("approved"), row("submitted"), row("completed")] });
     renderWithIntl(<ApplicationsView />);
