@@ -290,6 +290,19 @@ describe("NftJobsManager", () => {
     expect(screen.getByText("err p1")).toBeTruthy();
   });
 
+  it("says Loading… (not the old failure) while another status loads after a failed read", async () => {
+    let resolvePending: (value: unknown) => void = () => undefined;
+    adminApi.getAdminNftJobs.mockImplementation((status: string) => status === "FAILED"
+      ? Promise.reject(new Error("down"))
+      : new Promise((resolve) => { resolvePending = resolve; }));
+    renderWithIntl(<><NftJobsManager tabs={null}>{null}</NftJobsManager><AdminToastHost /></>);
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Could not load NFT jobs."));
+    fireEvent.click(screen.getByRole("button", { name: "Pending" }));
+    expect(screen.getByRole("status").textContent).toBe("Loading operations…");
+    resolvePending({ page: 1, pageSize: 30, total: 0, items: [] });
+    expect(await screen.findByText("No jobs in this status.")).toBeTruthy();
+  });
+
   it("ignores a slower response for the status the operator already switched away from", async () => {
     let resolveFailed: (value: unknown) => void = () => undefined;
     const job = { id: "jp", nftId: "np", jobType: "MINT_PARENT", status: "PENDING", retryCount: 1, lastError: "pending row", scheduledAt: null, updatedAt: null, nftType: "NINJA_PARENT", nftStatus: "PENDING", bountyTitle: null, ownerNickname: null, ownerWalletAddress: null };
