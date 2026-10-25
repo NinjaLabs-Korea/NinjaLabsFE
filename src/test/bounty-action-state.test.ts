@@ -105,6 +105,8 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["reviewing, just submitted", { status: "reviewing", submitted: true }, { kind: "inReviewLocked" }],
   ["reviewing, nothing submitted", { status: "reviewing" }, { kind: "closed", reason: "reviewing" }],
   ["closed, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "closed" }],
+  ["closed only by the deadline, revision requested (BE still resubmittable)", { status: "closed", deadlinePassed: true, submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: false }],
+  ["closed only by the deadline, nothing submitted", { status: "closed", deadlinePassed: true }, { kind: "closed", reason: "closed" }],
   // 9. 제출 폼
   ["first submission", {}, firstSubmit],
   ["submission pending → update form", { submissions: loaded([sub("submitted")]) }, updateSubmit],

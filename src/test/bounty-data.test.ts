@@ -57,6 +57,16 @@ describe("bounty mapping", () => {
     expect(none.applicationClosed).toBeUndefined();
   });
 
+  it("flags an OPEN bounty closed only by its submission deadline, but not a finished one", async () => {
+    const expired = { ...row("expired"), submission_deadline: "2020-01-01T00:00:00Z" };
+    const completed = { ...row("done"), status: "COMPLETED", submission_deadline: "2020-01-01T00:00:00Z" };
+    fetchPublicJson.mockResolvedValue({ items: [expired, completed, row("open")], page: 1, pageSize: 50, total: 3 });
+    const [late, done, open] = await getRuntimeBounties("en");
+    expect([late.status, late.deadlinePassed]).toEqual(["closed", true]);
+    expect([done.status, done.deadlinePassed]).toEqual(["closed", undefined]);
+    expect(open.deadlinePassed).toBeUndefined();
+  });
+
   it("does not offer an application bounty past its application deadline as the apply-guide example", () => {
     const base = { title: "", summary: "", category: "Dev" as const, status: "active" as const, reward: { amount: 1, currency: "INJ" as const }, sponsor: "S", deadline: "Open", coverImage: "" };
     const closedApply = { ...base, slug: "late", applicationRequired: true, applicationClosed: true };

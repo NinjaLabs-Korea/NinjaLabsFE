@@ -135,7 +135,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             ) : null}
           </article>
 
-          <BountyActionPanel bountyId={bounty.slug} applicationRequired={applicationRequired} applicationClosed={bounty.applicationClosed} status={bounty.status} submissionMode={submissionMode} />
+          <BountyActionPanel bountyId={bounty.slug} applicationRequired={applicationRequired} applicationClosed={bounty.applicationClosed} deadlinePassed={bounty.deadlinePassed} status={bounty.status} submissionMode={submissionMode} />
 
           {applicationRequired ? (
             <section className="rounded-card border border-border bg-surface p-[21px] shadow-card">
