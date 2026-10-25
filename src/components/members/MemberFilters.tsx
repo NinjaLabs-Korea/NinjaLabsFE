@@ -29,6 +29,12 @@ export function MemberFilters({ members }: MemberFiltersProps) {
         <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4" aria-label={t("filters.listAriaLabel")}>
           {visibleMembers.map((member) => <MemberCard key={member.slug} member={member} />)}
         </section>
+      ) : members.length === 0 ? (
+        // The feed itself is empty (nothing published yet): there is no filter to reset.
+        <div className="mt-8 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
+          <p className="text-sm font-semibold text-ink">{t("filters.feedEmptyTitle")}</p>
+          <p className="mt-1 text-sm text-ink-muted">{t("filters.feedEmptyBody")}</p>
+        </div>
       ) : (
         <div className="mt-8 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center">
           <p className="text-sm font-semibold text-ink">{t("filters.emptyTitle")}</p>
