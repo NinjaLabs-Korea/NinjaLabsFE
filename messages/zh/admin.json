@@ -73,6 +73,8 @@
     "emptyTitle": "没有符合搜索条件的用户",
     "emptyBody": "请尝试其他邮箱或昵称。",
     "resetSearch": "重置搜索",
+    "loading": "正在加载用户…",
+    "retry": "重试",
     "roles": {
       "Core": "核心",
       "Dev": "开发",

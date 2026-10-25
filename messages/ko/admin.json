@@ -73,6 +73,8 @@
     "emptyTitle": "검색 결과와 일치하는 사용자가 없습니다",
     "emptyBody": "다른 이메일이나 닉네임으로 검색해 보세요.",
     "resetSearch": "검색 초기화",
+    "loading": "사용자를 불러오는 중…",
+    "retry": "다시 시도",
     "roles": {
       "Core": "코어",
       "Dev": "개발",

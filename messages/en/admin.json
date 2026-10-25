@@ -73,6 +73,8 @@
     "emptyTitle": "No users match your search",
     "emptyBody": "Try a different email or nickname.",
     "resetSearch": "Reset search",
+    "loading": "Loading users…",
+    "retry": "Try again",
     "roles": {
       "Core": "Core",
       "Dev": "Dev",
