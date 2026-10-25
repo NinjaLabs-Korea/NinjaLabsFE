@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { loadRuntimeBounties } from "@/lib/bounties";
-import { localeAlternates } from "@/i18n/alternates";
+import { localeMetadata } from "@/i18n/alternates";
 
 type BountiesPageProps = {
   params: Promise<{ locale: string }>;
@@ -15,7 +15,7 @@ type BountiesPageProps = {
 export async function generateMetadata({ params }: BountiesPageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "bounties.meta.list" });
-  return { alternates: localeAlternates(locale, "/bounties"), title: t("title"), description: t("description") };
+  return localeMetadata(locale, "/bounties", { title: t("title"), description: t("description") });
 }
 
 export default async function BountiesPage({ params }: BountiesPageProps) {

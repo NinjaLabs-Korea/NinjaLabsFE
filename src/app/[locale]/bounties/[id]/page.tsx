@@ -9,11 +9,11 @@ import { BountyAccessBadges } from "@/components/bounties/BountyAccessBadges";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import { Markdown } from "@/components/ui/Markdown";
 import { isRewardUnset, RewardPill } from "@/components/ui/RewardPill";
-import { getPathname, Link } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { getRuntimeBounty } from "@/lib/bounties";
 import { validateDetailId } from "@/lib/detail-id";
 import type { Reward } from "@/lib/types";
-import { localeAlternates } from "@/i18n/alternates";
+import { localeMetadata } from "@/i18n/alternates";
 
 type BountyDetailPageProps = {
   params: Promise<{ locale: string; id: string }>;
@@ -41,12 +41,7 @@ export async function generateMetadata({ params }: BountyDetailPageProps): Promi
 
   const title = t("detailTitle", { title: bounty.applicationRequired && bounty.applicationTitle ? bounty.applicationTitle : bounty.title });
 
-  return {
-    alternates: localeAlternates(locale, `/bounties/${bounty.slug}`),
-    title,
-    description: bounty.summary,
-    openGraph: { title, description: bounty.summary, url: getPathname({ locale, href: `/bounties/${bounty.slug}` }) },
-  };
+  return localeMetadata(locale, `/bounties/${bounty.slug}`, { title, description: bounty.summary });
 }
 
 export default async function BountyDetailPage({ params }: BountyDetailPageProps) {
