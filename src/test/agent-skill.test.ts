@@ -21,6 +21,9 @@ describe("agent skill markdown", () => {
       expect(markdown).toContain("60 requests per minute per API key");
       expect(markdown).toContain("429 Too Many Requests");
       expect(markdown).toContain("`Retry-After-agent-api`");
+      // The BE sends X-RateLimit-* only on allowed responses; a 429 carries Retry-After-agent-api alone (docs/agent-api.md).
+      expect(markdown).toContain("sends only `Retry-After-agent-api`");
+      expect(markdown).not.toContain("global 120/min per-IP");
       expect(markdown).toContain("`X-RateLimit-Limit-agent-api`");
       expect(markdown).toContain("`X-RateLimit-Remaining-agent-api`");
       expect(markdown).toContain("`X-RateLimit-Reset-agent-api`");
