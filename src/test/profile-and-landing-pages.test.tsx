@@ -76,4 +76,21 @@ describe("landing page", () => {
     error.mockRestore();
     expect(screen.getAllByText("Same")).toHaveLength(2);
   });
+
+  it("groups hero stat counts by locale like the Hall of Fame cards and leaves the paid total as is", async () => {
+    data.landing = {
+      hero: {
+        primaryCta: { labelKey: "getStarted", href: "/signup" },
+        secondaryCta: { labelKey: "browseBounties", href: "/bounties" },
+        stats: [{ value: "1234", labelKey: "bountiesCompleted" }, { value: "12,500 USDC · 300 INJ", labelKey: "rewardsPaid" }],
+        portfolio: { handle: "ninja.inj", memberSince: 2026, completed: [], totalCompleted: 1234 },
+      },
+      bounties: [],
+      news: [],
+      unavailable: { bounties: false, news: false, stats: false },
+    };
+    renderWithIntl(await Home({ params: Promise.resolve({ locale: "en" }) } as never));
+    expect(screen.getByText("1,234", { selector: "dt" })).toBeTruthy();
+    expect(screen.getByText("12,500 USDC · 300 INJ", { selector: "dt" })).toBeTruthy();
+  });
 });

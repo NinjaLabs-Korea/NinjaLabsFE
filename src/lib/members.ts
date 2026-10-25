@@ -1,5 +1,6 @@
 import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toPayoutStatus, toRewards, type RewardRow } from "./api/codecs";
 import type { Completion, Member, PayoutStatus, Profile, ProfileNft, Reward } from "./types";
+import { nicknameInitials } from "./nickname";
 import { onboardingLog } from "./onboarding-log";
 import { cache } from "react";
 import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH } from "./api/public";
@@ -60,7 +61,7 @@ async function fetchMembers(): Promise<Member[]> {
   return rows.map((row) => ({
     slug: row.nickname,
     name: row.nickname,
-    initials: row.nickname.slice(0, 2).toUpperCase(),
+    initials: nicknameInitials(row.nickname),
     role: toMemberRoleLabel(row.member_role) ?? "Core",
     // Empty title/bio fall back to localized defaults in MemberCard.
     title: "",
@@ -144,7 +145,7 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
   return {
     slug: data.nickname,
     handle: data.nickname,
-    initials: data.nickname.slice(0, 2).toUpperCase(),
+    initials: nicknameInitials(data.nickname),
     bio: data.bio,
     skills: data.tags.flatMap((tag) => {
       const category = toCategoryLabel(tag);
