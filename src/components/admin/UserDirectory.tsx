@@ -39,9 +39,16 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   const [nextPage, setNextPage] = useState(2);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  // Paging of the settled search term (`GET /admin/users?q=&page=`): a term with more than one page of matches would otherwise
+  // dead-end after 30 hits while "Load more" fetched the unfiltered directory.
+  const [search, setSearch] = useState<{ term: string; nextPage: number; hasMore: boolean } | null>(null);
   // api mode renders with no rows and reads the directory after mount: "no users found" only once that read answered empty.
   const [loadState, setLoadState] = useState<"loading" | "ready" | "failed">(users.length ? "ready" : "loading");
-  const normalizedQuery = query.trim().toLowerCase();
+  const term = query.trim();
+  const normalizedQuery = term.toLowerCase();
+  // Only the search that belongs to the term in the box counts (the debounce has not caught up yet, or the term was cleared).
+  const activeSearch = term && search?.term === term ? search : null;
+  const canLoadMore = term ? (activeSearch?.hasMore ?? false) : hasMore;
   const visibleUsers = directoryUsers.filter((user) => (
     user.nickname.toLowerCase().includes(normalizedQuery) || user.email.toLowerCase().includes(normalizedQuery)
   ));
@@ -63,24 +70,37 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   // The table filters the loaded users instantly; after a pause the term also goes to the BE (`q` is ILIKE on
   // email/nickname) and users not loaded yet are merged in, so one beyond the first pages is found without paging to them.
   useEffect(() => {
-    const term = query.trim();
-    if (!term) return;
+    const settled = query.trim();
+    if (!settled) return;
+    let current = true;
     const timer = setTimeout(() => {
-      api.getAdminUsers(term).then(
-        (found) => setDirectoryUsers((current) => withNewUsers(current, found)),
+      api.getAdminUsers(settled).then(
+        (found) => {
+          setDirectoryUsers((existing) => withNewUsers(existing, found));
+          if (current) setSearch({ term: settled, nextPage: 2, hasMore: found.length >= USERS_PAGE_SIZE });
+        },
         () => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }),
       );
     }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
   }, [api, query, t]);
 
   async function loadMore() {
     setLoadingMore(true);
     try {
-      const loaded = await api.getAdminUsers("", nextPage);
-      setDirectoryUsers((current) => withNewUsers(current, loaded));
-      setNextPage((current) => current + 1);
-      setHasMore(loaded.length >= USERS_PAGE_SIZE);
+      if (activeSearch) {
+        const loaded = await api.getAdminUsers(activeSearch.term, activeSearch.nextPage);
+        setDirectoryUsers((current) => withNewUsers(current, loaded));
+        setSearch((current) => (current?.term === activeSearch.term ? { term: activeSearch.term, nextPage: activeSearch.nextPage + 1, hasMore: loaded.length >= USERS_PAGE_SIZE } : current));
+      } else {
+        const loaded = await api.getAdminUsers("", nextPage);
+        setDirectoryUsers((current) => withNewUsers(current, loaded));
+        setNextPage((current) => current + 1);
+        setHasMore(loaded.length >= USERS_PAGE_SIZE);
+      }
     } catch {
       pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") });
     } finally {
@@ -197,7 +217,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
               </tr>
             ))}
           </AdminTable>
-          {hasMore ? (
+          {canLoadMore ? (
             <div className="mt-4 flex justify-center">
               <button className="rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={loadingMore} onClick={() => void loadMore()} type="button">{t("loadMore")}</button>
             </div>
