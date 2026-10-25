@@ -135,6 +135,15 @@ export function resetSessionState(): void {
  */
 export const AUTH_REQUEST_TIMEOUT_MS = 15_000;
 
+/**
+ * Upper bound for one authenticated BE call. Without it a BE that accepted the connection and never answers leaves the
+ * session restore (`GET /auth/me`) pending forever - the header stays on "loading" and every guarded view never
+ * resolves. A timeout surfaces as a network failure (`unavailableReason` -> `network-error`, views offer a retry).
+ * Uploads (`fetchForm`, up to 5 MiB on a slow link) get a longer bound.
+ */
+export const API_REQUEST_TIMEOUT_MS = 30_000;
+export const API_UPLOAD_TIMEOUT_MS = 120_000;
+
 /** Headers + credentials for a same-origin cookie-mode auth request. */
 export function cookieAuthInit(body: unknown): RequestInit {
   const traceId = getOnboardingTraceId();
@@ -237,6 +246,7 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
         ...(traceId ? { "x-onboarding-trace-id": traceId } : {}),
       },
       body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
+      signal: AbortSignal.timeout(API_REQUEST_TIMEOUT_MS),
     });
   }
 
@@ -251,6 +261,7 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
         ...(traceId ? { "x-onboarding-trace-id": traceId } : {}),
       },
       body: form,
+      signal: AbortSignal.timeout(API_UPLOAD_TIMEOUT_MS),
     });
   }
 

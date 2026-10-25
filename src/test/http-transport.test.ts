@@ -4,6 +4,8 @@ import { AUTH_EVENT_STORAGE_KEY, createAuthEventBus } from "@/lib/api/auth-event
 import {
   allowSessionRefresh,
   ApiHttpError,
+  API_REQUEST_TIMEOUT_MS,
+  API_UPLOAD_TIMEOUT_MS,
   AUTH_REQUEST_TIMEOUT_MS,
   cookieAuthInit,
   createApiHttp,
@@ -138,6 +140,24 @@ describe("fetchJson request shape", () => {
       const init = cookieAuthInit({});
       expect(timeout).toHaveBeenCalledWith(AUTH_REQUEST_TIMEOUT_MS);
       expect(init.signal).toBeInstanceOf(AbortSignal);
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+});
+
+describe("authenticated request timeouts", () => {
+  it("bounds JSON calls and uploads so a hung BE cannot leave a view pending forever", async () => {
+    const request = vi.fn(async () => json({ ok: true }));
+    vi.stubGlobal("fetch", request);
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    try {
+      const http = createApiHttp(API);
+      await http.fetchJson("/auth/me");
+      await http.fetchForm("/admin/media", new FormData());
+      expect(timeout).toHaveBeenNthCalledWith(1, API_REQUEST_TIMEOUT_MS);
+      expect(timeout).toHaveBeenNthCalledWith(2, API_UPLOAD_TIMEOUT_MS);
+      for (const [, init] of request.mock.calls as unknown as [string, RequestInit][]) expect(init.signal).toBeInstanceOf(AbortSignal);
     } finally {
       timeout.mockRestore();
     }
