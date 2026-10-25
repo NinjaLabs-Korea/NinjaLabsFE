@@ -71,7 +71,7 @@ export function detailMayExist(kind: DetailKind, id: string): Promise<boolean> {
 }
 
 /**
- * Parses `/[locale]/<kind>/[id]` (exactly three segments, a known locale, a detail kind, not a static sibling such as
+ * Parses `/[locale]/<kind>/[id]` (exactly three segments, a known locale, a detail kind, a non-empty id, not a static sibling such as
  * `/bounties/apply`). The id is percent-decoded like Next's `params`; an undecodable id is returned as `""` so it fails
  * the shape check.
  */
@@ -79,6 +79,8 @@ export function resolveDetailRoute(pathname: string): DetailRoute | null {
   const segments = pathname.split("/");
   if (segments.length !== 4) return null;
   const [, locale, kind, rawId] = segments;
+  // `/en/bounties/` (trailing slash) is the list page, not a detail with an empty id.
+  if (!rawId) return null;
   if (!hasLocale(routing.locales, locale) || !(detailKinds as readonly string[]).includes(kind)) return null;
   const detailKind = kind as DetailKind;
   let id: string;

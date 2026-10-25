@@ -56,7 +56,7 @@ describe("resolveDetailRoute (proxy)", () => {
   });
 
   it("ignores lists, static siblings, unknown locales and deeper paths", () => {
-    for (const pathname of ["/en/bounties", "/en/bounties/apply", "/fr/bounties/x", "/en/nope/nope", "/en/bounties/x/y", "/bounties/x", "/en"]) {
+    for (const pathname of ["/en/bounties", "/en/bounties/apply", "/en/bounties/", "/ko/members/", "/fr/bounties/x", "/en/nope/nope", "/en/bounties/x/y", "/bounties/x", "/en"]) {
       expect(resolveDetailRoute(pathname), pathname).toBeNull();
     }
   });
