@@ -42,7 +42,8 @@ export const profiles: Record<string, Profile> = {
 };
 
 export function getMembers() { return members.filter((member) => member.isMember); }
-export function getProfile(slug: string) { return profiles[slug]; }
+// Own keys only: `slug` comes from the URL, and `profiles["constructor"]` / `["__proto__"]` would otherwise resolve to Object.prototype members.
+export function getProfile(slug: string): Profile | undefined { return Object.hasOwn(profiles, slug) ? profiles[slug] : undefined; }
 
 type MemberRow = {
   id: string;
