@@ -39,6 +39,11 @@ describe("BE error code snapshot (lib/api/be-error-codes.ts)", () => {
     for (const code of BE_ERROR_CODES) expect(code).toMatch(/^[A-Z][A-Z0-9_]*$/);
   });
 
+  it("includes INVALID_DATE (400 for a calendar-impossible date) and the admin write toasts explain it", () => {
+    expect(BE_ERROR_CODES as readonly string[]).toContain("INVALID_DATE");
+    expect(ERROR_COPY.adminWrite.codes as readonly string[]).toContain("INVALID_DATE");
+  });
+
   it("keeps FE-made codes separate from BE codes", () => {
     for (const code of FE_ERROR_CODES) expect(BE_ERROR_CODES as readonly string[], code).not.toContain(code);
   });

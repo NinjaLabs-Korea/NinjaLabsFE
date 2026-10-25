@@ -25,6 +25,7 @@
     "removeImage": "移除图片",
     "errors": {
       "INVALID_CHARACTER": "某个字段包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
+      "INVALID_DATE": "日期或时间不存在（例如 2 月 31 日）。请更正后重试。",
       "REFERENCE_NOT_FOUND": "该记录引用的对象已不存在。请刷新页面后重试。",
       "BOUNTY_NOT_FOUND": "该赏金已不存在。请刷新页面以更新列表。",
       "BOUNTY_HAS_OPEN_FUNDS": "该赏金在多签中仍有资金（已确认的存款未全部发放，或仍有进行中的付款）。请先完成付款或退款再删除。",

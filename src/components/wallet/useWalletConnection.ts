@@ -19,6 +19,15 @@ const INJECTIVE_EVM_BLOCK_EXPLORERS: Record<number, string> = {
   1776: "https://blockscout.injective.network",
 };
 
+/**
+ * Extensions may inject `window.ethereum` after the first render (MetaMask announces it with `ethereum#initialized`).
+ * Without a subscription the button would stay on "Wallet unavailable" until something else re-rendered it.
+ */
+function subscribeToInjectedWallet(onChange: () => void): () => void {
+  window.addEventListener("ethereum#initialized", onChange);
+  return () => window.removeEventListener("ethereum#initialized", onChange);
+}
+
 /** 화면 표시용 축약 주소 (0x1234…abcd) */
 export function shortWalletAddress(address: string): string {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
@@ -77,7 +86,7 @@ export function switchChainErrorKind(error: unknown): SwitchChainErrorKind | nul
  */
 export function useWalletConnection(chainId: number) {
   const hasInjectedWallet = useSyncExternalStore(
-    () => () => undefined,
+    subscribeToInjectedWallet,
     () => "ethereum" in window,
     () => false,
   );
