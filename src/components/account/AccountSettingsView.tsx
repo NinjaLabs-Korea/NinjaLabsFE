@@ -13,14 +13,16 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useRouter } from "@/i18n/navigation";
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { pushFlash } from "@/lib/flash";
+import { normalizeNickname } from "@/lib/nickname";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
 
-/** Same rule as the BE (`DELETE /users/me`): trimmed, case-insensitive. */
+/** Same rule as the BE (`DELETE /users/me`): trimmed, NFC-normalized, case-insensitive. */
 export function confirmationMatches(nickname: string, typed: string): boolean {
-  return typed.trim().length > 0 && typed.trim().toLowerCase() === nickname.trim().toLowerCase();
+  const normalized = normalizeNickname(typed);
+  return normalized.length > 0 && normalized.toLowerCase() === normalizeNickname(nickname).toLowerCase();
 }
 
 /** BE error codes with their own copy under `account.settings.deleteErrors` (목록: `ERROR_COPY.accountDelete`); anything else is `generic`. */
