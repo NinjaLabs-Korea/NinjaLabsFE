@@ -14,7 +14,7 @@ import { safeHttpUrl } from "@/lib/api/codecs";
 
 const columns = ["submitter", "work", "status", "wallet", "action"] as const;
 const subVariant = (status: string) =>
-  status === "APPROVED" ? "success" : status === "REJECTED" ? "danger" : status === "REVISION_REQUESTED" ? "warning" : status === "IN_REVIEW" ? "primary-soft" : "warning";
+  status === "APPROVED" ? "success" : status === "REJECTED" ? "danger" : status === "WITHDRAWN" ? "neutral" : status === "REVISION_REQUESTED" ? "warning" : status === "IN_REVIEW" ? "primary-soft" : "warning";
 const decisionButton: Record<SubmissionDecision, string> = { START_REVIEW: opsButton, REQUEST_REVISION: opsButton, APPROVE: opsPrimaryButton, REJECT: opsDangerButton };
 
 /**

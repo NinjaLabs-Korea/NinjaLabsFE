@@ -127,6 +127,14 @@ describe("BountyOperations", () => {
     await waitFor(() => expect(adminApi.reviewAdminSubmission).toHaveBeenCalledWith("s1", { decision: "REQUEST_REVISION", revisionNo: 3, comment: "Add tests" }));
   });
 
+  it("labels a WITHDRAWN submission (the owner left the platform) and offers no review actions for it", async () => {
+    const base = operations();
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [{ ...base.submissions[0], id: "s3", status: "WITHDRAWN", nickname: "gone" }] }));
+    await renderOps();
+    expect(screen.getByText("Withdrawn")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+  });
+
   it("closes a review dialog whose revision was superseded by a re-read instead of resending the stale revisionNo", async () => {
     await renderOps();
     fireEvent.click(screen.getByRole("button", { name: "Request revision" }));

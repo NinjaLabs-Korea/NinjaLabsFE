@@ -34,7 +34,10 @@ const data = vi.hoisted(() => ({
   notices: [] as Notice[],
 }));
 
-vi.mock("@/lib/hall-of-fame", () => ({ loadRuntimeHallOfFame: async () => data.hallOfFame }));
+vi.mock("@/lib/hall-of-fame", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/hall-of-fame")>()),
+  loadRuntimeHallOfFame: async () => data.hallOfFame,
+}));
 vi.mock("@/lib/members", () => ({ getRuntimeMembers: async () => data.members }));
 vi.mock("@/lib/notices", () => ({ getRuntimeNotices: async () => data.notices }));
 

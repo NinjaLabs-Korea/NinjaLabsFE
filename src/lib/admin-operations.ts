@@ -51,7 +51,7 @@ export type OpsReview = { revisionNo: number | null; decision: SubmissionDecisio
 
 export type OpsSubmission = OpsActor & {
   id: string;
-  status: "SUBMITTED" | "RESUBMITTED" | "IN_REVIEW" | "REVISION_REQUESTED" | "APPROVED" | "REJECTED" | (string & {});
+  status: "SUBMITTED" | "RESUBMITTED" | "IN_REVIEW" | "REVISION_REQUESTED" | "APPROVED" | "REJECTED" | "WITHDRAWN" | (string & {});
   /** Sent back as `revisionNo` so a resubmission landing mid-review answers SUBMISSION_REVISION_CHANGED instead of approving unseen work. */
   currentRevisionNo: number;
   submittedAt: string;

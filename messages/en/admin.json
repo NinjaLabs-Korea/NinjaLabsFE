@@ -370,7 +370,8 @@
       "IN_REVIEW": "In review",
       "REVISION_REQUESTED": "Revision requested",
       "APPROVED": "Approved",
-      "REJECTED": "Rejected"
+      "REJECTED": "Rejected",
+      "WITHDRAWN": "Withdrawn"
     },
     "payoutStatuses": {
       "REQUESTED": "Requested",

@@ -488,6 +488,65 @@ describe("API auth adapter cross-tab sign-out", () => {
     expect(tabA.getSnapshot().status).toBe("signed-in");
   });
 
+  describe("when another tab completes a login", () => {
+    /** Cookie owner: u1 until `switchTo` is called; the refresh answers with that user's access token. */
+    function cookieOwner() {
+      let owner: "a" | "b" = "a";
+      const users = { a: { ...me, id: "u1", nickname: "alice" }, b: { ...me, id: "u2", nickname: "bob" } };
+      const request = vi.fn(async (url: string, init?: RequestInit) => {
+        if (url === REFRESH) return Response.json({ accessToken: `${owner}-access` });
+        const authorization = new Headers(init?.headers).get("authorization");
+        if (authorization === "Bearer a-access") return Response.json(users.a);
+        if (authorization === "Bearer b-access") return Response.json(users.b);
+        return new Response(null, { status: 401 });
+      });
+      vi.stubGlobal("fetch", request);
+      return { request, switchTo: (next: "a" | "b") => { owner = next; } };
+    }
+    const signedInElsewhere = () => new FakeBroadcastChannel(AUTH_CHANNEL_NAME).postMessage({ type: "signed-in" });
+
+    it("shows the new account instead of keeping the previous user over the replaced cookie", async () => {
+      const { switchTo } = cookieOwner();
+      const tab = await signedInTab();
+      expect(tab.getSnapshot().user?.handle).toBe("alice");
+      switchTo("b");
+      signedInElsewhere();
+      await vi.waitFor(() => expect(tab.getSnapshot().user?.handle).toBe("bob"));
+      expect(getAccessToken()).toBe("b-access");
+    });
+
+    it("picks the session up in a tab that was signed out", async () => {
+      const { switchTo } = cookieOwner();
+      const tab = await signedInTab();
+      endLocalSession();
+      await tab.signOut();
+      expect(tab.getSnapshot().status).toBe("signed-out");
+      localStorage.setItem(SESSION_HINT_KEY, "1"); // the other tab's login wrote it
+      switchTo("b");
+      signedInElsewhere();
+      await vi.waitFor(() => expect(tab.getSnapshot().user?.handle).toBe("bob"));
+    });
+
+    it("keeps the snapshot object when the same user signed in", async () => {
+      cookieOwner();
+      const tab = await signedInTab();
+      const before = tab.getSnapshot();
+      signedInElsewhere();
+      await vi.waitFor(() => expect(getAccessToken()).toBe("a-access"));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(tab.getSnapshot()).toBe(before);
+    });
+
+    it("keeps what the tab shows when the probe is inconclusive", async () => {
+      const { request } = cookieOwner();
+      const tab = await signedInTab();
+      request.mockImplementation(async () => new Response(null, { status: 503 }));
+      signedInElsewhere();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(tab.getSnapshot().user?.handle).toBe("alice");
+    });
+  });
+
   it("ignores unrelated channel messages", async () => {
     stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
     const tab = await signedInTab();
