@@ -74,10 +74,12 @@ export function BountyOperations({ bountyId, onStatusChange }: { bountyId: strin
       pushAdminToast({ variant: "danger", title: t("toast.actionFailedTitle"), description: describe(error, context) });
       return false;
     } finally {
+      // Re-read on success AND failure: a 409/400 usually means the row moved under us (another admin, a resubmission).
+      // The key stays busy through the re-read: the dialog of a succeeded action is still open until the new state lands,
+      // and a second click in that window would send the same write again and toast an error right after the success.
+      await load();
       inFlight.current.delete(key);
       setBusy(new Set(inFlight.current));
-      // Re-read on success AND failure: a 409/400 usually means the row moved under us (another admin, a resubmission).
-      await load();
       if (context === "transition") onStatusChange?.();
     }
   };

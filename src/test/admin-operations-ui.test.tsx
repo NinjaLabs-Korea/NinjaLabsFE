@@ -213,6 +213,24 @@ describe("BountyOperations", () => {
     await waitFor(() => expect(adminApi.markAdminPayoutPaid).toHaveBeenCalledWith("p-mine", HASH));
   });
 
+  it("sends a write once even when the form is submitted again while the re-read after it is still running", async () => {
+    const approved = operations({ payouts: [{ ...operations().payouts[0], status: "APPROVED", requestedByMe: false }] });
+    adminApi.getAdminOperations.mockImplementation(async () => approved);
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Mark paid" }));
+    fireEvent.change(within(dialog()).getByRole("textbox"), { target: { value: HASH } });
+    const form = within(dialog()).getByRole("button", { name: "Mark paid" }).closest("form")!;
+    let finishRead: (value: AdminOperations) => void = () => undefined;
+    adminApi.getAdminOperations.mockImplementation(() => new Promise<AdminOperations>((resolve) => { finishRead = resolve; }));
+    fireEvent.submit(form);
+    await waitFor(() => expect(adminApi.getAdminOperations).toHaveBeenCalledTimes(2));
+    // The write succeeded and the dialog is still open until the re-read lands: the second submit must not reach the BE.
+    fireEvent.submit(form);
+    expect(adminApi.markAdminPayoutPaid).toHaveBeenCalledTimes(1);
+    finishRead(operations({ payouts: [{ ...approved.payouts[0], status: "PAID" }] }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
   it("confirms a deposit with the amount converted to base units", async () => {
     adminApi.getAdminOperations.mockImplementation(async () => operations({ bounty: { ...operations().bounty, status: "FUNDING_PENDING" }, rewards: [{ ...operations().rewards[0], status: "DEPOSIT_PENDING", depositedAmount: null, cap: null, allocated: "0" }], payouts: [] }));
     await renderOps();
