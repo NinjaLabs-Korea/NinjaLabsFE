@@ -58,6 +58,9 @@ export function safeHttpUrl(value: string | null | undefined): string | null {
     return value[1] === "/" || /\/\.{1,2}(\/|$)/.test(value) ? null : value;
   }
   try {
+    // `https:evil.com` parses as a valid absolute URL, but a browser resolves it as a relative path in href/src
+    // (the BE `IsHttpUrl` rejects it too): require the `//` authority marker.
+    if (!/^https?:\/\//i.test(value)) return null;
     const { protocol, username, password } = new URL(value);
     // Userinfo (`https://ninjalabs.xyz@evil.com`) disguises the real host; the BE refuses it under every URL rule.
     if (username || password) return null;

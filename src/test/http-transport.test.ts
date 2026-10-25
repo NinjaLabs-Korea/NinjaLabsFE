@@ -50,6 +50,12 @@ describe("toApiHttpError (Nest error bodies -> code)", () => {
 });
 
 describe("validation field hints", () => {
+  it("records properties that share a name with Object.prototype members", () => {
+    const fields = validationFieldsFromMessages(["constructor must be a string", "toString should not be empty"]);
+    expect(Object.keys(fields)).toEqual(["constructor", "toString"]);
+    expect(fields.constructor).toBe("constructor must be a string");
+  });
+
   it("reads the property from class-validator messages, keeps the first message per field and skips the rest", () => {
     expect(validationFieldsFromMessages([
       "nickname must match /regex/ regular expression",

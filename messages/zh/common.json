@@ -78,7 +78,8 @@
       "CHALLENGE_EXPIRED": "验证请求已过期或已被使用。请再次点击“验证钱包”并签署新消息。",
       "INVALID_SIGNATURE": "签名与该钱包不匹配。请使用已连接的地址签名后重试。",
       "WALLET_ALREADY_LINKED": "该钱包已关联到其他账户，或您的账户已有关联钱包。请使用其他钱包，或登录拥有该钱包的账户。",
-      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
+      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },
     "disconnectWalletLabel": "断开钱包 {address}",
     "unavailable": "钱包不可用",

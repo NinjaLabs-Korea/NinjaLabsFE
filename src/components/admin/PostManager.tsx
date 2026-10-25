@@ -10,7 +10,7 @@ import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { postCategoryLabelKeys, publishOptionFor, type AdminPost, adminErrorDescription } from "@/lib/admin-helpers";
-import { isHttpUrl, isHttpUrlOrMediaPath } from "@/lib/url-rules";
+import { isHttpUrl, isHttpUrlOrMediaPath, isSafeUrl } from "@/lib/url-rules";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const postColumns = [
@@ -35,17 +35,26 @@ const emptyForm: PostForm = {
   status: "draft",
 };
 
-/** 저장 전 검증 — BE `CreateNoticeDto`의 거울 (title/body @IsNotEmpty, thumbnailUrl IsHttpUrlOrMediaPath, externalUrl IsHttpUrl) */
+/**
+ * 저장 전 검증 — BE `CreateNoticeDto`의 거울 (title/body @IsNotEmpty, thumbnailUrl IsHttpUrlOrMediaPath, externalUrl IsHttpUrl).
+ * `stored`(수정할 행의 저장된 URL)와 같고 BE 완화 규칙(`isSafeUrl`)을 통과하는 값은 URL 검사를 건너뛴다:
+ * 수정 DTO는 레거시 행을 위해 완화 규칙(`IsSafeUrl`)이라 엄격 규칙 이전에 저장된 값을 그대로 받는데,
+ * 여기서 막으면 그 행은 URL을 지워야만 저장된다.
+ */
 type PostFieldErrors = Partial<Record<"title" | "bodyMarkdown" | "thumbnail" | "externalUrl", "required" | "urlInvalid" | "tooLong">>;
 /** BE `CreateNoticeDto.body` @MaxLength (a PATCH allows double; the stricter create limit applies to both). */
 export const NOTICE_BODY_MAX = 50_000;
-export function validatePostForm(input: Pick<PostForm, "title" | "bodyMarkdown" | "thumbnail" | "externalUrl">): PostFieldErrors {
+export function validatePostForm(
+  input: Pick<PostForm, "title" | "bodyMarkdown" | "thumbnail" | "externalUrl">,
+  stored?: Pick<AdminPost, "thumbnail" | "externalUrl">,
+): PostFieldErrors {
   const errors: PostFieldErrors = {};
   if (!input.title.trim()) errors.title = "required";
   if (!input.bodyMarkdown.trim()) errors.bodyMarkdown = "required";
   else if (input.bodyMarkdown.trim().length > NOTICE_BODY_MAX) errors.bodyMarkdown = "tooLong";
-  if (input.thumbnail && !isHttpUrlOrMediaPath(input.thumbnail)) errors.thumbnail = "urlInvalid";
-  if (input.externalUrl?.trim() && !isHttpUrl(input.externalUrl.trim())) errors.externalUrl = "urlInvalid";
+  if (input.thumbnail && !isHttpUrlOrMediaPath(input.thumbnail) && !(input.thumbnail === stored?.thumbnail && isSafeUrl(input.thumbnail))) errors.thumbnail = "urlInvalid";
+  const externalUrl = input.externalUrl?.trim();
+  if (externalUrl && !isHttpUrl(externalUrl) && !(externalUrl === stored?.externalUrl && isSafeUrl(externalUrl))) errors.externalUrl = "urlInvalid";
   return errors;
 }
 
@@ -119,7 +128,8 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   const savePost = async () => {
     if (saving) return;
     // A freshly picked file replaces the stored thumbnail, so only the kept URL is checked.
-    const nextErrors = validatePostForm({ ...form, thumbnail: thumbnailFile ? null : form.thumbnail });
+    const stored = mode === "create" ? undefined : records.find((item) => item.slug === mode);
+    const nextErrors = validatePostForm({ ...form, thumbnail: thumbnailFile ? null : form.thumbnail }, stored);
     if (Object.values(nextErrors).some(Boolean)) {
       setErrors(nextErrors);
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
