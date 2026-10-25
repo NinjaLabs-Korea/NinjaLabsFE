@@ -98,6 +98,14 @@ describe("cookie-mode refresh request", () => {
     expect(new Headers(init.headers).get("x-ninja-session")).toBeNull();
   });
 
+  it("reads a 2xx without a body as undefined instead of failing a write that went through", async () => {
+    installSession("fresh-access");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 200 })));
+    const http = createApiHttp(API);
+    await expect(http.fetchJson("/admin/notices/n1", { method: "DELETE" })).resolves.toBeUndefined();
+    await expect(http.fetchForm("/admin/media", new FormData())).resolves.toBeUndefined();
+  });
+
   it("ignores a refreshToken in the refresh body (older BE) and never stores it", async () => {
     stubRefreshFlow(() => Response.json({ accessToken: "fresh-access", refreshToken: "leaked-refresh" }));
     await createApiHttp(API).initSession();
