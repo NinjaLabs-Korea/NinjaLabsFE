@@ -8,7 +8,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { loadRuntimeBounties, pickGuideBounties } from "@/lib/bounties";
-import { localeAlternates } from "@/i18n/alternates";
+import { localeMetadata } from "@/i18n/alternates";
 
 // Keys under bounties.apply.statuses, with the 16 chip tones.
 const statuses = [
@@ -26,7 +26,7 @@ type BountyApplyPageProps = {
 export async function generateMetadata({ params }: BountyApplyPageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "bounties.meta.apply" });
-  return { alternates: localeAlternates(locale, "/bounties/apply"), title: t("title"), description: t("description") };
+  return localeMetadata(locale, "/bounties/apply", { title: t("title"), description: t("description") });
 }
 
 export default async function BountyApplyPage({ params }: BountyApplyPageProps) {
