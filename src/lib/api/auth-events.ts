@@ -2,8 +2,8 @@
  * Cross-tab auth notifications. No token is ever stored in Web Storage any more (the refresh token is an HttpOnly
  * cookie, the access token lives in each tab's memory), so another tab can no longer learn about a sign-out from a
  * `storage` event on a token key. Instead every API-mode tab opens a `BroadcastChannel("ninja-auth")` and posts
- * `signed-out` (explicit sign-out, or a refresh the BE rejected) and `signed-in` (a completed login, so a tab that
- * saw the session end may try a refresh again).
+ * `signed-out` (explicit sign-out, or a refresh the BE rejected) and `signed-in` (a completed login: a tab that
+ * saw the session end may refresh again, and every tab re-reads the session so it shows the account that now owns the cookie).
  *
  * Fallback without BroadcastChannel: `signed-out` writes the current timestamp to the non-secret
  * `localStorage["ninja.authEvent"]`; other tabs receive the `storage` event and treat it as a sign-out. `signed-in`
