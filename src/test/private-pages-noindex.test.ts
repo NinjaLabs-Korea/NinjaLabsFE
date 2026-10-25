@@ -34,7 +34,7 @@ describe("owner-private pages", () => {
   });
 
   it.each(Object.entries(privatePages))("%s is noindex", async (_name, load) => {
-    const { generateMetadata } = (await load()) as { generateMetadata: (props: { params: typeof params }) => Promise<{ robots?: unknown }> };
+    const { generateMetadata } = (await load()) as unknown as { generateMetadata: (props: { params: typeof params }) => Promise<{ robots?: unknown }> };
     expect((await generateMetadata({ params })).robots).toEqual({ index: false, follow: false });
   });
 });
