@@ -186,12 +186,15 @@ describe("API auth adapter login handoff", () => {
   it("restores the current session when the callback carries a planted code without this tab's verifier", async () => {
     window.history.replaceState(null, "", "/en/auth/callback#loginCode=planted");
     const request = stubCurrentSession();
-    vi.stubGlobal("location", { ...window.location, replace: vi.fn() });
+    const replace = vi.fn();
+    vi.stubGlobal("location", { ...window.location, replace });
     const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
     // No exchange was attempted: the planted code is ignored and the existing cookie session is restored once.
     expect(urls(request)).toEqual([REFRESH, `${API}/auth/me`]);
+    // The callback page only shows a spinner for a signed-in user, so the restored session must leave it.
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith("/en/"));
     expect(adapter.getSnapshot().user?.handle).toBe("ninja");
     expect(getAccessToken()).toBe("current-access");
   });

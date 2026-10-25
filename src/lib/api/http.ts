@@ -356,7 +356,10 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
    * 원 요청의 401 대신 `REFRESH_UNAVAILABLE`(refresh 응답 status)로 던져, 호출부가
    * 세션 만료와 구분할 수 있게 한다.
    */
-  async function retryAfterRefresh(): Promise<boolean> {
+  async function retryAfterRefresh(sentToken: string | null): Promise<boolean> {
+    // A sibling request already refreshed while this one was in flight: its 401 only says the token it carried is
+    // stale. Replay with the newer token instead of rotating the refresh cookie (and spending its 10/min budget) again.
+    if (accessToken !== null && accessToken !== sentToken) return true;
     const refresh = await refreshSession();
     if (refresh.ok) return true;
     if (refresh.reason === "unavailable") throw new ApiHttpError(refresh.status, "REFRESH_UNAVAILABLE");
@@ -384,9 +387,10 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
 
     fetchJson: async <T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> => {
       onboardingLog("http.request.started", { method: init?.method ?? "GET", path });
+      const sentToken = accessToken;
       let res = await rawFetch(path, init);
       onboardingLog("http.response.received", { path, status: res.status, attempt: 1 });
-      if ((await isSessionExpiry(res)) && (await retryAfterRefresh())) {
+      if ((await isSessionExpiry(res)) && (await retryAfterRefresh(sentToken))) {
         res = await rawFetch(path, init);
         onboardingLog("http.response.received", { path, status: res.status, attempt: 2 });
       }
@@ -399,9 +403,10 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
 
     fetchForm: async <T>(path: string, form: FormData): Promise<T> => {
       onboardingLog("http.request.started", { method: "POST", path });
+      const sentToken = accessToken;
       let res = await rawFormFetch(path, form);
       onboardingLog("http.response.received", { path, status: res.status, attempt: 1 });
-      if ((await isSessionExpiry(res)) && (await retryAfterRefresh())) {
+      if ((await isSessionExpiry(res)) && (await retryAfterRefresh(sentToken))) {
         res = await rawFormFetch(path, form);
         onboardingLog("http.response.received", { path, status: res.status, attempt: 2 });
       }
