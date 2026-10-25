@@ -25,6 +25,7 @@
     "removeImage": "Remove image",
     "errors": {
       "INVALID_CHARACTER": "A field contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
+      "INVALID_DATE": "A date or time is not on the calendar (for example February 31). Correct it and try again.",
       "REFERENCE_NOT_FOUND": "This record points to something that no longer exists. Reload the page and try again.",
       "BOUNTY_NOT_FOUND": "The bounty no longer exists. Reload the page to refresh the list.",
       "BOUNTY_HAS_OPEN_FUNDS": "This bounty still holds funds in the multisig (a confirmed deposit not fully paid out, or an open payout). Finish or refund the payouts before deleting it.",

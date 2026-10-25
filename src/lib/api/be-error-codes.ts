@@ -2,7 +2,7 @@
  * BE가 응답 `message`로 던지는 에러 코드 목록 — **BE 카탈로그의 그대로 복사본(snapshot)**이다. 손으로 코드를 지어내지 말 것.
  *
  * 원본: NinjaLabsBE `src/common/http/error-codes.ts` (`ERROR_CODES`의 키, 같은 순서·같은 묶음).
- * 스냅샷 기준: BE `fix/wiki-audit-findings` @ `bc15e45` (카탈로그 마지막 변경 `731e0f5`) · 83개.
+ * 스냅샷 기준: BE `fix/module-audit-loop` @ `5e8c158` (카탈로그 마지막 변경 `375cb32`) · 84개.
  * 줄 끝 주석은 "HTTP 상태 — BE 카탈로그의 한 줄 의미"이고 사용자 문구가 아니다 (사용자 문구는 `messages/<locale>/*.json`).
  *
  * ## 어디를 고치나
@@ -115,6 +115,7 @@ export const BE_ERROR_CODES = [
 
   // ── 공통 (DB 오류 매핑 — common/database/pg-errors.ts) ──
   "INVALID_CHARACTER", // 400 — 요청 값에 DB가 거부하는 문자(NUL 등)가 있다
+  "INVALID_DATE", // 400 — 요청 값의 날짜/시각이 달력에 없다 (예: 2월 31일)
   "REFERENCE_NOT_FOUND", // 400 — 참조하는 대상 행이 없다 (FK 위반)
   "DATABASE_UNAVAILABLE", // 503 — DB 연결 풀/응답 타임아웃 (재시도 가능)
 ] as const;

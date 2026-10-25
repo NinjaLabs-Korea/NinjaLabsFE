@@ -131,7 +131,7 @@ export const ERROR_COPY = {
   adminWrite: {
     messages: "admin.common.errors",
     codes: [
-      "INVALID_CHARACTER", "REFERENCE_NOT_FOUND", "BOUNTY_NOT_FOUND", "BOUNTY_HAS_OPEN_FUNDS",
+      "INVALID_CHARACTER", "INVALID_DATE", "REFERENCE_NOT_FOUND", "BOUNTY_NOT_FOUND", "BOUNTY_HAS_OPEN_FUNDS",
       // 바운티 수정: 마감을 과거로 옮김 (BE bounty-admin.service — 저장된 값 그대로 되보내는 것은 통과)
       "DEADLINE_IN_PAST",
       // 커버/썸네일/하이라이트 이미지 업로드 (POST /admin/media — 5 MiB, PNG/JPEG/WebP 시그니처 검사)
