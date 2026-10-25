@@ -29,9 +29,10 @@ export function WalletConnectButton({
   const router = useRouter();
   const apiClient = useWalletApi();
   const mode = useFoundationMode();
-  const [verificationState, setVerificationState] = useState<"idle" | "pending" | "error">("idle");
-  // 실패 문구 키 (`common.wallet.verifyErrors.<key>`) — BE 코드별 안내, 그 외는 generic.
-  const [verifyErrorKey, setVerifyErrorKey] = useState<ErrorCopyKey<typeof ERROR_COPY.walletVerify>>("generic");
+  const [verificationState, setVerificationState] = useState<"idle" | "pending">("idle");
+  // 실패 문구 키 (`common.wallet.verifyErrors.<key>`) — BE 코드별 안내, 그 외는 generic. 실패한 주소에 묶는다:
+  // 지갑을 끊고 다른 주소로 다시 연결했을 때 이전 주소의 실패("이미 연결된 지갑" 등)를 새 주소 아래에 보여 주지 않는다.
+  const [verifyFailure, setVerifyFailure] = useState<{ address: string; key: ErrorCopyKey<typeof ERROR_COPY.walletVerify> } | null>(null);
   const {
     address,
     connectedChainId,
@@ -58,6 +59,7 @@ export function WalletConnectButton({
       onboardingLog("wallet.verify.skipped", { reason: "NO_CONNECTED_ADDRESS" });
       return;
     }
+    setVerifyFailure(null);
     setVerificationState("pending");
     const wallet = maskWalletAddress(address);
     onboardingLog("wallet.challenge.started", { wallet, chainId: connectedChainId });
@@ -77,8 +79,8 @@ export function WalletConnectButton({
         wallet,
         ...onboardingErrorDetails(caught),
       });
-      setVerifyErrorKey(errorCopyKey(caught, ERROR_COPY.walletVerify));
-      setVerificationState("error");
+      setVerifyFailure({ address, key: errorCopyKey(caught, ERROR_COPY.walletVerify) });
+      setVerificationState("idle");
     }
   };
 
@@ -137,9 +139,9 @@ export function WalletConnectButton({
           >
             {t("disconnectAddress", { address: shortWalletAddress(address) })}
           </button>
-          {verificationState === "error" ? (
+          {verifyFailure?.address === address ? (
             <p className="text-xs text-danger" role="alert">
-              {tVerifyErrors(verifyErrorKey)}
+              {tVerifyErrors(verifyFailure.key)}
             </p>
           ) : null}
         </div>
