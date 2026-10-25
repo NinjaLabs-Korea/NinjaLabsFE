@@ -23,11 +23,10 @@ export function Header() {
       <div className="mx-auto grid h-full max-w-content grid-cols-[1fr_auto_1fr] items-center px-6">
         <Link className="flex items-center gap-2 justify-self-start" href="/" prefetch={true} aria-label={t("homeLabel")}>
           <Image
-            src="/figma/ninja-labs-mascot.png"
+            src="/brand/ninja-labs-mascot.svg"
             alt=""
-            width={28}
+            width={33}
             height={28}
-            className="rounded-logo"
           />
           <span className="hidden whitespace-nowrap font-display text-xl font-bold text-ink sm:inline">Ninja Labs</span>
         </Link>
