@@ -30,6 +30,14 @@ describe("rewrites", () => {
     ]);
   });
 
+  it("trims a pasted trailing newline/space off the API URL, as the runtime config does", async () => {
+    const config = await loadConfig({ ...apiEnv, NINJA_API_BASE_URL: " https://api.ninjalabs.example/\n" });
+    expect(await config.rewrites!()).toEqual([
+      { source: "/media/:path*", destination: "https://api.ninjalabs.example/media/:path*" },
+      { source: "/api/auth/:path*", destination: "https://api.ninjalabs.example/auth/:path*" },
+    ]);
+  });
+
   it("has no rewrite in mock mode (no API URL), so /api/auth is a plain 404", async () => {
     const config = await loadConfig({ NINJA_APP_ORIGIN: "http://localhost:3000" });
     expect(await config.rewrites!()).toEqual([]);
