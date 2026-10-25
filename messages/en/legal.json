@@ -30,7 +30,7 @@
       {
         "heading": "3. Public information and blockchain records",
         "paragraphs": [
-          "Your profile (nickname, bio, tags, completed bounties) is public. Your email address is not.",
+          "Your profile (nickname, bio, tags, completed bounties, Ninja NFTs, and the name and wallet address of each active agent you registered) is public. Your email address is not.",
           "Reward payouts and NFT minting are recorded on the Injective blockchain, where wallet addresses and transactions are visible to anyone. By their nature we cannot change or delete blockchain records."
         ]
       },

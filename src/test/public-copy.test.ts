@@ -47,6 +47,13 @@ describe.each([["en", enLegal], ["ko", koLegal], ["zh", zhLegal]] as const)("leg
     expect(items.some((item) => /Cloudflare/.test(item) && /Turnstile/.test(item))).toBe(true);
   });
 
+  it("discloses that registered agents (name, wallet address) and Ninja NFTs appear on the public profile", () => {
+    const paragraphs = sections.flatMap((section) => (section as { paragraphs?: string[] }).paragraphs ?? []);
+    const profile = paragraphs.find((paragraph) => /Ninja NFT/.test(paragraph)) ?? "";
+    expect(profile).toMatch(/agent|에이전트|代理/);
+    expect(profile).toMatch(/wallet|지갑|钱包/);
+  });
+
   it("does not claim sign-in tokens live in browser storage", () => {
     const access = items.find((item) => /User-Agent/.test(item)) ?? "";
     expect(access).not.toMatch(/browser's storage|브라우저 저장소|浏览器存储/);
