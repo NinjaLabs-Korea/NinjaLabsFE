@@ -53,8 +53,9 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
     user.nickname.toLowerCase().includes(normalizedQuery) || user.email.toLowerCase().includes(normalizedQuery)
   ));
 
+  // The first read can land after a debounced search already merged its hits: keep them (the loaded page wins for users in both).
   const loadDirectory = useCallback(() => api.getAdminUsers().then((loaded) => {
-    setDirectoryUsers(loaded);
+    setDirectoryUsers((existing) => withNewUsers(loaded, existing));
     setNextPage(2);
     setHasMore(loaded.length >= USERS_PAGE_SIZE);
     setLoadState("ready");
