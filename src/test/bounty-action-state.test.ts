@@ -82,6 +82,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["application rejected", { applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["rejection beats the local applied flag", { applicationRequired: true, applied: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["application under review", { applicationRequired: true, applications: loaded([app("open")]) }, { kind: "applicationUnderReview" }],
+  ["the local applied flag does not hide an approved server row", { applicationRequired: true, applied: true, applications: loaded([app("approved")]) }, firstSubmit],
   ["just applied (server row not re-read yet)", { applicationRequired: true, applied: true }, { kind: "applicationUnderReview" }],
   ["just applied on a closed bounty", { applicationRequired: true, applied: true, status: "closed" }, { kind: "applicationUnderReview" }],
   ["application approved → submit form", { applicationRequired: true, applications: loaded([app("approved")]) }, firstSubmit],
