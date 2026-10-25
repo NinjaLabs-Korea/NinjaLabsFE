@@ -165,10 +165,14 @@ describe("CompleteOnboarding", () => {
     state.auth = signedInAs({ ...user, onboardingStep: 3, onboardingCompleted: false });
     completeOnboarding.mockRejectedValue(new ApiHttpError(409, "PROFILE_REQUIRED"));
     const assign = vi.fn();
-    vi.stubGlobal("location", { ...window.location, pathname: "/ko/signup/get-started", assign });
+    const replace = vi.fn();
+    vi.stubGlobal("location", { ...window.location, pathname: "/ko/signup/get-started", assign, replace });
     try {
       const { container } = renderWithIntl(<CompleteOnboarding />);
-      await waitFor(() => expect(assign).toHaveBeenCalledWith("/ko/signup/profile"));
+      // The snapshot already says step 3, so the page redirects up front (replace) before the BE 409 could ever matter;
+      // the 409 handler (assign) is the fallback for a stale snapshot.
+      await waitFor(() => expect(replace.mock.calls.length + assign.mock.calls.length).toBeGreaterThan(0));
+      expect([...replace.mock.calls, ...assign.mock.calls].every(([to]) => to === "/ko/signup/profile")).toBe(true);
       expect(container.textContent).toBe("");
     } finally {
       vi.unstubAllGlobals();
