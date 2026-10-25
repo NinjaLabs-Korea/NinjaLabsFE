@@ -135,6 +135,15 @@ describe("BountyOperations", () => {
     expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
   });
 
+  it("shows an unknown review decision (the reserved REOPEN) as its raw code instead of a missing-message key", async () => {
+    const base = operations();
+    const reviews = [{ revisionNo: 3, decision: "REOPEN", comment: null, createdAt: "2026-10-05T00:00:00Z" }];
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [{ ...base.submissions[0], reviews }, base.submissions[1]] }));
+    await renderOps();
+    expect(screen.getByText(/REOPEN/)).toBeTruthy();
+    expect(document.body.textContent).not.toContain("submissions.decisions");
+  });
+
   it("closes a review dialog whose revision was superseded by a re-read instead of resending the stale revisionNo", async () => {
     await renderOps();
     fireEvent.click(screen.getByRole("button", { name: "Request revision" }));
