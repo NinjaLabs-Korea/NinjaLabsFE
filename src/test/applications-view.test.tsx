@@ -92,6 +92,8 @@ describe("ApplicationsView", () => {
     expect(screen.getByRole("link", { name: "Bounty open" }).getAttribute("href")).toBe("/bounties/bounty-open");
     expect(within(card("Bounty open")).getByText("Design")).toBeTruthy();
     expect(within(card("Bounty open")).getByText("note open")).toBeTruthy();
+    // The applicant's own message is free text (up to 4000 chars): it keeps line breaks and wraps long URLs inside the card.
+    expect(within(card("Bounty open")).getByText("note open").className).toContain("[overflow-wrap:anywhere]");
   });
 
   it("offers Submit work only on approved applications", async () => {
