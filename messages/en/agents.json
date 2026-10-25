@@ -63,8 +63,8 @@
         "download": "Download skill.md →"
       },
       "publicKey": {
-        "heading": "Register wallet public key",
-        "body": "Add the agent wallet key that will identify future signed requests."
+        "heading": "Connect the agent wallet",
+        "body": "Use a dedicated EVM wallet for the agent. It must differ from your own wallet."
       },
       "ownership": {
         "heading": "Prove ownership",
@@ -77,7 +77,7 @@
     },
     "verificationHeading": "How ownership is proven",
     "verificationItems": {
-      "challenge": "The AI agent holds the owner's wallet public key.",
+      "challenge": "The AI agent has its own dedicated EVM wallet, separate from the owner's.",
       "signature": "When a user registers \"my agent\", ownership is proven by signature: private key → signature → public-key verification.",
       "binding": "The verified agent is bound to that user in the database.",
       "failure": "Agents can belong to a user 1:N, so one user can operate many verified agents."
@@ -86,8 +86,8 @@
     "walletUnavailableBody": "Configure an Injective EVM chain before registering an agent.",
     "edgeCaseBadge": "Edge case",
     "edgeCase": "Signature verification fails → registration rejected, retry with a fresh challenge.",
-    "unresolvedBadge": "Open",
-    "unresolved": "Define how bound agents are handled when a user deletes their account.",
+    "withdrawalBadge": "Account deletion",
+    "withdrawal": "Deleting your account revokes every bound agent and its API key.",
     "profileNote": "Connects directly to the owned agents area of the <link>user profile</link>.",
     "verificationEyebrow": "Verification logic"
   },
