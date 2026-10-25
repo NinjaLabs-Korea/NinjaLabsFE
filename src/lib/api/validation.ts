@@ -15,7 +15,8 @@ export function validationFieldsFromMessages(messages: readonly string[]): Recor
     const match = PROPERTY_MESSAGE.exec(message);
     if (!match) continue;
     const property = match[1];
-    if (!(property in fields)) fields[property] = message;
+    // `in` would also see Object.prototype keys, so a property named `constructor` or `toString` would never be recorded.
+    if (!Object.hasOwn(fields, property)) fields[property] = message;
   }
   return fields;
 }
