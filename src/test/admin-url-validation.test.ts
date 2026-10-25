@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { validateHighlightForm } from "@/components/admin/HighlightManager";
 import { validatePostForm } from "@/components/admin/PostManager";
+import { isSafeUrl } from "@/lib/url-rules";
 
 const mediaPath = "/media/11111111-1111-4111-8111-111111111111";
 
@@ -61,5 +62,34 @@ describe("admin post form validation (mirror of BE CreateNoticeDto)", () => {
     expect(validatePostForm({ ...valid, externalUrl: "https://user:pw@injective.com" }).externalUrl).toBe("urlInvalid");
     expect(validatePostForm({ ...valid, thumbnail: "/notices/1" }).thumbnail).toBe("urlInvalid");
     expect(validatePostForm({ ...valid, thumbnail: "https://cdn.example/t.png" })).toEqual({});
+  });
+});
+
+describe("legacy stored URLs on edit (the BE PATCH rule is the lenient IsSafeUrl)", () => {
+  it("lets a highlight keep the legacy image and link it already stores, but still checks a changed one", () => {
+    const form = { title: "First payout", description: "500 INJ paid", image: "/uploads/x.png", link: "cdn.example/blog", order: 0 };
+    expect(validateHighlightForm(form).image).toBe("urlInvalid");
+    expect(validateHighlightForm(form).link).toBe("urlInvalid");
+    expect(validateHighlightForm(form, { image: "/uploads/x.png", link: "cdn.example/blog" })).toEqual({});
+    expect(validateHighlightForm({ ...form, image: "/uploads/y.png" }, { image: "/uploads/x.png", link: "cdn.example/blog" }).image).toBe("urlInvalid");
+  });
+
+  it("lets a notice keep the legacy thumbnail and external link it already stores, but still checks a changed one", () => {
+    const form = { title: "Batch shipped", bodyMarkdown: "Body", thumbnail: "/uploads/t.png", externalUrl: "injective.com/blog" };
+    expect(validatePostForm(form)).toEqual({ thumbnail: "urlInvalid", externalUrl: "urlInvalid" });
+    expect(validatePostForm(form, { thumbnail: "/uploads/t.png", externalUrl: "injective.com/blog" })).toEqual({});
+    // A stored value the relaxed BE rule would refuse as well is still reported.
+    expect(validatePostForm({ ...form, thumbnail: "not a url" }, { thumbnail: "not a url", externalUrl: "injective.com/blog" })).toEqual({ thumbnail: "urlInvalid" });
+    expect(validatePostForm({ ...form, externalUrl: "injective.com/other" }, { thumbnail: "/uploads/t.png", externalUrl: "injective.com/blog" })).toEqual({ externalUrl: "urlInvalid" });
+  });
+});
+
+describe("isSafeUrl (mirror of the BE relaxed PATCH rule)", () => {
+  it("accepts http(s) URLs, single-slash paths and bare hosts", () => {
+    for (const value of ["https://cdn.example/x.png", "/uploads/x.png", "/bounties/x", "cdn.example/x.png", "www.injective.com/blog"]) expect(isSafeUrl(value)).toBe(true);
+  });
+
+  it("rejects other schemes, protocol-relative URLs, userinfo, whitespace and control characters", () => {
+    for (const value of ["javascript:alert(1)", "data:text/html,x", "//evil.com/x", "/\\evil.com", "https://u:p@host.com", "https://evil.com\\.example.com", "https://a.com/x y", "/a\u0000b", "not a url", "localhost:3000", ""]) expect(isSafeUrl(value)).toBe(false);
   });
 });
