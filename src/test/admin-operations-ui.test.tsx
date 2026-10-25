@@ -151,6 +151,28 @@ describe("BountyOperations", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
+  it("closes the deposit dialog when another admin already confirmed that deposit", async () => {
+    const pending = operations({ rewards: [{ ...operations().rewards[0], status: "DEPOSIT_PENDING", depositedAmount: null, cap: null, allocated: "0" }] });
+    adminApi.getAdminOperations.mockImplementation(async () => pending);
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm deposit" }));
+    expect(dialog()).toBeTruthy();
+    adminApi.getAdminOperations.mockImplementation(async () => operations());
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("closes the payout request dialog once its submission already has a payout", async () => {
+    // s2 (approved) has p-mine; use a payout-free state first so s2 is a candidate.
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ payouts: [] }));
+    await renderOps();
+    fireEvent.click(payouts().getByRole("button", { name: "Request payout" }));
+    expect(dialog()).toBeTruthy();
+    adminApi.getAdminOperations.mockImplementation(async () => operations());
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
   it("only offers rejection for a pending application once intake is closed (IN_REVIEW)", async () => {
     await renderOps();
     const row = screen.getByText("pick me").closest("tr")!;
