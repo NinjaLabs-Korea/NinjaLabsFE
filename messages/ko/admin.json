@@ -18,6 +18,7 @@
     "deleteCallout": "되돌릴 수 없습니다.",
     "urlHint": "https://… 또는 /media/… 경로",
     "urlInvalid": "http(s) URL(또는 허용된 사이트 경로)을 입력하세요.",
+    "orderInvalid": "0 이상의 정수를 입력하세요.",
     "required": "필수 항목입니다.",
     "fixFields": "표시된 항목을 수정한 뒤 저장하세요.",
     "saving": "저장 중…",

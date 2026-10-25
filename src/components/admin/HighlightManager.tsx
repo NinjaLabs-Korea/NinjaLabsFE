@@ -7,19 +7,20 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { Badge } from "@/components/ui/Badge";
-import { highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminErrorDescription } from "@/lib/admin-helpers";
+import { DISPLAY_ORDER_MAX, highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminErrorDescription } from "@/lib/admin-helpers";
 import { HIGHLIGHT_TYPE_CODES, isHighlightTypeCode } from "@/lib/api/codecs";
 import { isHttpUrlOrMediaPath, isHttpUrlOrSitePath } from "@/lib/url-rules";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
-/** 저장 전 검증 — BE `CreateHighlightDto`의 거울 (title/description @IsNotEmpty, imageUrl IsHttpUrlOrMediaPath, linkUrl IsHttpUrlOrSitePath) */
-type HighlightFieldErrors = Partial<Record<"title" | "description" | "image" | "link", "required" | "urlInvalid">>;
-export function validateHighlightForm(input: { title: string; description: string; image: string | null; link: string }): HighlightFieldErrors {
+/** 저장 전 검증 — BE `CreateHighlightDto`의 거울 (title/description @IsNotEmpty, imageUrl IsHttpUrlOrMediaPath, linkUrl IsHttpUrlOrSitePath, displayOrder @IsInt @Min(0) @MaxPgInt) */
+type HighlightFieldErrors = Partial<Record<"title" | "description" | "image" | "link" | "order", "required" | "urlInvalid" | "orderInvalid">>;
+export function validateHighlightForm(input: { title: string; description: string; image: string | null; link: string; order: number }): HighlightFieldErrors {
   const errors: HighlightFieldErrors = {};
   if (!input.title.trim()) errors.title = "required";
   if (!input.description.trim()) errors.description = "required";
   if (input.image && !isHttpUrlOrMediaPath(input.image)) errors.image = "urlInvalid";
   if (input.link.trim() && !isHttpUrlOrSitePath(input.link.trim())) errors.link = "urlInvalid";
+  if (!Number.isInteger(input.order) || input.order < 0 || input.order > DISPLAY_ORDER_MAX) errors.order = "orderInvalid";
   return errors;
 }
 
@@ -134,7 +135,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     event.preventDefault();
     if (saving) return;
     // A freshly picked file replaces the stored image, so only the kept URL is checked.
-    const nextErrors = validateHighlightForm({ title, description, image: imageFile ? null : image, link });
+    const nextErrors = validateHighlightForm({ title, description, image: imageFile ? null : image, link, order });
     if (Object.values(nextErrors).some(Boolean)) {
       setErrors(nextErrors);
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
@@ -234,7 +235,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
               {fieldError("image")}
             </div>
             <label className="text-sm font-semibold text-ink">{t("form.link")} <span className="font-normal text-ink-muted">{t("form.optional")}</span><input {...invalidProps("link", "highlight-link-hint")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" inputMode="url" onChange={(event) => { setLink(event.target.value); clearError("link"); }} placeholder={t("form.linkPlaceholder")} type="url" value={link} /><span className="mt-1 block text-xs font-normal text-ink-muted" id="highlight-link-hint">{tCommon("urlHint")}</span>{fieldError("link")}</label>
-            <label className="text-sm font-semibold text-ink">{t("form.displayOrder")}<input className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder" min={0} onChange={(event) => setOrder(Number(event.target.value))} placeholder="0" required step={1} type="number" value={order} /></label>
+            <label className="text-sm font-semibold text-ink">{t("form.displayOrder")}<input {...invalidProps("order")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" min={0} onChange={(event) => { setOrder(Number(event.target.value)); clearError("order"); }} placeholder="0" required step={1} type="number" value={order} />{fieldError("order")}</label>
             <div className="text-sm font-semibold text-ink">
               {t("form.published")}
               <div className="mt-2">

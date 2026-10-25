@@ -6,7 +6,7 @@ import { validatePostForm } from "@/components/admin/PostManager";
 const mediaPath = "/media/11111111-1111-4111-8111-111111111111";
 
 describe("admin highlight form validation (mirror of BE CreateHighlightDto)", () => {
-  const valid = { title: "First payout", description: "500 INJ paid", image: mediaPath, link: "/bounties/helix-volume-analytics" };
+  const valid = { title: "First payout", description: "500 INJ paid", image: mediaPath, link: "/bounties/helix-volume-analytics", order: 0 };
 
   it("accepts a complete form with a /media/ image and a site-path link", () => {
     expect(validateHighlightForm(valid)).toEqual({});
@@ -24,6 +24,19 @@ describe("admin highlight form validation (mirror of BE CreateHighlightDto)", ()
     expect(validateHighlightForm({ ...valid, link: "/bounties/../admin" }).link).toBe("urlInvalid");
     expect(validateHighlightForm({ ...valid, image: "/bounties/x" }).image).toBe("urlInvalid");
     expect(validateHighlightForm({ ...valid, image: "/media/not-a-uuid" }).image).toBe("urlInvalid");
+  });
+});
+
+describe("admin highlight display order (mirror of BE @IsInt @Min(0) @MaxPgInt)", () => {
+  const valid = { title: "First payout", description: "500 INJ paid", image: null, link: "", order: 0 };
+
+  it("accepts whole numbers from 0 to the Postgres INTEGER ceiling", () => {
+    expect(validateHighlightForm({ ...valid, order: 0 })).toEqual({});
+    expect(validateHighlightForm({ ...valid, order: 2_147_483_647 })).toEqual({});
+  });
+
+  it.each([-1, 1.5, 2_147_483_648, Number.NaN])("rejects %s, which the BE would answer with a 400", (order) => {
+    expect(validateHighlightForm({ ...valid, order }).order).toBe("orderInvalid");
   });
 });
 

@@ -157,7 +157,7 @@ describe("UserDirectory", () => {
 describe("UserActions display order validation", () => {
   const user = { slug: "ninja", nickname: "ninja", isMember: false, memberRole: null, memberDisplayOrder: null };
 
-  it.each(["0", "-1", "1.5"])("rejects %s with an aria-invalid field and a described error, without calling onAssign", (value) => {
+  it.each(["0", "-1", "1.5", "2147483648"])("rejects %s with an aria-invalid field and a described error, without calling onAssign", (value) => {
     const onAssign = vi.fn();
     renderWithIntl(<UserActions onAssign={onAssign} onRemove={vi.fn()} user={user} />);
     fireEvent.click(screen.getByRole("button", { name: "Assign" }));

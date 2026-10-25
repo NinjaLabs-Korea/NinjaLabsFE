@@ -23,6 +23,9 @@ export function adminErrorDescription(error: unknown, translate: (key: `errors.$
   return code ? translate(`errors.${code}`) : fallback;
 }
 
+/** Postgres INTEGER ceiling: BE `MaxPgInt` on `displayOrder` (member and highlight ordering). Above it the BE answers 400. */
+export const DISPLAY_ORDER_MAX = 2_147_483_647;
+
 export type AdminUser = {
   slug: string;
   nickname: string;

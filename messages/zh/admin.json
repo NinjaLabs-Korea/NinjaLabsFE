@@ -18,6 +18,7 @@
     "deleteCallout": "此操作无法撤销。",
     "urlHint": "https://… 或 /media/… 路径",
     "urlInvalid": "请输入 http(s) URL（或允许的站内路径）。",
+    "orderInvalid": "请输入大于等于 0 的整数。",
     "required": "此项为必填项。",
     "fixFields": "请先修正标出的字段再保存。",
     "saving": "保存中…",

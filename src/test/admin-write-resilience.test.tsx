@@ -147,3 +147,24 @@ describe("deleting the record that is open in the form", () => {
     expect(field("Title").value).toBe("");
   });
 });
+
+describe("highlight display order", () => {
+  it("blocks a negative or fractional order with a field error instead of a BE 400", async () => {
+    const save = vi.spyOn(api, "saveAdminHighlight");
+    renderWithIntl(<><HighlightManager highlights={getAdminHighlights()} /><AdminToastHost /></>);
+    await waitFor(() => expect(screen.getAllByRole("row").length).toBeGreaterThan(1));
+    type("Title", "Best tool");
+    type("Description", "Body");
+    type("Display order", "-3");
+    fireEvent.submit(screen.getByRole("button", { name: "Save" }).closest("form") as HTMLFormElement);
+    const input = field("Display order");
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(document.getElementById(input.getAttribute("aria-describedby") ?? "")?.textContent).toBe("Enter a whole number from 0 up.");
+    expect(save).not.toHaveBeenCalled();
+
+    type("Display order", "4");
+    expect(input.getAttribute("aria-invalid")).toBeNull();
+    fireEvent.submit(screen.getByRole("button", { name: "Save" }).closest("form") as HTMLFormElement);
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+  });
+});
