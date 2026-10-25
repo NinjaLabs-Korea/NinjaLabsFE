@@ -7,7 +7,7 @@
   --color-surface-subtle: #F5F6FB;  /* future steps, empty panels */
   --color-ink: #111A2E;             /* headings/primary text */
   --color-ink-secondary: #4F5D77;   /* nav, rich body */
-  --color-ink-muted: #77839C;       /* metadata, excerpts */
+  --color-ink-muted: #626E86;       /* metadata, excerpts (WCAG AA on surface/page/surface-subtle) */
   --color-ink-placeholder: #9CA3AF;
   --color-ink-notice: #263450;      /* NFT notice body text (11-signup-wallet) */
   --color-primary: #4D3DFF;         /* CTAs, eyebrows, active chips */
@@ -19,12 +19,12 @@
   --color-border-dashed: #D1D7E6;
   --color-success-soft: #E4F8F1;  --color-success: #0B7A5B;
   --color-danger-soft: #FDECEC;   --color-danger: #B42323;
-  --color-warning-soft: #FEF3E2;  --color-warning: #A66A00;
+  --color-warning-soft: #FEF3E2;  --color-warning: #8F5B00;
   /* inverse surface roles */
   --color-inverse-surface: #0B1322;        /* footer */
   --color-on-inverse: #FFFFFF;
   --color-on-inverse-secondary: #B7B2CE;   /* footer links */
-  --color-on-inverse-muted: #566180;       /* copyright */
+  --color-on-inverse-muted: #7F8BA8;       /* copyright, footer tagline (WCAG AA on inverse-surface) */
   /* hero/nft gradient stops */
   --color-hero-from: #0C1528; --color-hero-via: #1D2B60; --color-hero-to: #4D3DFF;
   --color-glow: #7B6CFF; --color-accent-soft: #9A90FF; --color-nft-deep: #2E22AB;

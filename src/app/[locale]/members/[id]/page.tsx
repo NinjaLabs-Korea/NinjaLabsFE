@@ -129,7 +129,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
                 <h3 className="mt-3 break-words font-display text-lg font-bold text-ink">{completion.title}</h3>
                 <p className="mt-2 text-sm text-ink-muted">
                   {completion.reward
-                    ? t("history.completedOn", { date: completion.completedAt, reward: `${format.number(completion.reward.amount, { maximumFractionDigits: 6 })} ${completion.reward.currency}` })
+                    ? t("history.completedOn", { date: completion.completedAt, reward: `${format.number(completion.reward.amount, { maximumFractionDigits: 6 })} ${completion.reward.currency}${completion.moreRewards ? ` +${completion.moreRewards}` : ""}` })
                     : t("history.completedDate", { date: completion.completedAt })}
                 </p>
                 {badge ? <div className="mt-2"><Badge variant={badge.variant}>{t(badge.key)}</Badge></div> : null}

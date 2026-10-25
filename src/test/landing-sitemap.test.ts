@@ -47,6 +47,15 @@ describe("landing and sitemap with a partially unavailable API", () => {
     expect(landing.hero.portfolio.totalCompleted).toBe(3);
   });
 
+  it("shows only completed bounties as finished work in the hero, not cancelled or expired ones", async () => {
+    const done = { slug: "done", title: "Done", status: "closed", completed: true };
+    sources.bounties.mockResolvedValue([done, { slug: "cancelled", title: "Cancelled", status: "closed" }, bounty]);
+    sources.notices.mockResolvedValue([]);
+    sources.hall.mockResolvedValue({ stats: [], highlights: [], milestones: [], partners: [] });
+    const landing = await getRuntimeLanding("en");
+    expect(landing.hero.portfolio.completed).toEqual(["Done"]);
+  });
+
   it("lists static routes and the sources that loaded", async () => {
     sources.bounties.mockRejectedValue(new Error("down"));
     sources.members.mockResolvedValue([{ slug: "ninja" }]);

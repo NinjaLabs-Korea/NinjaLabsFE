@@ -89,6 +89,9 @@ describe("bounty mapping", () => {
     // The card localizes the countdown (bounties.card.daysLeft); the model never carries a "D-7" string.
     expect(bounties.map((bounty) => bounty.daysLeft)).toEqual([expect.any(Number), undefined, undefined]);
     expect(bounties[0].daysLeft).toBeGreaterThan(0);
+    // Only a finished (COMPLETED) bounty is `completed`; CANCELLED and expired-OPEN also present as closed.
+    expect(bounties.map((bounty) => bounty.completed)).toEqual([undefined, undefined, true]);
+    expect(getBounties().filter((bounty) => bounty.status === "closed").every((bounty) => bounty.completed)).toBe(true);
     expect(getBounties().every((bounty) => !/^D-\d+$/.test(bounty.deadline))).toBe(true);
     expect(getBounties().some((bounty) => bounty.status === "reviewing")).toBe(true);
   });

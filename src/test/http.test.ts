@@ -158,6 +158,27 @@ describe("API refresh rotation", () => {
     expect(refreshCalls(request)).toHaveLength(1);
   });
 
+  it("replays a request whose token a sibling already replaced instead of rotating the cookie again", async () => {
+    installSession("stale-access");
+    let releaseSlow!: () => void;
+    const slowGate = new Promise<void>((resolve) => { releaseSlow = resolve; });
+    const request = vi.fn(async (url: string, init?: RequestInit) => {
+      if (url === REFRESH) return Response.json({ accessToken: "fresh-access" });
+      const authorization = new Headers(init?.headers).get("authorization");
+      if (authorization === "Bearer fresh-access") return Response.json(me);
+      // The second request is still in flight when the first one's refresh completes, then answers 401 for the old token.
+      if (url.endsWith("/slow")) await slowGate;
+      return new Response(null, { status: 401 });
+    });
+    vi.stubGlobal("fetch", request);
+    const http = createApiHttp(API);
+    const slow = http.fetchJson("/slow");
+    await http.fetchJson("/auth/me");
+    releaseSlow();
+    await expect(slow).resolves.toMatchObject({ id: "u1" });
+    expect(refreshCalls(request)).toHaveLength(1);
+  });
+
   it("refreshes once on a 401 from fetchForm and retries the upload with the new access token", async () => {
     const request = vi.fn(async (url: string, init?: RequestInit) => {
       if (url === REFRESH) return Response.json({ accessToken: "fresh-access" });

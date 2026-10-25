@@ -10,7 +10,7 @@ import type { AccountApplication, AccountSubmission } from "@/lib/contracts/acco
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { renderWithIntl } from "@/test/intl";
-import { signedIn, signedOut } from "@/test/support/auth";
+import { signedIn, signedInWith, signedOut } from "@/test/support/auth";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => (
@@ -182,6 +182,30 @@ describe("BountyActionPanel", () => {
     expect(await screen.findByText("Application under review")).toBeTruthy();
     await waitFor(() => expect(getApplications).toHaveBeenCalledTimes(2));
     expect(applyToBounty).toHaveBeenCalledWith("bounty-1", { message: "Hi" });
+  });
+
+  it("does not carry the 'just applied' state over to a different account on the same page", async () => {
+    Object.assign(apiClient, { applyToBounty: vi.fn(async () => ({ id: "a-new", status: "PENDING" })) });
+    const view = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
+    expect(await screen.findByText("Application under review")).toBeTruthy();
+
+    // Another tab signs in as someone else; this page's snapshot follows. That account has no application on this bounty.
+    state.auth = signedInWith({ id: "user-2" });
+    view.rerender(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    expect(await screen.findByRole("button", { name: "Apply" })).toBeTruthy();
+    expect(screen.queryByText("Application under review")).toBeNull();
+  });
+
+  it("does not read /applications/me for a direct-submission bounty", async () => {
+    const getApplications = vi.fn(async () => ({ status: "available" as const, data: [] }));
+    const getSubmissions = vi.fn(async () => ({ status: "available" as const, data: [] }));
+    Object.assign(apiClient, { getApplications, getSubmissions });
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    expect(await screen.findByRole("button", { name: "Submit" })).toBeTruthy();
+    expect(getSubmissions).toHaveBeenCalledTimes(1);
+    expect(getApplications).not.toHaveBeenCalled();
   });
 
   it("keeps the success state when the re-read after a successful apply fails", async () => {
