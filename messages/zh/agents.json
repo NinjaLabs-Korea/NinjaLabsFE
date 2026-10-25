@@ -38,7 +38,8 @@
     "rotatedCopy": "请立即复制此 API key，它不会再次显示；旧密钥将立即失效。",
     "rotateErrors": {
       "generic": "无法轮换密钥，请重试。",
-      "AGENT_NOT_ACTIVE": "只有处于活动状态的代理才能轮换密钥。"
+      "AGENT_NOT_ACTIVE": "只有处于活动状态的代理才能轮换密钥。",
+      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },
     "revokeAgent": "撤销代理",
     "revoking": "正在撤销…",
@@ -119,7 +120,8 @@
     "submit": "签名并注册",
     "registerErrors": {
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "此钱包已注册，请在“我的代理”中查看。",
-      "generic": "代理注册失败，请检查钱包签名后重试。"
+      "generic": "代理注册失败，请检查钱包签名后重试。",
+      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },
     "verified": "代理已验证",
     "copyKey": "请立即复制此 API key，它不会再次显示。",

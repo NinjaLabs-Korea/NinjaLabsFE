@@ -56,7 +56,8 @@
     },
     "withdrawErrors": {
       "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "이미 검토되었거나 철회된 지원입니다.",
-      "generic": "지원을 철회하지 못했습니다. 잠시 후 다시 시도해 주세요."
+      "generic": "지원을 철회하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
     },
     "payoutPaid": "지급 완료",
     "payoutPartial": "일부 지급",
@@ -97,7 +98,8 @@
       "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS": "진행 중인 지급이 있습니다. 지급이 완료되거나 취소된 뒤에 계정을 삭제할 수 있어요.",
       "WITHDRAWAL_BLOCKED_PENDING_REWARDS": "승인되었지만 아직 지급 요청되지 않은 보상이 남아 있어 지금은 계정을 삭제할 수 없습니다(삭제하면 보상을 받을 수 없게 됩니다). Ninja Labs 운영자에게 연락해 지급을 마친 뒤 다시 시도해 주세요.",
       "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
-      "generic": "계정을 삭제하지 못했습니다. 잠시 후 다시 시도하세요."
+      "generic": "계정을 삭제하지 못했습니다. 잠시 후 다시 시도하세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
     }
   }
 }

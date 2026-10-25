@@ -38,7 +38,8 @@
     "rotatedCopy": "지금 이 API key를 복사하세요. 다시 표시되지 않으며, 이전 키는 즉시 사용이 중단됩니다.",
     "rotateErrors": {
       "generic": "키를 교체하지 못했습니다. 다시 시도해 주세요.",
-      "AGENT_NOT_ACTIVE": "활성 상태의 에이전트만 키를 교체할 수 있습니다."
+      "AGENT_NOT_ACTIVE": "활성 상태의 에이전트만 키를 교체할 수 있습니다.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
     },
     "revokeAgent": "에이전트 폐기",
     "revoking": "폐기 중…",
@@ -119,7 +120,8 @@
     "submit": "서명하고 등록하기",
     "registerErrors": {
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "이미 등록된 지갑입니다. 내 에이전트에서 확인하세요.",
-      "generic": "에이전트 등록에 실패했습니다. 지갑 서명을 확인하고 다시 시도해 주세요."
+      "generic": "에이전트 등록에 실패했습니다. 지갑 서명을 확인하고 다시 시도해 주세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
     },
     "verified": "에이전트 인증 완료",
     "copyKey": "지금 이 API key를 복사하세요. 다시 표시되지 않습니다.",
