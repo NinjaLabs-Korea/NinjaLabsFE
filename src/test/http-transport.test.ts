@@ -4,6 +4,7 @@ import { AUTH_EVENT_STORAGE_KEY, createAuthEventBus } from "@/lib/api/auth-event
 import {
   allowSessionRefresh,
   ApiHttpError,
+  AUTH_REQUEST_TIMEOUT_MS,
   cookieAuthInit,
   createApiHttp,
   endLocalSession,
@@ -129,6 +130,17 @@ describe("fetchJson request shape", () => {
     const init = cookieAuthInit({ code: "c" });
     expect(init).toMatchObject({ method: "POST", cache: "no-store", credentials: "include", body: "{\"code\":\"c\"}" });
     expect(new Headers(init.headers).get("x-ninja-session")).toBe("cookie");
+  });
+
+  it("bounds every cookie-mode auth request so a hung BE cannot hold the cross-tab refresh lock", () => {
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    try {
+      const init = cookieAuthInit({});
+      expect(timeout).toHaveBeenCalledWith(AUTH_REQUEST_TIMEOUT_MS);
+      expect(init.signal).toBeInstanceOf(AbortSignal);
+    } finally {
+      timeout.mockRestore();
+    }
   });
 });
 

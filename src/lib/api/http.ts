@@ -128,6 +128,13 @@ export function resetSessionState(): void {
   cookieState = "unknown";
 }
 
+/**
+ * Upper bound for one cookie-mode auth request (exchange / refresh / logout). The refresh runs under a cross-tab Web
+ * Lock: without a bound, one request stuck on a hung BE would hold the lock and freeze every tab's session restore and
+ * every 401 retry. A timeout surfaces like any network failure (`unavailable`: the cookie stays, the next 401 retries).
+ */
+export const AUTH_REQUEST_TIMEOUT_MS = 15_000;
+
 /** Headers + credentials for a same-origin cookie-mode auth request. */
 export function cookieAuthInit(body: unknown): RequestInit {
   const traceId = getOnboardingTraceId();
@@ -135,6 +142,7 @@ export function cookieAuthInit(body: unknown): RequestInit {
     method: "POST",
     cache: "no-store",
     credentials: "include",
+    signal: AbortSignal.timeout(AUTH_REQUEST_TIMEOUT_MS),
     headers: {
       "content-type": "application/json",
       [SESSION_MODE_HEADER]: SESSION_MODE_VALUE,
