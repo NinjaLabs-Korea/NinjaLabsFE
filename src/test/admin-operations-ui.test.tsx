@@ -234,6 +234,23 @@ describe("BountyOperations", () => {
   });
 });
 
+describe("payout request after a re-read", () => {
+  it("checks the amount against the reward's current headroom, not the one from when the dialog opened", async () => {
+    const reward = operations().rewards[0];
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ payouts: [], rewards: [{ ...reward, allocated: "0" }] }));
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Request payout" }));
+    // Another admin allocates 4 of the 5 INJ while the dialog is open; the next read shows 1 INJ left.
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ payouts: [], rewards: [{ ...reward, allocated: "4000000000000000000" }] }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(within(dialog()).getByText("Up to 1 INJ can still be allocated from this reward.")).toBeTruthy());
+    fireEvent.change(within(dialog()).getByRole("textbox"), { target: { value: "2" } });
+    fireEvent.submit(within(dialog()).getByRole("button", { name: "Request payout" }).closest("form")!);
+    expect(within(dialog()).getByRole("alert").textContent).toContain("Only 1 INJ is left");
+    expect(adminApi.requestAdminPayout).not.toHaveBeenCalled();
+  });
+});
+
 describe("payout request without a recipient wallet", () => {
   it("explains the missing wallet instead of sending a request the BE answers with 404", async () => {
     const base = operations();
