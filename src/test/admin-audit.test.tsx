@@ -30,11 +30,14 @@ beforeEach(() => {
 });
 
 describe("audit actor classification", () => {
-  it("labels script actions only when both actors are empty", () => {
+  it("labels script actions when both actors are empty, plus the forfeit script whose actor is the deciding operator", () => {
     expect(auditActorKind(log(1))).toBe("user");
     expect(auditActorKind(log(1, { actorUserId: null, actorAgentId: "ag" }))).toBe("agent");
     expect(auditActorKind(log(1, { actorUserId: null, action: "PAYOUT_CANCELLED_MANUAL" }))).toBe("script");
     expect(auditActorKind(log(1, { actorUserId: null, action: "APPLICATION_REAPPLIED" }))).toBe("unknown");
+    // scripts/record-refund.js writes REWARD_REFUNDED with no actor; scripts/forfeit-award.js writes SUBMISSION_AWARD_FORFEITED with one.
+    expect(auditActorKind(log(1, { actorUserId: null, action: "REWARD_REFUNDED", entityType: "bounty_reward" }))).toBe("script");
+    expect(auditActorKind(log(1, { action: "SUBMISSION_AWARD_FORFEITED", entityType: "bounty_submission" }))).toBe("script");
   });
 
   it("validates UUIDs", () => {
@@ -56,6 +59,14 @@ describe("AuditLogViewer", () => {
     expect(within(rows[3]).getByText("Unknown")).toBeTruthy();
     expect(screen.getByText("3 entries")).toBeTruthy();
     expect(screen.queryByRole("navigation", { name: "Audit log pages" })).toBeNull();
+  });
+
+  it("shows the operator id next to the Ops script badge for a script action that has an actor", async () => {
+    adminApi.getAdminAuditLogs.mockResolvedValue({ items: [log(1, { action: "SUBMISSION_AWARD_FORFEITED", entityType: "bounty_submission" })], page: 1, pageSize: 30, total: 1 });
+    render();
+    const rows = await screen.findAllByRole("row");
+    expect(within(rows[1]).getByText("Ops script")).toBeTruthy();
+    expect(within(rows[1]).getByText("aaaaaaaa…0000")).toBeTruthy();
   });
 
   it("pages with previous / next", async () => {

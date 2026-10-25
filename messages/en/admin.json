@@ -18,6 +18,7 @@
     "deleteCallout": "This cannot be undone.",
     "urlHint": "https://… or /media/… path",
     "urlInvalid": "Enter an http(s) URL (or an allowed site path).",
+    "orderInvalid": "Enter a whole number from 0 up.",
     "required": "This field is required.",
     "fixFields": "Fix the highlighted fields before saving.",
     "saving": "Saving…",

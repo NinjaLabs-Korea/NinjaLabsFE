@@ -75,7 +75,8 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
     const kind = auditActorKind(log);
     if (kind === "user") return <span className="font-mono text-xs" title={log.actorUserId ?? undefined}>{opsShort(log.actorUserId)}</span>;
     if (kind === "agent") return <span className="flex items-center gap-2"><Badge variant="neutral">{t("actors.agent")}</Badge><span className="font-mono text-xs" title={log.actorAgentId ?? undefined}>{opsShort(log.actorAgentId)}</span></span>;
-    return <Badge variant="neutral">{kind === "script" ? t("actors.script") : t("actors.unknown")}</Badge>;
+    if (kind === "script") return <span className="flex items-center gap-2"><Badge variant="neutral">{t("actors.script")}</Badge>{log.actorUserId ? <span className="font-mono text-xs" title={log.actorUserId}>{opsShort(log.actorUserId)}</span> : null}</span>;
+    return <Badge variant="neutral">{t("actors.unknown")}</Badge>;
   };
 
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;

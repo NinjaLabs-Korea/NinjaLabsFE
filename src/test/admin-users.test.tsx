@@ -65,6 +65,35 @@ describe("UserDirectory", () => {
     expect(screen.getAllByRole("row")).toHaveLength(getAdminUsers().length + 1);
   });
 
+  it("also searches the BE after a pause, so a user beyond the loaded pages shows up without Load more", async () => {
+    const beyond = { ...getAdminUsers()[0], slug: "far-away", nickname: "zedmund", email: "zedmund@example.com" };
+    const search = vi.spyOn(api, "getAdminUsers");
+    renderDirectory();
+    await waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    search.mockImplementation(async (query) => (query === "zed" ? [beyond] : []));
+    const box = screen.getByRole("searchbox", { name: "Search users" });
+    fireEvent.change(box, { target: { value: "ze" } });
+    fireEvent.change(box, { target: { value: " zed " } });
+    expect(await screen.findByText("zedmund", { selector: "td" })).toBeTruthy();
+    // One request for the settled term (trimmed); the keystroke in between never left the browser.
+    expect(search.mock.calls.slice(1)).toEqual([["zed"]]);
+
+    fireEvent.change(box, { target: { value: "" } });
+    expect(screen.getByText("zedmund", { selector: "td" })).toBeTruthy();
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(search).toHaveBeenCalledTimes(2);
+  });
+
+  it("reports a failed BE search with the load-failed toast and keeps the filtered rows", async () => {
+    const search = vi.spyOn(api, "getAdminUsers");
+    renderDirectory();
+    await waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    search.mockRejectedValue(new Error("down"));
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search users" }), { target: { value: "mina" } });
+    expect(await screen.findByText("Could not load the admin user directory.")).toBeTruthy();
+    expect(row("mina")).toBeTruthy();
+  });
+
   it("assigns a role with a display order through the client and updates the row", async () => {
     const setMember = vi.spyOn(api, "setAdminMember");
     renderDirectory();
@@ -157,7 +186,7 @@ describe("UserDirectory", () => {
 describe("UserActions display order validation", () => {
   const user = { slug: "ninja", nickname: "ninja", isMember: false, memberRole: null, memberDisplayOrder: null };
 
-  it.each(["0", "-1", "1.5"])("rejects %s with an aria-invalid field and a described error, without calling onAssign", (value) => {
+  it.each(["0", "-1", "1.5", "2147483648"])("rejects %s with an aria-invalid field and a described error, without calling onAssign", (value) => {
     const onAssign = vi.fn();
     renderWithIntl(<UserActions onAssign={onAssign} onRemove={vi.fn()} user={user} />);
     fireEvent.click(screen.getByRole("button", { name: "Assign" }));

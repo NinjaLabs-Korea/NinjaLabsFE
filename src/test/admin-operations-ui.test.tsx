@@ -74,6 +74,22 @@ describe("BountyOperations", () => {
     await waitFor(() => expect(adminApi.transitionAdminBounty).toHaveBeenCalledWith("b1", "OPEN"));
   });
 
+  it("keeps the newest read when an older overlapping read answers last", async () => {
+    await renderOps();
+    const pending: Array<(value: AdminOperations) => void> = [];
+    adminApi.getAdminOperations.mockImplementation(() => new Promise<AdminOperations>((resolve) => { pending.push(resolve); }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    expect(pending).toHaveLength(2);
+    const withTitle = (title: string) => operations({ bounty: { ...operations().bounty, title } });
+    pending[1](withTitle("Newer read"));
+    expect(await screen.findByRole("heading", { name: "Newer read" })).toBeTruthy();
+    pending[0](withTitle("Older read"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.getByRole("heading", { name: "Newer read" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Older read" })).toBeNull();
+  });
+
   it("explains the two-person rule instead of offering Approve on the admin's own payout request", async () => {
     await renderOps();
     expect(screen.getByText("You requested this payout, so another admin must approve it (two-person rule).")).toBeTruthy();
@@ -221,6 +237,24 @@ describe("NftJobsManager", () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(screen.getByText("pending row")).toBeTruthy();
     expect(screen.queryByText("No jobs in this status.")).toBeNull();
+  });
+
+  it("drops the previous status's rows while the next status loads, and keeps them when the active tab is clicked again", async () => {
+    const job = { id: "jf", nftId: "nf", jobType: "MINT_PARENT", status: "FAILED", retryCount: 5, lastError: "failed row", scheduledAt: null, updatedAt: null, nftType: "NINJA_PARENT", nftStatus: "FAILED", bountyTitle: null, ownerNickname: null, ownerWalletAddress: null };
+    let resolvePending: (value: unknown) => void = () => undefined;
+    adminApi.getAdminNftJobs.mockImplementation((status: string) => status === "FAILED"
+      ? Promise.resolve({ page: 1, pageSize: 30, total: 1, items: [job] })
+      : new Promise((resolve) => { resolvePending = resolve; }));
+    renderWithIntl(<><NftJobsManager tabs={null}>{null}</NftJobsManager><AdminToastHost /></>);
+    expect(await screen.findByText("failed row")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Failed" }));
+    expect(screen.getByText("failed row")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Pending" }));
+    expect(screen.queryByText("failed row")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+    resolvePending({ page: 1, pageSize: 30, total: 0, items: [] });
+    expect(await screen.findByText("No jobs in this status.")).toBeTruthy();
   });
 
   it("shows NFT_JOB_NOT_FOUND_OR_NOT_FAILED as its localized message", async () => {
