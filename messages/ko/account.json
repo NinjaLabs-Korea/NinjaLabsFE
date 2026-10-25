@@ -43,6 +43,7 @@
     "notAcceptedNote": "스폰서가 제출물을 검토한 뒤 채택하지 않았습니다. 이 결과는 최종입니다.",
     "forfeitedNote": "작업물은 승인되었지만 수상이 몰수되었습니다: {reason}. 잘못된 처리라고 생각되면 운영진에게 문의하세요.",
     "reviewerComment": "심사자 코멘트: {comment}",
+    "sponsorNote": "심사자 메모: {note}",
     "viaAgent": "{name} 대행",
     "withdraw": "철회",
     "withdrawing": "철회 중…",

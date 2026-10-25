@@ -41,6 +41,8 @@ export type AccountApplication = {
   agent: AccountAgentRef | null;
   /** Reviewer comment of the joined submission (set for `notAccepted`/`revisionRequested`, e.g. `forfeited: <reason>`); null otherwise. */
   reviewComment: string | null;
+  /** BE `review_note`: what the operator wrote when approving/rejecting the application itself ("The note is shown to the applicant"); null when none. */
+  reviewNote: string | null;
   /** Payout status of the joined APPROVED submission (meaningful for `completed` rows; NONE otherwise). Same rule as `AccountSubmission.paymentStatus`. */
   paymentStatus: PayoutStatus;
 };

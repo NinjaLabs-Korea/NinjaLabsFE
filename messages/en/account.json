@@ -43,6 +43,7 @@
     "notAcceptedNote": "The sponsor reviewed your submission and did not accept it. This result is final.",
     "forfeitedNote": "Your work was approved, but the award was forfeited: {reason}. Contact the admins if this is a mistake.",
     "reviewerComment": "Reviewer comment: {comment}",
+    "sponsorNote": "Note from the reviewer: {note}",
     "viaAgent": "via {name}",
     "withdraw": "Withdraw",
     "withdrawing": "Withdrawing…",

@@ -51,6 +51,7 @@ const application = (status: AccountApplication["status"], agent: AccountApplica
   status,
   agent,
   reviewComment: null,
+  reviewNote: null,
   paymentStatus: "NONE",
 });
 
@@ -255,6 +256,12 @@ describe("BountyActionPanel", () => {
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
   });
 
+  it("shows the operator's note on a rejected application", async () => {
+    state.applications = [{ ...application("rejected"), reviewNote: "Portfolio too thin" }];
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    expect(await screen.findByText("Reviewer comment: Portfolio too thin")).toBeTruthy();
+  });
+
   it("shows a plain rejection with the reviewer comment, without the forfeit copy", async () => {
     state.submissions = [submission("rejected", null, "Does not meet the brief")];
     renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
@@ -441,7 +448,7 @@ describe("api client application mapping", () => {
   const rows: Record<string, unknown> = {
     "/applications/me": [
       { id: "a1", status: "PENDING", message: "", applied_at: "", reviewed_at: null, bounty_id: "b1", bounty_title: "B1", category: "DEV" },
-      { id: "a2", status: "REJECTED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b2", bounty_title: "B2", category: "DEV" },
+      { id: "a2", status: "REJECTED", message: "", applied_at: "", reviewed_at: null, review_note: "  Portfolio too thin  ", bounty_id: "b2", bounty_title: "B2", category: "DEV" },
       { id: "a3", status: "WITHDRAWN", message: "", applied_at: "", reviewed_at: null, bounty_id: "b3", bounty_title: "B3", category: "DEV" },
       { id: "a4", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b4", bounty_title: "B4", category: "DEV", agent: null },
       { id: "a5", status: "PENDING", message: "", applied_at: "", reviewed_at: null, bounty_id: "b5", bounty_title: "B5", category: "DEV", agent: { id: "agent-1", name: "scout" } },
@@ -482,6 +489,10 @@ describe("api client application mapping", () => {
       ["b8", "notAccepted", null],
       ["b9", "notAccepted", null],
       ["b10", "notAccepted", null],
+    ]);
+    // The operator's application note ("shown to the applicant") is trimmed and travels with the row; no note → null.
+    expect(applications.status === "available" && applications.data.map((item) => item.reviewNote)).toEqual([
+      null, "Portfolio too thin", null, null, null, null, null, null, null,
     ]);
     // The reviewer comment travels with the final state; other states carry none.
     expect(applications.status === "available" && applications.data.map((item) => item.reviewComment)).toEqual([

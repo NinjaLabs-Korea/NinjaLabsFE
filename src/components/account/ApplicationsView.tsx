@@ -50,6 +50,13 @@ function NotAcceptedNote({ application }: { application: AccountApplication }) {
   );
 }
 
+/** What the operator wrote when deciding this application (approve or reject); the admin form tells them the applicant sees it. */
+function ApplicationNote({ application }: { application: AccountApplication }) {
+  const t = useTranslations("account.applications");
+  if (!application.reviewNote) return null;
+  return <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("sponsorNote", { note: application.reviewNote })}</p>;
+}
+
 /** Payout status of a completed (APPROVED) submission: Paid / Partially paid / Payout pending; NONE shows nothing. */
 function PayoutLine({ status }: { status: PayoutStatus }) {
   const t = useTranslations("account.applications");
@@ -194,7 +201,10 @@ export function ApplicationsView() {
               <p className="mt-1 text-sm text-ink-muted">{application.note}</p>
 
               {application.status === "rejected" ? (
-                <p className="mt-4 text-sm text-ink-muted">{t("rejectedNote")}</p>
+                <>
+                  <p className="mt-4 text-sm text-ink-muted">{t("rejectedNote")}</p>
+                  <ApplicationNote application={application} />
+                </>
               ) : application.status === "notAccepted" ? (
                 <NotAcceptedNote application={application} />
               ) : (
@@ -234,6 +244,7 @@ export function ApplicationsView() {
               )}
 
               {application.status === "completed" && application.paymentStatus ? <PayoutLine status={application.paymentStatus} /> : null}
+              {application.status === "approved" ? <ApplicationNote application={application} /> : null}
               {actionNeeded ? <RevisionNote application={application} /> : null}
               {application.status === "approved" || actionNeeded ? (
                 <Link

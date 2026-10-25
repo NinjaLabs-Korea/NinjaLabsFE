@@ -43,6 +43,7 @@
     "notAcceptedNote": "赞助方审核后未采纳您的提交。此结果为最终结果。",
     "forfeitedNote": "您的作品已通过审核，但奖励已被没收：{reason}。如有误，请联系管理员。",
     "reviewerComment": "审核意见：{comment}",
+    "sponsorNote": "审核备注：{note}",
     "viaAgent": "由 {name} 代为申请",
     "withdraw": "撤回",
     "withdrawing": "正在撤回…",

@@ -15,6 +15,8 @@ type ApplicationRow = {
   message: string;
   applied_at: string;
   reviewed_at: string | null;
+  /** Operator note from approving/rejecting the application; shown to the applicant. */
+  review_note?: string | null;
   bounty_id: string;
   bounty_title: string;
   category: CategoryCode;
@@ -81,6 +83,7 @@ function toApplication(row: ApplicationRow): AccountApplication {
     status: row.status === "APPROVED" ? "approved" : row.status === "REJECTED" ? "rejected" : "open",
     agent: toAgentRef(row.agent),
     reviewComment: null,
+    reviewNote: row.review_note?.trim() || null,
     paymentStatus: "NONE",
   };
 }
