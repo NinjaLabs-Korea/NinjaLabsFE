@@ -161,9 +161,12 @@ export function getRuntimeBounties(locale: string): Promise<Bounty[]> {
   return loadFromRuntime({ mock: getBounties, api: () => fetchAllBounties(locale) });
 }
 
-/** The bounties `/bounties/apply` links to as examples: the first one taking new work of each kind (an application bounty past its application deadline takes none). */
+/**
+ * The bounties `/bounties/apply` links to as examples: the first one taking new work of each kind (an application bounty
+ * past its application deadline takes none). Agent-only bounties are skipped: a person who follows the link gets the Agent API note, not a form.
+ */
 export function pickGuideBounties(list: readonly Bounty[]): { applicationBounty?: Bounty; directBounty?: Bounty } {
-  const active = list.filter((bounty) => bounty.status === "active");
+  const active = list.filter((bounty) => bounty.status === "active" && bounty.submissionMode !== "agent");
   return {
     applicationBounty: active.find((bounty) => bounty.applicationRequired && !bounty.applicationClosed),
     directBounty: active.find((bounty) => !bounty.applicationRequired),

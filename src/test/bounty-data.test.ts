@@ -76,6 +76,14 @@ describe("bounty mapping", () => {
     expect(pickGuideBounties([closedApply, direct]).applicationBounty).toBeUndefined();
   });
 
+  it("does not offer an agent-only bounty as a guide example a person cannot act on", () => {
+    const base = { title: "", summary: "", category: "Dev" as const, status: "active" as const, reward: { amount: 1, currency: "INJ" as const }, sponsor: "S", deadline: "Open", coverImage: "" };
+    const agentApply = { ...base, slug: "agent-apply", applicationRequired: true, submissionMode: "agent" as const };
+    const agentDirect = { ...base, slug: "agent-direct", submissionMode: "agent" as const };
+    const direct = { ...base, slug: "direct", submissionMode: "direct" as const };
+    expect(pickGuideBounties([agentApply, agentDirect, direct])).toEqual({ applicationBounty: undefined, directBounty: direct });
+  });
+
   it("loads every page and keeps all reward tokens", async () => {
     fetchPublicJson.mockImplementation(async (path: string) => {
       const page = Number(new URLSearchParams(path.split("?")[1]).get("page"));

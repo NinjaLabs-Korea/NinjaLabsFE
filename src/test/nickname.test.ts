@@ -22,7 +22,7 @@ describe("nickname rule (mirror of BE users/nickname.ts)", () => {
 
   it.each([
     ["a", "tooShort"], ["n".repeat(51), "tooLong"], ["ninja dev", "chars"], ["ninja@dev", "chars"], ["ninja/dev", "chars"],
-    ["ninja<b>", "chars"], ["   ", "tooShort"], ["​​", "chars"],
+    ["ninja<b>", "chars"], ["   ", "tooShort"], ["\u3164\u3164", "chars"], ["ninja\u115Fdev", "chars"], ["\uFFA0ninja", "chars"], ["​​", "chars"],
   ])("rejects %p as %s (length 2..50, no whitespace or symbols beyond _ . -)", (nickname, reason) => {
     expect(validateNickname(nickname)).toBe(reason);
   });

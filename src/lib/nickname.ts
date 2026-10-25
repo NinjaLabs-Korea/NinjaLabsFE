@@ -19,6 +19,7 @@ export const NICKNAME_MIN = 2;
 export const NICKNAME_MAX = 50;
 export const RESERVED_NICKNAMES: readonly string[] = ["me", "check-nickname", "admin", "new", "edit"];
 
+// Hangul filler letters (U+115F, U+1160, U+3164, U+FFA0) are category Lo but draw as blanks; the BE rejects them anywhere in the name.
 const ALLOWED_CHARS = /^(?!.*[\u115F\u1160\u3164\uFFA0])[\p{L}\p{N}_.-]+$/u;
 
 /** 탈퇴한 유저의 익명화 닉네임 접두사 (`withdrawn_<id 8hex>`) — 공개 프로필이 없으므로 상세 URL도 될 수 없다 */
