@@ -178,6 +178,20 @@ async function withRefreshLock<T>(task: () => Promise<T>): Promise<T> {
   }
 }
 
+/**
+ * 401 codes that say nothing about the session: the wallet/agent signature check answers `INVALID_SIGNATURE` as a 401
+ * even though the access token was fine. Refreshing and replaying those would rotate the refresh token for nothing and
+ * let a throttled refresh (`REFRESH_UNAVAILABLE`) replace the real answer. Every other 401 is the BE's session guard
+ * (`MISSING_BEARER_TOKEN` / `INVALID_ACCESS_TOKEN`) or an unreadable body, and still refreshes.
+ */
+const NON_SESSION_401_CODES: readonly string[] = ["INVALID_SIGNATURE"];
+
+async function isSessionExpiry(res: Response): Promise<boolean> {
+  if (res.status !== 401) return false;
+  const body = (await res.clone().json().catch(() => null)) as { message?: unknown } | null;
+  return !(typeof body?.message === "string" && NON_SESSION_401_CODES.includes(body.message));
+}
+
 export class ApiHttpError extends Error {
   /**
    * @param details Nest ValidationPipe의 `message[]` 원문 (`code === "VALIDATION_FAILED"`일 때만 비어 있지 않다).
@@ -372,7 +386,7 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       onboardingLog("http.request.started", { method: init?.method ?? "GET", path });
       let res = await rawFetch(path, init);
       onboardingLog("http.response.received", { path, status: res.status, attempt: 1 });
-      if (res.status === 401 && (await retryAfterRefresh())) {
+      if ((await isSessionExpiry(res)) && (await retryAfterRefresh())) {
         res = await rawFetch(path, init);
         onboardingLog("http.response.received", { path, status: res.status, attempt: 2 });
       }
@@ -387,7 +401,7 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       onboardingLog("http.request.started", { method: "POST", path });
       let res = await rawFormFetch(path, form);
       onboardingLog("http.response.received", { path, status: res.status, attempt: 1 });
-      if (res.status === 401 && (await retryAfterRefresh())) {
+      if ((await isSessionExpiry(res)) && (await retryAfterRefresh())) {
         res = await rawFormFetch(path, form);
         onboardingLog("http.response.received", { path, status: res.status, attempt: 2 });
       }

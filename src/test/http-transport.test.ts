@@ -190,6 +190,25 @@ describe("refresh edge cases", () => {
     expect(ended).not.toHaveBeenCalled();
   });
 
+  it("does not refresh or replay a 401 that is not a session failure (INVALID_SIGNATURE from a wallet verify)", async () => {
+    const request = stub(() => json({ accessToken: "fresh" }));
+    request.mockImplementation(async (url: string) =>
+      url === REFRESH ? json({ accessToken: "fresh" }) : json({ statusCode: 401, message: "INVALID_SIGNATURE" }, 401));
+    installSession("access-1");
+    const http = createApiHttp(API);
+    await expect(http.fetchJson("/wallets/verify", { method: "POST", body: {} })).rejects.toMatchObject({ status: 401, code: "INVALID_SIGNATURE" });
+    expect(refreshCount(request)).toBe(0);
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it("still refreshes and replays on the session guard's 401 codes", async () => {
+    const request = stub(() => json({ accessToken: "fresh" }));
+    installSession("stale");
+    const http = createApiHttp(API);
+    await expect(http.fetchJson("/auth/me")).resolves.toEqual({ ok: true });
+    expect(refreshCount(request)).toBe(1);
+  });
+
   it("re-enables refresh after another tab signs in, but not before", async () => {
     const request = stub(() => json({ accessToken: "fresh" }));
     endLocalSession();
