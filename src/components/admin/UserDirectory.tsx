@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { UserActions } from "@/components/admin/UserActions";
@@ -37,18 +37,26 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   const [nextPage, setNextPage] = useState(2);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  // api mode renders with no rows and reads the directory after mount: "no users found" only once that read answered empty.
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "failed">(users.length ? "ready" : "loading");
   const normalizedQuery = query.trim().toLowerCase();
   const visibleUsers = directoryUsers.filter((user) => (
     user.nickname.toLowerCase().includes(normalizedQuery) || user.email.toLowerCase().includes(normalizedQuery)
   ));
 
+  const loadDirectory = useCallback(() => api.getAdminUsers().then((loaded) => {
+    setDirectoryUsers(loaded);
+    setNextPage(2);
+    setHasMore(loaded.length >= USERS_PAGE_SIZE);
+    setLoadState("ready");
+  }).catch(() => {
+    setLoadState((current) => (current === "ready" ? current : "failed"));
+    pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") });
+  }), [api, t]);
+
   useEffect(() => {
-    api.getAdminUsers().then((loaded) => {
-      setDirectoryUsers(loaded);
-      setNextPage(2);
-      setHasMore(loaded.length >= USERS_PAGE_SIZE);
-    }).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
-  }, [api, t]);
+    void loadDirectory();
+  }, [loadDirectory]);
 
   // The table filters the loaded users instantly; after a pause the term also goes to the BE (`q` is ILIKE on
   // email/nickname) and users not loaded yet are merged in, so one beyond the first pages is found without paging to them.
@@ -193,6 +201,11 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
           ) : null}
           <p className="mt-3 text-xs text-ink-muted">{tCommon("saveNotice")}</p>
         </div>
+      ) : directoryUsers.length === 0 && loadState !== "ready" ? (
+        <p className="mt-6 flex flex-wrap items-center gap-3 rounded-card border border-border bg-surface p-[21px] text-sm text-ink-muted shadow-card" role="status">
+          {loadState === "failed" ? t("toast.loadFailedDescription") : t("loading")}
+          {loadState === "failed" ? <button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => { setLoadState("loading"); void loadDirectory(); }} type="button">{t("retry")}</button> : null}
+        </p>
       ) : (
         <div className="mt-6 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center">
           <p className="text-sm font-semibold text-ink">{t("emptyTitle")}</p>

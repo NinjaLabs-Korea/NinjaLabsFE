@@ -81,8 +81,9 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
 
   // An approve / mark-paid dialog describes a payout in one status: close it when a re-read shows the payout moved on (another admin acted).
   const dialogPayout = dialog && dialog.kind !== "request" ? ops.payouts.find((item) => item.id === dialog.payout.id) : undefined;
+  // A request dialog is stale once its reward stopped being requestable (bounty finished, reward not funded) or its submission got a payout meanwhile.
   const dialogCurrent = dialog === null ? false
-    : dialog.kind === "request" ? true
+    : dialog.kind === "request" ? requestable.some((item) => item.id === dialog.reward.id) && payoutCandidates(ops, dialog.reward.id).some((item) => item.id === dialog.submissionId)
       : dialogPayout !== undefined && (dialog.kind === "approve" ? canApprovePayout(dialogPayout) : canMarkPayoutPaid(dialogPayout));
 
   const busyKey = !dialog ? "" : dialog.kind === "request" ? `request:${dialog.reward.id}` : `payout:${dialog.payout.id}`;

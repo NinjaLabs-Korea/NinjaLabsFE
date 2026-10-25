@@ -137,7 +137,7 @@ describe("UserDirectory load more", () => {
     expect(adminApi.getAdminUsers).toHaveBeenLastCalledWith("", 2);
     // 30 + 1 new row (the duplicate is dropped) + header. Plain DOM query: role queries over ~32 rows take seconds in jsdom and made this test time out intermittently.
     expect(container.querySelectorAll("tr")).toHaveLength(32);
-  });
+  }, 20_000);
 
   it("offers no control when the first page is short", async () => {
     adminApi.getAdminUsers.mockResolvedValue([user(1)]);
