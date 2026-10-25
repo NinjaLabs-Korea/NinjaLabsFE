@@ -85,6 +85,8 @@ export type Completion = {
    * posted bounty reward (shown with a "payout pending" badge); NONE → null (nothing shown).
    */
   reward: Reward | null;
+  /** How many further reward tokens the bounty pays beyond `reward` (multi-token bounties); the profile shows `+N`. */
+  moreRewards?: number;
   payoutStatus: PayoutStatus;
   childNft?: { tokenId: string };
 };

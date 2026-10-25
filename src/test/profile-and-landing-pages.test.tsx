@@ -46,6 +46,15 @@ describe("member profile page", () => {
     expect(screen.getByText(`Registered wallet: ${wallet}`).className).toContain("break-all");
     expect(screen.getByRole("heading", { name: "n".repeat(60) }).className).toContain("break-words");
   });
+
+  it("marks a multi-token completion reward with the number of further tokens", async () => {
+    data.profile = {
+      slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", nfts: [], agents: [],
+      completions: [{ bountySlug: "b1", title: "Widget", category: "Dev", completedAt: "June 30, 2026", reward: { amount: 1, currency: "INJ" }, moreRewards: 1, payoutStatus: "PAID" }],
+    };
+    renderWithIntl(await MemberProfilePage({ params: Promise.resolve({ locale: "en", id: "ninja" }) } as never));
+    expect(screen.getByText(/1 INJ \+1/)).toBeTruthy();
+  });
 });
 
 describe("landing page", () => {
