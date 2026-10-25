@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type R
 
 /**
  * Header mobile menu: a progressive-enhancement `<details>` (works without JS) whose client behaviours are added here -
- * it closes on link click, on Escape (focus returns to the summary), and on a click outside.
+ * it closes on link or button click (sign out), on Escape (focus returns to the summary), and on a click outside.
  */
 export function MobileMenu({ label, children }: { label: string; children: ReactNode }) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
@@ -31,7 +31,7 @@ export function MobileMenu({ label, children }: { label: string; children: React
   }, [open]);
 
   const closeOnLinkClick = (event: ReactMouseEvent<HTMLDetailsElement>) => {
-    if ((event.target as HTMLElement).closest("a") && detailsRef.current) detailsRef.current.open = false;
+    if ((event.target as HTMLElement).closest("a, button") && detailsRef.current) detailsRef.current.open = false;
   };
 
   return (
