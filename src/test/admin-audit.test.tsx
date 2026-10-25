@@ -130,14 +130,14 @@ describe("UserDirectory load more", () => {
 
   it("appends the next page and hides the control after a short page", async () => {
     adminApi.getAdminUsers.mockImplementation(async (_q: string | undefined, page?: number) => (page === 2 ? [user(30), user(0)] : full));
-    renderWithIntl(<UserDirectory users={[]} />);
+    const { container } = renderWithIntl(<UserDirectory users={[]} />);
     const button = await screen.findByText("Load more", {}, { timeout: 4000 });
     fireEvent.click(button);
-    await waitFor(() => expect(screen.queryByRole("button", { name: "Load more" })).toBeNull());
+    await waitFor(() => expect(screen.queryByText("Load more")).toBeNull());
     expect(adminApi.getAdminUsers).toHaveBeenLastCalledWith("", 2);
-    // 30 + 1 new row (the duplicate is dropped) + header
-    expect(screen.getAllByRole("row")).toHaveLength(32);
-  });
+    // 30 + 1 new row (the duplicate is dropped) + header. Plain DOM query: role queries over ~32 rows take seconds in jsdom and made this test time out intermittently.
+    expect(container.querySelectorAll("tr")).toHaveLength(32);
+  }, 20_000);
 
   it("offers no control when the first page is short", async () => {
     adminApi.getAdminUsers.mockResolvedValue([user(1)]);

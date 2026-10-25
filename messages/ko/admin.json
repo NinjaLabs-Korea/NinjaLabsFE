@@ -20,6 +20,7 @@
     "urlInvalid": "http(s) URL(또는 허용된 사이트 경로)을 입력하세요.",
     "orderInvalid": "0 이상의 정수를 입력하세요.",
     "required": "필수 항목입니다.",
+    "tooLong": "너무 깁니다. 최대 {max}자까지 입력할 수 있습니다.",
     "fixFields": "표시된 항목을 수정한 뒤 저장하세요.",
     "saving": "저장 중…",
     "removeImage": "이미지 제거",
@@ -72,6 +73,8 @@
     "emptyTitle": "검색 결과와 일치하는 사용자가 없습니다",
     "emptyBody": "다른 이메일이나 닉네임으로 검색해 보세요.",
     "resetSearch": "검색 초기화",
+    "loading": "사용자를 불러오는 중…",
+    "retry": "다시 시도",
     "roles": {
       "Core": "코어",
       "Dev": "개발",
@@ -181,6 +184,7 @@
       "errors": {
         "summary": "표시된 항목을 수정한 뒤 저장하세요.",
         "required": "필수 항목입니다.",
+        "tooLong": "너무 깁니다. 최대 {max}자까지 입력할 수 있습니다.",
         "deadlineInvalid": "올바른 날짜와 시간을 입력하세요.",
         "deadlinePast": "마감일은 현재 이후로 설정하세요.",
         "amountInvalid": "토큰이 지원하는 소수 자릿수(USDC 6, INJ 18) 이내의 0보다 큰 금액을 입력하거나, 초안으로 저장하려면 비워 두세요.",
@@ -188,6 +192,7 @@
         "titleTooLong": "최대 200자까지 입력할 수 있습니다.",
         "sponsorTooLong": "최대 100자까지 입력할 수 있습니다."
       },
+      "rewardLockedHint": "보상은 바운티 생성 후에는 바꿀 수 없습니다.",
       "rewardNote": "생성 시 보상 토큰이 고정됩니다. 보상 흐름 = 예치 → 릴리스 → 전송이며 스왑은 없습니다."
     },
     "toast": {
@@ -560,7 +565,8 @@
       "MAX_WINNERS_REACHED": "이미 최대 수상자 수만큼 승인되었습니다.",
       "INVALID_DECISION": "지원하지 않는 심사 결정입니다.",
       "REWARD_NOT_FOUND": "보상이 더 이상 존재하지 않습니다.",
-      "REWARD_NOT_FOUND_OR_NOT_PENDING": "이미 입금이 확인되었거나 금액이 게시된 보상에 못 미칩니다.",
+      "DEPOSIT_BELOW_REWARD_AMOUNT": "입금액이 게시된 보상 금액보다 적습니다. 게시된 금액 이상을 입력하세요.",
+      "REWARD_NOT_FOUND_OR_NOT_PENDING": "이미 입금이 확인되었거나 보상이 더 이상 없습니다. 페이지를 새로고침하세요.",
       "REWARD_NOT_FUNDED": "지급을 요청하기 전에 보상 입금을 확인하세요.",
       "INVALID_TX_HASH": "올바른 거래 해시가 아닙니다.",
       "INVALID_TOKEN_AMOUNT": "금액은 최소 단위의 양의 정수여야 합니다.",

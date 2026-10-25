@@ -46,6 +46,9 @@ describe("admin post form validation (mirror of BE CreateNoticeDto)", () => {
   it("accepts a complete form and an empty external link", () => {
     expect(validatePostForm(valid)).toEqual({});
     expect(validatePostForm({ ...valid, externalUrl: null, thumbnail: null })).toEqual({});
+    // BE CreateNoticeDto.body @MaxLength(50 000)
+    expect(validatePostForm({ ...valid, bodyMarkdown: "a".repeat(50_001) })).toEqual({ bodyMarkdown: "tooLong" });
+    expect(validatePostForm({ ...valid, bodyMarkdown: "a".repeat(50_000) })).toEqual({});
   });
 
   it("requires a title and body", () => {

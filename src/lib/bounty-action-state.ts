@@ -9,7 +9,7 @@
  *  3. 세션 확인 중 → `checkingSession`, 비로그인 → `signedOut`
  *  4. 내 제출(+지원 필요 바운티면 내 지원) 조회 중 → `checkingStatus`, 조회 실패 → `statusUnavailable`
  *  5. 내 직접 행은 없고 에이전트가 만든 행만 있음 → `agentRow` (직접 지원/제출 폼을 띄우지 않는다)
- *  6. 지원 필요 바운티: 지원 전 → `applyForm`(진행 중일 때만, 아니면 `closed`) / 거절 → `applicationRejected` /
+ *  6. 지원 필요 바운티: 지원 전 → `applyForm`(진행 중이고 지원 마감 전일 때만, 아니면 `closed`) / 거절 → `applicationRejected` /
  *     방금 지원했거나 심사 중(`open`) → `applicationUnderReview` / 승인 등 → 7로 내려간다
  *  7. 제출 승인 → `submissionApproved`, 제출 거절 → `submissionRejected`
  *  8. 진행 중이 아니고 수정 요청도 아님 → 심사 중인 제출이 있으면 `inReviewLocked`, 없으면 `closed`
@@ -42,6 +42,8 @@ export type BountyActionInput = {
   applicationRequired: boolean;
   status: Bounty["status"];
   submissionMode: "direct" | "agent";
+  /** `Bounty.applicationClosed`: the application deadline passed, so a first application is refused. */
+  applicationClosed?: boolean;
   auth: AuthStatus;
   applications: AccountRowsQuery<ApplicationRow>;
   submissions: AccountRowsQuery<SubmissionRow>;
@@ -86,7 +88,7 @@ export function splitRows<T extends { agent: AccountAgentRef | null }>(rows: rea
 }
 
 export function deriveActionView(input: BountyActionInput): BountyActionView {
-  const { applicationRequired, status, submissionMode, auth, applications, submissions, applied, submitted } = input;
+  const { applicationRequired, applicationClosed = false, status, submissionMode, auth, applications, submissions, applied, submitted } = input;
   const acceptingNew = status === "active";
   const closed: BountyActionView = { kind: "closed", reason: status === "reviewing" ? "reviewing" : "closed" };
 
@@ -113,7 +115,7 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
 
   // 6. 지원 단계 (승인된 지원 등은 제출 단계로 내려간다)
   if (applicationRequired) {
-    if (!application && !applied) return acceptingNew ? { kind: "applyForm" } : closed;
+    if (!application && !applied) return acceptingNew && !applicationClosed ? { kind: "applyForm" } : closed;
     if (application?.status === "rejected") return application.reviewNote ? { kind: "applicationRejected", note: application.reviewNote } : { kind: "applicationRejected" };
     // `applied` only bridges the gap until the server row arrives; a row that already moved on (approved...) wins.
     if (application ? application.status === "open" : applied) return { kind: "applicationUnderReview" };

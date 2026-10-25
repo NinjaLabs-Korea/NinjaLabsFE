@@ -167,11 +167,14 @@ export type BountyFormError =
   | "deadlineInvalid"
   | "deadlinePast"
   | "amountInvalid"
-  | "deliverablesRequired";
+  | "deliverablesRequired"
+  | "tooLong";
 
 /** BE `CreateBountyDto`/`UpdateBountyDto`의 @MaxLength — 입력의 `maxLength`와 검증이 같은 값을 쓴다 */
 export const BOUNTY_TITLE_MAX = 200;
 export const BOUNTY_SPONSOR_MAX = 100;
+/** BE `CreateBountyDto` @MaxLength on the TEXT fields (description 50 000, requirements and evaluationCriteria 20 000); the PATCH limit is double, the stricter create limit applies to both. */
+export const BOUNTY_TEXT_MAX = { description: 50_000, deliverables: 20_000, reviewProcess: 20_000 } as const;
 export type BountyFormErrors = Partial<Record<keyof BountyFormValues, BountyFormError>>;
 
 /**
@@ -197,10 +200,11 @@ function isRewardAmountValid(raw: string, currency: BountyFormValues["currency"]
  * BE 필수 필드가 바뀌면 여기와 `src/test/admin-bounty-form.test.ts`를 함께 고칠 것.
  * 마감일은 신규 생성이거나 기존 값에서 바뀐 경우에만 미래 시각이어야 한다
  * (`options.originalDeadline`은 datetime-local 문자열; 없으면 폼의 `originalSubmissionDeadline`에서 만든다).
+ * 보상은 생성 때만 BE로 가므로(`saveAdminBounty`) `options.editing`이면 금액 입력은 검증하지 않는다.
  */
 export function validateBountyForm(
   form: BountyFormValues,
-  options: { originalDeadline?: string; now?: Date } = {},
+  options: { originalDeadline?: string; now?: Date; editing?: boolean } = {},
 ): BountyFormErrors {
   const errors: BountyFormErrors = {};
   const blank = (value: string) => value.trim().length === 0;
@@ -212,6 +216,11 @@ export function validateBountyForm(
   if (blank(form.description)) errors.description = "required";
   if (blank(form.reviewProcess)) errors.reviewProcess = "required";
   if (blank(form.deliverables) && blank(form.submissionGuide)) errors.deliverables = "deliverablesRequired";
+
+  // 상한을 넘기면 BE가 400 VALIDATION_FAILED(일반 문구)로 답한다 — 어느 칸이 문제인지 여기서 알려 준다. 길이는 BE와 같은 Trim 뒤 UTF-16 단위.
+  if (form.description.trim().length > BOUNTY_TEXT_MAX.description) errors.description = "tooLong";
+  if (form.reviewProcess.trim().length > BOUNTY_TEXT_MAX.reviewProcess) errors.reviewProcess = "tooLong";
+  if (!errors.deliverables && resolveRequirements(form).trim().length > BOUNTY_TEXT_MAX.deliverables) errors.deliverables = "tooLong";
 
   if (blank(form.deadline)) {
     // A loaded record whose stored deadline is not ISO (bountyToForm emptied the input) is flagged as invalid, not merely missing.
@@ -226,7 +235,7 @@ export function validateBountyForm(
     else if (changed && deadline.getTime() <= (options.now ?? new Date()).getTime()) errors.deadline = "deadlinePast";
   }
 
-  if (!blank(form.amount) && !isRewardAmountValid(form.amount, form.currency)) errors.amount = "amountInvalid";
+  if (!options.editing && !blank(form.amount) && !isRewardAmountValid(form.amount, form.currency)) errors.amount = "amountInvalid";
 
   return errors;
 }

@@ -8,6 +8,7 @@ export function AdminSelect({
   value,
   onChange,
   formatOption = (option) => option,
+  disabled = false,
 }: {
   label: string;
   options: string[];
@@ -15,6 +16,8 @@ export function AdminSelect({
   onChange: (v: string) => void;
   /** Maps an option value to its displayed (translated) label. */
   formatOption?: (option: string) => string;
+  /** Shows the current value but does not open (a value the BE no longer accepts changes for). */
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(() => Math.max(options.indexOf(value), 0));
@@ -92,7 +95,8 @@ export function AdminSelect({
         role="combobox"
         aria-label={label}
         id={`${listboxId}-trigger`}
-        className="flex h-[46px] w-full items-center justify-between rounded-control border border-border px-[17px] text-sm text-ink-secondary"
+        className="flex h-[46px] w-full items-center justify-between rounded-control border border-border px-[17px] text-sm text-ink-secondary disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={disabled}
         onBlur={() => setOpen(false)}
         onClick={() => (open ? setOpen(false) : openListbox())}
         onKeyDown={handleKeyDown}

@@ -123,7 +123,12 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
               return (
                 <li key={`${index}:${partner.name}`}>
                   {partner.href ? (
-                    <a className={`${tileClass} transition-shadow hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`} href={partner.href} rel="noreferrer" target={partner.href.startsWith("http") ? "_blank" : undefined}>{logo}</a>
+                    partner.href.startsWith("/") ? (
+                      // A same-site path goes through the locale-aware Link; a raw <a> would drop the locale prefix.
+                      <Link className={`${tileClass} transition-shadow hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`} href={partner.href}>{logo}</Link>
+                    ) : (
+                      <a className={`${tileClass} transition-shadow hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`} href={partner.href} rel="noreferrer" target="_blank">{logo}</a>
+                    )
                   ) : (
                     <div className={tileClass}>{logo}</div>
                   )}

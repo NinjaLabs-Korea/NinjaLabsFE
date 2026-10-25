@@ -11,6 +11,8 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/signup/p
   const t = await getTranslations({ locale, namespace: "signup.profile.metadata" });
   return {
     alternates: localeAlternates(locale, "/signup/profile"),
+    // Signed-in onboarding step: nothing to index.
+    robots: { index: false, follow: false },
     title: t("title"),
     description: t("description"),
   };

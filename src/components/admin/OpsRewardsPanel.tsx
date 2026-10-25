@@ -28,13 +28,17 @@ export function OpsRewardsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
     setForm({ txHash: "", amount: baseUnitsToHuman(reward.amount, reward.symbol) ?? "", errors: {} });
   };
 
+  // Close the dialog when a re-read shows the reward is no longer awaiting its deposit (another admin confirmed it first): confirming again only answers an error.
+  const live = target ? ops.rewards.find((item) => item.id === target.id) : undefined;
+  const targetCurrent = live?.status === "DEPOSIT_PENDING";
+
   const submit = async () => {
-    if (!target) return;
+    if (!target || !live) return;
     const depositedAmount = humanToBaseUnits(form.amount, target.symbol);
     const errors: DepositForm["errors"] = {};
     if (!isTxHash(form.txHash)) errors.txHash = t("form.txHashInvalid");
     if (!depositedAmount) errors.amount = t("form.amountInvalid", { symbol: target.symbol });
-    else if (BigInt(depositedAmount) < BigInt(target.amount)) errors.amount = t("rewards.amountBelowPosted", { amount: opsAmount(target.amount, target.symbol) });
+    else if (BigInt(depositedAmount) < BigInt(live.amount)) errors.amount = t("rewards.amountBelowPosted", { amount: opsAmount(live.amount, live.symbol) });
     if (errors.txHash || errors.amount) {
       setForm((current) => ({ ...current, errors }));
       return;
@@ -80,7 +84,7 @@ export function OpsRewardsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
         eyebrow={t("rewards.eyebrow")}
         onCancel={() => setTarget(null)}
         onSubmit={() => void submit()}
-        open={target !== null}
+        open={targetCurrent}
         submitLabel={t("rewards.confirm")}
         title={t("rewards.modalTitle")}
       >

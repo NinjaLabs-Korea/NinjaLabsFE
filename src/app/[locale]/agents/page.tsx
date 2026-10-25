@@ -11,7 +11,8 @@ type AgentsPageProps = {
 export async function generateMetadata({ params }: AgentsPageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "agents.meta.list" });
-  return { alternates: localeAlternates(locale, "/agents"), title: t("title"), description: t("description") };
+  // Owner-private (robots.ts disallows /<locale>/agents); noindex as a second line, like the account page.
+  return { alternates: localeAlternates(locale, "/agents"), title: t("title"), description: t("description"), robots: { index: false, follow: false } };
 }
 
 export default async function AgentsPage({ params }: AgentsPageProps) {

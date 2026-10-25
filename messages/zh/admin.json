@@ -20,6 +20,7 @@
     "urlInvalid": "请输入 http(s) URL（或允许的站内路径）。",
     "orderInvalid": "请输入大于等于 0 的整数。",
     "required": "此项为必填项。",
+    "tooLong": "内容过长：最多 {max} 个字符。",
     "fixFields": "请先修正标出的字段再保存。",
     "saving": "保存中…",
     "removeImage": "移除图片",
@@ -72,6 +73,8 @@
     "emptyTitle": "没有符合搜索条件的用户",
     "emptyBody": "请尝试其他邮箱或昵称。",
     "resetSearch": "重置搜索",
+    "loading": "正在加载用户…",
+    "retry": "重试",
     "roles": {
       "Core": "核心",
       "Dev": "开发",
@@ -181,6 +184,7 @@
       "errors": {
         "summary": "请先修正标出的字段再保存。",
         "required": "此项为必填项。",
+        "tooLong": "内容过长：最多 {max} 个字符。",
         "deadlineInvalid": "请输入有效的日期和时间。",
         "deadlinePast": "截止时间必须晚于当前时间。",
         "amountInvalid": "请输入大于 0 且小数位不超过代币精度（USDC 6、INJ 18）的金额，或留空以保存为草稿。",
@@ -188,6 +192,7 @@
         "titleTooLong": "最多 200 个字符。",
         "sponsorTooLong": "最多 100 个字符。"
       },
+      "rewardLockedHint": "奖励在悬赏创建后即固定，无法在此修改。",
       "rewardNote": "创建后奖励代币即被锁定。奖励流程 = 锁定 → 释放 → 转账，不进行兑换。"
     },
     "toast": {
@@ -560,7 +565,8 @@
       "MAX_WINNERS_REACHED": "已通过的获奖者已达上限。",
       "INVALID_DECISION": "不支持该审核决定。",
       "REWARD_NOT_FOUND": "该奖励已不存在。",
-      "REWARD_NOT_FOUND_OR_NOT_PENDING": "存款已确认过，或金额不足以覆盖公布的奖励。",
+      "DEPOSIT_BELOW_REWARD_AMOUNT": "存款金额低于公布的奖励。请至少输入公布的金额。",
+      "REWARD_NOT_FOUND_OR_NOT_PENDING": "存款已确认过，或该奖励已不存在。请刷新页面。",
       "REWARD_NOT_FUNDED": "申请付款前请先确认奖励存款。",
       "INVALID_TX_HASH": "交易哈希无效。",
       "INVALID_TOKEN_AMOUNT": "金额必须是以最小单位表示的正整数。",

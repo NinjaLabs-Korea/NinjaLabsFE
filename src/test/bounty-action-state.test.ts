@@ -78,6 +78,8 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["apply bounty, no application yet", { applicationRequired: true }, { kind: "applyForm" }],
   ["apply bounty, no application, reviewing", { applicationRequired: true, status: "reviewing" }, { kind: "closed", reason: "reviewing" }],
   ["apply bounty, no application, closed", { applicationRequired: true, status: "closed" }, { kind: "closed", reason: "closed" }],
+  ["apply bounty past its application deadline, no application yet", { applicationRequired: true, applicationClosed: true }, { kind: "closed", reason: "closed" }],
+  ["apply bounty past its application deadline, approved applicant still submits", { applicationRequired: true, applicationClosed: true, applications: loaded([app("approved")]) }, firstSubmit],
   ["rows for other bounties do not count", { applicationRequired: true, applications: loaded([app("approved", null, "other")]) }, { kind: "applyForm" }],
   ["application rejected", { applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["application rejected with the operator's note", { applicationRequired: true, applications: loaded([{ ...app("rejected"), reviewNote: "Portfolio too thin" }]) }, { kind: "applicationRejected", note: "Portfolio too thin" }],

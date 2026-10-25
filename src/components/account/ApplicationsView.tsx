@@ -193,12 +193,12 @@ export function ApplicationsView() {
               </div>
 
               <Link
-                className={`mt-3 inline-block font-display text-lg font-bold text-ink ${focusClass}`}
+                className={`mt-3 inline-block font-display text-lg font-bold text-ink [overflow-wrap:anywhere] ${focusClass}`}
                 href={`/bounties/${application.bountySlug}`}
               >
                 {application.bountyTitle}
               </Link>
-              <p className="mt-1 text-sm text-ink-muted">{application.note}</p>
+              <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{application.note}</p>
 
               {application.status === "rejected" ? (
                 <>

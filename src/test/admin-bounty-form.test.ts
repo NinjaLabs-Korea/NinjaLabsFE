@@ -198,3 +198,21 @@ describe("admin bounty form validation", () => {
     expect(saved.title).toBe("Build a widget");
   });
 });
+
+describe("admin bounty form text limits (BE CreateBountyDto)", () => {
+  const valid: BountyFormValues = { ...emptyBountyForm(), title: "T", sponsor: "S", deadline: "2030-01-01T10:00", description: "d", deliverables: "x", reviewProcess: "r" };
+  const now = new Date("2026-10-25T00:00:00.000Z");
+
+  it("flags description, deliverables and review process over the BE limit", () => {
+    expect(validateBountyForm(valid, { now })).toEqual({});
+    expect(validateBountyForm({ ...valid, description: "a".repeat(50_001) }, { now })).toEqual({ description: "tooLong" });
+    expect(validateBountyForm({ ...valid, reviewProcess: "a".repeat(20_001) }, { now })).toEqual({ reviewProcess: "tooLong" });
+    expect(validateBountyForm({ ...valid, deliverables: "a".repeat(20_001) }, { now })).toEqual({ deliverables: "tooLong" });
+    expect(validateBountyForm({ ...valid, description: "a".repeat(50_000) }, { now })).toEqual({});
+  });
+
+  it("does not validate the reward amount while editing (it is not sent)", () => {
+    expect(validateBountyForm({ ...valid, amount: "1e99999" }, { now })).toEqual({ amount: "amountInvalid" });
+    expect(validateBountyForm({ ...valid, amount: "1e99999" }, { now, editing: true })).toEqual({});
+  });
+});
