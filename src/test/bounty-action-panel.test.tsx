@@ -183,6 +183,31 @@ describe("BountyActionPanel", () => {
     expect(applyToBounty).toHaveBeenCalledWith("bounty-1", { message: "Hi" });
   });
 
+  it("keeps the success state when the re-read after a successful apply fails", async () => {
+    let reads = 0;
+    const getApplications = vi.fn(async () =>
+      ++reads === 1 ? { status: "available" as const, data: [] } : { status: "unavailable" as const, reason: "server-error" as const });
+    Object.assign(apiClient, { getApplications });
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
+    expect(await screen.findByText("Application under review")).toBeTruthy();
+    await waitFor(() => expect(getApplications).toHaveBeenCalledTimes(2));
+    expect(screen.getByText("Application under review")).toBeTruthy();
+  });
+
+  it("still reports a gone session from the re-read", async () => {
+    let reads = 0;
+    const getApplications = vi.fn(async () =>
+      ++reads === 1 ? { status: "available" as const, data: [] } : { status: "unavailable" as const, reason: "unauthorized" as const });
+    Object.assign(apiClient, { getApplications });
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
+    await waitFor(() => expect(getApplications).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText(/unavailable|couldn/i)).toBeTruthy();
+  });
+
   it("caps the free-text inputs at the BE limits so a long paste cannot only fail on submit", async () => {
     const { unmount } = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
     expect((await screen.findByLabelText("Application note") as HTMLTextAreaElement).maxLength).toBe(4000);
