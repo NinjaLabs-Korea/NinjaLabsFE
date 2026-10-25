@@ -49,6 +49,14 @@ describe("agent skill markdown", () => {
       expect(markdown).not.toContain("MAX_WINNERS_REACHED");
     });
 
+    it("names the list response shape and the bounty fields an agent filters on", () => {
+      expect(markdown).toContain("`{ items, page, pageSize, total }`");
+      for (const field of ["submission_mode", "application_required", "application_deadline", "submission_deadline"]) {
+        expect(markdown).toContain(`\`${field}\``);
+      }
+      expect(markdown).toContain("`DEV`, `DESIGN`, `CONTENT` or `OTHER`");
+    });
+
     it("documents re-applying after a withdrawal and the fixed rate-limit window", () => {
       expect(markdown).toContain("A withdrawn application is not a conflict: sending it again reopens the same row as pending.");
       expect(markdown).toContain("The window is fixed: it starts at the first request and lasts 60 seconds");

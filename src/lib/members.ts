@@ -1,4 +1,4 @@
-import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toPayoutStatus, toReward, type RewardRow } from "./api/codecs";
+import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toPayoutStatus, toRewards, type RewardRow } from "./api/codecs";
 import type { Completion, Member, PayoutStatus, Profile, ProfileNft, Reward } from "./types";
 import { onboardingLog } from "./onboarding-log";
 import { cache } from "react";
@@ -104,19 +104,25 @@ type PublicProfileResponse = {
   }>;
 };
 
-const firstReward = (rows: readonly RewardRow[] | undefined): Reward | null => (rows?.[0] ? toReward(rows[0]) : null);
+/** The primary (first displayable) reward plus how many further displayable ones the row carries (multi-token bounties). */
+const rewardSummary = (rows: readonly RewardRow[] | undefined): { reward: Reward | null; moreRewards?: number } => {
+  const [reward = null, ...rest] = toRewards(rows ?? []);
+  return rest.length > 0 ? { reward, moreRewards: rest.length } : { reward };
+};
 
 /**
  * `payoutStatus` + `postedRewards` are newer BE fields: PAID shows the paid payout, PARTIALLY_PAID the paid payout so far
  * (badge), PENDING the posted reward (badge), NONE nothing — unless paid `rewards` exist, which renders as PAID. An unknown value is read as PENDING. An older BE only sends
  * `rewards` (paid payouts), so a missing `payoutStatus` is derived from whether anything was paid.
+ * A bounty can pay several tokens (one payout row each): the first is shown and `moreRewards` counts the rest, like the
+ * `+N` on a bounty card, so a profile never reads as if only one token was paid.
  */
-export function toCompletionReward(row: Pick<PublicProfileResponse["completedBounties"][number], "rewards" | "postedRewards" | "payoutStatus">): Pick<Completion, "reward" | "payoutStatus"> {
-  const paid = firstReward(row.rewards);
-  const status: PayoutStatus = toPayoutStatus(row.payoutStatus) ?? (paid ? "PAID" : "NONE");
-  if (status === "PAID" || (status === "NONE" && paid)) return { reward: paid, payoutStatus: paid ? "PAID" : "NONE" };
-  if (status === "PARTIALLY_PAID") return { reward: paid, payoutStatus: "PARTIALLY_PAID" };
-  if (status === "PENDING") return { reward: firstReward(row.postedRewards), payoutStatus: "PENDING" };
+export function toCompletionReward(row: Pick<PublicProfileResponse["completedBounties"][number], "rewards" | "postedRewards" | "payoutStatus">): Pick<Completion, "reward" | "moreRewards" | "payoutStatus"> {
+  const paid = rewardSummary(row.rewards);
+  const status: PayoutStatus = toPayoutStatus(row.payoutStatus) ?? (paid.reward ? "PAID" : "NONE");
+  if (status === "PAID" || (status === "NONE" && paid.reward)) return { ...paid, payoutStatus: paid.reward ? "PAID" : "NONE" };
+  if (status === "PARTIALLY_PAID") return { ...paid, payoutStatus: "PARTIALLY_PAID" };
+  if (status === "PENDING") return { ...rewardSummary(row.postedRewards), payoutStatus: "PENDING" };
   return { reward: null, payoutStatus: "NONE" };
 }
 

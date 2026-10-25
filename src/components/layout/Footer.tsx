@@ -43,7 +43,7 @@ export function Footer() {
               height={86}
               className="h-[34px] w-auto"
             />
-            <p className="mt-3 max-w-[287px] text-sm text-ink-muted">
+            <p className="mt-3 max-w-[287px] text-sm text-on-inverse-muted">
               {t("tagline")}
             </p>
           </div>

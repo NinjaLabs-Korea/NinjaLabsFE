@@ -52,7 +52,7 @@ export async function getRuntimeLanding(locale: string): Promise<RuntimeLanding>
   const bounties = settledValue(bountiesResult, []);
   const notices = settledValue(noticesResult, []);
   const hall = settledValue(hallResult, emptyHallOfFame);
-  const completed = bounties.filter((bounty) => bounty.status === 'closed').slice(0, 5);
+  const completed = bounties.filter((bounty) => bounty.completed).slice(0, 5);
   return {
     hero: {
       ...landing.hero,
