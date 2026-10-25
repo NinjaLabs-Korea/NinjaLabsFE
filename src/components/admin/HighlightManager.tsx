@@ -153,7 +153,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
       // The loaded row decides what an edit must send: `publish` only when the state toggled, `type` only when changed.
       const current = isEditing ? records.find((item) => item.id === mode) : undefined;
       const record: AdminHighlight = {
-        id: isEditing ? mode : `highlight-${Date.now()}`,
+        id: isEditing ? mode : "", // create: the BE assigns the id
         type,
         title: title.trim(),
         description: description.trim(),
