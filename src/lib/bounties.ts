@@ -159,6 +159,15 @@ export function getRuntimeBounties(locale: string): Promise<Bounty[]> {
   return loadFromRuntime({ mock: getBounties, api: () => fetchAllBounties(locale) });
 }
 
+/** The bounties `/bounties/apply` links to as examples: the first one taking new work of each kind (an application bounty past its application deadline takes none). */
+export function pickGuideBounties(list: readonly Bounty[]): { applicationBounty?: Bounty; directBounty?: Bounty } {
+  const active = list.filter((bounty) => bounty.status === "active");
+  return {
+    applicationBounty: active.find((bounty) => bounty.applicationRequired && !bounty.applicationClosed),
+    directBounty: active.find((bounty) => !bounty.applicationRequired),
+  };
+}
+
 /** Page-level loader: an unreachable API renders an unavailable state instead of the error boundary. */
 export async function loadRuntimeBounties(locale: string): Promise<{ bounties: Bounty[]; unavailable: boolean }> {
   try {
