@@ -270,6 +270,18 @@ describe("NftJobsManager", () => {
     expect(screen.queryByText("No jobs in this status.")).toBeNull();
   });
 
+  it("steps back to the page on screen when fetching another page fails", async () => {
+    const job = (id: string) => ({ id, nftId: `${id}-n`, jobType: "MINT_PARENT", status: "FAILED", retryCount: 5, lastError: `err ${id}`, scheduledAt: null, updatedAt: null, nftType: "NINJA_PARENT", nftStatus: "FAILED", bountyTitle: null, ownerNickname: null, ownerWalletAddress: null });
+    adminApi.getAdminNftJobs.mockImplementation(async (_status: string, page: number) => ({ page, pageSize: 30, total: 61, items: [job(`p${page}`)] }));
+    renderWithIntl(<><NftJobsManager tabs={null}>{null}</NftJobsManager><AdminToastHost /></>);
+    expect(await screen.findByText("Page 1 of 3")).toBeTruthy();
+    adminApi.getAdminNftJobs.mockRejectedValueOnce(new Error("down"));
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await waitFor(() => expect(adminApi.getAdminNftJobs).toHaveBeenLastCalledWith("FAILED", 1));
+    expect(await screen.findByText("Page 1 of 3")).toBeTruthy();
+    expect(screen.getByText("err p1")).toBeTruthy();
+  });
+
   it("ignores a slower response for the status the operator already switched away from", async () => {
     let resolveFailed: (value: unknown) => void = () => undefined;
     const job = { id: "jp", nftId: "np", jobType: "MINT_PARENT", status: "PENDING", retryCount: 1, lastError: "pending row", scheduledAt: null, updatedAt: null, nftType: "NINJA_PARENT", nftStatus: "PENDING", bountyTitle: null, ownerNickname: null, ownerWalletAddress: null };

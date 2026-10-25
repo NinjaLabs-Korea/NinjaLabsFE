@@ -56,6 +56,14 @@ describe("public profile payout status", () => {
     expect(toCompletionReward({ rewards: paid, postedRewards: posted, payoutStatus: "PAID" })).toEqual({ reward: { amount: 1, currency: "INJ" }, payoutStatus: "PAID" });
   });
 
+  it("counts the further tokens of a multi-token payout instead of silently dropping them", () => {
+    const both = [...paid, { amount: "1000000", symbol: "USDC" }, { amount: "9", symbol: "UNKNOWN" }];
+    expect(toCompletionReward({ rewards: both, payoutStatus: "PAID" })).toEqual({ reward: { amount: 1, currency: "INJ" }, moreRewards: 1, payoutStatus: "PAID" });
+    // The first displayable row is the primary one, even when an unsupported token comes first.
+    expect(toCompletionReward({ rewards: [{ amount: "9", symbol: "UNKNOWN" }, ...paid], payoutStatus: "PAID" })).toEqual({ reward: { amount: 1, currency: "INJ" }, payoutStatus: "PAID" });
+    expect(toCompletionReward({ rewards: [], postedRewards: [...posted, ...paid], payoutStatus: "PENDING" })).toEqual({ reward: { amount: 500, currency: "USDC" }, moreRewards: 1, payoutStatus: "PENDING" });
+  });
+
   it("shows the posted reward flagged as pending when PENDING", () => {
     expect(toCompletionReward({ rewards: [], postedRewards: posted, payoutStatus: "PENDING" })).toEqual({ reward: { amount: 500, currency: "USDC" }, payoutStatus: "PENDING" });
   });

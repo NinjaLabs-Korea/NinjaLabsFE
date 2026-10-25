@@ -21,7 +21,7 @@ Rules of engagement (binding, same as `AGENTS.md`):
 | `surface-subtle` `#F5F6FB` | `bg-surface-subtle` | Empty panels, future steps, neutral badge fill |
 | `ink` `#111A2E` | `text-ink` | Headings, primary text |
 | `ink-secondary` `#4F5D77` | `text-ink-secondary` | Nav, rich body copy, table cells |
-| `ink-muted` `#77839C` | `text-ink-muted` | Metadata, excerpts, footnotes |
+| `ink-muted` `#626E86` | `text-ink-muted` | Metadata, excerpts, footnotes |
 | `ink-placeholder` `#9CA3AF` | `placeholder:text-ink-placeholder` | Input placeholders |
 | `primary` `#4D3DFF` | `bg-primary` / `text-primary` | Solid CTAs, eyebrows, active chips, focus outline |
 | `primary-strong` `#3D2ED9` | `text-primary-strong` | Outline-button labels, badge text |

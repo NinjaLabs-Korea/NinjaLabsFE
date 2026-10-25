@@ -9,6 +9,8 @@ export type Bounty = {
   category: BountyCategory;
   /** `reviewing` = BE SUBMISSION_CLOSED | IN_REVIEW: no new applications/submissions, but a requested revision can still be resubmitted. */
   status: 'active' | 'reviewing' | 'closed';
+  /** Closed because the work was finished (BE COMPLETED), not cancelled or past its deadline; the landing hero lists only these as completed work. */
+  completed?: boolean;
   /** Primary reward (first funded token); shown on cards. */
   reward: Reward;
   /** Every reward token the bounty pays, primary first. Omitted when only `reward` exists. */
@@ -83,6 +85,8 @@ export type Completion = {
    * posted bounty reward (shown with a "payout pending" badge); NONE → null (nothing shown).
    */
   reward: Reward | null;
+  /** How many further reward tokens the bounty pays beyond `reward` (multi-token bounties); the profile shows `+N`. */
+  moreRewards?: number;
   payoutStatus: PayoutStatus;
   childNft?: { tokenId: string };
 };

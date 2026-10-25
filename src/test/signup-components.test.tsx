@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiKeyReveal } from "@/components/agents/ApiKeyReveal";
@@ -7,6 +7,7 @@ import { CompleteOnboarding } from "@/components/signup/CompleteOnboarding";
 import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
 import { SignupGate } from "@/components/signup/SignupGate";
 import AuthCallbackPage from "@/app/[locale]/auth/callback/page";
+import { ApiHttpError } from "@/lib/api/http";
 import { exchangeLoginCodeFromLocation } from "@/lib/api/oauth";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { renderWithIntl } from "@/test/intl";
@@ -118,6 +119,35 @@ describe("CompleteOnboarding", () => {
     expect(completeOnboarding).not.toHaveBeenCalled();
   });
 
+  it("sends a user who has not saved the profile yet back to the step they owe instead of calling the BE", async () => {
+    const replace = vi.fn();
+    const original = window.location;
+    Object.defineProperty(window, "location", { configurable: true, value: { ...original, pathname: "/en/signup/get-started", replace } });
+    try {
+      state.auth = signedInAs({ ...user, onboardingStep: 2, onboardingCompleted: false });
+      renderWithIntl(<CompleteOnboarding />);
+      await waitFor(() => expect(replace).toHaveBeenCalledWith("/en/signup/wallet"));
+      expect(completeOnboarding).not.toHaveBeenCalled();
+
+      replace.mockClear();
+      cleanup();
+      state.auth = signedInAs({ ...user, onboardingStep: 3, onboardingCompleted: false });
+      renderWithIntl(<CompleteOnboarding />);
+      await waitFor(() => expect(replace).toHaveBeenCalledWith("/en/signup/profile"));
+
+      // Step 4 (profile saved) completes normally and never redirects.
+      replace.mockClear();
+      cleanup();
+      completeOnboarding.mockResolvedValue(undefined);
+      state.auth = signedInAs({ ...user, onboardingStep: 4, onboardingCompleted: false });
+      renderWithIntl(<CompleteOnboarding />);
+      await waitFor(() => expect(completeOnboarding).toHaveBeenCalledTimes(1));
+      expect(replace).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(window, "location", { configurable: true, value: original });
+    }
+  });
+
   it("shows an alert with Retry on failure and clears it once the retry succeeds", async () => {
     state.auth = signedInAs(user);
     completeOnboarding.mockRejectedValueOnce(new Error("boom")).mockResolvedValueOnce(undefined);
@@ -128,6 +158,25 @@ describe("CompleteOnboarding", () => {
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
     expect(completeOnboarding).toHaveBeenCalledTimes(2);
+  });
+
+  it("sends a user whose profile is not saved yet back to their onboarding step instead of offering a dead Retry", async () => {
+    // Opened /signup/get-started directly at step 3: the BE answers 409 PROFILE_REQUIRED on every attempt.
+    state.auth = signedInAs({ ...user, onboardingStep: 3, onboardingCompleted: false });
+    completeOnboarding.mockRejectedValue(new ApiHttpError(409, "PROFILE_REQUIRED"));
+    const assign = vi.fn();
+    const replace = vi.fn();
+    vi.stubGlobal("location", { ...window.location, pathname: "/ko/signup/get-started", assign, replace });
+    try {
+      const { container } = renderWithIntl(<CompleteOnboarding />);
+      // The snapshot already says step 3, so the page redirects up front (replace) before the BE 409 could ever matter;
+      // the 409 handler (assign) is the fallback for a stale snapshot.
+      await waitFor(() => expect(replace.mock.calls.length + assign.mock.calls.length).toBeGreaterThan(0));
+      expect([...replace.mock.calls, ...assign.mock.calls].every(([to]) => to === "/ko/signup/profile")).toBe(true);
+      expect(container.textContent).toBe("");
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

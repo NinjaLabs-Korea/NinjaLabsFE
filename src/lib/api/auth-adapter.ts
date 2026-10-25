@@ -83,6 +83,29 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     return restored;
   }
 
+  /** After a session restore: send an unfinished onboarding to its step, and a signed-in user off the callback page. */
+  function leaveCallbackOrOnboard(restored: AuthSnapshot): void {
+    const onboardingPath = shouldRedirectToOnboarding(
+      restored.user,
+      window.location.pathname,
+    );
+    onboardingLog("onboarding.redirect.evaluated", {
+      currentPath: window.location.pathname,
+      targetPath: onboardingPath,
+      onboardingStep: restored.user?.onboardingStep,
+      onboardingCompleted: restored.user?.onboardingCompleted,
+    });
+    // 콜백은 로케일 경로(/en/auth/callback)로 들어오므로 로케일을 떼고 비교하고, 같은 로케일의 홈으로 보낸다.
+    const onCallback = isAuthCallbackPath(window.location.pathname);
+    const targetPath = onboardingPath ?? (
+      onCallback && restored.status === "signed-in" ? withLocaleOf(window.location.pathname, "/") : null
+    );
+    if (targetPath) {
+      onboardingLog("onboarding.redirect.started", { targetPath });
+      window.location.replace(targetPath);
+    }
+  }
+
   let initialized = false;
   const initialize = () => {
     if (initialized || typeof window === "undefined") return;
@@ -111,27 +134,7 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
         await http.initSession();
       }
       return restoreSession();
-    })().then((restored) => {
-      const onboardingPath = shouldRedirectToOnboarding(
-        restored.user,
-        window.location.pathname,
-      );
-      onboardingLog("onboarding.redirect.evaluated", {
-        currentPath: window.location.pathname,
-        targetPath: onboardingPath,
-        onboardingStep: restored.user?.onboardingStep,
-        onboardingCompleted: restored.user?.onboardingCompleted,
-      });
-      // 콜백은 로케일 경로(/en/auth/callback)로 들어오므로 로케일을 떼고 비교하고, 같은 로케일의 홈으로 보낸다.
-      const onCallback = isAuthCallbackPath(window.location.pathname);
-      const targetPath = onboardingPath ?? (
-        onCallback && restored.status === "signed-in" ? withLocaleOf(window.location.pathname, "/") : null
-      );
-      if (targetPath) {
-        onboardingLog("onboarding.redirect.started", { targetPath });
-        window.location.replace(targetPath);
-      }
-    }).catch((error: unknown) => {
+    })().then(leaveCallbackOrOnboard).catch((error: unknown) => {
       // 교환을 실제로 시도했다가 실패한 경우에만 기존 세션을 끝낸다(쿠키도 폐기). `#error=`나 verifier 없는
       // `#loginCode=`(링크로 심을 수 있는 값)로는 로그인 중이던 세션을 잃지 않고 쿠키로 그대로 복원한다.
       const attempted = error instanceof LoginExchangeError && error.attempted;
@@ -143,6 +146,11 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       }
       return http.initSession()
         .then(() => restoreSession())
+        // The restored session still has to leave the callback page (it shows a spinner for a signed-in user).
+        .then((restored) => {
+          leaveCallbackOrOnboard(restored);
+          return restored;
+        })
         .catch(() => setSnapshot({ status: "signed-out", user: null }));
     });
   };
