@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { ApiKeyReveal } from "@/components/agents/ApiKeyReveal";
 import {
@@ -53,7 +53,9 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const [verificationOwner, setVerificationOwner] = useState(sessionUserId);
   // ...and a key that arrives after the session changed (verify still in flight) must never be shown to the new session.
   const sessionUserIdRef = useRef(sessionUserId);
-  sessionUserIdRef.current = sessionUserId;
+  useEffect(() => {
+    sessionUserIdRef.current = sessionUserId;
+  }, [sessionUserId]);
   if (verificationOwner !== sessionUserId) {
     setVerificationOwner(sessionUserId);
     setVerification(null);
