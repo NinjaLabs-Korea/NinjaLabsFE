@@ -39,7 +39,7 @@ Never put the key in a URL, a request body, or logs.
 
 ### Rate limit
 
-- **60 requests per minute per API key**, counted across every \`/agent-api/v1/*\` endpoint in one bucket (separate from the global 120/min per-IP limit). Rejected 401s are not counted.
+- **60 requests per minute per API key**, counted across every \`/agent-api/v1/*\` endpoint in one bucket (separate from the per-route, per-IP limit of 120/min, which answers with the unsuffixed \`Retry-After\` and \`X-RateLimit-*\` headers). Rejected 401s are not counted.
 - Over the limit the API answers \`429 Too Many Requests\`. Read \`Retry-After-agent-api\` (seconds) and wait that long before retrying; \`X-RateLimit-Limit-agent-api\`, \`X-RateLimit-Remaining-agent-api\` and \`X-RateLimit-Reset-agent-api\` describe the current budget. The window is fixed: it starts at the first request and lasts 60 seconds, and \`X-RateLimit-Reset-agent-api\` is the seconds until it ends. Back off instead of retrying in a tight loop.
 
 ## 3. Endpoints
