@@ -65,7 +65,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
               <Badge variant={completed ? "success" : "neutral"}>{completed ? t("bountiesCompleted", { count: profile.completions.length }) : t("newBuilder")}</Badge>
             </div>
             <h1 className="mt-3 break-words font-display text-4xl -tracking-[0.36px] text-ink sm:text-5xl sm:-tracking-[0.48px]">{profile.handle}</h1>
-            <p className="mt-3 max-w-[768px] text-base text-ink-muted">{profile.bio}</p>
+            <p className="mt-3 max-w-[768px] break-words text-base text-ink-muted">{profile.bio}</p>
           </div>
         </div>
         <Badge variant="success">{t("shareable")}</Badge>
@@ -95,7 +95,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
                   <div key={nft.id} className={`relative flex aspect-square flex-col overflow-hidden p-3 ${nftTileClass}`} title={[nft.tokenId ? t("portfolio.token", { id: nft.tokenId }) : null, nft.mintTxHash ? t("portfolio.tx", { hash: nft.mintTxHash }) : null].filter(Boolean).join(" · ") || undefined}>
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,var(--color-on-inverse)_0%,transparent_60%)] opacity-35" />
                     {nft.status !== "ATTACHED" ? <span className="relative text-xs text-on-inverse/70">{t(`nftStatus.${nft.status}`)}</span> : null}
-                    <span className="relative mt-auto text-xs font-semibold [text-shadow:var(--shadow-tile-text)]">{nft.title}</span>
+                    <span className="relative mt-auto break-words text-xs font-semibold [text-shadow:var(--shadow-tile-text)]">{nft.title}</span>
                   </div>
                 ))}
                 <div className="flex aspect-square items-center justify-center rounded-tile border border-dashed border-on-inverse/30 text-sm text-on-inverse/70">{t("portfolio.next")}</div>
@@ -126,7 +126,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
               return (
               <Link className="rounded-card border border-border bg-surface p-[21px] shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={completion.bountySlug ? `/bounties/${completion.bountySlug}` : "/bounties"} key={`${completion.bountySlug ?? ""}:${completion.title}`}>
                 <Badge>{t(`categories.${completion.category.toLowerCase()}`)}</Badge>
-                <h3 className="mt-3 font-display text-lg font-bold text-ink">{completion.title}</h3>
+                <h3 className="mt-3 break-words font-display text-lg font-bold text-ink">{completion.title}</h3>
                 <p className="mt-2 text-sm text-ink-muted">
                   {completion.reward
                     ? t("history.completedOn", { date: completion.completedAt, reward: `${format.number(completion.reward.amount, { maximumFractionDigits: 6 })} ${completion.reward.currency}` })
@@ -154,10 +154,10 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
             {profile.agents.map((agent) => (
               <article key={agent.wallet} className="rounded-card border border-dashed border-border-dashed bg-surface p-6">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="font-display text-xl font-bold text-ink">{agent.name}</h3>
+                  <h3 className="min-w-0 break-words font-display text-xl font-bold text-ink">{agent.name}</h3>
                   {agent.verified ? <Badge variant="success">{t("agents.verified")}</Badge> : null}
                 </div>
-                <p className="mt-3 text-sm text-ink-muted">{t("agents.wallet", { wallet: agent.wallet })}</p>
+                <p className="mt-3 break-all text-sm text-ink-muted">{t("agents.wallet", { wallet: agent.wallet })}</p>
                 <p className="mt-3 text-base font-semibold text-ink">{t("agents.completed", { count: agent.completedBounties })}</p>
               </article>
             ))}
