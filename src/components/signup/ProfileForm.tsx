@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useState, type FormEvent } from "react";
-import { useOnboardingApi, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { useAuthSnapshot, useOnboardingApi, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
 import { validationFieldsFromError } from "@/lib/api/validation";
@@ -51,6 +51,7 @@ export function ProfileForm() {
   const tSaveErrors = useTranslations(ERROR_COPY.profileSave.messages);
   const apiClient = useOnboardingApi();
   const mode = useFoundationMode();
+  const auth = useAuthSnapshot();
   const [nickname, setNickname] = useState(mode === "mock" ? signup.profile.nickname : "");
   const [bio, setBio] = useState(mode === "mock" ? signup.profile.bio : "");
   const [tags, setTags] = useState<string[]>(mode === "mock" ? ["DEV", "DESIGN"] : []);
@@ -62,8 +63,12 @@ export function ProfileForm() {
 
   const trimmedNickname = normalizeNickname(nickname);
   const nicknameRuleError = validateNickname(trimmedNickname);
+  // 이미 저장한 내 닉네임(뒤로 가기·재방문)은 BE `check-nickname`(공개, 익명)에게 "사용 중"이지만 저장은 허용된다(자기 행 UPDATE).
+  // 그 값은 묻지도 막지도 않는다. BE 비교는 대소문자 무시(`lower(nickname)`).
+  const ownNickname = auth.status === "signed-in" ? normalizeNickname(auth.user.handle).toLowerCase() : null;
+  const isOwnNickname = ownNickname !== null && trimmedNickname.toLowerCase() === ownNickname;
   // 규칙을 통과한 값만 BE에 묻는다; 마지막 검사 결과가 현재 입력과 다르면 아직 확인 중이다.
-  const nicknameStatus: "idle" | "checking" | "available" | "taken" = nicknameRuleError
+  const nicknameStatus: "idle" | "checking" | "available" | "taken" = nicknameRuleError || isOwnNickname
     ? "idle"
     : nicknameCheck?.nickname !== trimmedNickname
       ? "checking"
@@ -74,7 +79,7 @@ export function ProfileForm() {
           : "taken";
 
   useEffect(() => {
-    if (nicknameRuleError) return;
+    if (nicknameRuleError || isOwnNickname) return;
     let cancelled = false;
     const timer = window.setTimeout(() => {
       apiClient
@@ -90,7 +95,7 @@ export function ProfileForm() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [apiClient, nicknameRuleError, trimmedNickname]);
+  }, [apiClient, isOwnNickname, nicknameRuleError, trimmedNickname]);
 
   const toggleTag = (value: string) => {
     setTags((current) =>
