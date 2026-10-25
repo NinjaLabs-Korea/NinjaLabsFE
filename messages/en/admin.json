@@ -182,7 +182,7 @@
         "required": "This field is required.",
         "deadlineInvalid": "Enter a valid date and time.",
         "deadlinePast": "Choose a deadline in the future.",
-        "amountInvalid": "Enter an amount greater than 0, or leave it empty for a draft.",
+        "amountInvalid": "Enter an amount greater than 0 with no more decimals than the token supports (USDC 6, INJ 18), or leave it empty for a draft.",
         "deliverablesRequired": "Add at least one deliverable or a submission guide.",
         "titleTooLong": "Use at most 200 characters.",
         "sponsorTooLong": "Use at most 100 characters."

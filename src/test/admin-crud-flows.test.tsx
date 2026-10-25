@@ -104,7 +104,7 @@ describe("BountyManager flows", () => {
     type("Review process", "Triage");
     fireEvent.submit(screen.getByRole("button", { name: "Create" }).closest("form") as HTMLFormElement);
     expect(errorFor(field("Deadline"))).toBe("Choose a deadline in the future.");
-    expect(errorFor(field("Reward amount"))).toBe("Enter an amount greater than 0, or leave it empty for a draft.");
+    expect(errorFor(field("Reward amount"))).toBe("Enter an amount greater than 0 with no more decimals than the token supports (USDC 6, INJ 18), or leave it empty for a draft.");
     expect(field("Title").getAttribute("aria-invalid")).toBeNull();
   });
 
