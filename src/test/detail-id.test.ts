@@ -47,6 +47,30 @@ describe("detail id shape", () => {
   });
 });
 
+describe("member ids are never dot segments", () => {
+  // `/members/%2e%2e` decodes to ".." and `${api}/users/..` is the BE root: reject before any fetch, in the page and the proxy.
+  it.each([".", "..", "...", ".ninja", "ninja.", "-ninja", "a/..", "%2e%2e"])("rejects %j in api mode", async (id) => {
+    runtime.mode = "api";
+    runtime.apiUrl = "https://api.ninjalabs.example";
+    const fetchMock = vi.fn(async () => new Response(null, { status: 404 }));
+    vi.stubGlobal("fetch", fetchMock);
+    expect(isValidDetailId("members", id, "api")).toBe(false);
+    await expect(validateDetailId("members", id)).resolves.toBe(false);
+    await expect(detailMayExist("members", id)).resolves.toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("decodes %2e%2e in the proxy route, then fails the shape check", async () => {
+    expect(resolveDetailRoute("/en/members/%2e%2e")).toEqual({ locale: "en", kind: "members", id: ".." });
+    runtime.mode = "api";
+    await expect(detailMayExist("members", "..")).resolves.toBe(false);
+  });
+
+  it("still accepts dotted nicknames that start and end with a letter or digit", () => {
+    for (const id of ["ninja.inj", "a.b.c", "x_y", "닌자.inj"]) expect(isValidDetailId("members", id, "api"), id).toBe(true);
+  });
+});
+
 describe("resolveDetailRoute (proxy)", () => {
   it("parses only /[locale]/<kind>/[id] and decodes the id", () => {
     expect(resolveDetailRoute("/en/bounties/does-not-exist")).toEqual({ locale: "en", kind: "bounties", id: "does-not-exist" });

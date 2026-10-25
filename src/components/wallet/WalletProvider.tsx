@@ -6,6 +6,7 @@ import { http } from "viem";
 import { createConfig, WagmiProvider } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { createInjectiveChain } from "@/components/wallet/injective-chain";
+import { WalletSessionGuard } from "@/components/wallet/WalletSessionGuard";
 
 type WalletProviderProps = {
   chainId: number;
@@ -37,7 +38,10 @@ export function WalletProvider({ chainId, rpcUrl, children }: WalletProviderProp
 
   return (
     <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <WalletSessionGuard />
+        {children}
+      </QueryClientProvider>
     </WagmiProvider>
   );
 }

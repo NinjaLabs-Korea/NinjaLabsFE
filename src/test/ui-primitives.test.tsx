@@ -155,6 +155,12 @@ describe("Markdown allowlist", () => {
     expect(screen.getByRole("link", { name: "mail" }).getAttribute("target")).toBeNull();
   });
 
+  it("drops links whose href has a backslash (browsers read it as a slash, so \\/host is //host) but keeps the text", () => {
+    const { container } = renderMd("[a](\\\\/evil.example) [b](/\\\\evil.example) [c](https:\\\\\\\\evil.example) [ok](https://injective.com)");
+    expect(container.textContent).toContain("a b c");
+    expect(Array.from(container.querySelectorAll("a")).map((anchor) => anchor.getAttribute("href"))).toEqual(["https://injective.com"]);
+  });
+
   it("does not render raw HTML, images, tables or h1 but keeps their text", () => {
     const { container } = renderMd(
       [

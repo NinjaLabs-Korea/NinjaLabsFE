@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AccountSettingsView } from "@/components/account/AccountSettingsView";
 import { localeAlternates } from "@/i18n/alternates";
@@ -20,6 +21,8 @@ export async function generateMetadata({ params }: AccountPageProps): Promise<Me
 }
 
 export default async function AccountPage({ params }: AccountPageProps) {
+  // Nonce route (lib/csp.ts NONCE_ROUTE_PATTERNS): the CSP nonce is per request, so this must not be prerendered.
+  await connection();
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("account.settings");

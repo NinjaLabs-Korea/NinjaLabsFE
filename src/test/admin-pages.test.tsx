@@ -133,6 +133,9 @@ describe("AdminTable", () => {
   });
 });
 
+// The layout awaits `connection()` (nonce route, rendered per request); outside a request there is no store to wait on.
+vi.mock("next/server", async (importOriginal) => ({ ...(await importOriginal<typeof import("next/server")>()), connection: async () => undefined }));
+
 describe("admin pages", () => {
   it("redirects /admin to the users tab in the request locale", async () => {
     const { default: AdminIndex } = await import("@/app/[locale]/admin/page");
