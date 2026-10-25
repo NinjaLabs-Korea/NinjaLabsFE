@@ -33,6 +33,8 @@ export type Bounty = {
   /** Figma 15v renders variant-specific masthead/description copy without changing list copy. */
   applicationTitle?: string;
   applicationDescription?: string;
+  /** Application-required bounty whose `application_deadline` has passed: new applications are refused (BE `APPLICATION_DEADLINE_PASSED`); approved applicants can still submit. */
+  applicationClosed?: boolean;
 };
 
 export type Notice = {
