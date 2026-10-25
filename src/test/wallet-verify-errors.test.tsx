@@ -20,10 +20,12 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
   }));
 
 const signMessageAsync = vi.fn(async () => "0xsignature");
+const FIRST_ADDRESS = "0x1234567890abcdef1234567890abcdef1234cdef";
+const wallet = { address: FIRST_ADDRESS };
 vi.mock("@/components/wallet/useWalletConnection", () => ({
   shortWalletAddress: (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`,
   useWalletConnection: () => ({
-    address: "0x1234567890abcdef1234567890abcdef1234cdef",
+    address: wallet.address,
     connectedChainId: 1439,
     isWrongNetwork: false,
     isConnected: true,
@@ -49,6 +51,7 @@ async function verifyAndReadAlert(): Promise<string> {
 describe("WalletConnectButton verification errors", () => {
   beforeEach(() => {
     push.mockReset();
+    wallet.address = FIRST_ADDRESS;
     walletApi.createWalletChallenge.mockClear();
     walletApi.verifyWallet.mockReset();
     signMessageAsync.mockReset();
@@ -81,6 +84,17 @@ describe("WalletConnectButton verification errors", () => {
   it("keeps the generic copy for an unlisted BE code", async () => {
     walletApi.verifyWallet.mockRejectedValue(new ApiHttpError(500, "UNKNOWN_ERROR"));
     expect(await verifyAndReadAlert()).toBe("Wallet verification failed. Check the signature request and try again.");
+  });
+
+  it("does not show a failure of one address under another wallet connected afterwards", async () => {
+    walletApi.verifyWallet.mockRejectedValue(new ApiHttpError(409, "WALLET_ALREADY_LINKED"));
+    const { rerender } = renderWithIntl(<WalletConnectButton chainId={1439} />);
+    fireEvent.click(screen.getByRole("button", { name: "Verify wallet" }));
+    expect(await screen.findByRole("alert")).toBeTruthy();
+
+    wallet.address = "0xabcdefabcdefabcdefabcdefabcdefabcdef0001";
+    rerender(<WalletConnectButton chainId={1439} />);
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("navigates to the profile step on success", async () => {

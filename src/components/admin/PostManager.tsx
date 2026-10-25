@@ -1,11 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
+import { AdminListStatus } from "@/components/admin/AdminListStatus";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
+import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { postCategoryLabelKeys, publishOptionFor, type AdminPost, adminErrorDescription } from "@/lib/admin-helpers";
 import { isHttpUrl, isHttpUrlOrMediaPath } from "@/lib/url-rules";
@@ -52,7 +54,6 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   const t = useTranslations("admin.notices");
   const tCommon = useTranslations("admin.common");
   const categoryLabel = (value: string) => t(`categories.${postCategoryLabelKeys[value as AdminPost["category"]]}`);
-  const [records, setRecords] = useState(posts);
   const [mode, setMode] = useState<"create" | string>("create");
   const [form, setForm] = useState<PostForm>(emptyForm);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
@@ -69,16 +70,11 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     "aria-describedby": [errors[key] ? `post-${key}-error` : null, hintId ?? null].filter(Boolean).join(" ") || undefined,
   });
 
-  // Re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
+  // `reload` re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
   // (never "save failed": a retry of an already-created notice would create a duplicate).
-  const reload = useCallback(
-    () => api.getAdminPosts().then(setRecords).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") })),
-    [api, t],
-  );
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
+  const fetchPosts = useCallback(() => api.getAdminPosts(), [api]);
+  const toastLoadFailed = useCallback(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }), [t]);
+  const { records, setRecords, loadState, reload, retry } = useAdminList(fetchPosts, posts, toastLoadFailed);
 
   const updateForm = <K extends keyof PostForm>(key: K, value: PostForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -183,6 +179,8 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       </div>
       {tabs}
       <div className="mt-6 space-y-6">
+      <AdminListStatus failedText={t("toast.loadFailedDescription")} onRetry={retry} state={loadState} />
+      {loadState === "ready" ? (
       <AdminTable columns={postColumns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[820px]">
         {records.map((post) => (
           <tr key={post.slug} className="border-t border-border">
@@ -194,6 +192,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
           </tr>
         ))}
       </AdminTable>
+      ) : null}
 
       <section className="rounded-card border border-border bg-surface p-[21px] shadow-card" ref={formRef}>
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{isEditing ? t("form.eyebrowEdit") : t("form.eyebrowCreate")}</p>

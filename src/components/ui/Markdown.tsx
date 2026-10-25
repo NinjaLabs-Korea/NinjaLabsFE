@@ -3,6 +3,9 @@ import remarkGfm from "remark-gfm";
 
 // Deliberate long-form prose subset: tables, images, and task lists are unsupported by design
 // (unwrapDisallowed keeps their text content). See Bounty/Notice markdown contract in src/lib/types.ts.
+// Absolute (any scheme case) or protocol-relative: a bare `startsWith("http")` also matched relative paths like `http-guide`.
+const EXTERNAL_HREF = /^(https?:)?\/\//i;
+
 const allowedElements = ["p", "a", "strong", "em", "ul", "ol", "li", "h2", "h3", "code", "pre", "blockquote", "br", "del"];
 
 export function Markdown({ children }: { children: string }) {
@@ -14,7 +17,7 @@ export function Markdown({ children }: { children: string }) {
       components={{
         p: ({ children }) => <p className="mt-4 first:mt-0 text-base text-ink-secondary">{children}</p>,
         a: ({ href, children }) => {
-          const isExternal = typeof href === "string" && (href.startsWith("http") || href.startsWith("//"));
+          const isExternal = typeof href === "string" && EXTERNAL_HREF.test(href);
           return (
             <a
               className="font-semibold text-primary-strong underline underline-offset-2 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

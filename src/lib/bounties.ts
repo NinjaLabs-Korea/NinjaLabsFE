@@ -142,6 +142,7 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     applicationRequired: row.application_required,
     applicationTitle: row.application_required ? row.title : undefined,
     applicationDescription: row.application_required ? row.summary : undefined,
+    ...(row.status === "OPEN" && status === "closed" ? { deadlinePassed: true } : {}),
     ...(row.application_required && isPast(row.application_deadline) ? { applicationClosed: true } : {}),
   };
 }

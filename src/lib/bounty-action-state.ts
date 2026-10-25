@@ -44,6 +44,8 @@ export type BountyActionInput = {
   submissionMode: "direct" | "agent";
   /** `Bounty.applicationClosed`: the application deadline passed, so a first application is refused. */
   applicationClosed?: boolean;
+  /** `Bounty.deadlinePassed`: `status` is `closed` only because the deadline passed; a requested revision is still resubmittable. */
+  deadlinePassed?: boolean;
   auth: AuthStatus;
   applications: AccountRowsQuery<ApplicationRow>;
   submissions: AccountRowsQuery<SubmissionRow>;
@@ -88,7 +90,7 @@ export function splitRows<T extends { agent: AccountAgentRef | null }>(rows: rea
 }
 
 export function deriveActionView(input: BountyActionInput): BountyActionView {
-  const { applicationRequired, applicationClosed = false, status, submissionMode, auth, applications, submissions, applied, submitted } = input;
+  const { applicationRequired, applicationClosed = false, deadlinePassed = false, status, submissionMode, auth, applications, submissions, applied, submitted } = input;
   const acceptingNew = status === "active";
   const closed: BountyActionView = { kind: "closed", reason: status === "reviewing" ? "reviewing" : "closed" };
 
@@ -130,7 +132,8 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
 
   // 8~9. BE는 승인/거절 전까지 재제출을 받는다(마감 후엔 수정 요청일 때만). 단 바운티가 진행 중일 때만(`isInProgress`:
   // OPEN / SUBMISSION_CLOSED / IN_REVIEW) — `closed`(COMPLETED / CANCELLED)는 BOUNTY_REVIEW_CLOSED이므로 재제출 폼을 주지 않는다.
-  const revising = submission?.status === "revision_requested" && status !== "closed";
+  // 단 마감일만 지난 OPEN 바운티도 FE 상태는 `closed`이지만 BE는 수정 요청 재제출을 받는다(`deadlinePassed`).
+  const revising = submission?.status === "revision_requested" && (status !== "closed" || deadlinePassed);
   const inReview = submitted || (submission !== undefined && PENDING_SUBMISSION_STATUSES.includes(submission.status));
   if (!acceptingNew && !revising) return inReview ? { kind: "inReviewLocked" } : closed;
   const revisionComment = revising ? parseReviewComment(submission?.reviewComment)?.text : undefined;

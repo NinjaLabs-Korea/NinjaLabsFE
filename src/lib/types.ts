@@ -37,6 +37,8 @@ export type Bounty = {
   applicationDescription?: string;
   /** Application-required bounty whose `application_deadline` has passed: new applications are refused (BE `APPLICATION_DEADLINE_PASSED`); approved applicants can still submit. */
   applicationClosed?: boolean;
+  /** BE status is still `OPEN` but `submission_deadline` has passed, so `status` is `closed`: no new submissions, yet a requested revision can still be resubmitted (BE `canResubmitAfterIntakeClosed`). */
+  deadlinePassed?: boolean;
 };
 
 export type Notice = {

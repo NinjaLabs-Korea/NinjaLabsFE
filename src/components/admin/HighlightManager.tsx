@@ -1,11 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useCallback, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { AdminListStatus } from "@/components/admin/AdminListStatus";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
+import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { DISPLAY_ORDER_MAX, highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminErrorDescription } from "@/lib/admin-helpers";
 import { HIGHLIGHT_TYPE_CODES, isHighlightTypeCode } from "@/lib/api/codecs";
@@ -48,7 +50,6 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     const key = highlightTypeLabelKey(value);
     return key ? t(`types.${key}`) : value;
   };
-  const [records, setRecords] = useState(() => sortHighlights(highlights));
   const [mode, setMode] = useState<"create" | string>("create");
   const [type, setType] = useState<AdminHighlight["type"]>(DEFAULT_TYPE);
   const [title, setTitle] = useState("");
@@ -73,16 +74,11 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     "aria-describedby": [errors[key] ? `highlight-${key}-error` : null, hintId ?? null].filter(Boolean).join(" ") || undefined,
   });
 
-  // Re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
+  // `reload` re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
   // (never "save failed": a retry of an already-created highlight would create a duplicate).
-  const reload = useCallback(
-    () => api.getAdminHighlights().then((items) => setRecords(sortHighlights(items))).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") })),
-    [api, t],
-  );
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
+  const fetchHighlights = useCallback(() => api.getAdminHighlights().then(sortHighlights), [api]);
+  const toastLoadFailed = useCallback(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }), [t]);
+  const { records, setRecords, loadState, reload, retry } = useAdminList(fetchHighlights, sortHighlights(highlights), toastLoadFailed);
 
   const isEditing = mode !== "create";
 
@@ -202,6 +198,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
           <button className="h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={handleAdd} type="button">{t("addItem")}</button>
         </div>
         <div className="mt-6">
+          <AdminListStatus failedText={t("toast.loadFailedDescription")} onRetry={retry} state={loadState} />
+          {loadState === "ready" ? (
           <AdminTable columns={highlightColumns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[760px]">
             {records.map((highlight) => (
               <tr key={highlight.id} className="border-t border-border">
@@ -218,6 +216,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
               </tr>
             ))}
           </AdminTable>
+          ) : null}
         </div>
       </section>
 
