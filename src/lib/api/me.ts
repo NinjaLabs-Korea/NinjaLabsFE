@@ -20,7 +20,8 @@ export function toClientUser(me: MeResponse): ClientUser {
   return {
     id: me.id,
     handle: me.nickname,
-    initials: me.nickname.slice(0, 2).toUpperCase(),
+    // By code point: `slice(0, 2)` would cut an astral letter (nicknames allow any Unicode letter) into a lone surrogate.
+    initials: Array.from(me.nickname).slice(0, 2).join("").toUpperCase(),
     profileSlug: me.nickname,
     onboardingStep: me.onboardingStep,
     onboardingCompleted: me.onboardingCompleted,

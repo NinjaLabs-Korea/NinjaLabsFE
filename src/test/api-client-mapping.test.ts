@@ -257,6 +257,11 @@ describe("account reads: signed-out and failures", () => {
     expect(user).toEqual({ id: "u", handle: "zed", initials: "ZE", profileSlug: "zed", onboardingStep: 2, onboardingCompleted: false, isAdmin: false });
     expect(user).not.toHaveProperty("walletAddress");
   });
+
+  it("takes initials by code point so an astral letter is not cut into a lone surrogate", () => {
+    const user = toClientUser({ id: "u", nickname: "\u{1D4D0}\u{1D4D1}c", onboardingStep: 2, onboardingCompleted: false, isAdmin: false, wallet: null } as unknown as MeResponse);
+    expect(user.initials).toBe("\u{1D4D0}\u{1D4D1}");
+  });
 });
 
 describe("write requests: method, path encoding and body", () => {
