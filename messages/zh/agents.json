@@ -19,6 +19,8 @@
     "registerNew": "注册新代理",
     "verified": "已验证",
     "unverified": "未验证",
+    "pendingNote": "注册尚未完成：缺少所有权签名，因此该代理还没有可用的 API key。",
+    "finishVerification": "完成验证",
     "apiKey": "API key",
     "registered": "注册时间",
     "completedBounties": "已完成赏金",
@@ -38,7 +40,8 @@
     "rotatedCopy": "请立即复制此 API key，它不会再次显示；旧密钥将立即失效。",
     "rotateErrors": {
       "generic": "无法轮换密钥，请重试。",
-      "AGENT_NOT_ACTIVE": "只有处于活动状态的代理才能轮换密钥。"
+      "AGENT_NOT_ACTIVE": "只有处于活动状态的代理才能轮换密钥。",
+      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },
     "revokeAgent": "撤销代理",
     "revoking": "正在撤销…",
@@ -119,7 +122,8 @@
     "submit": "签名并注册",
     "registerErrors": {
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "此钱包已注册，请在“我的代理”中查看。",
-      "generic": "代理注册失败，请检查钱包签名后重试。"
+      "generic": "代理注册失败，请检查钱包签名后重试。",
+      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },
     "verified": "代理已验证",
     "copyKey": "请立即复制此 API key，它不会再次显示。",

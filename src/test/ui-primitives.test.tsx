@@ -80,6 +80,7 @@ describe("ConfirmDialog", () => {
     fireEvent.click(dialog, { clientX: 150, clientY: 150 });
     fireEvent.click(screen.getByText("Revoke agent?"), { clientX: 10, clientY: 10 });
     expect(onCancel).not.toHaveBeenCalled();
+    fireEvent.pointerDown(dialog);
     fireEvent.click(dialog, { clientX: 10, clientY: 10 });
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
@@ -141,9 +142,23 @@ describe("Markdown allowlist", () => {
     expect(ext.getAttribute("rel")).toBe("noreferrer");
     expect(screen.getByRole("link", { name: "proto" }).getAttribute("target")).toBe("_blank");
     const rel = screen.getByRole("link", { name: "rel" });
-    expect(rel.getAttribute("href")).toBe("/bounties/abc");
+    // Same-site paths keep the reader's locale (localePrefix "always").
+    expect(rel.getAttribute("href")).toBe("/en/bounties/abc");
     expect(rel.getAttribute("target")).toBeNull();
     expect(rel.getAttribute("rel")).toBeNull();
+  });
+
+  it("treats only real absolute URLs as external: a relative path starting with 'http' stays in-tab, an uppercase scheme opens a new tab", () => {
+    renderMd("[guide](http-guide) [shout](HTTPS://injective.com) [mail](mailto:a@b.co)");
+    expect(screen.getByRole("link", { name: "guide" }).getAttribute("target")).toBeNull();
+    expect(screen.getByRole("link", { name: "shout" }).getAttribute("target")).toBe("_blank");
+    expect(screen.getByRole("link", { name: "mail" }).getAttribute("target")).toBeNull();
+  });
+
+  it("drops links whose href has a backslash (browsers read it as a slash, so \\/host is //host) but keeps the text", () => {
+    const { container } = renderMd("[a](\\\\/evil.example) [b](/\\\\evil.example) [c](https:\\\\\\\\evil.example) [ok](https://injective.com)");
+    expect(container.textContent).toContain("a b c");
+    expect(Array.from(container.querySelectorAll("a")).map((anchor) => anchor.getAttribute("href"))).toEqual(["https://injective.com"]);
   });
 
   it("does not render raw HTML, images, tables or h1 but keeps their text", () => {

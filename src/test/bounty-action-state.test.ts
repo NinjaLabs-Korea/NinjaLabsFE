@@ -105,6 +105,8 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["reviewing, just submitted", { status: "reviewing", submitted: true }, { kind: "inReviewLocked" }],
   ["reviewing, nothing submitted", { status: "reviewing" }, { kind: "closed", reason: "reviewing" }],
   ["closed, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "closed" }],
+  ["closed only by the deadline, revision requested (BE still resubmittable)", { status: "closed", deadlinePassed: true, submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: false }],
+  ["closed only by the deadline, nothing submitted", { status: "closed", deadlinePassed: true }, { kind: "closed", reason: "closed" }],
   // 9. 제출 폼
   ["first submission", {}, firstSubmit],
   ["submission pending → update form", { submissions: loaded([sub("submitted")]) }, updateSubmit],
@@ -156,5 +158,11 @@ describe("bountyActionErrorCopy — bounties.action.errors key for a failed appl
   it("a non-HTTP failure (network, wallet) falls back to `generic`", () => {
     expect(bountyActionErrorCopy(new TypeError("Failed to fetch"))).toEqual({ key: "generic" });
     expect(bountyActionErrorCopy({ code: "ALREADY_APPLIED" })).toEqual({ key: "generic" });
+  });
+});
+
+describe("bountyActionErrorCopy: throttled requests", () => {
+  it("shows the too-many-requests copy, not the raw throttler text, for a 429", () => {
+    expect(bountyActionErrorCopy(new ApiHttpError(429, "ThrottlerException: Too Many Requests"))).toEqual({ key: "TOO_MANY_REQUESTS" });
   });
 });

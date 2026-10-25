@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import { useState } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { Modal } from "@/components/ui/Modal";
@@ -39,5 +39,39 @@ describe("Modal", () => {
     rerender(<Harness open={false} />);
     expect(close).toHaveBeenCalledTimes(1);
     expect(document.activeElement?.id).toBe("fallback");
+  });
+});
+
+describe("Modal backdrop dismissal", () => {
+  beforeAll(() => {
+    HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute("open", ""); };
+    HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) { this.removeAttribute("open"); };
+  });
+
+  function setup() {
+    const onClose = vi.fn();
+    const utils = render(
+      <Modal labelledBy="t" onClose={onClose} open>
+        <h2 id="t">Title</h2>
+        <input aria-label="confirm" />
+      </Modal>,
+    );
+    const dialog = utils.container.querySelector("dialog") as HTMLDialogElement;
+    return { onClose, dialog, input: utils.getByLabelText("confirm") };
+  }
+
+  it("closes on a click that started and ended on the backdrop", () => {
+    const { onClose, dialog } = setup();
+    fireEvent.pointerDown(dialog);
+    fireEvent.click(dialog, { clientX: -5, clientY: -5 });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays open when a press inside the dialog is released on the backdrop", () => {
+    const { onClose, dialog, input } = setup();
+    fireEvent.pointerDown(input);
+    // The browser targets the click at the common ancestor (the dialog) when the pointer is released outside the box.
+    fireEvent.click(dialog, { clientX: -5, clientY: -5 });
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { AgentRegisterForm } from "@/components/agents/AgentRegisterForm";
@@ -11,7 +12,7 @@ import { loadFromRuntime } from "@/lib/api/public";
 import { PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { composeFoundationRuntime } from "@/lib/runtime/config";
-import { localeAlternates } from "@/i18n/alternates";
+import { localeMetadata } from "@/i18n/alternates";
 
 const { wallet: walletConnectionConfig } = composeFoundationRuntime(previewUser);
 
@@ -27,10 +28,12 @@ type AgentRegisterPageProps = {
 export async function generateMetadata({ params }: AgentRegisterPageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "agents.meta.register" });
-  return { alternates: localeAlternates(locale, "/agents/register"), title: t("title"), description: t("description") };
+  return localeMetadata(locale, "/agents/register", { title: t("title"), description: t("description") });
 }
 
 export default async function AgentRegisterPage({ params }: AgentRegisterPageProps) {
+  // Nonce route (lib/csp.ts NONCE_ROUTE_PATTERNS): the CSP nonce is per request, so this must not be prerendered.
+  await connection();
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("agents.register");

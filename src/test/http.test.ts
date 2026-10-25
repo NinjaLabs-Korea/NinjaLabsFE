@@ -98,6 +98,14 @@ describe("cookie-mode refresh request", () => {
     expect(new Headers(init.headers).get("x-ninja-session")).toBeNull();
   });
 
+  it("reads a 2xx without a body as undefined instead of failing a write that went through", async () => {
+    installSession("fresh-access");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 200 })));
+    const http = createApiHttp(API);
+    await expect(http.fetchJson("/admin/notices/n1", { method: "DELETE" })).resolves.toBeUndefined();
+    await expect(http.fetchForm("/admin/media", new FormData())).resolves.toBeUndefined();
+  });
+
   it("ignores a refreshToken in the refresh body (older BE) and never stores it", async () => {
     stubRefreshFlow(() => Response.json({ accessToken: "fresh-access", refreshToken: "leaked-refresh" }));
     await createApiHttp(API).initSession();
@@ -544,6 +552,38 @@ describe("API auth adapter cross-tab sign-out", () => {
       signedInElsewhere();
       await new Promise((resolve) => setTimeout(resolve, 10));
       expect(tab.getSnapshot().user?.handle).toBe("alice");
+    });
+  });
+
+  describe("adapter teardown (provider remount)", () => {
+    const signedInElsewhere = () => new FakeBroadcastChannel(AUTH_CHANNEL_NAME).postMessage({ type: "signed-in" });
+
+    it("stops listening to other tabs and closes its channel, so a replaced provider does not re-read the session", async () => {
+      const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+      const adapter = createApiAuthAdapter(API);
+      const teardown = adapter.initialize?.();
+      await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+      const calls = request.mock.calls.length;
+      expect(typeof teardown).toBe("function");
+
+      (teardown as () => void)();
+      expect(FakeBroadcastChannel.instances.filter((channel) => !channel.closed)).toHaveLength(0);
+      signedInElsewhere();
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(request.mock.calls).toHaveLength(calls);
+    });
+
+    it("listens again when the same adapter is initialized again (StrictMode) without restoring the session twice", async () => {
+      const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
+      const adapter = createApiAuthAdapter(API);
+      (adapter.initialize?.() as () => void)();
+      const second = adapter.initialize?.();
+      await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+      expect(refreshCalls(request)).toHaveLength(1);
+
+      signedInElsewhere();
+      await vi.waitFor(() => expect(refreshCalls(request)).toHaveLength(2));
+      (second as () => void)();
     });
   });
 

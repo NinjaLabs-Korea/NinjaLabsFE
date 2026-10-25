@@ -121,6 +121,8 @@ type BountyActionPanelProps = {
   submissionMode: "direct" | "agent";
   /** Application deadline passed (`Bounty.applicationClosed`): no apply form for a first application. */
   applicationClosed?: boolean;
+  /** `Bounty.deadlinePassed`: closed only by the deadline, so a requested revision can still be resubmitted. */
+  deadlinePassed?: boolean;
 };
 
 export function BountyActionPanel(props: BountyActionPanelProps) {
@@ -138,7 +140,7 @@ export function BountyActionPanel(props: BountyActionPanelProps) {
   );
 }
 
-function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, status, submissionMode, announce }: BountyActionPanelProps & {
+function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, deadlinePassed, status, submissionMode, announce }: BountyActionPanelProps & {
   announce: (text: string) => void;
 }) {
   const t = useTranslations("bounties.action");
@@ -223,7 +225,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
 
   // The rule for which section to show lives in lib/bounty-action-state.ts (documented by src/test/bounty-action-state.test.ts).
   const view = deriveActionView({
-    bountyId, applicationRequired, applicationClosed, status, submissionMode,
+    bountyId, applicationRequired, applicationClosed, deadlinePassed, status, submissionMode,
     auth: auth.status,
     applications: applicationsQuery,
     submissions: submissionsQuery,

@@ -135,6 +135,15 @@ describe("BountyOperations", () => {
     expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
   });
 
+  it("shows an unknown review decision (the reserved REOPEN) as its raw code instead of a missing-message key", async () => {
+    const base = operations();
+    const reviews = [{ revisionNo: 3, decision: "REOPEN", comment: null, createdAt: "2026-10-05T00:00:00Z" }];
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [{ ...base.submissions[0], reviews }, base.submissions[1]] }));
+    await renderOps();
+    expect(screen.getByText(/REOPEN/)).toBeTruthy();
+    expect(document.body.textContent).not.toContain("submissions.decisions");
+  });
+
   it("closes a review dialog whose revision was superseded by a re-read instead of resending the stale revisionNo", async () => {
     await renderOps();
     fireEvent.click(screen.getByRole("button", { name: "Request revision" }));
@@ -157,6 +166,17 @@ describe("BountyOperations", () => {
     adminApi.getAdminOperations.mockImplementation(async () => operations({ payouts: [{ ...others.payouts[0], status: "APPROVED" }] }));
     fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("closes the cancel confirmation when a re-read shows the cancellation is blocked or no longer allowed", async () => {
+    const open = operations({ bounty: { ...operations().bounty, status: "OPEN" }, lifecycle: { blockers: {}, allowedTransitions: ["SUBMISSION_CLOSED", "CANCELLED"] } });
+    adminApi.getAdminOperations.mockImplementation(async () => open);
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel bounty" }));
+    expect(screen.getByRole("alertdialog")).toBeTruthy();
+    adminApi.getAdminOperations.mockImplementation(async () => ({ ...open, lifecycle: { blockers: { CANCELLED: [{ code: "UNPAID_WINNERS" }] }, allowedTransitions: ["SUBMISSION_CLOSED", "CANCELLED"] } }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
   });
 
   it("closes the deposit dialog when another admin already confirmed that deposit", async () => {
@@ -204,6 +224,24 @@ describe("BountyOperations", () => {
     await waitFor(() => expect(adminApi.markAdminPayoutPaid).toHaveBeenCalledWith("p-mine", HASH));
   });
 
+  it("sends a write once even when the form is submitted again while the re-read after it is still running", async () => {
+    const approved = operations({ payouts: [{ ...operations().payouts[0], status: "APPROVED", requestedByMe: false }] });
+    adminApi.getAdminOperations.mockImplementation(async () => approved);
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Mark paid" }));
+    fireEvent.change(within(dialog()).getByRole("textbox"), { target: { value: HASH } });
+    const form = within(dialog()).getByRole("button", { name: "Mark paid" }).closest("form")!;
+    let finishRead: (value: AdminOperations) => void = () => undefined;
+    adminApi.getAdminOperations.mockImplementation(() => new Promise<AdminOperations>((resolve) => { finishRead = resolve; }));
+    fireEvent.submit(form);
+    await waitFor(() => expect(adminApi.getAdminOperations).toHaveBeenCalledTimes(2));
+    // The write succeeded and the dialog is still open until the re-read lands: the second submit must not reach the BE.
+    fireEvent.submit(form);
+    expect(adminApi.markAdminPayoutPaid).toHaveBeenCalledTimes(1);
+    finishRead(operations({ payouts: [{ ...approved.payouts[0], status: "PAID" }] }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
   it("confirms a deposit with the amount converted to base units", async () => {
     adminApi.getAdminOperations.mockImplementation(async () => operations({ bounty: { ...operations().bounty, status: "FUNDING_PENDING" }, rewards: [{ ...operations().rewards[0], status: "DEPOSIT_PENDING", depositedAmount: null, cap: null, allocated: "0" }], payouts: [] }));
     await renderOps();
@@ -231,6 +269,23 @@ describe("BountyOperations", () => {
     fireEvent.change(amount, { target: { value: "2.5" } });
     fireEvent.submit(within(dialog()).getByRole("button", { name: "Request payout" }).closest("form")!);
     await waitFor(() => expect(adminApi.requestAdminPayout).toHaveBeenCalledWith({ rewardId: "r1", submissionId: "s2", amount: "2500000000000000000" }));
+  });
+});
+
+describe("payout request after a re-read", () => {
+  it("checks the amount against the reward's current headroom, not the one from when the dialog opened", async () => {
+    const reward = operations().rewards[0];
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ payouts: [], rewards: [{ ...reward, allocated: "0" }] }));
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Request payout" }));
+    // Another admin allocates 4 of the 5 INJ while the dialog is open; the next read shows 1 INJ left.
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ payouts: [], rewards: [{ ...reward, allocated: "4000000000000000000" }] }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(within(dialog()).getByText("Up to 1 INJ can still be allocated from this reward.")).toBeTruthy());
+    fireEvent.change(within(dialog()).getByRole("textbox"), { target: { value: "2" } });
+    fireEvent.submit(within(dialog()).getByRole("button", { name: "Request payout" }).closest("form")!);
+    expect(within(dialog()).getByRole("alert").textContent).toContain("Only 1 INJ is left");
+    expect(adminApi.requestAdminPayout).not.toHaveBeenCalled();
   });
 });
 
@@ -288,6 +343,19 @@ describe("NftJobsManager", () => {
     await waitFor(() => expect(adminApi.getAdminNftJobs).toHaveBeenLastCalledWith("FAILED", 1));
     expect(await screen.findByText("Page 1 of 3")).toBeTruthy();
     expect(screen.getByText("err p1")).toBeTruthy();
+  });
+
+  it("says Loading… (not the old failure) while another status loads after a failed read", async () => {
+    let resolvePending: (value: unknown) => void = () => undefined;
+    adminApi.getAdminNftJobs.mockImplementation((status: string) => status === "FAILED"
+      ? Promise.reject(new Error("down"))
+      : new Promise((resolve) => { resolvePending = resolve; }));
+    renderWithIntl(<><NftJobsManager tabs={null}>{null}</NftJobsManager><AdminToastHost /></>);
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Could not load NFT jobs."));
+    fireEvent.click(screen.getByRole("button", { name: "Pending" }));
+    expect(screen.getByRole("status").textContent).toBe("Loading operations…");
+    resolvePending({ page: 1, pageSize: 30, total: 0, items: [] });
+    expect(await screen.findByText("No jobs in this status.")).toBeTruthy();
   });
 
   it("ignores a slower response for the status the operator already switched away from", async () => {

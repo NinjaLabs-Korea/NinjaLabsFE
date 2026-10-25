@@ -96,6 +96,42 @@ describe("UserDirectory", () => {
     expect(search).toHaveBeenCalledTimes(2);
   });
 
+  it("pages a search with more than one page of matches instead of loading the unfiltered directory", { timeout: 20_000 }, async () => {
+    const page = (prefix: string, from: number) => Array.from({ length: 30 }, (_, index) => (
+      { ...fixtureUsers()[0], slug: `${prefix}-${from + index}`, nickname: `${prefix}${from + index}`, email: `${prefix}${from + index}@example.com` }
+    ));
+    const search = vi.spyOn(api, "getAdminUsers").mockImplementation(async (query = "", pageNo = 1) => {
+      if (query === "ab") return pageNo === 1 ? page("ab", 0) : pageNo === 2 ? [{ ...page("ab", 30)[0] }] : [];
+      return [];
+    });
+    renderDirectory();
+    await waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search users" }), { target: { value: "ab" } });
+    expect(await screen.findByText("ab0", { selector: "td" })).toBeTruthy();
+    fireEvent.click(await screen.findByRole("button", { name: "Load more" }));
+    expect(await screen.findByText("ab30", { selector: "td" })).toBeTruthy();
+    // The search term rides along with the page; the short last page ends the paging.
+    expect(search).toHaveBeenLastCalledWith("ab", 2);
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Load more" })).toBeNull());
+  });
+
+  it("keeps a search result that landed before a slow first directory read finished", async () => {
+    const beyond = { ...fixtureUsers()[0], slug: "far-away", nickname: "zedmund", email: "zedmund@example.com" };
+    let finishFirstRead: (users: ReturnType<typeof fixtureUsers>) => void = () => undefined;
+    const getAdminUsers = vi.fn(async (query = "") => (
+      query === "zed" ? [beyond] : new Promise<ReturnType<typeof fixtureUsers>>((resolve) => { finishFirstRead = resolve; })
+    ));
+    api = { ...createMockApiClient(), getAdminUsers } as AdminApi;
+    renderWithIntl(<><UserDirectory users={[]} /><AdminToastHost /></>);
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search users" }), { target: { value: "zed" } });
+    expect(await screen.findByText("zedmund", { selector: "td" })).toBeTruthy();
+    finishFirstRead(fixtureUsers());
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search users" }), { target: { value: "" } });
+    await waitFor(() => expect(screen.getByText("jinyoung", { selector: "td" })).toBeTruthy());
+    // The first page replaced the list, but the user the search found beyond it is still there.
+    expect(screen.getByText("zedmund", { selector: "td" })).toBeTruthy();
+  });
+
   it("caps the search box at the BE limit (320 characters) so a pasted long term is not sent as a 400", async () => {
     renderDirectory();
     expect((screen.getByRole("searchbox", { name: "Search users" }) as HTMLInputElement).maxLength).toBe(320);

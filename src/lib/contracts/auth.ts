@@ -29,7 +29,8 @@ export type SignInOptions = {
 };
 
 export type AuthAdapter = {
-  initialize?: () => void;
+  /** Starts the session restore (once per adapter) and cross-tab listening; the returned teardown stops the listening. */
+  initialize?: () => void | (() => void);
   getSnapshot: () => AuthSnapshot;
   subscribe: (listener: () => void) => () => void;
   signIn: (options?: SignInOptions) => Promise<AuthSnapshot>;

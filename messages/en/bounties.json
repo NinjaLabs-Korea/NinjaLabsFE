@@ -40,6 +40,8 @@
     "emptyTitle": "No bounties match your filters",
     "emptyBody": "Try a different category or clear the search.",
     "reset": "Reset filters",
+    "noneTitle": "No bounties yet",
+    "noneBody": "Sponsors have not posted any bounties yet. Check back soon.",
     "ariaLabel": "Bounty filters"
   },
   "apply": {
@@ -180,7 +182,8 @@
       "INVALID_CHARACTER": "Your text contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
       "REFERENCE_NOT_FOUND": "Something this request refers to no longer exists. Reload the page and try again.",
       "unknown": "Something went wrong ({code}). Please try again.",
-      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     },
     "checkingSession": "Checking your session…",
     "applicationRejectedHeading": "Application not selected",

@@ -1,25 +1,35 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useCallback, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { AdminListStatus } from "@/components/admin/AdminListStatus";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
+import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { DISPLAY_ORDER_MAX, highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminErrorDescription } from "@/lib/admin-helpers";
 import { HIGHLIGHT_TYPE_CODES, isHighlightTypeCode } from "@/lib/api/codecs";
-import { isHttpUrlOrMediaPath, isHttpUrlOrSitePath } from "@/lib/url-rules";
+import { isHttpUrlOrMediaPath, isHttpUrlOrSitePath, isSafeUrl } from "@/lib/url-rules";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
-/** 저장 전 검증 — BE `CreateHighlightDto`의 거울 (title/description @IsNotEmpty, imageUrl IsHttpUrlOrMediaPath, linkUrl IsHttpUrlOrSitePath, displayOrder @IsInt @Min(0) @MaxPgInt) */
+/**
+ * 저장 전 검증 — BE `CreateHighlightDto`의 거울 (title/description @IsNotEmpty, imageUrl IsHttpUrlOrMediaPath, linkUrl IsHttpUrlOrSitePath, displayOrder @IsInt @Min(0) @MaxPgInt).
+ * `stored`(수정할 행의 저장된 이미지/링크)와 같고 BE 완화 규칙(`isSafeUrl`)을 통과하는 값은 URL 검사를 건너뛴다:
+ * 수정 DTO는 레거시 행을 위해 완화 규칙(`IsSafeUrl`)이라 엄격 규칙 이전에 저장된 `/uploads/x.png` 같은 값을 그대로 받는데,
+ * 여기서 막으면 그 행은 이미지를 지워야만 저장된다.
+ */
 type HighlightFieldErrors = Partial<Record<"title" | "description" | "image" | "link" | "order", "required" | "urlInvalid" | "orderInvalid">>;
-export function validateHighlightForm(input: { title: string; description: string; image: string | null; link: string; order: number }): HighlightFieldErrors {
+export function validateHighlightForm(
+  input: { title: string; description: string; image: string | null; link: string; order: number },
+  stored?: { image: string | null; link: string | undefined },
+): HighlightFieldErrors {
   const errors: HighlightFieldErrors = {};
   if (!input.title.trim()) errors.title = "required";
   if (!input.description.trim()) errors.description = "required";
-  if (input.image && !isHttpUrlOrMediaPath(input.image)) errors.image = "urlInvalid";
-  if (input.link.trim() && !isHttpUrlOrSitePath(input.link.trim())) errors.link = "urlInvalid";
+  if (input.image && !isHttpUrlOrMediaPath(input.image) && !(input.image === stored?.image && isSafeUrl(input.image))) errors.image = "urlInvalid";
+  if (input.link.trim() && !isHttpUrlOrSitePath(input.link.trim()) && !(input.link.trim() === stored?.link && isSafeUrl(stored.link))) errors.link = "urlInvalid";
   if (!Number.isInteger(input.order) || input.order < 0 || input.order > DISPLAY_ORDER_MAX) errors.order = "orderInvalid";
   return errors;
 }
@@ -48,7 +58,6 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     const key = highlightTypeLabelKey(value);
     return key ? t(`types.${key}`) : value;
   };
-  const [records, setRecords] = useState(() => sortHighlights(highlights));
   const [mode, setMode] = useState<"create" | string>("create");
   const [type, setType] = useState<AdminHighlight["type"]>(DEFAULT_TYPE);
   const [title, setTitle] = useState("");
@@ -73,16 +82,11 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     "aria-describedby": [errors[key] ? `highlight-${key}-error` : null, hintId ?? null].filter(Boolean).join(" ") || undefined,
   });
 
-  // Re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
+  // `reload` re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
   // (never "save failed": a retry of an already-created highlight would create a duplicate).
-  const reload = useCallback(
-    () => api.getAdminHighlights().then((items) => setRecords(sortHighlights(items))).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") })),
-    [api, t],
-  );
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
+  const fetchHighlights = useCallback(() => api.getAdminHighlights().then(sortHighlights), [api]);
+  const toastLoadFailed = useCallback(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }), [t]);
+  const { records, setRecords, loadState, reload, retry } = useAdminList(fetchHighlights, sortHighlights(highlights), toastLoadFailed);
 
   const isEditing = mode !== "create";
 
@@ -140,7 +144,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     event.preventDefault();
     if (saving) return;
     // A freshly picked file replaces the stored image, so only the kept URL is checked.
-    const nextErrors = validateHighlightForm({ title, description, image: imageFile ? null : image, link, order });
+    const stored = isEditing ? records.find((item) => item.id === mode) : undefined;
+    const nextErrors = validateHighlightForm({ title, description, image: imageFile ? null : image, link, order }, stored && { image: stored.image, link: stored.link });
     if (Object.values(nextErrors).some(Boolean)) {
       setErrors(nextErrors);
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
@@ -202,6 +207,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
           <button className="h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={handleAdd} type="button">{t("addItem")}</button>
         </div>
         <div className="mt-6">
+          <AdminListStatus failedText={t("toast.loadFailedDescription")} onRetry={retry} state={loadState} />
+          {loadState === "ready" ? (
           <AdminTable columns={highlightColumns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[760px]">
             {records.map((highlight) => (
               <tr key={highlight.id} className="border-t border-border">
@@ -218,6 +225,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
               </tr>
             ))}
           </AdminTable>
+          ) : null}
         </div>
       </section>
 

@@ -23,6 +23,8 @@
     "tooLong": "Too long: use at most {max} characters.",
     "fixFields": "Fix the highlighted fields before saving.",
     "saving": "Saving…",
+    "loading": "Loading…",
+    "retry": "Try again",
     "removeImage": "Remove image",
     "errors": {
       "INVALID_CHARACTER": "A field contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
@@ -38,7 +40,10 @@
       "DEADLINE_IN_PAST": "The deadline cannot be moved into the past. Pick a future date and time, or keep the saved deadline.",
       "MEDIA_FILE_TOO_LARGE": "The image is larger than 5 MB. Choose a smaller file and try again.",
       "MEDIA_FILE_TYPE_UNSUPPORTED": "Only PNG, JPEG and WebP images can be uploaded. Choose a different file and try again.",
-      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "ADMIN_ONLY": "Your account no longer has admin permission.",
+      "UNAUTHORIZED": "Your session expired. Sign in again.",
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     }
   },
   "tabs": {

@@ -10,7 +10,9 @@ import { safeHttpUrl } from "@/lib/api/codecs";
 import { validateDetailId } from "@/lib/detail-id";
 import { imageProps } from "@/lib/image";
 import { getRuntimeNotice, noticeCategoryKeys } from "@/lib/notices";
-import { localeAlternates } from "@/i18n/alternates";
+import { localeMetadata } from "@/i18n/alternates";
+
+const readMoreClass = "mt-2 inline-block text-base font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 type NoticeDetailPageProps = PageProps<"/[locale]/notices/[id]">;
 
@@ -23,16 +25,7 @@ export async function generateMetadata({ params }: NoticeDetailPageProps): Promi
     return { alternates: {}, title: t("notFoundTitle") };
   }
 
-  return {
-    alternates: localeAlternates(locale, `/notices/${notice.slug}`),
-    title: t("pageTitle", { title: notice.title }),
-    description: notice.excerpt,
-    openGraph: {
-      title: t("pageTitle", { title: notice.title }),
-      description: notice.excerpt,
-      url: `/${locale}/notices/${notice.slug}`,
-    },
-  };
+  return localeMetadata(locale, `/notices/${notice.slug}`, { title: t("pageTitle", { title: notice.title }), description: notice.excerpt });
 }
 
 export default async function NoticeDetailPage({ params }: NoticeDetailPageProps) {
@@ -83,12 +76,12 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
           {externalUrl ? (
             <div className="mt-6 rounded-tile border border-border bg-primary-soft p-5">
               <h2 className="font-display text-lg font-bold text-ink">{t("detail.readMoreHeading")}</h2>
-              <a
-                className="mt-2 inline-block text-base font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                href={externalUrl}
-              >
-                {t("detail.readMoreLink")}
-              </a>
+              {/* A same-site path goes through the locale-aware Link; a raw <a> would drop the locale prefix. */}
+              {externalUrl.startsWith("/") ? (
+                <Link className={readMoreClass} href={externalUrl}>{t("detail.readMoreLink")}</Link>
+              ) : (
+                <a className={readMoreClass} href={externalUrl}>{t("detail.readMoreLink")}</a>
+              )}
             </div>
           ) : null}
         </article>

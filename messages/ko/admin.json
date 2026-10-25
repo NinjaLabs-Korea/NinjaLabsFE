@@ -23,6 +23,8 @@
     "tooLong": "너무 깁니다. 최대 {max}자까지 입력할 수 있습니다.",
     "fixFields": "표시된 항목을 수정한 뒤 저장하세요.",
     "saving": "저장 중…",
+    "loading": "불러오는 중…",
+    "retry": "다시 시도",
     "removeImage": "이미지 제거",
     "errors": {
       "INVALID_CHARACTER": "저장할 수 없는 문자(예: NUL 문자)가 들어 있습니다. 해당 문자를 지우고 다시 시도하세요.",
@@ -38,7 +40,10 @@
       "DEADLINE_IN_PAST": "마감일을 과거로 옮길 수 없습니다. 미래의 날짜와 시간을 고르거나 저장된 마감일을 그대로 두세요.",
       "MEDIA_FILE_TOO_LARGE": "이미지가 5MB를 넘습니다. 더 작은 파일을 골라 다시 시도하세요.",
       "MEDIA_FILE_TYPE_UNSUPPORTED": "PNG, JPEG, WebP 이미지만 업로드할 수 있습니다. 다른 파일을 골라 다시 시도하세요.",
-      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요."
+      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "ADMIN_ONLY": "이 계정에는 더 이상 관리자 권한이 없습니다.",
+      "UNAUTHORIZED": "세션이 만료되었습니다. 다시 로그인하세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
     }
   },
   "tabs": {

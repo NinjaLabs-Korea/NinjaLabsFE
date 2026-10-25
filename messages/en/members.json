@@ -23,6 +23,8 @@
     "listAriaLabel": "Members",
     "emptyTitle": "No members match your filters",
     "emptyBody": "Try a different category or clear the search.",
+    "feedEmptyTitle": "No members yet",
+    "feedEmptyBody": "Members will appear here once the team designates them.",
     "reset": "Reset filters"
   },
   "roles": {
@@ -63,6 +65,7 @@
       "bodyEmptyNotMinted": "The Ninja NFT parent identity is not minted yet. It is issued after onboarding, and approved bounties then add child NFTs to this public collection.",
       "token": "Token {id}",
       "tx": "Tx {hash}",
+      "untitledNft": "Bounty NFT",
       "next": "+ next",
       "emptyTitle": "No bounty NFTs yet",
       "emptyBodyCompleted": "Approved work appears here after payout and minting begins.",

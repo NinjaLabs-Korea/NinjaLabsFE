@@ -92,6 +92,15 @@ describe("knownCode / errorCopyKey", () => {
     expect(listedCode(null, codes)).toBeNull();
   });
 
+  it("maps a 429 to TOO_MANY_REQUESTS whatever its body says (the Nest throttler sends no catalog code)", () => {
+    const throttled = new ApiHttpError(429, "ThrottlerException: Too Many Requests");
+    expect(knownCode(throttled, ["TOO_MANY_REQUESTS", "DATABASE_UNAVAILABLE"] as const)).toBe("TOO_MANY_REQUESTS");
+    expect(knownCode(throttled, codes)).toBeNull();
+    for (const name of ["bountyAction", "accountDelete", "applicationWithdraw", "agentRotate", "agentRegister", "profileSave", "walletVerify"] as const) {
+      expect(errorCopyKey(throttled, ERROR_COPY[name]), name).toBe("TOO_MANY_REQUESTS");
+    }
+  });
+
   it("falls back to the surface's fallback key", () => {
     expect(errorCopyKey(new ApiHttpError(409, "AGENT_NOT_ACTIVE"), ERROR_COPY.agentRotate)).toBe("AGENT_NOT_ACTIVE");
     expect(errorCopyKey(new ApiHttpError(404, "AGENT_NOT_FOUND"), ERROR_COPY.agentRotate)).toBe("generic");
@@ -110,6 +119,7 @@ describe("profile save error rules (ProfileForm.saveErrorKey)", () => {
     ["503 DATABASE_UNAVAILABLE", new ApiHttpError(503, "DATABASE_UNAVAILABLE"), "DATABASE_UNAVAILABLE"],
     ["400 VALIDATION_FAILED", new ApiHttpError(400, "VALIDATION_FAILED", ["bio should not be empty"]), "invalid"],
     ["a 500", new ApiHttpError(500, "UNKNOWN_ERROR"), "generic"],
+    ["429 from the throttler", new ApiHttpError(429, "ThrottlerException: Too Many Requests"), "TOO_MANY_REQUESTS"],
   ])("maps %s", (_label, error, key) => {
     expect(saveErrorKey(error)).toBe(key);
   });

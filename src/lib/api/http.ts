@@ -217,6 +217,16 @@ export async function toApiHttpError(res: Response): Promise<ApiHttpError> {
   return new ApiHttpError(res.status, typeof message === "string" && message ? message : "UNKNOWN_ERROR");
 }
 
+/**
+ * Body of a successful response. A 2xx with no body (204, or a handler that returns nothing and so answers 200 with an
+ * empty body) reads as `undefined`: `res.json()` would throw on it and report a write that went through as a failure,
+ * inviting a duplicate retry.
+ */
+async function readSuccessBody<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
 export type ApiHttp = {
   /** 인증 헤더를 붙여 요청. 401이면 refresh 회전 후 1회 재시도. */
   fetchJson: <T>(path: string, init?: { method?: string; body?: unknown }) => Promise<T>;
@@ -397,8 +407,7 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       if (!res.ok) {
         throw await toApiHttpError(res);
       }
-      if (res.status === 204) return undefined as T;
-      return (await res.json()) as T;
+      return readSuccessBody<T>(res);
     },
 
     fetchForm: async <T>(path: string, form: FormData): Promise<T> => {
@@ -413,7 +422,7 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       if (!res.ok) {
         throw await toApiHttpError(res);
       }
-      return (await res.json()) as T;
+      return readSuccessBody<T>(res);
     },
 
     signOutRemote: async () => {

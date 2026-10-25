@@ -101,7 +101,8 @@ const markdownListItem = /^\s*(?:[-*+]|\d+[.)])\s+(.+)$/;
 /** Deliverables are the list items of the requirements markdown, with inline formatting stripped. */
 export function deliverablesFromMarkdown(markdown: string | undefined): string[] {
   if (!markdown) return [];
-  return markdown.split("\n").flatMap((line) => {
+  // `.` in the item pattern does not match "\r", so a CRLF body (API-created bounties) would lose every item.
+  return markdown.split(/\r?\n/).flatMap((line) => {
     const item = markdownListItem.exec(line)?.[1];
     if (!item) return [];
     const text = item
@@ -142,6 +143,7 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     applicationRequired: row.application_required,
     applicationTitle: row.application_required ? row.title : undefined,
     applicationDescription: row.application_required ? row.summary : undefined,
+    ...(row.status === "OPEN" && status === "closed" ? { deadlinePassed: true } : {}),
     ...(row.application_required && isPast(row.application_deadline) ? { applicationClosed: true } : {}),
   };
 }
@@ -160,9 +162,12 @@ export function getRuntimeBounties(locale: string): Promise<Bounty[]> {
   return loadFromRuntime({ mock: getBounties, api: () => fetchAllBounties(locale) });
 }
 
-/** The bounties `/bounties/apply` links to as examples: the first one taking new work of each kind (an application bounty past its application deadline takes none). */
+/**
+ * The bounties `/bounties/apply` links to as examples: the first one taking new work of each kind (an application bounty
+ * past its application deadline takes none). Agent-only bounties are skipped: a person who follows the link gets the Agent API note, not a form.
+ */
 export function pickGuideBounties(list: readonly Bounty[]): { applicationBounty?: Bounty; directBounty?: Bounty } {
-  const active = list.filter((bounty) => bounty.status === "active");
+  const active = list.filter((bounty) => bounty.status === "active" && bounty.submissionMode !== "agent");
   return {
     applicationBounty: active.find((bounty) => bounty.applicationRequired && !bounty.applicationClosed),
     directBounty: active.find((bounty) => !bounty.applicationRequired),

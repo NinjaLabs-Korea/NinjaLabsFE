@@ -40,6 +40,8 @@
     "emptyTitle": "조건에 맞는 바운티가 없습니다",
     "emptyBody": "다른 카테고리를 선택하거나 검색어를 지워 보세요.",
     "reset": "필터 초기화",
+    "noneTitle": "아직 등록된 바운티가 없습니다",
+    "noneBody": "아직 스폰서가 올린 바운티가 없습니다. 곧 다시 확인해 주세요.",
     "ariaLabel": "바운티 필터"
   },
   "apply": {
@@ -180,7 +182,8 @@
       "INVALID_CHARACTER": "저장할 수 없는 문자(예: NUL 문자)가 들어 있습니다. 해당 문자를 지우고 다시 시도하세요.",
       "REFERENCE_NOT_FOUND": "요청이 가리키는 대상이 더 이상 없습니다. 페이지를 새로고침한 뒤 다시 시도하세요.",
       "unknown": "문제가 발생했습니다 ({code}). 다시 시도해 주세요.",
-      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요."
+      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
     },
     "checkingSession": "세션을 확인하는 중…",
     "applicationRejectedHeading": "지원이 선정되지 않았습니다",

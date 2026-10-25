@@ -20,7 +20,7 @@ import { ApiHttpError } from "./http";
 /**
  * BE가 아니라 FE가 스스로 만드는 코드. 위치:
  * - `VALIDATION_FAILED` / `UNKNOWN_ERROR` / `REFRESH_UNAVAILABLE` — `lib/api/http.ts` (Nest `message[]`, 빈 message, refresh 일시 장애)
- * - `NETWORK_ERROR` / `UNAUTHORIZED` / `TOO_MANY_REQUESTS` / `TRANSITION_BLOCKED` — `lib/admin-operations.ts opsErrorCode` 정규화 결과
+ * - `NETWORK_ERROR` / `UNAUTHORIZED` / `TOO_MANY_REQUESTS` / `TRANSITION_BLOCKED` — `lib/admin-operations.ts opsErrorCode` 정규화 결과 (`TOO_MANY_REQUESTS`는 `knownCode`도 429에서 만든다)
  */
 export const FE_ERROR_CODES = [
   "VALIDATION_FAILED",
@@ -61,6 +61,7 @@ export const ERROR_COPY = {
       // 409: 이 주소가 다른 계정에 연결됐거나, 내 계정에 이미 대표 지갑이 있다.
       "WALLET_ALREADY_LINKED",
       "DATABASE_UNAVAILABLE",
+      "TOO_MANY_REQUESTS",
     ],
     fallback: "generic",
   },
@@ -75,7 +76,7 @@ export const ERROR_COPY = {
       "ALREADY_APPLIED", "BOUNTY_NOT_OPEN", "APPLICATION_NOT_APPROVED", "DEADLINE_PASSED", "SUBMISSION_FINALIZED", "VALIDATION_FAILED",
       "APPLICATION_DEADLINE_PASSED", "SUBMISSION_TYPE_BOUNTY", "AGENT_SUBMISSION_REQUIRED", "DIRECT_SUBMISSION_REQUIRED",
       "REFRESH_UNAVAILABLE", "UNKNOWN_ERROR", "MAX_WINNERS_REACHED", "BOUNTY_NOT_FOUND", "INVALID_CHARACTER", "REFERENCE_NOT_FOUND",
-      "DATABASE_UNAVAILABLE",
+      "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS",
     ],
     fallback: "generic",
   },
@@ -88,25 +89,27 @@ export const ERROR_COPY = {
       // 409: 승인됐지만 아직 지급 요청 전인 보상 — 탈퇴하면 잃으므로 운영자가 먼저 지급해야 한다.
       "WITHDRAWAL_BLOCKED_PENDING_REWARDS",
       "DATABASE_UNAVAILABLE",
+      // 탈퇴는 5회/분 한도다
+      "TOO_MANY_REQUESTS",
     ],
     fallback: "generic",
   },
   /** 내 지원 현황 → 지원 철회 — `account/ApplicationsView.tsx` (이 코드면 목록도 새로고침한다) */
   applicationWithdraw: {
     messages: "account.applications.withdrawErrors",
-    codes: ["APPLICATION_NOT_FOUND_OR_NOT_PENDING"],
+    codes: ["APPLICATION_NOT_FOUND_OR_NOT_PENDING", "TOO_MANY_REQUESTS"],
     fallback: "generic",
   },
   /** 내 에이전트 → API 키 회전 — `account/AgentsView.tsx` */
   agentRotate: {
     messages: "agents.list.rotateErrors",
-    codes: ["AGENT_NOT_ACTIVE"],
+    codes: ["AGENT_NOT_ACTIVE", "TOO_MANY_REQUESTS"],
     fallback: "generic",
   },
   /** 에이전트 등록 (register → 서명 → verify) — `agents/AgentRegisterForm.tsx`. 필드 검증(VALIDATION_FAILED)은 인라인으로 따로 처리한다. */
   agentRegister: {
     messages: "agents.form.registerErrors",
-    codes: ["AGENT_KEY_OR_WALLET_ALREADY_REGISTERED"],
+    codes: ["AGENT_KEY_OR_WALLET_ALREADY_REGISTERED", "TOO_MANY_REQUESTS"],
     fallback: "generic",
   },
   /**
@@ -115,13 +118,13 @@ export const ERROR_COPY = {
    */
   profileSave: {
     messages: "signup.profile.form.saveErrors",
-    codes: ["NICKNAME_TAKEN", "INVALID_CHARACTER", "REFERENCE_NOT_FOUND", "DATABASE_UNAVAILABLE"],
+    codes: ["NICKNAME_TAKEN", "INVALID_CHARACTER", "REFERENCE_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS"],
     fallback: "generic",
   },
   /**
-   * 로그인 콜백의 `#error=<CODE>` — `lib/api/oauth.ts` → `app/[locale]/auth/callback/page.tsx`. 오늘 BE는 `#error=AUTH_FAILED`만
-   * 리다이렉트한다(일반 문구 `failedBody`). Turnstile 코드는 `GET /auth/google` 자체의 JSON 400/503이라 FE가 보지 못하지만, BE가
-   * 콜백으로 보내기 시작할 때를 대비해 둔다.
+   * 로그인 콜백의 `#error=<CODE>` — `lib/api/oauth.ts` → `app/[locale]/auth/callback/page.tsx`. BE는 로그인 시작 실패(`GET /auth/google`)의
+   * `TURNSTILE_FAILED`/`TURNSTILE_UNAVAILABLE`과 콜백 중 DB 장애 `DATABASE_UNAVAILABLE`을 `#error=`로 돌려보낸다
+   * (BE `START_FAILURE_CODES`). 그 밖의 실패는 `AUTH_FAILED` → 일반 문구 `failedBody`.
    */
   loginCallback: {
     messages: "signup.authCallback.errors",
@@ -142,6 +145,8 @@ export const ERROR_COPY = {
       "MEDIA_FILE_TOO_LARGE", "MEDIA_FILE_TYPE_UNSUPPORTED",
       // 503: BE가 DB에 닿지 못함 (일시 장애)
       "DATABASE_UNAVAILABLE",
+      // 403 (운영자 권한 회수) / 401 · 429는 `adminApiErrorCode`가 상태로 정규화한다 — 429 본문에는 코드가 없다
+      "ADMIN_ONLY", "UNAUTHORIZED", "TOO_MANY_REQUESTS",
     ],
   },
   /**
@@ -200,9 +205,12 @@ export function listedCode<const C extends string>(value: unknown, codes: readon
 /**
  * 실패한 API 호출의 BE 코드가 `codes`에 있으면 그 코드, 아니면 null (네트워크 오류 등 `ApiHttpError`가 아닌 것도 null).
  * mock 모드의 `MockApiError`도 `ApiHttpError`를 상속하므로 같은 경로를 탄다.
+ * 429는 코드를 `TOO_MANY_REQUESTS`로 정규화한다: Nest throttler 본문(`ThrottlerException: Too Many Requests`)에는 카탈로그 코드가 없어
+ * 그대로 두면 "알 수 없는 오류 (ThrottlerException…)"처럼 원문이 화면에 샌다. 이 코드를 `codes`에 넣은 화면만 전용 문구를 쓴다.
  */
 export function knownCode<const C extends string>(error: unknown, codes: readonly C[]): C | null {
-  return error instanceof ApiHttpError ? listedCode(error.code, codes) : null;
+  if (!(error instanceof ApiHttpError)) return null;
+  return listedCode(error.status === 429 ? "TOO_MANY_REQUESTS" : error.code, codes);
 }
 
 type SurfaceWithFallback = { readonly codes: readonly string[]; readonly fallback: string };

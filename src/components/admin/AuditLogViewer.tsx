@@ -62,6 +62,7 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
     }
     setInvalidId(false);
     setData(null);
+    setFailed(false);
     shownPage.current = 1;
     setPage(1);
     setFilter({ ...(entityType.trim() ? { entityType: entityType.trim() } : {}), ...(id ? { entityId: id } : {}) });
@@ -72,6 +73,7 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
     setEntityId("");
     setInvalidId(false);
     setData(null);
+    setFailed(false);
     shownPage.current = 1;
     setPage(1);
     setFilter({});

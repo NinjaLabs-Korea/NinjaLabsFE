@@ -56,7 +56,8 @@
     },
     "withdrawErrors": {
       "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "This application was already reviewed or withdrawn.",
-      "generic": "We couldn’t withdraw this application. Please try again shortly."
+      "generic": "We couldn’t withdraw this application. Please try again shortly.",
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     },
     "payoutPaid": "Paid",
     "payoutPartial": "Partially paid",
@@ -97,7 +98,8 @@
       "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS": "A payout to you is still in progress. You can delete your account once it is paid or cancelled.",
       "WITHDRAWAL_BLOCKED_PENDING_REWARDS": "You have approved rewards that have not been paid out yet, so your account can’t be deleted right now (it would forfeit them). Please contact the Ninja Labs admins to complete the payout, then try again.",
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
-      "generic": "We couldn’t delete your account. Please try again shortly."
+      "generic": "We couldn’t delete your account. Please try again shortly.",
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     }
   }
 }

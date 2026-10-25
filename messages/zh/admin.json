@@ -23,6 +23,8 @@
     "tooLong": "内容过长：最多 {max} 个字符。",
     "fixFields": "请先修正标出的字段再保存。",
     "saving": "保存中…",
+    "loading": "正在加载…",
+    "retry": "重试",
     "removeImage": "移除图片",
     "errors": {
       "INVALID_CHARACTER": "某个字段包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
@@ -38,7 +40,10 @@
       "DEADLINE_IN_PAST": "截止时间不能改到过去。请选择未来的日期和时间，或保留已保存的截止时间。",
       "MEDIA_FILE_TOO_LARGE": "图片超过 5 MB。请选择更小的文件后重试。",
       "MEDIA_FILE_TYPE_UNSUPPORTED": "仅支持上传 PNG、JPEG 和 WebP 图片。请选择其他文件后重试。",
-      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
+      "ADMIN_ONLY": "你的账号已不再拥有管理员权限。",
+      "UNAUTHORIZED": "会话已过期。请重新登录。",
+      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     }
   },
   "tabs": {

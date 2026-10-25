@@ -42,7 +42,8 @@ export const profiles: Record<string, Profile> = {
 };
 
 export function getMembers() { return members.filter((member) => member.isMember); }
-export function getProfile(slug: string) { return profiles[slug]; }
+// Own keys only: `slug` comes from the URL, and `profiles["constructor"]` / `["__proto__"]` would otherwise resolve to Object.prototype members.
+export function getProfile(slug: string): Profile | undefined { return Object.hasOwn(profiles, slug) ? profiles[slug] : undefined; }
 
 type MemberRow = {
   id: string;
@@ -156,7 +157,8 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
     nfts: data.nfts.map((nft) => ({
       id: nft.id,
       type: nft.nft_type === "NINJA_PARENT" ? "parent" : "completion",
-      title: nft.bounty_title ?? "Ninja NFT",
+      // "" when the NFT's bounty was deleted: the page shows a localized fallback (a literal here would be English on every locale).
+      title: nft.bounty_title ?? "",
       status: nft.status,
       contractAddress: nft.contract_address,
       tokenId: nft.token_id,

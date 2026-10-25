@@ -142,9 +142,11 @@ describe("WalletProvider", () => {
 
   it("builds an SSR-safe injected-only wagmi config for the Injective chain", () => {
     renderWithIntl(
-      <WalletProvider chainId={1439} rpcUrl="https://rpc.ninjalabs.example">
-        <span>Wallet content</span>
-      </WalletProvider>,
+      <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
+        <WalletProvider chainId={1439} rpcUrl="https://rpc.ninjalabs.example">
+          <span>Wallet content</span>
+        </WalletProvider>
+      </FoundationProvider>,
     );
 
     expect(screen.getByText("Wallet content")).toBeTruthy();
@@ -165,9 +167,11 @@ describe("WalletProvider", () => {
 
   it("keeps the chain RPC list empty without an RPC URL (mock mode)", () => {
     renderWithIntl(
-      <WalletProvider chainId={1439}>
-        <span>Wallet content</span>
-      </WalletProvider>,
+      <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
+        <WalletProvider chainId={1439}>
+          <span>Wallet content</span>
+        </WalletProvider>
+      </FoundationProvider>,
     );
     expect(screen.getByText("Wallet content")).toBeTruthy();
 
@@ -305,7 +309,7 @@ describe("WalletConnectButton", () => {
     expect(wagmi.switchChain).toHaveBeenCalledWith({
       chainId: 1439,
       addEthereumChainParameter: {
-        chainName: "Injective EVM",
+        chainName: "Injective EVM Testnet",
         nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
         rpcUrls: ["https://rpc.ninjalabs.example"],
         blockExplorerUrls: ["https://testnet.blockscout.injective.network"],
@@ -372,6 +376,8 @@ describe("WalletConnectButton", () => {
       rpcUrls: ["https://evm.injective.network"],
       blockExplorerUrls: ["https://blockscout.injective.network"],
     });
+    // Only the mainnet entry is plain "Injective EVM"; the testnet is labelled so the wallet's two entries differ.
+    expect(addEthereumChainParameterFor(1439, ["https://rpc.example"])?.chainName).toBe("Injective EVM Testnet");
     expect(addEthereumChainParameterFor(999, ["https://rpc.example"])).not.toHaveProperty("blockExplorerUrls");
     expect(addEthereumChainParameterFor(1439, [])).toBeUndefined();
     expect(switchChainErrorKind(null)).toBeNull();

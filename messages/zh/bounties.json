@@ -40,6 +40,8 @@
     "emptyTitle": "没有符合筛选条件的赏金",
     "emptyBody": "请尝试其他类别或清除搜索内容。",
     "reset": "重置筛选",
+    "noneTitle": "暂时还没有赏金",
+    "noneBody": "赞助方尚未发布任何赏金，请稍后再来看看。",
     "ariaLabel": "赏金筛选"
   },
   "apply": {
@@ -180,7 +182,8 @@
       "INVALID_CHARACTER": "您的内容包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
       "REFERENCE_NOT_FOUND": "此请求引用的对象已不存在。请刷新页面后重试。",
       "unknown": "出了点问题（{code}），请重试。",
-      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
+      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },
     "checkingSession": "正在检查会话…",
     "applicationRejectedHeading": "申请未入选",

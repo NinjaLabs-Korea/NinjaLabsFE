@@ -23,6 +23,8 @@
     "listAriaLabel": "멤버",
     "emptyTitle": "필터에 맞는 멤버가 없습니다",
     "emptyBody": "다른 카테고리를 선택하거나 검색을 초기화해 보세요.",
+    "feedEmptyTitle": "아직 멤버가 없습니다",
+    "feedEmptyBody": "팀이 멤버를 지정하면 여기에 표시됩니다.",
     "reset": "필터 초기화"
   },
   "roles": {
@@ -63,6 +65,7 @@
       "bodyEmptyNotMinted": "Ninja NFT 부모 아이덴티티는 아직 발행되지 않았습니다. 온보딩 후 발행되며, 이후 승인된 바운티가 이 공개 컬렉션에 자식 NFT를 추가합니다.",
       "token": "토큰 {id}",
       "tx": "Tx {hash}",
+      "untitledNft": "바운티 NFT",
       "next": "+ 다음",
       "emptyTitle": "아직 바운티 NFT가 없습니다",
       "emptyBodyCompleted": "승인된 작업은 보상 지급 후 발행이 시작되면 여기에 표시됩니다.",
