@@ -9,7 +9,7 @@ import { Link } from "@/i18n/navigation";
 import { APPLICATION_MESSAGE_MAX, COMMIT_SHA_MAX, SUBMISSION_DESCRIPTION_MAX } from "@/lib/input-limits";
 import { payoutBadge } from "@/lib/payout";
 import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
-import { bountyActionErrorCopy, deriveActionView, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
+import { bountyActionErrorCopy, deriveActionView, isStaleRowsError, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
 import type { Bounty } from "@/lib/types";
 
 const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card";
@@ -150,6 +150,12 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const invalidProps = { "aria-invalid": hasError || undefined, "aria-describedby": hasError ? errorId : undefined };
   const errorLine = hasError ? <p className="mt-3 text-sm text-danger" id={errorId} role="alert">{feedback.text}</p> : null;
 
+  // A stale form (the BE says the row already moved on): re-read both lists so the matching section replaces it.
+  const refreshRows = () => {
+    applicationsQuery.refresh();
+    submissionsQuery.refresh();
+  };
+
   useEffect(() => {
     if (feedback?.kind !== "success") return;
     announce(feedback.text);
@@ -177,6 +183,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       if (applicationRequired) applicationsQuery.refresh();
     } catch (error) {
       setFeedback({ kind: "error", text: errorText(error, tError) });
+      if (isStaleRowsError(error)) refreshRows();
     } finally {
       setBusy(false);
     }
@@ -199,6 +206,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       applicationsQuery.refresh();
     } catch (error) {
       setFeedback({ kind: "error", text: errorText(error, tError) });
+      if (isStaleRowsError(error)) refreshRows();
     } finally {
       setBusy(false);
     }
