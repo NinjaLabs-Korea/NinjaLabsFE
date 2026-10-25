@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
@@ -61,9 +61,16 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     if (coverInputRef.current) coverInputRef.current.value = "";
   };
 
+  // Re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
+  // (never "save failed": a retry of an already-created bounty would create a duplicate).
+  const reload = useCallback(
+    () => api.getAdminBounties().then(setRecords).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") })),
+    [api, t],
+  );
+
   useEffect(() => {
-    api.getAdminBounties().then(setRecords).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
-  }, [api, t]);
+    void reload();
+  }, [reload]);
 
   const updateForm = <Key extends keyof BountyFormValues>(key: Key, value: BountyFormValues[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -122,9 +129,9 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
         ? { slug: mode.slug, coverImage, existingStatus: existing?.status ?? "draft", maxWinners: existing?.maxWinners }
         : { slug: "", coverImage });
       await api.saveAdminBounty(bounty, mode.kind === "create");
-      setRecords(await api.getAdminBounties());
       pushAdminToast({ variant: "success", title: mode.kind === "edit" ? t("toast.updatedTitle") : t("toast.createdTitle"), description: tCommon("savedDescription", { title: form.title }) });
       startCreate();
+      await reload();
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
@@ -136,8 +143,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     const to = bounty.status === "active" ? "SUBMISSION_CLOSED" : "OPEN";
     try {
       await api.transitionAdminBounty(bounty.slug, to);
-      setRecords(await api.getAdminBounties());
       pushAdminToast({ variant: "success", title: t("toast.statusUpdatedTitle"), description: t("toast.statusUpdatedDescription", { title: bounty.title, to }) });
+      await reload();
     } catch (error) {
       pushAdminToast({ variant: "danger", title: t("toast.transitionFailedTitle"), description: adminErrorDescription(error, tCommon, t("toast.transitionFailedDescription")) });
     }
@@ -148,6 +155,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     try {
       await api.deleteAdminBounty(bounty.slug);
       setRecords((current) => current.filter((item) => item.slug !== bounty.slug));
+      // The form may be editing the record that just went away: a later save would PATCH a missing row.
+      if (mode.kind === "edit" && mode.slug === bounty.slug) startCreate();
       pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: bounty.title });
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });

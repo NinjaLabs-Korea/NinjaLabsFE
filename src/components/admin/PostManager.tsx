@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
@@ -66,9 +66,16 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     "aria-describedby": [errors[key] ? `post-${key}-error` : null, hintId ?? null].filter(Boolean).join(" ") || undefined,
   });
 
+  // Re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
+  // (never "save failed": a retry of an already-created notice would create a duplicate).
+  const reload = useCallback(
+    () => api.getAdminPosts().then(setRecords).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") })),
+    [api, t],
+  );
+
   useEffect(() => {
-    api.getAdminPosts().then(setRecords).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
-  }, [api, t]);
+    void reload();
+  }, [reload]);
 
   const updateForm = <K extends keyof PostForm>(key: K, value: PostForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -124,9 +131,9 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       const previousStatus = records.find((item) => item.slug === mode)?.status;
       const options = publishOptionFor(previousStatus, form.status, mode === "create" ? "create" : "edit");
       await api.saveAdminPost(post, mode === "create", options);
-      setRecords(await api.getAdminPosts());
       pushAdminToast({ variant: "success", title: mode === "create" ? t("toast.createdTitle") : t("toast.updatedTitle"), description: tCommon("savedDescription", { title: form.title }) });
       startNew();
+      await reload();
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
@@ -139,6 +146,8 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     try {
       await api.deleteAdminPost(post.slug);
       setRecords((current) => current.filter((item) => item.slug !== post.slug));
+      // The form may be editing the record that just went away: a later save would PATCH a missing row.
+      if (mode === post.slug) startNew();
       pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: post.title });
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });

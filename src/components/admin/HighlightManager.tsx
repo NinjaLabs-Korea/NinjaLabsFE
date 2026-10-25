@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable } from "@/components/admin/AdminTable";
@@ -72,9 +72,16 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     "aria-describedby": [errors[key] ? `highlight-${key}-error` : null, hintId ?? null].filter(Boolean).join(" ") || undefined,
   });
 
+  // Re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
+  // (never "save failed": a retry of an already-created highlight would create a duplicate).
+  const reload = useCallback(
+    () => api.getAdminHighlights().then((items) => setRecords(sortHighlights(items))).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") })),
+    [api, t],
+  );
+
   useEffect(() => {
-    api.getAdminHighlights().then((items) => setRecords(sortHighlights(items))).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
-  }, [api, t]);
+    void reload();
+  }, [reload]);
 
   const isEditing = mode !== "create";
 
@@ -153,9 +160,9 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
         ...highlightPublishOptionFor(current?.published, published, isEditing ? "edit" : "create"),
         typeChanged: isEditing && type !== current?.type,
       });
-      setRecords(sortHighlights(await api.getAdminHighlights()));
       pushAdminToast({ variant: "success", title: isEditing ? t("toast.updatedTitle") : t("toast.addedTitle"), description: tCommon("savedDescription", { title }) });
       resetForm();
+      await reload();
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
@@ -168,6 +175,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     try {
       await api.deleteAdminHighlight(highlight.id);
       setRecords((current) => current.filter((item) => item.id !== highlight.id));
+      // The form may be editing the record that just went away: a later save would PATCH a missing row.
+      if (mode === highlight.id) resetForm();
       pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: highlight.title });
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
