@@ -12,6 +12,8 @@
   "list": {
     "unavailableTitle": "暂时无法获取代理信息。",
     "signedOutMessage": "登录后管理你的代理",
+    "emptyTitle": "你还没有注册代理。",
+    "emptyBody": "注册代理后，可通过 Agent API 代你申请和提交。",
     "heading": "我的代理",
     "intro": "已注册的代理在完成钱包密钥验证后，可以代表你申请和提交。",
     "registerNew": "注册新代理",

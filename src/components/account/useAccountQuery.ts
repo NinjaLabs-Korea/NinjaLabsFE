@@ -14,7 +14,7 @@ type AccountQueryState<T> = {
 };
 
 type AccountQueryResult<T> = AccountQueryState<T> & {
-  /** Re-reads from the API (after a mutation) without touching the auth snapshot; keeps the current data while loading. */
+  /** Re-reads from the API (after a mutation) without touching the auth snapshot; keeps the current data while loading or when the re-read fails (unless the session is gone). */
   refresh: () => void;
 };
 
@@ -52,12 +52,20 @@ export function useAccountQuery<T>(read: AccountQueryRead<T>): AccountQueryResul
           return;
         }
 
-        setResult({
-          key: queryKey,
-          state:
-            response.status === "unavailable"
-              ? { loading: false, unavailable: true, reason: response.reason, data: null }
-              : { loading: false, unavailable: false, reason: null, data: response.data },
+        setResult((previous) => {
+          // A re-read that fails (after a mutation succeeded, or a token refresh) keeps the rows already on screen for
+          // the same user: replacing them with "unavailable" would make a succeeded apply/submit look failed.
+          // A gone session still wins so the views can prompt for sign-in.
+          if (response.status === "unavailable" && response.reason !== "unauthorized" && previous.key === queryKey && previous.state.data !== null) {
+            return previous;
+          }
+          return {
+            key: queryKey,
+            state:
+              response.status === "unavailable"
+                ? { loading: false, unavailable: true, reason: response.reason, data: null }
+                : { loading: false, unavailable: false, reason: null, data: response.data },
+          };
         });
       });
 

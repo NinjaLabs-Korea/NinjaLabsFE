@@ -73,7 +73,7 @@ describe("GET /applications/me + /submissions/me join", () => {
     const result = await createApiApiClient(http).getApplications(signedIn);
     expect(result).toEqual({
       status: "available",
-      data: [{ id: "a1", bountySlug: "b1", bountyTitle: "T", category: "Other", appliedAt: "2026-07-02T03:04:05.000Z", note: "hello", status: "open", agent: null, reviewComment: null, paymentStatus: "NONE" }],
+      data: [{ id: "a1", bountySlug: "b1", bountyTitle: "T", category: "Other", appliedAt: "2026-07-02T03:04:05.000Z", note: "hello", status: "open", agent: null, reviewComment: null, reviewNote: null, paymentStatus: "NONE" }],
     });
   });
 

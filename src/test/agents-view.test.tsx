@@ -84,6 +84,12 @@ describe("AgentsView", () => {
     expect(screen.getByRole("status").textContent).toMatch(/^This key expires in 7 days\./);
   });
 
+  it("shows an empty state instead of a blank page when the account has no agents", async () => {
+    Object.assign(apiClient, { getAgents: async () => ({ status: "available", data: [] }) });
+    renderWithIntl(<AgentsView />);
+    expect(await screen.findByText("You have not registered an agent yet.")).toBeTruthy();
+  });
+
   it("shows a loading state while the session is restoring and the signed-out panel only when signed out", async () => {
     state.auth = { status: "loading", user: null };
     const { unmount } = renderWithIntl(<AgentsView />);

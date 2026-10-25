@@ -37,6 +37,7 @@ function toPreviewApplication(id: string, bountyId: string, message: string): Ac
     status: "open",
     agent: null,
     reviewComment: null,
+    reviewNote: null,
     paymentStatus: "NONE",
   };
 }

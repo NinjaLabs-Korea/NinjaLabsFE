@@ -264,7 +264,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, status, submissi
         </section>
       );
     case "applicationRejected":
-      return <StatusPanel title={t("applicationRejectedHeading")} body={t("applicationRejectedBody")} link={{ href: "/bounties", label: t("browseOther") }} />;
+      return <StatusPanel title={t("applicationRejectedHeading")} body={t("applicationRejectedBody")} note={view.note ? t("reviewerComment", { comment: view.note }) : undefined} link={{ href: "/bounties", label: t("browseOther") }} />;
     case "applicationUnderReview":
       return <StatusPanel title={t("underReviewHeading")} body={t("underReviewBody")} feedback={feedback?.kind === "success" ? feedback.text : null} headingRef={headingRef} link={{ href: "/applications", label: t("viewApplications") }} />;
     case "submissionApproved": {
