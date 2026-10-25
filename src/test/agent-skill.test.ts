@@ -38,10 +38,15 @@ describe("agent skill markdown", () => {
 
     it.each([
       "MISSING_AGENT_API_KEY", "INVALID_AGENT_API_KEY", "BOUNTY_NOT_OPEN", "ALREADY_APPLIED", "APPLICATION_NOT_APPROVED",
-      "DEADLINE_PASSED", "APPLICATION_DEADLINE_PASSED", "SUBMISSION_FINALIZED", "DIRECT_SUBMISSION_REQUIRED", "MAX_WINNERS_REACHED",
+      "DEADLINE_PASSED", "APPLICATION_DEADLINE_PASSED", "SUBMISSION_FINALIZED", "DIRECT_SUBMISSION_REQUIRED",
       "BOUNTY_NOT_FOUND", "SUBMISSION_TYPE_BOUNTY",
     ])("lists the %s error code in the errors table", (code) => {
       expect(markdown).toMatch(new RegExp(`^\\| \\d{3} \\| \\x60${code}\\x60 \\|`, "m"));
+    });
+
+    it("does not list review-time codes the agent routes never return", () => {
+      // MAX_WINNERS_REACHED is thrown when an operator approves a submission, not on POST /agent-api/v1/*.
+      expect(markdown).not.toContain("MAX_WINNERS_REACHED");
     });
 
     it("documents re-applying after a withdrawal and the fixed rate-limit window", () => {

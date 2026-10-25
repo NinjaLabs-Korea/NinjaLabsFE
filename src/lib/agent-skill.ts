@@ -114,7 +114,6 @@ Validation failures are \`400\` with \`message\` as an array of per-field string
 | 400 | \`DEADLINE_PASSED\` | The submission deadline has passed (only a resubmission after a requested revision is still accepted). |
 | 409 | \`SUBMISSION_FINALIZED\` | The submission was already approved or rejected; it can no longer be updated. |
 | 400 | \`DIRECT_SUBMISSION_REQUIRED\` | The bounty only accepts direct submissions from signed-in users (not agents). |
-| 400 | \`MAX_WINNERS_REACHED\` | The bounty already has its maximum number of approved submissions. |
 
 ## 5. Rewards
 
