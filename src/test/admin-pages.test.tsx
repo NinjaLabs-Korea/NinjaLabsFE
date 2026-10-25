@@ -187,7 +187,9 @@ describe("admin pages", () => {
     const { default: BountiesPage } = await import("@/app/[locale]/admin/bounties/page");
     renderWithIntl(await BountiesPage({ params } as never));
     expect(screen.getByRole("heading", { level: 1, name: "Bounty Registration & Management" })).toBeTruthy();
-    expect(screen.getAllByRole("row")).toHaveLength(1);
+    // No rows are rendered before the first read answers: "Loading…", not an empty table.
+    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.getByRole("status").textContent).toBe("Loading…");
     await waitFor(() => expect(screen.getByText("Build an iAsset price widget")).toBeTruthy());
     expect(screen.getByRole("link", { name: "Bounty Mgmt" }).getAttribute("aria-current")).toBe("page");
   });
@@ -213,8 +215,9 @@ describe("admin pages", () => {
     stubEnv(apiEnv);
     vi.stubGlobal("fetch", vi.fn(async () => new Response("down", { status: 503 })));
     renderWithIntl(await HallPage({ params } as never));
-    const status = screen.getByRole("status");
-    expect(status.textContent).toContain((enMessages.hallOfFame as { unavailable: { title: string } }).unavailable.title);
+    // The highlight list's own first read is a second status ("Loading…" / its failure) next to the unavailable panel.
+    const unavailableTitle = (enMessages.hallOfFame as { unavailable: { title: string } }).unavailable.title;
+    expect(screen.getAllByRole("status").some((node) => node.textContent?.includes(unavailableTitle))).toBe(true);
     // The curation manager still renders below the panel.
     expect(screen.getByRole("heading", { name: "Highlight curation" })).toBeTruthy();
   });
