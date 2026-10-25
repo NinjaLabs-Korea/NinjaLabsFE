@@ -79,6 +79,12 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
     if (ok) setDialog(null);
   };
 
+  // An approve / mark-paid dialog describes a payout in one status: close it when a re-read shows the payout moved on (another admin acted).
+  const dialogPayout = dialog && dialog.kind !== "request" ? ops.payouts.find((item) => item.id === dialog.payout.id) : undefined;
+  const dialogCurrent = dialog === null ? false
+    : dialog.kind === "request" ? true
+      : dialogPayout !== undefined && (dialog.kind === "approve" ? canApprovePayout(dialogPayout) : canMarkPayoutPaid(dialogPayout));
+
   const busyKey = !dialog ? "" : dialog.kind === "request" ? `request:${dialog.reward.id}` : `payout:${dialog.payout.id}`;
   const approveMode = dialog?.kind === "approve" ? payoutApprovalMode(dialog.payout, ops.policy) : "normal";
 
@@ -148,7 +154,7 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
         eyebrow={t("payouts.eyebrow")}
         onCancel={() => setDialog(null)}
         onSubmit={() => void submit()}
-        open={dialog !== null}
+        open={dialogCurrent}
         submitLabel={dialog?.kind === "request" ? t("payouts.request") : dialog?.kind === "approve" ? t("payouts.approve") : t("payouts.markPaid")}
         title={dialog?.kind === "request" ? t("payouts.requestTitle") : dialog?.kind === "approve" ? t("payouts.approveTitle") : t("payouts.paidTitle")}
       >

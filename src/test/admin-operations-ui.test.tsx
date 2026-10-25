@@ -127,6 +127,30 @@ describe("BountyOperations", () => {
     await waitFor(() => expect(adminApi.reviewAdminSubmission).toHaveBeenCalledWith("s1", { decision: "REQUEST_REVISION", revisionNo: 3, comment: "Add tests" }));
   });
 
+  it("closes a review dialog whose revision was superseded by a re-read instead of resending the stale revisionNo", async () => {
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Request revision" }));
+    expect(dialog()).toBeTruthy();
+    const base = operations();
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: base.submissions.map((item) => (item.id === "s1" ? { ...item, currentRevisionNo: 4 } : item)) }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("closes an approve dialog when another admin already approved the payout", async () => {
+    await renderOps();
+    // p-mine is requested by "me" (self-blocked), so use a payout someone else requested.
+    const others = operations({ payouts: [{ ...operations().payouts[0], id: "p-other", requestedByMe: false }] });
+    adminApi.getAdminOperations.mockImplementation(async () => others);
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    const approve = await within(screen.getByRole("region", { name: "Winner payouts" })).findByRole("button", { name: "Approve" });
+    fireEvent.click(approve);
+    expect(dialog()).toBeTruthy();
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ payouts: [{ ...others.payouts[0], status: "APPROVED" }] }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
   it("only offers rejection for a pending application once intake is closed (IN_REVIEW)", async () => {
     await renderOps();
     const row = screen.getByText("pick me").closest("tr")!;
