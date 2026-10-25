@@ -11,7 +11,7 @@ import { loadFromRuntime } from "@/lib/api/public";
 import { PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { composeFoundationRuntime } from "@/lib/runtime/config";
-import { localeAlternates } from "@/i18n/alternates";
+import { localeMetadata } from "@/i18n/alternates";
 
 const { wallet: walletConnectionConfig } = composeFoundationRuntime(previewUser);
 
@@ -27,7 +27,7 @@ type AgentRegisterPageProps = {
 export async function generateMetadata({ params }: AgentRegisterPageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "agents.meta.register" });
-  return { alternates: localeAlternates(locale, "/agents/register"), title: t("title"), description: t("description") };
+  return localeMetadata(locale, "/agents/register", { title: t("title"), description: t("description") });
 }
 
 export default async function AgentRegisterPage({ params }: AgentRegisterPageProps) {

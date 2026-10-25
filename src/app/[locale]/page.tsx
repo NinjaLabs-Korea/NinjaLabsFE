@@ -56,13 +56,13 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
               </Link>
             </div>
             {unavailable.stats ? (
-              <p className="mt-12 text-sm text-on-inverse/60" role="status">{t("stats.unavailable")}</p>
+              <p className="mt-12 text-sm text-on-inverse/75" role="status">{t("stats.unavailable")}</p>
             ) : (
               <dl className="mt-12 flex flex-wrap gap-x-10 gap-y-5">
                 {hero.stats.map((stat) => (
                   <div key={stat.labelKey}>
                     <dt className="font-display text-2xl font-bold text-on-inverse">{formatStatValue(stat.value, locale)}</dt>
-                    <dd className="text-sm text-on-inverse/50">{tStats(stat.labelKey)}</dd>
+                    <dd className="text-sm text-on-inverse/75">{tStats(stat.labelKey)}</dd>
                   </div>
                 ))}
               </dl>
@@ -80,7 +80,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
               />
               <div>
                 <p className="text-base font-semibold text-on-inverse">{hero.portfolio.handle}</p>
-                <p className="text-sm text-on-inverse/50">
+                <p className="text-sm text-on-inverse/75">
                   {t("hero.portfolioMeta", { year: String(hero.portfolio.memberSince) })}
                 </p>
               </div>
@@ -98,7 +98,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
                   </span>
                 </div>
               ))}
-              <div className="grid aspect-square place-items-center rounded-tile border border-dashed border-on-inverse/25 text-sm text-on-inverse/50">
+              <div className="grid aspect-square place-items-center rounded-tile border border-dashed border-on-inverse/25 text-sm text-on-inverse/75">
                 {t("hero.next")}
               </div>
             </div>

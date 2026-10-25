@@ -8,7 +8,7 @@ import { Link } from "@/i18n/navigation";
 import type { HighlightTypeLabel } from "@/lib/api/codecs";
 import { formatStatValue, loadRuntimeHallOfFame } from "@/lib/hall-of-fame";
 import { imageProps } from "@/lib/image";
-import { localeAlternates } from "@/i18n/alternates";
+import { localeMetadata } from "@/i18n/alternates";
 
 // One entry per BE highlight type (`lib/api/codecs.ts HIGHLIGHT_TYPE_LABELS`).
 const highlightVariants = {
@@ -33,11 +33,7 @@ const highlightLabelKeys = {
 export async function generateMetadata({ params }: PageProps<"/[locale]/hall-of-fame">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "hallOfFame.metadata" });
-  return {
-    alternates: localeAlternates(locale, "/hall-of-fame"),
-    title: t("title"),
-    description: t("description"),
-  };
+  return localeMetadata(locale, "/hall-of-fame", { title: t("title"), description: t("description") });
 }
 
 export default async function HallOfFamePage({ params }: PageProps<"/[locale]/hall-of-fame">) {

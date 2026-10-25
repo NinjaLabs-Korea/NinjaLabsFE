@@ -9,7 +9,7 @@ import { Link } from "@/i18n/navigation";
 import { loadFromRuntime } from "@/lib/api/public";
 import { validateDetailId } from "@/lib/detail-id";
 import { getRuntimeProfile, parentNftState, payoutBadge, portfolioBodyKey, PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
-import { localeAlternates } from "@/i18n/alternates";
+import { localeMetadata } from "@/i18n/alternates";
 
 type MemberProfilePageProps = PageProps<"/[locale]/members/[id]">;
 
@@ -26,18 +26,9 @@ export async function generateMetadata({ params }: MemberProfilePageProps): Prom
     return { alternates: {}, title: t("notFoundTitle") };
   }
 
-  return {
-    // The BE looks nicknames up case-insensitively: canonicalize to the stored spelling so /members/JAEMIN and
-    // /members/jaemin are one indexed page, not duplicates.
-    alternates: localeAlternates(locale, `/members/${profile.slug}`),
-    title: t("pageTitle", { handle: profile.handle }),
-    description: profile.bio,
-    openGraph: {
-      title: t("pageTitle", { handle: profile.handle }),
-      description: profile.bio,
-      url: `/${locale}/members/${profile.slug}`,
-    },
-  };
+  // The BE looks nicknames up case-insensitively: canonicalize to the stored spelling so /members/JAEMIN and
+  // /members/jaemin are one indexed page, not duplicates.
+  return localeMetadata(locale, `/members/${profile.slug}`, { title: t("pageTitle", { handle: profile.handle }), description: profile.bio });
 }
 
 export default async function MemberProfilePage({ params }: MemberProfilePageProps) {
@@ -86,7 +77,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
               <Image alt="" className="size-12 shrink-0 rounded-full" height={48} src="/figma/ninja-labs-mascot.png" width={48} />
               <div>
                 <p className="text-base font-semibold">{profile.handle}</p>
-                <p className="text-sm text-on-inverse/60">{t("portfolio.memberSince", { date: profile.joinedAt })}</p>
+                <p className="text-sm text-on-inverse/75">{t("portfolio.memberSince", { date: profile.joinedAt })}</p>
               </div>
             </div>
             {completionNfts.length ? (
