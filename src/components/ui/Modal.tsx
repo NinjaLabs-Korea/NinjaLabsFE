@@ -21,6 +21,9 @@ export function Modal({ open, onClose, labelledBy, describedBy, role, children, 
   const dialogRef = useRef<HTMLDialogElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const wasOpenRef = useRef(false);
+  // Whether the current press began on the backdrop. Selecting text inside the dialog and releasing the pointer outside
+  // it also fires `click` on the dialog (the common ancestor), which must not dismiss it and lose a typed confirmation.
+  const pressedOnBackdropRef = useRef(false);
   // Read through a ref so an inline `returnFocusTo={() => ...}` callback (new identity every render) never re-runs the
   // open/close effect: that would re-capture the opener (or re-close) on each parent render while the dialog is open.
   const returnFocusToRef = useRef(returnFocusTo);
@@ -65,10 +68,13 @@ export function Modal({ open, onClose, labelledBy, describedBy, role, children, 
         event.preventDefault();
         onClose();
       }}
+      onPointerDown={(event) => {
+        pressedOnBackdropRef.current = event.target === dialogRef.current;
+      }}
       onClick={(event) => {
         const dialog = dialogRef.current;
 
-        if (event.target !== dialog || !dialog) {
+        if (event.target !== dialog || !dialog || !pressedOnBackdropRef.current) {
           return;
         }
 
