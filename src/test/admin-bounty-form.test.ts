@@ -7,6 +7,7 @@ import {
   emptyBountyForm,
   formToBounty,
   fromLocalDateTimeInput,
+  isIsoDateTime,
   toLocalDateTimeInput,
   validateBountyForm,
   type BountyFormValues,
@@ -225,5 +226,19 @@ describe("admin bounty form text limits (BE CreateBountyDto)", () => {
   it("does not validate the reward amount while editing (it is not sent)", () => {
     expect(validateBountyForm({ ...valid, amount: "1e99999" }, { now })).toEqual({ amount: "amountInvalid" });
     expect(validateBountyForm({ ...valid, amount: "1e99999" }, { now, editing: true })).toEqual({});
+  });
+});
+
+describe("isIsoDateTime", () => {
+  it("accepts the microsecond timestamps Postgres json_build_object emits (review history dates)", () => {
+    expect(isIsoDateTime("2026-10-25T12:34:56.123456+00:00")).toBe(true);
+    expect(isIsoDateTime("2026-10-25T12:34:56.12+09:00")).toBe(true);
+    expect(isIsoDateTime("2026-10-25T12:34:56.123Z")).toBe(true);
+  });
+
+  it("still rejects values V8 would guess a date for", () => {
+    expect(isIsoDateTime("07.14")).toBe(false);
+    expect(isIsoDateTime("2026-10-25 12:34:56")).toBe(false);
+    expect(isIsoDateTime("2026-10-25T12:34:56.1234567890Z")).toBe(false);
   });
 });
