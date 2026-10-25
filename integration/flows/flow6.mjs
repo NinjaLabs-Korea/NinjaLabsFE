@@ -33,7 +33,7 @@ await fillLabel(p, 'Title', 'Integrate Injective EVM wallet'); await fillLabel(p
 const dl = new Date(Date.now() + 20 * 864e5); const pad = (n) => String(n).padStart(2, '0');
 const local = `${dl.getFullYear()}-${pad(dl.getMonth() + 1)}-${pad(dl.getDate())}T18:00`;
 await fillLabel(p, 'Deadline', local);
-await p.fill('main form input[type=number]', '25');
+await p.fill('main form input[inputmode=decimal]', '25');
 // "Dev" is preselected; picking "Design" must replace it (round-10 fix: the chips used to multi-toggle and save tags[0]).
 await p.click('Design', { exact: true, selector: 'main form [role=group] button' });
 const pressed = await p.eval(`[...document.querySelectorAll('main form [role=group] button[aria-pressed=true]')].map(b=>b.innerText.trim())`);
@@ -67,7 +67,7 @@ sql(`update bounty set submission_deadline=now()-interval '1 day' where id='${ne
 const before2 = msDeadline(`id='${newId}'`);
 await p.goto('/en/admin/bounties'); await p.waitText('NEW BOUNTY FORM');
 await rowButton(p, 'Integrate Injective EVM wallet', 'Edit');
-const amountShown = await p.eval(`document.querySelector('main form input[type=number]').value`);
+const amountShown = await p.eval(`document.querySelector('main form input[inputmode=decimal]').value`);
 check('edit form pre-fills reward amount 25', amountShown === '25', amountShown);
 await fillLabel(p, 'Title', 'Integrate Injective EVM wallet v2'); p.reset();
 await p.click('css:main form button[type=submit]'); await sleep(1800); await p.idle();
