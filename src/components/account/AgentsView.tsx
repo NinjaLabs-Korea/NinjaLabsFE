@@ -165,7 +165,7 @@ export function AgentsView() {
             <article className={`rounded-card border border-dashed border-border bg-surface p-5${revoked ? " opacity-70" : ""}`} key={agent.id}>
               <div className="flex flex-wrap items-center gap-2">
                 <h2
-                  className="font-display text-lg font-bold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  className="min-w-0 break-words font-display text-lg font-bold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   ref={(element) => {
                     if (element) headingRefs.current.set(agent.id, element);
                     else headingRefs.current.delete(agent.id);
@@ -182,7 +182,7 @@ export function AgentsView() {
                   <Badge variant="neutral">{t("unverified")}</Badge>
                 )}
               </div>
-              <p className="mt-1 text-sm text-ink-muted">{agent.walletAddress}</p>
+              <p className="mt-1 break-all text-sm text-ink-muted">{agent.walletAddress}</p>
 
               <dl className="mt-3 space-y-1.5 text-sm">
                 <div className="flex flex-wrap items-center gap-2">

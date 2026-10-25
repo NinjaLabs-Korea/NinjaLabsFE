@@ -67,8 +67,8 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
           <Badge>{t(`categories.${noticeCategoryKeys[notice.category]}`)}</Badge>
           <span className="text-sm text-ink-muted">{notice.publishedAt}</span>
         </div>
-        <h1 className="mt-5 font-display text-5xl tracking-[-0.48px] text-ink">{notice.title}</h1>
-        <p className="mt-5 text-lg text-ink-muted">{notice.excerpt}</p>
+        <h1 className="mt-5 break-words font-display text-5xl tracking-[-0.48px] text-ink">{notice.title}</h1>
+        <p className="mt-5 break-words text-lg text-ink-muted">{notice.excerpt}</p>
       </section>
 
       <div className="relative mt-8 aspect-video overflow-hidden rounded-card bg-gradient-to-br from-primary-soft-border to-surface-subtle">
@@ -76,8 +76,8 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
       </div>
 
       <div className="mt-8 grid gap-8 md:grid-cols-4">
-        <article className="rounded-card border border-border bg-surface p-5 shadow-card md:col-span-3">
-          <div className="text-base text-ink-secondary">
+        <article className="min-w-0 rounded-card border border-border bg-surface p-5 shadow-card md:col-span-3">
+          <div className="break-words text-base text-ink-secondary">
             <Markdown>{notice.bodyMarkdown}</Markdown>
           </div>
           {externalUrl ? (

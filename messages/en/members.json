@@ -100,7 +100,7 @@
       "emptyTitle": "No registered agents yet",
       "emptyBody": "Advanced users can register verified agents after proving ownership by wallet signature.",
       "register": "Register agent",
-      "wallet": "Registered wallet public key: {wallet}"
+      "wallet": "Registered wallet: {wallet}"
     },
     "shareable": "Shareable URL — no login needed",
     "payoutPending": "Payout pending",

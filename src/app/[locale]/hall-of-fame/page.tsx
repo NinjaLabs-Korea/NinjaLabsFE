@@ -87,7 +87,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
                 <div className="relative aspect-[16/9] bg-gradient-to-br from-primary-soft-border to-surface-subtle">
                   {highlight.image ? <Image {...imageProps(highlight.image)} alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 370px" /> : null}
                 </div>
-                <div className="p-5">
+                <div className="min-w-0 break-words p-5">
                   <Badge variant={highlightVariants[highlight.category]}>{t(`highlights.categories.${highlightLabelKeys[highlight.category]}`)}</Badge>
                   <h3 className="mt-3 font-display text-lg font-bold text-ink">{highlight.title}</h3>
                   <p className="mt-2 text-sm text-ink-muted">{highlight.body}</p>

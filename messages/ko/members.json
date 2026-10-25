@@ -100,7 +100,7 @@
       "emptyTitle": "아직 등록된 에이전트가 없습니다",
       "emptyBody": "고급 사용자는 지갑 서명으로 소유권을 증명한 뒤 인증된 에이전트를 등록할 수 있습니다.",
       "register": "에이전트 등록",
-      "wallet": "등록된 지갑 공개 키: {wallet}"
+      "wallet": "등록된 지갑: {wallet}"
     },
     "shareable": "공유 가능한 URL — 로그인 불필요",
     "payoutPending": "지급 대기",

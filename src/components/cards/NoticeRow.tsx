@@ -28,10 +28,10 @@ export function NoticeRow({ notice }: NoticeRowProps) {
           <Badge>{t(noticeCategoryKeys[notice.category])}</Badge>
           <span className="shrink-0 text-sm text-ink-muted">{notice.publishedAt}</span>
         </div>
-        <h2 className="mt-2 font-display text-xl font-bold tracking-[-0.2px] text-ink">
+        <h2 className="mt-2 break-words font-display text-xl font-bold tracking-[-0.2px] text-ink">
           {notice.title}
         </h2>
-        <p className="mt-2 text-sm text-ink-muted">{notice.excerpt}</p>
+        <p className="mt-2 break-words text-sm text-ink-muted">{notice.excerpt}</p>
       </div>
     </Link>
   );

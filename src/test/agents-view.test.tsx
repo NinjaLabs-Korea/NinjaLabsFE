@@ -84,6 +84,14 @@ describe("AgentsView", () => {
     expect(screen.getByRole("status").textContent).toMatch(/^This key expires in 7 days\./);
   });
 
+  it("lets the unbroken wallet address wrap instead of overflowing a narrow card", async () => {
+    renderWithIntl(<AgentsView />);
+    await screen.findByText("proof-collector");
+    const wallets = screen.getAllByText(/^inj1/);
+    expect(wallets.length).toBeGreaterThan(0);
+    for (const wallet of wallets) expect(wallet.className).toContain("break-all");
+  });
+
   it("shows an empty state instead of a blank page when the account has no agents", async () => {
     Object.assign(apiClient, { getAgents: async () => ({ status: "available", data: [] }) });
     renderWithIntl(<AgentsView />);
