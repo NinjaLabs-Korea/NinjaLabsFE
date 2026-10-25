@@ -86,6 +86,11 @@ describe("ConfirmDialog", () => {
 });
 
 describe("Toast", () => {
+  it("shrinks to its container on narrow screens instead of overflowing the viewport", () => {
+    renderWithIntl(<Toast onDismiss={() => undefined} title="Saved" variant="success" />);
+    expect(screen.getByText("Saved").closest("div[class*='w-[340px]']")?.className).toContain("max-w-full");
+  });
+
   it("interrupts (role=alert) only for danger toasts", () => {
     const { unmount } = renderWithIntl(<Toast onDismiss={() => undefined} title="Revoke failed" variant="danger" />);
     expect(screen.getByRole("alert").textContent).toContain("Revoke failed");
