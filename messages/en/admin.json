@@ -18,12 +18,14 @@
     "deleteCallout": "This cannot be undone.",
     "urlHint": "https://… or /media/… path",
     "urlInvalid": "Enter an http(s) URL (or an allowed site path).",
+    "orderInvalid": "Enter a whole number from 0 up.",
     "required": "This field is required.",
     "fixFields": "Fix the highlighted fields before saving.",
     "saving": "Saving…",
     "removeImage": "Remove image",
     "errors": {
       "INVALID_CHARACTER": "A field contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
+      "INVALID_DATE": "A date or time is not on the calendar (for example February 31). Correct it and try again.",
       "REFERENCE_NOT_FOUND": "This record points to something that no longer exists. Reload the page and try again.",
       "BOUNTY_NOT_FOUND": "The bounty no longer exists. Reload the page to refresh the list.",
       "BOUNTY_HAS_OPEN_FUNDS": "This bounty still holds funds in the multisig (a confirmed deposit not fully paid out, or an open payout). Finish or refund the payouts before deleting it.",
@@ -181,7 +183,7 @@
         "required": "This field is required.",
         "deadlineInvalid": "Enter a valid date and time.",
         "deadlinePast": "Choose a deadline in the future.",
-        "amountInvalid": "Enter an amount greater than 0, or leave it empty for a draft.",
+        "amountInvalid": "Enter an amount greater than 0 with no more decimals than the token supports (USDC 6, INJ 18), or leave it empty for a draft.",
         "deliverablesRequired": "Add at least one deliverable or a submission guide.",
         "titleTooLong": "Use at most 200 characters.",
         "sponsorTooLong": "Use at most 100 characters."
@@ -198,6 +200,7 @@
       "statusUpdatedDescription": "{title} is now {to, select, OPEN {open} other {submission closed}}.",
       "transitionFailedTitle": "Transition failed",
       "transitionFailedDescription": "This status transition is not currently allowed.",
+      "transitionBlockedDescription": "Something still blocks this transition (for example the reward deposit is not confirmed). Open Operations for this bounty to see what.",
       "deletedTitle": "Bounty deleted",
       "deleteFailedDescription": "The bounty was not deleted."
     },

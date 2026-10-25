@@ -21,6 +21,11 @@ const columns = [
 
 /** BE `MemberAdminService.PAGE_SIZE`. */
 const USERS_PAGE_SIZE = 30;
+/** Pause after the last keystroke before the search term goes to the BE. */
+const SEARCH_DEBOUNCE_MS = 300;
+
+/** `existing` plus the `incoming` users it does not hold yet (a signup between two requests shifts rows across page boundaries). */
+const withNewUsers = (existing: AdminUser[], incoming: AdminUser[]) => [...existing, ...incoming.filter((user) => !existing.some((known) => known.slug === user.slug))];
 
 export function UserDirectory({ users }: { users: AdminUser[] }) {
   const api = useAdminApi();
@@ -32,7 +37,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   const [nextPage, setNextPage] = useState(2);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const normalizedQuery = query.toLowerCase();
+  const normalizedQuery = query.trim().toLowerCase();
   const visibleUsers = directoryUsers.filter((user) => (
     user.nickname.toLowerCase().includes(normalizedQuery) || user.email.toLowerCase().includes(normalizedQuery)
   ));
@@ -45,12 +50,25 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
     }).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }));
   }, [api, t]);
 
+  // The table filters the loaded users instantly; after a pause the term also goes to the BE (`q` is ILIKE on
+  // email/nickname) and users not loaded yet are merged in, so one beyond the first pages is found without paging to them.
+  useEffect(() => {
+    const term = query.trim();
+    if (!term) return;
+    const timer = setTimeout(() => {
+      api.getAdminUsers(term).then(
+        (found) => setDirectoryUsers((current) => withNewUsers(current, found)),
+        () => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }),
+      );
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [api, query, t]);
+
   async function loadMore() {
     setLoadingMore(true);
     try {
       const loaded = await api.getAdminUsers("", nextPage);
-      // Join dedupes by id: a signup between the two requests shifts rows across the page boundary.
-      setDirectoryUsers((current) => [...current, ...loaded.filter((user) => !current.some((existing) => existing.slug === user.slug))]);
+      setDirectoryUsers((current) => withNewUsers(current, loaded));
       setNextPage((current) => current + 1);
       setHasMore(loaded.length >= USERS_PAGE_SIZE);
     } catch {

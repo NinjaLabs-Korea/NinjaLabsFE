@@ -85,7 +85,13 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
       <section className="mt-6 rounded-card border border-border bg-surface p-[21px] shadow-card">
         <div aria-label={t("filterLabel")} className="flex flex-wrap items-center gap-2" role="group">
           {NFT_JOB_STATUSES.map((option) => (
-            <button aria-pressed={status === option} className={`inline-flex h-6 items-center rounded-full px-2.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${status === option ? "bg-primary text-primary-soft" : "bg-primary-soft text-primary-strong"}`} key={option} onClick={() => { setStatus(option); setPage(1); }} type="button">
+            <button aria-pressed={status === option} className={`inline-flex h-6 items-center rounded-full px-2.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${status === option ? "bg-primary text-primary-soft" : "bg-primary-soft text-primary-strong"}`} key={option} onClick={() => {
+              // Another status is another list: drop the old rows so FAILED jobs (with Retry) never sit under the Pending tab while it loads.
+              if (option === status) return;
+              setStatus(option);
+              setPage(1);
+              setData(null);
+            }} type="button">
               {t(`statuses.${option}`)}
             </button>
           ))}

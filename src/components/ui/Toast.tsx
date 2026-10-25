@@ -49,7 +49,7 @@ export function Toast({
     <div
       // Danger toasts interrupt; the others are announced by the host's persistent aria-live region.
       role={variant === "danger" ? "alert" : undefined}
-      className={`flex w-[340px] items-start gap-3 rounded-tile border border-border border-l-[3px] bg-surface px-4 py-3.5 shadow-frame ${styles.accent}`}
+      className={`flex w-[340px] max-w-full items-start gap-3 rounded-tile border border-border border-l-[3px] bg-surface px-4 py-3.5 shadow-frame ${styles.accent}`}
     >
       <span
         aria-hidden="true"

@@ -31,7 +31,7 @@ import type { Bounty, PayoutStatus } from "@/lib/types";
 /** 심사 대기 중인 제출 상태 — 이 상태의 제출이 있으면 "심사 중" 화면/문구를 쓴다. */
 export const PENDING_SUBMISSION_STATUSES: readonly SubmissionStatus[] = ["submitted", "resubmitted", "in_review"];
 
-type ApplicationRow = Pick<AccountApplication, "bountySlug" | "status" | "agent">;
+type ApplicationRow = Pick<AccountApplication, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountApplication, "reviewNote">>;
 type SubmissionRow = Pick<AccountSubmission, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountSubmission, "reviewComment" | "paymentStatus">>;
 
 /** `useAccountQuery` 결과 중 이 규칙이 읽는 부분. `data`는 내 전체 행(모든 바운티)이다. */
@@ -63,7 +63,8 @@ export type BountyActionView =
   /** 에이전트만 이 바운티에 참여함 — `row`는 에이전트가 제출까지 했는지(우선) 지원만 했는지 */
   | { kind: "agentRow"; agentName: string; row: "submission" | "application" }
   | { kind: "applyForm" }
-  | { kind: "applicationRejected" }
+  /** `note`: what the operator wrote when rejecting (the admin form says the applicant sees it); omitted when none. */
+  | { kind: "applicationRejected"; note?: string }
   | { kind: "applicationUnderReview" }
   /** `payout`: the submission's payout status (`lib/payout.ts payoutBadge` decides what shows); omitted when unknown. */
   | { kind: "submissionApproved"; payout?: PayoutStatus }
@@ -113,8 +114,9 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
   // 6. 지원 단계 (승인된 지원 등은 제출 단계로 내려간다)
   if (applicationRequired) {
     if (!application && !applied) return acceptingNew ? { kind: "applyForm" } : closed;
-    if (application?.status === "rejected") return { kind: "applicationRejected" };
-    if (applied || application?.status === "open") return { kind: "applicationUnderReview" };
+    if (application?.status === "rejected") return application.reviewNote ? { kind: "applicationRejected", note: application.reviewNote } : { kind: "applicationRejected" };
+    // `applied` only bridges the gap until the server row arrives; a row that already moved on (approved...) wins.
+    if (application ? application.status === "open" : applied) return { kind: "applicationUnderReview" };
   }
 
   // 7. 확정된 제출

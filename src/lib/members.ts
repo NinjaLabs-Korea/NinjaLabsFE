@@ -155,10 +155,12 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
       tokenId: nft.token_id,
       mintTxHash: nft.mint_tx_hash,
     })),
-    agents: data.agents.map((agent) => ({
+    // The BE sends every non-deleted agent of the owner; the public card only lists live ones. A pending registration
+    // (unproven wallet) or a revoked agent is not "my verified agent" and must not put its wallet on a public page.
+    agents: data.agents.filter((agent) => agent.status === "ACTIVE").map((agent) => ({
       name: agent.name,
       wallet: agent.wallet_address,
-      verified: agent.status === "ACTIVE",
+      verified: true,
       completedBounties: agent.completed_bounties.length,
     })),
   };

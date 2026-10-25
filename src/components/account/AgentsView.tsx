@@ -97,6 +97,15 @@ export function AgentsView() {
     return <p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p>;
   }
 
+  if (agents.length === 0) {
+    return (
+      <div className="rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center">
+        <p className="text-sm font-semibold text-ink">{t("emptyTitle")}</p>
+        <p className="mt-1 text-sm text-ink-muted">{t("emptyBody")}</p>
+      </div>
+    );
+  }
+
   const rotateKey = async (agent: AccountAgent) => {
     if (pendingRef.current.has(agent.id)) return;
     pendingRef.current.add(agent.id);

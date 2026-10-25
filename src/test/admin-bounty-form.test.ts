@@ -183,6 +183,16 @@ describe("admin bounty form validation", () => {
     expect(validateBountyForm({ ...valid, amount: "" }, { now }).amount).toBeUndefined();
   });
 
+  it("rejects reward amounts the token cannot represent instead of letting parseUnits round them", () => {
+    expect(validateBountyForm({ ...valid, currency: "USDC", amount: "1.234567" }, { now }).amount).toBeUndefined();
+    expect(validateBountyForm({ ...valid, currency: "USDC", amount: "1.2345678" }, { now }).amount).toBe("amountInvalid");
+    expect(validateBountyForm({ ...valid, currency: "USDC", amount: "0.0000001" }, { now }).amount).toBe("amountInvalid");
+    expect(validateBountyForm({ ...valid, currency: "USDC", amount: "1e-9" }, { now }).amount).toBe("amountInvalid");
+    expect(validateBountyForm({ ...valid, currency: "INJ", amount: "0.000000000000000001" }, { now }).amount).toBeUndefined();
+    expect(validateBountyForm({ ...valid, currency: "INJ", amount: "1e3" }, { now }).amount).toBeUndefined();
+    expect(validateBountyForm({ ...valid, currency: "INJ", amount: "abc" }, { now }).amount).toBe("amountInvalid");
+  });
+
   it("trims text fields when building the saved bounty", () => {
     const saved = formToBounty({ ...valid, title: "  Build a widget  " }, { slug: "", coverImage: null });
     expect(saved.title).toBe("Build a widget");

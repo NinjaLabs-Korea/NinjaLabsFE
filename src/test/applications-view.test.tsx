@@ -33,6 +33,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
 
 const row = (status: ApplicationStatus, overrides: Partial<AccountApplication> = {}): AccountApplication => ({
   reviewComment: null,
+  reviewNote: null,
   paymentStatus: "NONE",
   id: `app-${status}`,
   bountySlug: `bounty-${status}`,
@@ -67,6 +68,13 @@ describe("ApplicationsView", () => {
   beforeEach(() => {
     state.auth = signedInAs(previewUser);
     state.mode = "api";
+  });
+
+  it("shows an empty state with a link to the bounty list when there are no applications", async () => {
+    serve({ status: "available", data: [] });
+    renderWithIntl(<ApplicationsView />);
+    expect(await screen.findByText("You have not applied to any bounty yet.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Browse bounties" }).getAttribute("href")).toBe("/bounties");
   });
 
   it("marks the current step for each status and shows the status badge copy", async () => {
@@ -104,6 +112,15 @@ describe("ApplicationsView", () => {
     expect(within(article).getByText(/did not select this application/)).toBeTruthy();
     expect(within(article).queryByRole("list", { name: "Application progress" })).toBeNull();
     expect(within(article).queryByRole("link", { name: "Submit work" })).toBeNull();
+  });
+
+  it("shows the operator's note on rejected and approved applications", async () => {
+    serve({ status: "available", data: [row("rejected", { reviewNote: "Portfolio too thin" }), row("approved", { reviewNote: "Welcome aboard" }), row("open")] });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Bounty rejected" });
+    expect(within(card("Bounty rejected")).getByText("Note from the reviewer: Portfolio too thin")).toBeTruthy();
+    expect(within(card("Bounty approved")).getByText("Note from the reviewer: Welcome aboard")).toBeTruthy();
+    expect(within(card("Bounty open")).queryByText(/Note from the reviewer/)).toBeNull();
   });
 
   it("shows an approved application with a rejected submission as a final danger state, not Submitted", async () => {

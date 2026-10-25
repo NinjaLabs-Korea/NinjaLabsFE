@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
+import { DISPLAY_ORDER_MAX } from "@/lib/admin-helpers";
 
 type MemberRole = "Core" | "Dev" | "Design" | "Ops";
 
@@ -38,10 +39,10 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
   }
 
   function handleAssign() {
-    // 표시 순서는 비우면 자동(null), 입력하면 1 이상의 정수만 받는다. 잘못된 값은 조용히 버리지 않고 알린다.
+    // 표시 순서는 비우면 자동(null), 입력하면 1 이상 DISPLAY_ORDER_MAX 이하의 정수만 받는다(BE `@Min(1) @MaxPgInt()`). 잘못된 값은 조용히 버리지 않고 알린다.
     const trimmed = displayOrder.trim();
     const parsedOrder = Number(trimmed);
-    if (trimmed && !(Number.isInteger(parsedOrder) && parsedOrder >= 1)) {
+    if (trimmed && !(Number.isInteger(parsedOrder) && parsedOrder >= 1 && parsedOrder <= DISPLAY_ORDER_MAX)) {
       setOrderInvalid(true);
       return;
     }

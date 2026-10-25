@@ -1,4 +1,5 @@
 import type { AdminBounty } from "./admin";
+import { rewardToBaseUnits, tokenDecimalsFor } from "./api/codecs";
 
 /** 어드민 바운티 폼의 입력 상태 (모든 값은 input/select가 다루는 문자열 형태) */
 export type BountyFormValues = {
@@ -174,6 +175,23 @@ export const BOUNTY_SPONSOR_MAX = 100;
 export type BountyFormErrors = Partial<Record<keyof BountyFormValues, BountyFormError>>;
 
 /**
+ * 보상 금액 입력이 BE에 보낼 수 있는 값인가: 양수이고, 토큰 자릿수보다 긴 소수가 아니며(viem `parseUnits`는 초과 자릿수를 오류 없이
+ * 반올림해 입력과 다른 금액을 보낸다), 최소 단위로 환산해도 0이 아니다(BE `TOKEN_AMOUNT`는 양의 정수). 지수 표기(`1e3`)는 환산에 맡긴다.
+ */
+function isRewardAmountValid(raw: string, currency: BountyFormValues["currency"]): boolean {
+  const text = raw.trim();
+  const amount = Number(text);
+  const decimals = tokenDecimalsFor(currency);
+  if (!Number.isFinite(amount) || amount <= 0 || decimals === null) return false;
+  if (/^\d*\.\d+$/.test(text) && text.split(".")[1].length > decimals) return false;
+  try {
+    return BigInt(rewardToBaseUnits({ amount, currency })) > BigInt(0);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * 저장 전 폼 검증. 필수 항목은 BE `CreateBountyDto`의 @IsNotEmpty 필드와 맞춘다
  * (title, sponsorName, description, requirements, evaluationCriteria, submissionDeadline).
  * BE 필수 필드가 바뀌면 여기와 `src/test/admin-bounty-form.test.ts`를 함께 고칠 것.
@@ -208,10 +226,7 @@ export function validateBountyForm(
     else if (changed && deadline.getTime() <= (options.now ?? new Date()).getTime()) errors.deadline = "deadlinePast";
   }
 
-  if (!blank(form.amount)) {
-    const amount = Number(form.amount);
-    if (!Number.isFinite(amount) || amount <= 0) errors.amount = "amountInvalid";
-  }
+  if (!blank(form.amount) && !isRewardAmountValid(form.amount, form.currency)) errors.amount = "amountInvalid";
 
   return errors;
 }

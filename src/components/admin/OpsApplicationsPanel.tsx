@@ -21,6 +21,9 @@ export function OpsApplicationsPanel({ ops, busy, run, formatDate }: { ops: Admi
   const t = useTranslations("admin.operations");
   const [target, setTarget] = useState<{ application: OpsApplication; decision: "APPROVED" | "REJECTED" } | null>(null);
   const [note, setNote] = useState("");
+  // Close the dialog when a re-read shows the application is no longer open to this decision (another admin got there first).
+  const live = target ? ops.applications.find((item) => item.id === target.application.id) : undefined;
+  const targetCurrent = target !== null && live !== undefined && applicationDecisionsFor(live, ops.bounty).includes(target.decision);
 
   const submit = async () => {
     if (!target) return;
@@ -76,7 +79,7 @@ export function OpsApplicationsPanel({ ops, busy, run, formatDate }: { ops: Admi
         eyebrow={t("applications.eyebrow")}
         onCancel={() => setTarget(null)}
         onSubmit={() => void submit()}
-        open={target !== null}
+        open={targetCurrent}
         submitLabel={target ? t(`applications.actions.${target.decision}`) : ""}
         title={target?.decision === "APPROVED" ? t("applications.approveTitle") : t("applications.rejectTitle")}
       >

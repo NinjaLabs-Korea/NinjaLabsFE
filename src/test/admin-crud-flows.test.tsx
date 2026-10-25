@@ -104,7 +104,7 @@ describe("BountyManager flows", () => {
     type("Review process", "Triage");
     fireEvent.submit(screen.getByRole("button", { name: "Create" }).closest("form") as HTMLFormElement);
     expect(errorFor(field("Deadline"))).toBe("Choose a deadline in the future.");
-    expect(errorFor(field("Reward amount"))).toBe("Enter an amount greater than 0, or leave it empty for a draft.");
+    expect(errorFor(field("Reward amount"))).toBe("Enter an amount greater than 0 with no more decimals than the token supports (USDC 6, INJ 18), or leave it empty for a draft.");
     expect(field("Title").getAttribute("aria-invalid")).toBeNull();
   });
 
@@ -196,6 +196,14 @@ describe("BountyManager flows", () => {
     expect(await screen.findByText("The bounty no longer exists. Reload the page to refresh the list.")).toBeTruthy();
     expect(screen.getAllByText("Transition failed")).toHaveLength(2);
     expect(within(row("Build an iAsset price widget")).getByText("Active")).toBeTruthy();
+  });
+
+  it("points a blocked transition (BE 400 with a blocker list) at Operations instead of the generic copy", async () => {
+    vi.spyOn(api, "transitionAdminBounty").mockRejectedValueOnce(new ApiHttpError(400, "VALIDATION_FAILED"));
+    renderBounties();
+    await waitFor(() => expect(within(row("Build an iAsset price widget")).getByRole("button", { name: "Close" })).toBeTruthy());
+    fireEvent.click(within(row("Build an iAsset price widget")).getByRole("button", { name: "Close" }));
+    expect(await screen.findByText(/Open Operations for this bounty/)).toBeTruthy();
   });
 
   it("deletes only after the destructive confirm dialog, and cancel returns focus to the opener", async () => {

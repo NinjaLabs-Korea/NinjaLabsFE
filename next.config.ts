@@ -4,8 +4,12 @@ import { routing } from "./src/i18n/routing";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-/** Same env the runtime config reads (`lib/runtime/config.ts`); unset in mock mode. */
-const apiUrl = process.env.NINJA_API_BASE_URL?.replace(/\/$/, "");
+/**
+ * Same env the runtime config reads (`lib/runtime/config.ts`, which trims it); unset in mock mode. Trimmed here too: a
+ * pasted trailing newline would otherwise land in the rewrite destinations (`/api/auth`, `/media`) and break every
+ * cookie-mode auth call, while the runtime config (which validates the same value) kept accepting it.
+ */
+const apiUrl = process.env.NINJA_API_BASE_URL?.trim().replace(/\/$/, "") || undefined;
 
 /** Origin form for `connect-src`; omitted when there is no API (mock mode) or the value is not a URL. */
 function apiOrigin(): string | null {

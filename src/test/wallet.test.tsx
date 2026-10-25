@@ -260,6 +260,18 @@ describe("WalletConnectButton", () => {
     expect(wagmi.connect).not.toHaveBeenCalled();
   });
 
+  it("picks up a wallet the extension injects after the first render (ethereum#initialized)", () => {
+    renderWalletButton();
+    expect(screen.getByRole("button", { name: "Wallet unavailable" })).toBeTruthy();
+
+    act(() => {
+      setInjectedWallet(true);
+      window.dispatchEvent(new Event("ethereum#initialized"));
+    });
+
+    expect((screen.getByRole("button", { name: "Connect wallet" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
   it("masks the connected address and disconnects on click", () => {
     wagmi.account = {
       address: "0x1234567890abcdef1234567890abcdef1234cdef",

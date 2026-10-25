@@ -24,12 +24,19 @@ export const AUDIT_ENTITY_TYPE_MAX = 64;
  * A missing actor alone is not enough (an agent's `APPLICATION_REAPPLIED` row has none either).
  */
 export const OPS_SCRIPT_ACTIONS: readonly string[] = [
-  "ADMIN_GRANTED", "ADMIN_REVOKED", "NFT_JOB_REQUEUED", "PAYOUT_CORRECTED_MANUAL", "PAYOUT_CANCELLED_MANUAL",
+  "ADMIN_GRANTED", "ADMIN_REVOKED", "NFT_JOB_REQUEUED", "REWARD_REFUNDED", "PAYOUT_CORRECTED_MANUAL", "PAYOUT_CANCELLED_MANUAL",
 ];
+
+/**
+ * Script actions that DO carry an actor (`scripts/forfeit-award.js --admin <id>` records the deciding operator). The action name alone
+ * says "ops script"; the actor id is still shown next to the badge.
+ */
+export const OPS_SCRIPT_ACTIONS_WITH_ACTOR: readonly string[] = ["SUBMISSION_AWARD_FORFEITED"];
 
 export type AuditActorKind = "user" | "agent" | "script" | "unknown";
 
 export function auditActorKind(log: Pick<AdminAuditLog, "actorUserId" | "actorAgentId" | "action">): AuditActorKind {
+  if (OPS_SCRIPT_ACTIONS_WITH_ACTOR.includes(log.action)) return "script";
   if (log.actorUserId) return "user";
   if (log.actorAgentId) return "agent";
   return OPS_SCRIPT_ACTIONS.includes(log.action) ? "script" : "unknown";

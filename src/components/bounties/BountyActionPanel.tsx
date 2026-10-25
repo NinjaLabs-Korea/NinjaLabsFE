@@ -6,6 +6,7 @@ import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
+import { APPLICATION_MESSAGE_MAX, COMMIT_SHA_MAX, SUBMISSION_DESCRIPTION_MAX } from "@/lib/input-limits";
 import { payoutBadge } from "@/lib/payout";
 import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 import { bountyActionErrorCopy, deriveActionView, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
@@ -255,7 +256,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, status, submissi
               <input className={inputClass} name="portfolioUrl" placeholder={t("portfolioUrl")} type="url" {...invalidProps} />
             </Field>
             <Field label={t("applyMessage")}>
-              <textarea className={`min-h-28 ${textareaClass}`} name="message" placeholder={t("applyMessage")} required {...invalidProps} />
+              <textarea className={`min-h-28 ${textareaClass}`} maxLength={APPLICATION_MESSAGE_MAX} name="message" placeholder={t("applyMessage")} required {...invalidProps} />
             </Field>
             <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy} type="submit">{busy ? t("applying") : t("apply")}</button>
           </form>
@@ -263,7 +264,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, status, submissi
         </section>
       );
     case "applicationRejected":
-      return <StatusPanel title={t("applicationRejectedHeading")} body={t("applicationRejectedBody")} link={{ href: "/bounties", label: t("browseOther") }} />;
+      return <StatusPanel title={t("applicationRejectedHeading")} body={t("applicationRejectedBody")} note={view.note ? t("reviewerComment", { comment: view.note }) : undefined} link={{ href: "/bounties", label: t("browseOther") }} />;
     case "applicationUnderReview":
       return <StatusPanel title={t("underReviewHeading")} body={t("underReviewBody")} feedback={feedback?.kind === "success" ? feedback.text : null} headingRef={headingRef} link={{ href: "/applications", label: t("viewApplications") }} />;
     case "submissionApproved": {
@@ -298,10 +299,10 @@ function BountyActionPanelBody({ bountyId, applicationRequired, status, submissi
               <input className={inputClass} name="repositoryUrl" placeholder={t("repositoryUrl")} type="url" {...invalidProps} />
             </Field>
             <Field label={t("commitSha")}>
-              <input className={inputClass} name="commitSha" placeholder={t("commitSha")} type="text" {...invalidProps} />
+              <input className={inputClass} maxLength={COMMIT_SHA_MAX} name="commitSha" placeholder={t("commitSha")} type="text" {...invalidProps} />
             </Field>
             <Field label={t("submissionDescription")}>
-              <textarea className={`min-h-24 ${textareaClass}`} name="description" placeholder={t("submissionDescription")} required {...invalidProps} />
+              <textarea className={`min-h-24 ${textareaClass}`} maxLength={SUBMISSION_DESCRIPTION_MAX} name="description" placeholder={t("submissionDescription")} required {...invalidProps} />
             </Field>
             <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy} type="submit">{busy ? t("submitting") : actionLabel}</button>
           </form>

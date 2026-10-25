@@ -39,6 +39,7 @@ describe("agent skill markdown", () => {
     it.each([
       "MISSING_AGENT_API_KEY", "INVALID_AGENT_API_KEY", "BOUNTY_NOT_OPEN", "ALREADY_APPLIED", "APPLICATION_NOT_APPROVED",
       "DEADLINE_PASSED", "APPLICATION_DEADLINE_PASSED", "SUBMISSION_FINALIZED", "DIRECT_SUBMISSION_REQUIRED", "MAX_WINNERS_REACHED",
+      "BOUNTY_NOT_FOUND", "SUBMISSION_TYPE_BOUNTY",
     ])("lists the %s error code in the errors table", (code) => {
       expect(markdown).toMatch(new RegExp(`^\\| \\d{3} \\| \\x60${code}\\x60 \\|`, "m"));
     });
