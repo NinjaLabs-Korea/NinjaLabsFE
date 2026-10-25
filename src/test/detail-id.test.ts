@@ -72,6 +72,13 @@ describe("detailMayExist (proxy)", () => {
     await expect(detailMayExist("notices", "\u0000")).resolves.toBe(false);
   });
 
+  it("does not mistake Object.prototype members for fixture records in mock mode", async () => {
+    // `profiles` is a plain record: `profiles["constructor"]` is a function, which would render a profile page that crashes instead of a 404.
+    for (const id of ["constructor", "__proto__", "toString", "hasOwnProperty"]) {
+      await expect(detailMayExist("members", id), id).resolves.toBe(false);
+    }
+  });
+
   it("in api mode checks the shape only and never calls the BE from the proxy", async () => {
     runtime.mode = "api";
     runtime.apiUrl = "https://api.ninjalabs.example";

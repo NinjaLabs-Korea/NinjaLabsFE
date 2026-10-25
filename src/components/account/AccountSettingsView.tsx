@@ -147,7 +147,8 @@ export function AccountSettingsView() {
             if (error) setError(null);
           }}
           onKeyDown={(event) => {
-            if (event.key === "Enter") {
+            // An IME (Korean/Japanese/Chinese nicknames) sends Enter to commit the composition: that must not delete the account.
+            if (event.key === "Enter" && !event.nativeEvent.isComposing) {
               event.preventDefault();
               void deleteAccount();
             }

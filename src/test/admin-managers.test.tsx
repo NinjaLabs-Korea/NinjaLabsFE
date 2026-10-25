@@ -266,6 +266,9 @@ describe("admin BE error codes", () => {
     expect(adminApiErrorCode(new ApiHttpError(400, "DEADLINE_IN_PAST"))).toBe("DEADLINE_IN_PAST");
     expect(adminApiErrorCode(new ApiHttpError(400, "MEDIA_FILE_TOO_LARGE"))).toBe("MEDIA_FILE_TOO_LARGE");
     expect(adminApiErrorCode(new ApiHttpError(400, "MEDIA_FILE_TYPE_UNSUPPORTED"))).toBe("MEDIA_FILE_TYPE_UNSUPPORTED");
+    expect(adminApiErrorCode(new ApiHttpError(403, "ADMIN_ONLY"))).toBe("ADMIN_ONLY");
+    expect(adminApiErrorCode(new ApiHttpError(429, "UNKNOWN_ERROR"))).toBe("TOO_MANY_REQUESTS");
+    expect(adminApiErrorCode(new ApiHttpError(401, "UNKNOWN_ERROR"))).toBe("UNAUTHORIZED");
     expect(adminApiErrorCode(new ApiHttpError(400, "VALIDATION_FAILED"))).toBeNull();
     expect(adminApiErrorCode(new Error("INVALID_CHARACTER"))).toBeNull();
   });

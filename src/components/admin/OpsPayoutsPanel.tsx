@@ -53,11 +53,15 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
     setDialog({ kind: "request", reward, submissionId: candidates[0]?.id ?? "", amount: headroom && headroom !== "0" ? baseUnitsToHuman(headroom, reward.symbol) ?? "" : "" });
   };
 
+  const liveReward = dialog?.kind === "request" ? ops.rewards.find((item) => item.id === dialog.reward.id) : undefined;
+
   const submit = async () => {
     if (!dialog) return;
     if (dialog.kind === "request") {
-      const amount = humanToBaseUnits(dialog.amount, dialog.reward.symbol);
-      const headroom = rewardHeadroom(dialog.reward);
+      // The headroom is the reward's current one (a re-read after another admin's request shrinks it), not the snapshot from when the dialog opened.
+      const reward = liveReward ?? dialog.reward;
+      const amount = humanToBaseUnits(dialog.amount, reward.symbol);
+      const headroom = rewardHeadroom(reward);
       // BE answers 404 APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND without an active primary wallet — say so before the round trip.
       if (!ops.submissions.find((item) => item.id === dialog.submissionId)?.recipientWalletAddress) return setDialog({ ...dialog, error: t("submissions.noWallet") });
       if (!amount) return setDialog({ ...dialog, error: t("form.amountInvalid", { symbol: dialog.reward.symbol }) });
@@ -147,7 +151,7 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
         busy={busyKey ? busy.has(busyKey) : false}
         callout={approveMode === "self-allowed" ? { tone: "warning", text: t("payouts.selfAllowedCallout") } : undefined}
         description={
-          dialog?.kind === "request" ? t("payouts.requestDescription", { amount: opsAmount(rewardHeadroom(dialog.reward), dialog.reward.symbol) })
+          dialog?.kind === "request" ? t("payouts.requestDescription", { amount: opsAmount(rewardHeadroom(liveReward ?? dialog.reward), dialog.reward.symbol) })
             : dialog?.kind === "approve" ? t("payouts.approveDescription", { amount: opsAmount(dialog.payout.amount, dialog.payout.symbol), address: dialog.payout.recipientAddress })
               : dialog?.kind === "paid" ? t("payouts.paidDescription", { amount: opsAmount(dialog.payout.amount, dialog.payout.symbol), address: dialog.payout.recipientAddress })
                 : undefined

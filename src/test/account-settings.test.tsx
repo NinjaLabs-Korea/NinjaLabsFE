@@ -130,6 +130,19 @@ describe("AccountSettingsView", () => {
     expect((await screen.findByRole("alert")).textContent).toMatch(/couldn’t delete your account/);
   });
 
+  it("treats Enter as confirm, except the Enter that commits an IME composition", async () => {
+    const withdrawAccount = vi.fn(async () => undefined);
+    Object.assign(apiClient, { withdrawAccount });
+    renderWithIntl(<AccountSettingsView />);
+    const input = openDialog();
+    fireEvent.change(input, { target: { value: "jaemin.inj" } });
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+    expect(withdrawAccount).not.toHaveBeenCalled();
+    fireEvent.keyDown(input, { key: "Enter" });
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+    expect(withdrawAccount).toHaveBeenCalledTimes(1);
+  });
+
   it("ignores a double click while the request is in flight", async () => {
     let resolve!: () => void;
     const withdrawAccount = vi.fn(() => new Promise<void>((done) => { resolve = done; }));

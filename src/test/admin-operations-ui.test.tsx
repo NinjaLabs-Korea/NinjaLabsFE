@@ -135,6 +135,15 @@ describe("BountyOperations", () => {
     expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
   });
 
+  it("shows an unknown review decision (the reserved REOPEN) as its raw code instead of a missing-message key", async () => {
+    const base = operations();
+    const reviews = [{ revisionNo: 3, decision: "REOPEN", comment: null, createdAt: "2026-10-05T00:00:00Z" }];
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [{ ...base.submissions[0], reviews }, base.submissions[1]] }));
+    await renderOps();
+    expect(screen.getByText(/REOPEN/)).toBeTruthy();
+    expect(document.body.textContent).not.toContain("submissions.decisions");
+  });
+
   it("closes a review dialog whose revision was superseded by a re-read instead of resending the stale revisionNo", async () => {
     await renderOps();
     fireEvent.click(screen.getByRole("button", { name: "Request revision" }));
@@ -231,6 +240,23 @@ describe("BountyOperations", () => {
     fireEvent.change(amount, { target: { value: "2.5" } });
     fireEvent.submit(within(dialog()).getByRole("button", { name: "Request payout" }).closest("form")!);
     await waitFor(() => expect(adminApi.requestAdminPayout).toHaveBeenCalledWith({ rewardId: "r1", submissionId: "s2", amount: "2500000000000000000" }));
+  });
+});
+
+describe("payout request after a re-read", () => {
+  it("checks the amount against the reward's current headroom, not the one from when the dialog opened", async () => {
+    const reward = operations().rewards[0];
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ payouts: [], rewards: [{ ...reward, allocated: "0" }] }));
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Request payout" }));
+    // Another admin allocates 4 of the 5 INJ while the dialog is open; the next read shows 1 INJ left.
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ payouts: [], rewards: [{ ...reward, allocated: "4000000000000000000" }] }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    await waitFor(() => expect(within(dialog()).getByText("Up to 1 INJ can still be allocated from this reward.")).toBeTruthy());
+    fireEvent.change(within(dialog()).getByRole("textbox"), { target: { value: "2" } });
+    fireEvent.submit(within(dialog()).getByRole("button", { name: "Request payout" }).closest("form")!);
+    expect(within(dialog()).getByRole("alert").textContent).toContain("Only 1 INJ is left");
+    expect(adminApi.requestAdminPayout).not.toHaveBeenCalled();
   });
 });
 
