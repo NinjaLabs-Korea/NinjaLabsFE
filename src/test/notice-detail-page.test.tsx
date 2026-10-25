@@ -39,12 +39,12 @@ describe("notice detail read-more link", () => {
   it("routes a same-site path through the locale-aware Link and leaves an absolute URL a plain anchor", async () => {
     data.notice = notice("/bounties");
     const { unmount } = renderWithIntl(await NoticeDetailPage({ params: Promise.resolve({ locale: "ko", id: "n1" }) } as never));
-    expect(screen.getByText(enMessages.notices.detail.readMoreLink).hasAttribute("data-i18n-link")).toBe(true);
+    expect(screen.getByText("Read more →").hasAttribute("data-i18n-link")).toBe(true);
     unmount();
 
     data.notice = notice("https://example.test/post");
     renderWithIntl(await NoticeDetailPage({ params: Promise.resolve({ locale: "ko", id: "n1" }) } as never));
-    const link = screen.getByText(enMessages.notices.detail.readMoreLink);
+    const link = screen.getByText("Read more →");
     expect(link.hasAttribute("data-i18n-link")).toBe(false);
     expect(link.getAttribute("href")).toBe("https://example.test/post");
   });

@@ -64,7 +64,7 @@ describe("member profile completion NFT tiles", () => {
       nfts: [{ id: "n1", type: "completion", title: "", status: "ATTACHED", contractAddress: "inj1x", tokenId: "7", mintTxHash: null }],
     };
     renderWithIntl(await MemberProfilePage({ params: Promise.resolve({ locale: "en", id: "ninja" }) } as never));
-    expect(screen.getByText(enMessages.members.profile.portfolio.untitledNft)).toBeTruthy();
+    expect(screen.getByText("Bounty NFT")).toBeTruthy();
   });
 });
 
