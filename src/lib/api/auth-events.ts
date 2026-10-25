@@ -19,6 +19,8 @@ export type AuthEventBus = {
   broadcast: (event: AuthEvent) => void;
   /** Receives events from OTHER tabs only (a BroadcastChannel does not deliver to its own sender). */
   subscribe: (handler: (event: AuthEvent) => void) => () => void;
+  /** Closes this bus's channel (the next `broadcast`/`subscribe` opens a new one). Call when the owning adapter goes away. */
+  close: () => void;
 };
 
 const isAuthEvent = (value: unknown): value is AuthEvent => value === "signed-out" || value === "signed-in";
@@ -40,6 +42,14 @@ export function createAuthEventBus(): AuthEventBus {
   }
 
   return {
+    close: () => {
+      try {
+        channel?.close();
+      } catch {
+        // already closed
+      }
+      channel = undefined;
+    },
     broadcast: (event) => {
       if (typeof window === "undefined") return;
       const current = getChannel();
