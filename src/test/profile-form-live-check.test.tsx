@@ -9,10 +9,12 @@ const completeProfile = vi.fn();
 // Stable like the provider's client, so the debounce effect only re-runs when the nickname changes.
 const onboardingApi = { checkNickname, completeProfile, completeOnboarding: vi.fn() };
 
+const session = { handle: "user_ab12cd" };
 vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({
     useOnboardingApi: () => onboardingApi,
     useFoundationMode: () => "api",
+    useAuthSnapshot: () => ({ status: "signed-in", user: { id: "u1", handle: session.handle, walletAddress: null } }),
   }));
 
 const nicknameInput = () => screen.getByLabelText("Nickname*") as HTMLInputElement;
@@ -86,6 +88,23 @@ describe("ProfileForm nickname live check", () => {
     await waitFor(() => expect(status()).toBe("That nickname is already taken."), { timeout: 1500 });
     typeNickname("n");
     expect(status()).toBe("");
+  });
+
+  it("neither asks nor blocks when the nickname is the user's own saved one (back button, revisit)", async () => {
+    session.handle = "Ninja_Dev";
+    checkNickname.mockResolvedValue({ available: false });
+    completeProfile.mockResolvedValue(undefined);
+    renderWithIntl(<ProfileForm />);
+    typeNickname("ninja_dev");
+    await sleep(NICKNAME_CHECK_DEBOUNCE_MS + 100);
+    expect(checkNickname).not.toHaveBeenCalled();
+    expect(status()).toBe("");
+
+    fireEvent.click(screen.getByRole("button", { name: "Dev" }));
+    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.submit(nicknameInput().closest("form") as HTMLFormElement);
+    await waitFor(() => expect(completeProfile).toHaveBeenCalledWith({ nickname: "ninja_dev", bio: "Builder", tags: ["DEV"] }));
+    session.handle = "user_ab12cd";
   });
 
   it("requires a tag and a bio before saving", async () => {

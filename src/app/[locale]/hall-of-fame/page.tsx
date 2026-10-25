@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import type { HighlightTypeLabel } from "@/lib/api/codecs";
-import { loadRuntimeHallOfFame } from "@/lib/hall-of-fame";
+import { formatStatValue, loadRuntimeHallOfFame } from "@/lib/hall-of-fame";
 import { imageProps } from "@/lib/image";
 import { localeAlternates } from "@/i18n/alternates";
 
@@ -44,7 +44,6 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("hallOfFame");
-  const format = await getFormatter();
   const { hallOfFame, unavailable } = await loadRuntimeHallOfFame(locale);
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
@@ -69,7 +68,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
             {hallOfFame.stats.map((stat) => (
               <div key={stat.labelKey} className="rounded-card border border-on-inverse/15 bg-on-inverse/5 p-5 text-center">
                 {/* The paid total is a multi-token string ("12,500 USDC · 300 INJ"), so it steps down a size and may wrap. */}
-                <p className={`font-display font-bold text-on-inverse ${stat.labelKey === "rewardsPaid" ? "break-words text-2xl" : "text-4xl"}`}>{/^\d+$/.test(stat.value) ? format.number(Number(stat.value)) : stat.value}</p>
+                <p className={`font-display font-bold text-on-inverse ${stat.labelKey === "rewardsPaid" ? "break-words text-2xl" : "text-4xl"}`}>{formatStatValue(stat.value, locale)}</p>
                 <p className="mt-2 text-sm text-on-inverse/70">{t(`stats.${stat.labelKey}`)}</p>
               </div>
             ))}

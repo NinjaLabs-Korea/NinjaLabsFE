@@ -28,6 +28,13 @@ declare global {
   }
 }
 
+/**
+ * A script request that neither loads nor errors (a stalled connection, a filter that drops the packets) would leave the
+ * widget on "verifying" - and the sign-in button disabled - until the page is reloaded. Past this bound the load fails
+ * like any other, which shows the widget's error state with its retry.
+ */
+export const TURNSTILE_LOAD_TIMEOUT_MS = 15_000;
+
 let loading: Promise<TurnstileApi> | null = null;
 
 /** Resolves with `window.turnstile`, injecting the script on first use. A failed load is forgotten so a retry re-injects it. */
@@ -42,7 +49,9 @@ export function loadTurnstile(): Promise<TurnstileApi> {
     script.async = true;
     script.defer = true;
     script.dataset.turnstileLoader = "";
+    const timer = setTimeout(() => fail(new Error("Turnstile script load timed out")), TURNSTILE_LOAD_TIMEOUT_MS);
     script.addEventListener("load", () => {
+      clearTimeout(timer);
       if (window.turnstile) resolve(window.turnstile);
       else fail(new Error("Turnstile script loaded without window.turnstile"));
     });
@@ -50,6 +59,7 @@ export function loadTurnstile(): Promise<TurnstileApi> {
     document.head.appendChild(script);
 
     function fail(error: Error) {
+      clearTimeout(timer);
       script.remove();
       loading = null;
       reject(error);

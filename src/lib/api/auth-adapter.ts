@@ -83,6 +83,26 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     return restored;
   }
 
+  /**
+   * Another tab completed a login, so the shared cookie now belongs to whoever signed in there. This tab's in-memory
+   * access token (and the user it shows) may be the previous account's: its next refresh would silently turn every
+   * request into the new account's while the UI kept naming the old one. Re-read the session now and show it. A failed
+   * or inconclusive probe keeps what this tab shows (the next 401 handles an actually dead session).
+   */
+  async function adoptOtherTabSession(): Promise<void> {
+    // While this tab's own initialization is still restoring the session there is nothing stale to correct.
+    const initializing = () => snapshot.status === "loading";
+    if (initializing()) return;
+    const refreshed = await http.initSession();
+    if (!refreshed.ok) return;
+    const me = await fetchMe(http);
+    if (!me || initializing() || !http.hasSession()) return;
+    const user = toClientUser(me);
+    if (snapshot.status === "signed-in" && snapshot.user.id === user.id) return;
+    onboardingLog("session.adopted", { reason: "OTHER_TAB_SIGNED_IN" });
+    setSnapshot({ status: "signed-in", user });
+  }
+
   /** After a session restore: send an unfinished onboarding to its step, and a signed-in user off the callback page. */
   function leaveCallbackOrOnboard(restored: AuthSnapshot): void {
     const onboardingPath = shouldRedirectToOnboarding(
@@ -118,6 +138,7 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     events.subscribe((event) => {
       if (event === "signed-in") {
         allowSessionRefresh();
+        void adoptOtherTabSession().catch(() => {});
         return;
       }
       endLocalSession();

@@ -21,6 +21,8 @@ const columns = [
 
 /** BE `MemberAdminService.PAGE_SIZE`. */
 const USERS_PAGE_SIZE = 30;
+/** BE `SearchUsersQueryDto.q` `@MaxChars(320)` (the longest email): a longer term is a 400 on every pause, so the box stops accepting more. */
+const SEARCH_TERM_MAX = 320;
 /** Pause after the last keystroke before the search term goes to the BE. */
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -161,6 +163,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
         <label className="block text-sm font-semibold text-ink" htmlFor="user-search">{t("searchLabel")}</label>
         <input
           id="user-search"
+          maxLength={SEARCH_TERM_MAX}
           className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder sm:w-[384px]"
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t("searchPlaceholder")}

@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import en from "../../messages/en/agents.json";
 import ko from "../../messages/ko/agents.json";
 import zh from "../../messages/zh/agents.json";
+import enLegal from "../../messages/en/legal.json";
+import koLegal from "../../messages/ko/legal.json";
+import zhLegal from "../../messages/zh/legal.json";
 import enCommon from "../../messages/en/common.json";
 import koCommon from "../../messages/ko/common.json";
 import zhCommon from "../../messages/zh/common.json";
@@ -30,5 +33,22 @@ describe.each([["en", en], ["ko", ko], ["zh", zh]] as const)("agents.register co
 describe.each([["en", enCommon], ["ko", koCommon], ["zh", zhCommon]] as const)("common.footer.legal (%s)", (_locale, messages) => {
   it("is the copyright line only, not a flow description", () => {
     expect(messages.footer.legal.split("·")).toHaveLength(2);
+  });
+});
+
+// The privacy policy lists what we collect and who processes it. Sign-in moved to an HttpOnly refresh cookie (access token
+// in memory only) and Cloudflare Turnstile now sees every sign-in visitor; the policy once still said "tokens are kept in
+// your browser's storage" and named no Cloudflare. Keep it in step with those facts.
+describe.each([["en", enLegal], ["ko", koLegal], ["zh", zhLegal]] as const)("legal.privacy copy (%s)", (_locale, messages) => {
+  const sections = messages.privacy.sections as Array<{ items?: string[] }>;
+  const items = sections.flatMap((section) => section.items ?? []);
+
+  it("names Cloudflare Turnstile among the service providers", () => {
+    expect(items.some((item) => /Cloudflare/.test(item) && /Turnstile/.test(item))).toBe(true);
+  });
+
+  it("does not claim sign-in tokens live in browser storage", () => {
+    const access = items.find((item) => /User-Agent/.test(item)) ?? "";
+    expect(access).not.toMatch(/browser's storage|브라우저 저장소|浏览器存储/);
   });
 });

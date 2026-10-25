@@ -370,7 +370,8 @@
       "IN_REVIEW": "심사 중",
       "REVISION_REQUESTED": "수정 요청",
       "APPROVED": "승인",
-      "REJECTED": "반려"
+      "REJECTED": "반려",
+      "WITHDRAWN": "철회됨"
     },
     "payoutStatuses": {
       "REQUESTED": "요청됨",

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiHttpError } from "@/lib/api/http";
 import { validationFieldsFromError, validationFieldsFromMessages } from "@/lib/api/validation";
-import { isReservedNickname, isValidNickname, NICKNAME, nicknameLength, normalizeNickname, validateNickname } from "@/lib/nickname";
+import { isReservedNickname, isValidNickname, NICKNAME, nicknameInitials, nicknameLength, normalizeNickname, validateNickname } from "@/lib/nickname";
 import { STATIC_FILE_EXTENSIONS } from "@/lib/static-extensions";
 
 // Probe cases mirror NinjaLabsBE `src/users/users.dto.spec.ts` (CompleteProfileDto) - keep the two files in step.
@@ -106,5 +106,13 @@ describe("BE VALIDATION_FAILED message[] → field hints", () => {
     });
     expect(validationFieldsFromError(new ApiHttpError(409, "NICKNAME_TAKEN"))).toEqual({});
     expect(validationFieldsFromError(new Error("boom"))).toEqual({});
+  });
+});
+
+describe("nicknameInitials", () => {
+  it("takes two code points and never leaves a lone surrogate", () => {
+    expect(nicknameInitials("jaemin.inj")).toBe("JA");
+    expect(nicknameInitials("a\u{1D400}bc")).toBe("A\u{1D400}");
+    expect(nicknameInitials("\u{1D400}\u{1D401}\u{1D402}")).toBe("\u{1D400}\u{1D401}");
   });
 });

@@ -48,6 +48,13 @@ describe("public profile dates", () => {
   });
 });
 
+describe("public profile initials", () => {
+  it("cuts the nickname by code point, never leaving half of a surrogate pair", async () => {
+    fetchPublicJson.mockResolvedValueOnce({ nickname: "a\u{1D400}bc", bio: "", created_at: "2026-05-31T00:00:00Z", tags: [], completedBounties: [], agents: [], nfts: [] });
+    expect((await getRuntimeProfile("a\u{1D400}bc", "en"))?.initials).toBe("A\u{1D400}");
+  });
+});
+
 describe("public profile payout status", () => {
   const paid = [{ amount: "1000000000000000000", symbol: "INJ" }];
   const posted = [{ amount: "500000000", symbol: "USDC" }];
