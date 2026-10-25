@@ -8,6 +8,7 @@ import { ApiHttpError } from "@/lib/api/http";
 import { validationFieldsFromError } from "@/lib/api/validation";
 import { Badge } from "@/components/ui/Badge";
 import { NICKNAME_MAX, NICKNAME_MIN, validateNickname } from "@/lib/nickname";
+import { PROFILE_BIO_MAX } from "@/lib/input-limits";
 import { signup } from "@/lib/signup";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
 import { withLocaleOf } from "@/i18n/routing";
@@ -207,6 +208,7 @@ export function ProfileForm() {
         <textarea
           className="mt-2 min-h-[120px] w-full rounded-control border border-border bg-surface px-4 py-3 text-sm text-ink-secondary placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           id="bio"
+          maxLength={PROFILE_BIO_MAX}
           name="bio"
           aria-describedby={fieldErrors.bio ? "bio-error bio-hint" : "bio-hint"}
           aria-invalid={fieldErrors.bio ? true : undefined}

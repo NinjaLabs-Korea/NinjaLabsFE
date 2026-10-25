@@ -72,6 +72,11 @@ describe("ProfileForm nickname rule + availability check", () => {
     expect(completeProfile).not.toHaveBeenCalled();
   });
 
+  it("caps the bio input at the BE limit", () => {
+    renderWithIntl(<ProfileForm />);
+    expect((screen.getByLabelText("Bio*") as HTMLTextAreaElement).maxLength).toBe(1000);
+  });
+
   it("maps a BE VALIDATION_FAILED message[] to field hints by property name", async () => {
     completeProfile.mockRejectedValue(new ApiHttpError(400, "VALIDATION_FAILED", [
       "nickname must match /^x$/u regular expression",

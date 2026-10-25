@@ -183,6 +183,15 @@ describe("BountyActionPanel", () => {
     expect(applyToBounty).toHaveBeenCalledWith("bounty-1", { message: "Hi" });
   });
 
+  it("caps the free-text inputs at the BE limits so a long paste cannot only fail on submit", async () => {
+    const { unmount } = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    expect((await screen.findByLabelText("Application note") as HTMLTextAreaElement).maxLength).toBe(4000);
+    unmount();
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    expect((await screen.findByLabelText("Describe what you completed") as HTMLTextAreaElement).maxLength).toBe(8000);
+    expect((screen.getByLabelText("Commit SHA (optional)") as HTMLInputElement).maxLength).toBe(64);
+  });
+
   it("refetches submissions after a successful submit", async () => {
     const submitBounty = vi.fn(async () => {
       state.submissions = [submission("submitted")];
