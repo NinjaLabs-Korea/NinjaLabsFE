@@ -72,6 +72,16 @@ describe("BountyManager", () => {
   });
 
 
+  it("locks the reward inputs when editing (the reward is only sent on create) and still allows other edits", async () => {
+    renderWithIntl(<BountyManager bounties={[bounty]} tabs={null}>{null}</BountyManager>);
+    await waitFor(() => expect(adminApi.getAdminBounties).toHaveBeenCalled());
+    expect((screen.getByLabelText("Reward amount") as HTMLInputElement).disabled).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect((screen.getByLabelText("Reward amount") as HTMLInputElement).disabled).toBe(true);
+    expect((screen.getByRole("combobox", { name: "Reward token" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(/Reward is fixed once the bounty exists/)).toBeTruthy();
+  });
+
   it("disables the save button while a save is in flight and never double-posts", async () => {
     const pending = deferred("b1");
     adminApi.saveAdminBounty.mockReturnValue(pending.promise);

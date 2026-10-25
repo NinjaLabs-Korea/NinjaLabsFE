@@ -34,11 +34,14 @@ const emptyForm: PostForm = {
 };
 
 /** 저장 전 검증 — BE `CreateNoticeDto`의 거울 (title/body @IsNotEmpty, thumbnailUrl IsHttpUrlOrMediaPath, externalUrl IsHttpUrl) */
-type PostFieldErrors = Partial<Record<"title" | "bodyMarkdown" | "thumbnail" | "externalUrl", "required" | "urlInvalid">>;
+type PostFieldErrors = Partial<Record<"title" | "bodyMarkdown" | "thumbnail" | "externalUrl", "required" | "urlInvalid" | "tooLong">>;
+/** BE `CreateNoticeDto.body` @MaxLength (a PATCH allows double; the stricter create limit applies to both). */
+export const NOTICE_BODY_MAX = 50_000;
 export function validatePostForm(input: Pick<PostForm, "title" | "bodyMarkdown" | "thumbnail" | "externalUrl">): PostFieldErrors {
   const errors: PostFieldErrors = {};
   if (!input.title.trim()) errors.title = "required";
   if (!input.bodyMarkdown.trim()) errors.bodyMarkdown = "required";
+  else if (input.bodyMarkdown.trim().length > NOTICE_BODY_MAX) errors.bodyMarkdown = "tooLong";
   if (input.thumbnail && !isHttpUrlOrMediaPath(input.thumbnail)) errors.thumbnail = "urlInvalid";
   if (input.externalUrl?.trim() && !isHttpUrl(input.externalUrl.trim())) errors.externalUrl = "urlInvalid";
   return errors;
@@ -60,7 +63,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
   const fieldError = (key: keyof PostFieldErrors) =>
-    errors[key] ? <span className="mt-1 block text-xs font-normal text-danger" id={`post-${key}-error`} role="alert">{tCommon(errors[key])}</span> : null;
+    errors[key] ? <span className="mt-1 block text-xs font-normal text-danger" id={`post-${key}-error`} role="alert">{tCommon(errors[key], { max: NOTICE_BODY_MAX })}</span> : null;
   const invalidProps = (key: keyof PostFieldErrors, hintId?: string) => ({
     "aria-invalid": errors[key] ? true : undefined,
     "aria-describedby": [errors[key] ? `post-${key}-error` : null, hintId ?? null].filter(Boolean).join(" ") || undefined,

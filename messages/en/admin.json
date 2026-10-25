@@ -20,6 +20,7 @@
     "urlInvalid": "Enter an http(s) URL (or an allowed site path).",
     "orderInvalid": "Enter a whole number from 0 up.",
     "required": "This field is required.",
+    "tooLong": "Too long: use at most {max} characters.",
     "fixFields": "Fix the highlighted fields before saving.",
     "saving": "Saving…",
     "removeImage": "Remove image",
@@ -181,6 +182,7 @@
       "errors": {
         "summary": "Fix the highlighted fields before saving.",
         "required": "This field is required.",
+        "tooLong": "Too long: use at most {max} characters.",
         "deadlineInvalid": "Enter a valid date and time.",
         "deadlinePast": "Choose a deadline in the future.",
         "amountInvalid": "Enter an amount greater than 0 with no more decimals than the token supports (USDC 6, INJ 18), or leave it empty for a draft.",
@@ -188,6 +190,7 @@
         "titleTooLong": "Use at most 200 characters.",
         "sponsorTooLong": "Use at most 100 characters."
       },
+      "rewardLockedHint": "Reward is fixed once the bounty exists; it cannot be changed here.",
       "rewardNote": "On creation, the reward token is locked. Reward flow = lock → release → transfer, with no swap."
     },
     "toast": {
