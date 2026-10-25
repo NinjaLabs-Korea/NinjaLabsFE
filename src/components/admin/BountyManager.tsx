@@ -11,6 +11,7 @@ import { RewardPill } from "@/components/ui/RewardPill";
 import { type AdminBounty, adminErrorDescription } from "@/lib/admin-helpers";
 import { BOUNTY_SPONSOR_MAX, BOUNTY_TITLE_MAX, bountyToForm, emptyBountyForm, formToBounty, isIsoDateTime, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
+import { opsErrorCode } from "@/lib/admin-operations";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { Link } from "@/i18n/navigation";
 
@@ -151,7 +152,9 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       pushAdminToast({ variant: "success", title: t("toast.statusUpdatedTitle"), description: t("toast.statusUpdatedDescription", { title: bounty.title, to }) });
       await reload();
     } catch (error) {
-      pushAdminToast({ variant: "danger", title: t("toast.transitionFailedTitle"), description: adminErrorDescription(error, tCommon, t("toast.transitionFailedDescription")) });
+      // A blocked transition (BE 400 with a blocker list, e.g. REWARDS_UNFUNDED) is the common failure here; the blockers themselves live in Operations.
+      const blocked = opsErrorCode(error, "transition").code === "TRANSITION_BLOCKED";
+      pushAdminToast({ variant: "danger", title: t("toast.transitionFailedTitle"), description: blocked ? t("toast.transitionBlockedDescription") : adminErrorDescription(error, tCommon, t("toast.transitionFailedDescription")) });
     }
   };
 

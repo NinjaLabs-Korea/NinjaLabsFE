@@ -140,6 +140,11 @@ describe("admin pages", () => {
     expect(redirect).toHaveBeenCalledWith({ href: "/admin/users", locale: "ko" });
   });
 
+  it("marks every admin route noindex through the layout", async () => {
+    const { metadata } = await import("@/app/[locale]/admin/layout");
+    expect(metadata.robots).toEqual({ index: false, follow: false });
+  });
+
   it("wraps admin routes in the gate with the admin messages available to client islands", async () => {
     const { default: AdminLayout } = await import("@/app/[locale]/admin/layout");
     // The layout returns the async server <PageMessages>; resolve it the way the RSC renderer would.

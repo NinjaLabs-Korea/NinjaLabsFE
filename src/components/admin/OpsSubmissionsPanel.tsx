@@ -27,6 +27,10 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
   const [target, setTarget] = useState<{ submission: OpsSubmission; decision: SubmissionDecision; revisionNo: number } | null>(null);
   const [comment, setComment] = useState("");
   const [commentError, setCommentError] = useState(false);
+  // The dialog describes the revision and status it was opened on. When a re-read shows either moved (a resubmission, another admin's decision),
+  // keeping it open would resend a stale revisionNo that the BE refuses with SUBMISSION_REVISION_CHANGED every time: close it instead.
+  const live = target ? ops.submissions.find((item) => item.id === target.submission.id) : undefined;
+  const targetCurrent = target !== null && live !== undefined && live.currentRevisionNo === target.revisionNo && submissionDecisionsFor(live.status, ops.bounty.status).includes(target.decision);
 
   const submit = async () => {
     if (!target) return;
@@ -103,11 +107,11 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
         eyebrow={t("submissions.eyebrow")}
         onCancel={() => setTarget(null)}
         onSubmit={() => void submit()}
-        open={target !== null}
+        open={targetCurrent}
         submitLabel={target ? t(`submissions.decisions.${target.decision}`) : ""}
         title={target ? t(`submissions.modalTitles.${target.decision}`) : ""}
       >
-        {target ? (
+        {target && targetCurrent ? (
           <label className="block text-sm font-semibold text-ink">{submissionCommentRequired(target.decision, target.submission.status) ? t("form.commentRequired") : t("form.commentOptional")}
             <textarea aria-describedby={commentError ? "ops-submission-comment-error" : undefined} aria-invalid={commentError || undefined} className={opsTextarea} maxLength={OPS_NOTE_MAX} onChange={(event) => { setComment(event.target.value); setCommentError(false); }} value={comment} />
             {commentError ? <span className="mt-1 block text-xs font-normal text-danger" id="ops-submission-comment-error" role="alert">{t("errors.REVISION_COMMENT_REQUIRED")}</span> : null}
