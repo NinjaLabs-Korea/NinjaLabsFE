@@ -1,5 +1,5 @@
 import type { AdminBounty } from "./admin";
-import { rewardToBaseUnits, tokenDecimalsFor } from "./api/codecs";
+import { humanToBaseUnits, rewardToBaseUnits, tokenDecimalsFor } from "./api/codecs";
 
 /** 어드민 바운티 폼의 입력 상태 (모든 값은 input/select가 다루는 문자열 형태) */
 export type BountyFormValues = {
@@ -178,17 +178,23 @@ export const BOUNTY_TEXT_MAX = { description: 50_000, deliverables: 20_000, revi
 export type BountyFormErrors = Partial<Record<keyof BountyFormValues, BountyFormError>>;
 
 /**
- * 보상 금액 입력이 BE에 보낼 수 있는 값인가: 양수이고, 토큰 자릿수보다 긴 소수가 아니며(viem `parseUnits`는 초과 자릿수를 오류 없이
+ * 보상 금액 입력이 BE에 보낼 수 있는 값인가: 일반 십진 표기(`1,5`·`0x10` 같은 입력은 값이 달라지거나 비어 버리므로 거부)이고 양수이며, 토큰 자릿수보다 긴 소수가 아니며(viem `parseUnits`는 초과 자릿수를 오류 없이
  * 반올림해 입력과 다른 금액을 보낸다), 최소 단위로 환산해도 0이 아니다(BE `TOKEN_AMOUNT`는 양의 정수). 지수 표기(`1e3`)는 환산에 맡긴다.
  */
 function isRewardAmountValid(raw: string, currency: BountyFormValues["currency"]): boolean {
   const text = raw.trim();
+  // `Number` also reads "0x10" (16) and "0b11" (3); only a plain decimal, optionally with an exponent, is an amount.
+  if (!/^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(text)) return false;
   const amount = Number(text);
   const decimals = tokenDecimalsFor(currency);
   if (!Number.isFinite(amount) || amount <= 0 || decimals === null) return false;
   if (/^\d*\.\d+$/.test(text) && text.split(".")[1].length > decimals) return false;
   try {
-    return BigInt(rewardToBaseUnits({ amount, currency })) > BigInt(0);
+    const baseUnits = rewardToBaseUnits({ amount, currency });
+    // The form carries the amount as a JS number: more significant digits than a double holds (2^53) would be rounded to a
+    // different amount than the one typed. The exact text conversion (plain decimals only) must agree with it.
+    if (!/e/i.test(text) && humanToBaseUnits(text.replace(/^\./, "0.").replace(/\.$/, ""), currency) !== baseUnits) return false;
+    return BigInt(baseUnits) > BigInt(0);
   } catch {
     return false;
   }

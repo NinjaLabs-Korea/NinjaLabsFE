@@ -4,6 +4,7 @@ import { endsWithStaticFileExtension } from "@/lib/static-extensions";
  * 닉네임 규칙 — NinjaLabsBE `src/users/nickname.ts` + `CompleteProfileDto`(@Trim @Length(2,50) @Matches @IsNotReservedNickname)의 거울.
  * BE 규칙이 바뀌면 여기와 `src/test/nickname.test.ts`를 함께 고칠 것. `/users/:nickname` 경로에 그대로 쓰이는 값이다.
  *
+ *   - 정규형은 trim + 유니코드 NFC (BE `normalizeNickname`): 자모로 풀어 쓴 한글·결합 악센트도 검증·전송 전에 합친다
  *   - 유니코드 문자/숫자와 `_ . -`만, 공백 불가
  *   - 처음과 끝은 문자/숫자 (`.ninja`, `ninja-`, `..`, `--` 불가)
  *   - 길이 2~50 (trim 후, **코드 포인트** 기준 — BE `@Length`/validator `isLength`는 서로게이트 쌍을 한 글자로 센다)
@@ -35,9 +36,14 @@ export function nicknameLength(value: string): number {
   return [...value].length;
 }
 
-/** BE와 같은 순서로 검사한다: trim → 길이 → 예약어 → 문자 집합 → 양 끝 → 정적 파일 확장자. 통과하면 null. */
+/** BE `normalizeNickname`과 같은 정규형(trim + NFC). 검증·중복 검사·저장 요청은 모두 이 값으로 한다. */
+export function normalizeNickname(raw: string): string {
+  return raw.trim().normalize("NFC");
+}
+
+/** BE와 같은 순서로 검사한다: trim·NFC → 길이 → 예약어 → 문자 집합 → 양 끝 → 정적 파일 확장자. 통과하면 null. */
 export function validateNickname(raw: string): NicknameError | null {
-  const value = raw.trim();
+  const value = normalizeNickname(raw);
   const length = nicknameLength(value);
   if (length < NICKNAME_MIN) return "tooShort";
   if (length > NICKNAME_MAX) return "tooLong";

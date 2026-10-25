@@ -7,7 +7,7 @@ import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
 import { validationFieldsFromError } from "@/lib/api/validation";
 import { Badge } from "@/components/ui/Badge";
-import { NICKNAME_MAX, NICKNAME_MIN, validateNickname } from "@/lib/nickname";
+import { NICKNAME_MAX, NICKNAME_MIN, normalizeNickname, validateNickname } from "@/lib/nickname";
 import { PROFILE_BIO_MAX } from "@/lib/input-limits";
 import { signup } from "@/lib/signup";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
@@ -60,7 +60,7 @@ export function ProfileForm() {
   const [saveError, setSaveError] = useState<SaveErrorKey>("generic");
   const [nicknameCheck, setNicknameCheck] = useState<NicknameCheck | null>(null);
 
-  const trimmedNickname = nickname.trim();
+  const trimmedNickname = normalizeNickname(nickname);
   const nicknameRuleError = validateNickname(trimmedNickname);
   // 규칙을 통과한 값만 BE에 묻는다; 마지막 검사 결과가 현재 입력과 다르면 아직 확인 중이다.
   const nicknameStatus: "idle" | "checking" | "available" | "taken" = nicknameRuleError
@@ -128,7 +128,7 @@ export function ProfileForm() {
       tagCount: tags.length,
     });
     try {
-      await apiClient.completeProfile({ nickname: nickname.trim(), bio: bio.trim(), tags });
+      await apiClient.completeProfile({ nickname: trimmedNickname, bio: bio.trim(), tags });
       onboardingLog("profile.save.succeeded", { targetPath: "/signup/get-started" });
       window.location.assign(withLocaleOf(window.location.pathname, "/signup/get-started"));
     } catch (error) {

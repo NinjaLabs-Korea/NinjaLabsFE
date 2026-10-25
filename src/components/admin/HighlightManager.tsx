@@ -186,6 +186,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
       pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: highlight.title });
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
+      // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
+      void reload();
     }
   }
 

@@ -10,6 +10,7 @@ function renderMenu() {
       <MobileMenu label="Menu">
         <nav aria-label="Mobile navigation">
           <a href="https://example.test/bounties" onClick={(event) => event.preventDefault()}>Bounties</a>
+          <button type="button">Sign out</button>
         </nav>
       </MobileMenu>
     </div>,
@@ -51,6 +52,13 @@ describe("MobileMenu", () => {
     const { details, open } = renderMenu();
     open();
     fireEvent.click(screen.getByRole("link", { name: "Bounties" }));
+    expect(details.open).toBe(false);
+  });
+
+  it("closes when a button inside is clicked (sign out must not leave the menu open)", () => {
+    const { details, open } = renderMenu();
+    open();
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
     expect(details.open).toBe(false);
   });
 });

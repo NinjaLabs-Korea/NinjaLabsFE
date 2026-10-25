@@ -100,7 +100,7 @@
       "emptyTitle": "暂无已注册的智能体",
       "emptyBody": "高级用户可在通过钱包签名证明所有权后注册已验证的智能体。",
       "register": "注册智能体",
-      "wallet": "已注册钱包公钥：{wallet}"
+      "wallet": "已注册钱包：{wallet}"
     },
     "shareable": "可分享链接 — 无需登录",
     "payoutPending": "待支付",

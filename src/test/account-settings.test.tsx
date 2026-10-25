@@ -163,6 +163,8 @@ describe("withdrawal contract", () => {
     expect(confirmationMatches("Ryan", " ryan ")).toBe(true);
     expect(confirmationMatches("Ryan", "")).toBe(false);
     expect(confirmationMatches("Ryan", "Rya")).toBe(false);
+    // The BE compares NFC forms: a pasted decomposed nickname must enable the button for the stored composed one.
+    expect(confirmationMatches("caf\u00e9", "cafe\u0301")).toBe(true);
   });
 
   it("robots disallows the account page in every locale", () => {

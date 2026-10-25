@@ -128,6 +128,18 @@ const notice = (overrides: Partial<Notice>): Notice => ({
   thumbnail: "", ...overrides,
 });
 
+describe("long unbroken text", () => {
+  it("wraps in member and notice cards instead of widening them", () => {
+    const word = "x".repeat(80);
+    const first = renderWithIntl(<MemberCard member={member({ name: word, bio: word })} />);
+    expect(screen.getByRole("heading", { name: word }).className).toContain("break-words");
+    first.unmount();
+    renderWithIntl(<NoticeRow notice={notice({ title: word, excerpt: `${word}!` })} />);
+    expect(screen.getByRole("heading", { name: word }).className).toContain("break-words");
+    expect(screen.getByText(`${word}!`).className).toContain("break-words");
+  });
+});
+
 describe("NewsCard and NoticeRow", () => {
   it("link to the notice with the localized category, date, title and excerpt", () => {
     const value = notice({ category: "Injective ecosystem" });

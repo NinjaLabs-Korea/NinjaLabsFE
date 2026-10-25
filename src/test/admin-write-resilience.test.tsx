@@ -7,6 +7,7 @@ import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { BountyManager } from "@/components/admin/BountyManager";
 import { HighlightManager } from "@/components/admin/HighlightManager";
 import { PostManager } from "@/components/admin/PostManager";
+import { ApiHttpError } from "@/lib/api/http";
 import { getAdminBounties, getAdminHighlights, getAdminPosts } from "@/lib/admin";
 import type { AdminApi } from "@/lib/contracts/api";
 import { createMockApiClient } from "@/lib/mocks/api-client";
@@ -98,6 +99,22 @@ describe("a succeeded write followed by a failed re-read", () => {
     fireEvent.click(within(row("Build an iAsset price widget")).getByRole("button", { name: "Close" }));
     expect(await screen.findByText("Status updated")).toBeTruthy();
     expect(screen.queryByText("Transition failed")).toBeNull();
+  });
+});
+
+describe("bounty status button", () => {
+  it("sends one transition for a double click", async () => {
+    let finish: () => void = () => undefined;
+    const transition = vi.spyOn(api, "transitionAdminBounty").mockImplementation(() => new Promise<void>((resolve) => { finish = resolve; }));
+    renderWithIntl(<><BountyManager bounties={getAdminBounties()} tabs={null}>{null}</BountyManager><AdminToastHost /></>);
+    await waitFor(() => expect(within(row("Build an iAsset price widget")).getByRole("button", { name: "Close" })).toBeTruthy());
+    const close = within(row("Build an iAsset price widget")).getByRole("button", { name: "Close" });
+    fireEvent.click(close);
+    fireEvent.click(close);
+    expect(transition).toHaveBeenCalledTimes(1);
+    expect((close as HTMLButtonElement).disabled).toBe(true);
+    finish();
+    expect(await screen.findByText("Status updated")).toBeTruthy();
   });
 });
 
@@ -200,5 +217,30 @@ describe("picked image files across form resets", () => {
     const cleared = watchFileInput();
     fireEvent.click(within(row("Hydro opens content bounties")).getByRole("button", { name: "Edit" }));
     expect(cleared).toHaveBeenCalledWith("");
+  });
+});
+
+describe("deleting a record another admin already deleted", () => {
+  it("notice: explains the 404 and re-reads so the ghost row disappears", async () => {
+    renderWithIntl(<><PostManager posts={getAdminPosts()} tabs={null}>{null}</PostManager><AdminToastHost /></>);
+    await waitFor(() => expect(row("Q3 roadmap preview")).toBeTruthy());
+    vi.spyOn(api, "deleteAdminPost").mockRejectedValue(new ApiHttpError(404, "NOTICE_NOT_FOUND"));
+    const reread = vi.spyOn(api, "getAdminPosts").mockResolvedValue(getAdminPosts().filter((post) => post.slug !== "q3-roadmap-preview"));
+    fireEvent.click(within(row("Q3 roadmap preview")).getByRole("button", { name: "Delete" }));
+    confirmDelete();
+    expect(await screen.findByText(/no longer exists/)).toBeTruthy();
+    await waitFor(() => expect(screen.queryByText("Q3 roadmap preview", { selector: "td" })).toBeNull());
+    expect(reread).toHaveBeenCalled();
+  });
+
+  it("highlight: explains the 404 and re-reads", async () => {
+    renderWithIntl(<><HighlightManager highlights={getAdminHighlights()} /><AdminToastHost /></>);
+    await waitFor(() => expect(screen.getAllByRole("row").length).toBeGreaterThan(1));
+    vi.spyOn(api, "deleteAdminHighlight").mockRejectedValue(new ApiHttpError(404, "HIGHLIGHT_NOT_FOUND"));
+    const reread = vi.spyOn(api, "getAdminHighlights").mockResolvedValue([]);
+    fireEvent.click(screen.getAllByRole("button", { name: "Delete" })[0]);
+    confirmDelete();
+    expect(await screen.findByText(/no longer exists/)).toBeTruthy();
+    await waitFor(() => expect(reread).toHaveBeenCalled());
   });
 });

@@ -56,6 +56,14 @@ describe("ProfileForm nickname live check", () => {
     expect(checkNickname).toHaveBeenCalledTimes(1);
   });
 
+  it("checks the NFC-normalized nickname, as the BE stores it", async () => {
+    checkNickname.mockResolvedValue({ available: true });
+    renderWithIntl(<ProfileForm />);
+    typeNickname("cafe\u0301");
+    await waitFor(() => expect(status()).toBe("Nickname is available."), { timeout: 1500 });
+    expect(checkNickname).toHaveBeenCalledWith("caf\u00e9");
+  });
+
   it("falls back to no verdict (and does not block submit) when the availability check fails", async () => {
     checkNickname.mockRejectedValue(new Error("network"));
     completeProfile.mockReturnValue(new Promise(() => undefined));

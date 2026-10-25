@@ -197,6 +197,32 @@ describe("BountyActionPanel", () => {
     expect(screen.getByText("Application under review")).toBeTruthy();
   });
 
+  it("re-reads the rows when the BE says the application already exists (applied from another tab)", async () => {
+    let applied = false;
+    const getApplications = vi.fn(async () => ({ status: "available" as const, data: applied ? [application("open")] : [] }));
+    const applyToBounty = vi.fn(async () => {
+      applied = true;
+      throw new ApiHttpError(409, "ALREADY_APPLIED");
+    });
+    Object.assign(apiClient, { applyToBounty, getApplications });
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
+    expect(await screen.findByText("Application under review")).toBeTruthy();
+    expect(getApplications).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not re-read the rows for an error that leaves the form valid", async () => {
+    const getApplications = vi.fn(async () => ({ status: "available" as const, data: [] }));
+    const applyToBounty = vi.fn(async () => { throw new ApiHttpError(400, "VALIDATION_FAILED"); });
+    Object.assign(apiClient, { applyToBounty, getApplications });
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
+    await screen.findByRole("alert");
+    expect(getApplications).toHaveBeenCalledTimes(1);
+  });
+
   it("still reports a gone session from the re-read", async () => {
     let reads = 0;
     const getApplications = vi.fn(async () =>

@@ -170,9 +170,13 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     },
     signOut: async () => {
       onboardingLog("session.signout.started");
-      await http.signOutRemote();
+      // The local session ends synchronously inside signOutRemote (token dropped, other tabs told); only the server-side
+      // revoke is awaited, and a hung BE can hold it for the request timeout. Show signed-out now, not after that wait.
+      const remote = http.signOutRemote();
+      const signedOut = setSnapshot({ status: "signed-out", user: null });
+      await remote;
       onboardingLog("session.signout.completed");
-      return setSnapshot({ status: "signed-out", user: null });
+      return signedOut;
     },
   };
 }
