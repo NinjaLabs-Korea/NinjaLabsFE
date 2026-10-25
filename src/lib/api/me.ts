@@ -1,5 +1,6 @@
 import type { ClientUser } from "@/lib/contracts/auth";
 import type { ApiHttp } from "@/lib/api/http";
+import { nicknameInitials } from "@/lib/nickname";
 
 /** BE GET /auth/me 응답 (NinjaLabsBE docs/api-contract.md) */
 export type MeResponse = {
@@ -20,8 +21,7 @@ export function toClientUser(me: MeResponse): ClientUser {
   return {
     id: me.id,
     handle: me.nickname,
-    // By code point: `slice(0, 2)` would cut an astral letter (nicknames allow any Unicode letter) into a lone surrogate.
-    initials: Array.from(me.nickname).slice(0, 2).join("").toUpperCase(),
+    initials: nicknameInitials(me.nickname),
     profileSlug: me.nickname,
     onboardingStep: me.onboardingStep,
     onboardingCompleted: me.onboardingCompleted,

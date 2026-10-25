@@ -36,6 +36,11 @@ export function nicknameLength(value: string): number {
   return [...value].length;
 }
 
+/** Avatar initials: the first two code points, upper-cased. `slice(0, 2)` would cut an astral letter (nicknames allow any Unicode letter) into a lone surrogate. */
+export function nicknameInitials(nickname: string): string {
+  return Array.from(nickname).slice(0, 2).join("").toUpperCase();
+}
+
 /** BE `normalizeNickname`과 같은 정규형(trim + NFC). 검증·중복 검사·저장 요청은 모두 이 값으로 한다. */
 export function normalizeNickname(raw: string): string {
   return raw.trim().normalize("NFC");
