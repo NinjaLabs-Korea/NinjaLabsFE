@@ -160,3 +160,9 @@ describe("bountyActionErrorCopy — bounties.action.errors key for a failed appl
     expect(bountyActionErrorCopy({ code: "ALREADY_APPLIED" })).toEqual({ key: "generic" });
   });
 });
+
+describe("bountyActionErrorCopy: throttled requests", () => {
+  it("shows the too-many-requests copy, not the raw throttler text, for a 429", () => {
+    expect(bountyActionErrorCopy(new ApiHttpError(429, "ThrottlerException: Too Many Requests"))).toEqual({ key: "TOO_MANY_REQUESTS" });
+  });
+});

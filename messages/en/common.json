@@ -78,7 +78,8 @@
       "CHALLENGE_EXPIRED": "The verification request expired or was already used. Select Verify wallet again and sign the new message.",
       "INVALID_SIGNATURE": "The signature does not match this wallet. Sign with the connected address and try again.",
       "WALLET_ALREADY_LINKED": "This wallet is already linked to another account, or your account already has a wallet. Use a different wallet, or sign in with the account that owns this one.",
-      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     },
     "disconnectWalletLabel": "Disconnect wallet {address}",
     "unavailable": "Wallet unavailable",
