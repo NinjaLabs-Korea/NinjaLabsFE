@@ -121,10 +121,13 @@ export function BountyActionPanel(props: BountyActionPanelProps) {
   // Persistent polite live region: it exists before any feedback arrives, so success copy is announced reliably even
   // though the panel below swaps whole sections (form → status panel). Errors use role="alert" inline instead.
   const [announcement, setAnnouncement] = useState("");
+  // The body keeps "I just applied/submitted" flags and feedback in state. They describe one account, so the body is
+  // keyed by user id: a different account on this page (switched in another tab) starts from the server rows only.
+  const accountKey = useAuthSnapshot().user?.id ?? "";
   return (
     <>
       <p aria-live="polite" className="sr-only">{announcement}</p>
-      <BountyActionPanelBody {...props} announce={setAnnouncement} />
+      <BountyActionPanelBody key={accountKey} {...props} announce={setAnnouncement} />
     </>
   );
 }
