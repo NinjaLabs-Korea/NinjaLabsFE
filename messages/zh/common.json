@@ -35,7 +35,9 @@
     "community": "社区",
     "legal": "© 2026 Ninja Labs · 所有内容无需登录即可查看",
     "contributor": "申请成为贡献者",
-    "contact": "联系我们"
+    "contact": "联系我们",
+    "privacy": "隐私政策",
+    "terms": "服务条款"
   },
   "userMenu": {
     "accountNavigation": "账户导航",

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 const platformLinks = [
   { href: "/bounties", key: "bounties" },
@@ -10,7 +11,6 @@ const platformLinks = [
 
 // Official links from the Ninja Labs Korea Notion hub (injective.notion.site/ninjalabskr).
 // Ninja Labs has no Discord of its own; the Discord link is Injective's.
-const CONTACT_EMAIL = "andrew@injectivelabs.org";
 
 const ninjaLabsLinks = (contributorLabel: string) => [
   { href: "https://x.com/NinjaLabsKR", label: "X (@NinjaLabsKR)" },
@@ -62,11 +62,19 @@ export function Footer() {
           <p className="text-xs leading-4 text-on-inverse-muted">
             {t("legal")}
           </p>
-          <p className="text-xs leading-4 text-on-inverse-muted">
-            {t("contact")}{" "}
-            <a className="text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`mailto:${CONTACT_EMAIL}`}>
-              {CONTACT_EMAIL}
-            </a>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs leading-4 text-on-inverse-muted">
+            <Link className="text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/privacy">
+              {t("privacy")}
+            </Link>
+            <Link className="text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/terms">
+              {t("terms")}
+            </Link>
+            <span>
+              {t("contact")}{" "}
+              <a className="text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`mailto:${CONTACT_EMAIL}`}>
+                {CONTACT_EMAIL}
+              </a>
+            </span>
           </p>
         </div>
       </div>
