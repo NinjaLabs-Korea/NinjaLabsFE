@@ -56,6 +56,16 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
     });
   }, [bounties, category, query, status]);
 
+  // Nothing posted yet (the BE list is empty): filters and "reset" would only suggest the user's choices hid something.
+  if (bounties.length === 0) {
+    return (
+      <div className="rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center">
+        <p className="text-sm font-semibold text-ink">{t("filters.noneTitle")}</p>
+        <p className="mt-1 text-sm text-ink-muted">{t("filters.noneBody")}</p>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* 14: one chip row (All + categories + statuses) with the search field on the right. "All" clears both groups. */}

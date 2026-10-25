@@ -40,6 +40,8 @@
     "emptyTitle": "没有符合筛选条件的赏金",
     "emptyBody": "请尝试其他类别或清除搜索内容。",
     "reset": "重置筛选",
+    "noneTitle": "暂时还没有赏金",
+    "noneBody": "赞助方尚未发布任何赏金，请稍后再来看看。",
     "ariaLabel": "赏金筛选"
   },
   "apply": {

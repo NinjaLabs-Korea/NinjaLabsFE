@@ -96,4 +96,12 @@ describe("BountyFilters", () => {
     expect(screen.getByText("Closed · Ninja Labs")).toBeTruthy();
     expect(screen.queryByText(/D-\d/)).toBeNull();
   });
+
+  it("says nothing is posted yet, without filters or a reset button, when the list is empty", () => {
+    renderWithIntl(<BountyFilters bounties={[]} />);
+    expect(screen.getByText("No bounties yet")).toBeTruthy();
+    expect(screen.queryByText("No bounties match your filters")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Reset filters" })).toBeNull();
+    expect(screen.queryByRole("group", { name: "Bounty filters" })).toBeNull();
+  });
 });
