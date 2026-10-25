@@ -9,6 +9,7 @@ import { readRuntimeConfig, toPublicRuntimeConfig } from "@/lib/runtime/config";
 import {
   loadTurnstile,
   resetTurnstileLoaderForTests,
+  TURNSTILE_LOAD_TIMEOUT_MS,
   TURNSTILE_SCRIPT_URL,
   turnstileLanguage,
   type TurnstileApi,
@@ -93,6 +94,35 @@ describe("loadTurnstile", () => {
     expect(document.head.querySelectorAll("script[data-turnstile-loader]")).toHaveLength(0);
     void loadTurnstile().catch(() => undefined);
     expect(document.head.querySelectorAll("script[data-turnstile-loader]")).toHaveLength(1);
+  });
+
+  it("fails a load that neither completes nor errors, and a retry injects the script again", async () => {
+    vi.useFakeTimers();
+    try {
+      const stalled = loadTurnstile();
+      const settled = expect(stalled).rejects.toThrow("timed out");
+      await vi.advanceTimersByTimeAsync(TURNSTILE_LOAD_TIMEOUT_MS);
+      await settled;
+      expect(document.head.querySelectorAll("script[data-turnstile-loader]")).toHaveLength(0);
+      void loadTurnstile().catch(() => undefined);
+      expect(document.head.querySelectorAll("script[data-turnstile-loader]")).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not time out a load that finished in time", async () => {
+    vi.useFakeTimers();
+    try {
+      const pending = loadTurnstile();
+      const { api } = installFakeTurnstile();
+      document.head.querySelector("script[data-turnstile-loader]")!.dispatchEvent(new Event("load"));
+      await expect(pending).resolves.toBe(api);
+      await vi.advanceTimersByTimeAsync(TURNSTILE_LOAD_TIMEOUT_MS * 2);
+      expect(await loadTurnstile()).toBe(api);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("maps app locales to Turnstile languages", () => {
