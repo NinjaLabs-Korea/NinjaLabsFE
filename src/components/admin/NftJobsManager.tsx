@@ -97,6 +97,7 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
               shownPage.current = 1;
               setPage(1);
               setData(null);
+              setFailed(false);
             }} type="button">
               {t(`statuses.${option}`)}
             </button>

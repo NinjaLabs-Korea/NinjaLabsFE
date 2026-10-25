@@ -1,11 +1,13 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { AdminListStatus } from "@/components/admin/AdminListStatus";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
+import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { type AdminBounty, adminErrorDescription } from "@/lib/admin-helpers";
@@ -38,7 +40,6 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   // reads like the datetime-local edit field (which is browser-local), and always prints the zone abbreviation.
   const format = useFormatter();
   const timeZone = useBrowserTimeZone();
-  const [records, setRecords] = useState(bounties);
   const [mode, setMode] = useState<Mode>({ kind: "create" });
   const [form, setForm] = useState<BountyFormValues>(emptyBountyForm);
   const [coverFile, setCoverFile] = useState<File | null>(null);
@@ -70,16 +71,11 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     clearCoverFile();
   };
 
-  // Re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
+  // `reload` re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
   // (never "save failed": a retry of an already-created bounty would create a duplicate).
-  const reload = useCallback(
-    () => api.getAdminBounties().then(setRecords).catch(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") })),
-    [api, t],
-  );
-
-  useEffect(() => {
-    void reload();
-  }, [reload]);
+  const fetchBounties = useCallback(() => api.getAdminBounties(), [api]);
+  const toastLoadFailed = useCallback(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }), [t]);
+  const { records, setRecords, loadState, reload, retry } = useAdminList(fetchBounties, bounties, toastLoadFailed);
 
   const updateForm = <Key extends keyof BountyFormValues>(key: Key, value: BountyFormValues[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -195,6 +191,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
       <div>{tabs}</div>
       <div className="mt-6">
+        <AdminListStatus failedText={t("toast.loadFailedDescription")} onRetry={retry} state={loadState} />
+        {loadState === "ready" ? (
         <AdminTable columns={columns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[900px]">
           {records.map((bounty) => (
             <tr className="border-t border-border" key={bounty.slug}>
@@ -208,6 +206,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
             </tr>
           ))}
         </AdminTable>
+        ) : null}
       </div>
 
       <section className="mt-6 rounded-card border border-border bg-surface p-[21px] shadow-card" ref={formRef}>

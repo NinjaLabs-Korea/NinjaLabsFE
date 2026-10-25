@@ -23,6 +23,8 @@
     "tooLong": "内容过长：最多 {max} 个字符。",
     "fixFields": "请先修正标出的字段再保存。",
     "saving": "保存中…",
+    "loading": "正在加载…",
+    "retry": "重试",
     "removeImage": "移除图片",
     "errors": {
       "INVALID_CHARACTER": "某个字段包含无法保存的字符（例如 NUL 字符）。请删除后重试。",

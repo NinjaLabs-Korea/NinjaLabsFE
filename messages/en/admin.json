@@ -23,6 +23,8 @@
     "tooLong": "Too long: use at most {max} characters.",
     "fixFields": "Fix the highlighted fields before saving.",
     "saving": "Saving…",
+    "loading": "Loading…",
+    "retry": "Try again",
     "removeImage": "Remove image",
     "errors": {
       "INVALID_CHARACTER": "A field contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",

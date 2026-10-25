@@ -116,6 +116,20 @@ describe("AuditLogViewer", () => {
     await waitFor(() => expect(adminApi.getAdminAuditLogs).toHaveBeenLastCalledWith({}, 1));
   });
 
+  it("says Loading… (not the old failure) while a newly applied filter loads after a failed read", async () => {
+    let resolveFiltered: (value: unknown) => void = () => undefined;
+    adminApi.getAdminAuditLogs.mockImplementation((filter: { entityType?: string }) => filter.entityType
+      ? new Promise((resolve) => { resolveFiltered = resolve; })
+      : Promise.reject(new Error("down")));
+    render();
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Could not load the audit log."));
+    fireEvent.change(screen.getByLabelText("Entity type"), { target: { value: "payout" } });
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    expect(screen.getByRole("status").textContent).toBe("Loading operations…");
+    resolveFiltered({ items: [log(1)], page: 1, pageSize: 30, total: 1 });
+    expect(await screen.findByText("PAYOUT_APPROVED")).toBeTruthy();
+  });
+
   it("shows the empty state and the load failure", async () => {
     adminApi.getAdminAuditLogs.mockResolvedValueOnce({ items: [], page: 1, pageSize: 30, total: 0 });
     const { unmount } = render();
