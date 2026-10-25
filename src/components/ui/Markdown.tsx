@@ -12,6 +12,11 @@ const EXTERNAL_HREF = /^(https?:)?\/\//i;
 // `<a href="/bounties/abc">` drops the reader's locale (one redirect, and the proxy may pick another language).
 const SAME_SITE_PATH = /^\/(?!\/)/;
 
+// Browsers read a backslash in a URL as a slash (`\\/host` and `/\\host` become `//host`, `https:\\host` becomes `https://host`).
+// react-markdown already percent-encodes it (`%5C`, inert) before this component sees the href; this keeps that from being the only
+// line of defense. No legitimate link needs one: keep the text, drop the link.
+const BACKSLASH_HREF = /\\|%5c/i;
+
 const linkClass = "font-semibold text-primary-strong underline underline-offset-2 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 const allowedElements = ["p", "a", "strong", "em", "ul", "ol", "li", "h2", "h3", "code", "pre", "blockquote", "br", "del"];
@@ -25,6 +30,7 @@ export function Markdown({ children }: { children: string }) {
       components={{
         p: ({ children }) => <p className="mt-4 first:mt-0 text-base text-ink-secondary">{children}</p>,
         a: ({ href, children }) => {
+          if (typeof href === "string" && BACKSLASH_HREF.test(href)) return <>{children}</>;
           const isExternal = typeof href === "string" && EXTERNAL_HREF.test(href);
           if (typeof href === "string" && SAME_SITE_PATH.test(href)) {
             return <Link className={linkClass} href={href}>{children}</Link>;
