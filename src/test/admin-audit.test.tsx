@@ -137,7 +137,8 @@ describe("UserDirectory load more", () => {
     expect(adminApi.getAdminUsers).toHaveBeenLastCalledWith("", 2);
     // 30 + 1 new row (the duplicate is dropped) + header
     expect(screen.getAllByRole("row")).toHaveLength(32);
-  });
+    // 31 rows each mount two dialogs: ~5 s in jsdom, right at vitest's default timeout.
+  }, 20_000);
 
   it("offers no control when the first page is short", async () => {
     adminApi.getAdminUsers.mockResolvedValue([user(1)]);
