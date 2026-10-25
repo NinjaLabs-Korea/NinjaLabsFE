@@ -28,18 +28,22 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
   const [failed, setFailed] = useState(false);
   // Only the newest request may write state (a slow page must not overwrite the filter the operator just applied).
   const latestRequest = useRef(0);
+  // The page the rows on screen belong to: a failed fetch of another page steps back to it, so the pager never labels old rows with the new page.
+  const shownPage = useRef(1);
 
   const load = useCallback(() => {
     const request = ++latestRequest.current;
     return api.getAdminAuditLogs(filter, page).then(
       (next) => {
         if (request !== latestRequest.current) return;
+        shownPage.current = next.page;
         setData(next);
         setFailed(false);
       },
       () => {
         if (request !== latestRequest.current) return;
         setFailed(true);
+        setPage(shownPage.current);
         pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") });
       },
     );
@@ -58,6 +62,7 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
     }
     setInvalidId(false);
     setData(null);
+    shownPage.current = 1;
     setPage(1);
     setFilter({ ...(entityType.trim() ? { entityType: entityType.trim() } : {}), ...(id ? { entityId: id } : {}) });
   };
@@ -67,6 +72,7 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
     setEntityId("");
     setInvalidId(false);
     setData(null);
+    shownPage.current = 1;
     setPage(1);
     setFilter({});
   };
