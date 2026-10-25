@@ -22,6 +22,8 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/signup/w
   const t = await getTranslations({ locale, namespace: "signup.wallet.metadata" });
   return {
     alternates: localeAlternates(locale, "/signup/wallet"),
+    // Signed-in onboarding step: nothing to index.
+    robots: { index: false, follow: false },
     title: t("title"),
     description: isApiMode ? t("descriptionApi") : t("descriptionMock"),
   };
