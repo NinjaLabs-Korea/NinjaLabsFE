@@ -391,6 +391,22 @@ describe("API auth adapter session restore", () => {
     expectOnlySessionHint();
   });
 
+  it("shows signed-out immediately while the server-side logout is still pending", async () => {
+    let finishLogout!: () => void;
+    const logoutDone = new Promise<void>((resolve) => { finishLogout = resolve; });
+    stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }), async () => {
+      await logoutDone;
+      return new Response(null, { status: 204 });
+    });
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    const signingOut = adapter.signOut();
+    expect(adapter.getSnapshot()).toEqual({ status: "signed-out", user: null });
+    finishLogout();
+    await expect(signingOut).resolves.toEqual({ status: "signed-out", user: null });
+  });
+
   it("signs out through the same-origin logout and leaves nothing in storage", async () => {
     const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }), () => new Response(null, { status: 204 }));
     const adapter = createApiAuthAdapter(API);
