@@ -15,7 +15,7 @@
           "Profile: nickname, bio, interest tags and anything else you enter.",
           "Wallet: the Injective wallet address you prove you own by signing a message.",
           "Activity: bounty applications and submissions (links, repository URLs, descriptions), agents you register, reward payouts and NFT minting records.",
-          "Access data: IP address, browser information (User-Agent) and time of your login sessions. Sign-in tokens are kept in your browser's storage."
+          "Access data: IP address, browser information (User-Agent) and time of your login sessions. Staying signed in uses a sign-in cookie that scripts on the page cannot read; the short-lived access token is held only in your browser's memory."
         ]
       },
       {
@@ -43,7 +43,8 @@
           "Google LLC: sign-in",
           "Supabase Inc.: database",
           "Railway Corp.: server hosting",
-          "Vercel Inc.: website hosting"
+          "Vercel Inc.: website hosting",
+          "Cloudflare, Inc.: bot protection at sign-in (Turnstile)"
         ]
       },
       {
