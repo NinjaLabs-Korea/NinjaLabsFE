@@ -4,6 +4,8 @@ import { AUTH_EVENT_STORAGE_KEY, createAuthEventBus } from "@/lib/api/auth-event
 import {
   allowSessionRefresh,
   ApiHttpError,
+  API_REQUEST_TIMEOUT_MS,
+  API_UPLOAD_TIMEOUT_MS,
   AUTH_REQUEST_TIMEOUT_MS,
   cookieAuthInit,
   createApiHttp,
@@ -144,6 +146,24 @@ describe("fetchJson request shape", () => {
   });
 });
 
+describe("authenticated request timeouts", () => {
+  it("bounds JSON calls and uploads so a hung BE cannot leave a view pending forever", async () => {
+    const request = vi.fn(async () => json({ ok: true }));
+    vi.stubGlobal("fetch", request);
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    try {
+      const http = createApiHttp(API);
+      await http.fetchJson("/auth/me");
+      await http.fetchForm("/admin/media", new FormData());
+      expect(timeout).toHaveBeenNthCalledWith(1, API_REQUEST_TIMEOUT_MS);
+      expect(timeout).toHaveBeenNthCalledWith(2, API_UPLOAD_TIMEOUT_MS);
+      for (const [, init] of request.mock.calls as unknown as [string, RequestInit][]) expect(init.signal).toBeInstanceOf(AbortSignal);
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+});
+
 describe("refresh edge cases", () => {
   /** API answers 401 unless it carries `Bearer fresh`; refresh answers `refresh`. */
   function stub(refresh: () => Response | Promise<Response>) {
@@ -168,6 +188,25 @@ describe("refresh edge cases", () => {
     await expect(http.fetchJson("/auth/me")).rejects.toMatchObject({ status: 200, code: "REFRESH_UNAVAILABLE" });
     expect(getAccessToken()).toBe("stale");
     expect(ended).not.toHaveBeenCalled();
+  });
+
+  it("does not refresh or replay a 401 that is not a session failure (INVALID_SIGNATURE from a wallet verify)", async () => {
+    const request = stub(() => json({ accessToken: "fresh" }));
+    request.mockImplementation(async (url: string) =>
+      url === REFRESH ? json({ accessToken: "fresh" }) : json({ statusCode: 401, message: "INVALID_SIGNATURE" }, 401));
+    installSession("access-1");
+    const http = createApiHttp(API);
+    await expect(http.fetchJson("/wallets/verify", { method: "POST", body: {} })).rejects.toMatchObject({ status: 401, code: "INVALID_SIGNATURE" });
+    expect(refreshCount(request)).toBe(0);
+    expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it("still refreshes and replays on the session guard's 401 codes", async () => {
+    const request = stub(() => json({ accessToken: "fresh" }));
+    installSession("stale");
+    const http = createApiHttp(API);
+    await expect(http.fetchJson("/auth/me")).resolves.toEqual({ ok: true });
+    expect(refreshCount(request)).toBe(1);
   });
 
   it("re-enables refresh after another tab signs in, but not before", async () => {

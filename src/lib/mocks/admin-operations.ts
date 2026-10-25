@@ -252,7 +252,8 @@ export function createMockOperationsApi(options: {
       if (!TOKEN_AMOUNT.test(depositedAmount)) fail(400, "INVALID_TOKEN_AMOUNT");
       if (!isTxHash(txHash)) fail(400, "INVALID_TX_HASH");
       const { row } = find((o) => o.rewards, rewardId, "REWARD_NOT_FOUND_OR_NOT_PENDING");
-      if (row.status !== "DEPOSIT_PENDING" || BigInt(depositedAmount) < BigInt(row.amount)) fail(404, "REWARD_NOT_FOUND_OR_NOT_PENDING");
+      if (row.status !== "DEPOSIT_PENDING") fail(404, "REWARD_NOT_FOUND_OR_NOT_PENDING");
+      if (BigInt(depositedAmount) < BigInt(row.amount)) fail(400, "DEPOSIT_BELOW_REWARD_AMOUNT");
       const hash = `0x${txHash.trim().replace(/^0x/i, "").toLowerCase()}`;
       for (const ops of state.values()) {
         if (ops.rewards.some((r) => r.depositTxHash === hash) || ops.payouts.some((p) => p.txHash === hash)) fail(409, "TX_HASH_ALREADY_USED");
