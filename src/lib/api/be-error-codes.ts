@@ -2,7 +2,7 @@
  * BE가 응답 `message`로 던지는 에러 코드 목록 — **BE 카탈로그의 그대로 복사본(snapshot)**이다. 손으로 코드를 지어내지 말 것.
  *
  * 원본: NinjaLabsBE `src/common/http/error-codes.ts` (`ERROR_CODES`의 키, 같은 순서·같은 묶음).
- * 스냅샷 기준: BE `fix/module-audit-loop` @ `5e8c158` (카탈로그 마지막 변경 `375cb32`) · 84개.
+ * 스냅샷 기준: BE `fix/module-audit-loop` @ `5e8c158` (카탈로그 마지막 변경 `6e3c130`) · 85개.
  * 줄 끝 주석은 "HTTP 상태 — BE 카탈로그의 한 줄 의미"이고 사용자 문구가 아니다 (사용자 문구는 `messages/<locale>/*.json`).
  *
  * ## 어디를 고치나
@@ -95,6 +95,7 @@ export const BE_ERROR_CODES = [
   "INVALID_TOKEN_AMOUNT", // 400 — 토큰 금액이 최소 단위 양의 정수 문자열이 아니다
   "TX_HASH_ALREADY_USED", // 409 — 이미 다른 입금/지급에 쓰인 tx hash다 (중복 사용 불가)
   "REWARD_NOT_FOUND", // 404 — 보상 행이 없다
+  "DEPOSIT_BELOW_REWARD_AMOUNT", // 400 — 입금액이 보상 게시 금액(amount)보다 적어 입금 확인을 할 수 없다
   "REWARD_NOT_FOUND_OR_NOT_PENDING", // 404 — 보상이 없거나 입금 대기(DEPOSIT_PENDING) 상태가 아니다
   "REWARD_NOT_FUNDED", // 400 — 보상이 없거나 입금 확인(FUNDED 이상)이 안 돼 지급을 요청할 수 없다
   "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND", // 404 — 승인된 제출이 없거나 수령자의 지갑이 연결돼 있지 않다

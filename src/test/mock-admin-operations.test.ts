@@ -87,7 +87,7 @@ describe("mock operations parity (lib/mocks/admin-operations.ts)", () => {
     const ops = await client.getAdminOperations(funding.slug);
     const reward = ops.rewards[0];
     expect(reward.status).toBe("DEPOSIT_PENDING");
-    expect(await codeOf(client.confirmAdminDeposit(reward.id, { txHash: HASH, depositedAmount: "1" }))).toEqual([404, "REWARD_NOT_FOUND_OR_NOT_PENDING"]);
+    expect(await codeOf(client.confirmAdminDeposit(reward.id, { txHash: HASH, depositedAmount: "1" }))).toEqual([400, "DEPOSIT_BELOW_REWARD_AMOUNT"]);
     expect(await codeOf(client.confirmAdminDeposit(reward.id, { txHash: "x", depositedAmount: reward.amount }))).toEqual([400, "INVALID_TX_HASH"]);
     await client.confirmAdminDeposit(reward.id, { txHash: HASH, depositedAmount: reward.amount });
     expect((await client.getAdminOperations(funding.slug)).rewards[0]).toMatchObject({ status: "FUNDED", cap: reward.amount, depositTxHash: `0x${HASH}` });

@@ -44,6 +44,11 @@ describe("BE error code snapshot (lib/api/be-error-codes.ts)", () => {
     expect(ERROR_COPY.adminWrite.codes as readonly string[]).toContain("INVALID_DATE");
   });
 
+  it("includes DEPOSIT_BELOW_REWARD_AMOUNT (400 for a below-amount deposit) and the operations console explains it", () => {
+    expect(BE_ERROR_CODES as readonly string[]).toContain("DEPOSIT_BELOW_REWARD_AMOUNT");
+    expect(ERROR_COPY.adminOperations.codes as readonly string[]).toContain("DEPOSIT_BELOW_REWARD_AMOUNT");
+  });
+
   it("keeps FE-made codes separate from BE codes", () => {
     for (const code of FE_ERROR_CODES) expect(BE_ERROR_CODES as readonly string[], code).not.toContain(code);
   });
