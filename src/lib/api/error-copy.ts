@@ -132,6 +132,10 @@ export const ERROR_COPY = {
     messages: "admin.common.errors",
     codes: [
       "INVALID_CHARACTER", "INVALID_DATE", "REFERENCE_NOT_FOUND", "BOUNTY_NOT_FOUND", "BOUNTY_HAS_OPEN_FUNDS",
+      // 다른 운영자가 먼저 지운 공지/하이라이트/유저에 대한 수정·삭제·멤버 지정 (404)
+      "NOTICE_NOT_FOUND", "HIGHLIGHT_NOT_FOUND", "USER_NOT_FOUND",
+      // 바운티 생성: 서버 env에 USDC 컨트랙트 / EVM 체인 ID가 없다 (운영자가 고칠 설정 문제 — 일반 실패 문구로 숨기지 않는다)
+      "USDC_EVM_CONTRACT_NOT_CONFIGURED", "INJECTIVE_EVM_CHAIN_NOT_CONFIGURED",
       // 바운티 수정: 마감을 과거로 옮김 (BE bounty-admin.service — 저장된 값 그대로 되보내는 것은 통과)
       "DEADLINE_IN_PAST",
       // 커버/썸네일/하이라이트 이미지 업로드 (POST /admin/media — 5 MiB, PNG/JPEG/WebP 시그니처 검사)

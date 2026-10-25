@@ -46,6 +46,9 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const [originalDeadline, setOriginalDeadline] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<AdminBounty | null>(null);
+  // Bounties with a transition in flight: a second click would send the same target again and answer INVALID_TRANSITION right after the success toast.
+  const transitioning = useRef(new Set<string>());
+  const [transitioningSlugs, setTransitioningSlugs] = useState<ReadonlySet<string>>(new Set());
   const formRef = useRef<HTMLElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const editing = mode.kind === "edit";
@@ -146,7 +149,10 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   };
 
   const transition = async (bounty: AdminBounty) => {
+    if (transitioning.current.has(bounty.slug)) return;
     const to = bounty.status === "active" ? "SUBMISSION_CLOSED" : "OPEN";
+    transitioning.current.add(bounty.slug);
+    setTransitioningSlugs(new Set(transitioning.current));
     try {
       await api.transitionAdminBounty(bounty.slug, to);
       pushAdminToast({ variant: "success", title: t("toast.statusUpdatedTitle"), description: t("toast.statusUpdatedDescription", { title: bounty.title, to }) });
@@ -155,6 +161,10 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       // A blocked transition (BE 400 with a blocker list, e.g. REWARDS_UNFUNDED) is the common failure here; the blockers themselves live in Operations.
       const blocked = opsErrorCode(error, "transition").code === "TRANSITION_BLOCKED";
       pushAdminToast({ variant: "danger", title: t("toast.transitionFailedTitle"), description: blocked ? t("toast.transitionBlockedDescription") : adminErrorDescription(error, tCommon, t("toast.transitionFailedDescription")) });
+    }
+    finally {
+      transitioning.current.delete(bounty.slug);
+      setTransitioningSlugs(new Set(transitioning.current));
     }
   };
 
@@ -168,6 +178,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: bounty.title });
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
+      // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
+      void reload();
     }
   };
 
@@ -192,7 +204,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <td className="px-5 py-4 text-sm text-ink-secondary">{t(`intake.${bounty.intakeEnabled ? "ON" : "OFF"}`)}<p className="mt-1 text-xs text-ink-muted">{t(`submissionModes.${bounty.submissionMode === "agent" ? "Agent" : "Direct"}`)}</p></td>
               <td className="px-5 py-4"><Badge variant={statusVariants[bounty.status]}>{t(`statuses.${bounty.status}`)}</Badge></td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{deadlineCell(bounty.deadline)}</td>
-              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<Link className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={{ pathname: "/admin/operations", query: { bounty: bounty.slug } }}>{t("operations")}</Link><button className="rounded-control border border-danger px-3 py-2 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
+              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong disabled:cursor-not-allowed disabled:opacity-60" disabled={transitioningSlugs.has(bounty.slug)} onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<Link className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={{ pathname: "/admin/operations", query: { bounty: bounty.slug } }}>{t("operations")}</Link><button className="rounded-control border border-danger px-3 py-2 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
             </tr>
           ))}
         </AdminTable>
@@ -219,7 +231,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <p className="text-sm font-semibold text-ink">{t("form.reward")}</p>
               <div className="mt-2 flex gap-3">
                 <div className="w-fit"><AdminSelect disabled={editing} label={t("form.rewardCurrency")} onChange={(value) => updateForm("currency", value as BountyFormValues["currency"])} options={["INJ", "USDC"]} value={form.currency} /></div>
-                <input aria-label={t("form.rewardAmount")} className="h-[46px] min-w-0 flex-1 rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("amount")} disabled={editing} min="0" onChange={(event) => updateForm("amount", event.target.value)} placeholder={t("form.amountPlaceholder")} type="number" value={form.amount} />
+                <input aria-label={t("form.rewardAmount")} className="h-[46px] min-w-0 flex-1 rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("amount")} disabled={editing} inputMode="decimal" onChange={(event) => updateForm("amount", event.target.value)} placeholder={t("form.amountPlaceholder")} type="text" value={form.amount} />
               </div>
               {fieldError("amount")}
               {editing ? <p className="mt-2 text-xs text-ink-muted">{t("form.rewardLockedHint")}</p> : null}
