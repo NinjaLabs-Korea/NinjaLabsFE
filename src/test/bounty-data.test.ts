@@ -44,6 +44,10 @@ describe("bounty mapping", () => {
     expect(deliverablesFromMarkdown(undefined)).toEqual([]);
   });
 
+  it("extracts deliverables from a CRLF body too", () => {
+    expect(deliverablesFromMarkdown("Intro\r\n\r\n- Repo\r\n- Preview URL\r\n")).toEqual(["Repo", "Preview URL"]);
+  });
+
   it("flags an application-required bounty whose application deadline has passed", async () => {
     const past = { ...row("late"), application_required: true, application_deadline: "2020-01-01T00:00:00Z" };
     const future = { ...row("early"), application_required: true, application_deadline: "2099-01-01T00:00:00Z" };
@@ -74,6 +78,14 @@ describe("bounty mapping", () => {
     const direct = { ...base, slug: "direct" };
     expect(pickGuideBounties([closedApply, openApply, direct])).toEqual({ applicationBounty: openApply, directBounty: direct });
     expect(pickGuideBounties([closedApply, direct]).applicationBounty).toBeUndefined();
+  });
+
+  it("does not offer an agent-only bounty as a guide example a person cannot act on", () => {
+    const base = { title: "", summary: "", category: "Dev" as const, status: "active" as const, reward: { amount: 1, currency: "INJ" as const }, sponsor: "S", deadline: "Open", coverImage: "" };
+    const agentApply = { ...base, slug: "agent-apply", applicationRequired: true, submissionMode: "agent" as const };
+    const agentDirect = { ...base, slug: "agent-direct", submissionMode: "agent" as const };
+    const direct = { ...base, slug: "direct", submissionMode: "direct" as const };
+    expect(pickGuideBounties([agentApply, agentDirect, direct])).toEqual({ applicationBounty: undefined, directBounty: direct });
   });
 
   it("loads every page and keeps all reward tokens", async () => {

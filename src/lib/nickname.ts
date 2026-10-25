@@ -6,6 +6,7 @@ import { endsWithStaticFileExtension } from "@/lib/static-extensions";
  *
  *   - 정규형은 trim + 유니코드 NFC (BE `normalizeNickname`): 자모로 풀어 쓴 한글·결합 악센트도 검증·전송 전에 합친다
  *   - 유니코드 문자/숫자와 `_ . -`만, 공백 불가
+ *   - 한글 채움 문자(U+115F, U+1160, U+3164, U+FFA0)는 불가 (BE 정규식): 범주는 문자(Lo)지만 빈칸으로 그려져 "보이지 않는 이름"이 된다
  *   - 처음과 끝은 문자/숫자 (`.ninja`, `ninja-`, `..`, `--` 불가)
  *   - 길이 2~50 (trim 후, **코드 포인트** 기준 — BE `@Length`/validator `isLength`는 서로게이트 쌍을 한 글자로 센다)
  *   - 라우트와 충돌하는 예약어는 대소문자 무관 거부
@@ -18,7 +19,8 @@ export const NICKNAME_MIN = 2;
 export const NICKNAME_MAX = 50;
 export const RESERVED_NICKNAMES: readonly string[] = ["me", "check-nickname", "admin", "new", "edit"];
 
-const ALLOWED_CHARS = /^[\p{L}\p{N}_.-]+$/u;
+// Hangul filler letters (U+115F, U+1160, U+3164, U+FFA0) are category Lo but draw as blanks; the BE rejects them anywhere in the name.
+const ALLOWED_CHARS = /^(?!.*[\u115F\u1160\u3164\uFFA0])[\p{L}\p{N}_.-]+$/u;
 
 /** 탈퇴한 유저의 익명화 닉네임 접두사 (`withdrawn_<id 8hex>`) — 공개 프로필이 없으므로 상세 URL도 될 수 없다 */
 export const WITHDRAWN_NICKNAME_PREFIX = "withdrawn_";

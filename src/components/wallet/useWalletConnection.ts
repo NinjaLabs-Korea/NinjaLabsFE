@@ -10,6 +10,7 @@ import {
   useSignMessage,
   useSwitchChain,
 } from "wagmi";
+import { injectiveChainName } from "@/components/wallet/injective-chain";
 
 /** 체인 전환 실패 분류: 사용자가 거절했는지(rejected) 그 외 실패인지(failed) */
 export type SwitchChainErrorKind = "rejected" | "failed";
@@ -42,7 +43,7 @@ export function addEthereumChainParameterFor(chainId: number, rpcUrls: readonly 
   if (rpcUrls.length === 0) return undefined;
   const blockExplorer = INJECTIVE_EVM_BLOCK_EXPLORERS[chainId];
   return {
-    chainName: "Injective EVM",
+    chainName: injectiveChainName(chainId),
     nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
     rpcUrls: [...rpcUrls],
     ...(blockExplorer ? { blockExplorerUrls: [blockExplorer] } : {}),

@@ -22,10 +22,17 @@ describe("nickname rule (mirror of BE users/nickname.ts)", () => {
 
   it.each([
     ["a", "tooShort"], ["n".repeat(51), "tooLong"], ["ninja dev", "chars"], ["ninja@dev", "chars"], ["ninja/dev", "chars"],
-    ["ninja<b>", "chars"], ["   ", "tooShort"], ["​​", "chars"],
+    ["ninja<b>", "chars"], ["   ", "tooShort"], ["\u3164\u3164", "chars"], ["ninja\u115Fdev", "chars"], ["\uFFA0ninja", "chars"], ["​​", "chars"],
   ])("rejects %p as %s (length 2..50, no whitespace or symbols beyond _ . -)", (nickname, reason) => {
     expect(validateNickname(nickname)).toBe(reason);
   });
+
+  it.each(["\u115F\u115F", "ninja\u3164dev", "\uFFA0ninja", "ninja\u1160"])(
+    "rejects the invisible Hangul filler in %j as chars (BE nickname regex)",
+    (nickname) => {
+      expect(validateNickname(nickname)).toBe("chars");
+    },
+  );
 
   it.each([".ninja", "ninja.", "-ninja", "ninja-", "_ninja", "ninja_", "..", "...", "--", "-.", ".-", "_-_", ".a", "a."])(
     "rejects %p: must start and end with a letter or digit",

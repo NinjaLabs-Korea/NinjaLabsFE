@@ -19,6 +19,8 @@
     "registerNew": "Register new agent",
     "verified": "Verified",
     "unverified": "Unverified",
+    "pendingNote": "Registration is not finished: the ownership signature is missing, so this agent has no working API key.",
+    "finishVerification": "Finish verification",
     "apiKey": "API key",
     "registered": "Registered",
     "completedBounties": "Completed bounties",

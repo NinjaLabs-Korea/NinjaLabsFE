@@ -13,6 +13,7 @@ import {
 } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Link } from "@/i18n/navigation";
 import { describeAgentKey } from "@/lib/agent-keys";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
 import type { AccountAgent } from "@/lib/contracts/account";
@@ -210,6 +211,12 @@ export function AgentsView() {
 
               {keyWarning ? <p className="mt-3 text-sm text-warning" role="status">{keyWarning}</p> : null}
               {revoked ? <p className="mt-3 text-sm text-ink-muted">{t("revokedNote")}</p> : null}
+              {agent.status === "PENDING_VERIFICATION" ? (
+                <p className="mt-3 text-sm text-warning">
+                  {t("pendingNote")}{" "}
+                  <Link className={`font-semibold underline ${focusClass}`} href="/agents/register">{t("finishVerification")}</Link>
+                </p>
+              ) : null}
 
               {!revoked ? (
                 <div className="mt-4 flex flex-wrap gap-2">

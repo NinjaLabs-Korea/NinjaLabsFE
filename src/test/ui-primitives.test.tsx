@@ -80,6 +80,7 @@ describe("ConfirmDialog", () => {
     fireEvent.click(dialog, { clientX: 150, clientY: 150 });
     fireEvent.click(screen.getByText("Revoke agent?"), { clientX: 10, clientY: 10 });
     expect(onCancel).not.toHaveBeenCalled();
+    fireEvent.pointerDown(dialog);
     fireEvent.click(dialog, { clientX: 10, clientY: 10 });
     expect(onCancel).toHaveBeenCalledTimes(1);
   });

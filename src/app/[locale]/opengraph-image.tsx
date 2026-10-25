@@ -4,6 +4,7 @@ import { ImageResponse } from "next/og";
 import { hasLocale } from "next-intl";
 import { loadNamespace } from "@/i18n/messages";
 import { routing } from "@/i18n/routing";
+import { loadOgFont } from "@/lib/og-font";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -33,6 +34,10 @@ export async function generateImageMetadata({ params }: { params: ImageParams | 
 export default async function Image({ params }: { params: Promise<ImageParams> }) {
   const { locale } = await params;
   const t = await ogCopy(locale);
+  const font = await loadOgFont(
+    hasLocale(routing.locales, locale) ? locale : routing.defaultLocale,
+    `Ninja Labs${t.headline}${t.highlight}${t.tagline}`,
+  );
   const mascot = await readFile(join(process.cwd(), "public/figma/ninja-labs-mascot.png"), "base64");
 
   return new ImageResponse(
@@ -46,6 +51,7 @@ export default async function Image({ params }: { params: Promise<ImageParams> }
           justifyContent: "center",
           padding: "80px",
           backgroundImage: "linear-gradient(160deg, #0C1528 0%, #1D2B60 55%, #4D3DFF 100%)",
+          ...(font ? { fontFamily: font.name } : {}),
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
@@ -77,6 +83,6 @@ export default async function Image({ params }: { params: Promise<ImageParams> }
         </div>
       </div>
     ),
-    size,
+    { ...size, ...(font ? { fonts: [{ name: font.name, data: font.data, weight: 700 as const, style: "normal" as const }] } : {}) },
   );
 }

@@ -178,7 +178,8 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               ))}
             </ol>
           </section>
-          <BountyAgentPanel copy={applicationRequired ? tAgents("copyApply") : tAgents("copyDirect")} />
+          {/* Only AGENT-mode bounties take agent requests: the BE answers DIRECT_SUBMISSION_REQUIRED to an agent key on a DIRECT bounty. */}
+          {submissionMode === "agent" ? <BountyAgentPanel copy={applicationRequired ? tAgents("copyApply") : tAgents("copyDirect")} /> : null}
         </aside>
       </div>
 
