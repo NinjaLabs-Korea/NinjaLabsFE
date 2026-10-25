@@ -32,6 +32,9 @@ export function BountyOperations({ bountyId, onStatusChange }: { bountyId: strin
   const [busy, setBusy] = useState<ReadonlySet<string>>(new Set());
   // Synchronous guard: two clicks in the same tick both see the old `busy` state.
   const inFlight = useRef(new Set<string>());
+  // Only the newest read may write state: Refresh / the re-read after an action can overlap, and an older answer landing last
+  // would put back a payout or submission state the operator has already moved past.
+  const latestLoad = useRef(0);
 
   const describe = useCallback((error: unknown, context: "transition" | "other" = "other"): string => {
     const { code, known } = opsErrorCode(error, context);
@@ -39,16 +42,21 @@ export function BountyOperations({ bountyId, onStatusChange }: { bountyId: strin
   }, [t]);
 
   // State is only set in the promise callbacks (never synchronously inside the effect).
-  const load = useCallback(() => api.getAdminOperations(bountyId).then(
-    (data) => {
-      setOps(data);
-      setLoadState("ready");
-    },
-    (error: unknown) => {
-      setLoadState("failed");
-      pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: describe(error) });
-    },
-  ), [api, bountyId, describe, t]);
+  const load = useCallback(() => {
+    const request = ++latestLoad.current;
+    return api.getAdminOperations(bountyId).then(
+      (data) => {
+        if (request !== latestLoad.current) return;
+        setOps(data);
+        setLoadState("ready");
+      },
+      (error: unknown) => {
+        if (request !== latestLoad.current) return;
+        setLoadState("failed");
+        pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: describe(error) });
+      },
+    );
+  }, [api, bountyId, describe, t]);
 
   useEffect(() => {
     void load();

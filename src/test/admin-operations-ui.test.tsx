@@ -74,6 +74,22 @@ describe("BountyOperations", () => {
     await waitFor(() => expect(adminApi.transitionAdminBounty).toHaveBeenCalledWith("b1", "OPEN"));
   });
 
+  it("keeps the newest read when an older overlapping read answers last", async () => {
+    await renderOps();
+    const pending: Array<(value: AdminOperations) => void> = [];
+    adminApi.getAdminOperations.mockImplementation(() => new Promise<AdminOperations>((resolve) => { pending.push(resolve); }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+    expect(pending).toHaveLength(2);
+    const withTitle = (title: string) => operations({ bounty: { ...operations().bounty, title } });
+    pending[1](withTitle("Newer read"));
+    expect(await screen.findByRole("heading", { name: "Newer read" })).toBeTruthy();
+    pending[0](withTitle("Older read"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.getByRole("heading", { name: "Newer read" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Older read" })).toBeNull();
+  });
+
   it("explains the two-person rule instead of offering Approve on the admin's own payout request", async () => {
     await renderOps();
     expect(screen.getByText("You requested this payout, so another admin must approve it (two-person rule).")).toBeTruthy();
