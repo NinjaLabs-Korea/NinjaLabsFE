@@ -223,6 +223,24 @@ describe("NftJobsManager", () => {
     expect(screen.queryByText("No jobs in this status.")).toBeNull();
   });
 
+  it("drops the previous status's rows while the next status loads, and keeps them when the active tab is clicked again", async () => {
+    const job = { id: "jf", nftId: "nf", jobType: "MINT_PARENT", status: "FAILED", retryCount: 5, lastError: "failed row", scheduledAt: null, updatedAt: null, nftType: "NINJA_PARENT", nftStatus: "FAILED", bountyTitle: null, ownerNickname: null, ownerWalletAddress: null };
+    let resolvePending: (value: unknown) => void = () => undefined;
+    adminApi.getAdminNftJobs.mockImplementation((status: string) => status === "FAILED"
+      ? Promise.resolve({ page: 1, pageSize: 30, total: 1, items: [job] })
+      : new Promise((resolve) => { resolvePending = resolve; }));
+    renderWithIntl(<><NftJobsManager tabs={null}>{null}</NftJobsManager><AdminToastHost /></>);
+    expect(await screen.findByText("failed row")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Failed" }));
+    expect(screen.getByText("failed row")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Pending" }));
+    expect(screen.queryByText("failed row")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+    resolvePending({ page: 1, pageSize: 30, total: 0, items: [] });
+    expect(await screen.findByText("No jobs in this status.")).toBeTruthy();
+  });
+
   it("shows NFT_JOB_NOT_FOUND_OR_NOT_FAILED as its localized message", async () => {
     adminApi.getAdminNftJobs.mockResolvedValue({ page: 1, pageSize: 30, total: 1, items: [{ id: "j1", nftId: "n1", jobType: "MINT_PARENT", status: "FAILED", retryCount: 5, lastError: null, scheduledAt: null, updatedAt: null, nftType: "NINJA_PARENT", nftStatus: "FAILED", bountyTitle: null, ownerNickname: null, ownerWalletAddress: null }] });
     adminApi.retryAdminNftJob.mockRejectedValueOnce(new ApiHttpError(404, "NFT_JOB_NOT_FOUND_OR_NOT_FAILED"));
