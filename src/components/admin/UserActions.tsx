@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
+import { DISPLAY_ORDER_MAX } from "@/lib/admin-helpers";
 
 type MemberRole = "Core" | "Dev" | "Design" | "Ops";
 
@@ -38,10 +39,10 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
   }
 
   function handleAssign() {
-    // 표시 순서는 비우면 자동(null), 입력하면 1 이상의 정수만 받는다. 잘못된 값은 조용히 버리지 않고 알린다.
+    // 표시 순서는 비우면 자동(null), 입력하면 1 이상 DISPLAY_ORDER_MAX 이하의 정수만 받는다(BE `@Min(1) @MaxPgInt()`). 잘못된 값은 조용히 버리지 않고 알린다.
     const trimmed = displayOrder.trim();
     const parsedOrder = Number(trimmed);
-    if (trimmed && !(Number.isInteger(parsedOrder) && parsedOrder >= 1)) {
+    if (trimmed && !(Number.isInteger(parsedOrder) && parsedOrder >= 1 && parsedOrder <= DISPLAY_ORDER_MAX)) {
       setOrderInvalid(true);
       return;
     }
@@ -84,7 +85,7 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("actions.roleEyebrow")}</p>
         <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink" id={assignTitleId}>{t("actions.assignTitle")}</h2>
         <p className="mt-2 text-sm text-ink-muted">{t.rich("actions.assignDescription", { nickname: user.nickname, b: (chunks) => <b>{chunks}</b> })}</p>
-        <div className="mt-4 flex flex-wrap gap-2" aria-label={t("actions.roleGroupLabel")}>
+        <div className="mt-4 flex flex-wrap gap-2" aria-label={t("actions.roleGroupLabel")} role="group">
           {roles.map((item) => (
             <button
               aria-pressed={role === item}

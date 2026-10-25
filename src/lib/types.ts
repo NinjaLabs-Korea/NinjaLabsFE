@@ -7,14 +7,18 @@ export type Bounty = {
   title: string;
   summary: string;
   category: BountyCategory;
-  status: 'active' | 'closed';
+  /** `reviewing` = BE SUBMISSION_CLOSED | IN_REVIEW: no new applications/submissions, but a requested revision can still be resubmitted. */
+  status: 'active' | 'reviewing' | 'closed';
   /** Primary reward (first funded token); shown on cards. */
   reward: Reward;
   /** Every reward token the bounty pays, primary first. Omitted when only `reward` exists. */
   rewards?: Reward[];
   sponsor: string;
+  /** `"Closed"` sentinel for every bounty that no longer accepts work; open bounties carry `daysLeft` instead. */
   deadline: string;
-  // 19:1480 shows D-7 label; 19:1739 shows full UTC deadline
+  /** Days until the submission deadline (open bounties only); cards render it through `bounties.card.daysLeft`. */
+  daysLeft?: number;
+  // Figma 14 (list card) shows the D-7 label; Figma 15 (detail meta cell) shows the full UTC deadline
   deadlineDetail?: string;
   coverImage: string;
   /** Markdown (rendered by ui/Markdown): supported subset is p/a/strong/em/ul/ol/li/h2/h3/code/pre/blockquote/br/del. Tables, images, and task lists are unsupported by design. */
@@ -24,12 +28,13 @@ export type Bounty = {
   deliverables?: string[];
   reviewProcess?: string;
   submissionMode?: 'direct' | 'agent';
-  completionSteps?: string[];
-  // 19:1911 apply variant driver
+  // Figma 15v apply-variant driver
   applicationRequired?: boolean;
-  /** 19:1911 renders variant-specific masthead/description copy without changing list copy. */
+  /** Figma 15v renders variant-specific masthead/description copy without changing list copy. */
   applicationTitle?: string;
   applicationDescription?: string;
+  /** Application-required bounty whose `application_deadline` has passed: new applications are refused (BE `APPLICATION_DEADLINE_PASSED`); approved applicants can still submit. */
+  applicationClosed?: boolean;
 };
 
 export type Notice = {
@@ -59,12 +64,26 @@ export type Member = {
   links: Partial<Record<'profile' | 'posts' | 'agents' | 'bounties' | 'notices', string>>;
 };
 
+/**
+ * BE `/users/:nickname` `completedBounties[].payoutStatus` and `/submissions/me` `payment_status` (same rule): PAID = every
+ * owed payout PAID, PARTIALLY_PAID = some PAID and some still open, PENDING = nothing paid yet, NONE = nothing is owed:
+ * no reward, a cancelled award, an exhausted pool (other winners took it all), a winner who withdrew without requesting, or a
+ * refunded reward. NONE can still come with paid `rewards` (e.g. after a refund); the FE then shows them as PAID.
+ * Older BE rows omit it (derived from `rewards`); an unknown value is read as PENDING (`lib/api/codecs.ts toPayoutStatus`).
+ */
+export type PayoutStatus = 'PAID' | 'PARTIALLY_PAID' | 'PENDING' | 'NONE';
+
 export type Completion = {
   bountySlug?: string;
   title: string;
   category: BountyCategory;
   completedAt: string;
-  reward: Reward;
+  /**
+   * PAID → the paid payout; PARTIALLY_PAID → the paid payout so far (shown with a "partially paid" badge); PENDING → the
+   * posted bounty reward (shown with a "payout pending" badge); NONE → null (nothing shown).
+   */
+  reward: Reward | null;
+  payoutStatus: PayoutStatus;
   childNft?: { tokenId: string };
 };
 

@@ -81,6 +81,7 @@ describe("AuthArea", () => {
       "/applications",
     );
     expect(screen.getByRole("link", { name: "My agents" }).getAttribute("href")).toBe("/agents");
+    expect(screen.getByRole("link", { name: "Account settings" }).getAttribute("href")).toBe("/account");
 
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
 
@@ -126,7 +127,7 @@ describe("BountyApplyGuideCta", () => {
       </FoundationProvider>,
     );
 
-    await screen.findByText("Authentication: Signed in");
+    await screen.findByText("Signed in");
     expect(screen.getByRole("link", { name: "Apply now" }).getAttribute("href")).toBe(
       "/bounties/live-bounty-id",
     );

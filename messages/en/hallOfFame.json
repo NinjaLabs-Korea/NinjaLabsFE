@@ -18,27 +18,30 @@
     "buildersRewarded": "Builders rewarded",
     "completionNfts": "Completion NFTs"
   },
-  "aggregateNote": "Platform aggregate, not a ranking.",
   "highlights": {
-    "eyebrow": "Featured",
-    "heading": "Highlights",
+    "eyebrow": "Curated by admin",
+    "heading": "Featured highlights",
     "readNotices": "Read notices",
     "categories": {
       "milestone": "Milestone",
       "featuredBounty": "Featured bounty",
-      "partnership": "Partnership"
+      "partnership": "Partnership",
+      "project": "Project",
+      "award": "Award",
+      "other": "Other"
     }
   },
   "timeline": {
-    "eyebrow": "Our story",
-    "heading": "Timeline"
+    "eyebrow": "Timeline",
+    "heading": "Platform milestones",
+    "entry": "{date} · {description}"
   },
   "unavailable": {
     "title": "The Hall of Fame is temporarily unavailable.",
     "body": "We couldn't reach the server. Please refresh in a moment."
   },
   "partners": {
-    "eyebrow": "Community",
-    "heading": "Partners"
+    "eyebrow": "Ecosystem",
+    "heading": "Partner logos"
   }
 }

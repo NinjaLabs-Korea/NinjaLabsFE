@@ -19,7 +19,8 @@
   },
   "status": {
     "active": "Active",
-    "closed": "Closed"
+    "closed": "Closed",
+    "reviewing": "Reviewing"
   },
   "list": {
     "eyebrow": "Marketplace",
@@ -28,7 +29,7 @@
     "howApplying": "How applying works →",
     "intro": "Find paid work from Injective ecosystem sponsors, ship useful pieces, and collect on-chain proof for your Ninja portfolio.",
     "resultsLabel": "Bounty filters and results",
-    "payoutNote": "Sponsors may pay INJ or USDC as-is, with no platform-side swap.",
+    "payoutNote": "Sponsors post in any token such as INJ or USDC. Rewards are sent as-is, so builders swap on their own; Ninja Labs does not run a platform-side swap.",
     "unavailable": "Bounties are temporarily unavailable."
   },
   "filters": {
@@ -38,43 +39,46 @@
     "search": "Search bounties",
     "emptyTitle": "No bounties match your filters",
     "emptyBody": "Try a different category or clear the search.",
-    "reset": "Reset filters"
+    "reset": "Reset filters",
+    "ariaLabel": "Bounty filters"
   },
   "apply": {
-    "eyebrow": "BOUNTIES",
-    "heading": "How bounty applications work",
-    "intro": "Some bounties accept work directly. Others require sponsor approval before you can submit.",
+    "eyebrow": "Bounty workflow",
+    "heading": "Bounty types — submit-type vs apply-type",
+    "intro": "Some bounties accept direct submissions; others require sponsor approval before work starts.",
     "auth": {
-      "checking": "Authentication: Checking",
-      "signedIn": "Authentication: Signed in",
-      "loginRequired": "Authentication: Login required"
+      "checking": "Checking session",
+      "signedIn": "Signed in",
+      "loginRequired": "Login required"
     },
     "cta": {
       "applyNow": "Apply now",
-      "viewAndSignIn": "View bounty and sign in",
+      "viewAndSignIn": "Apply after login",
       "view": "View bounty"
     },
     "submitType": {
       "badge": "Direct submit",
-      "heading": "Submit-type bounty",
-      "body": "Anyone can work on the bounty and submit when the work is ready.",
-      "flow": "The submission form is available on the bounty page right away.",
-      "viewDirect": "View direct bounty",
-      "none": "No submit-type bounties are open right now."
+      "heading": "Submit-type",
+      "body": "Anyone works and submits directly. This is best for small deliverables where the sponsor can judge completed output after the fact.",
+      "flow": "The Submit button is shown directly, the same as on the bounty detail page.",
+      "viewDirect": "View detail example",
+      "none": "No submit-type bounties are open right now.",
+      "flowTitle": "Button behavior"
     },
     "applyType": {
       "badge": "Application required",
-      "heading": "Apply-type bounty",
-      "body": "Submit work after the sponsor approves your application.",
-      "flow": "Apply with a short proposal. Once the sponsor approves it, the submission form unlocks on the bounty page.",
-      "none": "No apply-type bounties are open right now."
+      "heading": "Apply-type",
+      "body": "Submission opens only after sponsor approval. This is useful for larger work where sponsors want to review the builder first.",
+      "flow": "Apply → application form → sponsor review → after approval, Submit is enabled.",
+      "none": "No apply-type bounties are open right now.",
+      "flowTitle": "Button behavior"
     },
     "empty": {
       "title": "No open bounties right now",
       "body": "New sponsor opportunities will appear in the bounty marketplace.",
       "browse": "Browse all bounties"
     },
-    "statusHeading": "Application status",
+    "statusHeading": "Bounty status flow",
     "statuses": {
       "open": "Open",
       "underReview": "Under review",
@@ -82,8 +86,9 @@
       "submitted": "Submitted",
       "completed": "Completed"
     },
-    "statusNote": "Application status is tracked for bounties that require an application.",
-    "unavailable": "Open bounties are temporarily unavailable."
+    "statusNote": "Apply-type adds one approval step before submission; the sponsor reviews the application first.",
+    "unavailable": "Open bounties are temporarily unavailable.",
+    "statusEyebrow": "Apply-type status flow"
   },
   "detail": {
     "back": "← Back to bounties",
@@ -91,54 +96,67 @@
     "directSubmission": "Direct submission",
     "publicView": "Public view",
     "actionsRequireLogin": "Actions require login",
+    "signedInView": "Signed in",
+    "actionsAvailable": "Actions available",
     "description": "Description",
     "deliverable": "Deliverable",
     "deadline": "Deadline",
     "review": "Review",
     "defaultReview": "Sponsor review",
     "submissionGuide": "Submission guide",
-    "applyFootnote": "Viewing is public; applying and submitting require login.",
-    "reward": "Reward",
-    "sponsorPays": "Sponsor pays:",
-    "completionSteps": "Completion steps",
-    "defaultSteps": {
-      "work": "Complete the work",
-      "submit": "Submit the result URL",
-      "approval": "Receive sponsor approval",
-      "agentRegister": "Register and verify an agent",
-      "agentSubmit": "Submit through the agent API"
-    },
-    "applySteps": {
-      "apply": "Apply with relevant work and availability.",
-      "review": "Wait for sponsor review and approval.",
-      "submit": "Submit completed work after approval."
-    },
+    "applyFootnote": "Viewing is public; applying and submitting require login. Submission unlocks only after sponsor approval.",
+    "sponsorPays": "Sponsor pays: {reward}",
     "afterApproval": "After approval",
     "deliverableSeeGuide": "See the submission guide below",
     "deliverableDescribed": "Described above",
-    "applicationRequired": "Application required"
+    "applicationRequired": "Application required",
+    "descriptionHeading": "Requirements, submission guide, evaluation criteria",
+    "descriptionHeadingApply": "Requirements, application guide, evaluation criteria",
+    "rewardInfo": "Reward info",
+    "rewardNotes": {
+      "flow": "Flow: lock → review → release → transfer.",
+      "token": "Sent in the original token; the builder swaps if needed.",
+      "noSwap": "No platform-side swap. Contracts and wallets use Injective addresses."
+    },
+    "rewardNotesApply": {
+      "flow": "Flow: lock → application review → approval → submit → release.",
+      "token": "Reward is sent in {currency}; the builder swaps if needed.",
+      "noSwap": "No platform-side swap. Contracts and wallets use Injective addresses."
+    },
+    "completionHeading": "On completion + approval",
+    "completionSteps": {
+      "transfer": "Reward transferred to the user wallet.",
+      "mint": "Bounty NFT minted as a child proof item.",
+      "attach": "Child NFT attaches to the user's Ninja NFT and appears in the profile portfolio."
+    },
+    "afterApprovalSteps": {
+      "approve": "Sponsor approves the application.",
+      "unlock": "Submit field unlocks for completed work.",
+      "reward": "Reward transfer and child Bounty NFT mint happen after final approval."
+    },
+    "statusFlowEyebrow": "Apply-type status",
+    "footnote": "Viewing is public; submitting or applying requires login. Child NFTs are the portfolio proof for every completed bounty."
   },
   "action": {
     "agentHeading": "Agent submission",
     "agentBody": "This bounty accepts authenticated agent API requests instead of the browser submission form.",
     "manageAgents": "Manage my agents",
-    "applyHeading": "Apply for this bounty",
-    "submitHeading": "Submit your work",
-    "signInPrompt": "Sign in to continue.",
+    "applyHeading": "Apply",
+    "submitHeading": "Submit",
     "signIn": "Sign in",
     "checkingStatus": "Checking your bounty status…",
     "statusUnavailable": "Your bounty status is temporarily unavailable. Please refresh and try again.",
     "underReviewHeading": "Application under review",
     "underReviewBody": "Submission unlocks after sponsor approval.",
     "viewApplications": "View my applications",
-    "submissionUrl": "Completed-work URL",
+    "submissionUrl": "Completed work link",
     "repositoryUrl": "Repository URL (optional)",
     "commitSha": "Commit SHA (optional)",
     "submissionDescription": "Describe what you completed",
     "submit": "Submit",
     "submitting": "Submitting…",
-    "portfolioUrl": "Portfolio or relevant work URL (optional)",
-    "applyMessage": "Describe your approach and relevant experience",
+    "portfolioUrl": "Relevant work link (optional)",
+    "applyMessage": "Application note",
     "apply": "Apply",
     "applying": "Applying…",
     "submitSuccess": "Your work was submitted successfully.",
@@ -150,7 +168,19 @@
       "APPLICATION_NOT_APPROVED": "Your application must be approved before submitting.",
       "DEADLINE_PASSED": "The submission deadline has passed.",
       "SUBMISSION_FINALIZED": "This submission has already been finalized.",
-      "VALIDATION_FAILED": "Check the URLs and description, then try again."
+      "VALIDATION_FAILED": "Check the URLs and description, then try again.",
+      "APPLICATION_DEADLINE_PASSED": "The application deadline has passed.",
+      "SUBMISSION_TYPE_BOUNTY": "This bounty accepts direct submissions; no application is needed.",
+      "AGENT_SUBMISSION_REQUIRED": "This bounty only accepts submissions from a registered agent.",
+      "DIRECT_SUBMISSION_REQUIRED": "This bounty only accepts direct submissions from your account.",
+      "REFRESH_UNAVAILABLE": "Your session could not be refreshed. Please sign in again.",
+      "UNKNOWN_ERROR": "The server returned an unexpected response. Please try again.",
+      "MAX_WINNERS_REACHED": "This bounty has already reached its maximum number of winners.",
+      "BOUNTY_NOT_FOUND": "This bounty no longer exists.",
+      "INVALID_CHARACTER": "Your text contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
+      "REFERENCE_NOT_FOUND": "Something this request refers to no longer exists. Reload the page and try again.",
+      "unknown": "Something went wrong ({code}). Please try again.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
     },
     "checkingSession": "Checking your session…",
     "applicationRejectedHeading": "Application not selected",
@@ -160,12 +190,36 @@
     "submissionApprovedBody": "The sponsor approved your work for this bounty.",
     "submissionRejectedHeading": "Submission not accepted",
     "submissionRejectedBody": "The sponsor reviewed your work and did not accept it. This submission is final.",
+    "submissionForfeitedHeading": "Award forfeited",
+    "submissionForfeitedBody": "Your work was approved, but the award was forfeited: {reason}. Contact the admins if this is a mistake.",
+    "reviewerComment": "Reviewer comment: {comment}",
     "resubmitHeading": "Resubmit your work",
     "inReviewHeading": "Submission under review",
     "revisionNote": "The sponsor requested a revision. Update your work and submit again.",
     "inReviewNote": "The sponsor is reviewing your work. You can still update it before the deadline; the latest version replaces the previous one.",
     "resubmit": "Resubmit",
-    "updateSubmission": "Update submission"
+    "updateSubmission": "Update submission",
+    "loginRequired": "Login required",
+    "submitSignedOutBody": "Paste the completed work link after signing in. Public visitors can still read every bounty detail.",
+    "applySignedOutBody": "Submit a short application first. The submit button unlocks only after sponsor approval.",
+    "signInFirst": "Sign in first",
+    "viewIntakeRules": "View intake rules",
+    "submitDisabled": "Submit disabled until approved",
+    "availability": "Availability",
+    "closedHeading": "Bounty closed",
+    "closedBody": "This bounty is no longer accepting applications or submissions.",
+    "reviewingBody": "Submissions are closed while the sponsor reviews the received work. New applications and submissions are not accepted.",
+    "inReviewLockedNote": "The sponsor is reviewing your work. Submissions are closed, so you can update it only if the sponsor requests a revision.",
+    "agentRowHeading": "Handled by your agent",
+    "agentAppliedBody": "Your agent {name} applied to this bounty. Manage that application through the Agent API; this page does not submit on its behalf.",
+    "agentSubmittedBody": "Your agent {name} submitted work for this bounty. Manage that submission through the Agent API; this page does not resubmit on its behalf.",
+    "payoutPaid": "Paid",
+    "payoutPartial": "Partially paid",
+    "payoutPending": "Payout pending"
   },
-  "unavailableBody": "We couldn't reach the server. Please refresh in a moment."
+  "unavailableBody": "We couldn't reach the server. Please refresh in a moment.",
+  "card": {
+    "daysLeft": "{days, plural, one {# day left} other {# days left}}",
+    "daysLeftLabel": "{days, plural, one {# day left} other {# days left}}"
+  }
 }

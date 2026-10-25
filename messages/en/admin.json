@@ -12,13 +12,43 @@
     "deleteConfirm": "Delete {title}?",
     "savedDescription": "\"{title}\" was saved.",
     "saveFailed": "Save failed",
-    "deleteFailed": "Delete failed"
+    "deleteFailed": "Delete failed",
+    "deleteEyebrow": "Delete",
+    "deleteDescription": "This removes the record from the platform. Public pages update immediately.",
+    "deleteCallout": "This cannot be undone.",
+    "urlHint": "https://… or /media/… path",
+    "urlInvalid": "Enter an http(s) URL (or an allowed site path).",
+    "orderInvalid": "Enter a whole number from 0 up.",
+    "required": "This field is required.",
+    "tooLong": "Too long: use at most {max} characters.",
+    "fixFields": "Fix the highlighted fields before saving.",
+    "saving": "Saving…",
+    "removeImage": "Remove image",
+    "errors": {
+      "INVALID_CHARACTER": "A field contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
+      "INVALID_DATE": "A date or time is not on the calendar (for example February 31). Correct it and try again.",
+      "REFERENCE_NOT_FOUND": "This record points to something that no longer exists. Reload the page and try again.",
+      "BOUNTY_NOT_FOUND": "The bounty no longer exists. Reload the page to refresh the list.",
+      "BOUNTY_HAS_OPEN_FUNDS": "This bounty still holds funds in the multisig (a confirmed deposit not fully paid out, or an open payout). Finish or refund the payouts before deleting it.",
+      "NOTICE_NOT_FOUND": "This notice no longer exists (another admin may have deleted it). The list was refreshed.",
+      "HIGHLIGHT_NOT_FOUND": "This highlight no longer exists (another admin may have deleted it). The list was refreshed.",
+      "USER_NOT_FOUND": "This user no longer exists or has withdrawn. Reload the page to refresh the list.",
+      "USDC_EVM_CONTRACT_NOT_CONFIGURED": "The server has no USDC contract address configured, so a USDC reward cannot be created. Ask the operator to set it, or use INJ.",
+      "INJECTIVE_EVM_CHAIN_NOT_CONFIGURED": "The server has no Injective EVM chain ID configured, so a USDC reward cannot be created. Ask the operator to set it, or use INJ.",
+      "DEADLINE_IN_PAST": "The deadline cannot be moved into the past. Pick a future date and time, or keep the saved deadline.",
+      "MEDIA_FILE_TOO_LARGE": "The image is larger than 5 MB. Choose a smaller file and try again.",
+      "MEDIA_FILE_TYPE_UNSUPPORTED": "Only PNG, JPEG and WebP images can be uploaded. Choose a different file and try again.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+    }
   },
   "tabs": {
     "users": "User Mgmt",
     "bounties": "Bounty Mgmt",
     "hallOfFame": "Hall of Fame",
-    "notices": "Notices"
+    "notices": "Notices",
+    "operations": "Operations",
+    "nftJobs": "NFT Jobs",
+    "audit": "Audit log"
   },
   "gate": {
     "checking": "Checking admin access…",
@@ -29,10 +59,9 @@
   },
   "users": {
     "metaTitle": "Admin · Users | Ninja Labs",
-    "metaDescription": "Manage user access, wallet connections, and member roles.",
-    "eyebrow": "ADMIN",
-    "title": "User management",
-    "description": "Manage user access, wallet connections, and member roles.",
+    "metaDescription": "Review sign-ups, assign official member roles, and remove members without deleting their public profiles.",
+    "title": "User Management & Member Assignment",
+    "description": "Review sign-ups, assign official member roles, and remove members without deleting their public profiles.",
     "columns": {
       "nickname": "Nickname",
       "email": "Email",
@@ -49,6 +78,8 @@
     "emptyTitle": "No users match your search",
     "emptyBody": "Try a different email or nickname.",
     "resetSearch": "Reset search",
+    "loading": "Loading users…",
+    "retry": "Try again",
     "roles": {
       "Core": "Core",
       "Dev": "Dev",
@@ -83,14 +114,14 @@
       "roleGroupLabel": "Member role",
       "displayOrder": "Display order",
       "displayOrderInvalid": "Enter a whole number of 1 or more, or leave it empty."
-    }
+    },
+    "loadMore": "Load more"
   },
   "bounties": {
     "metaTitle": "Admin · Bounties | Ninja Labs",
-    "metaDescription": "Create and manage sponsor-backed bounties.",
-    "eyebrow": "ADMIN",
-    "title": "Bounty management",
-    "description": "Create and manage sponsor-backed bounties.",
+    "metaDescription": "Create sponsor-backed bounties, manage intake mode, and review live reward status.",
+    "title": "Bounty Registration & Management",
+    "description": "Create sponsor-backed bounties, manage intake mode, and review live reward status.",
     "newBounty": "+ New Bounty",
     "columns": {
       "title": "Title",
@@ -125,29 +156,29 @@
     "open": "Open",
     "close": "Close",
     "form": {
-      "eyebrowCreate": "BOUNTY",
-      "eyebrowEdit": "EDIT BOUNTY",
-      "titleCreate": "New Bounty",
-      "titleEdit": "Edit Bounty",
+      "eyebrowCreate": "New bounty form",
+      "eyebrowEdit": "Edit bounty form",
+      "titleCreate": "Create sponsor-backed work",
+      "titleEdit": "Edit bounty",
       "title": "Title",
-      "titlePlaceholder": "Bounty title",
+      "titlePlaceholder": "Build an iAsset alert component",
       "sponsor": "Sponsor",
-      "sponsorPlaceholder": "Sponsor name",
+      "sponsorPlaceholder": "Injective",
       "deadline": "Deadline",
       "reward": "Reward",
-      "rewardCurrency": "Reward currency",
+      "rewardCurrency": "Reward token",
       "rewardAmount": "Reward amount",
-      "amountPlaceholder": "Amount",
-      "intake": "Intake",
+      "amountPlaceholder": "500",
+      "intake": "Application intake",
       "intakeHint": "Allow submissions from the public bounty page.",
       "submissionMode": "Submission mode",
       "submissionModeHint": "Agent mode accepts applications and submissions through the agent API key.",
       "coverImage": "Cover image",
-      "tags": "Tags",
-      "description": "Description",
-      "descriptionPlaceholder": "Describe the bounty",
-      "submissionGuide": "Submission guide",
-      "submissionGuidePlaceholder": "Add evaluation criteria and submission guidance",
+      "tags": "Field tags",
+      "description": "Description (markdown)",
+      "descriptionPlaceholder": "Describe requirements, deliverables, and sponsor context.",
+      "submissionGuide": "Submission guide / evaluation criteria",
+      "submissionGuidePlaceholder": "Explain what reviewers will check before reward release.",
       "deliverables": "Deliverables",
       "deliverablesPlaceholder": "One deliverable per line",
       "deliverablesHint": "One item per line; saved as the public requirements list.",
@@ -158,11 +189,16 @@
       "errors": {
         "summary": "Fix the highlighted fields before saving.",
         "required": "This field is required.",
+        "tooLong": "Too long: use at most {max} characters.",
         "deadlineInvalid": "Enter a valid date and time.",
         "deadlinePast": "Choose a deadline in the future.",
-        "amountInvalid": "Enter an amount greater than 0, or leave it empty for a draft.",
-        "deliverablesRequired": "Add at least one deliverable or a submission guide."
-      }
+        "amountInvalid": "Enter an amount greater than 0 with no more decimals than the token supports (USDC 6, INJ 18), or leave it empty for a draft.",
+        "deliverablesRequired": "Add at least one deliverable or a submission guide.",
+        "titleTooLong": "Use at most 200 characters.",
+        "sponsorTooLong": "Use at most 100 characters."
+      },
+      "rewardLockedHint": "Reward is fixed once the bounty exists; it cannot be changed here.",
+      "rewardNote": "On creation, the reward token is locked. Reward flow = lock → release → transfer, with no swap."
     },
     "toast": {
       "loadFailedTitle": "Bounties unavailable",
@@ -174,18 +210,20 @@
       "statusUpdatedDescription": "{title} is now {to, select, OPEN {open} other {submission closed}}.",
       "transitionFailedTitle": "Transition failed",
       "transitionFailedDescription": "This status transition is not currently allowed.",
+      "transitionBlockedDescription": "Something still blocks this transition (for example the reward deposit is not confirmed). Open Operations for this bounty to see what.",
       "deletedTitle": "Bounty deleted",
       "deleteFailedDescription": "The bounty was not deleted."
-    }
+    },
+    "operations": "Operations"
   },
   "hallOfFame": {
     "metaTitle": "Admin · Hall of Fame | Ninja Labs",
-    "metaDescription": "Curate the milestones and highlights that celebrate the Ninja Labs community.",
-    "title": "Hall of Fame",
-    "description": "Curate the milestones and highlights that celebrate the Ninja Labs community.",
+    "metaDescription": "Review auto-aggregated platform stats and curate the highlights shown on the public Hall of Fame page.",
+    "title": "Hall of Fame Curation",
+    "description": "Review auto-aggregated platform stats and curate the highlights shown on the public Hall of Fame page.",
     "statsEyebrow": "Read-only",
     "statsTitle": "Cumulative stats",
-    "statsBadge": "auto-aggregated / read-only",
+    "statsBadge": "auto-aggregated",
     "highlights": {
       "eyebrow": "Manual",
       "title": "Highlight curation",
@@ -200,22 +238,28 @@
       "types": {
         "milestone": "Milestone",
         "featuredBounty": "Featured bounty",
-        "partnership": "Partnership"
+        "partnership": "Partnership",
+        "project": "Project",
+        "award": "Award",
+        "other": "Other"
       },
       "form": {
-        "eyebrowCreate": "Create",
-        "eyebrowEdit": "Edit",
+        "eyebrowCreate": "Add item form",
+        "eyebrowEdit": "Edit item form",
         "titleCreate": "Add highlight",
         "titleEdit": "Edit highlight",
         "type": "Type",
         "title": "Title",
-        "titlePlaceholder": "Highlight title",
+        "titlePlaceholder": "First 500 INJ reward released",
         "description": "Description",
-        "image": "Image",
+        "image": "Image upload",
         "uploadImage": "Upload image",
         "link": "Link",
         "optional": "(optional)",
-        "displayOrder": "Display order"
+        "displayOrder": "Display order",
+        "linkPlaceholder": "/bounties/12",
+        "published": "Visibility",
+        "removeImage": "Remove image"
       },
       "toast": {
         "loadFailedTitle": "Highlights unavailable",
@@ -225,14 +269,18 @@
         "saveFailedDescription": "The highlight was not saved.",
         "deletedTitle": "Highlight deleted",
         "deleteFailedDescription": "The highlight was not deleted."
+      },
+      "publishStates": {
+        "published": "Published",
+        "draft": "Hidden"
       }
     }
   },
   "notices": {
     "metaTitle": "Admin · Notices | Ninja Labs",
-    "metaDescription": "Publish updates and resources for the Ninja Labs community.",
-    "title": "Notices",
-    "description": "Publish updates and resources for the Ninja Labs community.",
+    "metaDescription": "Publish community feed posts, ecosystem updates, and event announcements that surface on public pages.",
+    "title": "Notices / News Management",
+    "description": "Publish community feed posts, ecosystem updates, and event announcements that surface on public pages.",
     "newPost": "+ New Post",
     "columns": {
       "title": "Title",
@@ -253,18 +301,19 @@
       "published": "Published"
     },
     "form": {
-      "eyebrowCreate": "New post",
-      "eyebrowEdit": "Edit post",
-      "titleCreate": "New post",
+      "eyebrowCreate": "New post form",
+      "eyebrowEdit": "Edit post form",
+      "titleCreate": "Create community feed post",
       "titleEdit": "Edit post",
       "title": "Title",
-      "titlePlaceholder": "Post title",
+      "titlePlaceholder": "Injective builders ship July bounty batch",
       "category": "Category",
       "thumbnail": "Thumbnail",
-      "externalLink": "External link",
+      "externalLink": "External link (optional)",
       "body": "Body (markdown)",
-      "bodyPlaceholder": "Write your post in markdown",
-      "status": "Status"
+      "bodyPlaceholder": "Write the notice body, summary links, and sponsor context.",
+      "status": "Status",
+      "externalLinkPlaceholder": "https://injective.com/..."
     },
     "toast": {
       "loadFailedTitle": "Notices unavailable",
@@ -274,6 +323,362 @@
       "saveFailedDescription": "The notice was not saved.",
       "deletedTitle": "Post deleted",
       "deleteFailedDescription": "The notice was not deleted."
+    }
+  },
+  "operations": {
+    "metaTitle": "Admin · Operations | Ninja Labs",
+    "metaDescription": "Confirm reward deposits, review applications and submissions, run payouts and move bounties through their lifecycle.",
+    "title": "Bounty Operations",
+    "description": "Confirm reward deposits, review applications and submissions, run payouts and move bounties through their lifecycle.",
+    "adminOnlyBadge": "ADMIN ONLY",
+    "pickBounty": "Bounty",
+    "noBounties": "No bounties yet. Create one under Bounty Mgmt first.",
+    "loading": "Loading operations…",
+    "loadFailed": "The operations data could not be loaded.",
+    "retry": "Try again",
+    "refresh": "Refresh",
+    "working": "Working…",
+    "bountyEyebrow": "Selected bounty",
+    "bountyMeta": "Submission deadline {deadline} · up to {maxWinners, plural, one {# winner} other {# winners}}",
+    "bountyStatuses": {
+      "DRAFT": "Draft",
+      "FUNDING_PENDING": "Funding pending",
+      "OPEN": "Open",
+      "SUBMISSION_CLOSED": "Submissions closed",
+      "IN_REVIEW": "In review",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "rewardStatuses": {
+      "DEPOSIT_PENDING": "Deposit pending",
+      "FUNDED": "Funded",
+      "PARTIALLY_PAID": "Partially paid",
+      "PAID": "Paid",
+      "REFUND_PENDING": "Refund pending",
+      "REFUNDED": "Refunded",
+      "CANCELLED": "Cancelled"
+    },
+    "applicationStatuses": {
+      "PENDING": "Pending",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected",
+      "WITHDRAWN": "Withdrawn"
+    },
+    "submissionStatuses": {
+      "SUBMITTED": "Submitted",
+      "RESUBMITTED": "Resubmitted",
+      "IN_REVIEW": "In review",
+      "REVISION_REQUESTED": "Revision requested",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "payoutStatuses": {
+      "REQUESTED": "Requested",
+      "AWAITING_MULTISIG_APPROVAL": "Awaiting multisig",
+      "APPROVED": "Approved",
+      "BROADCASTING": "Broadcasting",
+      "PAID": "Paid",
+      "FAILED": "Failed",
+      "CANCELLED": "Cancelled"
+    },
+    "actor": {
+      "agent": "Agent",
+      "owner": "Owner: {nickname}",
+      "unknown": "Unknown user"
+    },
+    "blockers": {
+      "DEADLINE_PASSED": "The submission deadline has passed. Extend it under Bounty Mgmt first.",
+      "REWARDS_UNFUNDED": "{count, plural, one {# reward deposit is} other {# reward deposits are}} not confirmed yet.",
+      "PENDING_APPLICATIONS": "{count, plural, one {# application is} other {# applications are}} still pending review.",
+      "UNSUBMITTED_PARTICIPANTS": "{count, plural, one {# approved participant has} other {# approved participants have}} not submitted yet. Wait for their work or the deadline.",
+      "UNRESOLVED_SUBMISSIONS": "{count, plural, one {# submission still needs} other {# submissions still need}} a final review (including requested revisions).",
+      "UNPAID_WINNERS": "Every approved winner needs a payout recorded as paid, and no payout may still be open.",
+      "unknown": "Blocked by the server ({code})."
+    },
+    "lifecycle": {
+      "eyebrow": "Lifecycle",
+      "title": "Status transitions",
+      "none": "No further transitions — this bounty is finished.",
+      "to": "→ {status}",
+      "actions": {
+        "FUNDING_PENDING": "Mark funding pending",
+        "OPEN": "Open bounty",
+        "SUBMISSION_CLOSED": "Close submissions",
+        "IN_REVIEW": "Start review phase",
+        "COMPLETED": "Complete bounty",
+        "CANCELLED": "Cancel bounty"
+      },
+      "hints": {
+        "FUNDING_PENDING": "Waits for the sponsor's deposit to the multisig.",
+        "OPEN": "Publishes the bounty and accepts applications/submissions.",
+        "SUBMISSION_CLOSED": "Stops new applications and submissions; reviews continue.",
+        "IN_REVIEW": "Final review phase; requested revisions can still be resubmitted.",
+        "COMPLETED": "Closes the bounty once every review and payout is settled.",
+        "CANCELLED": "Ends the bounty without winners. Refund any deposit off-platform."
+      },
+      "cancelTitle": "Cancel this bounty?",
+      "cancelDescription": "\"{title}\" stops accepting work and no further reviews or payout requests are possible.",
+      "cancelCallout": "Cancelling cannot be undone from the console."
+    },
+    "rewards": {
+      "eyebrow": "Rewards",
+      "title": "Deposits",
+      "description": "Confirm the sponsor's deposit to the multisig before opening. Amounts are exact token units.",
+      "empty": "This bounty has no reward.",
+      "columns": {
+        "token": "Token",
+        "status": "Status",
+        "posted": "Posted",
+        "deposited": "Deposited",
+        "allocated": "Allocated",
+        "depositTx": "Deposit tx",
+        "action": "Action"
+      },
+      "custody": "Multisig {address}",
+      "allocatedOf": "{allocated} of {cap}",
+      "confirm": "Confirm deposit",
+      "modalTitle": "Confirm reward deposit",
+      "modalDescription": "Record the on-chain deposit of at least {amount} to {address}. Check the transaction on the explorer first.",
+      "depositedAmount": "Deposited amount ({symbol})",
+      "amountBelowPosted": "The deposit must cover the posted reward ({amount})."
+    },
+    "applications": {
+      "eyebrow": "Applications",
+      "title": "Applicants",
+      "empty": "No applications yet.",
+      "columns": {
+        "applicant": "Applicant",
+        "message": "Message",
+        "status": "Status",
+        "applied": "Applied",
+        "action": "Action"
+      },
+      "portfolio": "Portfolio",
+      "reviewNote": "Note: {note}",
+      "actions": {
+        "APPROVED": "Approve",
+        "REJECTED": "Reject"
+      },
+      "approvalClosed": "Approval needs an open bounty with a future deadline; only rejection is possible now.",
+      "modalDescription": "Applicant: {name}. The note is shown to the applicant.",
+      "approveTitle": "Approve application",
+      "rejectTitle": "Reject application"
+    },
+    "submissions": {
+      "eyebrow": "Submissions",
+      "title": "Work review",
+      "empty": "No submissions yet.",
+      "columns": {
+        "submitter": "Submitter",
+        "work": "Latest revision",
+        "status": "Status",
+        "wallet": "Payout wallet",
+        "action": "Action"
+      },
+      "revision": "Revision {revision}",
+      "workLink": "Open work",
+      "repoLink": "Repository",
+      "history": "Review history ({count})",
+      "historyItem": "{decision} · rev {revision} · {date}",
+      "noWallet": "No linked wallet — a payout cannot be requested",
+      "decisions": {
+        "START_REVIEW": "Start review",
+        "REQUEST_REVISION": "Request revision",
+        "APPROVE": "Approve",
+        "REJECT": "Reject"
+      },
+      "modalDescription": "Submitter: {name}. This decision applies to revision {revision}; if a newer revision arrives first, the server refuses it.",
+      "modalTitles": {
+        "START_REVIEW": "Start reviewing this submission",
+        "REQUEST_REVISION": "Request a revision",
+        "APPROVE": "Approve this submission",
+        "REJECT": "Reject this submission"
+      }
+    },
+    "payouts": {
+      "eyebrow": "Payouts",
+      "title": "Winner payouts",
+      "empty": "No payouts requested yet.",
+      "policyTwoPerson": "Two-person rule: a payout must be approved by a different admin than the one who requested it.",
+      "policySelfAllowed": "Self-approval is enabled on this deployment (PAYOUT_ALLOW_SELF_APPROVAL). Self-approvals are audited separately.",
+      "headroom": "Available to allocate: {amount}",
+      "request": "Request payout",
+      "noCandidates": "No approved submission without a payout.",
+      "columns": {
+        "recipient": "Recipient",
+        "amount": "Amount",
+        "status": "Status",
+        "requested": "Requested by",
+        "approved": "Approved by",
+        "tx": "Payout tx",
+        "action": "Action"
+      },
+      "byYou": "You",
+      "selfBlocked": "You requested this payout, so another admin must approve it (two-person rule).",
+      "approve": "Approve",
+      "markPaid": "Mark paid",
+      "selfAllowedCallout": "You requested this payout. Approving it yourself is allowed here but is recorded as a self-approval in the audit log.",
+      "requestTitle": "Request payout",
+      "requestDescription": "Up to {amount} can still be allocated from this reward.",
+      "approveTitle": "Approve payout",
+      "approveDescription": "Confirm the multisig approved sending {amount} to {address}.",
+      "paidTitle": "Record payment",
+      "paidDescription": "Paste the multisig transaction that sent {amount} to {address}.",
+      "submission": "Approved submission",
+      "amount": "Amount ({symbol})",
+      "amountOverHeadroom": "Only {amount} is left to allocate from this reward."
+    },
+    "form": {
+      "txHash": "Transaction hash",
+      "txHashInvalid": "Enter a 32-byte hex transaction hash (64 hex characters, optional 0x).",
+      "amountInvalid": "Enter a positive {symbol} amount with no more decimals than the token supports.",
+      "amountHint": "Token units (e.g. 12.5); converted to base units before sending.",
+      "noteOptional": "Note (optional)",
+      "commentOptional": "Comment (optional)",
+      "commentRequired": "Comment (required)"
+    },
+    "toast": {
+      "loadFailedTitle": "Operations unavailable",
+      "actionFailedTitle": "Action failed",
+      "bountiesFailedTitle": "Bounties unavailable",
+      "bountiesFailedDescription": "Could not load the bounty list.",
+      "transitionedTitle": "Status updated",
+      "transitionedDescription": "{title} is now {status}.",
+      "depositConfirmedTitle": "Deposit confirmed",
+      "applicationApprovedTitle": "Application approved",
+      "applicationRejectedTitle": "Application rejected",
+      "submission": {
+        "START_REVIEW": "Review started",
+        "REQUEST_REVISION": "Revision requested",
+        "APPROVE": "Submission approved",
+        "REJECT": "Submission rejected"
+      },
+      "payoutRequestedTitle": "Payout requested",
+      "payoutRequestedDescription": "{amount} for {name}",
+      "payoutApprovedTitle": "Payout approved",
+      "payoutPaidTitle": "Payment recorded"
+    },
+    "errors": {
+      "BOUNTY_NOT_FOUND": "The bounty no longer exists. Reload the page.",
+      "BOUNTY_REVIEW_CLOSED": "This bounty is no longer in progress, so reviews and payout requests are closed.",
+      "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "This application was already reviewed or withdrawn.",
+      "APPLICATION_APPROVAL_CLOSED": "Applications can only be approved while the bounty is open and before the submission deadline.",
+      "SUBMISSION_NOT_FOUND": "The submission no longer exists.",
+      "SUBMISSION_NOT_REVIEWABLE": "This submission cannot take that decision in its current status.",
+      "SUBMISSION_REVISION_CHANGED": "A newer revision was submitted while you were reviewing. Check the latest revision and decide again.",
+      "REVISION_COMMENT_REQUIRED": "Add a comment explaining what needs to change.",
+      "MAX_WINNERS_REACHED": "The bounty already has its maximum number of approved winners.",
+      "INVALID_DECISION": "That review decision is not supported.",
+      "REWARD_NOT_FOUND": "The reward no longer exists.",
+      "DEPOSIT_BELOW_REWARD_AMOUNT": "The deposit amount is below the posted reward. Enter at least the posted amount.",
+      "REWARD_NOT_FOUND_OR_NOT_PENDING": "The deposit was already confirmed, or the reward no longer exists. Reload the page.",
+      "REWARD_NOT_FUNDED": "Confirm the reward deposit before requesting payouts.",
+      "INVALID_TX_HASH": "That is not a valid transaction hash.",
+      "INVALID_TOKEN_AMOUNT": "The amount must be a positive whole number of base units.",
+      "TX_HASH_ALREADY_USED": "This transaction hash is already recorded (as a deposit, or as another bounty's payout).",
+      "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND": "The submission is not approved, or its owner has no linked primary wallet.",
+      "APPROVED_SUBMISSION_NOT_FOUND": "The paid submission is no longer approved.",
+      "PAYOUT_ALREADY_REQUESTED": "A payout for this submission and reward already exists.",
+      "PAYOUT_EXCEEDS_AVAILABLE_REWARD": "The amount exceeds what is left to allocate from this reward.",
+      "PAYOUT_NOT_FOUND_OR_WRONG_STATUS": "This payout already moved on (or no longer exists). The list has been refreshed.",
+      "PAYOUT_SELF_APPROVAL": "You requested this payout, so you cannot approve it. Ask another admin (two-person rule).",
+      "NFT_JOB_NOT_FOUND_OR_NOT_FAILED": "This job is no longer failed (it may already be retrying).",
+      "INVALID_TRANSITION": "That status transition is not allowed from the current status.",
+      "TRANSITION_BLOCKED": "The transition is blocked. See the blockers listed under it.",
+      "VALIDATION_FAILED": "The server rejected the input. Check the fields and try again.",
+      "INVALID_CHARACTER": "A field contains characters that cannot be saved. Remove them and try again.",
+      "ADMIN_ONLY": "Your account no longer has admin permission.",
+      "UNAUTHORIZED": "Your session expired. Sign in again.",
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
+      "REFRESH_UNAVAILABLE": "Your session could not be refreshed. Sign in again.",
+      "NETWORK_ERROR": "The server could not be reached. Check your connection and try again.",
+      "unknown": "Something went wrong ({code}).",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+    }
+  },
+  "nftJobs": {
+    "metaTitle": "Admin · NFT Jobs | Ninja Labs",
+    "metaDescription": "Inspect NFT mint and attach jobs and retry the ones that failed permanently.",
+    "title": "NFT Job Console",
+    "description": "Inspect NFT mint and attach jobs and retry the ones that failed permanently.",
+    "filterLabel": "Job status",
+    "statuses": {
+      "FAILED": "Failed",
+      "PENDING": "Pending",
+      "PROCESSING": "Processing"
+    },
+    "hints": {
+      "FAILED": "Jobs that failed all 5 attempts. Fix the cause (gas, contract, wallet), then retry — the worker picks them up within a minute.",
+      "PENDING": "Queued or waiting for their next attempt (failed attempts retry every 10 minutes).",
+      "PROCESSING": "Being minted right now. Jobs stuck here for 15 minutes are requeued automatically."
+    },
+    "empty": "No jobs in this status.",
+    "columns": {
+      "job": "Job",
+      "owner": "Owner",
+      "attempts": "Failed attempts",
+      "lastError": "Last error",
+      "updated": "Updated",
+      "action": "Action"
+    },
+    "jobTypes": {
+      "MINT_PARENT": "Mint ninja NFT",
+      "MINT_CHILD": "Mint completion NFT",
+      "ATTACH_CHILD": "Attach completion NFT",
+      "RETRY_MINT": "Retry mint",
+      "RETRY_ATTACH": "Retry attach"
+    },
+    "nftTypes": {
+      "NINJA_PARENT": "Ninja NFT",
+      "BOUNTY_COMPLETION_CHILD": "Completion NFT"
+    },
+    "nftLine": "{type} · NFT {status}",
+    "retry": "Retry",
+    "pagination": "Job pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "toast": {
+      "loadFailedTitle": "NFT jobs unavailable",
+      "loadFailedDescription": "Could not load NFT jobs.",
+      "retriedTitle": "Job queued again",
+      "retriedDescription": "The worker will retry it within a minute.",
+      "retryFailedTitle": "Retry failed"
+    }
+  },
+  "audit": {
+    "metaTitle": "Admin · Audit log | Ninja Labs",
+    "metaDescription": "Read-only review of payout approvals and ops-script actions recorded in the audit log.",
+    "title": "Audit log",
+    "description": "Read-only review of payout approvals and ops-script actions recorded in the audit log.",
+    "filterLabel": "Audit log filters",
+    "entityType": "Entity type",
+    "entityTypePlaceholder": "e.g. payout",
+    "entityId": "Entity ID",
+    "entityIdPlaceholder": "UUID",
+    "apply": "Search",
+    "reset": "Reset",
+    "invalidEntityId": "Entity ID must be a UUID.",
+    "columns": {
+      "time": "Time",
+      "actor": "Actor",
+      "action": "Action",
+      "entity": "Entity"
+    },
+    "actors": {
+      "script": "Ops script",
+      "agent": "Agent",
+      "unknown": "Unknown"
+    },
+    "empty": "No audit log entries match.",
+    "pagination": "Audit log pages",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "total": "{total} entries",
+    "toast": {
+      "loadFailedTitle": "Audit log unavailable",
+      "loadFailedDescription": "Could not load the audit log."
     }
   }
 }

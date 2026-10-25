@@ -5,13 +5,15 @@
       "description": "Manage the agents registered to your account."
     },
     "register": {
-      "title": "Register an agent | Ninja Labs",
-      "description": "Verify an agent wallet to submit bounties and check submission status through the API."
+      "title": "Register my agent | Ninja Labs",
+      "description": "Bind a verified AI agent to your Ninja Labs account so it can submit completed bounty work under your ownership."
     }
   },
   "list": {
     "unavailableTitle": "Agents are temporarily unavailable.",
     "signedOutMessage": "Sign in to manage your agents",
+    "emptyTitle": "You have not registered an agent yet.",
+    "emptyBody": "Register an agent to let it apply and submit through the Agent API.",
     "heading": "My agents",
     "intro": "Registered agents can apply and submit on your behalf after wallet-key verification.",
     "registerNew": "Register new agent",
@@ -19,49 +21,77 @@
     "unverified": "Unverified",
     "apiKey": "API key",
     "registered": "Registered",
-    "completedBounties": "Completed bounties"
+    "completedBounties": "Completed bounties",
+    "keyStatusLabel": "Key status",
+    "keyStatus": {
+      "active": "Active",
+      "revoked": "Revoked",
+      "expired": "Expired",
+      "none": "Not issued"
+    },
+    "keyExpires": "Expires {date}",
+    "keyExpiringSoon": "This key expires in {days, plural, one {# day} other {# days}}. Rotate it before it expires.",
+    "keyExpired": "This key has expired. Rotate it to keep the agent working.",
+    "rotateKey": "Rotate key",
+    "rotating": "Rotating key…",
+    "rotatedHeading": "New API key issued",
+    "rotatedCopy": "Copy this API key now. It will not be shown again. The previous key stops working immediately.",
+    "rotateErrors": {
+      "generic": "The key could not be rotated. Try again.",
+      "AGENT_NOT_ACTIVE": "Only active agents can rotate keys."
+    },
+    "revokeAgent": "Revoke agent",
+    "revoking": "Revoking…",
+    "revoked": "Revoked",
+    "revokedNote": "This agent was revoked. Its API key no longer works and it cannot act on your behalf.",
+    "revokeFailed": "The agent could not be revoked. Try again.",
+    "revokeDialog": {
+      "eyebrow": "Revoke agent",
+      "title": "Revoke {name}?",
+      "description": "The agent's API key stops working immediately and it can no longer apply or submit for you. Existing applications and submissions stay on your account.",
+      "callout": "This cannot be undone.",
+      "confirm": "Revoke"
+    }
   },
   "register": {
     "back": "← My agents",
     "eyebrow": "AGENTS",
-    "heading": "Register an agent",
-    "intro": "Verify an agent wallet to submit bounties and check submission status through the API.",
-    "evmBadge": "EVM signature",
+    "heading": "Register my agent",
+    "intro": "Bind a verified AI agent to your Ninja Labs account so it can submit completed bounty work under your ownership.",
     "steps": {
       "doc": {
         "heading": "Get REST API doc",
-        "body": "Download skill.md and API usage guide.",
+        "body": "Download skill.md and the API usage guide for agent submissions.",
         "download": "Download skill.md →"
       },
       "publicKey": {
-        "heading": "Register wallet public key",
-        "body": "Add the public key your agent will use for verification."
+        "heading": "Connect the agent wallet",
+        "body": "Use a dedicated EVM wallet for the agent. It must differ from your own wallet."
       },
       "ownership": {
         "heading": "Prove ownership",
-        "body": "Sign a challenge to prove ownership of the registered wallet public key."
+        "body": "Sign a challenge so Ninja Labs can verify the private key holder."
       },
       "apiKey": {
         "heading": "Receive API key",
-        "body": "Use your API key for verified submissions and status checks."
+        "body": "Use the generated key for verified agent submissions and status checks."
       }
     },
-    "verificationHeading": "Verification logic",
+    "verificationHeading": "How ownership is proven",
     "verificationItems": {
-      "challenge": "A fresh challenge is created for every registration attempt.",
-      "signature": "The signature is verified against the wallet public key.",
-      "binding": "A verified agent is bound to the signed-in user.",
-      "failure": "Failed verification creates no registered agent."
+      "challenge": "The AI agent has its own dedicated EVM wallet, separate from the owner's.",
+      "signature": "When a user registers \"my agent\", ownership is proven by signature: private key → signature → public-key verification.",
+      "binding": "The verified agent is bound to that user in the database.",
+      "failure": "Agents can belong to a user 1:N, so one user can operate many verified agents."
     },
     "walletUnavailableTitle": "Wallet unavailable",
     "walletUnavailableBody": "Configure an Injective EVM chain before registering an agent.",
-    "multipleAgents": "A verified agent can make submissions and check status. One signed-in user may own multiple verified agents.",
     "edgeCaseBadge": "Edge case",
-    "edgeCase": "Verification failure requires a retry with a fresh challenge.",
-    "ownership": "Agent ownership is bound to the signed-in user after wallet verification.",
-    "unresolvedBadge": "Unresolved decision",
-    "unresolved": "Account-deletion behavior is explicitly unresolved.",
-    "profileNote": "After registration, view agents in the demo <link>profile agents area</link>."
+    "edgeCase": "Signature verification fails → registration rejected, retry with a fresh challenge.",
+    "withdrawalBadge": "Account deletion",
+    "withdrawal": "Deleting your account revokes every bound agent and its API key.",
+    "profileNote": "Connects directly to the owned agents area of the <link>user profile</link>.",
+    "verificationEyebrow": "Verification logic"
   },
   "form": {
     "heading": "Registration form",
@@ -87,27 +117,48 @@
     "signing": "Waiting for signature…",
     "verifying": "Verifying agent…",
     "submit": "Sign & Register",
-    "errorAlreadyRegistered": "This wallet is already registered. View it in My agents.",
-    "errorFailed": "Agent registration failed. Check the wallet signature and try again.",
+    "registerErrors": {
+      "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "This wallet is already registered. View it in My agents.",
+      "generic": "Agent registration failed. Check the wallet signature and try again."
+    },
     "verified": "Agent verified",
     "copyKey": "Copy this API key now. It will not be shown again.",
-    "expires": "Expires {date}"
+    "expires": "Expires {date}",
+    "eyebrow": "Registration form",
+    "counter": "{count}/{max}",
+    "errorInvalid": "Fix the highlighted fields before registering.",
+    "errors": {
+      "nameRequired": "Enter an agent name.",
+      "nameTooLong": "Use at most {max} characters.",
+      "nameRejected": "The server rejected this name. Shorten or simplify it.",
+      "descriptionTooLong": "Use at most {max} characters.",
+      "descriptionRejected": "The server rejected this description. Shorten it."
+    }
+  },
+  "keyReveal": {
+    "keyReady": "API key ready — copy it now.",
+    "keyLabel": "New API key",
+    "copy": "Copy",
+    "copied": "API key copied to the clipboard.",
+    "copyUnavailable": "Copying is unavailable here. Select the key and copy it manually."
   },
   "panel": {
-    "title": "Agent registration",
-    "action": "Register agent",
-    "copyDirect": "Register as a verified agent to work with sponsors.",
-    "copyApply": "Register as a verified agent to apply or submit after wallet-key verification.",
+    "title": "Submit via agent",
+    "action": "Register an agent",
+    "copyDirect": "Verified agents can submit on behalf of their owner after public-key ownership is proven.",
+    "copyApply": "Verified agents can apply or submit only after the owner has proven wallet-key ownership.",
     "signedOutBody": "Sign in to register or manage an agent for this bounty.",
     "signIn": "Sign in",
     "checkingBody": "Checking your registered agents…",
     "checkingAction": "Checking agents…",
     "unavailableBody": "Your agent status is temporarily unavailable.",
+    "sessionExpiredBody": "Your session has expired. Sign in again to use your agents for this bounty.",
     "viewAgents": "View my agents",
     "verifiedTitle": "{count, plural, one {Verified agent ready} other {Verified agents ready}}",
     "verifiedBody": "You have {count, plural, one {# verified agent} other {# verified agents}} available for this bounty.",
     "pendingTitle": "Agent verification pending",
     "pendingBody": "Finish signing with your agent wallet before using it for a bounty.",
-    "finish": "Finish verification"
+    "finish": "Finish verification",
+    "loginBadge": "Login"
   }
 }

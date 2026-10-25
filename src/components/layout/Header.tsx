@@ -2,6 +2,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { AuthArea } from "@/components/layout/AuthArea";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
+import { MobileMenu } from "@/components/layout/MobileMenu";
 import { NavLinks } from "@/components/layout/NavLinks";
 import { Link } from "@/i18n/navigation";
 
@@ -22,27 +23,23 @@ export function Header() {
       <div className="mx-auto grid h-full max-w-content grid-cols-[1fr_auto_1fr] items-center px-6">
         <Link className="flex items-center gap-2 justify-self-start" href="/" prefetch={true} aria-label={t("homeLabel")}>
           <Image
-            src="/figma/ninja-labs-mascot.png"
+            src="/brand/ninja-labs-mascot.svg"
             alt=""
-            width={28}
+            width={33}
             height={28}
-            className="rounded-logo"
           />
-          <span className="font-display text-xl font-bold text-ink">Ninja Labs</span>
+          <span className="hidden whitespace-nowrap font-display text-xl font-bold text-ink sm:inline">Ninja Labs</span>
         </Link>
 
         <nav className="col-start-2 hidden gap-7 md:flex" aria-label={t("mainNavigation")}>
           <NavLinks links={links} variant="desktop" />
         </nav>
 
-        <div className="col-start-3 flex items-center gap-2 justify-self-end">
+        <div className="col-start-3 flex items-center gap-1 justify-self-end sm:gap-2">
           <LocaleSwitcher />
           <AuthArea variant="desktop" />
 
-          <details className="relative md:hidden">
-            <summary className="flex cursor-pointer list-none items-center rounded-control px-3 py-3 text-sm leading-[21px] font-semibold text-ink-secondary [&::-webkit-details-marker]:hidden">
-              {t("menu")}
-            </summary>
+          <MobileMenu label={t("menu")}>
             <nav
               className="absolute right-0 top-full z-50 mt-2 flex w-44 flex-col gap-1 rounded-tile border border-border bg-surface p-2 shadow-card"
               aria-label={t("mobileNavigation")}
@@ -57,7 +54,7 @@ export function Header() {
               </Link>
               <AuthArea variant="mobile" />
             </nav>
-          </details>
+          </MobileMenu>
         </div>
       </div>
     </header>

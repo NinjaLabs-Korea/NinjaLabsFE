@@ -5,22 +5,23 @@
       "title": "Preview the Ninja Labs sign-in flow",
       "description": "Explore this step with a local session preview. It does not contact Google or create an account.",
       "disclosure": "Mock mode is local and test only. This preview does not contact Google or create an account.",
-      "statusTitle": "Preview status",
+      "statusTitle": "Edge cases",
       "edgeCases": {
         "first": "Selecting the button starts a local session preview only",
         "second": "Google authentication is not invoked"
       }
     },
     "api": {
-      "title": "Sign in to Ninja Labs",
-      "description": "Continue with Google to create your account. You will be redirected to Google and back here once you approve.",
+      "title": "Get started with Ninja Labs",
+      "description": "Start with Google — no wallet install needed.",
       "disclosure": "Signing in creates or restores your Ninja Labs account. We only receive your Google email. No password is shared.",
-      "statusTitle": "How it works",
+      "statusTitle": "Edge cases",
       "edgeCases": {
-        "first": "You are redirected to Google's consent screen and back after approval",
-        "second": "A new account starts at onboarding step 1; returning users resume their session"
+        "first": "Already signed-in user clicks Get Started → go to main.",
+        "second": "Google sign-in declined or failed → clear error and retry."
       }
-    }
+    },
+    "eyebrow": "Create account"
   },
   "wallet": {
     "metadata": {
@@ -61,7 +62,9 @@
         "term": "NFT",
         "detail": "Parent Ninja NFT mint is queued"
       }
-    }
+    },
+    "eyebrow": "Wallet",
+    "whatHappensEyebrow": "NFT minting"
   },
   "profile": {
     "metadata": {
@@ -69,15 +72,14 @@
       "description": "Spam control and profile quality"
     },
     "title": "Set up your profile",
-    "whyRequired": "Why all required",
-    "whyRequiredSubtitle": "Spam control and profile quality",
+    "whyRequired": "Spam control and profile quality",
     "requirements": {
-      "spamControl": "Spam control and profile quality",
-      "oneFlow": "Complete the signup funnel in one flow",
-      "noSkip": "No skipping or draft saving"
+      "spamControl": "Nickname alone cannot filter spam sign-ups, so nickname, field tags, and bio are mandatory.",
+      "oneFlow": "More required fields may increase drop-off, so the team monitors the per-step funnel after launch.",
+      "noSkip": "No draft saving on exit; re-entry starts over from the beginning of onboarding."
     },
     "form": {
-      "nicknameLabel": "Nickname",
+      "nicknameLabel": "Nickname*",
       "nicknamePlaceholder": "Enter your nickname",
       "fieldTags": "Field tags*",
       "tags": {
@@ -94,33 +96,55 @@
       "errors": {
         "nickname": "Enter a nickname of at least 2 characters.",
         "tags": "Choose at least one field tag.",
-        "bio": "Write a short intro."
+        "bio": "Write a short intro.",
+        "nicknameRejected": "The server rejected this nickname. Check the rules above.",
+        "bioRejected": "The server rejected this bio. Keep it under 1000 characters."
       },
       "saveErrors": {
         "network": "We couldn't save your profile. Check your connection and try again.",
         "session": "Your session has ended. Sign in again to continue.",
-        "nickname": "That nickname is already in use. Choose another one.",
+        "NICKNAME_TAKEN": "That nickname is already in use. Choose another one.",
         "invalid": "Check every field: the nickname must be 2-50 characters, and a bio and field tag are required.",
+        "INVALID_CHARACTER": "Your nickname or bio contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
+        "REFERENCE_NOT_FOUND": "Your account record could not be found. Reload the page or sign in again.",
+        "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
         "generic": "We couldn't save your profile. Please try again."
+      },
+      "nicknameHint": "2–50 characters: letters, digits, _ . - — starting and ending with a letter or digit.",
+      "nicknameErrors": {
+        "tooShort": "Use at least 2 characters.",
+        "tooLong": "Use at most 50 characters.",
+        "reserved": "This word is reserved. Choose another nickname.",
+        "chars": "Use only letters, digits, and _ . - (no spaces).",
+        "edge": "Start and end with a letter or digit.",
+        "staticExtension": "Nicknames can't end with a file extension like .js."
+      },
+      "nicknameCheck": {
+        "checking": "Checking availability…",
+        "available": "Nickname is available.",
+        "taken": "That nickname is already taken."
       }
-    }
+    },
+    "eyebrow": "Profile",
+    "subtitle": "This is what sponsors and other builders see on your public portfolio.",
+    "whyRequiredEyebrow": "Why all required"
   },
   "getStarted": {
     "metadata": {
       "title": "Get started | Ninja Labs",
-      "description": "All skippable and revisitable from main navigation."
+      "description": "All skippable. You can return to these options any time from the main navigation."
     },
     "eyebrow": "ONBOARDING COMPLETE",
     "title": "What would you like to do?",
-    "subtitle": "All skippable and revisitable from main navigation.",
+    "subtitle": "All skippable. You can return to these options any time from the main navigation.",
     "actions": {
       "browseBounties": {
         "title": "Browse active bounties",
         "description": "Find a bounty and start building your on-chain track record."
       },
-      "playground": {
-        "title": "Try Injective in the Playground",
-        "description": "Explore Injective before choosing your next bounty."
+      "injectiveDocs": {
+        "title": "Explore the Injective docs",
+        "description": "Learn how to build on Injective EVM before choosing your next bounty."
       },
       "learnMore": {
         "title": "Learn more about Ninja Labs",
@@ -146,6 +170,11 @@
     "restoring": "Restoring your account. You will be redirected shortly.",
     "failedTitle": "Sign-in could not be completed",
     "failedBody": "Please try signing in again in this browser tab.",
+    "errors": {
+      "TURNSTILE_FAILED": "The bot check did not pass. Go back to the sign-in page, complete the check again and retry.",
+      "TURNSTILE_UNAVAILABLE": "The bot check service is temporarily unavailable. Please try signing in again in a moment.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+    },
     "backToSignIn": "Back to sign in"
   }
 }

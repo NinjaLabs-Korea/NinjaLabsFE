@@ -6,20 +6,25 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Badge } from "@/components/ui/Badge";
 import { Markdown } from "@/components/ui/Markdown";
 import { Link } from "@/i18n/navigation";
+import { safeHttpUrl } from "@/lib/api/codecs";
+import { validateDetailId } from "@/lib/detail-id";
+import { imageProps } from "@/lib/image";
 import { getRuntimeNotice, noticeCategoryKeys } from "@/lib/notices";
+import { localeAlternates } from "@/i18n/alternates";
 
 type NoticeDetailPageProps = PageProps<"/[locale]/notices/[id]">;
 
 export async function generateMetadata({ params }: NoticeDetailPageProps): Promise<Metadata> {
   const { locale, id } = await params;
   const t = await getTranslations({ locale, namespace: "notices.detail" });
-  const notice = await getRuntimeNotice(id);
+  const notice = (await validateDetailId("notices", id)) ? await getRuntimeNotice(id) : undefined;
 
   if (!notice) {
-    return { title: t("notFoundTitle") };
+    return { alternates: {}, title: t("notFoundTitle") };
   }
 
   return {
+    alternates: localeAlternates(locale, `/notices/${notice.slug}`),
     title: t("pageTitle", { title: notice.title }),
     description: notice.excerpt,
     openGraph: {
@@ -34,11 +39,16 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
   const { locale, id } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("notices");
+  // Shape check before the fetch (api: UUID, mock: slug); the layout already did it, this keeps the page self-contained.
+  if (!(await validateDetailId("notices", id))) notFound();
   const notice = await getRuntimeNotice(id);
 
   if (!notice) {
     notFound();
   }
+  // Admin-entered URLs: anything but http(s)/same-origin renders the placeholder / no link.
+  const coverImage = safeHttpUrl(notice.coverImage);
+  const externalUrl = safeHttpUrl(notice.externalUrl);
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
@@ -57,25 +67,25 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
           <Badge>{t(`categories.${noticeCategoryKeys[notice.category]}`)}</Badge>
           <span className="text-sm text-ink-muted">{notice.publishedAt}</span>
         </div>
-        <h1 className="mt-5 font-display text-5xl tracking-[-0.48px] text-ink">{notice.title}</h1>
-        <p className="mt-5 text-lg text-ink-muted">{notice.excerpt}</p>
+        <h1 className="mt-5 break-words font-display text-5xl tracking-[-0.48px] text-ink">{notice.title}</h1>
+        <p className="mt-5 break-words text-lg text-ink-muted">{notice.excerpt}</p>
       </section>
 
       <div className="relative mt-8 aspect-video overflow-hidden rounded-card bg-gradient-to-br from-primary-soft-border to-surface-subtle">
-        {notice.coverImage ? <Image alt="" className="object-cover" fill priority sizes="(max-width: 1200px) 100vw, 1152px" src={notice.coverImage} /> : null}
+        {coverImage ? <Image {...imageProps(coverImage)} alt="" className="object-cover" fill priority sizes="(max-width: 1200px) 100vw, 1152px" /> : null}
       </div>
 
       <div className="mt-8 grid gap-8 md:grid-cols-4">
-        <article className="rounded-card border border-border bg-surface p-5 shadow-card md:col-span-3">
-          <div className="text-base text-ink-secondary">
+        <article className="min-w-0 rounded-card border border-border bg-surface p-5 shadow-card md:col-span-3">
+          <div className="break-words text-base text-ink-secondary">
             <Markdown>{notice.bodyMarkdown}</Markdown>
           </div>
-          {notice.externalUrl ? (
+          {externalUrl ? (
             <div className="mt-6 rounded-tile border border-border bg-primary-soft p-5">
               <h2 className="font-display text-lg font-bold text-ink">{t("detail.readMoreHeading")}</h2>
               <a
                 className="mt-2 inline-block text-base font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                href={notice.externalUrl}
+                href={externalUrl}
               >
                 {t("detail.readMoreLink")}
               </a>

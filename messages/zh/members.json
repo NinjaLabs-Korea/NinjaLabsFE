@@ -1,22 +1,21 @@
 {
   "metadata": {
     "title": "成员 | Ninja Labs",
-    "description": "认识共同塑造 Ninja Labs 的建设者与社区成员。"
+    "description": "认识运营 Ninja Labs、审核赏金提交并帮助 Injective 建设者交付成果的人们。"
   },
   "list": {
-    "eyebrow": "Ninja Labs 背后的人们",
-    "heading": "成员",
-    "description": "认识共同塑造 Ninja Labs 的建设者与社区成员。",
+    "eyebrow": "官方成员",
+    "heading": "团队",
+    "description": "认识运营 Ninja Labs、审核赏金提交并帮助 Injective 建设者交付成果的人们。",
     "public": "公开",
-    "howItWorks": "成员机制说明",
+    "howItWorks": "成员分配规则",
     "rules": {
-      "registration": "所有人使用同一注册流程。",
-      "adminEnables": "由管理员开启 is_member。",
-      "memberEdits": "成员可自行编辑简介。",
-      "unassign": "取消成员身份后卡片会隐藏，但个人主页会保留。"
+      "registration": "与普通用户走同一注册流程，无需单独的成员注册。",
+      "adminEnables": "注册后，由管理员将用户标记为成员并分配角色。",
+      "memberEdits": "成员通过自己的公开主页撰写和编辑简介。",
+      "unassign": "取消分配后会立即从此页移除，但主页仍然保留。"
     },
-    "viewProfile": "查看成员主页。",
-    "becomeFirst": "成为首位上榜成员。"
+    "howItWorksEyebrow": "运作方式"
   },
   "filters": {
     "ariaLabel": "成员角色",
@@ -48,8 +47,6 @@
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "已完成 {count} 个赏金",
     "newBuilder": "新晋建设者",
-    "joined": "加入时间 {date}",
-    "publicShareable": "公开且可分享",
     "categories": {
       "dev": "开发",
       "design": "设计",
@@ -58,21 +55,22 @@
     },
     "portfolio": {
       "eyebrow": "作品集",
-      "headingCompleted": "链上工作证明。",
-      "headingEmpty": "第一份证明从这里开始。",
-      "bodyCompleted": "已通过的工作会连同当前链上铸造状态一起展示。",
-      "bodyEmpty": "完成一个赏金，即可为此作品集添加永久的工作记录。",
-      "nftName": "Ninja NFT",
-      "parentNft": "父 NFT · {status}",
-      "parentPending": "{handle} · 父 NFT 待铸造",
+      "headingCompleted": "持续增长的链上证明",
+      "headingEmpty": "你的奖杯架从这里开始",
+      "bodyCompleted": "Ninja NFT 是父身份。每个通过的赏金都会在其下铸造一个子 NFT，让已完成的工作成为可随身携带的建设者作品集。",
+      "bodyEmpty": "Ninja NFT 已作为父身份铸造完成。第一个通过的赏金将为这个公开收藏添加一个子 NFT。",
+      "bodyEmptyPending": "Ninja NFT 父身份正在铸造中。铸造完成后，第一个通过的赏金将为这个公开收藏添加一个子 NFT。",
+      "bodyEmptyNotMinted": "Ninja NFT 父身份尚未铸造。它会在完成入门流程后发放，之后通过的赏金会为这个公开收藏添加子 NFT。",
       "token": "代币 {id}",
       "tx": "交易 {hash}",
       "next": "+ 下一个",
       "emptyTitle": "暂无赏金 NFT",
       "emptyBodyCompleted": "已通过的工作会在奖励发放并开始铸造后显示在这里。",
-      "emptyBodyNew": "完成一个赏金，添加你的第一份证明。",
+      "emptyBodyNew": "完成一个进行中的赏金，第一个子 NFT 就会作为链上证明显示在这里。",
       "browse": "浏览进行中的赏金",
-      "nftCount": "{count, plural, =0 {暂无链上赏金 NFT 记录} other {{count} 个链上赏金 NFT}}"
+      "memberSince": "Ninja NFT · 自 {date} 起加入",
+      "summaryCompleted": "已完成 {count} 个赏金 · 持续增长的链上作品集",
+      "summaryEmpty": "已完成 0 个赏金 · 等待第一份证明"
     },
     "nftStatus": {
       "PENDING": "待处理",
@@ -83,22 +81,30 @@
       "FAILED": "失败"
     },
     "history": {
-      "eyebrow": "赏金记录",
-      "heading": "已完成的赏金",
+      "eyebrow": "已完成的工作",
+      "heading": "最近完成的赏金",
       "viewFilled": "查看完整主页示例",
-      "completedOn": "完成于 {date}",
+      "completedOn": "完成于 {date} · {reward}",
       "emptyTitle": "暂无已完成的赏金",
-      "emptyBody": "找到一个赏金，留下你的第一份证明。",
-      "findFirst": "寻找第一个赏金"
+      "emptyBody": "下一个完成的任务会显示标题、完成日期、奖励以及铸造的子 NFT 证明。",
+      "findFirst": "寻找第一个赏金",
+      "headingEmpty": "已完成的赏金",
+      "browseMore": "浏览更多",
+      "completedDate": "完成于 {date}"
     },
     "agents": {
-      "eyebrow": "自动化",
-      "heading": "智能体",
+      "eyebrow": "拥有的智能体",
+      "heading": "智能体及其完成的赏金",
       "verified": "已验证",
       "completed": "已完成 {count} 个赏金",
       "emptyTitle": "暂无已注册的智能体",
-      "emptyBody": "通过签名验证注册智能体。",
-      "register": "注册智能体"
-    }
+      "emptyBody": "高级用户可在通过钱包签名证明所有权后注册已验证的智能体。",
+      "register": "注册智能体",
+      "wallet": "已注册钱包：{wallet}"
+    },
+    "shareable": "可分享链接 — 无需登录",
+    "payoutPending": "待支付",
+    "payoutPartial": "部分已支付",
+    "payoutPaid": "已支付"
   }
 }

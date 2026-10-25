@@ -1,6 +1,19 @@
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
-import { captureTokensFromLocation, clearTokens, createApiHttp, type ApiHttp } from "@/lib/api/http";
-import { createLoginChallenge, exchangeLoginCodeFromLocation } from "@/lib/api/oauth";
+import { createAuthEventBus } from "@/lib/api/auth-events";
+import {
+  allowSessionRefresh,
+  createApiHttp,
+  discardLegacyTokens,
+  endLocalSession,
+  type ApiHttp,
+} from "@/lib/api/http";
+import {
+  createLoginChallenge,
+  discardLoginVerifier,
+  exchangeLoginCodeFromLocation,
+  isAuthCallbackPath,
+  LoginExchangeError,
+} from "@/lib/api/oauth";
 import { fetchMe, toClientUser } from "@/lib/api/me";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
 import { stripLocale, withLocaleOf } from "@/i18n/routing";
@@ -27,12 +40,14 @@ export function shouldRedirectToOnboarding(
  *
  * - signIn: BE `/auth/google`로 전체 페이지 리다이렉트. 구글 동의 후 BE가
  *   `/auth/callback#loginCode=..`로 돌려보낸다. 코드를 지운 뒤 브라우저의
- *   verifier와 POST /auth/exchange로 교환하고 `/auth/me`로 세션을 복원한다.
+ *   verifier와 같은 출처 POST /api/auth/exchange로 교환하고(BE가 HttpOnly refresh 쿠키를 심는다)
+ *   `/auth/me`로 세션을 복원한다.
+ * - 그 외 페이지 로드는 `http.initSession()`이 POST /api/auth/refresh를 한 번 보내 쿠키로 세션을 복원한다
+ *   (401 → signed-out, 429/5xx → signed-out으로 보이되 쿠키는 남고 다음 401에서 재시도).
+ * - 탭 간 로그아웃은 `BroadcastChannel("ninja-auth")`(`lib/api/auth-events.ts`)로 전달된다.
  * - 서버 렌더 중에는 항상 "loading". 브라우저에서만 토큰/네트워크에 접근한다.
  */
 export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiHttp } {
-  const http = createApiHttp(apiUrl);
-
   let snapshot: AuthSnapshot = { status: "loading", user: null };
   const listeners = new Set<() => void>();
   const setSnapshot = (next: AuthSnapshot): AuthSnapshot => {
@@ -40,6 +55,15 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     listeners.forEach((listener) => listener());
     return snapshot;
   };
+  /** The session is gone (refresh rejected here, or another tab signed out): stop showing a signed-in UI now. */
+  const endSignedInSession = () => {
+    if (snapshot.status !== "signed-in") return;
+    onboardingLog("session.ended", { reason: "SESSION_CLEARED" });
+    setSnapshot({ status: "signed-out", user: null });
+  };
+
+  const events = createAuthEventBus();
+  const http = createApiHttp(apiUrl, { onSessionEnded: endSignedInSession, broadcast: events.broadcast });
 
   async function restoreSession(): Promise<AuthSnapshot> {
     onboardingLog("session.restore.started", {
@@ -67,10 +91,25 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       path: window.location.pathname,
       hasHash: Boolean(window.location.hash),
     });
-    const captured = captureTokensFromLocation();
-    onboardingLog("oauth.tokens.captured", { captured });
+    // Another tab signed out (its logout already cleared the shared cookie) or signed in (the cookie may be back).
+    events.subscribe((event) => {
+      if (event === "signed-in") {
+        allowSessionRefresh();
+        return;
+      }
+      endLocalSession();
+      endSignedInSession();
+    });
+    // Any page load other than the OAuth callback means the sign-in that stored a PKCE verifier was abandoned.
+    if (!isAuthCallbackPath(window.location.pathname)) discardLoginVerifier();
     void (async () => {
-      await exchangeLoginCodeFromLocation(apiUrl);
+      if (await exchangeLoginCodeFromLocation()) {
+        // A fresh login supersedes any token a pre-cookie build left behind.
+        discardLegacyTokens();
+        events.broadcast("signed-in");
+      } else {
+        await http.initSession();
+      }
       return restoreSession();
     })().then((restored) => {
       const onboardingPath = shouldRedirectToOnboarding(
@@ -84,7 +123,7 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
         onboardingCompleted: restored.user?.onboardingCompleted,
       });
       // 콜백은 로케일 경로(/en/auth/callback)로 들어오므로 로케일을 떼고 비교하고, 같은 로케일의 홈으로 보낸다.
-      const onCallback = stripLocale(window.location.pathname) === "/auth/callback";
+      const onCallback = isAuthCallbackPath(window.location.pathname);
       const targetPath = onboardingPath ?? (
         onCallback && restored.status === "signed-in" ? withLocaleOf(window.location.pathname, "/") : null
       );
@@ -92,10 +131,19 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
         onboardingLog("onboarding.redirect.started", { targetPath });
         window.location.replace(targetPath);
       }
-    }).catch(() => {
-      clearTokens();
-      setSnapshot({ status: "signed-out", user: null });
-      onboardingLog("oauth.exchange.failed");
+    }).catch((error: unknown) => {
+      // 교환을 실제로 시도했다가 실패한 경우에만 기존 세션을 끝낸다(쿠키도 폐기). `#error=`나 verifier 없는
+      // `#loginCode=`(링크로 심을 수 있는 값)로는 로그인 중이던 세션을 잃지 않고 쿠키로 그대로 복원한다.
+      const attempted = error instanceof LoginExchangeError && error.attempted;
+      onboardingLog("oauth.exchange.failed", { attempted });
+      if (attempted) {
+        const signedOut = http.signOutRemote();
+        const snapshotAfter = setSnapshot({ status: "signed-out", user: null });
+        return signedOut.then(() => snapshotAfter);
+      }
+      return http.initSession()
+        .then(() => restoreSession())
+        .catch(() => setSnapshot({ status: "signed-out", user: null }));
     });
   };
 
@@ -107,21 +155,28 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    signIn: async () => {
+    signIn: async (options) => {
       const traceId = getOnboardingTraceId();
       const codeChallenge = await createLoginChallenge();
       const params = new URLSearchParams({ returnTo: window.location.origin, codeChallenge });
       if (traceId) params.set("trace", traceId);
-      onboardingLog("oauth.redirect.started", { returnOrigin: window.location.origin });
-      window.location.assign(`${apiUrl.replace(/\/$/, "")}/auth/google?${params}`);
+      // Cloudflare Turnstile 위젯 토큰 (NEXT_PUBLIC_TURNSTILE_SITE_KEY가 있을 때만) — BE가 TURNSTILE_SECRET_KEY로 siteverify한다.
+      if (options?.turnstileToken) params.set("turnstileToken", options.turnstileToken);
+      onboardingLog("oauth.redirect.started", { returnOrigin: window.location.origin, turnstile: Boolean(options?.turnstileToken) });
+      // `new URL` keeps this an absolute cross-origin navigation (BE -> Google), which next/no-location-assign-relative-destination cannot infer from a template literal
+      window.location.assign(new URL(`${apiUrl.replace(/\/$/, "")}/auth/google?${params}`));
       // 페이지가 구글로 떠나므로 이 Promise는 결과를 낼 필요가 없다
       return new Promise<AuthSnapshot>(() => {});
     },
     signOut: async () => {
       onboardingLog("session.signout.started");
-      await http.signOutRemote();
+      // The local session ends synchronously inside signOutRemote (token dropped, other tabs told); only the server-side
+      // revoke is awaited, and a hung BE can hold it for the request timeout. Show signed-out now, not after that wait.
+      const remote = http.signOutRemote();
+      const signedOut = setSnapshot({ status: "signed-out", user: null });
+      await remote;
       onboardingLog("session.signout.completed");
-      return setSnapshot({ status: "signed-out", user: null });
+      return signedOut;
     },
   };
 }

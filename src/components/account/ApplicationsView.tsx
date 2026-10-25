@@ -1,42 +1,135 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
+import { useRef, useState } from "react";
 import { SignedOutPanel } from "@/components/account/SignedOutPanel";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import {
   useAuthSnapshot,
   useAccountApi,
+  useBountyApi,
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
-import type { ApplicationStatus } from "@/lib/contracts/account";
+import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
+import type { AccountApplication, ApplicationStatus } from "@/lib/contracts/account";
+import type { PayoutStatus } from "@/lib/types";
+import { payoutBadge } from "@/lib/payout";
+import { parseReviewComment, REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success" | "primary-soft" | "danger"> = {
   open: "neutral",
-  under_review: "warning",
   approved: "success",
   submitted: "primary-soft",
   completed: "success",
   rejected: "danger",
+  notAccepted: "danger",
+  revisionRequested: "warning",
 };
 
+const outlineDangerClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
+
 // Step labels live under account.applications.steps, keyed by status.
-const applicationSteps: readonly ApplicationStatus[] = ["open", "under_review", "approved", "submitted", "completed"];
+const applicationSteps: readonly ApplicationStatus[] = ["open", "approved", "submitted", "completed"];
+
+/** Final state of an approved application whose submission was rejected; a forfeited award names the reason. */
+function NotAcceptedNote({ application }: { application: AccountApplication }) {
+  const t = useTranslations("account.applications");
+  const review = parseReviewComment(application.reviewComment);
+  if (review?.forfeited) return <p className={`mt-4 text-sm text-danger ${REVIEW_TEXT_CLASS}`}>{t("forfeitedNote", { reason: review.text })}</p>;
+  return (
+    <>
+      <p className="mt-4 text-sm text-ink-muted">{t("notAcceptedNote")}</p>
+      {review ? <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: review.text })}</p> : null}
+    </>
+  );
+}
+
+/** What the operator wrote when deciding this application (approve or reject); the admin form tells them the applicant sees it. */
+function ApplicationNote({ application }: { application: AccountApplication }) {
+  const t = useTranslations("account.applications");
+  if (!application.reviewNote) return null;
+  return <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("sponsorNote", { note: application.reviewNote })}</p>;
+}
+
+/** Payout status of a completed (APPROVED) submission: Paid / Partially paid / Payout pending; NONE shows nothing. */
+function PayoutLine({ status }: { status: PayoutStatus }) {
+  const t = useTranslations("account.applications");
+  const badge = payoutBadge(status, { showPaid: true });
+  return badge ? <div className="mt-3"><Badge variant={badge.variant}>{t(badge.key)}</Badge></div> : null;
+}
+
+/** Approved work the reviewer sent back: the reviewer comment and the way back to the resubmit form on the bounty page. */
+function RevisionNote({ application }: { application: AccountApplication }) {
+  const t = useTranslations("account.applications");
+  const review = parseReviewComment(application.reviewComment);
+  return (
+    <>
+      <p className="mt-4 text-sm text-warning">{t("revisionNote")}</p>
+      {review ? <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: review.text })}</p> : null}
+    </>
+  );
+}
 
 export function ApplicationsView() {
   const t = useTranslations("account.applications");
   const tAccount = useTranslations("account.common");
   const tBounties = useTranslations("bounties.categories");
-  const statusLabel = (status: ApplicationStatus): string =>
-    status === "approved" ? t("approvedStatus") : status === "rejected" ? t("rejectedStatus") : t(`steps.${status}`);
+  const format = useFormatter();
+  const statusLabel = (application: AccountApplication): string => {
+    const { status } = application;
+    if (status === "approved") return t("approvedStatus");
+    if (status === "revisionRequested") return t("revisionRequestedStatus");
+    if (status === "rejected") return t("rejectedStatus");
+    if (status === "notAccepted") return parseReviewComment(application.reviewComment)?.forfeited ? t("forfeitedStatus") : t("notAcceptedStatus");
+    return t(`steps.${status}`);
+  };
   const mode = useFoundationMode();
   const authSnapshot = useAuthSnapshot();
   const apiClient = useAccountApi();
-  const { data: applications, unavailable } = useAccountQuery(apiClient.getApplications);
+  const bountyApi = useBountyApi();
+  const { data: applications, unavailable, reason, refresh } = useAccountQuery(apiClient.getApplications);
+  const tErrors = useTranslations(ERROR_COPY.applicationWithdraw.messages);
+  const [target, setTarget] = useState<AccountApplication | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [notice, setNotice] = useState("");
+  const pendingRef = useRef(new Set<string>());
+  const listRef = useRef<HTMLDivElement>(null);
+  // The withdrawn card disappears with its button, so focus moves to the list instead of <body>.
+  const focusList = () => listRef.current;
+
+  const withdraw = async (application: AccountApplication) => {
+    setTarget(null);
+    if (pendingRef.current.has(application.id)) return;
+    pendingRef.current.add(application.id);
+    setBusyId(application.id);
+    setNotice("");
+    setErrors((current) => ({ ...current, [application.id]: "" }));
+    try {
+      await bountyApi.withdrawApplication(application.id);
+      setNotice(t("withdrawn"));
+      refresh();
+    } catch (error) {
+      const key = errorCopyKey(error, ERROR_COPY.applicationWithdraw);
+      setErrors((current) => ({ ...current, [application.id]: tErrors(key) }));
+      // A stale row (already reviewed elsewhere) should refresh so the card reflects the real state.
+      if (key === "APPLICATION_NOT_FOUND_OR_NOT_PENDING") refresh();
+    } finally {
+      pendingRef.current.delete(application.id);
+      setBusyId(null);
+    }
+  };
+
+  // The BE rejected the session (401/403 after refresh): ask to sign in again instead of blaming the server.
+  if (unavailable && reason === "unauthorized") {
+    return <SignedOutPanel message={tAccount("sessionExpired")} />;
+  }
 
   if (unavailable) {
     return (
@@ -47,51 +140,73 @@ export function ApplicationsView() {
     );
   }
 
-  if (authSnapshot.status !== "signed-in") {
+  if (authSnapshot.status === "signed-out") {
     return <SignedOutPanel message={t("signedOutMessage")} />;
   }
 
-  if (!applications) {
-    return null;
+  if (authSnapshot.status === "loading" || !applications) {
+    return <p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p>;
+  }
+
+  if (applications.length === 0) {
+    return (
+      <div className="rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center">
+        {/* Withdrawing the last application lands here: keep announcing the result. */}
+        <p className="sr-only" role="status">{notice}</p>
+        <p className="text-sm font-semibold text-ink">{t("emptyTitle")}</p>
+        <p className="mt-1 text-sm text-ink-muted">{t("emptyBody")}</p>
+        <Link
+          className={`mt-4 inline-block rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong ${focusClass}`}
+          href="/bounties"
+        >
+          {t("browseBounties")}
+        </Link>
+      </div>
+    );
   }
 
   return (
     <>
-      <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{tAccount("eyebrow")}</p>
-      <h1 className="mt-2 font-display text-5xl -tracking-[0.48px] text-ink">{t("heading")}</h1>
-      <p className="mt-4 text-lg text-ink-muted">
-        {t("intro")}
-      </p>
-
-      <div className="mt-8 space-y-5">
+      <p className="sr-only" role="status">{notice}</p>
+      <div className="space-y-5" ref={listRef} tabIndex={-1}>
         {applications.map((application) => {
-          const currentIndex = applicationSteps.indexOf(application.status);
+          const actionNeeded = application.status === "revisionRequested";
+          // A requested revision is still the "Submitted" step; the marker says the next move is the applicant's.
+          const currentIndex = applicationSteps.indexOf(actionNeeded ? "submitted" : application.status);
 
           return (
             <article
               className="rounded-card border border-border bg-surface p-5 shadow-card"
-              key={application.bountySlug}
+              key={application.id}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="flex gap-2">
+                <span className="flex flex-wrap gap-2">
                   <Badge variant="primary-soft">{tBounties(application.category)}</Badge>
                   <Badge variant={statusVariants[application.status]}>
-                    {statusLabel(application.status)}
+                    {statusLabel(application)}
                   </Badge>
+                  {application.agent ? (
+                    <Badge variant="neutral">{t("viaAgent", { name: application.agent.name })}</Badge>
+                  ) : null}
                 </span>
-                <span className="text-xs text-ink-muted">{t("appliedAt", { date: application.appliedAt })}</span>
+                <span className="text-xs text-ink-muted">{t("appliedAt", { date: format.dateTime(new Date(application.appliedAt), { dateStyle: "medium" }) })}</span>
               </div>
 
               <Link
-                className={`mt-3 inline-block font-display text-lg font-bold text-ink ${focusClass}`}
+                className={`mt-3 inline-block font-display text-lg font-bold text-ink [overflow-wrap:anywhere] ${focusClass}`}
                 href={`/bounties/${application.bountySlug}`}
               >
                 {application.bountyTitle}
               </Link>
-              <p className="mt-1 text-sm text-ink-muted">{application.note}</p>
+              <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{application.note}</p>
 
               {application.status === "rejected" ? (
-                <p className="mt-4 text-sm text-ink-muted">{t("rejectedNote")}</p>
+                <>
+                  <p className="mt-4 text-sm text-ink-muted">{t("rejectedNote")}</p>
+                  <ApplicationNote application={application} />
+                </>
+              ) : application.status === "notAccepted" ? (
+                <NotAcceptedNote application={application} />
               ) : (
                 <ol
                   aria-label={t("progressLabel")}
@@ -119,6 +234,7 @@ export function ApplicationsView() {
                       >
                         {t(`steps.${step}`)}
                       </span>
+                      {actionNeeded && index === currentIndex ? <Badge variant="warning">{t("actionNeeded")}</Badge> : null}
                       {index < applicationSteps.length - 1 ? (
                         <span aria-hidden="true" className="hidden h-px w-5 bg-primary-outline sm:block" />
                       ) : null}
@@ -127,18 +243,48 @@ export function ApplicationsView() {
                 </ol>
               )}
 
-              {application.status === "approved" ? (
+              {application.status === "completed" && application.paymentStatus ? <PayoutLine status={application.paymentStatus} /> : null}
+              {application.status === "approved" ? <ApplicationNote application={application} /> : null}
+              {actionNeeded ? <RevisionNote application={application} /> : null}
+              {application.status === "approved" || actionNeeded ? (
                 <Link
                   className={`mt-4 inline-block rounded-control bg-primary px-4 py-2 text-sm font-semibold text-on-inverse ${focusClass}`}
                   href={`/bounties/${application.bountySlug}`}
                 >
-                  {t("submitWork")}
+                  {actionNeeded ? t("resubmit") : t("submitWork")}
                 </Link>
+              ) : null}
+              {application.status === "open" ? (
+                <div className="mt-4">
+                  <button
+                    className={outlineDangerClass}
+                    disabled={busyId === application.id}
+                    onClick={() => setTarget(application)}
+                    type="button"
+                  >
+                    {busyId === application.id ? t("withdrawing") : t("withdraw")}
+                  </button>
+                </div>
+              ) : null}
+              {errors[application.id] ? (
+                <p className="mt-3 text-sm text-danger" role="alert">{errors[application.id]}</p>
               ) : null}
             </article>
           );
         })}
       </div>
+
+      <ConfirmDialog
+        confirmLabel={t("withdrawDialog.confirm")}
+        description={t("withdrawDialog.description")}
+        destructive
+        eyebrow={t("withdrawDialog.eyebrow")}
+        onCancel={() => setTarget(null)}
+        onConfirm={() => { if (target) void withdraw(target); }}
+        open={target !== null}
+        returnFocusTo={focusList}
+        title={t("withdrawDialog.title", { title: target?.bountyTitle ?? "" })}
+      />
 
       {mode === "mock" ? (
         <p className="mt-3 text-xs text-ink-muted">{tAccount("mockNote")}</p>

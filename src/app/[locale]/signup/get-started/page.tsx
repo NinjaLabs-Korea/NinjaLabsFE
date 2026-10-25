@@ -7,11 +7,15 @@ import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
 import { CompleteOnboarding } from "@/components/signup/CompleteOnboarding";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { signup } from "@/lib/signup";
+import { localeAlternates } from "@/i18n/alternates";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/signup/get-started">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "signup.getStarted.metadata" });
   return {
+    alternates: localeAlternates(locale, "/signup/get-started"),
+    // Signed-in onboarding step: nothing to index.
+    robots: { index: false, follow: false },
     title: t("title"),
     description: t("description"),
   };
@@ -30,11 +34,11 @@ export default async function SignupGetStartedPage({ params }: PageProps<"/[loca
         <div className="mt-6">
           <SignupGate>
             <CompleteOnboarding />
-            <section className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">
-              <p className="text-xs font-bold tracking-[0.96px] text-success">{t("getStarted.eyebrow")}</p>
+            <section className="rounded-card border border-border bg-surface p-5 text-center shadow-card sm:p-[21px]">
+              <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("getStarted.eyebrow")}</p>
               <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] text-ink">{t("getStarted.title")}</h1>
               <p className="mt-3 text-base text-ink-muted">{t("getStarted.subtitle")}</p>
-              <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-6 grid gap-5 text-left md:grid-cols-2 lg:grid-cols-3">
                 {signup.completion.actions.map((action) => (
                   <CompleteSignupLink
                     className="flex min-h-[230px] flex-col rounded-card border border-border bg-surface p-5 shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -45,7 +49,7 @@ export default async function SignupGetStartedPage({ params }: PageProps<"/[loca
                     {action.icon === "mascot" ? (
                       <Image
                         alt=""
-                        className="h-12 w-12 rounded-logo"
+                        className="h-12 w-12 rounded-full"
                         height={48}
                         src="/figma/ninja-labs-mascot.png"
                         width={48}
@@ -55,7 +59,7 @@ export default async function SignupGetStartedPage({ params }: PageProps<"/[loca
                         {action.icon}
                       </span>
                     )}
-                    <h2 className="mt-5 font-display text-[19.8px] leading-7 font-bold -tracking-[0.2px] text-ink">
+                    <h2 className="mt-5 font-display text-xl leading-7 font-bold -tracking-[0.2px] text-ink">
                       {t(`getStarted.actions.${action.key}.title`)}
                     </h2>
                     <p className="mt-2 text-sm text-ink-muted">{t(`getStarted.actions.${action.key}.description`)}</p>
@@ -68,10 +72,10 @@ export default async function SignupGetStartedPage({ params }: PageProps<"/[loca
               >
                 {t("getStarted.skip")}
               </CompleteSignupLink>
-              <p className="mt-5 text-center text-xs text-ink-muted">
-                {t("getStarted.savedNote")}
-              </p>
             </section>
+            <p className="mt-5 text-center text-sm text-ink-muted">
+              {t("getStarted.savedNote")}
+            </p>
           </SignupGate>
         </div>
       </div>

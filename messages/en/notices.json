@@ -1,12 +1,12 @@
 {
   "metadata": {
     "title": "Notices | Ninja Labs",
-    "description": "A builder community and bounty marketplace for the Injective ecosystem."
+    "description": "A community feed of activity and news that shows the community is alive, shipping, and onboarding new sponsors."
   },
   "list": {
-    "eyebrow": "News",
-    "heading": "Notices",
-    "description": "A builder community and bounty marketplace for the Injective ecosystem.",
+    "eyebrow": "Notices / News",
+    "heading": "What Ninja Labs & the Injective ecosystem are up to",
+    "description": "A community feed of activity and news that shows the community is alive, shipping, and onboarding new sponsors.",
     "badge": "Community feed, not just ops notices"
   },
   "filters": {

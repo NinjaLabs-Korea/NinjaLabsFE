@@ -1,19 +1,81 @@
 import { loadRuntimeConfig } from "@/lib/runtime/config";
 
-/** Server-side public API fetcher used by public App Router pages. */
-export async function fetchPublicJson<T>(path: string): Promise<T> {
+/** 공개 페이지 SSR이 BE를 기다리는 상한 — BE가 멈춰도 Vercel 함수가 매달리지 않게 한다. */
+export const PUBLIC_FETCH_TIMEOUT_MS = 8000;
+
+/** A non-2xx BE answer. `status` lets a detail loader tell "this id does not exist" (404) apart from an outage. */
+export class PublicApiError extends Error {
+  override readonly name = "PublicApiError";
+
+  constructor(
+    readonly status: number,
+    readonly path: string,
+  ) {
+    super(`Public API ${status}: ${path}`);
+  }
+}
+
+/**
+ * True only when the BE answered 404. Detail loaders turn this, and nothing else, into `undefined` → `notFound()`;
+ * 5xx, network errors and the timeout must rethrow so `[locale]/error.tsx` renders instead of a false 404.
+ */
+export function isPublicNotFound(caught: unknown): boolean {
+  return caught instanceof PublicApiError && caught.status === 404;
+}
+
+type PublicFetchOptions = {
+  /**
+   * Replay a failure other than a 404 to calls for the same path for this long, instead of asking the BE again.
+   * See `PUBLIC_DETAIL_FETCH` for why detail loaders need it.
+   */
+  replayFailureMs?: number;
+};
+
+/**
+ * Options for the bounty/notice/member detail loaders. When the layout's fetch fails, Next renders an error shell in a
+ * second React render (`getErrorRSCPayload` → generateMetadata again). React `cache()` does not span renders, so without
+ * the replay an outage costs a second BE call, and a hung BE costs a second full timeout (16s instead of 8s).
+ */
+export const PUBLIC_DETAIL_FETCH: PublicFetchOptions = { replayFailureMs: 2000 };
+
+const recentFailures = new Map<string, { error: unknown; until: number }>();
+
+function rememberFailure(path: string, error: unknown, ms: number) {
+  const now = Date.now();
+  for (const [key, entry] of recentFailures) if (entry.until <= now) recentFailures.delete(key);
+  recentFailures.set(path, { error, until: now + ms });
+}
+
+/**
+ * Server-side public API fetcher used by public App Router pages.
+ * The abort signal opts this request out of Next's per-request fetch dedupe, so callers that hit the same path from
+ * generateMetadata, layout and page wrap their loader in React `cache()` instead.
+ */
+export async function fetchPublicJson<T>(path: string, options: PublicFetchOptions = {}): Promise<T> {
   const config = loadRuntimeConfig();
   if (config.runtimeMode !== "api" || !config.apiUrl) {
     throw new Error("Public API is unavailable in mock mode.");
   }
 
-  const response = await fetch(`${config.apiUrl.replace(/\/$/, "")}${path}`, {
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    throw new Error(`Public API ${response.status}: ${path}`);
+  const { replayFailureMs } = options;
+  if (replayFailureMs) {
+    const recent = recentFailures.get(path);
+    if (recent && recent.until > Date.now()) throw recent.error;
   }
-  return response.json() as Promise<T>;
+
+  try {
+    const response = await fetch(`${config.apiUrl.replace(/\/$/, "")}${path}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(PUBLIC_FETCH_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      throw new PublicApiError(response.status, path);
+    }
+    return (await response.json()) as T;
+  } catch (caught) {
+    if (replayFailureMs && !isPublicNotFound(caught)) rememberFailure(path, caught, replayFailureMs);
+    throw caught;
+  }
 }
 
 type RuntimeSources<T> = {

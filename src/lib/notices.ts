@@ -1,5 +1,8 @@
 import type { Notice } from "@/lib/types";
-import { fetchPublicJson, loadFromRuntime } from "@/lib/api/public";
+import { formatIsoDate, toNoticeCategoryLabel } from "@/lib/api/codecs";
+import { fetchAllPublicPages } from "@/lib/api/paging";
+import { cache } from "react";
+import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH } from "@/lib/api/public";
 
 export const notices: Notice[] = [
   {
@@ -29,35 +32,28 @@ export const notices: Notice[] = [
     ],
   },
   {
-    slug: "injective-evm-community-workshop",
-    title: "Injective EVM community workshop",
-    excerpt: "Injective EVM community workshop.",
+    slug: "july-bounty-sponsor-review-call",
+    title: "Community review call for July bounty sponsors",
+    excerpt: "Ninja Labs will walk through application intake, review status, and reward release timing.",
     bodyMarkdown:
-      "Details and participation info to follow. Check back here for the schedule and how to join.",
+      "Ninja Labs will walk through **application intake**, review status, and reward release timing with the sponsors lined up for July.\n\n- How apply-type bounties move from application to approval\n- What reviewers check before a reward is released\n- When child Bounty NFTs are minted after final approval",
     category: "Events",
     publishedAt: "2026.06.12",
     thumbnail: "",
   },
   {
-    slug: "ninja-bounty-prove-to-earn-campaign",
-    title: "Ninja Bounty: Prove to Earn campaign",
-    excerpt: "Ninja Bounty: Prove to Earn campaign.",
+    slug: "public-profiles-show-child-bounty-nfts",
+    title: "Public profiles now show child Bounty NFTs",
+    excerpt: "Completed work now appears under each builder's parent Ninja NFT portfolio grid.",
     bodyMarkdown:
-      "Details and participation info to follow. Keep an eye on this notice for eligibility and timelines.",
+      "Completed work now appears under each builder's parent Ninja NFT portfolio grid. Every approved bounty mints a child NFT that attaches to the builder's Ninja NFT and shows up on their public profile.\n\nProfiles are shareable without login, so sponsors can review a builder's track record before approving an application.",
     category: "Ninja Labs",
     publishedAt: "2026.06.08",
     thumbnail: "",
   },
 ];
 
-// Display-label keys (messages `notices.categories`); the category value itself stays English for matching.
-export const noticeCategoryKeys: Record<Notice["category"], string> = {
-  "Ninja Labs": "ninjaLabs",
-  "Injective ecosystem": "injectiveEcosystem",
-  Events: "events",
-  Recruitment: "recruitment",
-  Other: "other",
-};
+export { noticeCategoryKeys } from "./notice-categories";
 
 export function getNotices() {
   return notices;
@@ -77,15 +73,6 @@ type NoticeRow = {
   external_url: string | null;
   published_at: string;
 };
-type NoticeListResponse = { items: NoticeRow[] };
-
-const categoryLabels = {
-  NINJALABS: "Ninja Labs",
-  INJECTIVE_ECOSYSTEM: "Injective ecosystem",
-  EVENT: "Events",
-  RECRUITMENT: "Recruitment",
-  OTHER: "Other",
-} as const;
 
 function toNotice(row: NoticeRow): Notice {
   return {
@@ -93,8 +80,9 @@ function toNotice(row: NoticeRow): Notice {
     title: row.title,
     excerpt: row.summary ?? "",
     bodyMarkdown: row.body ?? row.summary ?? "",
-    category: categoryLabels[row.category as keyof typeof categoryLabels] ?? "Other",
-    publishedAt: new Date(row.published_at).toLocaleDateString("en-CA").replaceAll("-", "."),
+    category: toNoticeCategoryLabel(row.category) ?? "Other",
+    // Stable `YYYY.MM.DD` (not localized): the Figma date label, and sitemap.ts parses it back into a Date.
+    publishedAt: formatIsoDate(row.published_at).replaceAll("-", "."),
     thumbnail: row.thumbnail_url ?? "",
     coverImage: row.thumbnail_url ?? undefined,
     externalUrl: row.external_url ?? undefined,
@@ -104,19 +92,21 @@ function toNotice(row: NoticeRow): Notice {
 export function getRuntimeNotices(): Promise<Notice[]> {
   return loadFromRuntime({
     mock: getNotices,
-    api: async () => (await fetchPublicJson<NoticeListResponse>("/notices?page=1&pageSize=50")).items.map(toNotice),
+    api: async () => (await fetchAllPublicPages<NoticeRow>("/notices")).map(toNotice),
   });
 }
 
-export function getRuntimeNotice(id: string): Promise<Notice | undefined> {
-  return loadFromRuntime({
+/** Detail loader: `undefined` only on a BE 404, otherwise rethrows; `cache()` shares one BE request per render (see `getRuntimeBounty`). */
+export const getRuntimeNotice = cache((id: string): Promise<Notice | undefined> =>
+  loadFromRuntime({
     mock: () => getNotice(id),
     api: async () => {
       try {
-        return toNotice(await fetchPublicJson<NoticeRow>(`/notices/${encodeURIComponent(id)}`));
-      } catch {
-        return undefined;
+        return toNotice(await fetchPublicJson<NoticeRow>(`/notices/${encodeURIComponent(id)}`, PUBLIC_DETAIL_FETCH));
+      } catch (caught) {
+        if (isPublicNotFound(caught)) return undefined;
+        throw caught;
       }
     },
-  });
-}
+  }),
+);

@@ -8,6 +8,7 @@ import {
 } from "@/components/auth/FoundationProvider";
 import { useRouter } from "@/i18n/navigation";
 import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
+import { ERROR_COPY, errorCopyKey, type ErrorCopyKey } from "@/lib/api/error-copy";
 import {
   maskWalletAddress,
   onboardingErrorDetails,
@@ -24,10 +25,13 @@ export function WalletConnectButton({
   disabled = false,
 }: WalletConnectButtonProps) {
   const t = useTranslations("common.wallet");
+  const tVerifyErrors = useTranslations(ERROR_COPY.walletVerify.messages);
   const router = useRouter();
   const apiClient = useWalletApi();
   const mode = useFoundationMode();
   const [verificationState, setVerificationState] = useState<"idle" | "pending" | "error">("idle");
+  // 실패 문구 키 (`common.wallet.verifyErrors.<key>`) — BE 코드별 안내, 그 외는 generic.
+  const [verifyErrorKey, setVerifyErrorKey] = useState<ErrorCopyKey<typeof ERROR_COPY.walletVerify>>("generic");
   const {
     address,
     connectedChainId,
@@ -39,8 +43,10 @@ export function WalletConnectButton({
     isConnecting: isPending,
     disconnect,
     signMessageAsync,
+    canSwitch,
     switchToTargetChain,
     isSwitching,
+    switchError,
   } = useWalletConnection(chainId);
 
   const unavailable = !connector;
@@ -71,17 +77,19 @@ export function WalletConnectButton({
         wallet,
         ...onboardingErrorDetails(caught),
       });
+      setVerifyErrorKey(errorCopyKey(caught, ERROR_COPY.walletVerify));
       setVerificationState("error");
     }
   };
 
   if (isWrongNetwork) {
+    // No RPC URL for the configured chain (mock mode): the switch is never requested, the user is asked to switch manually.
     return (
       <div className="flex flex-col items-start gap-2">
         <button
           type="button"
           className={`${buttonClassName} border-warning-soft bg-warning-soft text-warning`}
-          disabled={disabled || isSwitching}
+          disabled={disabled || isSwitching || !canSwitch}
           onClick={() => {
             onboardingLog("wallet.network-switch.requested", {
               fromChainId: connectedChainId,
@@ -93,8 +101,13 @@ export function WalletConnectButton({
           {isSwitching ? t("switching") : t("switchNetwork")}
         </button>
         <p className="text-xs text-warning" role="status">
-          {t("unsupportedNetwork")}
+          {canSwitch ? t("unsupportedNetwork") : t("switchUnavailable")}
         </p>
+        {switchError ? (
+          <p className="text-xs text-danger" role="alert">
+            {t(switchError === "rejected" ? "switchRejected" : "switchFailed")}
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -126,7 +139,7 @@ export function WalletConnectButton({
           </button>
           {verificationState === "error" ? (
             <p className="text-xs text-danger" role="alert">
-              {t("verifyFailed")}
+              {tVerifyErrors(verifyErrorKey)}
             </p>
           ) : null}
         </div>

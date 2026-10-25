@@ -2,7 +2,9 @@
   "common": {
     "eyebrow": "账户",
     "unavailableBody": "无法连接服务器，请稍后重试。",
-    "mockNote": "会话预览：演示数据，刷新后将重置。"
+    "mockNote": "会话预览：演示数据，刷新后将重置。",
+    "loading": "正在加载账户信息…",
+    "sessionExpired": "会话已过期，请重新登录。"
   },
   "signedOut": {
     "body": "完成注册流程即可预览你的账户。",
@@ -15,20 +17,87 @@
     },
     "unavailableTitle": "暂时无法获取申请记录。",
     "signedOutMessage": "登录后查看你的申请",
+    "emptyTitle": "你还没有申请任何赏金任务。",
+    "emptyBody": "申请制赏金任务在你申请后会显示在这里。",
+    "browseBounties": "浏览赏金任务",
     "heading": "我的申请",
     "intro": "跟踪你申请过的所有申请型赏金。赞助方批准后即可提交。",
     "appliedAt": "申请于 {date}",
     "progressLabel": "申请进度",
     "steps": {
       "open": "已申请",
-      "under_review": "审核中",
       "approved": "已批准",
       "submitted": "已提交",
       "completed": "已完成"
     },
     "approvedStatus": "已批准：可以提交",
     "submitWork": "提交作品",
+    "resubmit": "重新提交",
+    "revisionRequestedStatus": "已要求修改",
+    "revisionNote": "审核人要求修改您的提交。请更新后重新提交。",
+    "actionNeeded": "需要操作",
     "rejectedStatus": "未入选",
-    "rejectedNote": "赞助方未选择此申请。浏览其他进行中的赏金，继续创作吧。"
+    "rejectedNote": "赞助方未选择此申请。浏览其他进行中的赏金，继续创作吧。",
+    "notAcceptedStatus": "提交未被采纳",
+    "forfeitedStatus": "奖励已被没收",
+    "notAcceptedNote": "赞助方审核后未采纳您的提交。此结果为最终结果。",
+    "forfeitedNote": "您的作品已通过审核，但奖励已被没收：{reason}。如有误，请联系管理员。",
+    "reviewerComment": "审核意见：{comment}",
+    "sponsorNote": "审核备注：{note}",
+    "viaAgent": "由 {name} 代为申请",
+    "withdraw": "撤回",
+    "withdrawing": "正在撤回…",
+    "withdrawn": "申请已撤回。赏金仍在进行时可重新申请。",
+    "withdrawDialog": {
+      "eyebrow": "撤回申请",
+      "title": "撤回对“{title}”的申请？",
+      "description": "赞助方将不再看到这份申请。赏金仍在进行时,你可以稍后重新申请。",
+      "confirm": "撤回申请"
+    },
+    "withdrawErrors": {
+      "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "该申请已被审核或已撤回。",
+      "generic": "无法撤回该申请,请稍后重试。"
+    },
+    "payoutPaid": "已支付",
+    "payoutPartial": "部分已支付",
+    "payoutPending": "待支付"
+  },
+  "settings": {
+    "meta": {
+      "title": "账户设置 | Ninja Labs",
+      "description": "管理你的 Ninja Labs 账户。"
+    },
+    "heading": "账户设置",
+    "intro": "你的个人资料与账户管理。",
+    "signedOutMessage": "登录后即可管理你的账户",
+    "profileHeading": "个人资料",
+    "nicknameLabel": "昵称",
+    "walletLabel": "钱包",
+    "dangerEyebrow": "危险操作",
+    "deleteHeading": "删除账户",
+    "deleteBody": "删除账户后无法恢复。使用同一个 Google 账户重新注册会创建一个与之前活动无关的新账户。",
+    "deleteConsequences": {
+      "sessions": "你将在所有设备上退出登录，公开主页也会消失。",
+      "agents": "你的代理将被吊销，其 API 密钥会立即失效。",
+      "history": "待审核的申请和尚在审核中的提交将被撤回。已完成的工作、付款记录和 NFT 会以匿名名称保留。",
+      "rewards": "已通过但尚未申请付款的奖励将不再发放。若有付款正在进行，需等其完成后才能删除账户。"
+    },
+    "deleteAction": "删除账户",
+    "deleteDialog": {
+      "eyebrow": "删除账户",
+      "title": "确定删除你的账户吗？",
+      "description": "这将永久删除你的 Ninja Labs 账户。链上 NFT 仍保留在你的钱包中。",
+      "callout": "此操作无法撤销。",
+      "inputLabel": "请输入你的昵称“{nickname}”以确认",
+      "confirm": "删除账户",
+      "deleting": "正在删除…"
+    },
+    "deleteErrors": {
+      "CONFIRM_NICKNAME_MISMATCH": "昵称不匹配，请按显示内容准确输入。",
+      "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS": "仍有一笔付款正在进行。付款完成或取消后即可删除账户。",
+      "WITHDRAWAL_BLOCKED_PENDING_REWARDS": "你还有已批准但尚未发放的奖励，因此目前无法删除账户（删除后将无法领取）。请联系 Ninja Labs 管理员完成发放后再试。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
+      "generic": "无法删除你的账户，请稍后重试。"
+    }
   }
 }

@@ -18,27 +18,30 @@
     "buildersRewarded": "보상받은 빌더",
     "completionNfts": "완료 NFT"
   },
-  "aggregateNote": "플랫폼 전체 집계이며 순위가 아닙니다.",
   "highlights": {
-    "eyebrow": "주목할 소식",
-    "heading": "하이라이트",
+    "eyebrow": "관리자 큐레이션",
+    "heading": "주요 하이라이트",
     "readNotices": "공지사항 보기",
     "categories": {
       "milestone": "마일스톤",
       "featuredBounty": "추천 바운티",
-      "partnership": "파트너십"
+      "partnership": "파트너십",
+      "project": "프로젝트",
+      "award": "수상",
+      "other": "기타"
     }
   },
   "timeline": {
-    "eyebrow": "우리의 이야기",
-    "heading": "타임라인"
+    "eyebrow": "타임라인",
+    "heading": "플랫폼 마일스톤",
+    "entry": "{date} · {description}"
   },
   "unavailable": {
     "title": "명예의 전당을 일시적으로 불러올 수 없습니다.",
     "body": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요."
   },
   "partners": {
-    "eyebrow": "커뮤니티",
-    "heading": "파트너"
+    "eyebrow": "생태계",
+    "heading": "파트너 로고"
   }
 }

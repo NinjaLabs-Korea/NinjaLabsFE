@@ -1,33 +1,39 @@
-import { rewardFromBaseUnits, toCategoryLabel, toMemberRoleLabel } from "./api/codecs";
-import type { Member, Profile } from "./types";
+import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toPayoutStatus, toReward, type RewardRow } from "./api/codecs";
+import type { Completion, Member, PayoutStatus, Profile, ProfileNft, Reward } from "./types";
 import { onboardingLog } from "./onboarding-log";
-import { fetchPublicJson, loadFromRuntime } from "./api/public";
+import { cache } from "react";
+import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH } from "./api/public";
 
+/** Mock fixture slugs used by demo affordances (Figma 05 / 05-Empty). */
+export const PROFILE_FILLED_EXAMPLE_ID = "jaemin";
 export const PROFILE_EMPTY_ID = "sora";
 
 const members: Member[] = [
-  { slug: "jinyoung", name: "Jinyoung Park", initials: "JP", role: "Core", title: "Product lead", bio: "Building the bounty marketplace for the Injective ecosystem.", isMember: true, links: { profile: "/members/jinyoung", posts: "/notices" } },
-  { slug: "juho", name: "Juho Kim", initials: "JK", role: "Dev", title: "Protocol engineer", bio: "Making on-chain proof useful for every builder.", isMember: true, links: { profile: "/members/juho", agents: "/members/juho" } },
-  { slug: "mina", name: "Mina Seo", initials: "MS", role: "Design", title: "Experience", bio: "Designing clear paths from first task to lasting proof.", isMember: true, links: { profile: "/members/mina", bounties: "/bounties" } },
-  { slug: "ara", name: "Ara Choi", initials: "AR", role: "Ops", title: "Community", bio: "Supporting builders and the community around their work.", isMember: true, links: { profile: "/members/ara", notices: "/notices" } },
+  { slug: "jinyoung", name: "Jinyoung Park", initials: "JP", role: "Core", title: "Product lead", bio: "Sets bounty quality standards and coordinates sponsor review loops.", isMember: true, links: { profile: "/members/jinyoung", posts: "/notices" } },
+  { slug: "juho", name: "Juho Kim", initials: "JK", role: "Dev", title: "Protocol engineer", bio: "Reviews CosmWasm deliverables and supports agent verification design.", isMember: true, links: { profile: "/members/juho", agents: "/members/juho" } },
+  { slug: "mina", name: "Mina Seo", initials: "MS", role: "Design", title: "Experience", bio: "Shapes onboarding, badge states, and public profile presentation.", isMember: true, links: { profile: "/members/mina", bounties: "/bounties" } },
+  { slug: "ara", name: "Ara Choi", initials: "AR", role: "Ops", title: "Community", bio: "Publishes notices and keeps member, sponsor, and builder updates current.", isMember: true, links: { profile: "/members/ara", notices: "/notices" } },
 ];
 
 export const profiles: Record<string, Profile> = {
   jaemin: {
-    slug: "jaemin", handle: "jaemin.inj", initials: "JM", bio: "Builder focused on useful tools and thoughtful experiences for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026",
+    slug: "jaemin", handle: "jaemin.inj", initials: "JM", bio: "Frontend builder focused on wallet onboarding, market data surfaces, and developer tools for Injective teams. Ships small, polished interfaces that sponsors can adopt without a long handoff.", skills: ["Dev", "Design"], joinedAt: "May 2026",
     completions: [
-      { title: "iAsset widget", category: "Dev", completedAt: "June 18, 2026", reward: { amount: 500, currency: "INJ" } },
-      { title: "Wallet flow", category: "Design", completedAt: "June 10, 2026", reward: { amount: 300, currency: "USDC" } },
-      { title: "Hydro guide", category: "Content", completedAt: "May 28, 2026", reward: { amount: 180, currency: "INJ" } },
-      { title: "Audit report", category: "Dev", completedAt: "May 21, 2026", reward: { amount: 0, currency: "INJ" } },
-      { title: "Docs revamp", category: "Content", completedAt: "May 14, 2026", reward: { amount: 0, currency: "INJ" } },
-      { title: "Helix card", category: "Design", completedAt: "May 8, 2026", reward: { amount: 0, currency: "INJ" } },
-      { title: "Quest copy", category: "Content", completedAt: "May 1, 2026", reward: { amount: 0, currency: "INJ" } },
+      { bountySlug: "iasset-price-widget", title: "Build an iAsset price widget", category: "Dev", completedAt: "July 2, 2026", reward: { amount: 500, currency: "INJ" }, payoutStatus: "PAID" },
+      // Some payouts PAID, one still open: the paid amount so far shows with the "partially paid" badge (FE-designed, like PENDING).
+      { bountySlug: "helix-volume-analytics", title: "Helix volume analytics", category: "Dev", completedAt: "June 28, 2026", reward: { amount: 250, currency: "INJ" }, payoutStatus: "PARTIALLY_PAID" },
+      { bountySlug: "wallet-onboarding-states", title: "Design wallet onboarding states", category: "Design", completedAt: "June 24, 2026", reward: { amount: 300, currency: "USDC" }, payoutStatus: "PAID" },
+      // Approved but not paid out yet: the posted reward shows with the "payout pending" badge (Figma 05 has no such state; FE-designed).
+      { bountySlug: "hydro-liquidity-explainer", title: "Hydro liquidity explainer", category: "Content", completedAt: "June 18, 2026", reward: { amount: 180, currency: "INJ" }, payoutStatus: "PENDING" },
+      { title: "Audit report", category: "Dev", completedAt: "May 21, 2026", reward: null, payoutStatus: "NONE" },
+      { title: "Docs revamp", category: "Content", completedAt: "May 14, 2026", reward: null, payoutStatus: "NONE" },
+      { title: "Helix card", category: "Design", completedAt: "May 8, 2026", reward: null, payoutStatus: "NONE" },
+      { title: "Quest copy", category: "Content", completedAt: "May 1, 2026", reward: null, payoutStatus: "NONE" },
     ],
     nfts: ["iAsset widget", "Wallet flow", "Audit report", "Docs revamp", "Hydro guide", "Helix card", "Quest copy"].map((title, index) => ({ id: `preview-nft-${index}`, type: "completion" as const, title, status: "ATTACHED" as const, contractAddress: "preview", tokenId: String(index + 1), mintTxHash: null })),
-    agents: [{ name: "market-scout-agent", wallet: "inj1...9k4d", verified: true, completedBounties: 3 }, { name: "proof-collector", wallet: "inj1...4r2m", verified: true, completedBounties: 2 }],
+    agents: [{ name: "market-scout-agent", wallet: "inj1...9k4d", verified: true, completedBounties: 3 }, { name: "docs-runner-agent", wallet: "inj1...x7ab", verified: true, completedBounties: 2 }],
   },
-  sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "A new builder preparing to contribute to the Injective ecosystem.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], nfts: [], agents: [] },
+  sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "New Injective builder exploring market data tasks, documentation bounties, and small UI components. This public profile is ready to become a portfolio as work is completed.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], nfts: [{ id: "sora-parent", type: "parent", title: "Ninja NFT", status: "MINTED", contractAddress: "preview", tokenId: "1", mintTxHash: null }], agents: [] },
   jinyoung: { slug: "jinyoung", handle: "jinyoung.inj", initials: "JP", bio: "Product lead building the bounty marketplace for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
   juho: { slug: "juho", handle: "juho.inj", initials: "JK", bio: "Protocol engineer making on-chain proof useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
   mina: { slug: "mina", handle: "mina.inj", initials: "MS", bio: "Experience designer creating clear paths from first task to lasting proof.", skills: ["Design"], joinedAt: "June 2026", completions: [], nfts: [], agents: [] },
@@ -74,7 +80,12 @@ type PublicProfileResponse = {
     title: string;
     category: string;
     completed_at: string;
-    rewards: Array<{ amount: string; symbol: string }>;
+    /** payouts actually PAID for this submission (older BE: the only reward field) */
+    rewards: RewardRow[];
+    /** the bounty's posted rewards — shown while the payout is PENDING (absent on older BE) */
+    postedRewards?: RewardRow[];
+    /** `PayoutStatus`; typed as string because a newer BE may add values (read as PENDING) */
+    payoutStatus?: string;
   }>;
   agents: Array<{
     name: string;
@@ -93,7 +104,25 @@ type PublicProfileResponse = {
   }>;
 };
 
-function toProfile(data: PublicProfileResponse): Profile {
+const firstReward = (rows: readonly RewardRow[] | undefined): Reward | null => (rows?.[0] ? toReward(rows[0]) : null);
+
+/**
+ * `payoutStatus` + `postedRewards` are newer BE fields: PAID shows the paid payout, PARTIALLY_PAID the paid payout so far
+ * (badge), PENDING the posted reward (badge), NONE nothing — unless paid `rewards` exist, which renders as PAID. An unknown value is read as PENDING. An older BE only sends
+ * `rewards` (paid payouts), so a missing `payoutStatus` is derived from whether anything was paid.
+ */
+export function toCompletionReward(row: Pick<PublicProfileResponse["completedBounties"][number], "rewards" | "postedRewards" | "payoutStatus">): Pick<Completion, "reward" | "payoutStatus"> {
+  const paid = firstReward(row.rewards);
+  const status: PayoutStatus = toPayoutStatus(row.payoutStatus) ?? (paid ? "PAID" : "NONE");
+  if (status === "PAID" || (status === "NONE" && paid)) return { reward: paid, payoutStatus: paid ? "PAID" : "NONE" };
+  if (status === "PARTIALLY_PAID") return { reward: paid, payoutStatus: "PARTIALLY_PAID" };
+  if (status === "PENDING") return { reward: firstReward(row.postedRewards), payoutStatus: "PENDING" };
+  return { reward: null, payoutStatus: "NONE" };
+}
+
+export { payoutBadge } from "./payout";
+
+function toProfile(data: PublicProfileResponse, locale: string): Profile {
   const completions = data.completedBounties.flatMap((completion) => {
     const category = toCategoryLabel(completion.category);
     if (!category) return [];
@@ -101,12 +130,8 @@ function toProfile(data: PublicProfileResponse): Profile {
       bountySlug: completion.id,
       title: completion.title,
       category,
-      completedAt: new Date(completion.completed_at).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      reward: rewardFromBaseUnits(completion.rewards[0]),
+      completedAt: formatUtcDate(completion.completed_at, locale, { year: "numeric", month: "long", day: "numeric" }),
+      ...toCompletionReward(completion),
     }];
   });
 
@@ -119,10 +144,7 @@ function toProfile(data: PublicProfileResponse): Profile {
       const category = toCategoryLabel(tag);
       return category ? [category] : [];
     }),
-    joinedAt: new Date(data.created_at).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-    }),
+    joinedAt: formatUtcDate(data.created_at, locale, { year: "numeric", month: "long" }),
     completions,
     nfts: data.nfts.map((nft) => ({
       id: nft.id,
@@ -133,17 +155,42 @@ function toProfile(data: PublicProfileResponse): Profile {
       tokenId: nft.token_id,
       mintTxHash: nft.mint_tx_hash,
     })),
-    agents: data.agents.map((agent) => ({
+    // The BE sends every non-deleted agent of the owner; the public card only lists live ones. A pending registration
+    // (unproven wallet) or a revoked agent is not "my verified agent" and must not put its wallet on a public page.
+    agents: data.agents.filter((agent) => agent.status === "ACTIVE").map((agent) => ({
       name: agent.name,
       wallet: agent.wallet_address,
-      verified: agent.status === "ACTIVE",
+      verified: true,
       completedBounties: agent.completed_bounties.length,
     })),
   };
 }
 
-export function getRuntimeProfile(slug: string): Promise<Profile | undefined> {
-  return loadFromRuntime({
+export type ParentNftState = "minted" | "pending" | "none";
+
+/**
+ * Where the member's parent Ninja NFT stands, from the public profile's NFT list. Only a parent that is on chain
+ * (MINTED, or further along) counts as minted; PENDING/MINTING is in progress; no parent row or FAILED is "not minted".
+ */
+export function parentNftState(nfts: readonly Pick<ProfileNft, "type" | "status">[]): ParentNftState {
+  const parents = nfts.filter((nft) => nft.type === "parent");
+  if (parents.some((nft) => nft.status === "MINTED" || nft.status === "ATTACHING" || nft.status === "ATTACHED")) return "minted";
+  if (parents.some((nft) => nft.status === "PENDING" || nft.status === "MINTING")) return "pending";
+  return "none";
+}
+
+/** `members.profile.portfolio.*` key for the portfolio intro paragraph. */
+export function portfolioBodyKey(completed: boolean, parent: ParentNftState) {
+  if (completed) return "bodyCompleted" as const;
+  return parent === "minted" ? ("bodyEmpty" as const) : parent === "pending" ? ("bodyEmptyPending" as const) : ("bodyEmptyNotMinted" as const);
+}
+
+/**
+ * `locale` formats API dates for display and comes from the server page; see `getRuntimeBounties` for why it is a parameter.
+ * `undefined` only on a BE 404, otherwise rethrows; `cache()` shares one BE request per render (see `getRuntimeBounty`).
+ */
+export const getRuntimeProfile = cache((slug: string, locale: string): Promise<Profile | undefined> =>
+  loadFromRuntime({
     mock: () => {
       onboardingLog("public-profile.mock.resolved", { slug, found: Boolean(getProfile(slug)) });
       return getProfile(slug);
@@ -151,16 +198,19 @@ export function getRuntimeProfile(slug: string): Promise<Profile | undefined> {
     api: async () => {
       try {
         onboardingLog("public-profile.fetch.started", { slug });
-        const data = await fetchPublicJson<PublicProfileResponse>(`/users/${encodeURIComponent(slug)}`);
+        const data = await fetchPublicJson<PublicProfileResponse>(`/users/${encodeURIComponent(slug)}`, PUBLIC_DETAIL_FETCH);
         onboardingLog("public-profile.fetch.completed", { slug });
-        return toProfile(data);
+        return toProfile(data, locale);
       } catch (caught) {
+        const notFound = isPublicNotFound(caught);
         onboardingLog("public-profile.fetch.failed", {
           slug,
+          notFound,
           errorName: caught instanceof Error ? caught.name : "UnknownError",
         });
-        return undefined;
+        if (notFound) return undefined;
+        throw caught;
       }
     },
-  });
-}
+  }),
+);

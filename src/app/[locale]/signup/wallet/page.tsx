@@ -9,10 +9,10 @@ import { StepIndicator } from "@/components/ui/StepIndicator";
 import { Link } from "@/i18n/navigation";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { composeFoundationRuntime } from "@/lib/runtime/config";
+import { localeAlternates } from "@/i18n/alternates";
 
 const { foundationConfig, wallet: walletConnectionConfig } = composeFoundationRuntime(previewUser);
 const isApiMode = foundationConfig.mode === "api";
-const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
 // Keys under messages `signup.wallet.steps`.
 const walletSteps = ["connection", "signing", "gas", "accountLinking", "nft"];
@@ -21,6 +21,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/signup/w
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "signup.wallet.metadata" });
   return {
+    alternates: localeAlternates(locale, "/signup/wallet"),
+    // Signed-in onboarding step: nothing to index.
+    robots: { index: false, follow: false },
     title: t("title"),
     description: isApiMode ? t("descriptionApi") : t("descriptionMock"),
   };
@@ -40,18 +43,20 @@ export default async function SignupWalletPage({ params }: PageProps<"/[locale]/
           <SignupGate>
             <div className="grid gap-5 lg:grid-cols-5">
               <article className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] lg:col-span-3">
-                <h1 className="font-display text-4xl -tracking-[0.36px] text-ink">
-                  {t("wallet.title")}
-                </h1>
-                <p className="mt-3 text-base text-ink-muted">
-                  {isApiMode ? t("wallet.introApi") : t("wallet.introMock")}
-                </p>
+                <div className="text-center">
+                  <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("wallet.eyebrow")}</p>
+                  <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] text-ink">
+                    {t("wallet.title")}
+                  </h1>
+                  <p className="mt-3 text-base text-ink-muted">
+                    {isApiMode ? t("wallet.introApi") : t("wallet.introMock")}
+                  </p>
+                </div>
                 <div className="mt-5 [&_button]:w-full">
                   {walletConnectionConfig ? (
                     <WalletProvider
                       chainId={walletConnectionConfig.chainId}
                       rpcUrl={walletConnectionConfig.rpcUrl}
-                      walletConnectProjectId={walletConnectProjectId}
                     >
                       <WalletConnectButton chainId={walletConnectionConfig.chainId} />
                     </WalletProvider>
@@ -84,12 +89,13 @@ export default async function SignupWalletPage({ params }: PageProps<"/[locale]/
                 >
                   {t("wallet.connectLater")}
                 </Link>
-                <p className="mt-4 text-sm text-ink-muted">
+                <p className="mt-4 text-center text-sm text-ink-muted">
                   {t("wallet.optionalNote")}
                 </p>
               </article>
               <aside className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] lg:col-span-2">
-                <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">
+                <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("wallet.whatHappensEyebrow")}</p>
+                <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">
                   {t("wallet.whatHappens")}
                 </h2>
                 <dl className="mt-5 space-y-4">

@@ -20,7 +20,8 @@ export function toClientUser(me: MeResponse): ClientUser {
   return {
     id: me.id,
     handle: me.nickname,
-    initials: me.nickname.slice(0, 2).toUpperCase(),
+    // By code point: `slice(0, 2)` would cut an astral letter (nicknames allow any Unicode letter) into a lone surrogate.
+    initials: Array.from(me.nickname).slice(0, 2).join("").toUpperCase(),
     profileSlug: me.nickname,
     onboardingStep: me.onboardingStep,
     onboardingCompleted: me.onboardingCompleted,
@@ -34,6 +35,8 @@ export async function fetchMe(http: ApiHttp): Promise<MeResponse | null> {
   try {
     return await http.fetchJson<MeResponse>("/auth/me");
   } catch {
-    return null; // 만료·폐기된 세션은 로그아웃 상태로 취급
+    // 만료·폐기된 세션은 로그아웃 상태로 취급. refresh가 일시 장애(REFRESH_UNAVAILABLE)여도
+    // refresh 쿠키는 남아 있으므로 UI만 signed-out이 되고 다음 401/다음 로드에서 세션이 복원된다.
+    return null;
   }
 }

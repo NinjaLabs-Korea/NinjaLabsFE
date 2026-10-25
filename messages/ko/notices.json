@@ -1,12 +1,12 @@
 {
   "metadata": {
     "title": "공지사항 | Ninja Labs",
-    "description": "Injective 생태계를 위한 빌더 커뮤니티이자 바운티 마켓플레이스입니다."
+    "description": "커뮤니티가 활발히 활동하고, 결과물을 내고, 새로운 스폰서를 맞이하고 있음을 보여 주는 소식 피드입니다."
   },
   "list": {
-    "eyebrow": "소식",
-    "heading": "공지사항",
-    "description": "Injective 생태계를 위한 빌더 커뮤니티이자 바운티 마켓플레이스입니다.",
+    "eyebrow": "공지 / 소식",
+    "heading": "Ninja Labs와 Injective 생태계의 지금",
+    "description": "커뮤니티가 활발히 활동하고, 결과물을 내고, 새로운 스폰서를 맞이하고 있음을 보여 주는 소식 피드입니다.",
     "badge": "운영 공지만이 아닌 커뮤니티 피드"
   },
   "filters": {

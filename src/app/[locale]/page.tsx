@@ -13,7 +13,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
   setRequestLocale(locale);
   const t = await getTranslations("landing");
   const tStats = await getTranslations("hallOfFame.stats");
-  const { hero, bounties, news, unavailable } = await getRuntimeLanding();
+  const { hero, bounties, news, unavailable } = await getRuntimeLanding(locale);
 
   return (
     <>
@@ -54,14 +54,18 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
                 {t(`hero.${hero.secondaryCta.labelKey}`)}
               </Link>
             </div>
-            <dl className="mt-12 flex flex-wrap gap-x-10 gap-y-5">
-              {hero.stats.map((stat) => (
-                <div key={stat.labelKey}>
-                  <dt className="font-display text-2xl font-bold text-on-inverse">{stat.value}</dt>
-                  <dd className="text-sm text-on-inverse/50">{tStats(stat.labelKey)}</dd>
-                </div>
-              ))}
-            </dl>
+            {unavailable.stats ? (
+              <p className="mt-12 text-sm text-on-inverse/60" role="status">{t("stats.unavailable")}</p>
+            ) : (
+              <dl className="mt-12 flex flex-wrap gap-x-10 gap-y-5">
+                {hero.stats.map((stat) => (
+                  <div key={stat.labelKey}>
+                    <dt className="font-display text-2xl font-bold text-on-inverse">{stat.value}</dt>
+                    <dd className="text-sm text-on-inverse/50">{tStats(stat.labelKey)}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
           </div>
 
           <div className="self-center rounded-card border border-on-inverse/12 bg-on-inverse/6 p-[21px] shadow-card backdrop-blur-[4px]">
@@ -81,9 +85,10 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
               </div>
             </div>
             <div className="mt-5 grid grid-cols-3 gap-3">
-              {hero.portfolio.completed.map((title) => (
+              {hero.portfolio.completed.map((title, index) => (
                 <div
-                  key={title}
+                  // Closed bounties may share a title: the index keeps React keys distinct.
+                  key={`${index}:${title}`}
                   className="relative aspect-square overflow-hidden rounded-tile bg-[linear-gradient(135deg,var(--color-nft-deep)_0%,var(--color-hero-to)_55%,var(--color-accent-soft)_100%)] shadow-nft"
                 >
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,var(--color-on-inverse)_0%,transparent_60%)] opacity-35" />

@@ -23,10 +23,15 @@ export type SignedInAuthSnapshot = {
 
 export type AuthSnapshot = SignedOutAuthSnapshot | SignedInAuthSnapshot;
 
+/** `signIn` options — `turnstileToken` is the Cloudflare Turnstile widget token forwarded to BE `GET /auth/google` (api mode only). */
+export type SignInOptions = {
+  turnstileToken?: string;
+};
+
 export type AuthAdapter = {
   initialize?: () => void;
   getSnapshot: () => AuthSnapshot;
   subscribe: (listener: () => void) => () => void;
-  signIn: () => Promise<AuthSnapshot>;
+  signIn: (options?: SignInOptions) => Promise<AuthSnapshot>;
   signOut: () => Promise<AuthSnapshot>;
 };

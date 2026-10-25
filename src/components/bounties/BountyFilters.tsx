@@ -14,10 +14,12 @@ type BountyFiltersProps = {
   bounties: Bounty[];
 };
 
-const categoryFilters: CategoryFilter[] = ["Dev", "Design", "Content", "Other"];
+// Canonical chip order; only categories present in the list are offered (14 draws Dev / Design / Content).
+const categoryOrder: BountyCategory[] = ["Dev", "Design", "Content", "Other"];
 const statusFilters: Exclude<StatusFilter, "All">[] = ["Active", "Closed"];
 // Filter values stay in English (matched against data); only the displayed labels are localized.
 const statusLabelKeys = { Active: "status.active", Closed: "status.closed" } as const;
+const chipButtonClass = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export function BountyFilters({ bounties }: BountyFiltersProps) {
   const t = useTranslations("bounties");
@@ -29,15 +31,20 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
     setStatus("All");
     setQuery("");
   };
+  const categoryFilters = useMemo(() => {
+    const present = new Set(bounties.map((bounty) => bounty.category));
+    return categoryOrder.filter((item) => present.has(item));
+  }, [bounties]);
 
   const visibleBounties = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return bounties.filter((bounty) => {
       const matchesCategory = category === "All" || bounty.category === category;
+      // Figma 14 draws only Active/Closed chips: "Closed" also covers reviewing bounties (no new applications/submissions).
       const matchesStatus =
         status === "All" ||
         (status === "Active" && bounty.status === "active") ||
-        (status === "Closed" && bounty.status === "closed");
+        (status === "Closed" && bounty.status !== "active");
       const matchesQuery =
         !normalizedQuery ||
         [bounty.title, bounty.summary]
@@ -51,62 +58,45 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
 
   return (
     <>
-      <div className="rounded-card border border-border bg-surface px-5 py-7 shadow-card sm:flex sm:items-start sm:justify-between sm:gap-8">
-        <div className="space-y-4">
-          <div aria-label={t("filters.category")} className="flex flex-col gap-2 sm:flex-row sm:items-center" role="group">
-            <span className="shrink-0 text-xs font-bold uppercase tracking-[0.72px] text-ink-muted sm:w-20">
-              {t("filters.category")}
-            </span>
-            <div className="flex flex-wrap gap-2">
+      {/* 14: one chip row (All + categories + statuses) with the search field on the right. "All" clears both groups. */}
+      <div className="flex flex-col gap-5 rounded-card border border-border bg-surface p-[21px] shadow-card sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+        <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")} role="group">
+          <button
+            aria-pressed={category === "All" && status === "All"}
+            className={chipButtonClass}
+            onClick={() => { setCategory("All"); setStatus("All"); }}
+            type="button"
+          >
+            <Badge variant={category === "All" && status === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge>
+          </button>
+          <span aria-label={t("filters.category")} className="contents" role="group">
+            {categoryFilters.map((item) => (
               <button
-                aria-pressed={category === "All"}
-                className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                onClick={() => setCategory("All")}
+                aria-pressed={category === item}
+                className={chipButtonClass}
+                key={item}
+                onClick={() => setCategory((current) => (current === item ? "All" : item))}
                 type="button"
               >
-                <Badge variant={category === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge>
+                <Badge variant={category === item ? "selected" : "primary-soft"}>{t(`categories.${item}`)}</Badge>
               </button>
-              {categoryFilters.map((item) => (
-                <button
-                  aria-pressed={category === item}
-                  className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  key={item}
-                  onClick={() => setCategory(item)}
-                  type="button"
-                >
-                  <Badge variant={category === item ? "selected" : "primary-soft"}>{t(`categories.${item}`)}</Badge>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div aria-label={t("filters.status")} className="flex flex-col gap-2 sm:flex-row sm:items-center" role="group">
-            <span className="shrink-0 text-xs font-bold uppercase tracking-[0.72px] text-ink-muted sm:w-20">
-              {t("filters.status")}
-            </span>
-            <div className="flex flex-wrap gap-2">
+            ))}
+          </span>
+          <span aria-label={t("filters.status")} className="contents" role="group">
+            {statusFilters.map((item) => (
               <button
-                aria-pressed={status === "All"}
-                className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                onClick={() => setStatus("All")}
+                aria-pressed={status === item}
+                className={chipButtonClass}
+                key={item}
+                onClick={() => setStatus((current) => (current === item ? "All" : item))}
                 type="button"
               >
-                <Badge variant={status === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge>
+                <Badge variant={status === item ? "selected" : item === "Active" ? "success" : "danger"}>{t(statusLabelKeys[item])}</Badge>
               </button>
-              {statusFilters.map((item) => (
-                <button
-                  aria-pressed={status === item}
-                  className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  key={item}
-                  onClick={() => setStatus(item)}
-                  type="button"
-                >
-                  <Badge variant={status === item ? "selected" : item === "Active" ? "success" : "danger"}>{t(statusLabelKeys[item])}</Badge>
-                </button>
-              ))}
-            </div>
-          </div>
+            ))}
+          </span>
         </div>
-        <label className="mt-5 block sm:mt-0 sm:w-80">
+        <label className="block sm:w-80">
           <span className="sr-only">{t("filters.search")}</span>
           <input
             className="h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

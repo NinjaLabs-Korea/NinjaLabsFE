@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       // Admin and owner-private account surfaces must not be indexed.
-      disallow: routing.locales.flatMap((l) => [`/${l}/admin`, `/${l}/applications`, `/${l}/agents$`]),
+      disallow: routing.locales.flatMap((l) => [`/${l}/admin`, `/${l}/account`, `/${l}/applications`, `/${l}/agents$`]),
     },
     sitemap: `${origin}/sitemap.xml`,
   };

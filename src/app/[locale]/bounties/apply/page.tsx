@@ -7,10 +7,17 @@ import {
 } from "@/components/bounties/BountyApplyGuideCta";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
-import { loadRuntimeBounties } from "@/lib/bounties";
+import { loadRuntimeBounties, pickGuideBounties } from "@/lib/bounties";
+import { localeAlternates } from "@/i18n/alternates";
 
-// Keys under bounties.apply.statuses.
-const statuses = ["open", "underReview", "approved", "submitted", "completed"] as const;
+// Keys under bounties.apply.statuses, with the 16 chip tones.
+const statuses = [
+  { key: "open", variant: "primary-soft" },
+  { key: "underReview", variant: "warning" },
+  { key: "approved", variant: "success" },
+  { key: "submitted", variant: "primary-soft" },
+  { key: "completed", variant: "success" },
+] as const;
 
 type BountyApplyPageProps = {
   params: Promise<{ locale: string }>;
@@ -19,7 +26,7 @@ type BountyApplyPageProps = {
 export async function generateMetadata({ params }: BountyApplyPageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "bounties.meta.apply" });
-  return { title: t("title"), description: t("description") };
+  return { alternates: localeAlternates(locale, "/bounties/apply"), title: t("title"), description: t("description") };
 }
 
 export default async function BountyApplyPage({ params }: BountyApplyPageProps) {
@@ -27,13 +34,8 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
   setRequestLocale(locale);
   const t = await getTranslations("bounties.apply");
   const tBounties = await getTranslations("bounties");
-  const { bounties, unavailable } = await loadRuntimeBounties();
-  const applicationBounty = bounties.find(
-    (bounty) => bounty.status === "active" && bounty.applicationRequired,
-  );
-  const directBounty = bounties.find(
-    (bounty) => bounty.status === "active" && !bounty.applicationRequired,
-  );
+  const { bounties, unavailable } = await loadRuntimeBounties(locale);
+  const { applicationBounty, directBounty } = pickGuideBounties(bounties);
   const hasOpenBounty = Boolean(applicationBounty || directBounty);
 
   return (
@@ -50,12 +52,13 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
       </section>
 
       <section className="mt-8 grid gap-5 md:grid-cols-2">
-        <article className="flex min-h-full flex-col rounded-card border border-border bg-surface p-5 shadow-card">
+        <article className="flex min-h-full flex-col rounded-card border border-border bg-surface p-[21px] shadow-card">
           <Badge variant="success">{t("submitType.badge")}</Badge>
           <h2 className="mt-4 font-display text-2xl font-bold -tracking-[0.24px] text-ink">{t("submitType.heading")}</h2>
           <p className="mt-3 text-base text-ink-secondary">{t("submitType.body")}</p>
-          <div className="mt-5 rounded-tile bg-primary-soft p-4 text-sm text-ink-secondary">
-            {t("submitType.flow")}
+          <div className="mt-5 rounded-tile bg-primary-soft p-4">
+            <p className="text-base font-semibold text-ink">{t("submitType.flowTitle")}</p>
+            <p className="mt-1 text-sm text-ink-secondary">{t("submitType.flow")}</p>
           </div>
           {directBounty ? (
             <Link
@@ -69,12 +72,13 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
           ) : null}
         </article>
 
-        <article className="flex min-h-full flex-col rounded-card border border-border bg-surface p-5 shadow-card">
+        <article className="flex min-h-full flex-col rounded-card border border-border bg-surface p-[21px] shadow-card">
           <Badge variant="warning">{t("applyType.badge")}</Badge>
           <h2 className="mt-4 font-display text-2xl font-bold -tracking-[0.24px] text-ink">{t("applyType.heading")}</h2>
           <p className="mt-3 text-base text-ink-secondary">{t("applyType.body")}</p>
-          <div className="mt-5 rounded-tile bg-primary-soft p-4 text-sm text-ink-secondary">
-            {t("applyType.flow")}
+          <div className="mt-5 rounded-tile bg-primary-soft p-4">
+            <p className="text-base font-semibold text-ink">{t("applyType.flowTitle")}</p>
+            <p className="mt-1 text-sm text-ink-secondary">{t("applyType.flow")}</p>
           </div>
           {applicationBounty ? (
             <BountyApplyGuideCta bountyHref={`/bounties/${applicationBounty.slug}`} />
@@ -104,19 +108,20 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
         </section>
       ) : null}
 
-      <section className="mt-8 rounded-card border border-border bg-surface p-5 shadow-card">
-        <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{t("statusHeading")}</h2>
+      <section className="mt-8 rounded-card border border-border bg-surface p-[21px] shadow-card">
+        <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("statusEyebrow")}</p>
+        <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">{t("statusHeading")}</h2>
         <ol className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-0">
           {statuses.map((status, index) => (
-            <li className="flex flex-1 items-center gap-3 sm:gap-0" key={status}>
-              <span className="w-fit rounded-full bg-surface-subtle px-3 py-1.5 text-sm text-ink-secondary">{t(`statuses.${status}`)}</span>
-              {index < statuses.length - 1 ? <span className="hidden h-px flex-1 bg-primary-outline sm:block" /> : null}
+            <li className="flex flex-1 items-center gap-3 sm:gap-0" key={status.key}>
+              <Badge variant={status.variant}>{t(`statuses.${status.key}`)}</Badge>
+              {index < statuses.length - 1 ? <span className="mx-3 hidden h-px flex-1 bg-border sm:block" /> : null}
             </li>
           ))}
         </ol>
       </section>
 
-      <p className="mt-4 text-xs text-ink-muted">{t("statusNote")}</p>
+      <p className="mt-4 text-sm text-ink-muted">{t("statusNote")}</p>
     </div>
   );
 }

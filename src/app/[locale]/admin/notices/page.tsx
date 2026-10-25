@@ -3,14 +3,15 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import { PostManager } from "@/components/admin/PostManager";
-import { Badge } from "@/components/ui/Badge";
 import { getAdminPosts } from "@/lib/admin";
 import { loadFromRuntime } from "@/lib/api/public";
+import { localeAlternates } from "@/i18n/alternates";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/admin/notices">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "admin.notices" });
   return {
+    alternates: localeAlternates(locale, "/admin/notices"),
     title: t("metaTitle"),
     description: t("metaDescription"),
   };
@@ -24,8 +25,8 @@ export default async function AdminNoticesPage({ params }: PageProps<"/[locale]/
   const posts = await loadFromRuntime({ mock: getAdminPosts, api: async () => [] });
 
   return (
-    <section className="relative mx-auto max-w-content px-6 py-16 pb-20">
-      <div className="flex flex-wrap items-start justify-between gap-6">
+    <section className="mx-auto max-w-content px-6 py-16 pb-20">
+      <PostManager posts={posts} tabs={<div className="mt-8"><AdminTabs active="notices" /></div>}>
         <div className="max-w-[768px]">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{tCommon("eyebrow")}</p>
           <h1 className="font-display text-5xl tracking-[-0.48px] text-ink">{t("title")}</h1>
@@ -33,16 +34,7 @@ export default async function AdminNoticesPage({ params }: PageProps<"/[locale]/
             {t("description")}
           </p>
         </div>
-        <div className="mr-[115px] flex items-center gap-3">
-          <Badge variant="neutral">{tCommon("adminOnly")}</Badge>
-        </div>
-      </div>
-
-      <div className="mt-8">
-        <AdminTabs active="notices" />
-      </div>
-
-      <PostManager posts={posts} />
+      </PostManager>
       <AdminToastHost />
     </section>
   );

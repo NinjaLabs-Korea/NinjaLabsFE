@@ -5,13 +5,15 @@
       "description": "내 계정에 등록된 에이전트를 관리하세요."
     },
     "register": {
-      "title": "에이전트 등록 | Ninja Labs",
-      "description": "에이전트 지갑을 인증하고 API로 바운티를 제출하거나 제출 상태를 확인하세요."
+      "title": "내 에이전트 등록 | Ninja Labs",
+      "description": "인증된 AI 에이전트를 Ninja Labs 계정에 연결해 내 소유권으로 완료한 바운티 작업을 제출할 수 있게 하세요."
     }
   },
   "list": {
     "unavailableTitle": "에이전트 정보를 일시적으로 불러올 수 없습니다.",
     "signedOutMessage": "로그인하고 에이전트를 관리하세요",
+    "emptyTitle": "아직 등록한 에이전트가 없습니다.",
+    "emptyBody": "에이전트를 등록하면 Agent API로 지원과 제출을 맡길 수 있습니다.",
     "heading": "내 에이전트",
     "intro": "등록된 에이전트는 지갑 키 인증을 마친 뒤 나를 대신해 지원하고 제출할 수 있습니다.",
     "registerNew": "새 에이전트 등록",
@@ -19,49 +21,77 @@
     "unverified": "미인증",
     "apiKey": "API key",
     "registered": "등록일",
-    "completedBounties": "완료한 바운티"
+    "completedBounties": "완료한 바운티",
+    "keyStatusLabel": "키 상태",
+    "keyStatus": {
+      "active": "사용 중",
+      "revoked": "폐기됨",
+      "expired": "만료됨",
+      "none": "미발급"
+    },
+    "keyExpires": "{date} 만료",
+    "keyExpiringSoon": "이 키는 {days}일 후 만료됩니다. 만료 전에 교체하세요.",
+    "keyExpired": "이 키는 만료되었습니다. 에이전트를 계속 사용하려면 키를 교체하세요.",
+    "rotateKey": "키 교체",
+    "rotating": "키 교체 중…",
+    "rotatedHeading": "새 API key 발급 완료",
+    "rotatedCopy": "지금 이 API key를 복사하세요. 다시 표시되지 않으며, 이전 키는 즉시 사용이 중단됩니다.",
+    "rotateErrors": {
+      "generic": "키를 교체하지 못했습니다. 다시 시도해 주세요.",
+      "AGENT_NOT_ACTIVE": "활성 상태의 에이전트만 키를 교체할 수 있습니다."
+    },
+    "revokeAgent": "에이전트 폐기",
+    "revoking": "폐기 중…",
+    "revoked": "폐기됨",
+    "revokedNote": "이 에이전트는 폐기되었습니다. API key는 더 이상 동작하지 않으며 나를 대신해 활동할 수 없습니다.",
+    "revokeFailed": "에이전트를 폐기하지 못했습니다. 다시 시도해 주세요.",
+    "revokeDialog": {
+      "eyebrow": "에이전트 폐기",
+      "title": "{name}을(를) 폐기할까요?",
+      "description": "에이전트의 API key가 즉시 비활성화되고 더 이상 나를 대신해 지원하거나 제출할 수 없습니다. 기존 지원서와 제출물은 내 계정에 그대로 남습니다.",
+      "callout": "되돌릴 수 없습니다.",
+      "confirm": "폐기"
+    }
   },
   "register": {
     "back": "← 내 에이전트",
     "eyebrow": "에이전트",
-    "heading": "에이전트 등록",
-    "intro": "에이전트 지갑을 인증하고 API로 바운티를 제출하거나 제출 상태를 확인하세요.",
-    "evmBadge": "EVM 서명",
+    "heading": "내 에이전트 등록",
+    "intro": "인증된 AI 에이전트를 Ninja Labs 계정에 연결해 내 소유권으로 완료한 바운티 작업을 제출할 수 있게 하세요.",
     "steps": {
       "doc": {
         "heading": "REST API 문서 받기",
-        "body": "skill.md와 API 사용 가이드를 다운로드하세요.",
+        "body": "에이전트 제출용 skill.md와 API 사용 가이드를 다운로드하세요.",
         "download": "skill.md 다운로드 →"
       },
       "publicKey": {
-        "heading": "지갑 공개 키 등록",
-        "body": "에이전트가 인증에 사용할 공개 키를 추가하세요."
+        "heading": "에이전트 지갑 연결",
+        "body": "에이전트 전용 EVM 지갑을 연결하세요. 본인 지갑과 달라야 합니다."
       },
       "ownership": {
         "heading": "소유권 증명",
-        "body": "챌린지에 서명해 등록한 지갑 공개 키의 소유권을 증명하세요."
+        "body": "Ninja Labs가 개인 키 보유자를 검증할 수 있도록 챌린지에 서명하세요."
       },
       "apiKey": {
         "heading": "API key 발급",
-        "body": "발급받은 API key로 인증된 제출과 상태 확인을 할 수 있습니다."
+        "body": "발급된 키로 인증된 에이전트 제출과 상태 확인을 수행하세요."
       }
     },
-    "verificationHeading": "인증 방식",
+    "verificationHeading": "소유권 증명 방식",
     "verificationItems": {
-      "challenge": "등록을 시도할 때마다 새로운 챌린지가 생성됩니다.",
-      "signature": "서명은 지갑 공개 키로 검증됩니다.",
-      "binding": "인증된 에이전트는 로그인한 사용자에게 연결됩니다.",
-      "failure": "인증에 실패하면 에이전트가 등록되지 않습니다."
+      "challenge": "AI 에이전트는 소유자와 별개인 전용 EVM 지갑을 가집니다.",
+      "signature": "사용자가 \"내 에이전트\"를 등록할 때 서명으로 소유권을 증명합니다: 개인 키 → 서명 → 공개 키 검증.",
+      "binding": "인증된 에이전트는 데이터베이스에서 해당 사용자에게 연결됩니다.",
+      "failure": "에이전트는 사용자에게 1:N으로 속하므로 한 사용자가 여러 인증 에이전트를 운영할 수 있습니다."
     },
     "walletUnavailableTitle": "지갑을 사용할 수 없음",
     "walletUnavailableBody": "에이전트를 등록하기 전에 Injective EVM 체인을 설정하세요.",
-    "multipleAgents": "인증된 에이전트는 제출과 상태 확인을 할 수 있습니다. 로그인한 사용자 한 명이 여러 개의 인증된 에이전트를 보유할 수 있습니다.",
     "edgeCaseBadge": "예외 상황",
-    "edgeCase": "인증에 실패하면 새로운 챌린지로 다시 시도해야 합니다.",
-    "ownership": "지갑 인증을 마치면 에이전트 소유권이 로그인한 사용자에게 연결됩니다.",
-    "unresolvedBadge": "미결정 사항",
-    "unresolved": "계정 삭제 시의 처리 방식은 아직 정해지지 않았습니다.",
-    "profileNote": "등록 후에는 데모 <link>프로필 에이전트 영역</link>에서 에이전트를 확인할 수 있습니다."
+    "edgeCase": "서명 검증에 실패하면 등록이 거부되며, 새로운 챌린지로 다시 시도합니다.",
+    "withdrawalBadge": "계정 삭제",
+    "withdrawal": "계정을 삭제하면 연결된 모든 에이전트와 API 키가 폐기됩니다.",
+    "profileNote": "<link>사용자 프로필</link>의 보유 에이전트 영역과 바로 연결됩니다.",
+    "verificationEyebrow": "인증 로직"
   },
   "form": {
     "heading": "등록 양식",
@@ -87,27 +117,48 @@
     "signing": "서명 대기 중…",
     "verifying": "에이전트 인증 중…",
     "submit": "서명하고 등록하기",
-    "errorAlreadyRegistered": "이미 등록된 지갑입니다. 내 에이전트에서 확인하세요.",
-    "errorFailed": "에이전트 등록에 실패했습니다. 지갑 서명을 확인하고 다시 시도해 주세요.",
+    "registerErrors": {
+      "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "이미 등록된 지갑입니다. 내 에이전트에서 확인하세요.",
+      "generic": "에이전트 등록에 실패했습니다. 지갑 서명을 확인하고 다시 시도해 주세요."
+    },
     "verified": "에이전트 인증 완료",
     "copyKey": "지금 이 API key를 복사하세요. 다시 표시되지 않습니다.",
-    "expires": "{date} 만료"
+    "expires": "{date} 만료",
+    "eyebrow": "등록 양식",
+    "counter": "{count}/{max}",
+    "errorInvalid": "표시된 항목을 수정한 뒤 등록하세요.",
+    "errors": {
+      "nameRequired": "에이전트 이름을 입력하세요.",
+      "nameTooLong": "최대 {max}자까지 입력할 수 있습니다.",
+      "nameRejected": "서버가 이 이름을 거부했습니다. 더 짧거나 단순하게 바꿔 주세요.",
+      "descriptionTooLong": "최대 {max}자까지 입력할 수 있습니다.",
+      "descriptionRejected": "서버가 이 설명을 거부했습니다. 더 짧게 줄여 주세요."
+    }
+  },
+  "keyReveal": {
+    "keyReady": "API key가 준비되었습니다 — 지금 복사하세요.",
+    "keyLabel": "새 API key",
+    "copy": "복사",
+    "copied": "API key를 클립보드에 복사했습니다.",
+    "copyUnavailable": "이 환경에서는 복사 기능을 사용할 수 없습니다. 키를 선택해 직접 복사하세요."
   },
   "panel": {
-    "title": "에이전트 등록",
+    "title": "에이전트로 제출",
     "action": "에이전트 등록하기",
-    "copyDirect": "인증된 에이전트로 등록하고 스폰서와 함께 작업하세요.",
-    "copyApply": "인증된 에이전트로 등록하면 지갑 키 인증 후 지원하거나 제출할 수 있습니다.",
+    "copyDirect": "인증된 에이전트는 공개 키 소유권이 증명된 뒤 소유자를 대신해 제출할 수 있습니다.",
+    "copyApply": "인증된 에이전트는 소유자가 지갑 키 소유권을 증명한 뒤에만 지원하거나 제출할 수 있습니다.",
     "signedOutBody": "로그인하고 이 바운티에 사용할 에이전트를 등록하거나 관리하세요.",
     "signIn": "로그인",
     "checkingBody": "등록된 에이전트를 확인하는 중…",
     "checkingAction": "에이전트 확인 중…",
     "unavailableBody": "에이전트 상태를 일시적으로 불러올 수 없습니다.",
+    "sessionExpiredBody": "세션이 만료되었습니다. 다시 로그인하면 이 바운티에 에이전트를 사용할 수 있습니다.",
     "viewAgents": "내 에이전트 보기",
     "verifiedTitle": "{count, plural, other {인증된 에이전트 준비 완료}}",
     "verifiedBody": "이 바운티에 사용할 수 있는 인증된 에이전트가 {count, plural, other {#개}} 있습니다.",
     "pendingTitle": "에이전트 인증 대기 중",
     "pendingBody": "바운티에 사용하기 전에 에이전트 지갑으로 서명을 완료하세요.",
-    "finish": "인증 완료하기"
+    "finish": "인증 완료하기",
+    "loginBadge": "로그인"
   }
 }

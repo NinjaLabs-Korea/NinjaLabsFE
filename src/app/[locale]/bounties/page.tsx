@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { loadRuntimeBounties } from "@/lib/bounties";
+import { localeAlternates } from "@/i18n/alternates";
 
 type BountiesPageProps = {
   params: Promise<{ locale: string }>;
@@ -14,7 +15,7 @@ type BountiesPageProps = {
 export async function generateMetadata({ params }: BountiesPageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "bounties.meta.list" });
-  return { title: t("title"), description: t("description") };
+  return { alternates: localeAlternates(locale, "/bounties"), title: t("title"), description: t("description") };
 }
 
 export default async function BountiesPage({ params }: BountiesPageProps) {
@@ -22,13 +23,13 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
   setRequestLocale(locale);
   const t = await getTranslations("bounties.list");
   const tBounties = await getTranslations("bounties");
-  const { bounties, unavailable } = await loadRuntimeBounties();
+  const { bounties, unavailable } = await loadRuntimeBounties(locale);
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <section>
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={1} size="xl" />
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <Badge variant="success">{t("publicBadge")}</Badge>
             <Link
               className="rounded-control border border-primary-outline px-[21px] py-3 text-sm leading-[21px] font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -38,7 +39,7 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
             </Link>
           </div>
         </div>
-        <p className="mt-4 max-w-2xl text-lg text-ink-muted">
+        <p className="mt-4 max-w-[768px] text-lg text-ink-muted">
           {t("intro")}
         </p>
       </section>

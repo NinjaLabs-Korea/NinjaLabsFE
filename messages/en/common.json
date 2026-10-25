@@ -1,7 +1,13 @@
 {
   "site": {
     "title": "Ninja Labs | Build. Complete. Own your track record.",
-    "description": "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own."
+    "description": "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.",
+    "og": {
+      "alt": "Ninja Labs | Build. Complete. Own your track record.",
+      "headline": "Complete bounties. Collect proof.",
+      "highlight": "Own your track record.",
+      "tagline": "A builder community and bounty marketplace for the Injective ecosystem."
+    }
   },
   "layout": {
     "skipToContent": "Skip to content"
@@ -27,13 +33,18 @@
     "tagline": "Build. Complete. Own your track record. On Injective.",
     "platform": "Platform",
     "community": "Community",
-    "legal": "© 2026 Ninja Labs · All content viewable without login · Returning users skip Intro and land on main."
+    "legal": "© 2026 Ninja Labs · All content viewable without login",
+    "contributor": "Become a contributor",
+    "contact": "Contact",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
   },
   "userMenu": {
     "accountNavigation": "Account navigation",
     "myProfile": "My profile",
     "myApplications": "My applications",
     "myAgents": "My agents",
+    "accountSettings": "Account settings",
     "signOut": "Sign out",
     "sessionPreview": "Session preview",
     "walletAddress": "Wallet address: {wallet}"
@@ -46,7 +57,12 @@
     "mockIdle": "Mock mode: this local preview does not contact Google or create an account.",
     "redirectNotice": "You will be redirected to Google to sign in.",
     "failed": "Google sign-in failed. Please try again.",
-    "previewFailure": "Preview failed sign-in"
+    "previewFailure": "Preview failed sign-in",
+    "turnstileLabel": "Human verification",
+    "turnstileVerifying": "Checking that you're human…",
+    "turnstileExpired": "Verification expired. Refreshing the check…",
+    "turnstileError": "We couldn't verify that you're human. Please retry the check.",
+    "turnstileRetry": "Retry check"
   },
   "wallet": {
     "switching": "Switching network…",
@@ -55,14 +71,25 @@
     "awaitingSignature": "Waiting for signature…",
     "verify": "Verify wallet",
     "disconnectAddress": "Disconnect {address}",
-    "verifyFailed": "Wallet verification failed. Check the signature request and try again.",
+    "verifyErrors": {
+      "generic": "Wallet verification failed. Check the signature request and try again.",
+      "INVALID_INJECTIVE_ADDRESS": "This wallet address is not supported. Connect an Injective-compatible EVM wallet and try again.",
+      "CHALLENGE_NOT_FOUND": "The verification request was not found. Select Verify wallet again to get a new one.",
+      "CHALLENGE_EXPIRED": "The verification request expired or was already used. Select Verify wallet again and sign the new message.",
+      "INVALID_SIGNATURE": "The signature does not match this wallet. Sign with the connected address and try again.",
+      "WALLET_ALREADY_LINKED": "This wallet is already linked to another account, or your account already has a wallet. Use a different wallet, or sign in with the account that owns this one.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+    },
     "disconnectWalletLabel": "Disconnect wallet {address}",
     "unavailable": "Wallet unavailable",
     "unavailableHint": "Install or unlock a compatible browser wallet to connect.",
     "connecting": "Connecting wallet…",
     "connect": "Connect wallet",
     "connectFailed": "Unable to connect your wallet. Try again.",
-    "supportedWallets": "Supported wallets"
+    "supportedWallets": "Supported wallets",
+    "switchRejected": "You declined the network switch. Approve it in your wallet to continue.",
+    "switchFailed": "The network could not be switched. Add Injective EVM to your wallet and try again.",
+    "switchUnavailable": "Automatic network switching is not configured here. Switch your wallet to Injective EVM manually, then try again."
   },
   "stepIndicator": {
     "login": "1. Login",
@@ -87,6 +114,16 @@
     "title": "Page not found",
     "description": "The page you are looking for does not exist or may have moved.",
     "home": "Back to home",
-    "browseBounties": "Browse bounties"
+    "browseBounties": "Browse bounties",
+    "metaTitle": "Page not found | Ninja Labs"
+  },
+  "reward": {
+    "tbd": "Reward TBD"
+  },
+  "flash": {
+    "accountDeleted": {
+      "title": "Your account was deleted",
+      "description": "You have been signed out. You can sign up again with the same Google account at any time."
+    }
   }
 }

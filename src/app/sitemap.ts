@@ -11,15 +11,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // A failing API source drops only its detail URLs; static routes are always listed.
   const orEmpty = <T>(promise: Promise<T[]>) => promise.catch((): T[] => []);
   const [bounties, members, notices] = await Promise.all([
-    orEmpty(getRuntimeBounties()), orEmpty(getRuntimeMembers()), orEmpty(getRuntimeNotices()),
+    orEmpty(getRuntimeBounties(routing.defaultLocale)), orEmpty(getRuntimeMembers()), orEmpty(getRuntimeNotices()),
   ]);
   const url = (path: string) => path;
+  // Nicknames may hold non-ASCII letters (`한글.inj`); sitemap URLs must be percent-encoded.
+  const segment = encodeURIComponent;
 
   const entries: MetadataRoute.Sitemap = [
     { url: url("/"), changeFrequency: "weekly", priority: 1 },
     { url: url("/bounties"), changeFrequency: "daily", priority: 0.9 },
     ...bounties.map(({ slug }) => ({
-      url: url(`/bounties/${slug}`),
+      url: url(`/bounties/${segment(slug)}`),
       changeFrequency: "weekly" as const,
       priority: 0.8,
     })),
@@ -27,19 +29,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: url("/hall-of-fame"), changeFrequency: "weekly", priority: 0.7 },
     { url: url("/members"), changeFrequency: "weekly", priority: 0.7 },
     ...members.map(({ slug }) => ({
-      url: url(`/members/${slug}`),
+      url: url(`/members/${segment(slug)}`),
       changeFrequency: "weekly" as const,
       priority: 0.6,
     })),
     { url: url("/notices"), changeFrequency: "weekly", priority: 0.7 },
-    ...notices.map(({ slug, publishedAt }) => ({
-      url: url(`/notices/${slug}`),
-      lastModified: new Date(publishedAt.replaceAll(".", "-")),
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    })),
+    ...notices.map(({ slug, publishedAt }) => {
+      // `publishedAt` is "" when the BE row had no parseable date (lib/notices.ts); such entries carry no lastModified.
+      const lastModified = new Date(publishedAt.replaceAll(".", "-"));
+      return {
+        url: url(`/notices/${segment(slug)}`),
+        ...(Number.isNaN(lastModified.getTime()) ? {} : { lastModified }),
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      };
+    }),
     { url: url("/signup"), changeFrequency: "monthly", priority: 0.5 },
     { url: url("/agents/register"), changeFrequency: "monthly", priority: 0.5 },
+    { url: url("/privacy"), changeFrequency: "yearly", priority: 0.3 },
+    { url: url("/terms"), changeFrequency: "yearly", priority: 0.3 },
   ];
 
   // One entry per locale, each listing every language variant as an alternate.
