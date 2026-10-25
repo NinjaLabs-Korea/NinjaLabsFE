@@ -57,6 +57,15 @@ describe("landing and sitemap with a partially unavailable API", () => {
     expect(urls.some((url) => url.includes("/bounties/b"))).toBe(false);
   });
 
+  it("percent-encodes non-ASCII member nicknames in sitemap URLs", async () => {
+    sources.bounties.mockResolvedValue([]);
+    sources.members.mockResolvedValue([{ slug: "한글.inj" }]);
+    sources.notices.mockResolvedValue([]);
+    const urls = (await sitemap()).map((entry) => entry.url);
+    expect(urls).toContain("https://ninja.test/en/members/%ED%95%9C%EA%B8%80.inj");
+    expect(urls.some((url) => url.includes("한글"))).toBe(false);
+  });
+
   it("lists a notice without a parseable published date, just without lastModified", async () => {
     sources.bounties.mockResolvedValue([]);
     sources.members.mockResolvedValue([]);
