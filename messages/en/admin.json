@@ -199,6 +199,7 @@
       "statusUpdatedDescription": "{title} is now {to, select, OPEN {open} other {submission closed}}.",
       "transitionFailedTitle": "Transition failed",
       "transitionFailedDescription": "This status transition is not currently allowed.",
+      "transitionBlockedDescription": "Something still blocks this transition (for example the reward deposit is not confirmed). Open Operations for this bounty to see what.",
       "deletedTitle": "Bounty deleted",
       "deleteFailedDescription": "The bounty was not deleted."
     },

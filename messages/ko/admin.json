@@ -199,6 +199,7 @@
       "statusUpdatedDescription": "{title}의 상태가 {to, select, OPEN {모집 중} other {제출 마감}}으로 변경되었습니다.",
       "transitionFailedTitle": "상태 변경 실패",
       "transitionFailedDescription": "현재 이 상태로 변경할 수 없습니다.",
+      "transitionBlockedDescription": "아직 충족되지 않은 조건이 있습니다(예: 보상 입금 미확인). 이 바운티의 Operations에서 막는 사유를 확인하세요.",
       "deletedTitle": "바운티 삭제됨",
       "deleteFailedDescription": "바운티가 삭제되지 않았습니다."
     },

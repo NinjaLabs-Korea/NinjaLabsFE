@@ -199,6 +199,7 @@
       "statusUpdatedDescription": "{title} 现在{to, select, OPEN {已开放} other {已截止提交}}。",
       "transitionFailedTitle": "状态变更失败",
       "transitionFailedDescription": "当前不允许进行此状态变更。",
+      "transitionBlockedDescription": "仍有条件未满足（例如奖励入金未确认）。请在此赏金的 Operations 中查看具体原因。",
       "deletedTitle": "赏金已删除",
       "deleteFailedDescription": "赏金未删除。"
     },

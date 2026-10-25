@@ -198,6 +198,14 @@ describe("BountyManager flows", () => {
     expect(within(row("Build an iAsset price widget")).getByText("Active")).toBeTruthy();
   });
 
+  it("points a blocked transition (BE 400 with a blocker list) at Operations instead of the generic copy", async () => {
+    vi.spyOn(api, "transitionAdminBounty").mockRejectedValueOnce(new ApiHttpError(400, "VALIDATION_FAILED"));
+    renderBounties();
+    await waitFor(() => expect(within(row("Build an iAsset price widget")).getByRole("button", { name: "Close" })).toBeTruthy());
+    fireEvent.click(within(row("Build an iAsset price widget")).getByRole("button", { name: "Close" }));
+    expect(await screen.findByText(/Open Operations for this bounty/)).toBeTruthy();
+  });
+
   it("deletes only after the destructive confirm dialog, and cancel returns focus to the opener", async () => {
     const remove = vi.spyOn(api, "deleteAdminBounty");
     renderBounties();
