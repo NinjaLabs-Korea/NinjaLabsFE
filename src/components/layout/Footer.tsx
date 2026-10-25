@@ -8,9 +8,23 @@ const platformLinks = [
   { href: "/notices", key: "notices" },
 ] as const;
 
-const communityLinks = [
-  { href: "https://x.com/", label: "X / Twitter" },
-  { href: "https://discord.com/", label: "Discord" },
+// Official links from the Ninja Labs Korea Notion hub (injective.notion.site/ninjalabskr).
+// Ninja Labs has no Discord of its own; the Discord link is Injective's.
+const CONTACT_EMAIL = "andrew@injectivelabs.org";
+
+const ninjaLabsLinks = (contributorLabel: string) => [
+  { href: "https://x.com/NinjaLabsKR", label: "X (@NinjaLabsKR)" },
+  { href: "https://t.me/NinjaLabsKR", label: "Telegram (@NinjaLabsKR)" },
+  { href: "https://t.me/+Nsy2KjGWtOE5NTY9", label: "Ninja Builders (Telegram)" },
+  { href: "https://tally.so/r/3E7XZA", label: contributorLabel },
+];
+
+const injectiveLinks = [
+  { href: "https://injective.com/", label: "Injective.com" },
+  { href: "https://x.com/InjectiveKR", label: "X (@InjectiveKR)" },
+  { href: "https://t.me/Injective_Korea", label: "Telegram (@Injective_Korea)" },
+  { href: "https://discord.com/invite/injective", label: "Discord" },
+  { href: "https://injhub.com/ecosystem/", label: "Ecosystem" },
 ];
 
 export function Footer() {
@@ -22,16 +36,13 @@ export function Footer() {
       <div className="mx-auto max-w-content px-6 pt-12">
         <div className="flex flex-col justify-between gap-10 md:flex-row">
           <div>
-            <div className="flex items-center gap-2">
-              <Image
-                src="/figma/ninja-labs-mascot.png"
-                alt=""
-                width={28}
-                height={28}
-                className="rounded-logo"
-              />
-              <span className="font-display text-xl font-bold">Ninja Labs</span>
-            </div>
+            <Image
+              src="/brand/ninja-labs-kr-logo.png"
+              alt="Ninja Labs KR"
+              width={370}
+              height={86}
+              className="h-[34px] w-auto"
+            />
             <p className="mt-3 max-w-[287px] text-sm text-ink-muted">
               {t("tagline")}
             </p>
@@ -42,13 +53,20 @@ export function Footer() {
               heading={t("platform")}
               links={platformLinks.map(({ href, key }) => ({ href, label: tNav(key) }))}
             />
-            <FooterLinkColumn heading={t("community")} links={communityLinks} external />
+            <FooterLinkColumn heading={t("community")} links={ninjaLabsLinks(t("contributor"))} external />
+            <FooterLinkColumn heading="Injective" links={injectiveLinks} external />
           </div>
         </div>
 
-        <div className="mt-8 border-t border-on-inverse/8 pt-[25px] pb-12">
+        <div className="mt-8 flex flex-col gap-2 border-t border-on-inverse/8 pt-[25px] pb-12 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs leading-4 text-on-inverse-muted">
             {t("legal")}
+          </p>
+          <p className="text-xs leading-4 text-on-inverse-muted">
+            {t("contact")}{" "}
+            <a className="text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`mailto:${CONTACT_EMAIL}`}>
+              {CONTACT_EMAIL}
+            </a>
           </p>
         </div>
       </div>
