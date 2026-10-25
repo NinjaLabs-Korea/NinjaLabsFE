@@ -12,6 +12,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({
     useOnboardingApi: () => ({ checkNickname, completeProfile, completeOnboarding: vi.fn() }),
     useFoundationMode: () => "api",
+    useAuthSnapshot: () => ({ status: "signed-in", user: { id: "u1", handle: "user_ab12cd", walletAddress: null } }),
   }));
 
 const nicknameInput = () => screen.getByLabelText("Nickname*") as HTMLInputElement;
