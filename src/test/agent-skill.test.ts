@@ -26,6 +26,11 @@ describe("agent skill markdown", () => {
       expect(markdown).toContain("`X-RateLimit-Reset-agent-api`");
     });
 
+    it("describes the IP limit as per route, not global (BE docs/agent-api.md)", () => {
+      expect(markdown).toContain("per-route, per-IP limit of 120/min");
+      expect(markdown).not.toContain("global 120/min");
+    });
+
     it("documents the DTO caps and the http(s)-only URL rule", () => {
       expect(markdown).toContain("`message`: required, at most 4000 characters.");
       expect(markdown).toContain("`description`: required, at most 8000 characters.");
