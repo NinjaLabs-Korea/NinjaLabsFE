@@ -26,6 +26,15 @@ const settled = <T>(result: PromiseSettledResult<T>, fallback: T): T => (result.
 const newestPublishedFirst = (a: Notice, b: Notice) => b.publishedAt.localeCompare(a.publishedAt);
 
 /**
+ * An event dated after today (UTC calendar day). The landing section is "Past activities / what we have done together", so an
+ * announced event must not appear there before it happened; it stays in the notices list. Undated events are kept (nothing says
+ * they are in the future).
+ */
+export function isUpcomingEvent(notice: { eventDate?: string | null }, now: Date = new Date()): boolean {
+  return Boolean(notice.eventDate) && /^\d{4}-\d{2}-\d{2}$/.test(notice.eventDate!) && notice.eventDate! > now.toISOString().slice(0, 10);
+}
+
+/**
  * The data behind the community sections shared by the Intro (`/`) and `/about`. One notices read serves both the
  * activities (BE `sort=eventDate`) and the news (re-sorted by publish date), so the page costs one notice list, not two.
  */
@@ -37,7 +46,7 @@ export async function getRuntimeCommunity(locale: string): Promise<CommunityData
   ]);
   const notices = settled(noticesResult, []);
   return {
-    events: notices.filter((notice) => notice.category === "Events").slice(0, COMMUNITY_EVENT_LIMIT),
+    events: notices.filter((notice) => notice.category === "Events" && !isUpcomingEvent(notice)).slice(0, COMMUNITY_EVENT_LIMIT),
     news: [...notices].sort(newestPublishedFirst).slice(0, COMMUNITY_NEWS_LIMIT),
     hall: settled(hallResult, emptyHallOfFame),
     members: settled(membersResult, []).slice(0, COMMUNITY_MEMBER_LIMIT),
