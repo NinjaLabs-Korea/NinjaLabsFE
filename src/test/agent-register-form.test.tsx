@@ -170,6 +170,37 @@ describe("AgentRegisterForm connected-wallet check", () => {
     expect((screen.getByRole("button", { name: "Sign & Register" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it("recognises the owner's own wallet when the BE stores it as inj1 and the wallet reports 0x", async () => {
+    const original = authState.current;
+    authState.current = signedInWith({ walletAddress: "inj1cml96vmptgw99syqrrz8az79xer2pcgp0a885r" });
+    Object.assign(wallet, { address: "0xC6Fe5D33615a1C52c08018c47E8Bc53646A0E101" });
+    try {
+      renderWithIntl(<AgentRegisterForm chainId={1439} />);
+      expect((await screen.findByRole("alert")).textContent).toBe("This is your personal onboarding wallet. Switch MetaMask to a dedicated agent account.");
+      fireEvent.change(screen.getByLabelText("Agent name"), { target: { value: "mine" } });
+      expect((screen.getByRole("button", { name: "Sign & Register" }) as HTMLButtonElement).disabled).toBe(true);
+    } finally {
+      authState.current = original;
+    }
+  });
+
+  it("does not show the 'already registered' notice next to the key it just issued", async () => {
+    registerAgent.mockResolvedValue({ agentId: "agent-new", status: "PENDING_VERIFICATION", verificationMessage: "sign me" });
+    signMessageAsync.mockResolvedValue("0xsig");
+    verifyAgent.mockImplementation(async () => {
+      state.agents = [agent("ACTIVE")];
+      return { agentId: "agent-new", status: "ACTIVE", apiKey: "nl_live_first_key", expiresAt: "2027-01-01T00:00:00Z" };
+    });
+    renderWithIntl(<AgentRegisterForm chainId={1439} />);
+    const submit = (await screen.findByRole("button", { name: "Sign & Register" })) as HTMLButtonElement;
+    fireEvent.change(screen.getByLabelText("Agent name"), { target: { value: "fresh-agent" } });
+    await waitFor(() => expect(submit.disabled).toBe(false));
+    fireEvent.submit(submit.closest("form") as HTMLFormElement);
+    await screen.findByLabelText("New API key");
+    await waitFor(() => expect(getAgents).toHaveBeenCalledTimes(2));
+    expect(screen.queryByText(/already registered/)).toBeNull();
+  });
+
   it("surfaces a failed chain switch as an alert next to the switch button", async () => {
     Object.assign(wallet, { isWrongNetwork: true, switchError: "failed" });
     renderWithIntl(<AgentRegisterForm chainId={1439} />);
@@ -286,6 +317,9 @@ describe("AgentRegisterForm field limits (mirror of BE RegisterAgentDto)", () =>
     expect(validateAgentRegisterForm({ name: "n".repeat(AGENT_NAME_MAX), description: "d".repeat(AGENT_DESCRIPTION_MAX) })).toEqual({});
     expect(validateAgentRegisterForm({ name: "n".repeat(AGENT_NAME_MAX + 1), description: "d".repeat(AGENT_DESCRIPTION_MAX + 1) })).toEqual({ name: "tooLong", description: "tooLong" });
     expect(validateAgentRegisterForm({ name: "   ", description: "" })).toEqual({ name: "required" });
+    // Zero-width space / word joiner / Hangul filler only: blank to the reader, so blank to the rule.
+    expect(validateAgentRegisterForm({ name: "\u200B\u2060 \u3164", description: "" })).toEqual({ name: "required" });
+    expect(validateAgentRegisterForm({ name: "Bot\u200B", description: "" })).toEqual({});
   });
 
   it("caps the inputs with maxLength and shows a live description counter", async () => {

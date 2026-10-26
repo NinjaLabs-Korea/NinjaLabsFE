@@ -7,7 +7,7 @@
     "sessionExpired": "会话已过期，请重新登录。"
   },
   "signedOut": {
-    "body": "完成注册流程即可预览你的账户。",
+    "body": "使用 Google 登录即可查看你的账户。",
     "cta": "开始使用"
   },
   "applications": {
@@ -33,6 +33,7 @@
       "completed": "已完成"
     },
     "approvedStatus": "已批准：可以提交",
+    "agentApprovedStatus": "已批准：你的代理 {name} 通过 Agent API 提交",
     "submitWork": "提交作品",
     "resubmit": "重新提交",
     "revisionRequestedStatus": "已要求修改",

@@ -9,6 +9,7 @@ import {
   useAccountApi,
   useAgentApi,
 } from "@/components/auth/FoundationProvider";
+import { isSameWalletAddress } from "@/lib/injective-address";
 import { Link } from "@/i18n/navigation";
 import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
 import type { AgentVerification } from "@/lib/contracts/api";
@@ -18,6 +19,7 @@ import {
   AGENT_DESCRIPTION_MAX,
   AGENT_NAME_MAX,
   agentErrorsFromValidationFields,
+  hasVisibleText,
   validateAgentRegisterForm,
   type AgentRegisterErrors,
 } from "@/lib/agent-register-form";
@@ -76,8 +78,9 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
     switchError,
   } = useWalletConnection(chainId);
   const isBusy = submissionState !== "idle";
-  const ownerWallet = auth.user?.walletAddress?.toLowerCase();
-  const isOwnerWallet = Boolean(address && ownerWallet === address.toLowerCase());
+  // The BE stores the owner's wallet as inj1..., the injected wallet reports 0x...: compare the decoded bytes.
+  const ownerWallet = auth.user?.walletAddress;
+  const isOwnerWallet = Boolean(address && ownerWallet && isSameWalletAddress(ownerWallet, address));
   // A REVOKED agent no longer claims its wallet: registering it again replaces it with a fresh pending agent (the BE soft-deletes the old row).
   const existingAgent = address
     ? agents?.find((agent) => agent.status !== "REVOKED" && agent.walletAddress.toLowerCase() === address.toLowerCase())
@@ -92,7 +95,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       isWrongNetwork ||
       isOwnerWallet ||
       existingAgent?.verified ||
-      !name.trim()
+      !hasVisibleText(name)
     ) {
       return;
     }
@@ -261,7 +264,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
           {t("ownerWallet")}
         </p>
       ) : null}
-      {existingAgent?.verified ? (
+      {existingAgent?.verified && !verification ? (
         <div className="mt-3 rounded-tile border border-success-soft bg-success-soft p-3" role="status">
           <p className="text-sm font-semibold text-success">
             {t("alreadyRegistered", { name: existingAgent.name })}
@@ -315,7 +318,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
             isBusy ||
             isOwnerWallet ||
             existingAgent?.verified ||
-            !name.trim() ||
+            !hasVisibleText(name) ||
             Boolean(verification)
           }
           type="submit"
@@ -329,7 +332,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
           apiKey={verification.apiKey}
           className="mt-5"
           copy={t("copyKey")}
-          expiresLabel={t("expires", { date: format.dateTime(new Date(verification.expiresAt), { dateStyle: "medium", timeStyle: "short" }) })}
+          expiresLabel={t("expires", { date: format.dateTime(new Date(verification.expiresAt), { dateStyle: "medium", timeStyle: "short", timeZoneName: "short" }) })}
           title={t("verified")}
         />
       ) : null}

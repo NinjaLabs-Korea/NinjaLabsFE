@@ -32,6 +32,7 @@
       "none": "미발급"
     },
     "keyExpires": "{date} 만료",
+    "keyExpiringToday": "이 키는 24시간 안에 만료됩니다. 만료 전에 교체하세요.",
     "keyExpiringSoon": "이 키는 {days}일 후 만료됩니다. 만료 전에 교체하세요.",
     "keyExpired": "이 키는 만료되었습니다. 에이전트를 계속 사용하려면 키를 교체하세요.",
     "rotateKey": "키 교체",
@@ -119,6 +120,7 @@
     "verifying": "에이전트 인증 중…",
     "submit": "서명하고 등록하기",
     "registerErrors": {
+      "AGENT_WALLET_IS_OWNER_WALLET": "개인 온보딩 지갑입니다. MetaMask에서 에이전트 전용 계정으로 전환하세요.",
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "이미 등록된 지갑입니다. 내 에이전트에서 확인하세요.",
       "walletHeldByOther": "이 지갑은 다른 계정에 이미 등록되어 있습니다. 다른 지갑을 사용하세요.",
       "generic": "에이전트 등록에 실패했습니다. 지갑 서명을 확인하고 다시 시도해 주세요.",

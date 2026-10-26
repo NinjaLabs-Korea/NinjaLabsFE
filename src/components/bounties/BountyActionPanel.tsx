@@ -134,17 +134,25 @@ export function BountyActionPanel(props: BountyActionPanelProps) {
   const [announcement, setAnnouncement] = useState("");
   // The body keeps "I just applied/submitted" flags and feedback in state. They describe one account, so the body is
   // keyed by user id: a different account on this page (switched in another tab) starts from the server rows only.
-  const accountKey = useAuthSnapshot().user?.id ?? "";
+  const auth = useAuthSnapshot();
+  // The user this page last saw signed in. When the session ends under an open form (refresh rejected), the key must not
+  // change to "": that would remount the body and wipe what the person typed.
+  const [lastUserId, setLastUserId] = useState<string | null>(null);
+  if (auth.user && auth.user.id !== lastUserId) setLastUserId(auth.user.id);
+  const sessionEnded = auth.status === "signed-out" && lastUserId !== null;
+  const accountKey = auth.user?.id ?? lastUserId ?? "";
   return (
     <>
       <p aria-live="polite" className="sr-only">{announcement}</p>
-      <BountyActionPanelBody key={accountKey} {...props} announce={setAnnouncement} />
+      <BountyActionPanelBody key={accountKey} {...props} announce={setAnnouncement} sessionEnded={sessionEnded} />
     </>
   );
 }
 
-function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, deadlinePassed, status, submissionMode, announce }: BountyActionPanelProps & {
+function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, deadlinePassed, status, submissionMode, announce, sessionEnded }: BountyActionPanelProps & {
   announce: (text: string) => void;
+  /** The session ended after this page saw a signed-in user: keep an open form (and its text) and say so. */
+  sessionEnded: boolean;
 }) {
   const t = useTranslations("bounties.action");
   const tError = useTranslations("bounties.action.errors");
@@ -235,13 +243,30 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   };
 
   // The rule for which section to show lives in lib/bounty-action-state.ts (documented by src/test/bounty-action-state.test.ts).
-  const view = deriveActionView({
+  const derivedView = deriveActionView({
     bountyId, applicationRequired, applicationClosed, deadlinePassed, status, submissionMode,
     auth: auth.status,
     applications: applicationsQuery,
     submissions: submissionsQuery,
     applied, submitted,
   });
+
+  // Remember the last form on screen so a session that ends under it does not swap the form (and its typed text) for the
+  // signed-out panel without a word.
+  const formSignature = derivedView.kind === "applyForm" || derivedView.kind === "submitForm" ? JSON.stringify(derivedView) : null;
+  const [heldForm, setHeldForm] = useState<{ signature: string; view: typeof derivedView } | null>(null);
+  if (formSignature) {
+    if (heldForm?.signature !== formSignature) setHeldForm({ signature: formSignature, view: derivedView });
+  } else if (heldForm && derivedView.kind !== "signedOut" && derivedView.kind !== "checkingSession") {
+    setHeldForm(null);
+  }
+  const view = sessionEnded && derivedView.kind === "signedOut" && heldForm ? heldForm.view : derivedView;
+  const sessionEndedLine = sessionEnded ? (
+    <p className="mt-3 text-sm text-danger" role="alert">
+      {t("sessionEnded")}{" "}
+      <Link className="font-semibold underline" href="/signup" rel="noopener" target="_blank">{t("signInAgain")}</Link>
+    </p>
+  ) : null;
 
   switch (view.kind) {
     case "closed":
@@ -307,8 +332,9 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
             <Field label={t("applyMessage")}>
               <textarea className={`min-h-28 ${textareaClass}`} maxLength={APPLICATION_MESSAGE_MAX} name="message" placeholder={t("applyMessage")} required {...invalidProps} />
             </Field>
-            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy} type="submit">{busy ? t("applying") : t("apply")}</button>
+            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy || sessionEnded} type="submit">{busy ? t("applying") : t("apply")}</button>
           </form>
+          {sessionEndedLine}
           {errorLine}
         </section>
       );
@@ -353,8 +379,9 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
             <Field label={t("submissionDescription")}>
               <textarea className={`min-h-24 ${textareaClass}`} maxLength={SUBMISSION_DESCRIPTION_MAX} name="description" placeholder={t("submissionDescription")} required {...invalidProps} />
             </Field>
-            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy} type="submit">{busy ? t("submitting") : actionLabel}</button>
+            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy || sessionEnded} type="submit">{busy ? t("submitting") : actionLabel}</button>
           </form>
+          {sessionEndedLine}
           {feedback?.kind === "success" ? <p className="mt-3 text-sm text-success">{feedback.text}</p> : errorLine}
         </section>
       );

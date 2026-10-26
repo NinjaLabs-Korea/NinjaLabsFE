@@ -46,8 +46,14 @@ export function AccountSettingsView() {
   // Synchronous guard: a second click lands before the `busy` state update.
   const pendingRef = useRef(false);
 
+  // Signed out after being signed in on this page, and not because this page just deleted the account: the session ended
+  // (a delete confirmation hit a revoked session, say). Say so instead of showing the plain "sign in" gate.
+  const [seenSignedIn, setSeenSignedIn] = useState(false);
+  const [withdrawn, setWithdrawn] = useState(false);
+  if (authSnapshot.status === "signed-in" && !seenSignedIn) setSeenSignedIn(true);
+
   if (authSnapshot.status === "signed-out") {
-    return <SignedOutPanel message={t("signedOutMessage")} />;
+    return <SignedOutPanel message={seenSignedIn && !withdrawn ? tAccount("sessionExpired") : t("signedOutMessage")} />;
   }
 
   if (authSnapshot.status !== "signed-in") {
@@ -79,6 +85,7 @@ export function AccountSettingsView() {
       return;
     }
     // The BE already revoked every session; signOut clears the cookie (POST /api/auth/logout) and the local state.
+    setWithdrawn(true);
     pushFlash("accountDeleted");
     try {
       await signOut();

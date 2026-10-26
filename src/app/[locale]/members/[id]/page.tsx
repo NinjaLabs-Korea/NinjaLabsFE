@@ -98,7 +98,6 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
                 <span className={`${mascotTileClass} bg-on-inverse`}><Image alt="" height={36} src="/figma/ninja-labs-mascot.png" width={36} /></span>
                 <h3 className="mt-4 font-display text-xl font-bold">{t("portfolio.emptyTitle")}</h3>
                 <p className="mt-2 max-w-md text-sm text-on-inverse/70">{completed ? t("portfolio.emptyBodyCompleted") : t("portfolio.emptyBodyNew")}</p>
-                <Link className="mt-5 rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-outline" href="/bounties">{t("portfolio.browse")}</Link>
               </div>
             )}
             <p className="mt-5 text-center text-sm text-on-inverse/75">{completed ? t("portfolio.summaryCompleted", { count: profile.completions.length }) : t("portfolio.summaryEmpty")}</p>
@@ -135,7 +134,6 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
             <span className={`${mascotTileClass} bg-primary-soft`}><Image alt="" height={36} src="/figma/ninja-labs-mascot.png" width={36} /></span>
             <h3 className="mt-4 font-display text-xl font-bold text-ink">{t("history.emptyTitle")}</h3>
             <p className="mt-2 max-w-xl text-sm text-ink-muted">{t("history.emptyBody")}</p>
-            <Link className="mt-5 rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/bounties">{t("history.findFirst")}</Link>
           </div>
         )}
       </section>
@@ -161,7 +159,6 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
               <h3 className="font-display text-xl font-bold text-ink">{t("agents.emptyTitle")}</h3>
               <p className="mt-1 text-sm text-ink-muted">{t("agents.emptyBody")}</p>
             </div>
-            <Link className="rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/agents/register">{t("agents.register")}</Link>
           </div>
         )}
       </section>
