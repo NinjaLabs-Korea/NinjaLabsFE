@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { StartLink } from "@/components/auth/StartLink";
 import { BountyCard } from "@/components/cards/BountyCard";
 import { NewsCard } from "@/components/cards/NewsCard";
 import { Badge } from "@/components/ui/Badge";
@@ -13,6 +14,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("landing");
+  const tUser = await getTranslations("common.userMenu");
   const tStats = await getTranslations("hallOfFame.stats");
   const { hero, bounties, news, unavailable } = await getRuntimeLanding(locale);
 
@@ -42,12 +44,12 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
             </h1>
             <p className="mt-6 max-w-[524px] text-lg text-on-inverse/75">{t("hero.description")}</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
+              <StartLink
                 className="rounded-control bg-primary px-[29px] py-[15px] text-center text-base font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                href={hero.primaryCta.href}
-              >
-                {t(`hero.${hero.primaryCta.labelKey}`)}
-              </Link>
+                memberLabel={tUser("myProfile")}
+                resumeLabel={t("hero.continueSignup")}
+                signUpLabel={t(`hero.${hero.primaryCta.labelKey}`)}
+              />
               <Link
                 className="rounded-control border border-on-inverse/20 bg-on-inverse/8 px-[29px] py-[15px] text-center text-base font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 href={hero.secondaryCta.href}

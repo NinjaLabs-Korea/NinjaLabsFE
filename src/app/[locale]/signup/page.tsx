@@ -3,8 +3,8 @@ import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
+import { SignupEntryGate } from "@/components/signup/SignupEntryGate";
 import { StepIndicator } from "@/components/ui/StepIndicator";
-import { signup } from "@/lib/signup";
 import { loadRuntimeConfig } from "@/lib/runtime/config";
 import { localeMetadata } from "@/i18n/alternates";
 
@@ -34,18 +34,12 @@ export default async function SignupPage({ params }: PageProps<"/[locale]/signup
             <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] text-ink">{t("title")}</h1>
             <p className="mt-3 text-base text-ink-muted">{t("description")}</p>
           </div>
-          <GoogleLoginButton turnstileSiteKey={loadRuntimeConfig().turnstileSiteKey} />
-          <div className="mt-5 rounded-tile border border-border bg-primary-soft p-4 text-center text-sm text-ink-notice">
-            {t("disclosure")}
-          </div>
-          <div className="mt-5 rounded-tile border border-border bg-surface p-[21px]">
-            <h2 className="font-display text-lg font-bold text-ink">{t("statusTitle")}</h2>
-            <ul className="mt-3 space-y-2 text-sm text-ink-muted">
-              {signup.login.edgeCaseKeys.map((edgeCase) => (
-                <li key={edgeCase}>{t(`edgeCases.${edgeCase}`)}</li>
-              ))}
-            </ul>
-          </div>
+          <SignupEntryGate>
+            <GoogleLoginButton turnstileSiteKey={loadRuntimeConfig().turnstileSiteKey} />
+            <div className="mt-5 rounded-tile border border-border bg-primary-soft p-4 text-center text-sm text-ink-notice">
+              {t("disclosure")}
+            </div>
+          </SignupEntryGate>
         </div>
       </div>
     </section>
