@@ -160,7 +160,7 @@ describe("ApplicationsView", () => {
     renderWithIntl(<ApplicationsView />);
     await screen.findByRole("link", { name: "Bounty revisionRequested" });
     const article = card("Bounty revisionRequested");
-    const badge = within(article).getByText("Revision requested");
+    const badge = within(article).getByText("Revision requested").closest(".rounded-full") as HTMLElement;
     expect(badge.className).toContain("text-warning");
     expect(currentStep(article)).toContain("Submitted");
     expect(within(article).getByText("Action needed")).toBeTruthy();

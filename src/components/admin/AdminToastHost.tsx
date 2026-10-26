@@ -52,7 +52,7 @@ export function AdminToastHost() {
   return (
     <>
       <div aria-live="polite" className="sr-only">{announcement ? <span key={announcement.id}>{announcement.text}</span> : null}</div>
-      <div className="fixed bottom-4 right-4 z-[70] flex flex-col gap-2.5">
+      <div className="fixed bottom-4 right-4 z-[70] flex max-w-[calc(100vw-2rem)] flex-col gap-2.5">
         {toasts.map((toast) => (
           <DismissibleToast dismiss={dismissToast} key={toast.id} toast={toast} />
         ))}

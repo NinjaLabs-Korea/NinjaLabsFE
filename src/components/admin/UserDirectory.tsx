@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
-import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { UserActions } from "@/components/admin/UserActions";
 import { Badge } from "@/components/ui/Badge";
@@ -195,12 +195,12 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
 
       {visibleUsers.length > 0 ? (
         <div className="mt-6">
-          <AdminTable columns={columns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[820px]">
+          <AdminTable columns={columns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[1120px]">
             {visibleUsers.map((user) => (
               <tr className="border-t border-border" key={user.slug}>
-                <td className="px-5 py-4 text-sm font-semibold text-ink">{user.nickname}</td>
-                <td className="px-5 py-4 text-sm text-ink-muted">{user.email}</td>
-                <td className="px-5 py-4 text-sm text-ink-secondary">{user.joinedAt || "–"}</td>
+                <td className={`px-5 py-4 text-sm font-semibold text-ink ${adminLongTextCell}`}>{user.nickname}</td>
+                <td className={`px-5 py-4 text-sm text-ink-muted ${adminLongTextCell}`}>{user.email}</td>
+                <td className="whitespace-nowrap px-5 py-4 text-sm text-ink-secondary">{user.joinedAt || "–"}</td>
                 <td className="px-5 py-4 text-sm text-ink-secondary">
                   {user.walletStatus === "linked" ? <Badge variant="success">{t("walletLinked")}</Badge> : "-"}
                 </td>
@@ -220,7 +220,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
           </AdminTable>
           {canLoadMore ? (
             <div className="mt-4 flex justify-center">
-              <button className="rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={loadingMore} onClick={() => void loadMore()} type="button">{t("loadMore")}</button>
+              <button className="rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={loadingMore} onClick={() => void loadMore()} type="button">{t("loadMore")}</button>
             </div>
           ) : null}
           <p className="mt-3 text-xs text-ink-muted">{tCommon("saveNotice")}</p>
@@ -228,14 +228,14 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
       ) : directoryUsers.length === 0 && loadState !== "ready" ? (
         <p className="mt-6 flex flex-wrap items-center gap-3 rounded-card border border-border bg-surface p-[21px] text-sm text-ink-muted shadow-card" role="status">
           {loadState === "failed" ? t("toast.loadFailedDescription") : t("loading")}
-          {loadState === "failed" ? <button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => { setLoadState("loading"); void loadDirectory(); }} type="button">{t("retry")}</button> : null}
+          {loadState === "failed" ? <button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => { setLoadState("loading"); void loadDirectory(); }} type="button">{t("retry")}</button> : null}
         </p>
       ) : (
         <div className="mt-6 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center">
           <p className="text-sm font-semibold text-ink">{t("emptyTitle")}</p>
           <p className="mt-1 text-sm text-ink-muted">{t("emptyBody")}</p>
           <button
-            className="mt-4 rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="mt-4 rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             onClick={() => setQuery("")}
             type="button"
           >

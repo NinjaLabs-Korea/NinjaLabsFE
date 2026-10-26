@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import type { OpsDateFormatter, OpsRunner } from "@/components/admin/BountyOperations";
 import { OpsActorCell } from "@/components/admin/OpsActorCell";
 import { OpsFormModal } from "@/components/admin/OpsFormModal";
@@ -62,8 +62,8 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
               const decisions = submissionDecisionsFor(submission.status, ops.bounty.status);
               return (
                 <tr className="border-t border-border" key={submission.id}>
-                  <td className={opsCell}><OpsActorCell actor={submission} /><p className="mt-1 text-xs text-ink-muted">{formatDate(submission.submittedAt)}</p></td>
-                  <td className={`${opsCell} max-w-[360px]`}>
+                  <td className={`${opsCell} ${adminLongTextCell}`}><OpsActorCell actor={submission} /><p className="mt-1 text-xs text-ink-muted">{formatDate(submission.submittedAt)}</p></td>
+                  <td className={`${opsCell} max-w-[360px] ${adminLongTextCell}`}>
                     <p className="text-xs font-semibold text-ink">{t("submissions.revision", { revision: submission.currentRevisionNo })}</p>
                     {latest ? <p className="mt-1 whitespace-pre-line break-words">{latest.description}</p> : null}
                     <div className="mt-1 flex flex-wrap gap-3 text-xs font-semibold">

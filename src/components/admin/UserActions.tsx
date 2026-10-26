@@ -53,7 +53,7 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
   return (
     <>
       <button
-        className={`rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong ${focusClass}`}
+        className={`rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong ${focusClass}`}
         onClick={() => {
           if (user.isMember) {
             setRemoveOpen(true);
@@ -89,7 +89,7 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
           {roles.map((item) => (
             <button
               aria-pressed={role === item}
-              className={`h-6 rounded-full px-2.5 text-xs font-semibold ${role === item ? "bg-primary text-primary-soft" : "bg-primary-soft text-primary-strong"} ${focusClass}`}
+              className={`h-6 rounded-full px-2.5 text-xs font-semibold max-sm:h-10 max-sm:px-4 ${role === item ? "bg-primary text-primary-soft" : "bg-primary-soft text-primary-strong"} ${focusClass}`}
               key={item}
               onClick={() => setRole(item)}
               type="button"

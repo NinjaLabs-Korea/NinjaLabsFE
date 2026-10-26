@@ -105,7 +105,7 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
             const headroom = rewardHeadroom(reward);
             return (
               <li className="flex flex-wrap items-center gap-3 rounded-tile border border-border px-4 py-3 text-sm" key={reward.id}>
-                <span className="text-ink-secondary">{t("payouts.headroom", { amount: opsAmount(headroom, reward.symbol) })}</span>
+                <span className="min-w-0 text-ink-secondary [overflow-wrap:anywhere]">{t("payouts.headroom", { amount: opsAmount(headroom, reward.symbol) })}</span>
                 <button className={opsPrimaryButton} disabled={!candidates.length || headroom === "0" || busy.has(`request:${reward.id}`)} onClick={() => openRequest(reward)} type="button">{t("payouts.request")}</button>
                 {!candidates.length ? <span className="text-xs text-ink-muted">{t("payouts.noCandidates")}</span> : null}
               </li>
