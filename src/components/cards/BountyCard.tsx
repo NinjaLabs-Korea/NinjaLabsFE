@@ -1,11 +1,10 @@
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 
+import { CoverImage } from "@/components/cards/CoverImage";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { Link } from "@/i18n/navigation";
 import { safeHttpUrl } from "@/lib/api/codecs";
-import { imageProps } from "@/lib/image";
 import type { Bounty } from "@/lib/types";
 
 type BountyCardProps = {
@@ -33,13 +32,7 @@ export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3
     >
       <div className="relative aspect-[368.67/207.37]">
         {coverImage ? (
-          <Image
-            {...imageProps(coverImage)}
-            alt=""
-            fill
-            sizes="(max-width: 768px) 100vw, 370px"
-            className="object-cover"
-          />
+          <CoverImage sizes="(max-width: 768px) 100vw, 370px" src={coverImage} />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary-soft-border to-surface-subtle" />
         )}
