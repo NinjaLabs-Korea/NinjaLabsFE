@@ -181,15 +181,10 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       }
       return restoreSession();
     })().then(leaveCallbackOrOnboard).catch((error: unknown) => {
-      // 교환을 실제로 시도했다가 실패한 경우에만 기존 세션을 끝낸다(쿠키도 폐기). `#error=`나 verifier 없는
-      // `#loginCode=`(링크로 심을 수 있는 값)로는 로그인 중이던 세션을 잃지 않고 쿠키로 그대로 복원한다.
-      const attempted = error instanceof LoginExchangeError && error.attempted;
-      onboardingLog("oauth.exchange.failed", { attempted });
-      if (attempted) {
-        const signedOut = http.signOutRemote();
-        const snapshotAfter = setSnapshot({ status: "signed-out", user: null });
-        return signedOut.then(() => snapshotAfter);
-      }
+      // 교환이 실패해도(만료, 이미 사용, 다른 탭이 먼저 소비) 공유 쿠키의 기존 세션은 건드리지 않는다. 같은 링크를 연
+      // 두 탭 중 진 쪽이 이긴 쪽의 세션을 폐기하면 안 된다. 세션이 없으면 아래 복원이 signed-out으로 끝나고 콜백 페이지가
+      // 실패 화면을 보여 준다.
+      onboardingLog("oauth.exchange.failed", { attempted: error instanceof LoginExchangeError && error.attempted });
       return http.initSession()
         .then(() => restoreSession())
         // The restored session still has to leave the callback page (it shows a spinner for a signed-in user).
