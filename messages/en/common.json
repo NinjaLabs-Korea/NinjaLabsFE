@@ -130,6 +130,10 @@
     "signInRequired": {
       "title": "Sign in to continue",
       "description": "Signing up starts with Google sign-in. Sign in first, then connect a wallet and set up your profile."
+    },
+    "signOutFailed": {
+      "title": "Sign out did not complete",
+      "description": "We could not reach the server to end your session, so you are still signed in. Check your connection and press Sign out again."
     }
   }
 }

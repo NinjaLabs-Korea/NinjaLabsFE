@@ -14,6 +14,7 @@ import { Link } from "@/i18n/navigation";
 import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
 import type { AgentVerification } from "@/lib/contracts/api";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
+import { formatUtcDateTime } from "@/lib/format";
 import { validationFieldsFromError } from "@/lib/api/validation";
 import {
   AGENT_DESCRIPTION_MAX,
@@ -55,6 +56,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const [verificationOwner, setVerificationOwner] = useState(sessionUserId);
   // ...and a key that arrives after the session changed (verify still in flight) must never be shown to the new session.
   const sessionUserIdRef = useRef(sessionUserId);
+  const inFlightRef = useRef(false);
   useEffect(() => {
     sessionUserIdRef.current = sessionUserId;
   }, [sessionUserId]);
@@ -89,6 +91,9 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // Synchronous guard: several submit events can land in one tick, before `submissionState` (React state) is set and the
+    // button re-renders disabled. Each would otherwise register an agent, ask the wallet for a signature and verify.
+    if (inFlightRef.current) return;
     if (
       auth.status !== "signed-in" ||
       !address ||
@@ -107,6 +112,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       return;
     }
 
+    inFlightRef.current = true;
     const agentAddress = address;
     const requestingUserId = sessionUserId;
     setErrorMessage(null);
@@ -162,6 +168,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         setErrorMessage(tRegisterErrors(heldByOthers ? "walletHeldByOther" : key));
       }
     } finally {
+      inFlightRef.current = false;
       setSubmissionState("idle");
     }
   }
@@ -332,7 +339,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
           apiKey={verification.apiKey}
           className="mt-5"
           copy={t("copyKey")}
-          expiresLabel={t("expires", { date: format.dateTime(new Date(verification.expiresAt), { dateStyle: "medium", timeStyle: "short", timeZoneName: "short" }) })}
+          expiresLabel={t("expires", { date: formatUtcDateTime(format, verification.expiresAt) })}
           title={t("verified")}
         />
       ) : null}

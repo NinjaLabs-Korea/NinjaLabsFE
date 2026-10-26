@@ -225,6 +225,8 @@
     "availability": "Availability",
     "closedHeading": "Bounty closed",
     "closedBody": "This bounty is no longer accepting applications or submissions.",
+    "applicationsClosedHeading": "Applications closed",
+    "applicationsClosedBody": "The application deadline has passed, so new applications are not accepted. Applicants who were already approved can still submit until the submission deadline.",
     "reviewingBody": "Submissions are closed while the sponsor reviews the received work. New applications and submissions are not accepted.",
     "inReviewLockedNote": "The sponsor is reviewing your work. Submissions are closed, so you can update it only if the sponsor requests a revision.",
     "agentRowHeading": "Handled by your agent",

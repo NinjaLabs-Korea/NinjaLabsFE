@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Toast } from "@/components/ui/Toast";
-import { FLASH_EVENT, takeFlash, type FlashKey } from "@/lib/flash";
+import { FAILURE_FLASH_KEYS, FLASH_EVENT, takeFlash, type FlashKey } from "@/lib/flash";
 
 /** How long a flash stays up before it dismisses itself. */
 export const FLASH_TOAST_MS = 6000;
@@ -51,7 +51,7 @@ export function FlashToast() {
             description={t(`${flash}.description`)}
             onDismiss={() => setFlash(null)}
             title={t(`${flash}.title`)}
-            variant="success"
+            variant={FAILURE_FLASH_KEYS.includes(flash) ? "danger" : "success"}
           />
         </div>
       ) : null}

@@ -130,6 +130,10 @@
     "signInRequired": {
       "title": "请先登录",
       "description": "注册从 Google 登录开始。请先登录，再连接钱包并设置个人资料。"
+    },
+    "signOutFailed": {
+      "title": "退出登录未完成",
+      "description": "无法连接服务器结束会话，因此你仍处于登录状态。请检查网络后再次点击退出登录。"
     }
   }
 }

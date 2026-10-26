@@ -73,6 +73,13 @@ export default async function proxy(request: NextRequest) {
 
   const notFound = NextResponse.rewrite(new URL(`/${locale}/${NOT_FOUND_SEGMENT}`, request.url), { status: 404 });
   for (const cookie of response.headers.getSetCookie()) notFound.headers.append("set-cookie", cookie);
+  // The shared CSP from `next.config.ts headers()` skips nonce-route paths (the proxy was meant to send theirs), but this
+  // rewrite lands on the STATIC, cacheable page-not-found page: it cannot carry a per-request nonce, and it still runs the
+  // auth provider (session UI, in-memory access token). Give it the public policy instead of none.
+  if (nonced) {
+    const mode = cspMode();
+    notFound.headers.set(CSP_HEADER_NAME[mode], contentSecurityPolicy(mode));
+  }
   return notFound;
 }
 

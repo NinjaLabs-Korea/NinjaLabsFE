@@ -19,7 +19,7 @@ const { wallet: walletConnectionConfig } = composeFoundationRuntime(previewUser)
 // Keys under agents.register.steps / agents.register.verificationItems.
 const steps = ["doc", "publicKey", "ownership", "apiKey"] as const;
 
-const verificationItems = ["challenge", "signature", "binding", "failure"] as const;
+const verificationItems = ["challenge", "signature", "binding", "multiple"] as const;
 
 type AgentRegisterPageProps = {
   params: Promise<{ locale: string }>;
@@ -111,7 +111,11 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
       <section className="mt-8">
         <article className="rounded-card border border-border bg-surface p-[21px] shadow-card">
           <Badge variant="warning">{t("withdrawalBadge")}</Badge>
-          <p className="mt-3 text-sm text-ink-secondary">{t("withdrawal")}</p>
+          <p className="mt-3 text-sm text-ink-secondary">
+            {t.rich("withdrawal", {
+              link: (chunks) => <Link className="font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/account">{chunks}</Link>,
+            })}
+          </p>
         </article>
       </section>
 

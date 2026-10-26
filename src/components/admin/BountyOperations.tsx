@@ -100,9 +100,9 @@ export function BountyOperations({ bountyId, onStatusChange }: { bountyId: strin
     <div>
       <section className="mt-6 rounded-card border border-border bg-surface p-[21px] shadow-card" aria-labelledby="ops-bounty-title">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("bountyEyebrow")}</p>
-            <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink" id="ops-bounty-title">{ops.bounty.title}</h2>
+            <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink [overflow-wrap:anywhere]" id="ops-bounty-title">{ops.bounty.title}</h2>
             <p className="mt-2 text-sm text-ink-muted">{t("bountyMeta", { deadline: formatDate(ops.bounty.submissionDeadline), maxWinners: ops.bounty.maxWinners })}</p>
           </div>
           <div className="flex items-center gap-2">
