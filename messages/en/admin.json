@@ -36,6 +36,7 @@
       "NOTICE_NOT_FOUND": "This notice no longer exists (another admin may have deleted it). The list was refreshed.",
       "HIGHLIGHT_NOT_FOUND": "This highlight no longer exists (another admin may have deleted it). The list was refreshed.",
       "USER_NOT_FOUND": "This user no longer exists or has withdrawn. Reload the page to refresh the list.",
+      "PROFILE_REQUIRED": "This user has not finished signing up (profile not saved yet), so a member role cannot be assigned. Try again after they complete onboarding.",
       "USDC_EVM_CONTRACT_NOT_CONFIGURED": "The server has no USDC contract address configured, so a USDC reward cannot be created. Ask the operator to set it, or use INJ.",
       "INJECTIVE_EVM_CHAIN_NOT_CONFIGURED": "The server has no Injective EVM chain ID configured, so a USDC reward cannot be created. Ask the operator to set it, or use INJ.",
       "DEADLINE_IN_PAST": "The deadline cannot be moved into the past. Pick a future date and time, or keep the saved deadline.",

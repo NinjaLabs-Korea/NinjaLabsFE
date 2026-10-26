@@ -36,6 +36,7 @@
       "NOTICE_NOT_FOUND": "이 공지가 더 이상 없습니다(다른 운영자가 삭제했을 수 있습니다). 목록을 새로 불러왔습니다.",
       "HIGHLIGHT_NOT_FOUND": "이 하이라이트가 더 이상 없습니다(다른 운영자가 삭제했을 수 있습니다). 목록을 새로 불러왔습니다.",
       "USER_NOT_FOUND": "이 사용자가 더 이상 없거나 탈퇴했습니다. 페이지를 새로고침해 목록을 갱신하세요.",
+      "PROFILE_REQUIRED": "이 사용자는 아직 가입(프로필 저장)을 끝내지 않아 멤버 역할을 지정할 수 없습니다. 온보딩을 마친 뒤 다시 시도하세요.",
       "USDC_EVM_CONTRACT_NOT_CONFIGURED": "서버에 USDC 컨트랙트 주소가 설정되어 있지 않아 USDC 보상을 만들 수 없습니다. 운영 설정을 요청하거나 INJ를 사용하세요.",
       "INJECTIVE_EVM_CHAIN_NOT_CONFIGURED": "서버에 Injective EVM 체인 ID가 설정되어 있지 않아 USDC 보상을 만들 수 없습니다. 운영 설정을 요청하거나 INJ를 사용하세요.",
       "DEADLINE_IN_PAST": "마감일을 과거로 옮길 수 없습니다. 미래의 날짜와 시간을 고르거나 저장된 마감일을 그대로 두세요.",

@@ -171,6 +171,8 @@ export const ERROR_COPY = {
       "INVALID_CHARACTER", "INVALID_DATE", "REFERENCE_NOT_FOUND", "BOUNTY_NOT_FOUND", "BOUNTY_HAS_OPEN_FUNDS",
       // 다른 운영자가 먼저 지운 공지/하이라이트/유저에 대한 수정·삭제·멤버 지정 (404)
       "NOTICE_NOT_FOUND", "HIGHLIGHT_NOT_FOUND", "USER_NOT_FOUND",
+      // 멤버 지정: 가입(온보딩)을 끝내지 않은 유저 (409) - 운영자가 할 수 있는 일이 없다는 이유를 말해 준다
+      "PROFILE_REQUIRED",
       // 바운티 생성: 서버 env에 USDC 컨트랙트 / EVM 체인 ID가 없다 (운영자가 고칠 설정 문제 - 일반 실패 문구로 숨기지 않는다)
       "USDC_EVM_CONTRACT_NOT_CONFIGURED", "INJECTIVE_EVM_CHAIN_NOT_CONFIGURED",
       // 바운티 수정: 마감을 과거로 옮김 (BE bounty-admin.service - 저장된 값 그대로 되보내는 것은 통과)

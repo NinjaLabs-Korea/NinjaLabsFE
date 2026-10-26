@@ -36,6 +36,7 @@
       "NOTICE_NOT_FOUND": "该公告已不存在（可能已被其他管理员删除）。列表已刷新。",
       "HIGHLIGHT_NOT_FOUND": "该精选已不存在（可能已被其他管理员删除）。列表已刷新。",
       "USER_NOT_FOUND": "该用户已不存在或已注销。请刷新页面以更新列表。",
+      "PROFILE_REQUIRED": "该用户尚未完成注册（资料未保存），因此无法分配成员角色。请待其完成注册后再试。",
       "USDC_EVM_CONTRACT_NOT_CONFIGURED": "服务器未配置 USDC 合约地址，无法创建 USDC 奖励。请联系运维设置，或改用 INJ。",
       "INJECTIVE_EVM_CHAIN_NOT_CONFIGURED": "服务器未配置 Injective EVM 链 ID，无法创建 USDC 奖励。请联系运维设置，或改用 INJ。",
       "DEADLINE_IN_PAST": "截止时间不能改到过去。请选择未来的日期和时间，或保留已保存的截止时间。",
