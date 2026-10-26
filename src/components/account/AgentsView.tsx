@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
 import { describeAgentKey } from "@/lib/agent-keys";
-import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
+import { ERROR_COPY, errorCopyKey, knownCode } from "@/lib/api/error-copy";
 import { formatUtcDateTime } from "@/lib/format";
 import type { AccountAgent } from "@/lib/contracts/account";
 import type { AgentKeyRotation } from "@/lib/contracts/api";
@@ -118,7 +118,11 @@ export function AgentsView() {
       setAgentAction(agent.id, null);
       refresh();
     } catch (error) {
-      setAgentAction(agent.id, { kind: "error", message: tRotateErrors(errorCopyKey(error, ERROR_COPY.agentRotate)) });
+      const key = errorCopyKey(error, ERROR_COPY.agentRotate);
+      setAgentAction(agent.id, { kind: "error", message: tRotateErrors(key) });
+      // The card is stale (revoked or deleted elsewhere): retrying cannot help, so re-read the list instead of leaving
+      // Active/Rotate/Revoke on a card that no longer matches the account.
+      if (key === "AGENT_NOT_ACTIVE" || key === "AGENT_NOT_FOUND") refresh();
     } finally {
       pendingRef.current.delete(agent.id);
     }
@@ -135,8 +139,10 @@ export function AgentsView() {
       await agentApi.revokeAgent(agent.id);
       setAgentAction(agent.id, null);
       refresh();
-    } catch {
+    } catch (error) {
       setAgentAction(agent.id, { kind: "error", message: t("revokeFailed") });
+      // A 404 means the agent is already gone from this account: show the real list.
+      if (knownCode(error, ["AGENT_NOT_FOUND"] as const)) refresh();
     } finally {
       pendingRef.current.delete(agent.id);
     }

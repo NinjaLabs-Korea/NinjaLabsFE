@@ -42,6 +42,7 @@
     "rotateErrors": {
       "generic": "无法轮换密钥，请重试。",
       "AGENT_NOT_ACTIVE": "只有处于活动状态的代理才能轮换密钥。",
+      "AGENT_NOT_FOUND": "该代理已不存在。列表已刷新。",
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },
     "revokeAgent": "撤销代理",
