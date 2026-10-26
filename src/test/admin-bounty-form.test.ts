@@ -201,7 +201,9 @@ describe("admin bounty form validation", () => {
     expect(validateBountyForm({ ...valid, currency: "USDC", amount: "0.0000001" }, { now }).amount).toBe("amountInvalid");
     expect(validateBountyForm({ ...valid, currency: "USDC", amount: "1e-9" }, { now }).amount).toBe("amountInvalid");
     expect(validateBountyForm({ ...valid, currency: "INJ", amount: "0.000000000000000001" }, { now }).amount).toBeUndefined();
-    expect(validateBountyForm({ ...valid, currency: "INJ", amount: "1e3" }, { now }).amount).toBeUndefined();
+    // Exponent notation is refused: rewards cannot be edited after creation, and "5e" / "1e18" are typos, not amounts.
+    for (const amount of ["1e3", "1E3", "5e", "1e18", "2.5e1"]) expect(validateBountyForm({ ...valid, currency: "INJ", amount }, { now }).amount, amount).toBe("amountInvalid");
+    expect(validateBountyForm({ ...valid, currency: "INJ", amount: "1000" }, { now }).amount).toBeUndefined();
     expect(validateBountyForm({ ...valid, currency: "INJ", amount: "abc" }, { now }).amount).toBe("amountInvalid");
   });
 
