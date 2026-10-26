@@ -102,8 +102,9 @@ describe("MemberCard", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Kim" })).toBeTruthy();
     expect(screen.getByText("Dev · Engineer")).toBeTruthy();
     expect(screen.getByText("Writes code.")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Profile" }).getAttribute("href")).toBe("/members/kim");
-    expect(screen.getByRole("link", { name: "Posts" }).getAttribute("href")).toBe("/notices?author=kim");
+    // Every card says "Profile": the accessible name carries the member so a screen reader's link list is distinguishable (WCAG 2.4.4).
+    expect(screen.getByRole("link", { name: "Profile of Kim" }).getAttribute("href")).toBe("/members/kim");
+    expect(screen.getByRole("link", { name: "Posts of Kim" }).getAttribute("href")).toBe("/notices?author=kim");
   });
 
   it("falls back to the default title and bio when the member has not written one", () => {

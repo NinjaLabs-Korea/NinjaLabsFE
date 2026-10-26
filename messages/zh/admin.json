@@ -17,6 +17,7 @@
     "deleteDescription": "将从平台中删除此记录，公开页面会立即更新。",
     "deleteCallout": "此操作无法撤销。",
     "urlHint": "https://… 或 /media/… 路径",
+    "httpUrlHint": "https://…（仅限 http 或 https）",
     "urlInvalid": "请输入 http(s) URL（或允许的站内路径）。",
     "orderInvalid": "请输入大于等于 0 的整数。",
     "required": "此项为必填项。",

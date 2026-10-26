@@ -17,6 +17,7 @@
     "deleteDescription": "This removes the record from the platform. Public pages update immediately.",
     "deleteCallout": "This cannot be undone.",
     "urlHint": "https://… or /media/… path",
+    "httpUrlHint": "https://… (http or https only)",
     "urlInvalid": "Enter an http(s) URL (or an allowed site path).",
     "orderInvalid": "Enter a whole number from 0 up.",
     "required": "This field is required.",

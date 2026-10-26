@@ -17,6 +17,7 @@
     "deleteDescription": "플랫폼에서 이 항목을 삭제합니다. 공개 페이지에 즉시 반영됩니다.",
     "deleteCallout": "되돌릴 수 없습니다.",
     "urlHint": "https://… 또는 /media/… 경로",
+    "httpUrlHint": "https://… (http 또는 https만 가능)",
     "urlInvalid": "http(s) URL(또는 허용된 사이트 경로)을 입력하세요.",
     "orderInvalid": "0 이상의 정수를 입력하세요.",
     "required": "필수 항목입니다.",
