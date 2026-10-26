@@ -107,7 +107,7 @@ describe("audit log api", () => {
     const audit = createHttp({ items: [row], page: 2, pageSize: 30, total: 31 });
     const page = await createAdminApi(audit.http).getAdminAuditLogs({ entityType: "payout", entityId: "11111111-1111-4111-8111-111111111111" }, 2);
     expect(calls(audit.fetchJson)[0][0]).toBe("/admin/audit-logs?entityType=payout&entityId=11111111-1111-4111-8111-111111111111&page=2");
-    expect(page).toEqual({ page: 2, pageSize: 30, total: 31, items: [{ id: "l1", actorUserId: null, actorAgentId: null, action: "ADMIN_GRANTED", entityType: "user", entityId: "u1", createdAt: "2026-10-01T00:00:00Z" }] });
+    expect(page).toEqual({ page: 2, pageSize: 30, total: 31, items: [{ id: "l1", actorUserId: null, actorAgentId: null, actorNickname: null, action: "ADMIN_GRANTED", entityType: "user", entityId: "u1", createdAt: "2026-10-01T00:00:00Z" }] });
     const bare = createHttp({ items: [], page: 1, pageSize: 30, total: 0 });
     await createAdminApi(bare.http).getAdminAuditLogs({}, 1);
     expect(calls(bare.fetchJson)[0][0]).toBe("/admin/audit-logs?page=1");
