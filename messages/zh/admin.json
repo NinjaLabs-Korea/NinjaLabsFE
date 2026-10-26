@@ -343,6 +343,8 @@
     "description": "确认奖励存款、审核申请与提交、处理付款，并推进赏金生命周期。",
     "adminOnlyBadge": "ADMIN ONLY",
     "pickBounty": "赏金",
+    "pickBountyPlaceholder": "选择赏金",
+    "bountyNotFound": "未找到 id 为“{id}”的赏金（可能已被删除）。请从列表中选择。",
     "noBounties": "还没有赏金。请先在赏金管理中创建。",
     "loading": "正在加载运营数据…",
     "loadFailed": "无法加载运营数据。",

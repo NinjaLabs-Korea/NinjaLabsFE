@@ -343,6 +343,8 @@
     "description": "Confirm reward deposits, review applications and submissions, run payouts and move bounties through their lifecycle.",
     "adminOnlyBadge": "ADMIN ONLY",
     "pickBounty": "Bounty",
+    "pickBountyPlaceholder": "Select a bounty",
+    "bountyNotFound": "No bounty with the id “{id}” was found (it may have been deleted). Pick one from the list.",
     "noBounties": "No bounties yet. Create one under Bounty Mgmt first.",
     "loading": "Loading operations…",
     "loadFailed": "The operations data could not be loaded.",

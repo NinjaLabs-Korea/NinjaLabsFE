@@ -414,4 +414,32 @@ describe("OperationsConsole", () => {
     fireEvent.click(retry);
     expect(await screen.findByText(/No bounties yet/)).toBeTruthy();
   });
+
+  describe("?bounty= deep link", () => {
+    const rows = [{ slug: "first", title: "First bounty" }, { slug: "second", title: "Second bounty" }] as never[];
+    const openWith = (query: string) => {
+      window.history.replaceState(null, "", `/admin/operations${query}`);
+      adminApi.getAdminBounties.mockResolvedValue(rows);
+      adminApi.getAdminOperations.mockClear();
+      renderWithIntl(<OperationsConsole bounties={[]} tabs={null}>{null}</OperationsConsole>);
+    };
+
+    it("selects the linked bounty", async () => {
+      openWith("?bounty=second");
+      await waitFor(() => expect(adminApi.getAdminOperations).toHaveBeenCalledWith("second"));
+      expect(screen.queryByRole("alert")).toBeNull();
+    });
+
+    it.each(["nope", "00000000-0000-4000-8000-000000000000"])("says so and opens no bounty for an unknown id (%s), instead of the first bounty", async (id) => {
+      openWith(`?bounty=${id}`);
+      expect((await screen.findByRole("alert")).textContent).toContain(`“${id}”`);
+      expect(adminApi.getAdminOperations).not.toHaveBeenCalled();
+    });
+
+    it("opens the first bounty when there is no link", async () => {
+      openWith("");
+      await waitFor(() => expect(adminApi.getAdminOperations).toHaveBeenCalledWith("first"));
+      expect(screen.queryByRole("alert")).toBeNull();
+    });
+  });
 });

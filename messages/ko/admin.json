@@ -343,6 +343,8 @@
     "description": "보상 입금 확인, 지원/제출 심사, 지급 처리, 바운티 상태 전이를 한곳에서 관리합니다.",
     "adminOnlyBadge": "ADMIN ONLY",
     "pickBounty": "바운티",
+    "pickBountyPlaceholder": "바운티 선택",
+    "bountyNotFound": "id “{id}”인 바운티를 찾을 수 없습니다(삭제되었을 수 있습니다). 목록에서 선택하세요.",
     "noBounties": "아직 바운티가 없습니다. 먼저 바운티 관리에서 등록하세요.",
     "loading": "운영 데이터를 불러오는 중…",
     "loadFailed": "운영 데이터를 불러오지 못했습니다.",
