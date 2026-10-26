@@ -35,6 +35,8 @@
   },
   "card": {
     "profile": "主页",
+    "profileLabel": "{name} 的主页",
+    "linkLabel": "{name} 的{link}",
     "defaultTitle": "Ninja Labs 成员",
     "defaultBio": "正在 Injective 生态中构建。",
     "links": {

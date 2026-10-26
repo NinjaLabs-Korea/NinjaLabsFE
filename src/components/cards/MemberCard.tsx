@@ -25,8 +25,8 @@ export function MemberCard({ member }: MemberCardProps) {
         <p className="mt-1 text-sm font-semibold text-primary">{t(`roles.${member.role.toLowerCase()}`)} · {member.title || t("card.defaultTitle")}</p>
         <p className="mt-3 break-words text-sm text-ink-muted">{member.bio || t("card.defaultBio")}</p>
         <div className="mt-4 flex gap-4 text-sm font-semibold text-primary">
-          {member.links.profile ? <Link className="hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={member.links.profile}>{t("card.profile")}</Link> : null}
-          {contextual ? <Link className="hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={contextual.href}>{t(`card.links.${contextual.key}`)}</Link> : null}
+          {member.links.profile ? <Link className="hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={member.links.profile} aria-label={t("card.profileLabel", { name: member.name })}>{t("card.profile")}</Link> : null}
+          {contextual ? <Link className="hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={contextual.href} aria-label={t("card.linkLabel", { name: member.name, link: t(`card.links.${contextual.key}`) })}>{t(`card.links.${contextual.key}`)}</Link> : null}
         </div>
       </div>
     </article>

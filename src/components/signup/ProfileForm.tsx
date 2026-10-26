@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuthSnapshot, useOnboardingApi, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
@@ -58,6 +58,8 @@ export function ProfileForm() {
   const [state, setState] = useState<"idle" | "pending" | "error">("idle");
   // 필드 검증 에러. 저장 실패(state "error", 예: 닉네임 중복)와는 따로 표시한다.
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  // Synchronous in-flight guard: several submit events can land in one tick before React re-renders the disabled button.
+  const inFlight = useRef(false);
   const [saveError, setSaveError] = useState<SaveErrorKey>("generic");
   const [nicknameCheck, setNicknameCheck] = useState<NicknameCheck | null>(null);
 
@@ -106,6 +108,7 @@ export function ProfileForm() {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (inFlight.current) return;
     const nextErrors: FieldErrors = {
       ...(nicknameRuleError
         ? { nickname: `nicknameErrors.${nicknameRuleError}` }
@@ -126,6 +129,7 @@ export function ProfileForm() {
       return;
     }
 
+    inFlight.current = true;
     setState("pending");
     onboardingLog("profile.save.started", {
       nicknameLength: nickname.trim().length,
@@ -150,6 +154,7 @@ export function ProfileForm() {
       if (key === "NICKNAME_TAKEN") setNicknameCheck({ nickname: trimmedNickname, available: false });
       setSaveError(key);
       setState("error");
+      inFlight.current = false;
     }
   };
 

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { loadFromRuntime } from "@/lib/api/public";
-import { validateDetailId } from "@/lib/detail-id";
+import { decodeDetailId, validateDetailId } from "@/lib/detail-id";
 import { getRuntimeProfile, parentNftState, payoutBadge, portfolioBodyKey, PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
 import { localeMetadata } from "@/i18n/alternates";
 
@@ -18,7 +18,8 @@ const mascotTileClass = "flex size-14 items-center justify-center rounded-tile";
 
 export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: MemberProfilePageProps): Promise<Metadata> {
-  const { locale, id } = await params;
+  const { locale, id: rawId } = await params;
+  const id = decodeDetailId(rawId);
   const t = await getTranslations({ locale, namespace: "members.profile" });
   const profile = (await validateDetailId("members", id)) ? await getRuntimeProfile(id, locale) : undefined;
 
@@ -32,7 +33,8 @@ export async function generateMetadata({ params }: MemberProfilePageProps): Prom
 }
 
 export default async function MemberProfilePage({ params }: MemberProfilePageProps) {
-  const { locale, id } = await params;
+  const { locale, id: rawId } = await params;
+  const id = decodeDetailId(rawId);
   setRequestLocale(locale);
   const t = await getTranslations("members.profile");
   const format = await getFormatter();

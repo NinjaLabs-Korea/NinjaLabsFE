@@ -107,4 +107,19 @@ describe("ProfileForm nickname rule + availability check", () => {
     await waitFor(() => expect(completeProfile).toHaveBeenCalledTimes(1));
     expect(await screen.findByText(copy)).toBeTruthy();
   });
+
+  it("sends one save request when several submit events land in the same tick", async () => {
+    completeProfile.mockReturnValue(new Promise(() => undefined));
+    renderWithIntl(<ProfileForm />);
+    typeNickname("ninja_dev");
+    fireEvent.click(screen.getByRole("button", { name: "Dev" }));
+    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    const form = nicknameInput().closest("form")!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    await waitFor(() => expect(completeProfile).toHaveBeenCalledTimes(1));
+    await sleep(50);
+    expect(completeProfile).toHaveBeenCalledTimes(1);
+  });
 });

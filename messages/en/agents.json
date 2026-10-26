@@ -122,6 +122,7 @@
     "submit": "Sign & Register",
     "registerErrors": {
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "This wallet is already registered. View it in My agents.",
+      "walletHeldByOther": "This wallet is already registered to another account. Use a different wallet.",
       "generic": "Agent registration failed. Check the wallet signature and try again.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     },

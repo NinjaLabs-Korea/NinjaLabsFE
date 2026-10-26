@@ -16,6 +16,8 @@ export type BountyFormValues = {
   submissionGuide: string;
   deliverables: string;
   reviewProcess: string;
+  /** 최대 당선자 수: 1 이상 정수 문자열(BE `maxWinners` `@Min(1)`). 신규 기본 "1". */
+  maxWinners: string;
   /**
    * BE가 돌려준 원본 ISO 마감. `deadline`(datetime-local 문자열)이 이 값의 로컬 표시와 같으면 저장 시 원본을 그대로 보낸다
    * — 로컬 ↔ UTC 변환을 다시 거치면 초/밀리초가 잘리고, 같은 시각을 "변경"으로 재전송하게 된다.
@@ -86,6 +88,7 @@ export const emptyBountyForm = (): BountyFormValues => ({
   submissionGuide: "",
   deliverables: "",
   reviewProcess: "",
+  maxWinners: "1",
 });
 
 /**
@@ -109,6 +112,7 @@ export function bountyToForm(bounty: AdminBounty): BountyFormValues {
     submissionGuide: bounty.submissionGuide,
     deliverables,
     reviewProcess: bounty.reviewProcess,
+    maxWinners: String(bounty.maxWinners),
     originalSubmissionDeadline: bounty.deadline,
     originalApplicationDeadline: bounty.applicationDeadline,
     originalRequirements: bounty.requirements,
@@ -138,7 +142,7 @@ export function resolveRequirements(form: BountyFormValues): string {
  */
 export function formToBounty(
   form: BountyFormValues,
-  target: { slug: string; coverImage: string | null; existingStatus?: AdminBounty["status"]; maxWinners?: number },
+  target: { slug: string; coverImage: string | null; existingStatus?: AdminBounty["status"] },
 ): AdminBounty {
   const amount = Number(form.amount) || 0;
   return {
@@ -151,8 +155,7 @@ export function formToBounty(
     coverImage: target.coverImage,
     deadline: resolveDeadlineIso(form.deadline, form.originalSubmissionDeadline),
     applicationDeadline: form.originalApplicationDeadline ?? null,
-    // 폼에는 입력란이 없다: 수정이면 불러온 레코드의 값을 유지하고, 신규는 1.
-    maxWinners: target.maxWinners ?? 1,
+    maxWinners: Number(form.maxWinners.trim()),
     tags: form.tags,
     description: form.description.trim(),
     submissionGuide: form.submissionGuide.trim(),
@@ -172,6 +175,7 @@ export type BountyFormError =
   | "deadlinePast"
   | "amountInvalid"
   | "deliverablesRequired"
+  | "maxWinnersInvalid"
   | "tooLong";
 
 /** BE `CreateBountyDto`/`UpdateBountyDto`의 @MaxLength — 입력의 `maxLength`와 검증이 같은 값을 쓴다 */
@@ -179,6 +183,8 @@ export const BOUNTY_TITLE_MAX = 200;
 export const BOUNTY_SPONSOR_MAX = 100;
 /** BE `CreateBountyDto` @MaxLength on the TEXT fields (description 50 000, requirements and evaluationCriteria 20 000); the PATCH limit is double, the stricter create limit applies to both. */
 export const BOUNTY_TEXT_MAX = { description: 50_000, deliverables: 20_000, reviewProcess: 20_000 } as const;
+/** Postgres INTEGER ceiling: BE `MaxPgInt` on `maxWinners`. */
+export const MAX_WINNERS_MAX = 2_147_483_647;
 export type BountyFormErrors = Partial<Record<keyof BountyFormValues, BountyFormError>>;
 
 /**
@@ -244,6 +250,9 @@ export function validateBountyForm(
     if (Number.isNaN(deadline.getTime())) errors.deadline = "deadlineInvalid";
     else if (changed && deadline.getTime() <= (options.now ?? new Date()).getTime()) errors.deadline = "deadlinePast";
   }
+
+  const winners = form.maxWinners.trim();
+  if (!/^\d+$/.test(winners) || Number(winners) < 1 || Number(winners) > MAX_WINNERS_MAX) errors.maxWinners = "maxWinnersInvalid";
 
   if (!options.editing && !blank(form.amount) && !isRewardAmountValid(form.amount, form.currency)) errors.amount = "amountInvalid";
 

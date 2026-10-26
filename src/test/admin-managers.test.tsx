@@ -237,6 +237,13 @@ describe("HighlightManager", () => {
 });
 
 describe("PostManager", () => {
+  it("hints that the external link takes http(s) only (a /media path is the thumbnail rule, not this field's)", async () => {
+    renderWithIntl(<PostManager posts={[post]} tabs={null}>{null}</PostManager>);
+    await waitFor(() => expect(adminApi.getAdminPosts).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(document.getElementById("post-externalUrl-hint")?.textContent).toBe("https://… (http or https only)");
+  });
+
   it("sends cleared external link and thumbnail as null and blocks double saves", async () => {
     const pending = deferred("n1");
     adminApi.saveAdminPost.mockReturnValue(pending.promise);

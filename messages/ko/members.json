@@ -35,6 +35,8 @@
   },
   "card": {
     "profile": "프로필",
+    "profileLabel": "{name} 프로필",
+    "linkLabel": "{name} {link}",
     "defaultTitle": "Ninja Labs 멤버",
     "defaultBio": "Injective 생태계에서 빌드하고 있습니다.",
     "links": {

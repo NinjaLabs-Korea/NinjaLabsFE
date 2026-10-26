@@ -46,7 +46,7 @@ export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3
       </div>
       <div className="p-5">
         <Badge variant={isClosed ? "danger" : bounty.status === "reviewing" ? "warning" : "primary-soft"}>{statusLabel ?? t(`categories.${bounty.category}`)}</Badge>
-        <TitleTag className="mt-3 font-display text-base font-bold -tracking-[0.16px] text-ink">{bounty.title}</TitleTag>
+        <TitleTag className="mt-3 [overflow-wrap:anywhere] font-display text-base font-bold -tracking-[0.16px] text-ink">{bounty.title}</TitleTag>
         {showSummary && bounty.summary ? (
           <p className="mt-2 line-clamp-2 text-sm text-ink-muted">{bounty.summary}</p>
         ) : null}
@@ -57,7 +57,7 @@ export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3
               <span className="shrink-0 text-xs font-semibold text-ink-muted">+{bounty.rewards.length - 1}</span>
             ) : null}
           </span>
-          <span className="min-w-0 text-right text-xs text-ink-muted">
+          <span className="min-w-0 text-right text-xs text-ink-muted [overflow-wrap:anywhere]">
             {statusLabel ?? (daysLeft && daysLeftLabel ? (
               daysLeft === daysLeftLabel ? daysLeft : <><span aria-hidden="true" className="whitespace-nowrap">{daysLeft}</span><span className="sr-only">{daysLeftLabel}</span></>
             ) : t("status.active"))} · {bounty.sponsor}

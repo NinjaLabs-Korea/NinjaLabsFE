@@ -42,7 +42,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function StatusPanel({ title, body, note, tone = "muted", feedback, link, headingRef, badge }: {
+function StatusPanel({ title, body, note, tone = "muted", feedback, link, headingRef, badge, code }: {
   title: string;
   body: string;
   /** Reviewer comment shown under the body. */
@@ -54,6 +54,8 @@ function StatusPanel({ title, body, note, tone = "muted", feedback, link, headin
   headingRef?: Ref<HTMLHeadingElement>;
   /** Small status badge under the body (payout status). */
   badge?: { variant: "warning" | "success"; label: string } | null;
+  /** Agent API endpoint the next step goes through (agent revision requests). */
+  code?: string;
 }) {
   const bodyClass = tone === "danger" ? "text-danger" : tone === "success" ? "text-success" : "text-ink-muted";
   return (
@@ -62,6 +64,7 @@ function StatusPanel({ title, body, note, tone = "muted", feedback, link, headin
       <p className={`mt-2 text-sm ${bodyClass} ${REVIEW_TEXT_CLASS}`}>{body}</p>
       {note ? <p className={`mt-2 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{note}</p> : null}
       {badge ? <div className="mt-3"><Badge variant={badge.variant}>{badge.label}</Badge></div> : null}
+      {code ? <div className="mt-4 rounded-tile bg-surface-subtle p-4 text-sm text-ink-secondary"><code className="break-all">{code}</code></div> : null}
       {link ? <Link className={outlineLinkClass} href={link.href}>{link.label}</Link> : null}
       {feedback ? <p className="mt-3 text-sm text-success">{feedback}</p> : null}
     </section>
@@ -151,6 +154,8 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const applicationsQuery = useAccountQuery(applicationRequired ? accountApi.getApplications : noApplications);
   const submissionsQuery = useAccountQuery(accountApi.getSubmissions);
   const [busy, setBusy] = useState(false);
+  // Synchronous in-flight guard: several submit events can land in one tick (automation, assistive tools) before React re-renders `busy`.
+  const inFlight = useRef(false);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [applied, setApplied] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -175,6 +180,8 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (inFlight.current) return;
+    inFlight.current = true;
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     setBusy(true);
@@ -196,12 +203,15 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       setFeedback({ kind: "error", text: errorText(error, tError) });
       if (isStaleRowsError(error)) refreshRows();
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   };
 
   const apply = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (inFlight.current) return;
+    inFlight.current = true;
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     setBusy(true);
@@ -219,6 +229,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       setFeedback({ kind: "error", text: errorText(error, tError) });
       if (isStaleRowsError(error)) refreshRows();
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   };
@@ -260,14 +271,31 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingStatus")}</p></section>;
     case "statusUnavailable":
       return <section className={panelClass}><p className="text-sm text-danger">{t("statusUnavailable")}</p></section>;
-    case "agentRow":
-      return (
-        <StatusPanel
-          body={view.row === "submission" ? t("agentSubmittedBody", { name: view.agentName }) : t("agentAppliedBody", { name: view.agentName })}
-          link={{ href: "/agents", label: t("manageAgents") }}
-          title={t("agentRowHeading")}
-        />
-      );
+    case "agentRow": {
+      const { agentName, state } = view;
+      const payout = view.payout ? payoutBadge(view.payout, { showPaid: true }) : null;
+      const review = view.review;
+      const link = { href: "/agents", label: t("manageAgents") };
+      const submissionsEndpoint = `POST /agent-api/v1/bounties/${bountyId}/submissions`;
+      switch (state) {
+        case "applied":
+          return <StatusPanel body={t("agentAppliedBody", { name: agentName })} link={link} title={t("agentRowHeading")} />;
+        case "applicationRejected":
+          return <StatusPanel body={t("agentApplicationRejectedBody", { name: agentName })} link={link} title={t("agentRowHeading")} tone="danger" />;
+        case "applicationApproved":
+          return <StatusPanel body={t("agentApplicationApprovedBody", { name: agentName })} code={submissionsEndpoint} link={link} title={t("agentRowHeading")} />;
+        case "revisionRequested":
+          return <StatusPanel body={t("agentRevisionBody", { name: agentName })} code={submissionsEndpoint} link={link} note={review ? t("reviewerComment", { comment: review.text }) : undefined} title={t("agentRevisionHeading")} tone="danger" />;
+        case "approved":
+          return <StatusPanel badge={payout ? { variant: payout.variant, label: t(payout.key) } : null} body={t("agentApprovedBody", { name: agentName })} link={link} title={t("agentApprovedHeading")} tone="success" />;
+        case "rejected":
+          return review?.forfeited
+            ? <StatusPanel body={t("agentForfeitedBody", { name: agentName, reason: review.text })} link={link} title={t("submissionForfeitedHeading")} tone="danger" />
+            : <StatusPanel body={t("agentRejectedBody", { name: agentName })} link={link} note={review ? t("reviewerComment", { comment: review.text }) : undefined} title={t("submissionRejectedHeading")} tone="danger" />;
+        default:
+          return <StatusPanel body={t("agentSubmittedBody", { name: agentName })} link={link} title={t("agentRowHeading")} />;
+      }
+    }
     case "applyForm":
       return (
         <section className={panelClass}>

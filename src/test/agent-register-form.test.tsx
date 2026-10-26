@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AgentRegisterForm } from "@/components/agents/AgentRegisterForm";
@@ -103,6 +103,24 @@ describe("AgentRegisterForm connected-wallet check", () => {
     expect(screen.getByRole("status").textContent).toBe("Automatic network switching is not configured here. Switch your wallet to Injective EVM manually, then try again.");
     fireEvent.click(button);
     expect(wallet.switchToTargetChain).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["another account's pending agent holds the wallet", [] as AccountAgent[], "This wallet is already registered to another account. Use a different wallet."],
+    ["the user's own agent holds the wallet", [agent("SUSPENDED")], "This wallet is already registered. View it in My agents."],
+  ])("explains a 409 wallet conflict by who holds it: %s", async (_label, agents, copy) => {
+    state.agents = agents;
+    registerAgent.mockReset();
+    registerAgent.mockRejectedValue(new ApiHttpError(409, "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED"));
+    renderWithIntl(<AgentRegisterForm chainId={1439} />);
+    await waitFor(() => expect(getAgents).toHaveBeenCalled());
+    await screen.findByRole("button", { name: "Sign & Register" });
+    await act(async () => { await Promise.resolve(); });
+    fireEvent.change(screen.getByLabelText("Agent name"), { target: { value: "fresh-agent" } });
+    const submit = screen.getByRole("button", { name: "Sign & Register" }) as HTMLButtonElement;
+    await waitFor(() => expect(submit.disabled).toBe(false));
+    fireEvent.submit(submit.closest("form") as HTMLFormElement);
+    expect((await screen.findByRole("alert")).textContent).toBe(copy);
   });
 
   it("re-reads the agent list after a successful verification so the pending banner disappears", async () => {

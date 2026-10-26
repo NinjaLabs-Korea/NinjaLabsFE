@@ -78,7 +78,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
 
       <section className="mt-8 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
         <div className="min-w-0">
-          <h1 className="font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">
+          <h1 className="font-display text-4xl -tracking-[0.36px] text-ink [overflow-wrap:anywhere] sm:text-5xl sm:-tracking-[0.48px]">
             {applicationRequired && bounty.applicationTitle ? bounty.applicationTitle : bounty.title}
           </h1>
           <div className="mt-4 flex flex-wrap gap-2">

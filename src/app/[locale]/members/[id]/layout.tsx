@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { validateDetailId } from "@/lib/detail-id";
+import { decodeDetailId, validateDetailId } from "@/lib/detail-id";
 import { getRuntimeProfile } from "@/lib/members";
 
 // 없는 id는 loading.tsx 스트리밍이 시작되기 전에 여기서 404로 끝낸다.
@@ -9,7 +9,8 @@ import { getRuntimeProfile } from "@/lib/members";
 // 로더는 BE 404일 때만 undefined를 돌려준다. 5xx·네트워크 오류·타임아웃은 throw되어 스트리밍 전에 error.tsx로 간다.
 // id 모양부터 확인한다 (api: nickname, mock: slug): 쓰레기 id는 조회 없이 404.
 export default async function MemberProfileLayout({ children, params }: LayoutProps<"/[locale]/members/[id]">) {
-  const { locale, id } = await params;
+  const { locale, id: rawId } = await params;
+  const id = decodeDetailId(rawId);
   if (!(await validateDetailId("members", id))) notFound();
   if (!(await getRuntimeProfile(id, locale))) notFound();
   return children;

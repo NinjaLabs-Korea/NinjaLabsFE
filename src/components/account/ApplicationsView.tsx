@@ -36,6 +36,8 @@ const outlineDangerClass = `rounded-control border border-danger-soft bg-danger-
 
 // Step labels live under account.applications.steps, keyed by status.
 const applicationSteps: readonly ApplicationStatus[] = ["open", "approved", "submitted", "completed"];
+// A submission with no application behind it (direct or agent-mode bounty) skips Applied/Approved.
+const submissionSteps: readonly ApplicationStatus[] = ["submitted", "completed"];
 
 /** Final state of an approved application whose submission was rejected; a forfeited award names the reason. */
 function NotAcceptedNote({ application }: { application: AccountApplication }) {
@@ -70,7 +72,7 @@ function RevisionNote({ application }: { application: AccountApplication }) {
   const review = parseReviewComment(application.reviewComment);
   return (
     <>
-      <p className="mt-4 text-sm text-warning">{t("revisionNote")}</p>
+      <p className="mt-4 text-sm text-warning">{application.agent ? t("agentRevisionNote", { name: application.agent.name }) : t("revisionNote")}</p>
       {review ? <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: review.text })}</p> : null}
     </>
   );
@@ -172,7 +174,8 @@ export function ApplicationsView() {
         {applications.map((application) => {
           const actionNeeded = application.status === "revisionRequested";
           // A requested revision is still the "Submitted" step; the marker says the next move is the applicant's.
-          const currentIndex = applicationSteps.indexOf(actionNeeded ? "submitted" : application.status);
+          const steps = application.source === "submission" ? submissionSteps : applicationSteps;
+          const currentIndex = steps.indexOf(actionNeeded ? "submitted" : application.status);
 
           return (
             <article
@@ -189,7 +192,7 @@ export function ApplicationsView() {
                     <Badge variant="neutral">{t("viaAgent", { name: application.agent.name })}</Badge>
                   ) : null}
                 </span>
-                <span className="text-xs text-ink-muted">{t("appliedAt", { date: format.dateTime(new Date(application.appliedAt), { dateStyle: "medium" }) })}</span>
+                <span className="text-xs text-ink-muted">{t(application.source === "submission" ? "submittedAt" : "appliedAt", { date: format.dateTime(new Date(application.appliedAt), { dateStyle: "medium" }) })}</span>
               </div>
 
               <Link
@@ -212,7 +215,7 @@ export function ApplicationsView() {
                   aria-label={t("progressLabel")}
                   className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2"
                 >
-                  {applicationSteps.map((step, index) => (
+                  {steps.map((step, index) => (
                     <li
                       aria-current={index === currentIndex ? "step" : undefined}
                       className="flex items-center gap-2"
@@ -235,7 +238,7 @@ export function ApplicationsView() {
                         {t(`steps.${step}`)}
                       </span>
                       {actionNeeded && index === currentIndex ? <Badge variant="warning">{t("actionNeeded")}</Badge> : null}
-                      {index < applicationSteps.length - 1 ? (
+                      {index < steps.length - 1 ? (
                         <span aria-hidden="true" className="hidden h-px w-5 bg-primary-outline sm:block" />
                       ) : null}
                     </li>
@@ -246,7 +249,8 @@ export function ApplicationsView() {
               {application.status === "completed" && application.paymentStatus ? <PayoutLine status={application.paymentStatus} /> : null}
               {application.status === "approved" ? <ApplicationNote application={application} /> : null}
               {actionNeeded ? <RevisionNote application={application} /> : null}
-              {application.status === "approved" || actionNeeded ? (
+              {/* An agent's submission is resubmitted through the Agent API, not from this page (see the revision note). */}
+              {application.status === "approved" || (actionNeeded && !application.agent) ? (
                 <Link
                   className={`mt-4 inline-block rounded-control bg-primary px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-on-inverse ${focusClass}`}
                   href={`/bounties/${application.bountySlug}`}
