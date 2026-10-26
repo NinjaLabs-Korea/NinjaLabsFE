@@ -82,9 +82,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   const updateForm = <Key extends keyof BountyFormValues>(key: Key, value: BountyFormValues[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
-    // 산출물/제출 가이드는 둘 중 하나만 있으면 되므로 한쪽을 고치면 같은 에러를 지운다.
-    const cleared = key === "submissionGuide" ? "deliverables" : key;
-    setErrors((current) => ({ ...current, [cleared]: undefined }));
+    setErrors((current) => ({ ...current, [key]: undefined }));
   };
 
   const fieldError = (key: keyof BountyFormValues) => {
@@ -276,9 +274,6 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
             <label className="block text-sm font-semibold text-ink">{t("form.description")}
               <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("description")} onChange={(event) => updateForm("description", event.target.value)} placeholder={t("form.descriptionPlaceholder")} value={form.description} />
               {fieldError("description")}
-            </label>
-            <label className="block text-sm font-semibold text-ink">{t("form.submissionGuide")}
-              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("submissionGuide", event.target.value)} placeholder={t("form.submissionGuidePlaceholder")} value={form.submissionGuide} />
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.deliverables")}
               <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("deliverables")} onChange={(event) => updateForm("deliverables", event.target.value)} placeholder={t("form.deliverablesPlaceholder")} value={form.deliverables} />

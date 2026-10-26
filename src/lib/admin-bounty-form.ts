@@ -1,4 +1,5 @@
 import type { AdminBounty } from "./admin";
+import { deliverablesFromRequirements } from "./admin-helpers";
 import { humanToBaseUnits, rewardToBaseUnits, tokenDecimalsFor } from "./api/codecs";
 
 /** 어드민 바운티 폼의 입력 상태 (모든 값은 input/select가 다루는 문자열 형태) */
@@ -13,7 +14,11 @@ export type BountyFormValues = {
   coverImage: string | null;
   tags: AdminBounty["tags"];
   description: string;
-  submissionGuide: string;
+  /**
+   * The BE `requirements` text: ONE input for what used to be two ("Submission guide" and "Deliverables"), because the BE has a
+   * single `requirements` column. The public bounty page shows its bullet lines as the deliverables list and the whole text as the
+   * submission guide. Two inputs mapped onto one column dropped the guide at create and let a guide edit erase the deliverables.
+   */
   deliverables: string;
   reviewProcess: string;
   /** 최대 당선자 수: 1 이상 정수 문자열(BE `maxWinners` `@Min(1)`). 신규 기본 "1". */
@@ -26,14 +31,10 @@ export type BountyFormValues = {
   /** 폼에 입력란이 없는 지원 마감. 수정 시 손대지 않고 그대로 되돌려 준다. */
   originalApplicationDeadline?: string | null;
   /**
-   * BE `requirements` 원문. `deliverables`/`submissionGuide` 입력란이 불러온 값과 같으면 저장 시 이 문자열을 바이트 그대로 보낸다
-   * - 줄 단위 split/join 왕복은 빈 줄과 들여쓰기를 잃는다.
+   * BE `requirements` 원문. `deliverables` 입력란이 불러온 값과 같으면 저장 시 이 문자열을 바이트 그대로 보낸다
+   * - 끝 공백 정리도 하지 않는다(안 고친 바운티를 저장해도 바이트가 바뀌지 않게).
    */
   originalRequirements?: string;
-  /** `deliverables` 입력란의 초기값 (변경 여부 비교용). */
-  originalDeliverables?: string;
-  /** `submissionGuide` 입력란의 초기값 (변경 여부 비교용). */
-  originalSubmissionGuide?: string;
 };
 
 const pad2 = (value: number) => String(value).padStart(2, "0");
@@ -85,7 +86,6 @@ export const emptyBountyForm = (): BountyFormValues => ({
   coverImage: null,
   tags: ["Dev"],
   description: "",
-  submissionGuide: "",
   deliverables: "",
   reviewProcess: "",
   maxWinners: "1",
@@ -96,7 +96,6 @@ export const emptyBountyForm = (): BountyFormValues => ({
  * `originalSubmissionDeadline`에 남겨 `validateBountyForm`이 `deadlineInvalid`로 막는다 - 조용히 받아 저장하지 않는다.
  */
 export function bountyToForm(bounty: AdminBounty): BountyFormValues {
-  const deliverables = bounty.deliverables.join("\n");
   return {
     title: bounty.title,
     sponsor: bounty.sponsor,
@@ -109,31 +108,22 @@ export function bountyToForm(bounty: AdminBounty): BountyFormValues {
     coverImage: bounty.coverImage,
     tags: bounty.tags,
     description: bounty.description,
-    submissionGuide: bounty.submissionGuide,
-    deliverables,
+    // The raw BE text, not the parsed list: the list drops every non-bullet line (the guide prose).
+    deliverables: bounty.requirements,
     reviewProcess: bounty.reviewProcess,
     maxWinners: String(bounty.maxWinners),
     originalSubmissionDeadline: bounty.deadline,
     originalApplicationDeadline: bounty.applicationDeadline,
     originalRequirements: bounty.requirements,
-    originalDeliverables: deliverables,
-    originalSubmissionGuide: bounty.submissionGuide,
   };
 }
 
 /**
- * 저장할 `requirements`: 두 입력란 모두 불러온 값 그대로면 BE 원문을 바이트 동일하게 돌려주고, 산출물 입력란을 고쳤으면 그 줄들
- * (비어 있으면 제출 가이드), 제출 가이드만 고쳤으면 제출 가이드(비어 있으면 산출물 줄들)를 보낸다. 신규 생성은 원문이 없으므로
- * 산출물 줄들 || 제출 가이드.
+ * 저장할 `requirements`: 입력란이 불러온 값 그대로면 BE 원문을 바이트 동일하게, 고쳤으면 입력한 텍스트(앞뒤 공백만 정리, 줄바꿈·들여쓰기 유지).
  */
 export function resolveRequirements(form: BountyFormValues): string {
-  const deliverableLines = form.deliverables.split("\n").map((line) => line.trim()).filter(Boolean).join("\n");
-  const guide = form.submissionGuide.trim();
-  const deliverablesChanged = form.deliverables !== (form.originalDeliverables ?? "");
-  const guideChanged = form.submissionGuide !== (form.originalSubmissionGuide ?? "");
-  if (form.originalRequirements !== undefined && !deliverablesChanged && !guideChanged) return form.originalRequirements;
-  if (deliverablesChanged || form.originalRequirements === undefined) return deliverableLines || guide;
-  return guide || deliverableLines;
+  if (form.originalRequirements !== undefined && form.deliverables === form.originalRequirements) return form.originalRequirements;
+  return form.deliverables.trim();
 }
 
 /**
@@ -145,6 +135,7 @@ export function formToBounty(
   target: { slug: string; coverImage: string | null; existingStatus?: AdminBounty["status"] },
 ): AdminBounty {
   const amount = Number(form.amount) || 0;
+  const requirements = resolveRequirements(form);
   return {
     slug: target.slug,
     title: form.title.trim(),
@@ -158,9 +149,10 @@ export function formToBounty(
     maxWinners: Number(form.maxWinners.trim()),
     tags: form.tags,
     description: form.description.trim(),
-    submissionGuide: form.submissionGuide.trim(),
-    requirements: resolveRequirements(form),
-    deliverables: form.deliverables.split("\n").map((line) => line.trim()).filter(Boolean),
+    // `submissionGuide` mirrors `requirements` (one BE column); see `BountyFormValues.deliverables`.
+    submissionGuide: requirements,
+    requirements,
+    deliverables: deliverablesFromRequirements(requirements),
     reviewProcess: form.reviewProcess.trim(),
     status: target.existingStatus ?? (amount > 0 ? "funding" : "draft"),
   };
@@ -231,7 +223,7 @@ export function validateBountyForm(
   else if (form.sponsor.trim().length > BOUNTY_SPONSOR_MAX) errors.sponsor = "sponsorTooLong";
   if (blank(form.description)) errors.description = "required";
   if (blank(form.reviewProcess)) errors.reviewProcess = "required";
-  if (blank(form.deliverables) && blank(form.submissionGuide)) errors.deliverables = "deliverablesRequired";
+  if (blank(form.deliverables)) errors.deliverables = "deliverablesRequired";
 
   // 상한을 넘기면 BE가 400 VALIDATION_FAILED(일반 문구)로 답한다 - 어느 칸이 문제인지 여기서 알려 준다. 길이는 BE와 같은 Trim 뒤 UTF-16 단위.
   if (form.description.trim().length > BOUNTY_TEXT_MAX.description) errors.description = "tooLong";

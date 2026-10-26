@@ -39,8 +39,7 @@ await p.click('Design', { exact: true, selector: 'main form [role=group] button'
 const pressed = await p.eval(`[...document.querySelectorAll('main form [role=group] button[aria-pressed=true]')].map(b=>b.innerText.trim())`);
 check('field chips are single-select (only Design pressed)', JSON.stringify(pressed) === '["Design"]', pressed);
 await fillLabel(p, 'Description (markdown)', '## Integrate\nAdd wallet connect.');
-await fillLabel(p, 'Submission guide', 'Working demo required.');
-await fillLabel(p, 'Deliverables', 'Repo\nDemo URL'); await fillLabel(p, 'Review process', 'Helix team reviews.');
+await fillLabel(p, 'Deliverables and submission guide', 'Working demo required.\n- Repo\n- Demo URL'); await fillLabel(p, 'Review process', 'Helix team reviews.');
 p.reset();
 await clickSave('Create');
 const muts1 = mutations(p); clean(await report(p, 'create bounty', { muts1 }));

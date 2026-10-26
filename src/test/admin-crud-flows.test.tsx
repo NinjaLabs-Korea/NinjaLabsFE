@@ -79,18 +79,18 @@ describe("BountyManager flows", () => {
       expect(input.getAttribute("aria-invalid"), label).toBe("true");
       expect(errorFor(input), label).toBe("This field is required.");
     }
-    expect(errorFor(field("Deliverables"))).toBe("Add at least one deliverable or a submission guide.");
+    expect(errorFor(field("Deliverables and submission guide"))).toBe("Add the deliverables or a submission guide.");
     // Optional reward stays valid when empty.
     expect(field("Reward amount").getAttribute("aria-invalid")).toBeNull();
     expect(await screen.findByRole("alert")).toHaveProperty("textContent", expect.stringContaining("Fix the highlighted fields before saving."));
     expect(save).not.toHaveBeenCalled();
 
-    // Typing into a field clears only its own error; filling the submission guide also clears the deliverables error.
+    // Typing into a field clears only its own error.
     type("Title", "Fresh");
     expect(field("Title").getAttribute("aria-invalid")).toBeNull();
     expect(field("Sponsor").getAttribute("aria-invalid")).toBe("true");
-    type("Submission guide / evaluation criteria", "Check the repo");
-    expect(field("Deliverables").getAttribute("aria-invalid")).toBeNull();
+    type("Deliverables and submission guide", "Check the repo");
+    expect(field("Deliverables and submission guide").getAttribute("aria-invalid")).toBeNull();
   });
 
   it("rejects a past deadline and a non-positive reward on create", async () => {
@@ -100,7 +100,7 @@ describe("BountyManager flows", () => {
     type("Deadline", "2020-01-01T10:00");
     type("Reward amount", "0");
     type("Description (markdown)", "Body");
-    type("Deliverables", "- Repo");
+    type("Deliverables and submission guide", "- Repo");
     type("Review process", "Triage");
     fireEvent.submit(screen.getByRole("button", { name: "Create" }).closest("form") as HTMLFormElement);
     expect(errorFor(field("Deadline"))).toBe("Choose a deadline in the future.");
@@ -119,7 +119,7 @@ describe("BountyManager flows", () => {
     pick("Reward token", "USDC");
     pick("Submission mode", "Agent");
     type("Description (markdown)", "Body");
-    type("Deliverables", "  - Repo  \n\n  - Demo ");
+    type("Deliverables and submission guide", "  - Repo\n- Demo  ");
     type("Review process", "Triage");
     fireEvent.submit(screen.getByRole("button", { name: "Create" }).closest("form") as HTMLFormElement);
 
