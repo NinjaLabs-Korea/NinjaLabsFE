@@ -155,6 +155,19 @@ describe("signup pages follow the session", () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
+  it("keeps the step (and what the user typed) when the session ends while it is shown", () => {
+    reset();
+    state.auth = unfinished(3);
+    const step = () => <SignupGate step={3}><input aria-label="typed" /></SignupGate>;
+    const view = renderWithIntl(step());
+    expect(screen.getByLabelText("typed")).toBeTruthy();
+    state.auth = signedOut;
+    view.rerender(step());
+    expect(screen.getByLabelText("typed")).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
+    expect(flash).not.toHaveBeenCalled();
+  });
+
   it("stepper marks Login done and not current once signed in; step 1 is never a link", () => {
     state.auth = unfinished(3);
     const { unmount } = renderWithIntl(<SignupStepIndicator current={1} />);

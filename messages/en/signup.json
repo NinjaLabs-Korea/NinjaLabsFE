@@ -102,6 +102,7 @@
         "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
       },
       "nicknameHint": "2–50 characters: letters, digits, _ . -; starting and ending with a letter or digit.",
+      "signInAgain": "Sign in again (your entries are kept)",
       "nicknameErrors": {
         "tooShort": "Use at least 2 characters.",
         "tooLong": "Use at most 50 characters.",

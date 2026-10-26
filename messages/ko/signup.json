@@ -102,6 +102,7 @@
         "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
       },
       "nicknameHint": "2~50자: 문자, 숫자, _ . - 사용 가능. 처음과 끝은 문자 또는 숫자.",
+      "signInAgain": "다시 로그인 (입력한 내용은 유지됩니다)",
       "nicknameErrors": {
         "tooShort": "2자 이상 입력하세요.",
         "tooLong": "최대 50자까지 입력할 수 있습니다.",
