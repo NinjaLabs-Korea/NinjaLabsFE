@@ -327,6 +327,7 @@
       "externalLink": "External link (optional)",
       "body": "Body (markdown)",
       "bodyPlaceholder": "Write the notice body, summary links, and sponsor context.",
+      "bodyHint": "Headings, bold, lists and links are shown. Images, tables and raw HTML are not: they are dropped from the page, so use the thumbnail for a poster or picture.",
       "status": "Status",
       "externalLinkPlaceholder": "https://injective.com/...",
       "eventDate": "Event date (optional)",

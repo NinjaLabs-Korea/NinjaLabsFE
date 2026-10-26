@@ -327,6 +327,7 @@
       "externalLink": "외부 링크 (선택)",
       "body": "본문 (마크다운)",
       "bodyPlaceholder": "공지 본문, 요약 링크, 스폰서 배경을 작성하세요.",
+      "bodyHint": "제목, 굵게, 목록, 링크는 표시됩니다. 이미지, 표, HTML은 페이지에서 제외되므로 포스터나 사진은 썸네일로 올리세요.",
       "status": "상태",
       "externalLinkPlaceholder": "https://injective.com/...",
       "eventDate": "행사 날짜 (선택)",

@@ -327,6 +327,7 @@
       "externalLink": "外部链接（可选）",
       "body": "正文（Markdown）",
       "bodyPlaceholder": "撰写公告正文、摘要链接和赞助方背景。",
+      "bodyHint": "标题、粗体、列表和链接会显示。图片、表格和原始 HTML 不会显示，海报或图片请使用缩略图。",
       "status": "状态",
       "externalLinkPlaceholder": "https://injective.com/...",
       "eventDate": "活动日期(可选)",
