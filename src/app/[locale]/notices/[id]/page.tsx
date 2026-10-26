@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: NoticeDetailPageProps): Promi
     return { alternates: {}, title: t("notFoundTitle") };
   }
 
-  return localeMetadata(locale, `/notices/${notice.slug}`, { title: t("pageTitle", { title: notice.title }), description: notice.excerpt });
+  return localeMetadata(locale, `/notices/${notice.slug}`, { title: t("pageTitle", { title: notice.title }), description: notice.excerpt, ...(notice.thumbnail ? { image: notice.thumbnail } : {}) });
 }
 
 export default async function NoticeDetailPage({ params }: NoticeDetailPageProps) {
