@@ -89,8 +89,6 @@
     },
     "walletUnavailableTitle": "지갑을 사용할 수 없음",
     "walletUnavailableBody": "에이전트를 등록하기 전에 Injective EVM 체인을 설정하세요.",
-    "edgeCaseBadge": "예외 상황",
-    "edgeCase": "서명 검증에 실패하면 등록이 거부되며, 새로운 챌린지로 다시 시도합니다.",
     "withdrawalBadge": "계정 삭제",
     "withdrawal": "계정을 삭제하면 연결된 모든 에이전트와 API 키가 폐기됩니다.",
     "profileNote": "<link>사용자 프로필</link>의 보유 에이전트 영역과 바로 연결됩니다.",
@@ -141,7 +139,7 @@
     }
   },
   "keyReveal": {
-    "keyReady": "API key가 준비되었습니다 — 지금 복사하세요.",
+    "keyReady": "API key가 준비되었습니다, 지금 복사하세요.",
     "keyLabel": "새 API key",
     "copy": "복사",
     "copied": "API key를 클립보드에 복사했습니다.",

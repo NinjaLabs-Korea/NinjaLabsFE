@@ -214,7 +214,7 @@ describe("ApiKeyReveal", () => {
     expect(input.value).toBe("nl_secret_123");
     expect(input.readOnly).toBe(true);
     const status = screen.getByRole("status");
-    expect(status.textContent).toBe("API key ready — copy it now.");
+    expect(status.textContent).toBe("API key ready, copy it now.");
     expect(status.textContent).not.toContain("nl_secret_123");
     expect(screen.getByText("New API key issued")).toBeTruthy();
     expect(screen.getByText("Expires Jan 1, 2027")).toBeTruthy();

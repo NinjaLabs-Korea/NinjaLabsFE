@@ -121,7 +121,7 @@ describe("AgentsView", () => {
     expect(screen.getByRole("button", { name: "Copy" })).toBeTruthy();
     // The live region never carries the secret.
     const statuses = screen.getAllByRole("status").map((element) => element.textContent ?? "");
-    expect(statuses).toContain("API key ready — copy it now.");
+    expect(statuses).toContain("API key ready, copy it now.");
     expect(statuses.some((text) => text.includes("nl_preview_rotated_key"))).toBe(false);
     // The list re-reads /agents/me: the masked key changes while the raw key is never part of the row.
     await waitFor(() => expect(screen.getByText("nl_live_····…new1")).toBeTruthy());

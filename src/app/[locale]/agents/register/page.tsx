@@ -108,11 +108,7 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
         )}
       </section>
 
-      <section className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
-        <article className="rounded-card border border-border bg-surface p-[21px] shadow-card">
-          <Badge variant="danger">{t("edgeCaseBadge")}</Badge>
-          <p className="mt-3 text-sm text-ink-secondary">{t("edgeCase")}</p>
-        </article>
+      <section className="mt-8">
         <article className="rounded-card border border-border bg-surface p-[21px] shadow-card">
           <Badge variant="warning">{t("withdrawalBadge")}</Badge>
           <p className="mt-3 text-sm text-ink-secondary">{t("withdrawal")}</p>

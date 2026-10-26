@@ -413,7 +413,7 @@
     "lifecycle": {
       "eyebrow": "生命周期",
       "title": "状态流转",
-      "none": "无法继续流转 — 该赏金已结束。",
+      "none": "无法继续流转，该赏金已结束。",
       "to": "→ {status}",
       "actions": {
         "FUNDING_PENDING": "标记为等待存款",
@@ -495,7 +495,7 @@
       "repoLink": "代码仓库",
       "history": "审核记录（{count}）",
       "historyItem": "{decision} · 第 {revision} 版 · {date}",
-      "noWallet": "未绑定钱包 — 无法申请付款",
+      "noWallet": "未绑定钱包，无法申请付款",
       "decisions": {
         "START_REVIEW": "开始审核",
         "REQUEST_REVISION": "要求修改",

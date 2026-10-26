@@ -107,7 +107,7 @@
       "register": "에이전트 등록",
       "wallet": "등록된 지갑: {wallet}"
     },
-    "shareable": "공유 가능한 URL — 로그인 불필요",
+    "shareable": "공유 가능한 URL, 로그인 불필요",
     "payoutPending": "지급 대기",
     "payoutPartial": "일부 지급",
     "payoutPaid": "지급 완료"

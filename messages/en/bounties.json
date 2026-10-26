@@ -46,7 +46,7 @@
   },
   "apply": {
     "eyebrow": "Bounty workflow",
-    "heading": "Bounty types — submit-type vs apply-type",
+    "heading": "Bounty types, submit-type vs apply-type",
     "intro": "Some bounties accept direct submissions; others require sponsor approval before work starts.",
     "auth": {
       "checking": "Checking session",

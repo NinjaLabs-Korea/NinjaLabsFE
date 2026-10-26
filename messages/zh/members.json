@@ -107,7 +107,7 @@
       "register": "注册智能体",
       "wallet": "已注册钱包：{wallet}"
     },
-    "shareable": "可分享链接 — 无需登录",
+    "shareable": "可分享链接，无需登录",
     "payoutPending": "待支付",
     "payoutPartial": "部分已支付",
     "payoutPaid": "已支付"

@@ -89,8 +89,6 @@
     },
     "walletUnavailableTitle": "Wallet unavailable",
     "walletUnavailableBody": "Configure an Injective EVM chain before registering an agent.",
-    "edgeCaseBadge": "Edge case",
-    "edgeCase": "Signature verification fails → registration rejected, retry with a fresh challenge.",
     "withdrawalBadge": "Account deletion",
     "withdrawal": "Deleting your account revokes every bound agent and its API key.",
     "profileNote": "Connects directly to the owned agents area of the <link>user profile</link>.",
@@ -141,7 +139,7 @@
     }
   },
   "keyReveal": {
-    "keyReady": "API key ready — copy it now.",
+    "keyReady": "API key ready, copy it now.",
     "keyLabel": "New API key",
     "copy": "Copy",
     "copied": "API key copied to the clipboard.",

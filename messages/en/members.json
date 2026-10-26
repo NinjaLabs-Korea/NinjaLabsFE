@@ -107,7 +107,7 @@
       "register": "Register agent",
       "wallet": "Registered wallet: {wallet}"
     },
-    "shareable": "Shareable URL — no login needed",
+    "shareable": "Shareable URL, no login needed",
     "payoutPending": "Payout pending",
     "payoutPartial": "Partially paid",
     "payoutPaid": "Paid"

@@ -59,3 +59,22 @@ describe.each([["en", enLegal], ["ko", koLegal], ["zh", zhLegal]] as const)("leg
     expect(access).not.toMatch(/browser's storage|브라우저 저장소|浏览器存储/);
   });
 });
+
+// Spec annotations ("Edge case: signed-in user clicks Get Started -> ...") are design notes, not product copy, and U+2014
+// is banned in everything we ship. Both leaked into user-facing pages before.
+describe("user-facing messages", () => {
+  const files = import.meta.glob("../../messages/*/*.json", { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
+
+  it("contain no em dash in any locale", () => {
+    const offenders = Object.entries(files).filter(([, text]) => text.includes("—")).map(([file]) => file);
+    expect(offenders).toEqual([]);
+  });
+
+  it("carry no edge-case spec boxes on the signup and agent register pages", () => {
+    for (const [file, text] of Object.entries(files)) {
+      if (/\/(signup|agents)\.json$/.test(file)) {
+        expect(text, file).not.toMatch(/"edgeCases?"|"edgeCaseBadge"|"statusTitle"/);
+      }
+    }
+  });
+});

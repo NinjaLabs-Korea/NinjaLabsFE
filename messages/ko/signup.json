@@ -4,22 +4,12 @@
     "mock": {
       "title": "Ninja Labs 로그인 절차 미리보기",
       "description": "로컬 세션 미리보기로 이 단계를 살펴보세요. Google에 연결하거나 계정을 만들지 않습니다.",
-      "disclosure": "모의 모드는 로컬 테스트 전용입니다. 이 미리보기는 Google에 연결하거나 계정을 만들지 않습니다.",
-      "statusTitle": "예외 상황",
-      "edgeCases": {
-        "first": "버튼을 누르면 로컬 세션 미리보기만 시작됩니다",
-        "second": "Google 인증은 호출되지 않습니다"
-      }
+      "disclosure": "모의 모드는 로컬 테스트 전용입니다. 이 미리보기는 Google에 연결하거나 계정을 만들지 않습니다."
     },
     "api": {
       "title": "Ninja Labs 시작하기",
-      "description": "Google로 시작하세요 — 지갑 설치가 필요 없습니다.",
-      "disclosure": "로그인하면 Ninja Labs 계정이 생성되거나 복원됩니다. Google 이메일만 전달받으며 비밀번호는 공유되지 않습니다.",
-      "statusTitle": "예외 상황",
-      "edgeCases": {
-        "first": "이미 로그인한 사용자가 시작하기를 누르면 → 메인으로 이동합니다.",
-        "second": "Google 로그인을 거부하거나 실패하면 → 오류를 지우고 다시 시도합니다."
-      }
+      "description": "Google로 시작하세요, 지갑 설치가 필요 없습니다.",
+      "disclosure": "로그인하면 Ninja Labs 계정이 생성되거나 복원됩니다. Google 이메일만 전달받으며 비밀번호는 공유되지 않습니다."
     },
     "eyebrow": "계정 만들기"
   },
@@ -111,7 +101,7 @@
         "generic": "프로필을 저장하지 못했습니다. 다시 시도해 주세요.",
         "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
       },
-      "nicknameHint": "2~50자: 문자, 숫자, _ . - 사용 가능 — 처음과 끝은 문자 또는 숫자.",
+      "nicknameHint": "2~50자: 문자, 숫자, _ . - 사용 가능. 처음과 끝은 문자 또는 숫자.",
       "nicknameErrors": {
         "tooShort": "2자 이상 입력하세요.",
         "tooLong": "최대 50자까지 입력할 수 있습니다.",
