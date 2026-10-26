@@ -130,12 +130,14 @@ check('review dialog shows the answers and says the note is internal', await adm
 check('review dialog: confirm is disabled until a decision is chosen', await adminPage.eval(`[...document.querySelector('dialog[open]').querySelectorAll('button')].find(b=>b.innerText.trim()==='Choose a decision').disabled`));
 await adminPage.eval(`[...document.querySelector('dialog[open]').querySelectorAll('input[type=radio]')].find(i=>i.closest('label').innerText.trim()==='Accept').click()`);
 await adminPage.fill('dialog[open] textarea', 'SECRET INTERNAL NOTE strong portfolio');
+// Flow 6 may already have made BUILDER a member: the rule is that accepting changes nothing, so compare before and after.
+const memberBefore = sql(`select is_member from "user" where id='${ids.BUILDER}'`);
 adminPage.reset();
 await dialogButton(adminPage, 'Accept application'); await sleep(1000); await adminPage.idle();
 check('admin: POST /admin/cohort-applications/:id/review', mutations(adminPage).some((m) => /^POST \/admin\/cohort-applications\/.+\/review 201$/.test(m)), mutations(adminPage));
 check('DB: ACCEPTED with the internal note, reviewer set', sql(`select status||'|'||review_note||'|'||(reviewed_by is not null) from cohort_application where user_id='${ids.BUILDER}' and cohort_id='${cohortId}'`) === 'ACCEPTED|SECRET INTERNAL NOTE strong portfolio|true');
 check('DB: audit row records the decision change', sql(`select after_data->>'status' from audit_log where action='COHORT_APPLICATION_ACCEPTED' order by created_at desc limit 1`) === 'ACCEPTED');
-check('DB: accepting did not make the applicant a member', sql(`select is_member from "user" where id='${ids.BUILDER}'`).startsWith('f') || sql(`select is_member from "user" where id='${ids.BUILDER}'`) === 'false');
+check('DB: accepting did not change the applicant\'s membership', sql(`select is_member from "user" where id='${ids.BUILDER}'`) === memberBefore, memberBefore);
 clean(await report(adminPage, 'admin reviewed'));
 
 // CSV export (UI click + API content check)
