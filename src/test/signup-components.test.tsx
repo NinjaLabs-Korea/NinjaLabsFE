@@ -28,6 +28,7 @@ const onboardingApi = { completeOnboarding };
 
 vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({
+    useAuthActions: () => ({ signIn: vi.fn(), signOut: vi.fn() }),
     useAuthSnapshot: () => state.auth,
     useFoundationMode: () => state.mode,
     useOnboardingApi: () => onboardingApi,

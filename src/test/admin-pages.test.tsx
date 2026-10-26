@@ -113,11 +113,12 @@ describe("AdminTabs", () => {
       ["Bounty Mgmt", "/admin/bounties"],
       ["Operations", "/admin/operations"],
       ["NFT Jobs", "/admin/nft-jobs"],
+      ["Recruitment", "/admin/recruitment"],
       ["Hall of Fame", "/admin/hall-of-fame"],
       ["Notices", "/admin/notices"],
       ["Audit log", "/admin/audit"],
     ]);
-    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual([null, null, null, null, "page", null, null]);
+    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual([null, null, null, null, null, "page", null, null]);
   });
 });
 
@@ -174,10 +175,10 @@ describe("admin pages", () => {
     const { default: AdminLayout } = await import("@/app/[locale]/admin/layout");
     // The layout returns the async server <PageMessages>; resolve it the way the RSC renderer would.
     const tree = await AdminLayout({ children: <p>inner</p>, params });
-    expect(tree.props.namespaces).toEqual(["admin"]);
+    expect(tree.props.namespaces).toEqual(["admin", "recruit"]);
     const render = tree.type as (props: typeof tree.props) => Promise<ReactElement<{ messages: Record<string, unknown>; children: ReactNode }>>;
     const provider = await render(tree.props);
-    expect(Object.keys(provider.props.messages).sort()).toEqual(["admin", "common"]);
+    expect(Object.keys(provider.props.messages).sort()).toEqual(["admin", "common", "recruit"]);
     // Render what the provider wraps (the test wrapper already supplies the English messages and locale).
     renderWithIntl(<>{provider.props.children}</>);
     expect(screen.getByRole("heading", { level: 1, name: "Admin sign-in required" })).toBeTruthy();

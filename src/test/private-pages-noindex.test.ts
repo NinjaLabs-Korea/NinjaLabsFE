@@ -16,6 +16,7 @@ const params = Promise.resolve({ locale: "en" });
 // carries noindex. A new owner-private page belongs in this list.
 const privatePages = {
   account: () => import("@/app/[locale]/account/page"),
+  home: () => import("@/app/[locale]/home/page"),
   applications: () => import("@/app/[locale]/applications/page"),
   agents: () => import("@/app/[locale]/agents/page"),
   "signup/wallet": () => import("@/app/[locale]/signup/wallet/page"),

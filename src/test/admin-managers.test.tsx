@@ -264,6 +264,31 @@ describe("PostManager", () => {
   });
 });
 
+describe("PostManager event date", () => {
+  it("lists the event date, prefills it on edit, and sends a changed or cleared one", async () => {
+    adminApi.getAdminPosts.mockResolvedValueOnce([{ ...post, eventDate: "2026-06-18" }]);
+    adminApi.saveAdminPost.mockResolvedValue({ id: "n1" });
+    renderWithIntl(<PostManager posts={[{ ...post, eventDate: "2026-06-18" }]} tabs={null}>{null}</PostManager>);
+    await waitFor(() => expect(adminApi.getAdminPosts).toHaveBeenCalled());
+    expect(screen.getByRole("columnheader", { name: "Event date" })).toBeTruthy();
+    expect(screen.getByText("2026-06-18")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const input = screen.getByLabelText(/Event date \(optional\)/) as HTMLInputElement;
+    expect(input.type).toBe("date");
+    expect(input.value).toBe("2026-06-18");
+    fireEvent.change(input, { target: { value: "2026-07-01" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(adminApi.saveAdminPost).toHaveBeenCalledTimes(1));
+    expect(adminApi.saveAdminPost.mock.calls[0][0]).toMatchObject({ eventDate: "2026-07-01" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.change(screen.getByLabelText(/Event date \(optional\)/), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(adminApi.saveAdminPost).toHaveBeenCalledTimes(2));
+    expect(adminApi.saveAdminPost.mock.calls[1][0]).toMatchObject({ eventDate: null });
+  });
+});
+
 describe("admin BE error codes", () => {
   it("recognizes only the mapped codes", () => {
     expect(adminApiErrorCode(new ApiHttpError(400, "INVALID_CHARACTER"))).toBe("INVALID_CHARACTER");

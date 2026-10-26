@@ -32,6 +32,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
     useAuthSnapshot: () => state.auth,
     useAccountSettingsApi: () => apiClient,
     useAuthActions: () => ({ signIn: vi.fn(), signOut }),
+    useCohortApi: () => ({ getMyCohortApplications: async () => ({ status: "available", data: [] }) }),
     useFoundationMode: () => "mock",
   }));
 

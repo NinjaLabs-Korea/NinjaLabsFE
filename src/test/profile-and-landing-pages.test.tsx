@@ -13,6 +13,7 @@ vi.mock("@/i18n/navigation", () => ({
       {children}
     </a>
   ),
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
 }));
 vi.mock("next-intl/server", () => ({
   setRequestLocale: () => undefined,
@@ -31,7 +32,7 @@ vi.mock("@/lib/members", async (importOriginal) => ({
 }));
 vi.mock("@/lib/api/public", () => ({ loadFromRuntime: async ({ mock }: { mock: () => unknown }) => mock() }));
 vi.mock("@/components/auth/FoundationProvider", async () =>
-  (await import("./support/foundation")).foundationMock({ useAuthSnapshot: () => ({ status: "signed-out", user: null }) }));
+  (await import("./support/foundation")).foundationMock({ useAuthSnapshot: () => ({ status: "signed-out", user: null }), useCohortApi: () => ({ getCurrentCohort: async () => null }) }));
 vi.mock("@/lib/landing", () => ({ getRuntimeLanding: async () => data.landing }));
 
 const { default: MemberProfilePage } = await import("@/app/[locale]/members/[id]/page");

@@ -141,13 +141,13 @@ const me = { id: "u1", nickname: "ninja", onboardingStep: 4, onboardingCompleted
  * The browser still holds the refresh cookie of the current session: `/api/auth/refresh` answers with a new access
  * token, `/auth/me` with the user, the exchange (if any) with `exchange`, everything else 500.
  */
-function stubCurrentSession(exchange: () => Response = () => new Response(null, { status: 500 })) {
+function stubCurrentSession(exchange: () => Response = () => new Response(null, { status: 500 }), user: object = me) {
   // That earlier sign-in left the non-secret session hint behind (it makes the page load try the refresh).
   localStorage.setItem("ninja.session", "1");
   const request = vi.fn(async (url: string) => {
     if (url === REFRESH) return Response.json({ accessToken: "current-access" });
     if (url === EXCHANGE) return exchange();
-    if (url === `${API}/auth/me`) return Response.json(me);
+    if (url === `${API}/auth/me`) return Response.json(user);
     return new Response(null, { status: url === "/api/auth/logout" ? 204 : 500 });
   });
   vi.stubGlobal("fetch", request);
@@ -194,9 +194,46 @@ describe("API auth adapter login handoff", () => {
     // No exchange was attempted: the planted code is ignored and the existing cookie session is restored once.
     expect(urls(request)).toEqual([REFRESH, `${API}/auth/me`]);
     // The callback page only shows a spinner for a signed-in user, so the restored session must leave it.
-    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith("/en/"));
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith("/en/home"));
     expect(adapter.getSnapshot().user?.handle).toBe("ninja");
     expect(getAccessToken()).toBe("current-access");
+  });
+
+  it("sends a finished user back to the page that asked for the sign-in, once", async () => {
+    window.history.replaceState(null, "", "/en/auth/callback#loginCode=planted");
+    sessionStorage.setItem("ninja.returnTo", "/recruit");
+    stubCurrentSession();
+    const replace = vi.fn();
+    vi.stubGlobal("location", { ...window.location, replace });
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith("/en/recruit"));
+    expect(sessionStorage.getItem("ninja.returnTo")).toBeNull();
+  });
+
+  it("keeps the remembered page for an unfinished sign-up, which goes to its onboarding step first", async () => {
+    window.history.replaceState(null, "", "/en/auth/callback#loginCode=planted");
+    sessionStorage.setItem("ninja.returnTo", "/recruit");
+    stubCurrentSession(undefined, { ...me, onboardingStep: 3, onboardingCompleted: false });
+    const replace = vi.fn();
+    vi.stubGlobal("location", { ...window.location, replace });
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith("/en/signup/profile"));
+    expect(sessionStorage.getItem("ninja.returnTo")).toBe("/recruit");
+  });
+
+  it("re-reads the signed-in user on demand (after onboarding completes) and keeps the old snapshot when the read fails", async () => {
+    window.history.replaceState(null, "", "/en/bounties");
+    const request = stubCurrentSession(undefined, { ...me, onboardingStep: 4, onboardingCompleted: false });
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    expect(adapter.getSnapshot().user?.onboardingCompleted).toBe(false);
+    request.mockImplementation(async (url: string) => (url === `${API}/auth/me` ? Response.json({ ...me, onboardingStep: 4, onboardingCompleted: true }) : new Response(null, { status: 500 })));
+    expect((await adapter.refresh?.())?.user?.onboardingCompleted).toBe(true);
+    request.mockImplementation(async () => new Response(null, { status: 503 }));
+    expect((await adapter.refresh?.())?.user?.onboardingCompleted).toBe(true);
   });
 
   it("ends (and revokes) the session only after an attempted exchange fails", async () => {
