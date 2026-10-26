@@ -15,7 +15,7 @@
  *  6. 지원 필요 바운티: 지원 전 → `applyForm`(진행 중이고 지원 마감 전일 때만, 지원 마감만 지났으면 `closed`+`applications`, 그 밖엔 `closed`) / 거절 → `applicationRejected` /
  *     방금 지원했거나 심사 중(`open`) → `applicationUnderReview`(바운티가 완료/취소로 끝났거나 제출이 닫혀 심사 중이면 `closed`) / 승인 등 → 7로 내려간다
  *  7. 제출 승인 → `submissionApproved`, 제출 거절 → `submissionRejected`
- *  8. 진행 중이 아니고 수정 요청도 아님 → 심사 중인 제출이 있으면 `inReviewLocked`, 없으면 `closed`
+ *  8. 진행 중이 아니고 수정 요청도 아님 → 취소된 바운티면 `closed`(cancelled), 심사 중인 제출이 있으면 `inReviewLocked`, 없으면 `closed`
  *  9. 나머지 → `submitForm` (처음 제출 / 심사 중 수정 / 수정 요청 재제출)
  *
  * ## 어디를 고치나
@@ -207,6 +207,9 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
   // 단 마감일만 지난 OPEN 바운티도 FE 상태는 `closed`이지만 BE는 수정 요청 재제출을 받는다(`deadlinePassed`).
   const revising = submission?.status === "revision_requested" && (status !== "closed" || deadlinePassed);
   const inReview = submitted || (submission !== undefined && PENDING_SUBMISSION_STATUSES.includes(submission.status));
+  // A cancelled bounty (closed, neither completed nor merely past its deadline) is never reviewed: do not tell the builder that
+  // "the sponsor is reviewing your work".
+  if (!acceptingNew && !revising && submission && status === "closed" && !completed && !deadlinePassed) return { kind: "closed", reason: "cancelled" };
   if (!acceptingNew && !revising) return inReview ? { kind: "inReviewLocked" } : closed;
   const revisionComment = revising ? parseReviewComment(submission?.reviewComment)?.text : undefined;
   return revisionComment ? { kind: "submitForm", revising, inReview, revisionComment } : { kind: "submitForm", revising, inReview };

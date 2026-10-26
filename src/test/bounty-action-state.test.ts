@@ -121,10 +121,13 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["submission rejected with a blank comment", { submissions: loaded([sub("rejected", null, BOUNTY, "   ")]) }, { kind: "submissionRejected" }],
   // 8. 진행 중이 아님
   ["reviewing, submission pending", { status: "reviewing", submissions: loaded([sub("in_review")]) }, { kind: "inReviewLocked" }],
-  ["closed, submission resubmitted", { status: "closed", submissions: loaded([sub("resubmitted")]) }, { kind: "inReviewLocked" }],
+  ["closed only by the deadline, submission resubmitted (the sponsor can still review)", { status: "closed", deadlinePassed: true, submissions: loaded([sub("resubmitted")]) }, { kind: "inReviewLocked" }],
+  ["cancelled bounty, submission pending: nobody is reviewing it", { status: "closed", submissions: loaded([sub("submitted")]) }, { kind: "closed", reason: "cancelled" }],
+  ["cancelled bounty, submission in review", { status: "closed", submissions: loaded([sub("in_review")]) }, { kind: "closed", reason: "cancelled" }],
   ["reviewing, just submitted", { status: "reviewing", submitted: true }, { kind: "inReviewLocked" }],
   ["reviewing, nothing submitted", { status: "reviewing" }, { kind: "closed", reason: "reviewing" }],
-  ["closed, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "closed" }],
+  ["cancelled, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "cancelled" }],
+  ["completed, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", completed: true, submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "closed" }],
   ["closed only by the deadline, revision requested (BE still resubmittable)", { status: "closed", deadlinePassed: true, submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: false }],
   ["closed only by the deadline, nothing submitted", { status: "closed", deadlinePassed: true }, { kind: "closed", reason: "closed" }],
   // 9. 제출 폼

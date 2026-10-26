@@ -218,7 +218,7 @@
     "availability": "Availability",
     "closedHeading": "Bounty closed",
     "closedBody": "This bounty is no longer accepting applications or submissions.",
-    "cancelledBody": "This bounty was cancelled by the sponsor, so applications that were still pending were closed with it.",
+    "cancelledBody": "This bounty was cancelled by the sponsor, so nothing more will be reviewed or accepted on it. Applications and work that were still pending were closed with it.",
     "applicationsClosedHeading": "Applications closed",
     "applicationsClosedBody": "The application deadline has passed, so new applications are not accepted. Applicants who were already approved can still submit until the submission deadline.",
     "reviewingBody": "Submissions are closed while the sponsor reviews the received work. New applications and submissions are not accepted.",
