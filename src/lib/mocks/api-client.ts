@@ -286,7 +286,7 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
       // `publish` is only sent when the state toggled; a plain edit keeps the stored publishedAt (BE contract).
       const status = options?.publish === undefined ? current.status : options.publish ? "published" : "draft";
       const publishedAt = options?.publish === undefined ? current.publishedAt : options.publish ? today : null;
-      posts = posts.map((item) => (item.slug === post.slug ? { ...post, status, publishedAt } : item));
+      posts = posts.map((item) => (item.slug === post.slug ? { ...post, summary: post.summary ?? item.summary, status, publishedAt } : item));
       return { id: post.slug };
     },
     deleteAdminPost: async (noticeId) => {

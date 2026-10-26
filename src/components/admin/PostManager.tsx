@@ -9,7 +9,8 @@ import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
-import { postCategoryLabelKeys, publishOptionFor, type AdminPost, adminErrorDescription } from "@/lib/admin-helpers";
+import { markdownToPlainSummary } from "@/lib/markdown-summary";
+import { postCategoryLabelKeys, publishOptionFor, summaryForPostUpdate, type AdminPost, adminErrorDescription } from "@/lib/admin-helpers";
 import { isHttpUrl, isHttpUrlOrMediaPath, isSafeUrl } from "@/lib/url-rules";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
@@ -150,7 +151,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       const thumbnail = thumbnailFile ? (await api.uploadAdminMedia(thumbnailFile)).url : form.thumbnail;
       // An emptied link is `null` (the API sends it as null so the BE clears the column), never an omitted key.
       const externalUrl = form.externalUrl?.trim() || null;
-      const post: AdminPost = { ...form, title: form.title.trim(), externalUrl, thumbnail, eventDate: form.category === "Events" ? form.eventDate || null : null, slug: mode === "create" ? "" : mode, publishedAt: null };
+      const post: AdminPost = { ...form, title: form.title.trim(), externalUrl, thumbnail, eventDate: form.category === "Events" ? form.eventDate || null : null, slug: mode === "create" ? "" : mode, publishedAt: null, ...(mode === "create" ? {} : { summary: summaryForPostUpdate(stored, form.bodyMarkdown, markdownToPlainSummary) }) };
       // Plain edits omit `publish` so the BE keeps published_at (see publishOptionFor).
       const previousStatus = records.find((item) => item.slug === mode)?.status;
       const options = publishOptionFor(previousStatus, form.status, mode === "create" ? "create" : "edit");

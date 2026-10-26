@@ -52,6 +52,16 @@ describe("admin notice save payload", () => {
     expect(init.body.summary).toBe("Kickoff Join the hackathon at Injective. Prizes code");
   });
 
+  it("never overwrites the stored summary on an edit: omitted unless the caller supplied one", async () => {
+    const { http, fetchJson } = createHttp();
+    const api = createAdminApi(http);
+    await api.saveAdminPost({ ...post, bodyMarkdown: "# Hello\nWelcome builders." }, false);
+    await api.saveAdminPost({ ...post, summary: "Kept, hand written" }, false);
+    const bodies = fetchJson.mock.calls.map((call) => (call as unknown as [string, { body: Record<string, unknown> }])[1].body);
+    expect(bodies[0]).not.toHaveProperty("summary");
+    expect(bodies[1]).toMatchObject({ summary: "Kept, hand written" });
+  });
+
   it("sends cleared thumbnail/external URLs as null so the BE clears the columns (never an omitted key)", async () => {
     const { http, fetchJson } = createHttp();
     await createAdminApi(http).saveAdminPost({ ...post, thumbnail: null, externalUrl: null }, false);

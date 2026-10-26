@@ -102,7 +102,27 @@ export type AdminPost = {
   externalUrl: string | null;
   /** BE `event_date` (`YYYY-MM-DD`): when the activity took place; null for a plain announcement. */
   eventDate?: string | null;
+  /**
+   * Notice summary. Loaded rows carry the stored BE `summary` (the form has no summary input). On save it means "the summary to
+   * send": `undefined` on an edit = keep the stored one (omit the key); on create the API derives it from the body.
+   */
+  summary?: string;
 };
+
+/**
+ * Summary to send when a notice is edited, or undefined to leave the stored one alone. The form has no summary input, so the
+ * default is to keep it: a summary written through the API or the seed script must survive an edit or a publish toggle. Only a
+ * summary the UI itself derived from the old body (a re-derivation reproduces it) follows the body when the body changes.
+ */
+export function summaryForPostUpdate(
+  stored: Pick<AdminPost, "bodyMarkdown" | "summary"> | undefined,
+  nextBody: string,
+  derive: (markdown: string) => string,
+): string | undefined {
+  if (!stored || stored.summary === undefined) return undefined;
+  if (stored.bodyMarkdown === nextBody) return undefined;
+  return derive(stored.bodyMarkdown) === stored.summary ? derive(nextBody) : undefined;
+}
 
 /**
  * `publish` option for `saveAdminPost`: always sent on create (derived from the chosen status); on edit only when the
