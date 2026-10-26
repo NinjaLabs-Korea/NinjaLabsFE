@@ -71,6 +71,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   const [saving, setSaving] = useState(false);
   // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
   const savingRef = useRef(false);
+  const deletingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminHighlight | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -186,6 +187,9 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   }
 
   async function handleDelete(highlight: AdminHighlight) {
+    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
+    if (deletingRef.current) return;
+    deletingRef.current = true;
     setPendingDelete(null);
     try {
       await api.deleteAdminHighlight(highlight.id);
@@ -197,6 +201,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
       pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
       // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
       void reload();
+    } finally {
+      deletingRef.current = false;
     }
   }
 

@@ -232,6 +232,23 @@ describe("BountyManager flows", () => {
     expect(screen.getByText("Bounty deleted")).toBeTruthy();
   });
 
+  it("sends one DELETE and one success toast when the confirm button is clicked several times in the same tick", async () => {
+    const remove = vi.spyOn(api, "deleteAdminBounty").mockResolvedValue(undefined);
+    renderBounties();
+    await waitFor(() => expect(within(row("Quest copy refresh")).getByRole("button", { name: "Delete" })).toBeTruthy());
+    fireEvent.click(within(row("Quest copy refresh")).getByRole("button", { name: "Delete" }));
+    const confirm = within(screen.getByRole("alertdialog")).getByRole("button", { name: "Delete" });
+    // One batched tick (what an automated or double click does): React has not re-rendered the closed dialog in between.
+    await act(async () => {
+      confirm.click();
+      confirm.click();
+      confirm.click();
+    });
+    await waitFor(() => expect(screen.getByText("Bounty deleted")).toBeTruthy());
+    expect(remove).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("Delete failed")).toBeNull();
+  });
+
   it("keeps the row and shows the mapped copy when the delete fails", async () => {
     vi.spyOn(api, "deleteAdminBounty").mockRejectedValue(new ApiHttpError(404, "BOUNTY_NOT_FOUND"));
     renderBounties();

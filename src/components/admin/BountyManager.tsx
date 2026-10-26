@@ -48,6 +48,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const [saving, setSaving] = useState(false);
   // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
   const savingRef = useRef(false);
+  const deletingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminBounty | null>(null);
   // Bounties with a transition in flight: a second click would send the same target again and answer INVALID_TRANSITION right after the success toast.
   const transitioning = useRef(new Set<string>());
@@ -169,6 +170,9 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   };
 
   const remove = async (bounty: AdminBounty) => {
+    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
+    if (deletingRef.current) return;
+    deletingRef.current = true;
     setPendingDelete(null);
     try {
       await api.deleteAdminBounty(bounty.slug);
@@ -180,6 +184,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
       // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
       void reload();
+    } finally {
+      deletingRef.current = false;
     }
   };
 
