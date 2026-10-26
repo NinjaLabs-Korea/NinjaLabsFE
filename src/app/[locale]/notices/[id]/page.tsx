@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Markdown } from "@/components/ui/Markdown";
 import { Link } from "@/i18n/navigation";
 import { safeHttpUrl } from "@/lib/api/codecs";
+import { formatEventDate } from "@/lib/community";
 import { validateDetailId } from "@/lib/detail-id";
 import { imageProps } from "@/lib/image";
 import { getRuntimeNotice, noticeCategoryKeys } from "@/lib/notices";
@@ -42,6 +43,7 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
   // Admin-entered URLs: anything but http(s)/same-origin renders the placeholder / no link.
   const coverImage = safeHttpUrl(notice.coverImage);
   const externalUrl = safeHttpUrl(notice.externalUrl);
+  const eventDate = formatEventDate(notice.eventDate);
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
@@ -59,6 +61,7 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
         <div className="flex flex-wrap items-center gap-3">
           <Badge>{t(`categories.${noticeCategoryKeys[notice.category]}`)}</Badge>
           <span className="text-sm text-ink-muted">{notice.publishedAt}</span>
+          {eventDate ? <span className="text-sm font-semibold text-primary">{t("eventDate", { date: eventDate })}</span> : null}
         </div>
         <h1 className="mt-5 break-words font-display text-4xl tracking-[-0.36px] sm:text-5xl sm:tracking-[-0.48px] text-ink">{notice.title}</h1>
         <p className="mt-5 break-words text-lg text-ink-muted">{notice.excerpt}</p>

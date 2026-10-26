@@ -1,13 +1,16 @@
 import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { IntroRedirect } from "@/components/auth/IntroRedirect";
 import { StartLink } from "@/components/auth/StartLink";
 import { BountyCard } from "@/components/cards/BountyCard";
-import { NewsCard } from "@/components/cards/NewsCard";
+import { CommunitySections } from "@/components/community/CommunitySections";
+import { ClientMessages } from "@/components/layout/ClientMessages";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { formatStatValue } from "@/lib/hall-of-fame";
+import { getRuntimeCommunity } from "@/lib/community";
 import { getRuntimeLanding } from "@/lib/landing";
 
 export default async function Home({ params }: PageProps<"/[locale]">) {
@@ -16,10 +19,11 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
   const t = await getTranslations("landing");
   const tUser = await getTranslations("common.userMenu");
   const tStats = await getTranslations("hallOfFame.stats");
-  const { hero, bounties, news, unavailable } = await getRuntimeLanding(locale);
+  const [{ hero, bounties, unavailable }, community] = await Promise.all([getRuntimeLanding(locale), getRuntimeCommunity(locale)]);
 
   return (
     <>
+      <IntroRedirect />
       <section className="relative isolate overflow-hidden bg-[linear-gradient(160deg,var(--color-hero-from)_0%,var(--color-hero-via)_55%,var(--color-hero-to)_100%)] lg:flex lg:min-h-[870px] lg:items-center">
         <div className="pointer-events-none absolute -right-1/4 -top-1/4 h-[680px] w-[680px] bg-[radial-gradient(circle,var(--color-glow)_0%,transparent_70%)] opacity-30" />
         <div className="relative mx-auto grid grid-cols-1 w-full max-w-content gap-12 px-4 py-28 sm:px-6 lg:grid-cols-2">
@@ -113,7 +117,9 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
         </div>
       </section>
 
-      <section className="mx-auto max-w-content px-4 py-16 sm:px-6">
+      <ClientMessages namespaces={["recruit"]}>
+      <CommunitySections data={community} locale={locale}>
+      <section className="mx-auto max-w-content px-4 pb-16 sm:px-6">
         <SectionHeader
           eyebrow={t("bounties.eyebrow")}
           heading={t("bounties.heading")}
@@ -137,29 +143,8 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
         )}
       </section>
 
-      <section className="mx-auto max-w-content px-4 pb-20 sm:px-6">
-        <SectionHeader
-          eyebrow={t("news.eyebrow")}
-          heading={t("news.heading")}
-          level={2}
-          size="lg"
-          action={{ label: t("news.viewAll"), href: "/notices" }}
-        />
-        {unavailable.news ? (
-          <div className="mt-7 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
-            <p className="text-sm font-semibold text-ink">{t("news.unavailable")}</p>
-            <p className="mt-1 text-sm text-ink-muted">{t("unavailableBody")}</p>
-          </div>
-        ) : news.length === 0 ? (
-          <p className="mt-7 text-sm text-ink-muted">{t("news.empty")}</p>
-        ) : (
-          <div className="mt-7 grid grid-cols-1 gap-5 lg:grid-cols-3">
-            {news.map((notice) => (
-              <NewsCard key={notice.slug} notice={notice} />
-            ))}
-          </div>
-        )}
-      </section>
+      </CommunitySections>
+      </ClientMessages>
     </>
   );
 }

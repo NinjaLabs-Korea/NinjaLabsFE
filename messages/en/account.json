@@ -102,6 +102,18 @@
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
       "generic": "We couldn’t delete your account. Please try again shortly.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
+    },
+    "bioLabel": "Bio",
+    "tagsLabel": "Field tags",
+    "editProfile": "Edit profile",
+    "cancelEdit": "Cancel editing",
+    "wallet": {
+      "heading": "Wallet",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "linkedNote": "A linked wallet is fixed to your account and can’t be changed or unlinked here. Contact the operators if you need a different one.",
+      "body": "If you chose “Connect later” while signing up, connect your wallet here. Connecting a wallet issues your Ninja NFT.",
+      "unavailable": "Wallet connection is not available in this environment."
     }
   }
 }

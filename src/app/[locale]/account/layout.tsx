@@ -6,5 +6,5 @@ import { PageMessages } from "@/components/layout/PageMessages";
 export default async function AccountLayout({ children, params }: { children: ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <PageMessages namespaces={["account"]}>{children}</PageMessages>;
+  return <PageMessages namespaces={["account", "signup", "recruit"]}>{children}</PageMessages>;
 }

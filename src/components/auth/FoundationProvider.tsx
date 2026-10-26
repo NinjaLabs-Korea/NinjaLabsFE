@@ -12,9 +12,11 @@ import type {
   AccountApi,
   AccountSettingsApi,
   AdminApi,
+  AdminCohortApi,
   AgentApi,
   ApiClient,
   BountyApi,
+  CohortApi,
   OnboardingApi,
   WalletApi,
 } from "@/lib/contracts/api";
@@ -151,10 +153,10 @@ export function useAuthSnapshot(): AuthSnapshot {
   return useSyncExternalStore(adapter.subscribe, adapter.getSnapshot, getServerAuthSnapshot);
 }
 
-export function useAuthActions(): Pick<AuthAdapter, "signIn" | "signOut"> {
+export function useAuthActions(): Pick<AuthAdapter, "signIn" | "signOut" | "refresh"> {
   const { adapter } = useFoundationContext();
 
-  return { signIn: adapter.signIn, signOut: adapter.signOut };
+  return { signIn: adapter.signIn, signOut: adapter.signOut, refresh: adapter.refresh };
 }
 
 // 컴포넌트는 필요한 API 조각만 받는다. 구현체(mock/api)는 FoundationProvider가 고른다.
@@ -165,6 +167,8 @@ export const useWalletApi = (): WalletApi => useFoundationContext().apiClient;
 export const useOnboardingApi = (): OnboardingApi => useFoundationContext().apiClient;
 export const useAccountSettingsApi = (): AccountSettingsApi => useFoundationContext().apiClient;
 export const useAdminApi = (): AdminApi => useFoundationContext().apiClient;
+export const useCohortApi = (): CohortApi => useFoundationContext().apiClient;
+export const useAdminCohortApi = (): AdminCohortApi => useFoundationContext().apiClient;
 
 export function useFoundationMode(): FoundationConfig["mode"] {
   return useFoundationContext().mode;

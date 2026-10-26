@@ -4,9 +4,11 @@ import { Link } from "@/i18n/navigation";
 import { CONTACT_EMAIL } from "@/lib/contact";
 
 const platformLinks = [
+  { href: "/about", key: "about" },
   { href: "/bounties", key: "bounties" },
   { href: "/hall-of-fame", key: "hallOfFame" },
   { href: "/notices", key: "notices" },
+  { href: "/recruit", key: "recruit" },
 ] as const;
 
 // Official links from the Ninja Labs Korea Notion hub (injective.notion.site/ninjalabskr).

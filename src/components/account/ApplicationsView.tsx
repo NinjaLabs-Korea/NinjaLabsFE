@@ -22,7 +22,8 @@ import { parseReviewComment, REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
-const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success" | "primary-soft" | "danger"> = {
+/** Badge color of each application status (also used by the home page's activity list). */
+export const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success" | "primary-soft" | "danger"> = {
   open: "neutral",
   approved: "success",
   submitted: "primary-soft",

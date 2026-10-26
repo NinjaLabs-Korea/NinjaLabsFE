@@ -3,6 +3,10 @@ import { connection } from "next/server";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AccountSettingsView } from "@/components/account/AccountSettingsView";
 import { localeAlternates } from "@/i18n/alternates";
+import { previewUser } from "@/lib/mocks/fixtures";
+import { composeFoundationRuntime } from "@/lib/runtime/config";
+
+const { wallet: walletConfig } = composeFoundationRuntime(previewUser);
 
 type AccountPageProps = {
   params: Promise<{ locale: string }>;
@@ -34,7 +38,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
       <h1 className="mt-2 font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">{t("heading")}</h1>
       <p className="mt-4 text-lg text-ink-muted">{t("intro")}</p>
       <div className="mt-8">
-        <AccountSettingsView />
+        <AccountSettingsView wallet={walletConfig} />
       </div>
     </section>
   );

@@ -8,14 +8,14 @@ import { Badge } from "@/components/ui/Badge";
 import { noticeCategoryKeys } from "@/lib/notice-categories";
 import type { Notice } from "@/lib/types";
 
-type NoticeFiltersProps = { notices: Notice[] };
+type NoticeFiltersProps = { notices: Notice[]; /** Pre-selected chip (the `?category=` link from the community pages); ignored when no notice has it. */ initialCategory?: Notice["category"] };
 type CategoryFilter = "All" | Notice["category"];
 // Canonical chip order; only categories present in the feed are offered (08 draws All / Ninja Labs / Injective ecosystem / Events).
 const categoryOrder: Notice["category"][] = ["Ninja Labs", "Injective ecosystem", "Events", "Recruitment", "Other"];
 
-export function NoticeFilters({ notices }: NoticeFiltersProps) {
+export function NoticeFilters({ notices, initialCategory }: NoticeFiltersProps) {
   const t = useTranslations("notices");
-  const [category, setCategory] = useState<CategoryFilter>("All");
+  const [category, setCategory] = useState<CategoryFilter>(() => (initialCategory && notices.some((notice) => notice.category === initialCategory) ? initialCategory : "All"));
   const resetFilters = () => {
     setCategory("All");
   };

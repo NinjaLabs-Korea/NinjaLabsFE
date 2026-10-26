@@ -102,6 +102,18 @@
       "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
       "generic": "계정을 삭제하지 못했습니다. 잠시 후 다시 시도하세요.",
       "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
+    },
+    "bioLabel": "소개",
+    "tagsLabel": "분야 태그",
+    "editProfile": "프로필 수정",
+    "cancelEdit": "수정 취소",
+    "wallet": {
+      "heading": "지갑",
+      "connected": "연결됨",
+      "notConnected": "미연결",
+      "linkedNote": "연결된 지갑은 계정에 고정되어 여기서 바꾸거나 해제할 수 없어요. 바꿔야 한다면 운영진에게 문의해 주세요.",
+      "body": "가입할 때 ‘나중에 연결하기’를 선택했다면 여기서 연결할 수 있어요. 지갑을 연결하면 Ninja NFT가 발급돼요.",
+      "unavailable": "이 환경에서는 지갑 연결을 사용할 수 없어요."
     }
   }
 }

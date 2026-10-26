@@ -9,14 +9,19 @@ import {
   useAuthSnapshot,
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
+import { MyCohortApplications } from "@/components/account/MyCohortApplications";
+import { WalletSettings } from "@/components/account/WalletSettings";
+import { ProfileForm } from "@/components/signup/ProfileForm";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useRouter } from "@/i18n/navigation";
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { pushFlash } from "@/lib/flash";
 import { normalizeNickname } from "@/lib/nickname";
+import type { WalletConfig } from "@/lib/runtime/config";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const secondaryButtonClass = `rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong ${focusClass}`;
 const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
 
 /** Same rule as the BE (`DELETE /users/me`): trimmed, NFC-normalized, case-insensitive. */
@@ -29,9 +34,10 @@ export function confirmationMatches(nickname: string, typed: string): boolean {
 const deleteErrors = ERROR_COPY.accountDelete;
 type KnownError = (typeof deleteErrors.codes)[number];
 
-export function AccountSettingsView() {
+export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain config for the wallet card (server-composed runtime config); null → no wallet connect here. */ wallet?: WalletConfig | null } = {}) {
   const t = useTranslations("account.settings");
   const tAccount = useTranslations("account.common");
+  const tTags = useTranslations("signup.profile.form.tags");
   const authSnapshot = useAuthSnapshot();
   const mode = useFoundationMode();
   const settingsApi = useAccountSettingsApi();
@@ -40,6 +46,7 @@ export function AccountSettingsView() {
   const inputId = useId();
   const errorId = useId();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<KnownError | "generic" | null>(null);
@@ -94,6 +101,18 @@ export function AccountSettingsView() {
         <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-[160px_1fr]">
           <dt className="text-ink-muted">{t("nicknameLabel")}</dt>
           <dd className="font-semibold text-ink">{nickname}</dd>
+          {user.bio ? (
+            <>
+              <dt className="text-ink-muted">{t("bioLabel")}</dt>
+              <dd className="min-w-0 whitespace-pre-wrap break-words text-ink-secondary">{user.bio}</dd>
+            </>
+          ) : null}
+          {user.tags && user.tags.length > 0 ? (
+            <>
+              <dt className="text-ink-muted">{t("tagsLabel")}</dt>
+              <dd className="font-semibold text-ink">{user.tags.map((tag) => tTags(tag.toLowerCase())).join(", ")}</dd>
+            </>
+          ) : null}
           {user.walletAddress ? (
             <>
               <dt className="text-ink-muted">{t("walletLabel")}</dt>
@@ -101,7 +120,19 @@ export function AccountSettingsView() {
             </>
           ) : null}
         </dl>
+        {editingProfile ? (
+          <div className="mt-2 border-t border-border pt-4">
+            <ProfileForm mode="edit" onSaved={() => setEditingProfile(false)} />
+            <button className={`mt-3 ${secondaryButtonClass}`} onClick={() => setEditingProfile(false)} type="button">{t("cancelEdit")}</button>
+          </div>
+        ) : (
+          <button className={`mt-5 ${secondaryButtonClass}`} onClick={() => setEditingProfile(true)} type="button">{t("editProfile")}</button>
+        )}
       </section>
+
+      <WalletSettings wallet={wallet} />
+
+      <MyCohortApplications />
 
       <section aria-labelledby={`${inputId}-danger`} className="rounded-card border border-danger-soft bg-surface p-6">
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-danger">{t("dangerEyebrow")}</p>

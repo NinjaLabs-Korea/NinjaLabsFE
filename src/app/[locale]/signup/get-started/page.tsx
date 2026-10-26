@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SignupGate } from "@/components/signup/SignupGate";
 import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
 import { CompleteOnboarding } from "@/components/signup/CompleteOnboarding";
+import { ReturnPathNotice } from "@/components/signup/ReturnPathNotice";
 import { SignupStepIndicator } from "@/components/signup/SignupStepIndicator";
 import { signup } from "@/lib/signup";
 import { localeAlternates } from "@/i18n/alternates";
@@ -34,6 +35,7 @@ export default async function SignupGetStartedPage({ params }: PageProps<"/[loca
         <div className="mt-6">
           <SignupGate step={4}>
             <CompleteOnboarding />
+            <ReturnPathNotice />
             <section className="rounded-card border border-border bg-surface p-5 text-center shadow-card sm:p-[21px]">
               <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("getStarted.eyebrow")}</p>
               <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] text-ink">{t("getStarted.title")}</h1>
