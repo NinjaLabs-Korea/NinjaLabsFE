@@ -84,7 +84,12 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
                   </td>
                   <td className={opsCell}><Badge variant={subVariant(submission.status)}>{t(`submissionStatuses.${submission.status}`)}</Badge></td>
                   <td className={`${opsCell} text-xs`} title={submission.recipientWalletAddress ?? undefined}>
-                    {submission.recipientWalletAddress ? <span className="font-mono">{opsShort(submission.recipientWalletAddress)}</span> : <span className="text-danger">{t("submissions.noWallet")}</span>}
+                    {submission.recipientWalletAddress
+                      ? <span className="font-mono">{opsShort(submission.recipientWalletAddress)}</span>
+                      // A missing wallet only blocks a payout: warn on an approved submission of a bounty that pays something, a dash elsewhere.
+                      : submission.status === "APPROVED" && ops.rewards.length > 0
+                        ? <span className="text-danger">{t("submissions.noWallet")}</span>
+                        : <span className="text-ink-muted">–</span>}
                   </td>
                   <td className={opsCell}>
                     <div className="flex flex-wrap gap-2">
