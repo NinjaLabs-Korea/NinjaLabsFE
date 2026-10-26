@@ -1,3 +1,4 @@
+import { newestFirst } from "@/lib/account-order";
 import type { AdminApi, ApiClient } from "@/lib/contracts/api";
 import type { AccountAgent, AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
@@ -89,7 +90,7 @@ export function createMockApiClient(seed = "default"): ApiClient {
         return { status: "available", data: [] };
       }
 
-      return { status: "available", data: applications.map((application) => ({ ...application })) };
+      return { status: "available", data: newestFirst(applications.map((application) => ({ ...application }))) };
     },
     getSubmissions: async (auth) => {
       if (!isFixtureOwner(auth, fixtureSnapshot)) {

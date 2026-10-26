@@ -103,15 +103,16 @@ describe("standalone submissions on /applications", () => {
     const result = await createApiApiClient(http).getApplications(signedIn);
     const rows = result.status === "available" ? result.data : [];
     // The submission behind an application row is joined into it, never listed twice.
+    // Newest first across both kinds: s1 (2026-10-01) is newer than the application (2026-07-01); rows without a time go last.
     expect(rows.map((row) => [row.id, row.source ?? "application", row.status])).toEqual([
-      ["with-app", "application", "submitted"],
       ["submission:s1", "submission", "submitted"],
+      ["with-app", "application", "submitted"],
       ["submission:s2", "submission", "revisionRequested"],
       ["submission:s3", "submission", "notAccepted"],
       ["submission:s4", "submission", "completed"],
       ["submission:s5", "submission", "revisionRequested"],
     ]);
-    expect(rows[1]).toMatchObject({ bountySlug: "b-d1", bountyTitle: "Direct one", appliedAt: "2026-10-01T00:00:00.000Z", note: "my work", agent: null });
+    expect(rows[0]).toMatchObject({ bountySlug: "b-d1", bountyTitle: "Direct one", appliedAt: "2026-10-01T00:00:00.000Z", note: "my work", agent: null });
     expect(rows[2].reviewComment).toBe("fix links");
     expect(rows[3].reviewComment).toBe("forfeited: no wallet");
     expect(rows[4].paymentStatus).toBe("PAID");
