@@ -58,7 +58,7 @@ console.log('hall of fame stats', JSON.stringify(stats), 'allZero', statsAllZero
     check('Intro: the bounty preview shows at least one bounty card', await p.eval(`document.querySelectorAll('main a[href*="/en/bounties/"]').length > 0`));
   } else console.log('Intro: no open bounty section (no active bounty seeded)');
   check('Intro: the stat block follows the zero rule', (await p.eval(`!!document.querySelector('main dl')`)) === !statsAllZero, { statsAllZero });
-  check('Intro: no em dash', !text.includes('—'));
+  check('Intro: no em dash', !text.includes('\u2014'));
   clean(await report(p, 'Intro', {}), { signedOut: true });
 
   // a secondary link without an open cohort is the past activities
