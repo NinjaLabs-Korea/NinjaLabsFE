@@ -24,7 +24,7 @@ auth, the data layer, routing or a whole user flow.
 ## Run
 
 ```sh
-NINJA_BE_DIR=../NinjaLabsBE npm run test:integration          # flows 1-11
+NINJA_BE_DIR=../NinjaLabsBE npm run test:integration          # flows 1-13
 NINJA_BE_DIR=../NinjaLabsBE npm run test:integration -- 1 3    # a subset
 NINJA_IT_CHROME_FLAGS="--no-sandbox"  # extra Chrome flags (Linux CI)
 npm run test:integration -- --reap    # stop + delete the leftovers of dead runs
