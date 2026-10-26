@@ -36,7 +36,7 @@ describe("createNonce", () => {
 });
 
 describe("isNonceRoute", () => {
-  it.each(["/en/account", "/ko/admin", "/zh/admin/users", "/en/admin/operations", "/en/agents/register", "/en/auth/callback", "/en/account/"])(
+  it.each(["/en/account", "/ko/admin", "/zh/admin/users", "/en/admin/operations", "/en/agents", "/en/agents/register", "/en/auth/callback", "/en/account/"])(
     "%s gets the nonce policy",
     (pathname) => expect(isNonceRoute(pathname)).toBe(true),
   );
@@ -44,8 +44,8 @@ describe("isNonceRoute", () => {
   it.each([
     "/en",
     "/en/bounties",
-    "/en/agents",
-    "/en/agents/registered",
+    "/en/agentsx",
+    "/en/agents-guide",
     "/en/administrators",
     "/en/accounts",
     "/en/signup",
@@ -106,7 +106,7 @@ describe("proxy CSP selection", () => {
   }
   const cspOf = (response: Response) => response.headers.get("content-security-policy") ?? response.headers.get("content-security-policy-report-only");
 
-  it.each(["/en/account", "/ko/admin/users", "/zh/agents/register", "/en/auth/callback"])("%s: nonce CSP on the response, request header and x-nonce agree", async (pathname) => {
+  it.each(["/en/account", "/ko/admin/users", "/ko/agents", "/zh/agents/register", "/en/auth/callback"])("%s: nonce CSP on the response, request header and x-nonce agree", async (pathname) => {
     const response = await run(pathname);
     const csp = cspOf(response)!;
     const nonce = /'nonce-([^']+)'/.exec(csp)![1];
@@ -131,7 +131,7 @@ describe("proxy CSP selection", () => {
     expect(response.headers.get("x-middleware-request-content-security-policy") ?? response.headers.get("x-middleware-request-content-security-policy-report-only")).not.toContain("EVIL");
   });
 
-  it.each(["/en", "/en/bounties", "/ko/agents", "/en/signup", "/en/members/ninja"])("%s: public page, no proxy CSP and no nonce (stays static)", async (pathname) => {
+  it.each(["/en", "/en/bounties", "/en/hall-of-fame", "/en/signup", "/en/members/ninja"])("%s: public page, no proxy CSP and no nonce (stays static)", async (pathname) => {
     const response = await run(pathname);
     expect(cspOf(response)).toBeNull();
     expect(response.headers.get("x-middleware-request-x-nonce")).toBeNull();
@@ -143,6 +143,7 @@ describe("nonce routes render per request", () => {
   const files = [
     "src/app/[locale]/account/page.tsx",
     "src/app/[locale]/admin/layout.tsx",
+    "src/app/[locale]/agents/layout.tsx",
     "src/app/[locale]/agents/register/page.tsx",
     "src/app/[locale]/auth/callback/layout.tsx",
   ];
