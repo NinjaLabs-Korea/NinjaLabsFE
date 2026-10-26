@@ -17,6 +17,23 @@ describe("AdminSelect", () => {
   });
 });
 
+describe("AdminSelect with a long unbroken label", () => {
+  // jsdom has no layout, so assert the classes that keep an unbroken title (a URL or hash) from widening the page:
+  // the root may shrink below its content, the trigger text truncates and the option text wraps anywhere.
+  it("lets the trigger shrink and truncate, and the options wrap", () => {
+    const long = "x".repeat(150);
+    const { container } = renderWithIntl(<AdminSelect formatOption={() => long} label="Bounty" onChange={vi.fn()} options={["a"]} value="a" />);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.className).toContain("min-w-0");
+    expect(root.className).toContain("max-w-full");
+    const label = screen.getByText(long);
+    expect(label.className).toContain("truncate");
+    expect(label.className).toContain("min-w-0");
+    fireEvent.click(screen.getByRole("combobox", { name: "Bounty" }));
+    expect(screen.getByRole("option").className).toContain("[overflow-wrap:anywhere]");
+  });
+});
+
 describe("UserActions", () => {
   beforeAll(() => {
     // jsdom has no <dialog> implementation; Modal only needs open/close bookkeeping here.

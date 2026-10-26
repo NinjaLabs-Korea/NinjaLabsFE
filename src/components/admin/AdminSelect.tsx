@@ -86,7 +86,7 @@ export function AdminSelect({
   };
 
   return (
-    <div className="relative" ref={rootRef}>
+    <div className="relative max-w-full min-w-0" ref={rootRef}>
       <button
         aria-activedescendant={open ? `${listboxId}-opt-${activeIndex}` : undefined}
         aria-controls={listboxId}
@@ -103,8 +103,9 @@ export function AdminSelect({
         ref={triggerRef}
         type="button"
       >
-        {formatOption(value)}
-        <span>▾</span>
+        {/* min-w-0 + truncate: an unbroken option text (a URL or hash as a bounty title) must not widen the page. */}
+        <span className="min-w-0 truncate">{formatOption(value)}</span>
+        <span aria-hidden="true" className="ml-2 shrink-0">▾</span>
       </button>
       {open && (
         <ul aria-labelledby={`${listboxId}-trigger`} className="absolute z-30 mt-1 w-full rounded-tile border border-border bg-surface p-1 shadow-frame" id={listboxId} role="listbox">
@@ -112,8 +113,8 @@ export function AdminSelect({
             const selected = value === option;
             const active = activeIndex === index;
             const className = selected
-              ? `rounded-control px-3 py-2.5 text-left text-sm font-semibold bg-primary-soft text-primary-strong${active ? " outline outline-1 outline-primary-outline" : ""}`
-              : `rounded-control px-3 py-2.5 text-left text-sm${active ? " bg-surface-subtle" : ""}`;
+              ? `rounded-control px-3 py-2.5 text-left text-sm [overflow-wrap:anywhere] font-semibold bg-primary-soft text-primary-strong${active ? " outline outline-1 outline-primary-outline" : ""}`
+              : `rounded-control px-3 py-2.5 text-left text-sm [overflow-wrap:anywhere]${active ? " bg-surface-subtle" : ""}`;
 
             return (
               <li
