@@ -65,6 +65,18 @@ describe("BountyActionPanel", () => {
     Object.assign(apiClient, defaultApiClient);
   });
 
+  it("sends one apply request when several submit events land in the same tick", async () => {
+    const applyToBounty = vi.fn(() => new Promise<never>(() => undefined));
+    Object.assign(apiClient, { applyToBounty });
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    const form = screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    await waitFor(() => expect(applyToBounty).toHaveBeenCalledTimes(1));
+  });
+
   it("shows the closed panel to signed-out visitors instead of the sign-in prompt", async () => {
     state.auth = signedOut;
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="closed" submissionMode="direct" />);

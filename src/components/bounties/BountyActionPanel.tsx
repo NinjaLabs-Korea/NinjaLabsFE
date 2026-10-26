@@ -151,6 +151,8 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const applicationsQuery = useAccountQuery(applicationRequired ? accountApi.getApplications : noApplications);
   const submissionsQuery = useAccountQuery(accountApi.getSubmissions);
   const [busy, setBusy] = useState(false);
+  // Synchronous in-flight guard: several submit events can land in one tick (automation, assistive tools) before React re-renders `busy`.
+  const inFlight = useRef(false);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [applied, setApplied] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -175,6 +177,8 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (inFlight.current) return;
+    inFlight.current = true;
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     setBusy(true);
@@ -196,12 +200,15 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       setFeedback({ kind: "error", text: errorText(error, tError) });
       if (isStaleRowsError(error)) refreshRows();
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   };
 
   const apply = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (inFlight.current) return;
+    inFlight.current = true;
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     setBusy(true);
@@ -219,6 +226,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       setFeedback({ kind: "error", text: errorText(error, tError) });
       if (isStaleRowsError(error)) refreshRows();
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   };
