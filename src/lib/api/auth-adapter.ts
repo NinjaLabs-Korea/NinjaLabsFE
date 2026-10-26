@@ -26,9 +26,10 @@ export { getOnboardingPath };
 /**
  * Pages an unfinished sign-up may stay on after a session restore: the sign-up steps themselves, and `/account`, the only
  * place to delete the account (`DELETE /users/me` works from onboarding step 2, so someone who only did the Google step
- * must be able to leave without finishing a profile or wallet first).
+ * must be able to leave without finishing a profile or wallet first), and the legal pages (`/privacy`, `/terms`): the
+ * sign-up footer links to them, so a reload or a new tab must not bounce someone who is creating an account away from them.
  */
-const ONBOARDING_EXEMPT = /^\/(?:signup\/|account(?:\/|$))/;
+const ONBOARDING_EXEMPT = /^\/(?:signup\/|account(?:\/|$)|(?:privacy|terms)(?:\/|$))/;
 
 export function shouldRedirectToOnboarding(
   user: AuthSnapshot["user"],
