@@ -2,6 +2,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { Link } from "@/i18n/navigation";
+import { stripLocale } from "@/i18n/routing";
 
 // Deliberate long-form prose subset: tables, images, and task lists are unsupported by design
 // (unwrapDisallowed keeps their text content). See Bounty/Notice markdown contract in src/lib/types.ts.
@@ -11,6 +12,16 @@ const EXTERNAL_HREF = /^(https?:)?\/\//i;
 // A same-site path (`/bounties/abc`, not `//host`): rendered through the locale-aware Link, because under `localePrefix: "always"` a raw
 // `<a href="/bounties/abc">` drops the reader's locale (one redirect, and the proxy may pick another language).
 const SAME_SITE_PATH = /^\/(?!\/)/;
+
+/**
+ * A path copied from the address bar already carries a locale (`/en/bounties`); the locale-aware Link would add the reader's
+ * locale again (`/en/en/bounties`, a 404). Drop one leading locale segment, keeping the query and hash.
+ */
+function withoutLocalePrefix(href: string): string {
+  const match = /^([^?#]*)(.*)$/.exec(href);
+  const path = stripLocale(match?.[1] ?? href);
+  return `${path === "" ? "/" : path}${match?.[2] ?? ""}`;
+}
 
 // Browsers read a backslash in a URL as a slash (`\\/host` and `/\\host` become `//host`, `https:\\host` becomes `https://host`).
 // react-markdown already percent-encodes it (`%5C`, inert) before this component sees the href; this keeps that from being the only
@@ -35,7 +46,7 @@ export function Markdown({ children }: { children: string }) {
           if (typeof href === "string" && BACKSLASH_HREF.test(href)) return <>{children}</>;
           const isExternal = typeof href === "string" && EXTERNAL_HREF.test(href);
           if (typeof href === "string" && SAME_SITE_PATH.test(href)) {
-            return <Link className={linkClass} href={href}>{children}</Link>;
+            return <Link className={linkClass} href={withoutLocalePrefix(href)}>{children}</Link>;
           }
           return (
             <a

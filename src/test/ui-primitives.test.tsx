@@ -148,6 +148,14 @@ describe("Markdown allowlist", () => {
     expect(rel.getAttribute("rel")).toBeNull();
   });
 
+  it("keeps a same-site path that already has a locale prefix as is, instead of doubling it", () => {
+    renderMd("[a](/en/bounties) [b](/ko/notices/abc?x=1#top) [c](/zh) [d](/english/x)");
+    expect(screen.getByRole("link", { name: "a" }).getAttribute("href")).toBe("/en/bounties");
+    expect(screen.getByRole("link", { name: "b" }).getAttribute("href")).toBe("/en/notices/abc?x=1#top");
+    expect(screen.getByRole("link", { name: "c" }).getAttribute("href")).toBe("/en");
+    expect(screen.getByRole("link", { name: "d" }).getAttribute("href")).toBe("/en/english/x");
+  });
+
   it("treats only real absolute URLs as external: a relative path starting with 'http' stays in-tab, an uppercase scheme opens a new tab", () => {
     renderMd("[guide](http-guide) [shout](HTTPS://injective.com) [mail](mailto:a@b.co)");
     expect(screen.getByRole("link", { name: "guide" }).getAttribute("target")).toBeNull();
