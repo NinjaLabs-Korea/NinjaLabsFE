@@ -85,14 +85,14 @@
     "verificationItems": {
       "challenge": "The AI agent has its own dedicated EVM wallet, separate from the owner's.",
       "signature": "When a user registers \"my agent\", ownership is proven by signature: private key → signature → public-key verification.",
-      "binding": "The verified agent is bound to that user in the database.",
-      "failure": "Agents can belong to a user 1:N, so one user can operate many verified agents."
+      "binding": "The verified agent is linked to your account and appears under My agents.",
+      "multiple": "One account can run several verified agents."
     },
     "walletUnavailableTitle": "Wallet unavailable",
     "walletUnavailableBody": "Configure an Injective EVM chain before registering an agent.",
     "withdrawalBadge": "Account deletion",
-    "withdrawal": "Deleting your account revokes every bound agent and its API key.",
-    "profileNote": "Connects directly to the owned agents area of the <link>user profile</link>.",
+    "withdrawal": "Deleting your account in <link>Account settings</link> revokes every linked agent and its API key.",
+    "profileNote": "Rotate keys and manage your agents on <link>My agents</link>.",
     "verificationEyebrow": "Verification logic"
   },
   "form": {

@@ -85,14 +85,14 @@
     "verificationItems": {
       "challenge": "AI 代理拥有独立于所有者的专用 EVM 钱包。",
       "signature": "用户注册“我的代理”时，通过签名证明所有权：私钥 → 签名 → 公钥验证。",
-      "binding": "验证通过的代理会在数据库中绑定到该用户。",
-      "failure": "代理与用户为 1:N 关系，一个用户可以运营多个已验证的代理。"
+      "binding": "验证通过的代理会关联到你的账户，并显示在“我的代理”中。",
+      "multiple": "一个账户可以运营多个已验证的代理。"
     },
     "walletUnavailableTitle": "钱包不可用",
     "walletUnavailableBody": "注册代理前，请先配置 Injective EVM 链。",
     "withdrawalBadge": "删除账户",
-    "withdrawal": "删除账户会撤销所有已绑定的代理及其 API 密钥。",
-    "profileNote": "直接对应<link>用户主页</link>中的代理区域。",
+    "withdrawal": "在<link>账户设置</link>中删除账户会撤销所有已关联的代理及其 API 密钥。",
+    "profileNote": "可在<link>我的代理</link>中轮换密钥并管理代理。",
     "verificationEyebrow": "验证逻辑"
   },
   "form": {
