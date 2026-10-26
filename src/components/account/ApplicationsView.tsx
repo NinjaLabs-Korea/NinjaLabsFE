@@ -40,6 +40,22 @@ const applicationSteps: readonly ApplicationStatus[] = ["open", "approved", "sub
 // A submission with no application behind it (direct or agent-mode bounty) skips Applied/Approved.
 const submissionSteps: readonly ApplicationStatus[] = ["submitted", "completed"];
 
+/**
+ * The status words of a row (badge text). Single source for the My applications page and the home activity list, so a
+ * forfeited award reads the same everywhere. `t` is `useTranslations("account.applications")`.
+ */
+export function applicationStatusLabel(
+  t: (key: string, values?: Record<string, string>) => string,
+  application: Pick<AccountApplication, "status" | "agent" | "reviewComment">,
+): string {
+  const { status } = application;
+  if (status === "approved") return application.agent ? t("agentApprovedStatus", { name: application.agent.name }) : t("approvedStatus");
+  if (status === "revisionRequested") return t("revisionRequestedStatus");
+  if (status === "rejected") return t("rejectedStatus");
+  if (status === "notAccepted") return parseReviewComment(application.reviewComment)?.forfeited ? t("forfeitedStatus") : t("notAcceptedStatus");
+  return t(`steps.${status}`);
+}
+
 /** Final state of an approved application whose submission was rejected; a forfeited award names the reason. */
 function NotAcceptedNote({ application }: { application: AccountApplication }) {
   const t = useTranslations("account.applications");
@@ -84,14 +100,7 @@ export function ApplicationsView() {
   const tAccount = useTranslations("account.common");
   const tBounties = useTranslations("bounties.categories");
   const format = useFormatter();
-  const statusLabel = (application: AccountApplication): string => {
-    const { status } = application;
-    if (status === "approved") return application.agent ? t("agentApprovedStatus", { name: application.agent.name }) : t("approvedStatus");
-    if (status === "revisionRequested") return t("revisionRequestedStatus");
-    if (status === "rejected") return t("rejectedStatus");
-    if (status === "notAccepted") return parseReviewComment(application.reviewComment)?.forfeited ? t("forfeitedStatus") : t("notAcceptedStatus");
-    return t(`steps.${status}`);
-  };
+  const statusLabel = (application: AccountApplication): string => applicationStatusLabel(t, application);
   const mode = useFoundationMode();
   const authSnapshot = useAuthSnapshot();
   const apiClient = useAccountApi();

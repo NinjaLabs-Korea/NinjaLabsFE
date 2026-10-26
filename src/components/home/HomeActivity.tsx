@@ -2,7 +2,7 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
-import { statusVariants } from "@/components/account/ApplicationsView";
+import { applicationStatusLabel, statusVariants } from "@/components/account/ApplicationsView";
 import { useAccountApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -12,14 +12,14 @@ import type { ApplicationStatus } from "@/lib/contracts/account";
 /** How many of my latest rows the home lists; the rest is on /applications. */
 const HOME_ACTIVITY_LIMIT = 4;
 
-// `account.applications` keys of each status label (the same words as the My applications page).
-const statusLabelKeys: Record<ApplicationStatus, string> = {
+// `account.applications` keys of each status label (the same words as the My applications page, except that the compact
+// home card keeps the short step names for approved rows). Rejected and not-accepted rows go through the shared label so a
+// forfeited award reads the same here and on /applications.
+const statusLabelKeys: Partial<Record<ApplicationStatus, string>> = {
   open: "steps.open",
   approved: "steps.approved",
   submitted: "steps.submitted",
   completed: "steps.completed",
-  rejected: "rejectedStatus",
-  notAccepted: "notAcceptedStatus",
   revisionRequested: "revisionRequestedStatus",
 };
 
@@ -56,7 +56,7 @@ export function HomeActivity() {
                 href={row.source === "submission" || row.status !== "open" ? `/bounties/${row.bountySlug}` : "/applications"}
               >
                 <span className="flex flex-wrap items-center justify-between gap-2">
-                  <Badge variant={statusVariants[row.status]}>{tApplications(statusLabelKeys[row.status])}</Badge>
+                  <Badge variant={statusVariants[row.status]}>{statusLabelKeys[row.status] ? tApplications(statusLabelKeys[row.status]!) : applicationStatusLabel(tApplications, row)}</Badge>
                   <span className="text-xs text-ink-muted">{format.dateTime(new Date(row.appliedAt), { dateStyle: "medium" })}</span>
                 </span>
                 <span className="line-clamp-2 break-words font-display text-lg font-bold text-ink">{row.bountyTitle}</span>
