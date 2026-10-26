@@ -23,12 +23,19 @@ import { stripLocale, withLocaleOf } from "@/i18n/routing";
 
 export { getOnboardingPath };
 
+/**
+ * Pages an unfinished sign-up may stay on after a session restore: the sign-up steps themselves, and `/account`, the only
+ * place to delete the account (`DELETE /users/me` works from onboarding step 2, so someone who only did the Google step
+ * must be able to leave without finishing a profile or wallet first).
+ */
+const ONBOARDING_EXEMPT = /^\/(?:signup\/|account(?:\/|$))/;
+
 export function shouldRedirectToOnboarding(
   user: AuthSnapshot["user"],
   pathname: string,
 ): string | null {
   const onboardingPath = getOnboardingPath(user);
-  if (!onboardingPath || stripLocale(pathname).startsWith("/signup/")) return null;
+  if (!onboardingPath || ONBOARDING_EXEMPT.test(stripLocale(pathname))) return null;
   return withLocaleOf(pathname, onboardingPath);
 }
 
