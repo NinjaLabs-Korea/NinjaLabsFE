@@ -211,7 +211,7 @@
         "sponsorTooLong": "最多 100 个字符。"
       },
       "rewardLockedHint": "奖励在悬赏创建后即固定，无法在此修改。",
-      "rewardNote": "创建后奖励代币即被锁定。奖励流程 = 锁定 → 释放 → 转账，不进行兑换。"
+      "rewardNote": "创建后，赞助方需将奖励转入多签钱包，管理员在 Operations 中确认存款，赏金任务才能开放。任务创建后无法更改奖励。"
     },
     "toast": {
       "loadFailedTitle": "无法获取赏金",

@@ -211,7 +211,7 @@
         "sponsorTooLong": "Use at most 100 characters."
       },
       "rewardLockedHint": "Reward is fixed once the bounty exists; it cannot be changed here.",
-      "rewardNote": "On creation, the reward token is locked. Reward flow = lock → release → transfer, with no swap."
+      "rewardNote": "After you create it, the sponsor sends the reward to the multisig wallet and an admin confirms the deposit in Operations. Only then can the bounty open. The reward cannot be changed once the bounty exists."
     },
     "toast": {
       "loadFailedTitle": "Bounties unavailable",
