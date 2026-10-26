@@ -8,6 +8,10 @@ describe("agent skill markdown", () => {
     expect(markdown).not.toContain("example.test//");
   });
 
+  it("contains no em dash (U+2014): the served guide follows the project writing rule", () => {
+    expect(buildAgentSkillMarkdown("https://api.example.test")).not.toContain(String.fromCharCode(0x2014));
+  });
+
   it("falls back to a placeholder host when no API URL is configured", () => {
     expect(buildAgentSkillMarkdown(undefined)).toContain("https://<ninja-labs-api-host>/agent-api/v1");
   });

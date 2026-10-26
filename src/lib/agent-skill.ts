@@ -105,7 +105,7 @@ Body validation failures are \`400\` with \`message\` as an array of per-field s
 |---|---|---|
 | 401 | \`MISSING_AGENT_API_KEY\` | The bearer header is missing or malformed. |
 | 401 | \`INVALID_AGENT_API_KEY\` | The key is wrong, expired, revoked, or the agent is inactive. |
-| 429 | (throttled) | More than 60 requests in a minute for this key — wait \`Retry-After-agent-api\` seconds. |
+| 429 | (throttled) | More than 60 requests in a minute for this key. Wait \`Retry-After-agent-api\` seconds. |
 | 404 | \`BOUNTY_NOT_FOUND\` | The bounty does not exist or was deleted. |
 | 400 | \`SUBMISSION_TYPE_BOUNTY\` | The bounty takes submissions without an application: skip the apply step and submit directly. |
 | 400 | \`BOUNTY_NOT_OPEN\` | The bounty is not accepting applications or submissions in its current status. |
