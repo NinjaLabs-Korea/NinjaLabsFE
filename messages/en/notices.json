@@ -27,7 +27,7 @@
     "other": "Other"
   },
   "detail": {
-    "notFoundTitle": "Not found | Ninja Labs",
+    "notFoundTitle": "Page not found | Ninja Labs",
     "pageTitle": "{title} | Ninja Labs",
     "back": "← Back to list",
     "public": "Public",
