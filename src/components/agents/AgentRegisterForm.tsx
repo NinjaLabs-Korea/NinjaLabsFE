@@ -14,6 +14,7 @@ import { Link } from "@/i18n/navigation";
 import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
 import type { AgentVerification } from "@/lib/contracts/api";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
+import { formatUtcDateTime } from "@/lib/format";
 import { validationFieldsFromError } from "@/lib/api/validation";
 import {
   AGENT_DESCRIPTION_MAX,
@@ -332,7 +333,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
           apiKey={verification.apiKey}
           className="mt-5"
           copy={t("copyKey")}
-          expiresLabel={t("expires", { date: format.dateTime(new Date(verification.expiresAt), { dateStyle: "medium", timeStyle: "short", timeZoneName: "short" }) })}
+          expiresLabel={t("expires", { date: formatUtcDateTime(format, verification.expiresAt) })}
           title={t("verified")}
         />
       ) : null}
