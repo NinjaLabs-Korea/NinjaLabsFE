@@ -103,6 +103,7 @@
       },
       "nicknameHint": "2–50 个字符：字母（含重音或元音符号）、数字、_ . -，且开头和结尾必须是字母或数字。",
       "signInAgain": "重新登录（已填写的内容会保留）",
+      "signInAgainEdit": "在新标签页重新登录，然后回到这里保存",
       "nicknameErrors": {
         "tooShort": "至少 2 个字符。",
         "tooLong": "最多 50 个字符。",

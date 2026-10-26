@@ -14,6 +14,7 @@ import { WalletSettings } from "@/components/account/WalletSettings";
 import { ProfileForm } from "@/components/signup/ProfileForm";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
+import type { ClientUser } from "@/lib/contracts/auth";
 import { stashFlash } from "@/lib/flash";
 import { leaveForIntro } from "@/lib/home-hint";
 import { normalizeNickname } from "@/lib/nickname";
@@ -47,6 +48,10 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
   const errorId = useId();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
+  // The last signed-in user: while the profile editor is open and the session ends from outside, the page keeps showing it
+  // (with the typed values) instead of swapping in the sign-in prompt.
+  const [lastUser, setLastUser] = useState<ClientUser | null>(null);
+  if (authSnapshot.status === "signed-in" && lastUser !== authSnapshot.user) setLastUser(authSnapshot.user);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<KnownError | "generic" | null>(null);
@@ -55,15 +60,17 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
 
   // Only a session ended from outside (refresh rejected, another tab) says "expired"; the user's own Sign out or this
   // page's account deletion shows the plain "sign in" gate.
-  if (authSnapshot.status === "signed-out") {
+  const heldForEdit = authSnapshot.status === "signed-out" && authSnapshot.reason === "session-ended" && editingProfile && lastUser !== null;
+  if (authSnapshot.status === "signed-out" && !heldForEdit) {
     return <SignedOutPanel message={authSnapshot.reason === "session-ended" ? tAccount("sessionExpired") : t("signedOutMessage")} returnTo="/account" />;
   }
 
-  if (authSnapshot.status !== "signed-in") {
+  if (authSnapshot.status === "loading") {
     return <p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p>;
   }
 
-  const { user } = authSnapshot;
+  const user = authSnapshot.status === "signed-in" ? authSnapshot.user : lastUser;
+  if (!user) return null;
   const nickname = user.handle;
   const matches = confirmationMatches(nickname, typed);
 

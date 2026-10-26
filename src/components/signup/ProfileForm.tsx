@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/Badge";
 import { NICKNAME_MAX, NICKNAME_MIN, normalizeNickname, validateNickname } from "@/lib/nickname";
 import { PROFILE_BIO_MAX } from "@/lib/input-limits";
 import { pushFlash } from "@/lib/flash";
+import { signInHref } from "@/lib/return-path";
 import { signup } from "@/lib/signup";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
 import { withLocaleOf } from "@/i18n/routing";
@@ -324,9 +325,17 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
       {sessionEnded ? (
         <div className="space-y-2" role="alert">
           <p className="text-sm text-danger">{tSaveErrors("session")}</p>
-          <Link className="inline-block text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/signup">
-            {t("signInAgain")}
-          </Link>
+          {editing ? (
+            // The account page keeps this editor on screen, so sign in in a NEW tab (it reaches this tab through the
+            // cross-tab "signed-in" event); following the link in this tab would drop the edit.
+            <Link className="inline-block text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={signInHref("/account")} rel="noopener" target="_blank">
+              {t("signInAgainEdit")}
+            </Link>
+          ) : (
+            <Link className="inline-block text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/signup">
+              {t("signInAgain")}
+            </Link>
+          )}
         </div>
       ) : state === "error" ? (
         <p className="text-sm text-danger" role="alert">

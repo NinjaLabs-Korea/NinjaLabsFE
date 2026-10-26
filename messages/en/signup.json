@@ -103,6 +103,7 @@
       },
       "nicknameHint": "2–50 characters: letters (with their accent or vowel marks), digits, _ . -; starting and ending with a letter or digit.",
       "signInAgain": "Sign in again (your entries are kept)",
+      "signInAgainEdit": "Sign in again in a new tab, then save here",
       "nicknameErrors": {
         "tooShort": "Use at least 2 characters.",
         "tooLong": "Use at most 50 characters.",

@@ -63,7 +63,9 @@
     "signInRequired": "Admin sign-in required",
     "signIn": "Sign in",
     "accessOnly": "Admin access only",
-    "noPermission": "Your account does not have administrator permission."
+    "noPermission": "Your account does not have administrator permission.",
+    "sessionExpired": "Your session has expired. What you typed is kept on this page. Sign in again in a new tab, then come back here and save.",
+    "signInAgain": "Sign in again"
   },
   "users": {
     "metaTitle": "Admin · Users | Ninja Labs",

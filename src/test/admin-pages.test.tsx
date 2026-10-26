@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // Admin route shells: the gate, the tab strip, the server pages (mock vs api data source, metadata) and the index redirect.
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { createTranslator } from "next-intl";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -89,6 +89,32 @@ describe("AdminGate", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Admin access only" })).toBeTruthy();
     expect(screen.getByText("Your account does not have administrator permission.")).toBeTruthy();
     expect(screen.queryByText("secret console")).toBeNull();
+  });
+
+  it("keeps the page (and what was typed) when an admin's session ends, and says why", () => {
+    state.auth = signedInAs({ ...previewUser, isAdmin: true });
+    const form = <input aria-label="draft body" />;
+    const view = renderWithIntl(<AdminGate>{form}</AdminGate>);
+    fireEvent.change(screen.getByLabelText("draft body"), { target: { value: "long notice body" } });
+    const input = screen.getByLabelText("draft body") as HTMLInputElement;
+
+    state.auth = { status: "signed-out", user: null, reason: "session-ended" };
+    view.rerender(<AdminGate>{form}</AdminGate>);
+    expect(screen.getByRole("alert").textContent).toMatch(/Your session has expired\. What you typed is kept on this page/);
+    expect(screen.getByRole("link", { name: "Sign in again" }).getAttribute("target")).toBe("_blank");
+    expect(screen.getByLabelText("draft body")).toBe(input); // same DOM node: not remounted
+    expect(input.value).toBe("long notice body");
+
+    state.auth = signedInAs({ ...previewUser, isAdmin: true }); // signed in again from the other tab
+    view.rerender(<AdminGate>{form}</AdminGate>);
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByLabelText("draft body")).toBe(input);
+  });
+
+  it("still asks a visitor who was never an admin here to sign in after a session end", () => {
+    state.auth = { status: "signed-out", user: null, reason: "session-ended" };
+    renderWithIntl(<AdminGate>{content}</AdminGate>);
+    expect(screen.getByRole("heading", { level: 1, name: "Admin sign-in required" })).toBeTruthy();
   });
 
   it("renders the console for an admin, and always in mock mode", () => {

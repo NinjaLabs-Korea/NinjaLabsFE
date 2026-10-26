@@ -63,7 +63,9 @@
     "signInRequired": "관리자 로그인이 필요합니다",
     "signIn": "로그인",
     "accessOnly": "관리자만 접근할 수 있습니다",
-    "noPermission": "현재 계정에는 관리자 권한이 없습니다."
+    "noPermission": "현재 계정에는 관리자 권한이 없습니다.",
+    "sessionExpired": "세션이 만료되었습니다. 입력한 내용은 이 페이지에 그대로 남아 있습니다. 새 탭에서 다시 로그인한 뒤 이 페이지로 돌아와 저장하세요.",
+    "signInAgain": "다시 로그인"
   },
   "users": {
     "metaTitle": "관리자 · 사용자 | Ninja Labs",
