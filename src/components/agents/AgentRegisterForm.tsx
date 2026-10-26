@@ -56,6 +56,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const [verificationOwner, setVerificationOwner] = useState(sessionUserId);
   // ...and a key that arrives after the session changed (verify still in flight) must never be shown to the new session.
   const sessionUserIdRef = useRef(sessionUserId);
+  const inFlightRef = useRef(false);
   useEffect(() => {
     sessionUserIdRef.current = sessionUserId;
   }, [sessionUserId]);
@@ -90,6 +91,9 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // Synchronous guard: several submit events can land in one tick, before `submissionState` (React state) is set and the
+    // button re-renders disabled. Each would otherwise register an agent, ask the wallet for a signature and verify.
+    if (inFlightRef.current) return;
     if (
       auth.status !== "signed-in" ||
       !address ||
@@ -108,6 +112,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       return;
     }
 
+    inFlightRef.current = true;
     const agentAddress = address;
     const requestingUserId = sessionUserId;
     setErrorMessage(null);
@@ -163,6 +168,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         setErrorMessage(tRegisterErrors(heldByOthers ? "walletHeldByOther" : key));
       }
     } finally {
+      inFlightRef.current = false;
       setSubmissionState("idle");
     }
   }
