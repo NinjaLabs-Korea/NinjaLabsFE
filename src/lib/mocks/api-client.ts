@@ -203,14 +203,6 @@ export function createMockApiClient(seed = "default"): ApiClient {
   };
 }
 
-const ADMIN_BOUNTY_STATUS: Record<string, AdminBounty["status"]> = {
-  DRAFT: "draft",
-  FUNDING_PENDING: "funding",
-  OPEN: "active",
-  SUBMISSION_CLOSED: "reviewing",
-  IN_REVIEW: "reviewing",
-};
-
 /** 운영자 콘솔 mock — fixture로 시작해 이 탭 안의 생성·수정·전이·삭제를 메모리에 반영한다 (새로고침하면 초기화). */
 function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
   let users: AdminUser[] = getAdminUsers();
@@ -268,7 +260,7 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
       requireOne(bounties, (item) => item.slug === bountyId, "BOUNTY_NOT_FOUND");
       // A bounty opened in the operations console enforces the BE transition table + lifecycle blockers on its mock rows.
       if (openedOperations.has(bountyId)) transitionOperations(bountyId, to);
-      const status = ADMIN_BOUNTY_STATUS[to] ?? ADMIN_STATUS_FROM_CODE[to] ?? "closed";
+      const status = ADMIN_STATUS_FROM_CODE[to] ?? "completed";
       bounties = bounties.map((item) => (item.slug === bountyId ? { ...item, status } : item));
     },
     deleteAdminBounty: async (bountyId) => {

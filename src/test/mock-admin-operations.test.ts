@@ -76,7 +76,7 @@ describe("mock operations parity (lib/mocks/admin-operations.ts)", () => {
     }
     await client.transitionAdminBounty(slug, "SUBMISSION_CLOSED");
     expect((await client.getAdminOperations(slug)).bounty.status).toBe("SUBMISSION_CLOSED");
-    expect((await client.getAdminBounties()).find((b) => b.slug === slug)?.status).toBe("reviewing");
+    expect((await client.getAdminBounties()).find((b) => b.slug === slug)?.status).toBe("submissionClosed");
   });
 
   it("confirms a pending deposit only with a valid hash and an amount covering the reward", async () => {

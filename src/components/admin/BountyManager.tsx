@@ -28,7 +28,7 @@ const columns = [
 ];
 
 const tags = ["Dev", "Design", "Content", "Other"] as const;
-const statusVariants = { draft: "neutral", funding: "warning", active: "success", reviewing: "warning", closed: "danger" } as const;
+const statusVariants = { draft: "neutral", funding: "warning", active: "success", submissionClosed: "warning", reviewing: "warning", completed: "neutral", cancelled: "danger" } as const;
 
 type Mode = { kind: "create" } | { kind: "edit"; slug: string };
 

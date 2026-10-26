@@ -150,8 +150,10 @@
       "draft": "草稿",
       "funding": "注资中",
       "active": "进行中",
+      "submissionClosed": "提交已截止",
       "reviewing": "审核中",
-      "closed": "已关闭"
+      "completed": "已完成",
+      "cancelled": "已取消"
     },
     "tags": {
       "Dev": "开发",

@@ -150,8 +150,10 @@
       "draft": "초안",
       "funding": "펀딩 중",
       "active": "진행 중",
-      "reviewing": "검토 중",
-      "closed": "종료"
+      "submissionClosed": "제출 마감",
+      "reviewing": "심사 중",
+      "completed": "완료",
+      "cancelled": "취소됨"
     },
     "tags": {
       "Dev": "개발",

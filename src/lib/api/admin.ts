@@ -65,8 +65,11 @@ const bountyStatus = (status: string): AdminBounty["status"] => {
   if (status === "DRAFT") return "draft";
   if (status === "FUNDING_PENDING") return "funding";
   if (status === "OPEN") return "active";
-  if (status === "IN_REVIEW" || status === "SUBMISSION_CLOSED") return "reviewing";
-  return "closed";
+  if (status === "SUBMISSION_CLOSED") return "submissionClosed";
+  if (status === "IN_REVIEW") return "reviewing";
+  if (status === "CANCELLED") return "cancelled";
+  // COMPLETED, and any status a newer BE adds: shown as finished rather than guessed.
+  return "completed";
 };
 
 /** 운영자 콘솔 API — BE 행(snake_case, 코드값)을 FE 어드민 타입으로 변환한다 */

@@ -66,7 +66,7 @@ describe("BountyManager flows", () => {
     // Only draft/funding/active rows offer a transition button; active closes, reviewing/closed have none.
     expect(widget.getByRole("button", { name: "Close" })).toBeTruthy();
     expect(within(row("Design wallet onboarding states")).queryByRole("button", { name: /^(Open|Close)$/ })).toBeNull();
-    expect(within(row("Quest copy refresh")).getByText("Closed")).toBeTruthy();
+    expect(within(row("Quest copy refresh")).getByText("Completed")).toBeTruthy();
   });
 
   it("blocks an empty create with per-field messages wired through aria-invalid/aria-describedby and a summary toast", async () => {
@@ -179,7 +179,7 @@ describe("BountyManager flows", () => {
     renderBounties();
     await waitFor(() => expect(within(row("Build an iAsset price widget")).getByRole("button", { name: "Close" })).toBeTruthy());
     fireEvent.click(within(row("Build an iAsset price widget")).getByRole("button", { name: "Close" }));
-    await waitFor(() => expect(within(row("Build an iAsset price widget")).getByText("Reviewing")).toBeTruthy());
+    await waitFor(() => expect(within(row("Build an iAsset price widget")).getByText("Submissions closed")).toBeTruthy());
     expect(transition).toHaveBeenCalledWith("iasset-price-widget", "SUBMISSION_CLOSED");
     expect(screen.getByText("Build an iAsset price widget is now submission closed.")).toBeTruthy();
   });

@@ -150,8 +150,10 @@
       "draft": "Draft",
       "funding": "Funding",
       "active": "Active",
-      "reviewing": "Reviewing",
-      "closed": "Closed"
+      "submissionClosed": "Submissions closed",
+      "reviewing": "In review",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
     },
     "tags": {
       "Dev": "Dev",
