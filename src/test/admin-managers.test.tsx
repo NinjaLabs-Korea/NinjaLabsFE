@@ -281,6 +281,31 @@ describe("PostManager", () => {
   });
 });
 
+describe("admin form accessibility and previews", () => {
+  it("shows the stored notice thumbnail as an image in the edit form, not only its path", async () => {
+    renderWithIntl(<PostManager posts={[post]} tabs={null}>{null}</PostManager>);
+    await waitFor(() => expect(adminApi.getAdminPosts).toHaveBeenCalled());
+    expect(screen.queryByTestId("thumbnail-preview")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const preview = screen.getByTestId("thumbnail-preview");
+    expect(preview.querySelector("img")?.getAttribute("src")).toContain("11111111-1111-4111-8111-111111111111");
+    fireEvent.click(screen.getByRole("button", { name: "Remove image" }));
+    expect(screen.queryByTestId("thumbnail-preview")).toBeNull();
+  });
+
+  it("names the Hall of Fame image upload input for assistive technology", async () => {
+    renderWithIntl(<HighlightManager highlights={[]} />);
+    await waitFor(() => expect(adminApi.getAdminHighlights).toHaveBeenCalled());
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(input.getAttribute("aria-label")).toBe("Image upload");
+  });
+
+  it("tells the admin that markdown images are not shown in a notice body", async () => {
+    renderWithIntl(<PostManager posts={[]} tabs={null}>{null}</PostManager>);
+    expect(await screen.findByText(/Images, tables and raw HTML are not/)).toBeTruthy();
+  });
+});
+
 describe("PostManager event date", () => {
   it("offers the event date only for the Events category and never sends one for another category", async () => {
     adminApi.saveAdminPost.mockResolvedValue({ id: "n1" });

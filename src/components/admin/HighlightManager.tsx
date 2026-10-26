@@ -254,7 +254,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
             <label className="text-sm font-semibold text-ink md:col-span-2">{t("form.description")}<textarea {...invalidProps("description")} className="mt-2 min-h-24 w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary aria-[invalid]:border-danger" maxLength={2000} onChange={(event) => { setDescription(event.target.value); clearError("description"); }} required value={description} />{fieldError("description")}</label>
             <div className="text-sm font-semibold text-ink">{t("form.image")}
               <button className="mt-2 flex h-[46px] w-full items-center rounded-control border border-border px-4 text-left text-sm font-normal text-ink-placeholder hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => imageInputRef.current?.click()} type="button">{image ?? t("form.uploadImage")}</button>
-              <input accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleImageChange} ref={imageInputRef} type="file" />
+              <input accept="image/jpeg,image/png,image/webp" aria-label={t("form.image")} className="sr-only" onChange={handleImageChange} ref={imageInputRef} type="file" />
               <span className="mt-2 block text-xs font-normal text-ink-muted">{imageFile?.name ?? image ?? tCommon("fileHint")}</span>
               {image || imageFile ? <button className="mt-2 text-xs font-semibold text-danger hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={handleRemoveImage} type="button">{t("form.removeImage")}</button> : null}
               {fieldError("image")}
