@@ -70,6 +70,30 @@ describe("CohortApplicationForm", () => {
     expect((screen.getByLabelText(/^Introduction and motivation/) as HTMLTextAreaElement).maxLength).toBe(1000);
   });
 
+  it("renders no error text or invalid marks on a pristine form", () => {
+    renderWithIntl(<CohortApplicationForm cohortId="cohort-2" onSaved={vi.fn()} />);
+    expect(screen.queryAllByRole("alert")).toHaveLength(0);
+    expect(document.querySelectorAll("[aria-invalid]")).toHaveLength(0);
+    expect(screen.queryByText(/This field is required|Please choose an option/)).toBeNull();
+  });
+
+  it("shows a field's problem only after it is left, and clears it when fixed", () => {
+    renderWithIntl(<CohortApplicationForm cohortId="cohort-2" onSaved={vi.fn()} />);
+    const name = screen.getByLabelText(/^Name/);
+    fireEvent.focus(name);
+    expect(screen.queryAllByRole("alert")).toHaveLength(0);
+    fireEvent.blur(name);
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+    expect(name.getAttribute("aria-invalid")).toBe("true");
+    type(/^Name/, "Mina");
+    expect(screen.queryAllByRole("alert")).toHaveLength(0);
+    fireEvent.blur(screen.getByLabelText(/^Telegram ID/));
+    expect(screen.getByText(/This field is required/)).toBeTruthy();
+    const group = screen.getByRole("group", { name: /Web3 experience/ });
+    fireEvent.blur(group);
+    expect(screen.getByText("Please choose an option.")).toBeTruthy();
+  });
+
   it("does not call the API for an empty form and marks every missing field", () => {
     const apply = vi.spyOn(api, "applyToCohort");
     renderWithIntl(<CohortApplicationForm cohortId="cohort-2" onSaved={vi.fn()} />);
