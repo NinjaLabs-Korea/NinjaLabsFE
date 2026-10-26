@@ -3,8 +3,8 @@ import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
-import { SignupEntryGate } from "@/components/signup/SignupEntryGate";
-import { StepIndicator } from "@/components/ui/StepIndicator";
+import { SignupGate } from "@/components/signup/SignupGate";
+import { SignupStepIndicator } from "@/components/signup/SignupStepIndicator";
 import { loadRuntimeConfig } from "@/lib/runtime/config";
 import { localeMetadata } from "@/i18n/alternates";
 
@@ -25,7 +25,7 @@ export default async function SignupPage({ params }: PageProps<"/[locale]/signup
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="mx-auto max-w-[768px]">
         <div>
-          <StepIndicator current={1} />
+          <SignupStepIndicator current={1} />
         </div>
         <div className="mx-auto mt-6 max-w-[576px] rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">
           <div className="text-center">
@@ -34,12 +34,12 @@ export default async function SignupPage({ params }: PageProps<"/[locale]/signup
             <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] text-ink">{t("title")}</h1>
             <p className="mt-3 text-base text-ink-muted">{t("description")}</p>
           </div>
-          <SignupEntryGate>
+          <SignupGate step={1}>
             <GoogleLoginButton turnstileSiteKey={loadRuntimeConfig().turnstileSiteKey} />
             <div className="mt-5 rounded-tile border border-border bg-primary-soft p-4 text-center text-sm text-ink-notice">
               {t("disclosure")}
             </div>
-          </SignupEntryGate>
+          </SignupGate>
         </div>
       </div>
     </section>

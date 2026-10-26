@@ -56,3 +56,36 @@ export function returnPathFromReferrer(referrer: string, origin: string, stripLo
   if (NOT_A_DESTINATION.test(path)) return "/";
   return `${path}${url.search}`;
 }
+
+export type SignupStep = 1 | 2 | 3 | 4;
+
+export type SignupAccess =
+  /** Session still being restored: show a neutral checking state, neither the step nor a redirect. */
+  | { kind: "wait" }
+  /** The step may render. */
+  | { kind: "show" }
+  /** Signed out on step 2-4: back to step 1, with a message saying why. */
+  | { kind: "sign-in-first"; href: "/signup" }
+  /** Signed in with an unfinished onboarding on step 1: straight to the step they owe. */
+  | { kind: "resume"; href: string }
+  /** Signed in and finished: no signup page applies any more; leave for home or the page they came from. */
+  | { kind: "leave" };
+
+/**
+ * What a `/signup*` page does for the current session. Step 1 (the login) exists for signed-out visitors only; steps
+ * 2-4 exist for signed-in users who still owe onboarding; a finished user has no business on any of them. Signed-out
+ * visitors on step 2-4 are sent to step 1, never shown a broken page.
+ */
+export function resolveSignupAccess(snapshot: AuthSnapshot, step: SignupStep): SignupAccess {
+  const target = resolveStartTarget(snapshot);
+  switch (target.kind) {
+    case "checking":
+      return { kind: "wait" };
+    case "sign-up":
+      return step === 1 ? { kind: "show" } : { kind: "sign-in-first", href: "/signup" };
+    case "member":
+      return { kind: "leave" };
+    case "resume":
+      return step === 1 ? { kind: "resume", href: target.href } : { kind: "show" };
+  }
+}

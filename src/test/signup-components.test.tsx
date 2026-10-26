@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiKeyReveal } from "@/components/agents/ApiKeyReveal";
 import { CompleteOnboarding } from "@/components/signup/CompleteOnboarding";
 import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
-import { SignupGate } from "@/components/signup/SignupGate";
 import AuthCallbackPage from "@/app/[locale]/auth/callback/page";
 import { ApiHttpError } from "@/lib/api/http";
 import { exchangeLoginCodeFromLocation } from "@/lib/api/oauth";
@@ -59,40 +58,6 @@ describe("AuthCallbackPage #error mapping", () => {
     state.auth = { status: "loading", user: null };
     renderWithIntl(<AuthCallbackPage />);
     expect(screen.getByRole("status").textContent).toBe("Restoring your account. You will be redirected shortly.");
-  });
-});
-
-describe("SignupGate", () => {
-  beforeEach(() => {
-    state.mode = "api";
-  });
-
-  it("renders the step for a signed-in session", () => {
-    state.auth = signedInAs(user);
-    renderWithIntl(<SignupGate><p>Step content</p></SignupGate>);
-    expect(screen.getByText("Step content")).toBeTruthy();
-  });
-
-  it("shows a checking status while the session restores, without the step", () => {
-    state.auth = { status: "loading", user: null };
-    renderWithIntl(<SignupGate><p>Step content</p></SignupGate>);
-    expect(screen.getByRole("status").textContent).toBe("Checking your session…");
-    expect(screen.queryByText("Step content")).toBeNull();
-  });
-
-  it("asks a signed-out visitor to sign in instead of showing the step in API mode", () => {
-    state.auth = { status: "signed-out", user: null };
-    renderWithIntl(<SignupGate><p>Step content</p></SignupGate>);
-    expect(screen.queryByText("Step content")).toBeNull();
-    expect(screen.getByText("Sign in to continue signing up")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Continue with Google" }).getAttribute("href")).toBe("/signup");
-  });
-
-  it("keeps every step previewable in mock mode", () => {
-    state.mode = "mock";
-    state.auth = { status: "signed-out", user: null };
-    renderWithIntl(<SignupGate><p>Step content</p></SignupGate>);
-    expect(screen.getByText("Step content")).toBeTruthy();
   });
 });
 

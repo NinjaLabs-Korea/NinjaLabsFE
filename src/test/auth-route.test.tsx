@@ -4,14 +4,18 @@ import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { StartLink } from "@/components/auth/StartLink";
 import { AuthArea } from "@/components/layout/AuthArea";
-import { SignupEntryGate } from "@/components/signup/SignupEntryGate";
-import { resolveStartTarget, returnPathFromReferrer } from "@/lib/auth-route";
+import { SignupGate } from "@/components/signup/SignupGate";
+import { SignupStepIndicator } from "@/components/signup/SignupStepIndicator";
+import { resolveSignupAccess, resolveStartTarget, returnPathFromReferrer } from "@/lib/auth-route";
 import { stripLocale } from "@/i18n/routing";
 import { renderWithIntl } from "@/test/intl";
-import { loading, signedIn, signedInWith, signedOut } from "@/test/support/auth";
+import { loading, signedInWith, signedOut } from "@/test/support/auth";
 
 const state = vi.hoisted(() => ({ auth: null as unknown }));
 const replace = vi.hoisted(() => vi.fn());
+const flash = vi.hoisted(() => vi.fn());
+const mode = vi.hoisted(() => ({ current: "api" as "api" | "mock" }));
+vi.mock("@/lib/flash", () => ({ pushFlash: flash }));
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => <a href={href} {...props}>{children}</a>,
@@ -22,7 +26,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({
     useAuthSnapshot: () => state.auth,
     useAuthActions: () => ({ signIn: vi.fn(), signOut: vi.fn() }),
-    useFoundationMode: () => "api",
+    useFoundationMode: () => mode.current,
   }));
 
 const unfinished = (step: number) => signedInWith({ onboardingCompleted: false, onboardingStep: step });
@@ -53,37 +57,115 @@ describe("returnPathFromReferrer", () => {
   });
 });
 
-describe("signup step 1 for a signed-in user", () => {
-  const login = <SignupEntryGate><button type="button">Continue with Google</button></SignupEntryGate>;
+describe("resolveSignupAccess", () => {
+  it.each([
+    ["loading", loading, 1, { kind: "wait" }],
+    ["loading", loading, 3, { kind: "wait" }],
+    ["signed out, step 1", signedOut, 1, { kind: "show" }],
+    ["signed out, step 2", signedOut, 2, { kind: "sign-in-first", href: "/signup" }],
+    ["signed out, step 4", signedOut, 4, { kind: "sign-in-first", href: "/signup" }],
+    ["owes wallet, step 1", unfinished(2), 1, { kind: "resume", href: "/signup/wallet" }],
+    ["owes profile, step 1", unfinished(3), 1, { kind: "resume", href: "/signup/profile" }],
+    ["owes profile, step 2", unfinished(3), 2, { kind: "show" }],
+    ["owes profile, step 3", unfinished(3), 3, { kind: "show" }],
+    ["finished, step 1", finished, 1, { kind: "leave" }],
+    ["finished, step 2", finished, 2, { kind: "leave" }],
+    ["finished, step 4", finished, 4, { kind: "leave" }],
+  ] as const)("%s", (_name, snapshot, step, expected) => {
+    expect(resolveSignupAccess(snapshot, step)).toEqual(expected);
+  });
+});
 
-  it("shows the login only when signed out", () => {
+describe("signup pages follow the session", () => {
+  const login = <SignupGate step={1}><button type="button">Continue with Google</button></SignupGate>;
+  const stepTwo = <SignupGate step={2}><p>Wallet step</p></SignupGate>;
+  const reset = () => { replace.mockClear(); flash.mockClear(); mode.current = "api"; };
+
+  it("step 1 shows the login only when signed out", () => {
+    reset();
     state.auth = signedOut;
     renderWithIntl(login);
     expect(screen.getByText("Continue with Google")).toBeTruthy();
   });
 
-  it("shows neither the login nor a redirect while the session is still being restored", () => {
-    replace.mockClear();
+  it("shows neither the step nor a redirect while the session is still being restored", () => {
+    reset();
     state.auth = loading;
-    renderWithIntl(login);
+    renderWithIntl(<>{login}{stepTwo}</>);
     expect(screen.queryByText("Continue with Google")).toBeNull();
+    expect(screen.queryByText("Wallet step")).toBeNull();
+    expect(screen.getAllByRole("status")).toHaveLength(2);
     expect(replace).not.toHaveBeenCalled();
   });
 
-  it("sends a finished user home instead of asking them to log in again", async () => {
-    replace.mockClear();
-    state.auth = finished;
-    renderWithIntl(login);
-    expect(screen.queryByText("Continue with Google")).toBeNull();
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+  it("sends a finished user away from every signup step instead of asking them to log in again", async () => {
+    for (const ui of [login, stepTwo]) {
+      reset();
+      state.auth = finished;
+      const { unmount } = renderWithIntl(ui);
+      expect(screen.queryByText("Continue with Google")).toBeNull();
+      expect(screen.queryByText("Wallet step")).toBeNull();
+      await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+      unmount();
+    }
   });
 
-  it("sends a user with an unfinished onboarding to the step they owe", async () => {
-    replace.mockClear();
+  it("sends a user with an unfinished onboarding from step 1 to the step they owe", async () => {
+    reset();
     state.auth = unfinished(3);
     renderWithIntl(login);
     expect(screen.queryByText("Continue with Google")).toBeNull();
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/signup/profile"));
+  });
+
+  it("lets a user with an unfinished onboarding see steps 2-4", () => {
+    reset();
+    state.auth = unfinished(3);
+    renderWithIntl(stepTwo);
+    expect(screen.getByText("Wallet step")).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("sends a signed-out visitor from step 2 back to step 1 with a message", async () => {
+    reset();
+    state.auth = signedOut;
+    renderWithIntl(stepTwo);
+    expect(screen.queryByText("Wallet step")).toBeNull();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/signup"));
+    expect(flash).toHaveBeenCalledWith("signInRequired");
+  });
+
+  it("keeps steps 2-4 previewable signed out in mock mode", () => {
+    reset();
+    mode.current = "mock";
+    state.auth = signedOut;
+    renderWithIntl(stepTwo);
+    expect(screen.getByText("Wallet step")).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("does not bounce the user off the last step when onboarding completes while it is shown", () => {
+    reset();
+    state.auth = unfinished(4);
+    const view = renderWithIntl(<SignupGate step={4}><p>Done</p></SignupGate>);
+    expect(screen.getByText("Done")).toBeTruthy();
+    state.auth = finished;
+    view.rerender(<SignupGate step={4}><p>Done</p></SignupGate>);
+    expect(screen.getByText("Done")).toBeTruthy();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("stepper marks Login done and not current once signed in; step 1 is never a link", () => {
+    state.auth = unfinished(3);
+    const { unmount } = renderWithIntl(<SignupStepIndicator current={1} />);
+    const first = screen.getAllByRole("listitem")[0]!;
+    expect(first.getAttribute("data-done")).toBe("true");
+    expect(first.getAttribute("aria-current")).toBeNull();
+    expect(first.querySelector("a, button")).toBeNull();
+    unmount();
+    state.auth = signedOut;
+    renderWithIntl(<SignupStepIndicator current={1} />);
+    expect(screen.getAllByRole("listitem")[0]!.getAttribute("aria-current")).toBe("step");
   });
 });
 
