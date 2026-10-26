@@ -19,7 +19,9 @@
     "bounties": "赏金",
     "hallOfFame": "名人堂",
     "members": "成员",
-    "notices": "公告"
+    "notices": "公告",
+    "about": "关于",
+    "recruit": "成员招募"
   },
   "header": {
     "homeLabel": "Ninja Labs 首页",

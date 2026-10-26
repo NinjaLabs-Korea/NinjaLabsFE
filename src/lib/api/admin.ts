@@ -8,7 +8,7 @@ import { formatIsoDate, rewardFromBaseUnits, rewardToBaseUnits, toCategoryCode, 
 
 type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: MemberRoleCode | null; member_display_order: number | null; created_at: string; wallet_address: string | null };
 type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: CategoryCode; status: string; application_required: boolean; submission_mode: "DIRECT" | "AGENT"; cover_image_url: string | null; submission_deadline: string; application_deadline: string | null; max_winners: number; rewards: Array<{ symbol: string; amount: string; tokenContractAddress?: string | null; evmChainId?: number | null }> };
-type NoticeRow = { id: string; title: string; body: string; category: string; status: string; published_at: string | null; thumbnail_url: string | null; external_url: string | null };
+type NoticeRow = { id: string; title: string; body: string; category: string; status: string; published_at: string | null; thumbnail_url: string | null; external_url: string | null; event_date?: string | null };
 type ActorColumns = { actor_kind: "USER" | "AGENT"; user_id: string | null; nickname: string | null; agent_id: string | null; agent_name: string | null };
 type OperationsResponse = {
   bounty: { id: string; title: string; status: string; submission_deadline: string | null; max_winners: number; application_required: boolean };
@@ -142,13 +142,13 @@ export function createAdminApi(http: ApiHttp): AdminApi {
     deleteAdminBounty: async (bountyId: string) => { await http.fetchJson(`/admin/bounties/${encodeURIComponent(bountyId)}`, { method: "DELETE" }); },
     getAdminPosts: async (): Promise<AdminPost[]> => {
       const rows = await http.fetchJson<NoticeRow[]>("/admin/notices");
-      return rows.map((row) => ({ slug: row.id, title: row.title, category: toNoticeCategoryLabel(row.category) ?? "Other", status: row.status === "PUBLISHED" ? "published" : "draft", publishedAt: formatIsoDate(row.published_at) || null, bodyMarkdown: row.body, thumbnail: row.thumbnail_url, externalUrl: row.external_url }));
+      return rows.map((row) => ({ slug: row.id, title: row.title, category: toNoticeCategoryLabel(row.category) ?? "Other", status: row.status === "PUBLISHED" ? "published" : "draft", publishedAt: formatIsoDate(row.published_at) || null, bodyMarkdown: row.body, thumbnail: row.thumbnail_url, externalUrl: row.external_url, eventDate: row.event_date ?? null }));
     },
     saveAdminPost: (post: AdminPost, create: boolean, options?: { publish?: boolean }): Promise<{ id: string }> => {
       // BE resets published_at whenever `publish` is present, so edits send it only when the status was toggled.
       const publish = create ? post.status === "published" : options?.publish;
       // Cleared optional URLs go as null: the BE's `?? null` on create and its `!== undefined` filter on PATCH both write null, an omitted key would keep the old value.
-      return http.fetchJson(create ? "/admin/notices" : `/admin/notices/${encodeURIComponent(post.slug)}`, { method: create ? "POST" : "PATCH", body: { title: post.title, summary: markdownToPlainSummary(post.bodyMarkdown), body: post.bodyMarkdown, category: toNoticeCategoryCode(post.category), thumbnailUrl: post.thumbnail ?? null, externalUrl: post.externalUrl ?? null, ...(publish === undefined ? {} : { publish }) } });
+      return http.fetchJson(create ? "/admin/notices" : `/admin/notices/${encodeURIComponent(post.slug)}`, { method: create ? "POST" : "PATCH", body: { title: post.title, summary: markdownToPlainSummary(post.bodyMarkdown), body: post.bodyMarkdown, category: toNoticeCategoryCode(post.category), thumbnailUrl: post.thumbnail ?? null, externalUrl: post.externalUrl ?? null, eventDate: post.eventDate ?? null, ...(publish === undefined ? {} : { publish }) } });
     },
     deleteAdminPost: async (id: string) => { await http.fetchJson(`/admin/notices/${encodeURIComponent(id)}`, { method: "DELETE" }); },
     getAdminHighlights: async (): Promise<AdminHighlight[]> => {

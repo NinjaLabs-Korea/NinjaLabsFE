@@ -11,6 +11,7 @@ const completeProfile = vi.fn();
 vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({
     useOnboardingApi: () => ({ checkNickname, completeProfile, completeOnboarding: vi.fn() }),
+    useAuthActions: () => ({ signIn: vi.fn(), signOut: vi.fn() }),
     useFoundationMode: () => "api",
     useAuthSnapshot: () => ({ status: "signed-in", user: { id: "u1", handle: "user_ab12cd", walletAddress: null } }),
   }));

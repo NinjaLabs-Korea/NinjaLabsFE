@@ -34,5 +34,6 @@
     "readMoreHeading": "了解更多",
     "readMoreLink": "了解更多 →",
     "related": "相关内容"
-  }
+  },
+  "eventDate": "活动日期 {date}"
 }

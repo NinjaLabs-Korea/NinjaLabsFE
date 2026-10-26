@@ -34,5 +34,6 @@
     "readMoreHeading": "Read more",
     "readMoreLink": "Read more →",
     "related": "Related"
-  }
+  },
+  "eventDate": "Event date {date}"
 }

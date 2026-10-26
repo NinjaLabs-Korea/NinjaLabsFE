@@ -103,6 +103,18 @@
       "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
       "generic": "无法删除你的账户，请稍后重试。",
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
+    },
+    "bioLabel": "简介",
+    "tagsLabel": "领域标签",
+    "editProfile": "编辑资料",
+    "cancelEdit": "取消编辑",
+    "wallet": {
+      "heading": "钱包",
+      "connected": "已连接",
+      "notConnected": "未连接",
+      "linkedNote": "已连接的钱包与账户绑定,无法在此更换或解绑。如需更换请联系运营团队。",
+      "body": "如果注册时选择了“稍后连接”,可以在这里连接钱包。连接钱包后会发放你的 Ninja NFT。",
+      "unavailable": "当前环境无法使用钱包连接。"
     }
   }
 }

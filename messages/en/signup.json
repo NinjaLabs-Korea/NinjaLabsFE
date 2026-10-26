@@ -114,7 +114,9 @@
         "checking": "Checking availability…",
         "available": "Nickname is available.",
         "taken": "That nickname is already taken."
-      }
+      },
+      "save": "Save profile",
+      "saved": "Profile saved."
     },
     "eyebrow": "Profile",
     "subtitle": "This is what sponsors and other builders see on your public portfolio.",
@@ -147,6 +149,10 @@
     "completeError": {
       "message": "We couldn't finish saving your onboarding. Please try again.",
       "retry": "Retry"
+    },
+    "returnNotice": {
+      "message": "You were in the middle of something. Now that you are signed up, you can pick it up again.",
+      "cta": "Continue"
     }
   },
   "gate": {

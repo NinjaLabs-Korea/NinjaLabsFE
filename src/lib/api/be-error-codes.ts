@@ -2,7 +2,7 @@
  * BE가 응답 `message`로 던지는 에러 코드 목록 — **BE 카탈로그의 그대로 복사본(snapshot)**이다. 손으로 코드를 지어내지 말 것.
  *
  * 원본: NinjaLabsBE `src/common/http/error-codes.ts` (`ERROR_CODES`의 키, 같은 순서·같은 묶음).
- * 스냅샷 기준: BE `main` @ `ba5846f` (카탈로그 마지막 변경 `daee479`) · 87개 (+ AGENT_WALLET_IS_OWNER_WALLET 수동 추가; BE 카탈로그는 이후 더 늘었다, 전체 재동기화는 후속).
+ * 스냅샷 기준: BE `feat/cohort-recruitment` (PR #35) @ `1ef311c` (카탈로그 마지막 변경 `69d15c7`, 기수 모집 11개 + `AGENT_WALLET_IS_OWNER_WALLET`) · 98개.
  * 줄 끝 주석은 "HTTP 상태 — BE 카탈로그의 한 줄 의미"이고 사용자 문구가 아니다 (사용자 문구는 `messages/<locale>/*.json`).
  *
  * ## 어디를 고치나
@@ -115,6 +115,19 @@ export const BE_ERROR_CODES = [
   "MEDIA_FILE_TOO_LARGE", // 400 — 업로드 파일이 크기 상한을 넘는다
   "MEDIA_FILE_TYPE_UNSUPPORTED", // 400 — 허용되지 않는 이미지 형식이다 (시그니처 검사)
   "MEDIA_NOT_FOUND", // 404 — 미디어가 없다
+
+  // ── 기수 모집 (cohorts) ──
+  "COHORT_NOT_FOUND", // 404: 기수가 없다 (DRAFT 기수는 지원자에게도 없는 것과 같다)
+  "COHORT_NOT_ACCEPTING", // 409: 지금 지원을 받지 않는 기수다 (OPEN이 아니거나 접수 기간 밖; 지원서 수정에도 같은 규칙)
+  "COHORT_ALREADY_APPLIED", // 409: 이 기수에 이미 지원했다 (철회한 지원만 같은 행을 다시 열어 재지원)
+  "COHORT_APPLICATION_NOT_FOUND", // 404: 기수 지원서가 없거나 내 것이 아니다 (남의 지원서도 같은 404)
+  "COHORT_APPLICATION_NOT_SUBMITTED", // 409: SUBMITTED가 아니라 수정·철회할 수 없다 (이미 심사됨/철회됨)
+  "COHORT_APPLICATION_WITHDRAWN", // 409: 철회된 지원서라 심사할 수 없다
+  "COHORT_OTHER_DETAIL_REQUIRED", // 400: 활동 유형 또는 관심 분야에 OTHER를 골랐는데 상세(activityTypeOther/interestOther)가 비었다
+  "COHORT_INVALID_WINDOW", // 400: 접수 종료(closesAt)가 시작(opensAt)보다 늦지 않다
+  "COHORT_INVALID_TRANSITION", // 400: 허용되지 않는 기수 상태 전이다 (DRAFT->OPEN->CLOSED, CLOSED->OPEN만)
+  "COHORT_ALREADY_OPEN", // 409: 다른 기수가 이미 OPEN이다 (동시에 열린 기수는 하나)
+  "COHORT_HAS_APPLICATIONS", // 409: 지원서가 있는 기수는 삭제할 수 없다 (철회 포함)
 
   // ── 공통 (DB 오류 매핑 — common/database/pg-errors.ts) ──
   "INVALID_CHARACTER", // 400 — 요청 값에 DB가 거부하는 문자(NUL 등)가 있다

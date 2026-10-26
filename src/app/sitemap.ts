@@ -19,6 +19,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const entries: MetadataRoute.Sitemap = [
     { url: url("/"), changeFrequency: "weekly", priority: 1 },
+    { url: url("/about"), changeFrequency: "weekly", priority: 0.8 },
+    { url: url("/recruit"), changeFrequency: "weekly", priority: 0.8 },
     { url: url("/bounties"), changeFrequency: "daily", priority: 0.9 },
     ...bounties.map(({ slug }) => ({
       url: url(`/bounties/${segment(slug)}`),

@@ -152,6 +152,14 @@ with a `next/image` `object-contain` logo in an `h-12` box; linked tiles add `tr
 
 **Admin persistence disclosure:** API-mode Create/Save forms state that changes are saved immediately. Destructive actions require confirmation and failures surface a danger toast.
 
+## Community and recruitment patterns (FE-designed, no Figma node)
+
+- **Choice pills** (`recruit/ChoiceChip`): a native `radio` / `checkbox` (`sr-only`) inside a `label`, rendered as `Badge` `selected` / `primary-soft` like the signup tag picker. Keyboard and screen readers get real inputs; the focus ring is `has-[:focus-visible]` on the label; phones get `min-h-10`.
+- **Recruitment strip** (`recruit/RecruitmentBanner`, `home/HomeRecruitment`): `rounded-card border border-primary-soft-border bg-primary-soft p-5 shadow-card`, a `selected` Badge, an `h2` in `font-display text-2xl` and the primary button. It appears only while a cohort accepts applications.
+- **Status card** (`recruit/CohortApplicationCard`): the bordered `rounded-card` surface, eyebrow + title, a status `Badge` (warning / success / neutral), one muted sentence, small outline and danger buttons. Never prints a reviewer note.
+- **Section states** (`community/CommunitySectionState`, `recruit/RecruitNotice`): the dashed `rounded-tile border-dashed bg-surface-subtle` tile with a semibold title and a muted line; `role="status"`.
+- **Past activity card**: `NewsCard` with `dateKind="event"`; a notice without an event date falls back to its publish date.
+
 ## Third-party widgets
 
 **Cloudflare Turnstile** (`components/auth/TurnstileWidget.tsx`, sign-in only, when `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set): the iframe is Cloudflare's own UI (`theme: "auto"`, `language` from the locale) and cannot use our tokens. Its container is centered under the Google button with `mt-4` and reserves `min-h-[65px]` - Cloudflare's fixed "normal" widget height - so the card does not jump when the iframe mounts. Status copy uses the existing helper-text recipe (`text-sm text-ink-muted`, `role="status"`); the error uses `text-danger` in a `role="alert"` with a text-link retry (same recipe as the mock "Preview failed sign-in" link). No Figma frame (docs/figma/design-gaps.md).

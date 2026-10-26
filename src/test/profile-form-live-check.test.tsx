@@ -12,6 +12,7 @@ const onboardingApi = { checkNickname, completeProfile, completeOnboarding: vi.f
 const session = { handle: "user_ab12cd" };
 vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({
+    useAuthActions: () => ({ signIn: vi.fn(), signOut: vi.fn() }),
     useOnboardingApi: () => onboardingApi,
     useFoundationMode: () => "api",
     useAuthSnapshot: () => ({ status: "signed-in", user: { id: "u1", handle: session.handle, walletAddress: null } }),

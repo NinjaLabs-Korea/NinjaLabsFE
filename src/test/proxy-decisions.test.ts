@@ -105,3 +105,28 @@ describe("proxy: locale cookie on the 404 rewrite", () => {
     expect(notFound.response.headers.getSetCookie()).toEqual(plain.response.headers.getSetCookie());
   });
 });
+
+describe("proxy: finished users skip the Intro (hint cookie)", () => {
+  it.each([
+    ["/en", "/en/home"],
+    ["/ko/", "/ko/home"],
+    ["/zh", "/zh/home"],
+  ])("redirects %s to %s when the hint cookie is set, privately", async (pathname, target) => {
+    const result = await run(pathname, { cookie: "ninja_home=1" });
+    expect(result.status).toBe(307);
+    expect(result.location).toBe(target);
+    expect(result.response.headers.get("cache-control")).toBe("private, no-store");
+  });
+
+  it("leaves everything else alone: no cookie, another value, the about page, the home itself and deeper pages", async () => {
+    for (const [pathname, cookie] of [["/en", undefined], ["/en", "ninja_home=0"], ["/en", "ninja_home="], ["/en/about", "ninja_home=1"], ["/en/home", "ninja_home=1"], ["/ko/bounties", "ninja_home=1"], ["/xx", "ninja_home=1"]] as const) {
+      const result = await run(pathname, cookie ? { cookie } : {});
+      expect(result.location === null || !result.location.endsWith("/home"), `${pathname} ${cookie}`).toBe(true);
+    }
+  });
+
+  it("serves the new public pages in api mode too", async () => {
+    runtime.mode = "api";
+    for (const pathname of ["/en/about", "/ko/recruit", "/zh/home", "/en/admin/recruitment"]) expect((await run(pathname)).status, pathname).toBe(200);
+  });
+});

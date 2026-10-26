@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { AuthArea } from "@/components/layout/AuthArea";
+import { BrandLink } from "@/components/layout/BrandLink";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { NavLinks } from "@/components/layout/NavLinks";
@@ -21,7 +22,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 h-16 border-b border-border bg-surface/85 backdrop-blur-[6px]">
       <div className="mx-auto grid h-full max-w-content grid-cols-[1fr_auto_1fr] items-center px-6">
-        <Link className="flex items-center gap-2 justify-self-start" href="/" prefetch={true} aria-label={t("homeLabel")}>
+        <BrandLink className="flex items-center gap-2 justify-self-start" label={t("homeLabel")}>
           <Image
             src="/brand/ninja-labs-mascot.svg"
             alt=""
@@ -29,7 +30,7 @@ export function Header() {
             height={28}
           />
           <span className="hidden whitespace-nowrap font-display text-xl font-bold text-ink sm:inline">Ninja Labs</span>
-        </Link>
+        </BrandLink>
 
         <nav className="col-start-2 hidden gap-7 lg:flex" aria-label={t("mainNavigation")}>
           <NavLinks links={links} variant="desktop" />

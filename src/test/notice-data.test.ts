@@ -76,3 +76,23 @@ describe("notice detail loader failure modes", () => {
     await expect(getRuntimeNotice("x")).rejects.toBe(failure);
   });
 });
+
+describe("notice event date and event-date sort", () => {
+  afterEach(() => fetchPublicJson.mockReset());
+
+  it("maps event_date (YYYY-MM-DD) to eventDate, and leaves it off for null, missing or malformed values", async () => {
+    fetchPublicJson.mockResolvedValue({
+      items: [{ ...row("n1"), event_date: "2026-06-18" }, { ...row("n2"), event_date: null }, row("n3"), { ...row("n4"), event_date: "June 18" }],
+      page: 1, pageSize: 50, total: 4,
+    });
+    const notices = await getRuntimeNotices();
+    expect(notices.map(({ slug, eventDate }) => [slug, eventDate])).toEqual([["n1", "2026-06-18"], ["n2", undefined], ["n3", undefined], ["n4", undefined]]);
+  });
+
+  it("asks the BE for sort=eventDate and keeps its order (event date newest first, undated last)", async () => {
+    fetchPublicJson.mockResolvedValue({ items: [{ ...row("new"), event_date: "2026-09-01" }, { ...row("old"), event_date: "2026-01-01" }, row("undated")], page: 1, pageSize: 50, total: 3 });
+    const notices = await getRuntimeNotices({ sort: "eventDate" });
+    expect(fetchPublicJson).toHaveBeenCalledWith("/notices?sort=eventDate&page=1&pageSize=50");
+    expect(notices.map((notice) => notice.slug)).toEqual(["new", "old", "undated"]);
+  });
+});

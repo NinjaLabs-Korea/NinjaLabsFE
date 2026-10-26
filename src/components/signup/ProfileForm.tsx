@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useAuthSnapshot, useOnboardingApi, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { useAuthActions, useAuthSnapshot, useOnboardingApi, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
 import { validationFieldsFromError } from "@/lib/api/validation";
@@ -46,15 +46,29 @@ export function saveErrorKey(error: unknown): SaveErrorKey {
   return ERROR_COPY.profileSave.fallback;
 }
 
-export function ProfileForm() {
+type ProfileFormProps = {
+  /**
+   * `onboarding` (default): signup step 3, saves and continues to step 4. `edit`: the account page, prefilled from the signed-in
+   * user; saving re-reads the session and calls `onSaved` instead of navigating. Same fields, same rules, same BE endpoint.
+   */
+  mode?: "onboarding" | "edit";
+  onSaved?: () => void;
+};
+
+export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileFormProps = {}) {
+  const editing = formMode === "edit";
   const t = useTranslations("signup.profile.form");
   const tSaveErrors = useTranslations(ERROR_COPY.profileSave.messages);
   const apiClient = useOnboardingApi();
   const mode = useFoundationMode();
   const auth = useAuthSnapshot();
-  const [nickname, setNickname] = useState(mode === "mock" ? signup.profile.nickname : "");
-  const [bio, setBio] = useState(mode === "mock" ? signup.profile.bio : "");
-  const [tags, setTags] = useState<string[]>(mode === "mock" ? ["DEV", "DESIGN"] : []);
+  const { refresh } = useAuthActions();
+  const signedInUser = auth.status === "signed-in" ? auth.user : null;
+  // Edit mode starts from what is saved; onboarding starts empty (mock mode prefills a demo profile).
+  const [nickname, setNickname] = useState(editing && signedInUser ? signedInUser.handle : mode === "mock" ? signup.profile.nickname : "");
+  const [bio, setBio] = useState(editing && signedInUser ? signedInUser.bio ?? "" : mode === "mock" ? signup.profile.bio : "");
+  const [tags, setTags] = useState<string[]>(editing && signedInUser ? [...(signedInUser.tags ?? [])] : mode === "mock" ? ["DEV", "DESIGN"] : []);
+  const [saved, setSaved] = useState(false);
   const [state, setState] = useState<"idle" | "pending" | "error">("idle");
   // 필드 검증 에러. 저장 실패(state "error", 예: 닉네임 중복)와는 따로 표시한다.
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -100,6 +114,7 @@ export function ProfileForm() {
   }, [apiClient, isOwnNickname, nicknameRuleError, trimmedNickname]);
 
   const toggleTag = (value: string) => {
+    setSaved(false);
     setTags((current) =>
       current.includes(value) ? current.filter((tag) => tag !== value) : [...current, value],
     );
@@ -135,6 +150,16 @@ export function ProfileForm() {
     });
     try {
       await apiClient.completeProfile({ nickname: trimmedNickname, bio: bio.trim(), tags });
+      if (editing) {
+        onboardingLog("profile.save.succeeded", { targetPath: "(account)" });
+        // The session snapshot carries nickname, bio and tags: re-read it so the header, the profile link and this form agree.
+        await refresh?.().catch(() => undefined);
+        setSaved(true);
+        setState("idle");
+        inFlight.current = false;
+        onSaved?.();
+        return;
+      }
       onboardingLog("profile.save.succeeded", { targetPath: "/signup/get-started" });
       window.location.assign(withLocaleOf(window.location.pathname, "/signup/get-started"));
     } catch (error) {
@@ -177,6 +202,7 @@ export function ProfileForm() {
           aria-invalid={fieldErrors.nickname || nicknameStatus === "taken" ? true : undefined}
           onChange={(event) => {
             setNickname(event.target.value);
+            setSaved(false);
             setFieldErrors((current) => ({ ...current, nickname: undefined }));
           }}
           placeholder={t("nicknamePlaceholder")}
@@ -222,6 +248,7 @@ export function ProfileForm() {
           aria-invalid={fieldErrors.bio ? true : undefined}
           onChange={(event) => {
             setBio(event.target.value);
+            setSaved(false);
             setFieldErrors((current) => ({ ...current, bio: undefined }));
           }}
           placeholder={t("bioPlaceholder")}
@@ -236,8 +263,9 @@ export function ProfileForm() {
         disabled={state === "pending"}
         type="submit"
       >
-        {state === "pending" ? t("saving") : t("submit")}
+        {state === "pending" ? t("saving") : editing ? t("save") : t("submit")}
       </button>
+      {saved ? <p className="text-sm font-semibold text-success" role="status">{t("saved")}</p> : null}
       {state === "error" ? (
         <p className="text-sm text-danger" role="alert">
           {tSaveErrors(saveError)}

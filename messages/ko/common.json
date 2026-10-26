@@ -19,7 +19,9 @@
     "bounties": "바운티",
     "hallOfFame": "명예의 전당",
     "members": "멤버",
-    "notices": "공지사항"
+    "notices": "공지사항",
+    "about": "소개",
+    "recruit": "멤버 모집"
   },
   "header": {
     "homeLabel": "Ninja Labs 홈",

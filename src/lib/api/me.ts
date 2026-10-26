@@ -26,6 +26,9 @@ export function toClientUser(me: MeResponse): ClientUser {
     onboardingStep: me.onboardingStep,
     onboardingCompleted: me.onboardingCompleted,
     isAdmin: me.isAdmin,
+    bio: me.bio,
+    tags: me.tags,
+    nftStatus: me.nft?.status ?? null,
     ...(me.wallet ? { walletAddress: me.wallet.address } : {}),
   };
 }

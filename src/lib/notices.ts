@@ -40,6 +40,7 @@ export const notices: Notice[] = [
     category: "Events",
     publishedAt: "2026.06.12",
     thumbnail: "",
+    eventDate: "2026-06-18",
   },
   {
     slug: "public-profiles-show-child-bounty-nfts",
@@ -72,6 +73,8 @@ type NoticeRow = {
   thumbnail_url: string | null;
   external_url: string | null;
   published_at: string;
+  /** `YYYY-MM-DD` or null (older BE: absent). */
+  event_date?: string | null;
 };
 
 function toNotice(row: NoticeRow): Notice {
@@ -86,13 +89,21 @@ function toNotice(row: NoticeRow): Notice {
     thumbnail: row.thumbnail_url ?? "",
     coverImage: row.thumbnail_url ?? undefined,
     externalUrl: row.external_url ?? undefined,
+    ...(row.event_date && /^\d{4}-\d{2}-\d{2}$/.test(row.event_date) ? { eventDate: row.event_date } : {}),
   };
 }
 
-export function getRuntimeNotices(): Promise<Notice[]> {
+/** Mock `sort=eventDate`: dated notices newest event first, undated ones after them in their usual (publish) order. */
+export function sortByEventDate(list: readonly Notice[]): Notice[] {
+  const dated = list.filter((notice) => notice.eventDate).sort((a, b) => (b.eventDate ?? "").localeCompare(a.eventDate ?? ""));
+  return [...dated, ...list.filter((notice) => !notice.eventDate)];
+}
+
+/** `sort: "eventDate"` is the BE's `GET /notices?sort=eventDate` (event date newest first, undated last); the default is newest published first. */
+export function getRuntimeNotices(options: { sort?: "eventDate" } = {}): Promise<Notice[]> {
   return loadFromRuntime({
-    mock: getNotices,
-    api: async () => (await fetchAllPublicPages<NoticeRow>("/notices")).map(toNotice),
+    mock: () => (options.sort === "eventDate" ? sortByEventDate(getNotices()) : getNotices()),
+    api: async () => (await fetchAllPublicPages<NoticeRow>(options.sort === "eventDate" ? "/notices?sort=eventDate" : "/notices")).map(toNotice),
   });
 }
 

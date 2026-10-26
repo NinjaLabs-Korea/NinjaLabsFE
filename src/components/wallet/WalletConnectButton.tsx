@@ -18,11 +18,14 @@ import {
 type WalletConnectButtonProps = {
   chainId: number;
   disabled?: boolean;
+  /** Called after the wallet is verified and linked instead of continuing to signup step 3 (the account page re-reads the session). */
+  onVerified?: () => void;
 };
 
 export function WalletConnectButton({
   chainId,
   disabled = false,
+  onVerified,
 }: WalletConnectButtonProps) {
   const t = useTranslations("common.wallet");
   const tVerifyErrors = useTranslations(ERROR_COPY.walletVerify.messages);
@@ -78,9 +81,10 @@ export function WalletConnectButton({
       onboardingLog("wallet.signature.received", { wallet });
       onboardingLog("wallet.verify.started", { wallet });
       await apiClient.verifyWallet(address, signature);
-      onboardingLog("wallet.verify.succeeded", { wallet, targetPath: "/signup/profile" });
+      onboardingLog("wallet.verify.succeeded", { wallet, targetPath: onVerified ? "(callback)" : "/signup/profile" });
       setVerificationState("idle");
-      router.push("/signup/profile");
+      if (onVerified) onVerified();
+      else router.push("/signup/profile");
     } catch (caught) {
       onboardingLog("wallet.verify.failed", {
         wallet,

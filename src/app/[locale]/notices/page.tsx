@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NoticeFilters } from "@/components/notices/NoticeFilters";
 import { Badge } from "@/components/ui/Badge";
 import { getRuntimeNotices } from "@/lib/notices";
+import { noticeCategoryFromQuery } from "@/lib/notice-categories";
 import { localeMetadata } from "@/i18n/alternates";
 
 
@@ -12,8 +13,9 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/notices"
   return localeMetadata(locale, "/notices", { title: t("title"), description: t("description") });
 }
 
-export default async function NoticesPage({ params }: PageProps<"/[locale]/notices">) {
+export default async function NoticesPage({ params, searchParams }: PageProps<"/[locale]/notices">) {
   const { locale } = await params;
+  const { category } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("notices.list");
   const notices = await getRuntimeNotices();
@@ -32,7 +34,7 @@ export default async function NoticesPage({ params }: PageProps<"/[locale]/notic
       </section>
 
       <div className="mt-8">
-        <NoticeFilters notices={notices} />
+        <NoticeFilters initialCategory={noticeCategoryFromQuery(category)} notices={notices} />
       </div>
     </div>
   );

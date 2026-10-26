@@ -1,0 +1,61 @@
+{
+  "metadata": {
+    "title": "닌자랩스 소개 | Ninja Labs",
+    "description": "Injective 위에서 배우고, 만들고, 움직이는 사람들의 Contributor Hub. 지난 활동, 소식, 성과, 멤버를 만나 보세요."
+  },
+  "about": {
+    "eyebrow": "닌자랩스 소개",
+    "heading": "Injective 위에서 배우고, 만들고, 움직여요",
+    "body": "Ninja Labs는 Injective 위에서 배우고, 만들고, 움직이는 사람들의 Contributor Hub입니다. 개발자, 마케터, 리서처, 크리에이터 누구든 자유롭게 참여할 수 있어요.",
+    "roles": {
+      "developer": {
+        "title": "개발자",
+        "description": "Injective 위에서 컨트랙트, 도구, 연동을 만들어요."
+      },
+      "marketer": {
+        "title": "마케터",
+        "description": "커뮤니티를 키우고 Injective의 이야기를 알려요."
+      },
+      "researcher": {
+        "title": "리서처",
+        "description": "프로토콜을 파고들고 발견한 것을 공유해요."
+      },
+      "creator": {
+        "title": "크리에이터",
+        "description": "빌더들이 쓰고 싶어 하는 가이드, 디자인, 콘텐츠를 만들어요."
+      }
+    }
+  },
+  "activities": {
+    "eyebrow": "지난 활동",
+    "heading": "함께 해 온 활동",
+    "viewAll": "행사 소식 전체 보기 →",
+    "unavailable": "지난 활동을 일시적으로 불러올 수 없습니다.",
+    "unavailableBody": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요.",
+    "empty": "아직 올라온 행사 소식이 없습니다. 곧 다시 확인해 주세요."
+  },
+  "news": {
+    "eyebrow": "커뮤니티 소식",
+    "heading": "최근 소식",
+    "viewAll": "전체 보기 →",
+    "unavailable": "최근 소식을 일시적으로 불러올 수 없습니다.",
+    "unavailableBody": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요.",
+    "empty": "아직 소식이 없습니다. 곧 다시 확인해 주세요."
+  },
+  "achievements": {
+    "eyebrow": "최근 성과",
+    "heading": "커뮤니티가 만들어 낸 성과",
+    "viewAll": "명예의 전당 보기 →",
+    "unavailable": "성과를 일시적으로 불러올 수 없습니다.",
+    "unavailableBody": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요.",
+    "empty": "커뮤니티의 성과가 쌓이면 여기에 표시됩니다."
+  },
+  "members": {
+    "eyebrow": "멤버",
+    "heading": "멤버 미리보기",
+    "viewAll": "전체 멤버 보기 →",
+    "unavailable": "멤버를 일시적으로 불러올 수 없습니다.",
+    "unavailableBody": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요.",
+    "empty": "공식 멤버가 정해지면 여기에 표시됩니다."
+  }
+}

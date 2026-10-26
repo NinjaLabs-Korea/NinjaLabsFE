@@ -55,7 +55,8 @@
     "notices": "공지사항",
     "operations": "운영",
     "nftJobs": "NFT 잡",
-    "audit": "감사 로그"
+    "audit": "감사 로그",
+    "recruitment": "멤버 모집"
   },
   "gate": {
     "checking": "관리자 권한을 확인하는 중…",
@@ -299,7 +300,8 @@
       "category": "카테고리",
       "status": "상태",
       "published": "게시일",
-      "action": "작업"
+      "action": "작업",
+      "eventDate": "행사일"
     },
     "categories": {
       "ninjaLabs": "Ninja Labs",
@@ -325,7 +327,9 @@
       "body": "본문 (마크다운)",
       "bodyPlaceholder": "공지 본문, 요약 링크, 스폰서 배경을 작성하세요.",
       "status": "상태",
-      "externalLinkPlaceholder": "https://injective.com/..."
+      "externalLinkPlaceholder": "https://injective.com/...",
+      "eventDate": "행사 날짜 (선택)",
+      "eventDateHint": "행사·활동이 열린 날짜예요. 지난 활동 목록은 이 날짜 순으로 정렬돼요."
     },
     "toast": {
       "loadFailedTitle": "공지사항을 불러올 수 없음",
@@ -694,6 +698,189 @@
     "toast": {
       "loadFailedTitle": "감사 로그를 사용할 수 없음",
       "loadFailedDescription": "감사 로그를 불러오지 못했습니다."
+    }
+  },
+  "recruitment": {
+    "metaTitle": "멤버 모집 | Ninja Labs 관리자",
+    "metaDescription": "기수를 만들고, 모집을 열고 닫고, 지원서를 심사합니다.",
+    "title": "멤버 모집 관리",
+    "description": "기수를 만들고, 모집을 열고, 지원자를 심사하고, 목록을 내보냅니다. 합격은 멤버 지정이 아니에요. 멤버는 사용자 탭에서 따로 지정하세요.",
+    "newCohort": "새 기수",
+    "empty": "아직 기수가 없습니다. 아래에서 첫 기수를 만드세요.",
+    "selectHint": "기수의 ‘지원서’ 버튼을 누르면 지원자를 볼 수 있습니다.",
+    "deleteBlocked": "지원서가 있는 기수는 삭제할 수 없습니다. 마감 처리하세요.",
+    "columns": {
+      "name": "기수",
+      "status": "상태",
+      "window": "접수 기간",
+      "applications": "지원서",
+      "action": "작업"
+    },
+    "statuses": {
+      "DRAFT": "초안",
+      "OPEN": "모집 중",
+      "CLOSED": "마감"
+    },
+    "counts": "전체 {total} · 대기 {submitted} · 합격 {accepted} · 불합격 {rejected}",
+    "window": {
+      "unbounded": "제한 없음",
+      "none": "기간 없음 (기수가 열려 있는 동안)"
+    },
+    "actions": {
+      "applications": "지원서",
+      "open": "모집 열기",
+      "reopen": "다시 열기",
+      "close": "모집 마감"
+    },
+    "transition": {
+      "eyebrow": "모집 상태 변경",
+      "open": {
+        "title": "{name} 모집을 열까요?",
+        "description": "지원자가 바로 지원서를 보낼 수 있어요(접수 기간을 정했다면 그 안에서). 한 번에 하나의 기수만 열 수 있습니다.",
+        "confirm": "모집 열기"
+      },
+      "reopen": {
+        "title": "{name} 모집을 다시 열까요?",
+        "description": "지원자가 다시 지원서를 보내고 수정할 수 있어요. 한 번에 하나의 기수만 열 수 있습니다.",
+        "confirm": "다시 열기"
+      },
+      "close": {
+        "title": "{name} 모집을 마감할까요?",
+        "description": "새 지원과 수정이 멈춰요. 지원자는 철회할 수 있고, 나중에 다시 열 수도 있어요.",
+        "confirm": "모집 마감"
+      }
+    },
+    "form": {
+      "eyebrowCreate": "새 기수 양식",
+      "eyebrowEdit": "기수 수정 양식",
+      "titleCreate": "기수 만들기",
+      "titleEdit": "기수 수정",
+      "name": "이름",
+      "namePlaceholder": "닌자랩스 2기",
+      "description": "설명 (지원자에게 보여요)",
+      "descriptionPlaceholder": "이 기수가 어떤 모집이고 어떤 사람을 찾는지 적어 주세요.",
+      "opensAt": "접수 시작 (선택)",
+      "closesAt": "접수 종료 (선택)",
+      "windowHint": "시각은 브라우저의 시간대 기준이에요. 비워 두면 제한이 없고, 기수가 열려 있는 동안 지원을 받아요.",
+      "draftNote": "새 기수는 초안으로 시작해요. 준비가 되면 목록에서 ‘모집 열기’를 누르세요.",
+      "errors": {
+        "required": "필수 항목입니다.",
+        "tooLong": "너무 깁니다. 최대 {max}자까지 입력할 수 있습니다.",
+        "window": "접수 종료 시각은 시작 시각보다 늦어야 합니다."
+      }
+    },
+    "toast": {
+      "loadFailedTitle": "불러오지 못했습니다",
+      "loadFailedDescription": "기수 목록을 불러오지 못했습니다. 다시 시도하세요.",
+      "createdTitle": "기수를 만들었습니다",
+      "updatedTitle": "기수를 수정했습니다",
+      "deletedTitle": "기수를 삭제했습니다",
+      "transitioned": {
+        "OPEN": "모집을 열었습니다",
+        "CLOSED": "모집을 마감했습니다"
+      }
+    },
+    "applications": {
+      "eyebrow": "지원서",
+      "heading": "{name} 지원서",
+      "export": "CSV 내보내기",
+      "exporting": "내보내는 중…",
+      "filters": {
+        "label": "지원서 필터",
+        "status": "상태",
+        "activityType": "활동 유형",
+        "interestArea": "참여 분야",
+        "search": "검색",
+        "searchPlaceholder": "이름, Telegram, X, 닉네임, 이메일",
+        "all": "전체",
+        "apply": "적용",
+        "reset": "초기화"
+      },
+      "statuses": {
+        "SUBMITTED": "대기",
+        "ACCEPTED": "합격",
+        "REJECTED": "불합격",
+        "WITHDRAWN": "철회"
+      },
+      "decisions": {
+        "ACCEPTED": "합격",
+        "REJECTED": "불합격"
+      },
+      "columns": {
+        "applicant": "지원자",
+        "contact": "연락처",
+        "experience": "Web3 경력",
+        "activity": "활동 유형",
+        "interests": "참여 분야",
+        "status": "상태",
+        "applied": "지원일",
+        "action": "작업"
+      },
+      "loading": "지원서를 불러오는 중…",
+      "empty": "아직 지원서가 없습니다.",
+      "emptyFiltered": "조건에 맞는 지원서가 없습니다.",
+      "total": "지원서 {total}건",
+      "pagination": "지원서 페이지",
+      "previous": "이전",
+      "next": "다음",
+      "pageOf": "{page} / {pages} 페이지",
+      "review": "심사",
+      "changeDecision": "결정 변경",
+      "withdrawnNote": "철회됨",
+      "toast": {
+        "loadFailedTitle": "불러오지 못했습니다",
+        "loadFailedDescription": "지원서를 불러오지 못했습니다. 다시 시도하세요.",
+        "exportFailedTitle": "내보내기 실패",
+        "reviewedTitle": "심사 결과를 저장했습니다",
+        "reviewedDescription": "{name}: {decision}"
+      }
+    },
+    "review": {
+      "eyebrow": "지원서 심사",
+      "title": "{name}님 지원서 심사",
+      "description": "메모는 운영진만 봅니다. 지원자에게는 결과(합격/불합격)만 보이고 메모는 보이지 않아요.",
+      "memberNote": "합격해도 멤버가 되는 것은 아닙니다.",
+      "memberLink": "멤버 지정은 사용자 탭에서 하세요.",
+      "fields": {
+        "applicant": "지원자",
+        "status": "현재 상태"
+      },
+      "statuses": {
+        "SUBMITTED": "대기",
+        "ACCEPTED": "합격",
+        "REJECTED": "불합격",
+        "WITHDRAWN": "철회"
+      },
+      "decision": "결정",
+      "decisions": {
+        "ACCEPTED": "합격",
+        "REJECTED": "불합격"
+      },
+      "note": "내부 메모 (선택)",
+      "notePlaceholder": "결정 이유, 팀이 이어서 할 일",
+      "noteHint": "최대 2000자. 결정을 바꾸면 여기에 쓴 메모로 새로 저장돼요.",
+      "saving": "저장하는 중…",
+      "confirm": {
+        "ACCEPTED": "합격 처리",
+        "REJECTED": "불합격 처리",
+        "none": "결정을 선택하세요"
+      }
+    },
+    "errors": {
+      "COHORT_NOT_FOUND": "이 기수가 더 이상 없습니다. 목록을 새로 불러왔습니다.",
+      "COHORT_ALREADY_OPEN": "다른 기수가 이미 열려 있습니다. 그 기수를 먼저 마감한 뒤 여세요.",
+      "COHORT_HAS_APPLICATIONS": "지원서가 있는 기수는 삭제할 수 없습니다(철회한 지원서 포함). 마감 처리하세요.",
+      "COHORT_INVALID_WINDOW": "접수 종료 시각은 시작 시각보다 늦어야 합니다.",
+      "COHORT_INVALID_TRANSITION": "현재 상태에서는 할 수 없는 변경입니다. 목록을 새로 불러왔습니다.",
+      "COHORT_APPLICATION_NOT_FOUND": "이 지원서가 더 이상 없습니다. 목록을 새로 불러왔습니다.",
+      "COHORT_APPLICATION_WITHDRAWN": "지원자가 철회한 지원서라 심사할 수 없습니다.",
+      "INVALID_CHARACTER": "저장할 수 없는 문자(예: NUL 문자)가 들어 있습니다. 지우고 다시 시도하세요.",
+      "INVALID_DATE": "달력에 없는 날짜나 시각입니다. 값을 고치고 다시 시도하세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "ADMIN_ONLY": "이 계정에는 더 이상 관리자 권한이 없습니다.",
+      "UNAUTHORIZED": "세션이 만료되었습니다. 다시 로그인하세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
+      "generic": "요청을 처리하지 못했습니다. 다시 시도해 주세요."
     }
   }
 }

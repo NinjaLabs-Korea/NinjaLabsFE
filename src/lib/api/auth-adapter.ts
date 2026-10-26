@@ -15,8 +15,9 @@ import {
   LoginExchangeError,
 } from "@/lib/api/oauth";
 import { fetchMe, toClientUser } from "@/lib/api/me";
-import { getOnboardingPath } from "@/lib/auth-route";
+import { getOnboardingPath, HOME_PATH } from "@/lib/auth-route";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
+import { takeReturnPath } from "@/lib/return-path";
 import { stripLocale, withLocaleOf } from "@/i18n/routing";
 
 export { getOnboardingPath };
@@ -112,13 +113,25 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     });
     // 콜백은 로케일 경로(/en/auth/callback)로 들어오므로 로케일을 떼고 비교하고, 같은 로케일의 홈으로 보낸다.
     const onCallback = isAuthCallbackPath(window.location.pathname);
+    // A finished user goes back to the page that asked for the sign-in (`lib/return-path.ts`), else to their home.
+    // An unfinished onboarding keeps the remembered path: the last signup step offers it.
     const targetPath = onboardingPath ?? (
-      onCallback && restored.status === "signed-in" ? withLocaleOf(window.location.pathname, "/") : null
+      onCallback && restored.status === "signed-in"
+        ? withLocaleOf(window.location.pathname, restored.user.onboardingCompleted === true ? takeReturnPath() ?? HOME_PATH : "/")
+        : null
     );
     if (targetPath) {
       onboardingLog("onboarding.redirect.started", { targetPath });
       window.location.replace(targetPath);
     }
+  }
+
+  /** Re-reads `/auth/me` into the snapshot. A failed or empty read keeps what is shown (the next 401 handles a dead session). */
+  async function refresh(): Promise<AuthSnapshot> {
+    if (snapshot.status !== "signed-in" || !http.hasSession()) return snapshot;
+    const me = await fetchMe(http);
+    if (!me || snapshot.status !== "signed-in") return snapshot;
+    return setSnapshot({ status: "signed-in", user: toClientUser(me) });
   }
 
   let bootstrapped = false;
@@ -183,6 +196,7 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
   return {
     initialize,
     http,
+    refresh,
     getSnapshot: () => snapshot,
     subscribe: (listener) => {
       listeners.add(listener);

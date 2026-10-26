@@ -231,6 +231,8 @@ export type ApiHttp = {
   /** 인증 헤더를 붙여 요청. 401이면 refresh 회전 후 1회 재시도. */
   fetchJson: <T>(path: string, init?: { method?: string; body?: unknown }) => Promise<T>;
   fetchForm: <T>(path: string, form: FormData) => Promise<T>;
+  /** GET that returns the body as text (the cohort CSV export); same auth, refresh-and-retry and error mapping as `fetchJson`. */
+  fetchText: (path: string) => Promise<string>;
   /** True while this tab holds an access token (after a login exchange or a successful refresh). */
   hasSession: () => boolean;
   /** Page-load restore: legacy migration if needed, then one `POST /api/auth/refresh` (skipped without the session hint). */
@@ -408,6 +410,21 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
         throw await toApiHttpError(res);
       }
       return readSuccessBody<T>(res);
+    },
+
+    fetchText: async (path: string): Promise<string> => {
+      onboardingLog("http.request.started", { method: "GET", path });
+      const sentToken = accessToken;
+      let res = await rawFetch(path);
+      onboardingLog("http.response.received", { path, status: res.status, attempt: 1 });
+      if ((await isSessionExpiry(res)) && (await retryAfterRefresh(sentToken))) {
+        res = await rawFetch(path);
+        onboardingLog("http.response.received", { path, status: res.status, attempt: 2 });
+      }
+      if (!res.ok) {
+        throw await toApiHttpError(res);
+      }
+      return res.text();
     },
 
     fetchForm: async <T>(path: string, form: FormData): Promise<T> => {

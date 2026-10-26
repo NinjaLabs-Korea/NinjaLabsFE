@@ -7,6 +7,7 @@ import { getBounty } from "@/lib/bounties";
 import { createMockFixtures, getMockFixtureSnapshot, type MockAccountFixtures } from "@/lib/mocks/fixtures";
 import { getAdminBounties, getAdminHighlights, getAdminPosts, getAdminUsers } from "@/lib/admin";
 import { ADMIN_STATUS_FROM_CODE, createMockOperationsApi } from "@/lib/mocks/admin-operations";
+import { createMockCohortApis } from "@/lib/mocks/cohorts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const daysFromNow = (days: number): string => new Date(Date.now() + days * DAY_MS).toISOString();
@@ -74,6 +75,7 @@ export function createMockApiClient(seed = "default"): ApiClient {
     agents = agents.map((agent) => (agent.id === agentId ? next : agent));
     return next;
   };
+  const cohorts = createMockCohortApis({ nextId, ownerId: fixtureSnapshot.account.user.id, isOwner: (auth) => isFixtureOwner(auth, fixtureSnapshot) });
   return {
     getAccount: async (auth) => {
       if (!isFixtureOwner(auth, fixtureSnapshot)) {
@@ -199,7 +201,9 @@ export function createMockApiClient(seed = "default"): ApiClient {
         throw new MockApiError(400, "CONFIRM_NICKNAME_MISMATCH");
       }
     },
+    ...cohorts.applicantApi,
     ...createMockAdminApi(nextId),
+    ...cohorts.adminApi,
   };
 }
 

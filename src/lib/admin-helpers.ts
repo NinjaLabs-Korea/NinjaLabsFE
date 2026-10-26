@@ -100,6 +100,8 @@ export type AdminPost = {
   bodyMarkdown: string;
   thumbnail: string | null;
   externalUrl: string | null;
+  /** BE `event_date` (`YYYY-MM-DD`): when the activity took place; null for a plain announcement. */
+  eventDate?: string | null;
 };
 
 /**

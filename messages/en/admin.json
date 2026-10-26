@@ -55,7 +55,8 @@
     "notices": "Notices",
     "operations": "Operations",
     "nftJobs": "NFT Jobs",
-    "audit": "Audit log"
+    "audit": "Audit log",
+    "recruitment": "Recruitment"
   },
   "gate": {
     "checking": "Checking admin access…",
@@ -299,7 +300,8 @@
       "category": "Category",
       "status": "Status",
       "published": "Published",
-      "action": "Action"
+      "action": "Action",
+      "eventDate": "Event date"
     },
     "categories": {
       "ninjaLabs": "Ninja Labs",
@@ -325,7 +327,9 @@
       "body": "Body (markdown)",
       "bodyPlaceholder": "Write the notice body, summary links, and sponsor context.",
       "status": "Status",
-      "externalLinkPlaceholder": "https://injective.com/..."
+      "externalLinkPlaceholder": "https://injective.com/...",
+      "eventDate": "Event date (optional)",
+      "eventDateHint": "The day the event or activity took place. Past activities are listed by this date."
     },
     "toast": {
       "loadFailedTitle": "Notices unavailable",
@@ -694,6 +698,189 @@
     "toast": {
       "loadFailedTitle": "Audit log unavailable",
       "loadFailedDescription": "Could not load the audit log."
+    }
+  },
+  "recruitment": {
+    "metaTitle": "Recruitment | Ninja Labs Admin",
+    "metaDescription": "Create cohorts, open and close recruitment, and review applications.",
+    "title": "Member recruitment",
+    "description": "Create a cohort, open it for applications, review who applied and export the list. Accepting an applicant does not make them a member: set that on the Users tab.",
+    "newCohort": "New cohort",
+    "empty": "No cohorts yet. Create the first one below.",
+    "selectHint": "Choose Applications on a cohort to review who applied.",
+    "deleteBlocked": "Cohorts with applications can’t be deleted. Close it instead.",
+    "columns": {
+      "name": "Cohort",
+      "status": "Status",
+      "window": "Application window",
+      "applications": "Applications",
+      "action": "Actions"
+    },
+    "statuses": {
+      "DRAFT": "Draft",
+      "OPEN": "Open",
+      "CLOSED": "Closed"
+    },
+    "counts": "{total} total · {submitted} waiting · {accepted} accepted · {rejected} not selected",
+    "window": {
+      "unbounded": "no limit",
+      "none": "No window (open while the cohort is open)"
+    },
+    "actions": {
+      "applications": "Applications",
+      "open": "Open",
+      "reopen": "Re-open",
+      "close": "Close"
+    },
+    "transition": {
+      "eyebrow": "Recruitment status",
+      "open": {
+        "title": "Open {name} for applications?",
+        "description": "Applicants can send applications right away (inside the window, if you set one). Only one cohort can be open at a time.",
+        "confirm": "Open recruitment"
+      },
+      "reopen": {
+        "title": "Re-open {name}?",
+        "description": "Applicants can send and edit applications again. Only one cohort can be open at a time.",
+        "confirm": "Re-open recruitment"
+      },
+      "close": {
+        "title": "Close {name}?",
+        "description": "New applications and edits stop. Applicants can still withdraw, and you can re-open the cohort later.",
+        "confirm": "Close recruitment"
+      }
+    },
+    "form": {
+      "eyebrowCreate": "New cohort form",
+      "eyebrowEdit": "Edit cohort form",
+      "titleCreate": "Create a cohort",
+      "titleEdit": "Edit cohort",
+      "name": "Name",
+      "namePlaceholder": "Ninja Labs 2nd cohort",
+      "description": "Description (shown to applicants)",
+      "descriptionPlaceholder": "What this cohort is about and who it is for.",
+      "opensAt": "Applications open (optional)",
+      "closesAt": "Applications close (optional)",
+      "windowHint": "Times are in your browser’s time zone. An empty side has no limit: the cohort accepts while it is open.",
+      "draftNote": "A new cohort starts as a draft. Use Open on the list when you are ready.",
+      "errors": {
+        "required": "This field is required.",
+        "tooLong": "Too long. Up to {max} characters.",
+        "window": "The closing time must be after the opening time."
+      }
+    },
+    "toast": {
+      "loadFailedTitle": "Couldn’t load",
+      "loadFailedDescription": "The cohort list could not be loaded. Try again.",
+      "createdTitle": "Cohort created",
+      "updatedTitle": "Cohort updated",
+      "deletedTitle": "Cohort deleted",
+      "transitioned": {
+        "OPEN": "Recruitment opened",
+        "CLOSED": "Recruitment closed"
+      }
+    },
+    "applications": {
+      "eyebrow": "Applications",
+      "heading": "Applications for {name}",
+      "export": "Export CSV",
+      "exporting": "Exporting…",
+      "filters": {
+        "label": "Filter applications",
+        "status": "Status",
+        "activityType": "Activity type",
+        "interestArea": "Interest area",
+        "search": "Search",
+        "searchPlaceholder": "Name, Telegram, X, nickname, email",
+        "all": "All",
+        "apply": "Apply",
+        "reset": "Reset"
+      },
+      "statuses": {
+        "SUBMITTED": "Waiting",
+        "ACCEPTED": "Accepted",
+        "REJECTED": "Not selected",
+        "WITHDRAWN": "Withdrawn"
+      },
+      "decisions": {
+        "ACCEPTED": "accepted",
+        "REJECTED": "not selected"
+      },
+      "columns": {
+        "applicant": "Applicant",
+        "contact": "Contact",
+        "experience": "Web3 experience",
+        "activity": "Activity",
+        "interests": "Interests",
+        "status": "Status",
+        "applied": "Applied",
+        "action": "Actions"
+      },
+      "loading": "Loading applications…",
+      "empty": "No applications yet.",
+      "emptyFiltered": "No application matches these filters.",
+      "total": "{total} applications",
+      "pagination": "Applications pages",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {pages}",
+      "review": "Review",
+      "changeDecision": "Change decision",
+      "withdrawnNote": "Withdrawn",
+      "toast": {
+        "loadFailedTitle": "Couldn’t load",
+        "loadFailedDescription": "The applications could not be loaded. Try again.",
+        "exportFailedTitle": "Export failed",
+        "reviewedTitle": "Decision saved",
+        "reviewedDescription": "{name}: {decision}"
+      }
+    },
+    "review": {
+      "eyebrow": "Review application",
+      "title": "Review {name}’s application",
+      "description": "The note is for operators only. The applicant sees the result (accepted or not selected), never the note.",
+      "memberNote": "Accepting does not make the applicant a member.",
+      "memberLink": "Set members on the Users tab.",
+      "fields": {
+        "applicant": "Applicant",
+        "status": "Current status"
+      },
+      "statuses": {
+        "SUBMITTED": "Waiting",
+        "ACCEPTED": "Accepted",
+        "REJECTED": "Not selected",
+        "WITHDRAWN": "Withdrawn"
+      },
+      "decision": "Decision",
+      "decisions": {
+        "ACCEPTED": "Accept",
+        "REJECTED": "Do not select"
+      },
+      "note": "Internal note (optional)",
+      "notePlaceholder": "Why you decided this, follow-ups for the team",
+      "noteHint": "Up to 2000 characters. A new decision starts with the note you write here.",
+      "saving": "Saving…",
+      "confirm": {
+        "ACCEPTED": "Accept application",
+        "REJECTED": "Mark as not selected",
+        "none": "Choose a decision"
+      }
+    },
+    "errors": {
+      "COHORT_NOT_FOUND": "This cohort no longer exists. The list was refreshed.",
+      "COHORT_ALREADY_OPEN": "Another cohort is already open. Close it first, then open this one.",
+      "COHORT_HAS_APPLICATIONS": "This cohort has applications (withdrawn ones count), so it can’t be deleted. Close it instead.",
+      "COHORT_INVALID_WINDOW": "The closing time must be after the opening time.",
+      "COHORT_INVALID_TRANSITION": "That status change is not allowed from the current status. The list was refreshed.",
+      "COHORT_APPLICATION_NOT_FOUND": "This application no longer exists. The list was refreshed.",
+      "COHORT_APPLICATION_WITHDRAWN": "The applicant withdrew this application, so it can’t be reviewed.",
+      "INVALID_CHARACTER": "A field contains characters that cannot be saved (for example a NUL character). Remove them and try again.",
+      "INVALID_DATE": "That date or time does not exist on the calendar. Fix it and try again.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "ADMIN_ONLY": "This account no longer has admin access.",
+      "UNAUTHORIZED": "Your session has expired. Sign in again.",
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
+      "generic": "The request failed. Please try again."
     }
   }
 }

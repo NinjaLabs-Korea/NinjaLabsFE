@@ -24,7 +24,7 @@ auth, the data layer, routing or a whole user flow.
 ## Run
 
 ```sh
-NINJA_BE_DIR=../NinjaLabsBE npm run test:integration          # flows 1-11
+NINJA_BE_DIR=../NinjaLabsBE npm run test:integration          # flows 1-13
 NINJA_BE_DIR=../NinjaLabsBE npm run test:integration -- 1 3    # a subset
 NINJA_IT_CHROME_FLAGS="--no-sandbox"  # extra Chrome flags (Linux CI)
 npm run test:integration -- --reap    # stop + delete the leftovers of dead runs
@@ -111,6 +111,10 @@ failed request.
 | 8 | Sign-out | `POST /api/auth/logout 204`, cookie cleared, the other tab flips to signed-out without a request or reload, session revoked, the old refresh token is rejected in cookie and body mode; a refresh rejected mid-session flips the UI to signed-out in the same document and the BE clears the dead cookie. |
 | 9 | Legacy migration + CSRF | A body-mode refresh token in `localStorage["ninja.refreshToken"]` is migrated by one `POST /api/auth/refresh` (`X-Ninja-Session: cookie`): `ninja_rt` planted, both legacy keys removed, the legacy row revoked with the cookie as its successor, the next reload sends an empty body; a cross-site-style refresh/logout with the cookie but without `X-Ninja-Session` (through the FE rewrite and on the BE) gets 400/401, no `Set-Cookie`, and does not rotate the session; replaying the migrated legacy token is reuse and revokes the chain. |
 | 10 | Payout policy + re-apply | Two admins (flow creates `g-admin2`): deleting a funded bounty is 409 `BOUNTY_HAS_OPEN_FUNDS`; admin 1 requests a payout and cannot approve it (403 `PAYOUT_SELF_APPROVAL`); admin 2 approves; delete stays 409 while the payout is open; audit rows name both admins. Then a builder applies in the FE, withdraws (API: the FE has no withdraw control yet), re-applies in the FE: the same application row is PENDING again with the new portfolio URL and `/applications` lists it. Runs last because it leaves an open payout on B1. |
+
+| 11 | Auth state | Header, hero CTA, signup step 1 and gated pages agree with the session in every state; a finished user's `/en` lands on the home. |
+| 12 | Member recruitment | Admin creates and opens a cohort in the UI; a signed-out visitor sees the banner and a sign-in link with `returnTo`; a sign-in that started from `/recruit` returns there; a finished user applies from the home, sees the status on `/recruit`, `/account` and the home, edits it; the admin filters, reviews with a confirm (internal note) and exports the CSV; the applicant sees the result and never the note (DOM and API); an unfinished sign-up is sent to its onboarding step and the BE answers `PROFILE_REQUIRED`; the proxy redirects a finished user from `/en` to `/en/home` (hint cookie) while `/en/about` stays; withdraw and reapply reopen the same row; a cohort with applications cannot be deleted; closing removes the banner and the form. |
+| 13 | Responsive community screens | Intro, about, home, recruit (status and form with errors), account, notices, admin recruitment (table, review dialog) and admin notices in Korean at 375, 768 and 1280 px: no horizontal scroll, nothing outside the viewport, no character-per-line wrapping, plus a screenshot of each in `<log dir>/shots/<screen>__<state>__<width>.png`. Gets a 20 minute budget (flow 12: 12 minutes). |
 
 Flows depend on each other's data: 7 and 8 use 4's application and 5's agents, 9 uses 4's application and 5's agents (PendingBot), 10 uses B1's deposit, so run subsets with that in mind.
 

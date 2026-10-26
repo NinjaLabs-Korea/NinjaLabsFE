@@ -138,3 +138,27 @@ export const mutations = (p) => p.requests.filter((r) => !['GET', 'OPTIONS'].inc
 export const mainText = async (p) => (await p.eval(`(document.querySelector('main')||document.body).innerText`)).replace(/\s+/g, ' ');
 /** Bearer access token for `userId` signed with the run's JWT secret (API calls outside the browser). */
 export const tokenFor = (userId, adm = false) => signAccess(state.jwtSecret, userId, adm);
+
+/** Clicks a button inside the open `<dialog>` (ConfirmDialog / Modal) by its exact text. */
+export async function dialogButton(p, text) {
+  const ok = await p.eval(`(()=>{const d=document.querySelector('dialog[open]'); const b=d && [...d.querySelectorAll('button')].find(b=>b.innerText.trim()===${JSON.stringify(text)}); if(!b) return false; b.click(); return true})()`);
+  if (!ok) throw new Error(`dialog button not found: ${text}`);
+  await sleep(400); await p.idle(500);
+}
+/** Clicks a chip (`label` around a radio/checkbox) by its exact text, inside `main` (or inside the fieldset whose legend starts with `legend`). */
+export async function chip(p, text, legend) {
+  const ok = await p.eval(`(()=>{const scope=${JSON.stringify(legend ?? '')} ? [...document.querySelectorAll('main fieldset')].find(f=>f.querySelector('legend')?.innerText.trim().startsWith(${JSON.stringify(legend ?? '')})) : document.querySelector('main'); if(!scope) return false;
+    const l=[...scope.querySelectorAll('label')].find(l=>l.innerText.trim()===${JSON.stringify(text)} && l.querySelector('input')); if(!l) return false; l.querySelector('input').click(); return true})()`);
+  if (!ok) throw new Error(`chip not found: ${text}`);
+  await sleep(100);
+}
+/** Same as `signIn`, but plants `ninja.returnTo` first, the way the signup page does before leaving for Google. */
+export async function signInWithReturn(page, userId, returnTo) {
+  const { code, verifier } = loginCode(userId);
+  await page.goto('/en');
+  await page.eval(`sessionStorage.setItem('ninja.oauthVerifier', JSON.stringify({ verifier: ${JSON.stringify(verifier)}, createdAt: Date.now() })); sessionStorage.setItem('ninja.returnTo', ${JSON.stringify(returnTo)}); true`);
+  page.reset();
+  await page.goto(`/en/auth/callback#loginCode=${code}`);
+  await page.waitFor(`!location.pathname.endsWith('/auth/callback')`, 15000);
+  await page.idle();
+}

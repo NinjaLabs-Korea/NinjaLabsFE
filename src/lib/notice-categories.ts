@@ -10,3 +10,9 @@ export const noticeCategoryKeys: Record<Notice["category"], string> = {
   Recruitment: "recruitment",
   Other: "other",
 };
+
+/** The `?category=` query value of a community link (`events`, `ninjaLabs`, ...) -> the category it pre-selects; anything else is `undefined`. */
+export function noticeCategoryFromQuery(value: string | string[] | undefined): Notice["category"] | undefined {
+  const key = Array.isArray(value) ? value[0] : value;
+  return (Object.entries(noticeCategoryKeys) as Array<[Notice["category"], string]>).find(([, queryKey]) => queryKey.toLowerCase() === key?.toLowerCase())?.[0];
+}

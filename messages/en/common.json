@@ -19,7 +19,9 @@
     "bounties": "Bounties",
     "hallOfFame": "Hall of Fame",
     "members": "Members",
-    "notices": "Notices"
+    "notices": "Notices",
+    "about": "About",
+    "recruit": "Join us"
   },
   "header": {
     "homeLabel": "Ninja Labs home",

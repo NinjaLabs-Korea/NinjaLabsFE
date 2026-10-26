@@ -12,7 +12,7 @@ export const signup = {
     actions: [
       { key: "browseBounties", href: "/bounties", icon: "→" },
       { key: "injectiveDocs", href: "https://docs.injective.network/developers-evm", icon: "↗" },
-      { key: "learnMore", href: "/", icon: "mascot" },
+      { key: "learnMore", href: "/about", icon: "mascot" },
     ],
   },
 } as const;
