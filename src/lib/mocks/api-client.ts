@@ -28,6 +28,7 @@ function toPreviewApplication(id: string, bountyId: string, message: string): Ac
   const bounty = getBounty(bountyId);
   return {
     id,
+    source: "application",
     bountySlug: bountyId,
     bountyTitle: bounty?.applicationTitle ?? bounty?.title ?? bountyId,
     category: bounty?.category ?? "Other",

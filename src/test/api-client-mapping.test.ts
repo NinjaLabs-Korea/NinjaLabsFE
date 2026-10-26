@@ -73,7 +73,7 @@ describe("GET /applications/me + /submissions/me join", () => {
     const result = await createApiApiClient(http).getApplications(signedIn);
     expect(result).toEqual({
       status: "available",
-      data: [{ id: "a1", bountySlug: "b1", bountyTitle: "T", category: "Other", appliedAt: "2026-07-02T03:04:05.000Z", note: "hello", status: "open", agent: null, reviewComment: null, reviewNote: null, paymentStatus: "NONE" }],
+      data: [{ id: "a1", source: "application", bountySlug: "b1", bountyTitle: "T", category: "Other", appliedAt: "2026-07-02T03:04:05.000Z", note: "hello", status: "open", agent: null, reviewComment: null, reviewNote: null, paymentStatus: "NONE" }],
     });
   });
 
@@ -83,6 +83,39 @@ describe("GET /applications/me + /submissions/me join", () => {
     const { http } = createHttp({ "/applications/me": [legacy], "/submissions/me": [{ status: "APPROVED", bounty_id: "b1" }] });
     const result = await createApiApiClient(http).getApplications(signedIn);
     expect(result.status === "available" && result.data[0]).toMatchObject({ status: "completed", agent: null });
+  });
+});
+
+describe("standalone submissions on /applications", () => {
+  it("lists direct and agent-mode submissions (no application behind them) with status, reviewer comment and payout", async () => {
+    const agent = { id: "ag1", name: "Scout" };
+    const { http } = createHttp({
+      "/applications/me": [application({ id: "with-app", status: "APPROVED", bounty_id: "b-apply" })],
+      "/submissions/me": [
+        { id: "s0", status: "IN_REVIEW", bounty_id: "b-apply", agent: null },
+        { id: "s1", status: "SUBMITTED", bounty_id: "b-d1", agent: null, bounty_title: "Direct one", category: "DEV", submitted_at: "2026-10-01T00:00:00.000Z", description: "my work" },
+        { id: "s2", status: "REVISION_REQUESTED", bounty_id: "b-d2", agent: null, review_comment: " fix links " },
+        { id: "s3", status: "REJECTED", bounty_id: "b-d3", agent: null, review_comment: "forfeited: no wallet" },
+        { id: "s4", status: "APPROVED", bounty_id: "b-d4", agent: null, payment_status: "PAID" },
+        { id: "s5", status: "REVISION_REQUESTED", bounty_id: "b-agent", agent, review_comment: "add repo" },
+      ],
+    });
+    const result = await createApiApiClient(http).getApplications(signedIn);
+    const rows = result.status === "available" ? result.data : [];
+    // The submission behind an application row is joined into it, never listed twice.
+    expect(rows.map((row) => [row.id, row.source ?? "application", row.status])).toEqual([
+      ["with-app", "application", "submitted"],
+      ["submission:s1", "submission", "submitted"],
+      ["submission:s2", "submission", "revisionRequested"],
+      ["submission:s3", "submission", "notAccepted"],
+      ["submission:s4", "submission", "completed"],
+      ["submission:s5", "submission", "revisionRequested"],
+    ]);
+    expect(rows[1]).toMatchObject({ bountySlug: "b-d1", bountyTitle: "Direct one", appliedAt: "2026-10-01T00:00:00.000Z", note: "my work", agent: null });
+    expect(rows[2].reviewComment).toBe("fix links");
+    expect(rows[3].reviewComment).toBe("forfeited: no wallet");
+    expect(rows[4].paymentStatus).toBe("PAID");
+    expect(rows[5].agent).toEqual(agent);
   });
 });
 
