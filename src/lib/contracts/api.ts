@@ -3,6 +3,17 @@ import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
 import type { AdminAuditLogFilter, AdminAuditLogPage } from "@/lib/admin-audit";
 import type { AdminNftJobPage, AdminOperations, NftJobStatus, SubmissionDecision } from "@/lib/admin-operations";
+import type {
+  AdminCohort,
+  AdminCohortApplication,
+  AdminCohortApplicationFilter,
+  AdminCohortApplicationPage,
+  AdminCohortInput,
+  CohortApplicationValues,
+  CohortReviewDecision,
+  MyCohortApplication,
+  PublicCohort,
+} from "@/lib/cohorts";
 
 export type ApiAvailable<T> = {
   status: "available";
@@ -100,6 +111,23 @@ export type OnboardingApi = {
   completeOnboarding: () => Promise<void>;
 };
 
+/**
+ * 다음 기수 모집 (cohorts). 공개 읽기 + 로그인한 온보딩 완료 유저의 지원서 제출/수정/철회.
+ * 지원자는 심사 메모를 받지 못한다(BE가 내려보내지 않는다): 결과는 `status`뿐이다.
+ */
+export type CohortApi = {
+  /** `GET /cohorts/current`: the open cohort, or `null` (BE answers 200 with a JSON `null` body when none is open). Public, no session needed. */
+  getCurrentCohort: () => Promise<PublicCohort | null>;
+  /** `GET /cohorts/applications/me`, newest first. Signed out: `[]`. */
+  getMyCohortApplications: (auth: AuthSnapshot) => Promise<ApiResult<readonly MyCohortApplication[]>>;
+  /** `POST /cohorts/:id/applications`: 409 `PROFILE_REQUIRED` (onboarding unfinished), `COHORT_NOT_FOUND`, `COHORT_NOT_ACCEPTING`, `COHORT_ALREADY_APPLIED`, 400 `COHORT_OTHER_DETAIL_REQUIRED`. A withdrawn application is reopened (same id). */
+  applyToCohort: (cohortId: string, values: CohortApplicationValues) => Promise<MyCohortApplication>;
+  /** `PATCH /cohorts/applications/:id`: SUBMITTED and accepting only (409 `COHORT_APPLICATION_NOT_SUBMITTED` / `COHORT_NOT_ACCEPTING`). */
+  updateCohortApplication: (applicationId: string, values: CohortApplicationValues) => Promise<MyCohortApplication>;
+  /** `POST /cohorts/applications/:id/withdraw`: SUBMITTED only; allowed after the cohort closed. */
+  withdrawCohortApplication: (applicationId: string) => Promise<void>;
+};
+
 /** 계정 설정 (본인 전용) */
 export type AccountSettingsApi = {
   /**
@@ -153,4 +181,22 @@ export type AdminApi = {
   getAdminAuditLogs: (filter: AdminAuditLogFilter, page: number) => Promise<AdminAuditLogPage>;
 };
 
-export type ApiClient = AccountApi & AccountSettingsApi & BountyApi & AgentApi & WalletApi & OnboardingApi & AdminApi;
+/** 운영자 기수 모집 콘솔 (AdminGuard 보호 엔드포인트) */
+export type AdminCohortApi = {
+  /** GET /admin/cohorts: every cohort, newest first, with per-status application counts and the allowed next states. */
+  getAdminCohorts: () => Promise<AdminCohort[]>;
+  /** POST /admin/cohorts (always DRAFT) / PATCH /admin/cohorts/:id. 400 `COHORT_INVALID_WINDOW`. */
+  saveAdminCohort: (cohortId: string | null, input: AdminCohortInput) => Promise<AdminCohort>;
+  /** POST /admin/cohorts/:id/transition `{to}`: 409 `COHORT_ALREADY_OPEN`, 400 `COHORT_INVALID_TRANSITION`. */
+  transitionAdminCohort: (cohortId: string, to: "OPEN" | "CLOSED") => Promise<AdminCohort>;
+  /** DELETE /admin/cohorts/:id: 409 `COHORT_HAS_APPLICATIONS` (withdrawn ones count). */
+  deleteAdminCohort: (cohortId: string) => Promise<void>;
+  /** GET /admin/cohorts/:id/applications?status=&activityType=&interestArea=&q=&page= (30 per page, newest first). */
+  getAdminCohortApplications: (cohortId: string, filter: AdminCohortApplicationFilter, page: number) => Promise<AdminCohortApplicationPage>;
+  /** POST /admin/cohort-applications/:id/review: an empty note is omitted; a decided application can be decided again. 409 `COHORT_APPLICATION_WITHDRAWN`. */
+  reviewAdminCohortApplication: (applicationId: string, input: { decision: CohortReviewDecision; note?: string }) => Promise<AdminCohortApplication>;
+  /** GET /admin/cohorts/:id/applications.csv with the same filter: the CSV text (UTF-8 BOM, quoted cells, CRLF). */
+  exportAdminCohortApplications: (cohortId: string, filter: AdminCohortApplicationFilter) => Promise<string>;
+};
+
+export type ApiClient = AccountApi & AccountSettingsApi & CohortApi & BountyApi & AgentApi & WalletApi & OnboardingApi & AdminApi & AdminCohortApi;

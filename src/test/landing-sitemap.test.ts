@@ -66,6 +66,15 @@ describe("landing and sitemap with a partially unavailable API", () => {
     expect(urls.some((url) => url.includes("/bounties/b"))).toBe(false);
   });
 
+  it("lists the community pages (about, recruit) but not the signed-in home", async () => {
+    sources.bounties.mockResolvedValue([]);
+    sources.members.mockResolvedValue([]);
+    sources.notices.mockResolvedValue([]);
+    const urls = (await sitemap()).map((entry) => entry.url);
+    expect(urls).toEqual(expect.arrayContaining(["https://ninja.test/en/about", "https://ninja.test/ko/recruit"]));
+    expect(urls.some((url) => url.endsWith("/home"))).toBe(false);
+  });
+
   it("percent-encodes non-ASCII member nicknames in sitemap URLs", async () => {
     sources.bounties.mockResolvedValue([]);
     sources.members.mockResolvedValue([{ slug: "한글.inj" }]);

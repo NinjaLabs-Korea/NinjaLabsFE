@@ -117,6 +117,7 @@ export function getAdminPosts(): AdminPost[] {
       bodyMarkdown: notice.bodyMarkdown,
       thumbnail: notice.thumbnail,
       externalUrl: notice.externalUrl ?? null,
+      eventDate: notice.eventDate ?? null,
     })),
     {
       slug: "q3-roadmap-preview",
@@ -127,6 +128,7 @@ export function getAdminPosts(): AdminPost[] {
       bodyMarkdown: "A preview of Ninja Labs' third-quarter roadmap.",
       thumbnail: null,
       externalUrl: null,
+      eventDate: null,
     },
   ];
 }

@@ -3,6 +3,7 @@ import type { ApiClient, ApiResult, ApiUnavailable } from "@/lib/contracts/api";
 import { ApiHttpError, type ApiHttp } from "@/lib/api/http";
 import { fetchMe, toClientUser } from "@/lib/api/me";
 import { createAdminApi } from "@/lib/api/admin";
+import { createAdminCohortApi, createCohortApi } from "@/lib/api/cohorts";
 import { toCategoryLabel, toPayoutStatus, type CategoryCode } from "@/lib/api/codecs";
 
 /** Agent that acted on the owner's behalf (null = the owner acted directly). Rows for agent-made entries are included in /me lists. */
@@ -288,6 +289,8 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
     withdrawAccount: async (confirmNickname) => {
       await http.fetchJson("/users/me", { method: "DELETE", body: { confirmNickname } });
     },
+    ...createCohortApi(http),
     ...createAdminApi(http),
+    ...createAdminCohortApi(http),
   };
 }

@@ -6,8 +6,24 @@ import type { AuthSnapshot, ClientUser } from "@/lib/contracts/auth";
  *
  * - signed out: `/signup` (step 1)
  * - signed in, onboarding unfinished: the step they owe (wallet, profile, complete)
- * - signed in, onboarding finished: nothing to start; they belong on the site (their profile / where they came from)
+ * - signed in, onboarding finished: nothing to start; they belong on the site (their home / where they came from)
+ *
+ * The same module owns the other half of "where should this user be?" for the community pages: the Intro (`/`) is for
+ * visitors and unfinished sign-ups, a finished user lands on their home (`/home`), and the Intro content stays reachable at
+ * `/about` for everyone.
  */
+
+/** Signed-in home for users who finished onboarding (`app/[locale]/home`), the public community overview (`/about`). */
+export const HOME_PATH = "/home";
+export const ABOUT_PATH = "/about";
+
+/**
+ * Non-secret "a finished user is signed in here" hint on the FE origin, written by `components/layout/HomeHint` and read by
+ * `proxy.ts` to send `/` to `/home` before anything renders (so the Intro never flashes). It is never used for
+ * authorization: `/home` re-checks the real session and clears the hint when there is none.
+ */
+export const HOME_HINT_COOKIE = "ninja_home";
+
 
 /** The onboarding step a signed-in user still owes, or null when onboarding is finished (or there is no user). */
 export function getOnboardingPath(user: ClientUser | null): string | null {
@@ -35,6 +51,47 @@ export function resolveStartTarget(snapshot: AuthSnapshot): StartTarget {
   const resume = getOnboardingPath(user);
   if (resume) return { kind: "resume", href: resume };
   return { kind: "member", href: `/members/${user.profileSlug}` };
+}
+
+/** True when the session is a signed-in user who finished onboarding (the only user the home page is for). */
+export function isFinishedUser(snapshot: AuthSnapshot): boolean {
+  return snapshot.status === "signed-in" && snapshot.user.onboardingCompleted === true;
+}
+
+/** The logo target: the home for a finished user, the Intro for everyone else (including while the session is restored). */
+export function resolveBrandHref(snapshot: AuthSnapshot): "/" | typeof HOME_PATH {
+  return isFinishedUser(snapshot) ? HOME_PATH : "/";
+}
+
+export type IntroAccess =
+  /** Visitors, unfinished sign-ups and a session still being restored: the Intro renders. */
+  | { kind: "show" }
+  /** A finished user visiting `/`: leave for the home (the Intro content is at `/about`). */
+  | { kind: "home"; href: typeof HOME_PATH };
+
+export function resolveIntroAccess(snapshot: AuthSnapshot): IntroAccess {
+  return isFinishedUser(snapshot) ? { kind: "home", href: HOME_PATH } : { kind: "show" };
+}
+
+export type HomeAccess =
+  /** Session still being restored: a neutral checking state, neither the home nor a redirect. */
+  | { kind: "wait" }
+  | { kind: "show" }
+  /** Signed out: the home has nothing to show; back to the Intro. */
+  | { kind: "intro"; href: "/" }
+  /** Signed in with an unfinished onboarding: the step they owe. */
+  | { kind: "resume"; href: string };
+
+/**
+ * What `/home` does for the session. `preview` (mock mode, where the preview user has no onboarding fields) shows the home
+ * to any signed-in session so the screen stays reviewable without a backend.
+ */
+export function resolveHomeAccess(snapshot: AuthSnapshot, options: { preview?: boolean } = {}): HomeAccess {
+  if (snapshot.status === "loading") return { kind: "wait" };
+  if (snapshot.status === "signed-out") return { kind: "intro", href: "/" };
+  if (options.preview) return { kind: "show" };
+  const resume = getOnboardingPath(snapshot.user);
+  return resume ? { kind: "resume", href: resume } : { kind: "show" };
 }
 
 const NOT_A_DESTINATION = /^\/(?:signup(?:\/|$)|auth\/)/;

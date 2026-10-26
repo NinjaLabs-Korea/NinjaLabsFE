@@ -167,3 +167,17 @@ describe("admin highlight save payload", () => {
     expect(body(fetchJson, 1)).toMatchObject({ method: "POST", body: { type: "PARTNERSHIP", publish: true } });
   });
 });
+
+describe("admin notice event date", () => {
+  it("sends eventDate on create and edit, and null when it was cleared (an omitted key would keep the old date)", async () => {
+    const { http, fetchJson } = createHttp();
+    const api = createAdminApi(http);
+    await api.saveAdminPost({ ...post, eventDate: "2026-06-18" }, true);
+    await api.saveAdminPost({ ...post, eventDate: null }, false);
+    await api.saveAdminPost(post, false);
+    const bodies = fetchJson.mock.calls.map((call) => (call as unknown as [string, { body: Record<string, unknown> }])[1].body);
+    expect(bodies[0]).toMatchObject({ eventDate: "2026-06-18" });
+    expect(bodies[1]).toMatchObject({ eventDate: null });
+    expect(bodies[2]).toHaveProperty("eventDate", null);
+  });
+});

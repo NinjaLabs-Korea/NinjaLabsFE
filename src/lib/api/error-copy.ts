@@ -122,6 +122,38 @@ export const ERROR_COPY = {
     fallback: "generic",
   },
   /**
+   * 기수 모집 지원서 제출/수정 (`POST /cohorts/:id/applications`, `PATCH /cohorts/applications/:id`): `recruit/CohortApplicationForm.tsx`.
+   * 코드 외 상태 규칙(네트워크 → `network`, 401 → `session`, 400/422 → `invalid`)은 `lib/cohort-errors.ts cohortApplyErrorKey`가 소유한다.
+   * 온보딩 미완료는 기존 `PROFILE_REQUIRED`(409).
+   */
+  cohortApply: {
+    messages: "recruit.form.saveErrors",
+    codes: [
+      "PROFILE_REQUIRED", "COHORT_NOT_FOUND", "COHORT_NOT_ACCEPTING", "COHORT_ALREADY_APPLIED", "COHORT_APPLICATION_NOT_FOUND",
+      "COHORT_APPLICATION_NOT_SUBMITTED", "COHORT_OTHER_DETAIL_REQUIRED", "INVALID_CHARACTER", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS",
+    ],
+    fallback: "generic",
+  },
+  /** 내 기수 지원서 철회 (`POST /cohorts/applications/:id/withdraw`): `recruit/CohortApplicationCard.tsx` (이 코드면 목록도 새로고침한다) */
+  cohortWithdraw: {
+    messages: "recruit.mine.withdrawErrors",
+    codes: ["COHORT_APPLICATION_NOT_FOUND", "COHORT_APPLICATION_NOT_SUBMITTED", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS"],
+    fallback: "generic",
+  },
+  /**
+   * 운영자 기수 모집 콘솔 쓰기/심사/내보내기: `admin/RecruitmentManager.tsx`, `admin/CohortApplicationsPanel.tsx`.
+   * 401/429는 `lib/cohort-errors.ts cohortAdminErrorKey`가 상태로 정규화한다.
+   */
+  adminCohort: {
+    messages: "admin.recruitment.errors",
+    codes: [
+      "COHORT_NOT_FOUND", "COHORT_ALREADY_OPEN", "COHORT_HAS_APPLICATIONS", "COHORT_INVALID_WINDOW", "COHORT_INVALID_TRANSITION",
+      "COHORT_APPLICATION_NOT_FOUND", "COHORT_APPLICATION_WITHDRAWN", "INVALID_CHARACTER", "INVALID_DATE", "DATABASE_UNAVAILABLE",
+      "ADMIN_ONLY", "UNAUTHORIZED", "TOO_MANY_REQUESTS",
+    ],
+    fallback: "generic",
+  },
+  /**
    * 로그인 콜백의 `#error=<CODE>` — `lib/api/oauth.ts` → `app/[locale]/auth/callback/page.tsx`. BE는 로그인 시작 실패(`GET /auth/google`)의
    * `TURNSTILE_FAILED`/`TURNSTILE_UNAVAILABLE`과 콜백 중 DB 장애 `DATABASE_UNAVAILABLE`을 `#error=`로 돌려보낸다
    * (BE `START_FAILURE_CODES`). 그 밖의 실패는 `AUTH_FAILED` → 일반 문구 `failedBody`.
