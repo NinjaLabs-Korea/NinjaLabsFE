@@ -21,10 +21,10 @@ import { alive, reapStale, reapDir, writePids, TMP_PREFIX } from './lib/reaper.m
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FE_DIR = path.resolve(HERE, '..');
 // Flow 10 runs last: it leaves an open payout on the funded bounty B1.
-const ALL_FLOWS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'];
+const ALL_FLOWS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14'];
 const FLOW_TIMEOUT_MS = 6 * 60_000;
 /** Flows 12 (recruitment lifecycle across four sessions) and 13 (every community screen at three widths, screenshots included) get a longer budget. */
-const flowTimeoutMs = (script) => (/flow13\.mjs$/.test(script) ? 20 * 60_000 : /flow12\.mjs$/.test(script) ? 12 * 60_000 : FLOW_TIMEOUT_MS);
+const flowTimeoutMs = (script) => (/flow14\.mjs$/.test(script) ? 75 * 60_000 : /flow13\.mjs$/.test(script) ? 20 * 60_000 : /flow12\.mjs$/.test(script) ? 12 * 60_000 : FLOW_TIMEOUT_MS);
 
 const env = process.env;
 const port = (name, def) => Number(env[`NINJA_IT_${name}_PORT`] ?? def);
