@@ -1,9 +1,5 @@
 // Sign-up UI copy lives in messages `signup`; this file holds keys, hrefs and mock fixtures.
 export const signup = {
-  login: {
-    // Keys under messages `signup.login.<mode>.edgeCases`.
-    edgeCaseKeys: ["first", "second"],
-  },
   profile: {
     // Mock-mode prefill (fixture content, not UI copy).
     nickname: "jaemin",

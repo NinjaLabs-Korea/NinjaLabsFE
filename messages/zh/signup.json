@@ -4,22 +4,12 @@
     "mock": {
       "title": "预览 Ninja Labs 登录流程",
       "description": "通过本地会话预览体验此步骤。不会连接 Google，也不会创建账户。",
-      "disclosure": "模拟模式仅用于本地测试。此预览不会连接 Google，也不会创建账户。",
-      "statusTitle": "边界情况",
-      "edgeCases": {
-        "first": "点击按钮仅会启动本地会话预览",
-        "second": "不会调用 Google 身份验证"
-      }
+      "disclosure": "模拟模式仅用于本地测试。此预览不会连接 Google，也不会创建账户。"
     },
     "api": {
       "title": "开始使用 Ninja Labs",
-      "description": "使用 Google 开始 — 无需安装钱包。",
-      "disclosure": "登录会创建或恢复你的 Ninja Labs 账户。我们只会获取你的 Google 邮箱，不会共享密码。",
-      "statusTitle": "边界情况",
-      "edgeCases": {
-        "first": "已登录用户点击“开始使用” → 前往首页。",
-        "second": "Google 登录被拒绝或失败 → 清除错误并重试。"
-      }
+      "description": "使用 Google 开始，无需安装钱包。",
+      "disclosure": "登录会创建或恢复你的 Ninja Labs 账户。我们只会获取你的 Google 邮箱，不会共享密码。"
     },
     "eyebrow": "创建账户"
   },

@@ -413,7 +413,7 @@
     "lifecycle": {
       "eyebrow": "Lifecycle",
       "title": "Status transitions",
-      "none": "No further transitions — this bounty is finished.",
+      "none": "No further transitions, this bounty is finished.",
       "to": "→ {status}",
       "actions": {
         "FUNDING_PENDING": "Mark funding pending",
@@ -495,7 +495,7 @@
       "repoLink": "Repository",
       "history": "Review history ({count})",
       "historyItem": "{decision} · rev {revision} · {date}",
-      "noWallet": "No linked wallet — a payout cannot be requested",
+      "noWallet": "No linked wallet, a payout cannot be requested",
       "decisions": {
         "START_REVIEW": "Start review",
         "REQUEST_REVISION": "Request revision",
@@ -623,7 +623,7 @@
       "PROCESSING": "Processing"
     },
     "hints": {
-      "FAILED": "Jobs that failed all 5 attempts. Fix the cause (gas, contract, wallet), then retry — the worker picks them up within a minute.",
+      "FAILED": "Jobs that failed all 5 attempts. Fix the cause (gas, contract, wallet), then retry, the worker picks them up within a minute.",
       "PENDING": "Queued or waiting for their next attempt (failed attempts retry every 10 minutes).",
       "PROCESSING": "Being minted right now. Jobs stuck here for 15 minutes are requeued automatically."
     },

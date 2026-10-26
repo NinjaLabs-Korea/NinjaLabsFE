@@ -15,16 +15,11 @@ import {
   LoginExchangeError,
 } from "@/lib/api/oauth";
 import { fetchMe, toClientUser } from "@/lib/api/me";
+import { getOnboardingPath } from "@/lib/auth-route";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
 import { stripLocale, withLocaleOf } from "@/i18n/routing";
 
-export function getOnboardingPath(user: AuthSnapshot["user"]): string | null {
-  if (!user || user.onboardingCompleted) return null;
-  const step = user.onboardingStep ?? 2;
-  if (step <= 2) return "/signup/wallet";
-  if (step === 3) return "/signup/profile";
-  return "/signup/get-started";
-}
+export { getOnboardingPath };
 
 export function shouldRedirectToOnboarding(
   user: AuthSnapshot["user"],

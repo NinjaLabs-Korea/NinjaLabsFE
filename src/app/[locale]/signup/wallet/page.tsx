@@ -5,7 +5,7 @@ import { SignupGate } from "@/components/signup/SignupGate";
 import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
 import { Badge } from "@/components/ui/Badge";
-import { StepIndicator } from "@/components/ui/StepIndicator";
+import { SignupStepIndicator } from "@/components/signup/SignupStepIndicator";
 import { Link } from "@/i18n/navigation";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { composeFoundationRuntime } from "@/lib/runtime/config";
@@ -37,10 +37,10 @@ export default async function SignupWalletPage({ params }: PageProps<"/[locale]/
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="mx-auto max-w-[1024px]">
         <div>
-          <StepIndicator current={2} />
+          <SignupStepIndicator current={2} />
         </div>
         <div className="mt-6">
-          <SignupGate>
+          <SignupGate step={2}>
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
               <article className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] lg:col-span-3">
                 <div className="text-center">

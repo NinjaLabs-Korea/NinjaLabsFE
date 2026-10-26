@@ -4,22 +4,12 @@
     "mock": {
       "title": "Preview the Ninja Labs sign-in flow",
       "description": "Explore this step with a local session preview. It does not contact Google or create an account.",
-      "disclosure": "Mock mode is local and test only. This preview does not contact Google or create an account.",
-      "statusTitle": "Edge cases",
-      "edgeCases": {
-        "first": "Selecting the button starts a local session preview only",
-        "second": "Google authentication is not invoked"
-      }
+      "disclosure": "Mock mode is local and test only. This preview does not contact Google or create an account."
     },
     "api": {
       "title": "Get started with Ninja Labs",
-      "description": "Start with Google — no wallet install needed.",
-      "disclosure": "Signing in creates or restores your Ninja Labs account. We only receive your Google email. No password is shared.",
-      "statusTitle": "Edge cases",
-      "edgeCases": {
-        "first": "Already signed-in user clicks Get Started → go to main.",
-        "second": "Google sign-in declined or failed → clear error and retry."
-      }
+      "description": "Start with Google, no wallet install needed.",
+      "disclosure": "Signing in creates or restores your Ninja Labs account. We only receive your Google email. No password is shared."
     },
     "eyebrow": "Create account"
   },
@@ -111,7 +101,7 @@
         "generic": "We couldn't save your profile. Please try again.",
         "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
       },
-      "nicknameHint": "2–50 characters: letters, digits, _ . - — starting and ending with a letter or digit.",
+      "nicknameHint": "2–50 characters: letters, digits, _ . -; starting and ending with a letter or digit.",
       "nicknameErrors": {
         "tooShort": "Use at least 2 characters.",
         "tooLong": "Use at most 50 characters.",

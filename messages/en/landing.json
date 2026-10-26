@@ -6,6 +6,7 @@
     "description": "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.",
     "getStarted": "Get Started",
     "browseBounties": "Browse Bounties",
+    "continueSignup": "Continue sign-up",
     "portfolioMeta": "Ninja NFT · member since {year}",
     "next": "+ next",
     "portfolioSummary": "{count, plural, one {# bounty completed} other {# bounties completed}} · a growing on-chain portfolio"

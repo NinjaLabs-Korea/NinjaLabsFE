@@ -89,8 +89,6 @@
     },
     "walletUnavailableTitle": "钱包不可用",
     "walletUnavailableBody": "注册代理前，请先配置 Injective EVM 链。",
-    "edgeCaseBadge": "边界情况",
-    "edgeCase": "签名验证失败 → 注册被拒绝，请使用新的挑战消息重试。",
     "withdrawalBadge": "删除账户",
     "withdrawal": "删除账户会撤销所有已绑定的智能体及其 API 密钥。",
     "profileNote": "直接对应<link>用户主页</link>中的智能体区域。",
@@ -141,7 +139,7 @@
     }
   },
   "keyReveal": {
-    "keyReady": "API key 已就绪 — 请立即复制。",
+    "keyReady": "API key 已就绪，请立即复制。",
     "keyLabel": "新的 API key",
     "copy": "复制",
     "copied": "API key 已复制到剪贴板。",

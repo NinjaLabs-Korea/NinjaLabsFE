@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SignupGate } from "@/components/signup/SignupGate";
 import { ProfileForm } from "@/components/signup/ProfileForm";
-import { StepIndicator } from "@/components/ui/StepIndicator";
+import { SignupStepIndicator } from "@/components/signup/SignupStepIndicator";
 import { signup } from "@/lib/signup";
 import { localeAlternates } from "@/i18n/alternates";
 
@@ -26,10 +26,10 @@ export default async function SignupProfilePage({ params }: PageProps<"/[locale]
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="mx-auto max-w-[1024px]">
         <div>
-          <StepIndicator current={3} />
+          <SignupStepIndicator current={3} />
         </div>
         <div className="mt-6">
-          <SignupGate>
+          <SignupGate step={3}>
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
               <section className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] lg:col-span-3">
                 <div className="text-center">

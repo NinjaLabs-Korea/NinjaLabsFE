@@ -7,6 +7,7 @@ import { emptyHallOfFame, getRuntimeHallOfFame, type HallStatKey } from './hall-
 // CTA `labelKey` and stat `labelKey` resolve there and under `hallOfFame.stats`.
 type LandingData = {
   hero: {
+    /** Signed-out label; `StartLink` swaps the target and label by auth state (`lib/auth-route.ts`). */
     primaryCta: { labelKey: 'getStarted'; href: string };
     secondaryCta: { labelKey: 'browseBounties'; href: string };
     stats: Array<{ value: string; labelKey: HallStatKey }>;

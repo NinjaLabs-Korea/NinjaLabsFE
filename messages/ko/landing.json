@@ -6,6 +6,7 @@
     "description": "Injective 생태계를 위한 빌더 커뮤니티이자 바운티 마켓플레이스입니다. 완료한 작업마다 온체인 NFT가 발행되고, 이 NFT들이 모여 온전히 내 것인 포트폴리오가 됩니다.",
     "getStarted": "시작하기",
     "browseBounties": "바운티 둘러보기",
+    "continueSignup": "가입 이어서 하기",
     "portfolioMeta": "Ninja NFT · {year}년부터 멤버",
     "next": "+ 다음",
     "portfolioSummary": "바운티 {count}개 완료 · 계속 성장하는 온체인 포트폴리오"

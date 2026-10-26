@@ -125,6 +125,10 @@
     "accountDeleted": {
       "title": "你的账户已删除",
       "description": "你已退出登录。你可以随时使用同一个 Google 账户重新注册。"
+    },
+    "signInRequired": {
+      "title": "请先登录",
+      "description": "注册从 Google 登录开始。请先登录，再连接钱包并设置个人资料。"
     }
   }
 }

@@ -413,7 +413,7 @@
     "lifecycle": {
       "eyebrow": "라이프사이클",
       "title": "상태 전이",
-      "none": "더 이상 전이할 수 없습니다 — 종료된 바운티입니다.",
+      "none": "더 이상 전이할 수 없습니다, 종료된 바운티입니다.",
       "to": "→ {status}",
       "actions": {
         "FUNDING_PENDING": "입금 대기로 전환",
@@ -495,7 +495,7 @@
       "repoLink": "저장소",
       "history": "심사 기록 ({count})",
       "historyItem": "{decision} · 리비전 {revision} · {date}",
-      "noWallet": "연결된 지갑 없음 — 지급을 요청할 수 없습니다",
+      "noWallet": "연결된 지갑 없음, 지급을 요청할 수 없습니다",
       "decisions": {
         "START_REVIEW": "심사 시작",
         "REQUEST_REVISION": "수정 요청",
@@ -547,7 +547,7 @@
       "txHash": "거래 해시",
       "txHashInvalid": "32바이트 16진수 거래 해시를 입력하세요(16진수 64자, 0x는 선택).",
       "amountInvalid": "토큰이 지원하는 소수 자릿수 이내의 양수 {symbol} 금액을 입력하세요.",
-      "amountHint": "토큰 단위(예: 12.5) — 전송 전에 최소 단위로 변환됩니다.",
+      "amountHint": "토큰 단위(예: 12.5), 전송 전에 최소 단위로 변환됩니다.",
       "noteOptional": "메모(선택)",
       "commentOptional": "코멘트(선택)",
       "commentRequired": "코멘트(필수)"

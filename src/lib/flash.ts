@@ -7,7 +7,7 @@
 export const FLASH_STORAGE_KEY = "ninja.flash";
 export const FLASH_EVENT = "ninja:flash";
 
-export const flashKeys = ["accountDeleted"] as const;
+export const flashKeys = ["accountDeleted", "signInRequired"] as const;
 export type FlashKey = (typeof flashKeys)[number];
 
 const isFlashKey = (value: unknown): value is FlashKey => flashKeys.includes(value as FlashKey);

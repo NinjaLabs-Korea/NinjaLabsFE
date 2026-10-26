@@ -30,6 +30,8 @@ vi.mock("@/lib/members", async (importOriginal) => ({
   getRuntimeProfile: async () => data.profile,
 }));
 vi.mock("@/lib/api/public", () => ({ loadFromRuntime: async ({ mock }: { mock: () => unknown }) => mock() }));
+vi.mock("@/components/auth/FoundationProvider", async () =>
+  (await import("./support/foundation")).foundationMock({ useAuthSnapshot: () => ({ status: "signed-out", user: null }) }));
 vi.mock("@/lib/landing", () => ({ getRuntimeLanding: async () => data.landing }));
 
 const { default: MemberProfilePage } = await import("@/app/[locale]/members/[id]/page");

@@ -253,7 +253,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         )}
       </div>
 
-      {auth.status !== "signed-in" ? (
+      {auth.status === "signed-out" ? (
         <p className="mt-3 text-sm text-danger" role="alert">{t("signInRequired")}</p>
       ) : null}
       {isOwnerWallet ? (
