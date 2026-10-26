@@ -83,6 +83,14 @@ describe("AccountSettingsView", () => {
     expect(screen.getByText(/session has expired/)).toBeTruthy();
   });
 
+  it("says the session could not be checked (not 'sign in') when the restore failed transiently", () => {
+    state.auth = { status: "signed-out", user: null, reason: "unavailable" };
+    renderWithIntl(<AccountSettingsView />);
+    expect(screen.getByText("We can't check your sign-in right now.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Get Started" })).toBeNull();
+  });
+
   it("keeps the confirm action disabled until the nickname is typed (trimmed, case-insensitive)", () => {
     renderWithIntl(<AccountSettingsView />);
     expect(screen.getByText("jaemin.inj")).toBeTruthy();

@@ -6,6 +6,7 @@ import {
   discardLegacyTokens,
   endLocalSession,
   type ApiHttp,
+  type RefreshResult,
 } from "@/lib/api/http";
 import {
   createLoginChallenge,
@@ -14,7 +15,7 @@ import {
   isAuthCallbackPath,
   LoginExchangeError,
 } from "@/lib/api/oauth";
-import { fetchMe, toClientUser } from "@/lib/api/me";
+import { fetchMe, readMe, toClientUser } from "@/lib/api/me";
 import { pushFlash } from "@/lib/flash";
 import { getOnboardingPath, HOME_PATH } from "@/lib/auth-route";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
@@ -70,14 +71,21 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
   const events = createAuthEventBus();
   const http = createApiHttp(apiUrl, { onSessionEnded: endSignedInSession, broadcast: events.broadcast });
 
-  async function restoreSession(): Promise<AuthSnapshot> {
+  async function restoreSession(init?: RefreshResult): Promise<AuthSnapshot> {
     onboardingLog("session.restore.started", {
       path: typeof window === "undefined" ? "server" : window.location.pathname,
       hasSession: http.hasSession(),
     });
-    const me = await fetchMe(http);
+    const { me, unavailable } = await readMe(http);
+    // The session could not be checked (refresh/me answered 5xx or 429, or the network failed): the cookie is kept, so say
+    // "unavailable" instead of "signed out" (a reload after the BE recovers restores the session).
+    const couldNotCheck = !me && (unavailable || (init?.ok === false && init.reason === "unavailable"));
     const restored = setSnapshot(
-      me ? { status: "signed-in", user: toClientUser(me) } : { status: "signed-out", user: null },
+      me
+        ? { status: "signed-in", user: toClientUser(me) }
+        : couldNotCheck
+          ? { status: "signed-out", user: null, reason: "unavailable" }
+          : { status: "signed-out", user: null },
     );
     onboardingLog("session.restore.completed", {
       status: restored.status,
@@ -172,21 +180,22 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     // Any page load other than the OAuth callback means the sign-in that stored a PKCE verifier was abandoned.
     if (!isAuthCallbackPath(window.location.pathname)) discardLoginVerifier();
     void (async () => {
+      let init: RefreshResult | undefined;
       if (await exchangeLoginCodeFromLocation()) {
         // A fresh login supersedes any token a pre-cookie build left behind.
         discardLegacyTokens();
         events.broadcast("signed-in");
       } else {
-        await http.initSession();
+        init = await http.initSession();
       }
-      return restoreSession();
+      return restoreSession(init);
     })().then(leaveCallbackOrOnboard).catch((error: unknown) => {
       // 교환이 실패해도(만료, 이미 사용, 다른 탭이 먼저 소비) 공유 쿠키의 기존 세션은 건드리지 않는다. 같은 링크를 연
       // 두 탭 중 진 쪽이 이긴 쪽의 세션을 폐기하면 안 된다. 세션이 없으면 아래 복원이 signed-out으로 끝나고 콜백 페이지가
       // 실패 화면을 보여 준다.
       onboardingLog("oauth.exchange.failed", { attempted: error instanceof LoginExchangeError && error.attempted });
       return http.initSession()
-        .then(() => restoreSession())
+        .then((init) => restoreSession(init))
         // The restored session still has to leave the callback page (it shows a spinner for a signed-in user).
         .then((restored) => {
           leaveCallbackOrOnboard(restored);

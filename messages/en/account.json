@@ -4,7 +4,9 @@
     "unavailableBody": "We couldn’t reach the server. Please try again shortly.",
     "mockNote": "Session preview: demo data, resets on reload.",
     "loading": "Loading your account…",
-    "sessionExpired": "Your session has expired. Sign in again to continue."
+    "sessionExpired": "Your session has expired. Sign in again to continue.",
+    "sessionUnavailableTitle": "We can't check your sign-in right now.",
+    "retry": "Try again"
   },
   "signedOut": {
     "body": "Sign in with Google to see your account.",
