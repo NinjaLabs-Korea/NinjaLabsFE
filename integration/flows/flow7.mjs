@@ -5,7 +5,7 @@
 // B) two tabs of one context reload at the same moment -> both signed in, every refresh 200, no logout, no
 //    reuse-detection revocation. C) same with each refresh held 1.5 s at the network layer (Web Locks serialize them).
 import { Browser, report, ORIGIN } from '../lib/cdp.mjs';
-import { sql, ids, seed, check, clean, done, sleep, signIn, signedInHeader, rtCookie, storageDump, hasToken, H, API } from '../lib/harness.mjs';
+import { fillWhenReady, sql, ids, seed, check, clean, done, sleep, signIn, signedInHeader, rtCookie, storageDump, hasToken, H, API } from '../lib/harness.mjs';
 const BUILDER = ids.BUILDER;
 const refreshes = (p) => p.requests.filter((r) => r.url === ORIGIN + '/api/auth/refresh' && r.method === 'POST').map((r) => r.status);
 const logouts = (p) => p.requests.filter((r) => r.url.endsWith('/auth/logout'));
@@ -37,8 +37,8 @@ const b = await Browser.connect();
   check('DB: rotation revoked the login row and created one live successor', sql(`select (revoked_at is not null)::text from auth_session where refresh_token_hash=${H(c.value)}`) === 'true' &&
     sql(`select count(*) from auth_session where prev_refresh_token_hash=${H(c.value)} and refresh_token_hash=${H(c2.value)} and revoked_at is null`) === '1');
   // access-token expiry during an action
-  await p.goto(`/en/bounties/${seed.B2}`); await p.waitFor(`!!document.querySelector('form input[name=submissionUrl]')`, 8000);
-  await p.fill('form input[name=submissionUrl]', 'https://github.com/builderone/tutorial'); await p.fill('form textarea[name=description]', 'Tutorial written.');
+  await p.goto(`/en/bounties/${seed.B2}`); const formReady = await fillWhenReady(p, 'form input[name=submissionUrl]', 'https://github.com/builderone/tutorial', 'A: submit form');
+  if (formReady) await p.fill('form textarea[name=description]', 'Tutorial written.');
   console.log('waiting 65 s for the 60 s access token to expire');
   await sleep(65000); p.reset();
   await p.click('css:form button[type=submit]'); await sleep(2500); await p.idle();
