@@ -89,7 +89,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["apply bounty, no application yet", { applicationRequired: true }, { kind: "applyForm" }],
   ["apply bounty, no application, reviewing", { applicationRequired: true, status: "reviewing" }, { kind: "closed", reason: "reviewing" }],
   ["apply bounty, no application, closed", { applicationRequired: true, status: "closed" }, { kind: "closed", reason: "closed" }],
-  ["apply bounty past its application deadline, no application yet", { applicationRequired: true, applicationClosed: true }, { kind: "closed", reason: "closed" }],
+  ["apply bounty past its application deadline, no application yet", { applicationRequired: true, applicationClosed: true }, { kind: "closed", reason: "applications" }],
   ["apply bounty past its application deadline, approved applicant still submits", { applicationRequired: true, applicationClosed: true, applications: loaded([app("approved")]) }, firstSubmit],
   ["rows for other bounties do not count", { applicationRequired: true, applications: loaded([app("approved", null, "other")]) }, { kind: "applyForm" }],
   ["application rejected", { applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
@@ -102,6 +102,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["application approved → submit form", { applicationRequired: true, applications: loaded([app("approved")]) }, firstSubmit],
   ["application approved, bounty reviewing, nothing submitted", { applicationRequired: true, status: "reviewing", applications: loaded([app("approved")]) }, { kind: "closed", reason: "reviewing" }],
   ["pending application on an ended bounty (completed/cancelled) is shown as closed", { applicationRequired: true, status: "closed", applications: loaded([app("open")]) }, { kind: "closed", reason: "closed" }],
+  ["pending application on a bounty that moved to SUBMISSION_CLOSED / IN_REVIEW can no longer unlock a submission", { applicationRequired: true, status: "reviewing", applications: loaded([app("open")]) }, { kind: "closed", reason: "reviewing" }],
   ["pending application on a bounty closed only by its deadline is still under review", { applicationRequired: true, status: "closed", deadlinePassed: true, applications: loaded([app("open")]) }, { kind: "applicationUnderReview" }],
   // 7. 확정된 제출
   ["submission approved", { submissions: loaded([sub("approved")]) }, { kind: "submissionApproved" }],

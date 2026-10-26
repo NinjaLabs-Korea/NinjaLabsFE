@@ -11,8 +11,8 @@
  *  3. 세션 확인 중 → `checkingSession`, 비로그인 → `signedOut`
  *  4. 내 제출(+지원 필요 바운티면 내 지원) 조회 중 → `checkingStatus`, 조회 실패 → `statusUnavailable`
  *  5. 내 직접 행은 없고 에이전트가 만든 행만 있음 → `agentRow` (직접 지원/제출 폼을 띄우지 않는다)
- *  6. 지원 필요 바운티: 지원 전 → `applyForm`(진행 중이고 지원 마감 전일 때만, 아니면 `closed`) / 거절 → `applicationRejected` /
- *     방금 지원했거나 심사 중(`open`) → `applicationUnderReview`(바운티가 완료/취소로 끝났으면 `closed`) / 승인 등 → 7로 내려간다
+ *  6. 지원 필요 바운티: 지원 전 → `applyForm`(진행 중이고 지원 마감 전일 때만, 지원 마감만 지났으면 `closed`+`applications`, 그 밖엔 `closed`) / 거절 → `applicationRejected` /
+ *     방금 지원했거나 심사 중(`open`) → `applicationUnderReview`(바운티가 완료/취소로 끝났거나 제출이 닫혀 심사 중이면 `closed`) / 승인 등 → 7로 내려간다
  *  7. 제출 승인 → `submissionApproved`, 제출 거절 → `submissionRejected`
  *  8. 진행 중이 아니고 수정 요청도 아님 → 심사 중인 제출이 있으면 `inReviewLocked`, 없으면 `closed`
  *  9. 나머지 → `submitForm` (처음 제출 / 심사 중 수정 / 수정 요청 재제출)
@@ -63,8 +63,11 @@ export type BountyActionInput = {
 };
 
 export type BountyActionView =
-  /** 새 지원/제출을 받지 않음. `reason`이 본문 문구를 고른다 (`reviewingBody` / `closedBody`). */
-  | { kind: "closed"; reason: "reviewing" | "closed" }
+  /**
+   * 새 지원/제출을 받지 않음. `reason`이 제목·본문 문구를 고른다 (`reviewingBody` / `closedBody` / `applicationsClosedBody`).
+   * `applications`: 지원 마감만 지났다 (제출 마감 전, 승인된 지원자는 계속 제출할 수 있다): "bounty closed"라고 말하면 거짓이다.
+   */
+  | { kind: "closed"; reason: "reviewing" | "closed" | "applications" }
   /** 에이전트 전용 바운티 — `POST /agent-api/v1/bounties/{id}/{endpoint}` 안내 */
   | { kind: "agentMode"; endpoint: "applications" | "submissions" }
   | { kind: "checkingSession" }
@@ -170,13 +173,17 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
 
   // 6. 지원 단계 (승인된 지원 등은 제출 단계로 내려간다)
   if (applicationRequired) {
-    if (!application && !applied) return acceptingNew && !applicationClosed ? { kind: "applyForm" } : closed;
+    if (!application && !applied) {
+      if (!acceptingNew) return closed;
+      return applicationClosed ? { kind: "closed", reason: "applications" } : { kind: "applyForm" };
+    }
     if (application?.status === "rejected") return application.reviewNote ? { kind: "applicationRejected", note: application.reviewNote } : { kind: "applicationRejected" };
     // `applied` only bridges the gap until the server row arrives; a row that already moved on (approved...) wins.
     if (application ? application.status === "open" : applied) {
       // A pending application on a bounty that ended (COMPLETED / CANCELLED; not merely past its deadline, where the sponsor can still decide)
       // can never be reviewed: say the bounty is closed instead of promising "submission unlocks after approval".
-      return application && status === "closed" && !deadlinePassed ? closed : { kind: "applicationUnderReview" };
+      // Same for a bounty that moved on to SUBMISSION_CLOSED / IN_REVIEW (`reviewing`): approval could no longer unlock a submission.
+      return application && (status === "reviewing" || (status === "closed" && !deadlinePassed)) ? closed : { kind: "applicationUnderReview" };
     }
   }
 
