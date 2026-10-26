@@ -50,7 +50,7 @@ export const BE_ERROR_CODES = [
   "INVALID_AGENT_WALLET_ADDRESS", // 400 — 에이전트 지갑 주소 형식이 올바르지 않다
   "AGENT_PUBLIC_KEY_REQUIRED", // 400 — 에이전트 공개키가 필요하다
   "AGENT_PUBLIC_KEY_MISMATCH", // 400 — inj1 에이전트의 공개키가 그 지갑 주소의 키가 아니다
-  "AGENT_WALLET_IS_OWNER_WALLET", // 400 — 에이전트 지갑이 소유자 본인의 연결 지갑과 같다 (전용 에이전트 지갑을 써야 한다)
+  "AGENT_WALLET_IS_OWNER_WALLET", // 400 - 에이전트 지갑이 소유자 본인의 연결 지갑과 같다 (전용 에이전트 지갑을 써야 한다)
   "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED", // 409 — 같은 공개키 또는 지갑으로 이미 등록된 에이전트가 있다
   "AGENT_NOT_FOUND", // 404 — 내 에이전트가 아니거나 없다
   "AGENT_ALREADY_VERIFIED", // 409 — 이미 검증이 끝난 에이전트다
