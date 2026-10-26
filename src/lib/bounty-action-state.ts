@@ -73,7 +73,7 @@ export type BountyActionView =
   | { kind: "checkingStatus" }
   | { kind: "statusUnavailable" }
   /**
-   * 에이전트만 이 바운티에 참여함 — `row`는 에이전트가 제출까지 했는지(우선) 지원만 했는지, `state`는 그 행의 진행 상태.
+   * 에이전트만 이 바운티에 참여함. `row`는 에이전트가 제출까지 했는지(우선) 지원만 했는지, `state`는 그 행의 진행 상태.
    * `review`: 심사자 코멘트(수정 요청·거절·몰수), `payout`: 승인된 제출의 지급 상태. 없으면 생략.
    */
   | { kind: "agentRow"; agentName: string; row: "submission" | "application"; state: AgentRowState; review?: ReviewNote; payout?: PayoutStatus }
