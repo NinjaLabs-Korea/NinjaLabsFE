@@ -50,7 +50,7 @@ describe("nickname rule (mirror of BE users/nickname.ts)", () => {
   );
 
   it("counts length in code points like validator isLength (astral letters are one character)", () => {
-    const astral = "𝐀"; // U+1D400 MATHEMATICAL BOLD CAPITAL A: \p{L}, two UTF-16 code units
+    const astral = "𠮷"; // U+20BB7 CJK ideograph (not in the banned U+1D400 math block): \p{L}, two UTF-16 code units
     expect(astral.length).toBe(2);
     expect(nicknameLength(astral)).toBe(1);
     expect(validateNickname(astral)).toBe("tooShort");
@@ -121,5 +121,28 @@ describe("nicknameInitials", () => {
     expect(nicknameInitials("jaemin.inj")).toBe("JA");
     expect(nicknameInitials("a\u{1D400}bc")).toBe("A\u{1D400}");
     expect(nicknameInitials("\u{1D400}\u{1D401}\u{1D402}")).toBe("\u{1D400}\u{1D401}");
+  });
+});
+
+describe("BE look-alike rules (fullwidth, math alphanumerics, mixed scripts, confusable reserved words)", () => {
+  it.each(["ａbc12", "ＡＤＭＩＮ", "ａｄｍｉｎ", "𝐚bcd"])("rejects %p as lookalike, with a specific reason", (nickname) => {
+    expect(validateNickname(nickname)).toBe("lookalike");
+    expect(NICKNAME.test(nickname)).toBe(false);
+  });
+
+  it.each(["аdmin", "buіlderone", "αbc12"])("rejects %p as a Latin + Cyrillic/Greek mix", (nickname) => {
+    expect(validateNickname(nickname)).toBe("mixedScript");
+    expect(NICKNAME.test(nickname)).toBe(false);
+  });
+
+  it("still accepts single-script names and accented Latin", () => {
+    for (const nickname of ["Привет", "Αθήνα", "café1", "Ñandú"]) expect(validateNickname(nickname), nickname).toBeNull();
+  });
+
+  it("folds confusable letters before the reserved-word check", () => {
+    expect(isReservedNickname("аdmіn")).toBe(true);
+    expect(isReservedNickname("ＡＤＭＩＮ")).toBe(true);
+    expect(isReservedNickname("withdrawn_x")).toBe(true);
+    expect(isReservedNickname("adminx")).toBe(false);
   });
 });

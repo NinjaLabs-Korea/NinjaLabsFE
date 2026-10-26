@@ -107,6 +107,8 @@
         "tooLong": "Use at most 50 characters.",
         "reserved": "This word is reserved. Choose another nickname.",
         "chars": "Use only letters, digits, and _ . - (no spaces).",
+        "lookalike": "Full-width and math-style letters are not allowed. Use plain letters.",
+        "mixedScript": "Don't mix Latin letters with Cyrillic or Greek ones.",
         "edge": "Start and end with a letter or digit.",
         "staticExtension": "Nicknames can't end with a file extension like .js."
       },
