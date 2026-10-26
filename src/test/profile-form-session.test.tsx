@@ -32,7 +32,7 @@ describe("ProfileForm when the session ends mid-form", () => {
     const view = renderWithIntl(<ProfileForm />);
     fireEvent.change(screen.getByLabelText("Nickname*"), { target: { value: "ninja_dev" } });
     fireEvent.change(screen.getByLabelText(/^Bio/), { target: { value: "I build things" } });
-    state.auth = signedOut;
+    state.auth = { status: "signed-out", user: null, reason: "session-ended" };
     view.rerender(<ProfileForm />);
     expect((screen.getByLabelText("Nickname*") as HTMLInputElement).value).toBe("ninja_dev");
     expect((screen.getByLabelText(/^Bio/) as HTMLTextAreaElement).value).toBe("I build things");
@@ -46,6 +46,13 @@ describe("ProfileForm when the session ends mid-form", () => {
     renderWithIntl(<ProfileForm />);
     expect((screen.getByLabelText("Nickname*") as HTMLInputElement).value).toBe("ninja_dev");
     expect((screen.getByLabelText(/^Bio/) as HTMLTextAreaElement).value).toBe("I build things");
+  });
+
+  it("does not claim the session ended after a sign-out the user chose", () => {
+    const view = renderWithIntl(<ProfileForm />);
+    state.auth = signedOut;
+    view.rerender(<ProfileForm />);
+    expect(screen.queryByText("Your session has ended. Sign in again to continue.")).toBeNull();
   });
 
   it("shows no session message while signed in", () => {

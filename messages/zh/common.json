@@ -79,6 +79,7 @@
       "CHALLENGE_EXPIRED": "验证请求已过期或已被使用。请再次点击“验证钱包”并签署新消息。",
       "INVALID_SIGNATURE": "签名与该钱包不匹配。请使用已连接的地址签名后重试。",
       "WALLET_ALREADY_LINKED": "该钱包已关联到其他账户，或您的账户已有关联钱包。已关联的钱包无法在此更改。如果关联有误，或该钱包属于其他账户，请联系 Ninja Labs 团队。",
+      "AGENT_WALLET_IS_OWNER_WALLET": "此地址已被你的某个代理用作钱包。请为账户连接另一个个人钱包。",
       "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },
@@ -134,6 +135,10 @@
     "signOutFailed": {
       "title": "退出登录未完成",
       "description": "无法连接服务器结束会话，因此你仍处于登录状态。请检查网络后再次点击退出登录。"
+    },
+    "profileSaved": {
+      "title": "资料已保存",
+      "description": "你的修改已更新到账户和公开资料。"
     }
   }
 }

@@ -35,6 +35,7 @@ export const BE_ERROR_CODES = [
   "USER_NOT_FOUND", // 404 — 대상 유저가 없다 (탈퇴 포함)
   "PROFILE_REQUIRED", // 409 — 프로필(닉네임·자기소개·태그)을 저장하기 전에는 온보딩을 완료할 수 없다
   "NICKNAME_TAKEN", // 409 — 이미 사용 중인 닉네임이다
+  "NICKNAME_CHANGE_COOLDOWN", // 409 — 닉네임을 이미 정한 유저가 24시간 안에 또 바꾸려 했다 (마지막 변경 24시간 뒤에 다시 가능)
   "CONFIRM_NICKNAME_MISMATCH", // 400 — 탈퇴 확인용 닉네임 입력이 현재 닉네임과 다르다
   "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS", // 409 — 진행 중인 지급(payout)이 있어 탈퇴할 수 없다
   "WITHDRAWAL_BLOCKED_PENDING_REWARDS", // 409 — 입금 대기 중인 보상이 걸려 있어 탈퇴할 수 없다

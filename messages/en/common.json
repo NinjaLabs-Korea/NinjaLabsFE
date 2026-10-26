@@ -79,6 +79,7 @@
       "CHALLENGE_EXPIRED": "The verification request expired or was already used. Select Verify wallet again and sign the new message.",
       "INVALID_SIGNATURE": "The signature does not match this wallet. Sign with the connected address and try again.",
       "WALLET_ALREADY_LINKED": "This wallet is already linked to another account, or your account already has a wallet. A linked wallet cannot be changed here. If it is the wrong one, or it belongs to another account, contact the Ninja Labs team.",
+      "AGENT_WALLET_IS_OWNER_WALLET": "This address is already used as the wallet of one of your agents. Connect a different personal wallet for your account.",
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     },
@@ -134,6 +135,10 @@
     "signOutFailed": {
       "title": "Sign out did not complete",
       "description": "We could not reach the server to end your session, so you are still signed in. Check your connection and press Sign out again."
+    },
+    "profileSaved": {
+      "title": "Profile saved",
+      "description": "Your changes are now on your account and public profile."
     }
   }
 }

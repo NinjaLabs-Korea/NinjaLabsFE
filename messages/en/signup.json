@@ -87,12 +87,13 @@
         "tags": "Choose at least one field tag.",
         "bio": "Write a short intro.",
         "nicknameRejected": "The server rejected this nickname. Check the rules above.",
-        "bioRejected": "The server rejected this bio. Keep it under 1000 characters."
+        "bioRejected": "The server rejected this bio. Remove invisible or unusual characters and keep it under 1000 characters."
       },
       "saveErrors": {
         "network": "We couldn't save your profile. Check your connection and try again.",
         "session": "Your session has ended. Sign in again to continue.",
         "NICKNAME_TAKEN": "That nickname is already in use. Choose another one.",
+        "NICKNAME_CHANGE_COOLDOWN": "Nicknames can be changed once every 24 hours. Keep your current nickname for now and try again later.",
         "invalid": "Check every field: the nickname must be 2-50 characters, and a bio and field tag are required.",
         "INVALID_CHARACTER": "Your nickname or bio contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
         "REFERENCE_NOT_FOUND": "Your account record could not be found. Reload the page or sign in again.",

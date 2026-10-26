@@ -106,6 +106,9 @@ describe("ProfileForm in edit mode (account page)", () => {
     expect(refresh).toHaveBeenCalled();
     expect(assign).not.toHaveBeenCalled();
     expect(screen.getByText("Profile saved.")).toBeTruthy();
+    // The account page unmounts the form on onSaved, so the visible confirmation is the shell-level flash toast.
+    expect(window.sessionStorage.getItem("ninja.flash")).toBe("profileSaved");
+    window.sessionStorage.removeItem("ninja.flash");
     vi.unstubAllGlobals();
   });
 

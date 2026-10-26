@@ -60,6 +60,8 @@ export const ERROR_COPY = {
       "INVALID_SIGNATURE",
       // 409: 이 주소가 다른 계정에 연결됐거나, 내 계정에 이미 대표 지갑이 있다.
       "WALLET_ALREADY_LINKED",
+      // 400: 이 주소가 내 에이전트의 지갑이다. 개인 지갑은 에이전트 지갑과 달라야 한다.
+      "AGENT_WALLET_IS_OWNER_WALLET",
       "DATABASE_UNAVAILABLE",
       "TOO_MANY_REQUESTS",
     ],
@@ -118,7 +120,7 @@ export const ERROR_COPY = {
    */
   profileSave: {
     messages: "signup.profile.form.saveErrors",
-    codes: ["NICKNAME_TAKEN", "INVALID_CHARACTER", "REFERENCE_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS"],
+    codes: ["NICKNAME_TAKEN", "NICKNAME_CHANGE_COOLDOWN", "INVALID_CHARACTER", "REFERENCE_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS"],
     fallback: "generic",
   },
   /**

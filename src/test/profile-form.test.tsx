@@ -25,6 +25,7 @@ describe("ProfileForm nickname rule + availability check", () => {
     checkNickname.mockReset();
     completeProfile.mockReset();
     checkNickname.mockResolvedValue({ available: true });
+    sessionStorage.clear(); // the onboarding form keeps a draft of what was typed
   });
   afterEach(() => {
     vi.restoreAllMocks();
@@ -128,8 +129,45 @@ describe("ProfileForm nickname rule + availability check", () => {
     fireEvent.submit(nicknameInput().closest("form")!);
     await waitFor(() => expect(completeProfile).toHaveBeenCalledTimes(1));
     expect(await screen.findByText("The server rejected this nickname. Check the rules above.")).toBeTruthy();
-    expect(screen.getByText("The server rejected this bio. Keep it under 1000 characters.")).toBeTruthy();
+    expect(screen.getByText("The server rejected this bio. Remove invisible or unusual characters and keep it under 1000 characters.")).toBeTruthy();
     expect(nicknameInput().getAttribute("aria-describedby")).toContain("nickname-error");
+  });
+
+  it("says a rejected bio once: the inline hint only, no second form-level alert", async () => {
+    completeProfile.mockRejectedValue(new ApiHttpError(400, "VALIDATION_FAILED", ["bio must match /^x$/u regular expression"]));
+    renderWithIntl(<ProfileForm />);
+    typeNickname("ninja_dev");
+    fireEvent.click(screen.getByRole("button", { name: "Dev" }));
+    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "\u200b\u200b\u200b" } });
+    fireEvent.submit(nicknameInput().closest("form")!);
+    await screen.findByText(/Remove invisible or unusual characters/);
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+    expect(screen.queryByText(/Check every field/)).toBeNull();
+  });
+
+  it("explains the nickname change cooldown and does not mark the typed name as taken", async () => {
+    completeProfile.mockRejectedValue(new ApiHttpError(409, "NICKNAME_CHANGE_COOLDOWN"));
+    renderWithIntl(<ProfileForm />);
+    typeNickname("ninja_dev");
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Nickname is available."), { timeout: 1500 });
+    fireEvent.click(screen.getByRole("button", { name: "Dev" }));
+    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.submit(nicknameInput().closest("form")!);
+    expect((await screen.findByRole("alert")).textContent).toMatch(/once every 24 hours/);
+    expect(screen.getByRole("status").textContent).toBe("Nickname is available.");
+    expect(nicknameInput().getAttribute("aria-invalid")).toBeNull();
+  });
+
+  it("keeps what was typed when the form remounts (language switch, reload)", () => {
+    const first = renderWithIntl(<ProfileForm />);
+    typeNickname("ninja_dev");
+    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.click(screen.getByRole("button", { name: "Dev" }));
+    first.unmount();
+    renderWithIntl(<ProfileForm />);
+    expect(nicknameInput().value).toBe("ninja_dev");
+    expect((screen.getByLabelText("Bio*") as HTMLTextAreaElement).value).toBe("Builder");
+    expect(screen.getByRole("button", { name: "Dev" }).getAttribute("aria-pressed")).toBe("true");
   });
   it.each([
     ["INVALID_CHARACTER", "Your nickname or bio contains characters that cannot be saved (for example a NUL byte). Remove them and try again."],

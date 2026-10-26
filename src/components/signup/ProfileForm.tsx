@@ -10,6 +10,7 @@ import { validationFieldsFromError } from "@/lib/api/validation";
 import { Badge } from "@/components/ui/Badge";
 import { NICKNAME_MAX, NICKNAME_MIN, normalizeNickname, validateNickname } from "@/lib/nickname";
 import { PROFILE_BIO_MAX } from "@/lib/input-limits";
+import { pushFlash } from "@/lib/flash";
 import { signup } from "@/lib/signup";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
 import { withLocaleOf } from "@/i18n/routing";
@@ -99,7 +100,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   // on screen with the typed values and say so, instead of sending the user to the login page empty-handed.
   const [wasSignedIn, setWasSignedIn] = useState(false);
   if (signedInUser && !wasSignedIn) setWasSignedIn(true);
-  const sessionEnded = mode === "api" && wasSignedIn && auth.status === "signed-out";
+  const sessionEnded = mode === "api" && wasSignedIn && auth.status === "signed-out" && auth.reason === "session-ended";
   // Onboarding only: a draft left by an ended session pre-fills the form once the user is back.
   const [draft] = useState(() => (!editing && mode === "api" && typeof window !== "undefined" ? readDraft() : null));
   // Edit mode starts from what is saved; onboarding starts empty (mock mode prefills a demo profile).
@@ -136,9 +137,12 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
           ? "available"
           : "taken";
 
+  // Onboarding keeps what was typed for the whole step, not only after a session ended: a language switch (a new
+  // `[locale]` route) or a reload remounts the form, and the draft refills it. Cleared on a successful save.
   useEffect(() => {
-    if (sessionEnded && !editing) writeDraft({ nickname, bio, tags });
-  }, [sessionEnded, editing, nickname, bio, tags]);
+    if (editing || mode !== "api") return;
+    writeDraft(nickname || bio || tags.length > 0 ? { nickname, bio, tags } : null);
+  }, [editing, mode, nickname, bio, tags]);
 
   useEffect(() => {
     if (nicknameRuleError || isOwnNickname) return;
@@ -204,6 +208,8 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         setSaved(true);
         setState("idle");
         inFlight.current = false;
+        // The account page closes this form on `onSaved`, so an inline status would never be seen: confirm with a toast.
+        pushFlash("profileSaved");
         onSaved?.();
         return;
       }
@@ -222,8 +228,9 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
       });
       if (key === "NICKNAME_TAKEN") setNicknameCheck({ nickname: trimmedNickname, available: false });
       setSaveError(key);
-      // NICKNAME_TAKEN is already said by the status line under the field; a form-level alert would repeat it in other words.
-      setState(key === "NICKNAME_TAKEN" ? "idle" : "error");
+      // NICKNAME_TAKEN is already said by the status line under the field, and a 400 whose fields are named is said by
+      // those inline hints; a form-level alert would repeat it in other words (two alerts for one rejected bio).
+      setState(key === "NICKNAME_TAKEN" || (key === "invalid" && Object.keys(rejected).length > 0) ? "idle" : "error");
       inFlight.current = false;
     }
   };

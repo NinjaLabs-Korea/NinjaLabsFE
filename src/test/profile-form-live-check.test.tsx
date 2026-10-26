@@ -27,6 +27,7 @@ describe("ProfileForm nickname live check", () => {
   beforeEach(() => {
     checkNickname.mockReset();
     completeProfile.mockReset();
+    sessionStorage.clear(); // the onboarding form keeps a draft of what was typed
   });
 
   it("ignores a slow answer for a nickname the user has already changed", async () => {
