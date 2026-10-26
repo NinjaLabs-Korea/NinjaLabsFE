@@ -69,6 +69,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   const [published, setPublished] = useState(true);
   const [errors, setErrors] = useState<HighlightFieldErrors>({});
   const [saving, setSaving] = useState(false);
+  // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
+  const savingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminHighlight | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -142,7 +144,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving) return;
+    if (savingRef.current) return;
     // A freshly picked file replaces the stored image, so only the kept URL is checked.
     const stored = isEditing ? records.find((item) => item.id === mode) : undefined;
     const nextErrors = validateHighlightForm({ title, description, image: imageFile ? null : image, link, order }, stored && { image: stored.image, link: stored.link });
@@ -151,6 +153,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
       return;
     }
+    savingRef.current = true;
     setSaving(true);
     try {
       const uploadedImage = imageFile ? (await api.uploadAdminMedia(imageFile)).url : image;
@@ -177,6 +180,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }

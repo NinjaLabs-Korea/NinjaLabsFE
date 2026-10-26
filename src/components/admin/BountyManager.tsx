@@ -46,6 +46,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const [errors, setErrors] = useState<BountyFormErrors>({});
   const [originalDeadline, setOriginalDeadline] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
+  // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
+  const savingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminBounty | null>(null);
   // Bounties with a transition in flight: a second click would send the same target again and answer INVALID_TRANSITION right after the success toast.
   const transitioning = useRef(new Set<string>());
@@ -119,13 +121,14 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (saving) return;
+    if (savingRef.current) return;
     const nextErrors = validateBountyForm(form, { originalDeadline, editing });
     if (Object.values(nextErrors).some(Boolean)) {
       setErrors(nextErrors);
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("form.errors.summary") });
       return;
     }
+    savingRef.current = true;
     setSaving(true);
     try {
       const coverImage = coverFile ? (await api.uploadAdminMedia(coverFile)).url : form.coverImage;
@@ -140,6 +143,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
