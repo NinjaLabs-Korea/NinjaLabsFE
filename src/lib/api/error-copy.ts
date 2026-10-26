@@ -155,12 +155,12 @@ export const ERROR_COPY = {
   },
   /**
    * 로그인 콜백의 `#error=<CODE>` — `lib/api/oauth.ts` → `app/[locale]/auth/callback/page.tsx`. BE는 로그인 시작 실패(`GET /auth/google`)의
-   * `TURNSTILE_FAILED`/`TURNSTILE_UNAVAILABLE`과 콜백 중 DB 장애 `DATABASE_UNAVAILABLE`을 `#error=`로 돌려보낸다
+   * `TURNSTILE_FAILED`/`TURNSTILE_UNAVAILABLE`/`TOO_MANY_REQUESTS`(시작 한도)와 콜백 중 DB 장애 `DATABASE_UNAVAILABLE`을 `#error=`로 돌려보낸다
    * (BE `START_FAILURE_CODES`). 그 밖의 실패는 `AUTH_FAILED` → 일반 문구 `failedBody`.
    */
   loginCallback: {
     messages: "signup.authCallback.errors",
-    codes: ["TURNSTILE_FAILED", "TURNSTILE_UNAVAILABLE", "DATABASE_UNAVAILABLE"],
+    codes: ["TURNSTILE_FAILED", "TURNSTILE_UNAVAILABLE", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS"],
   },
   /** 운영자 콘솔 CRUD 저장/삭제/전이 토스트 — `lib/admin-helpers.ts adminErrorDescription` (fallback은 액션별 문구) */
   adminWrite: {

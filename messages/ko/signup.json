@@ -173,7 +173,8 @@
     "errors": {
       "TURNSTILE_FAILED": "봇 방지 확인을 통과하지 못했습니다. 로그인 페이지로 돌아가 확인을 다시 완료한 뒤 시도해 주세요.",
       "TURNSTILE_UNAVAILABLE": "봇 방지 확인 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 로그인해 주세요.",
-      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요."
+      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "TOO_MANY_REQUESTS": "로그인 시도가 너무 많습니다. 1분 정도 기다린 뒤 다시 시도해 주세요."
     },
     "backToSignIn": "로그인으로 돌아가기"
   }

@@ -44,6 +44,7 @@ describe("AuthCallbackPage #error mapping", () => {
     ["error=TURNSTILE_FAILED", "The bot check did not pass. Go back to the sign-in page, complete the check again and retry."],
     ["error=TURNSTILE_UNAVAILABLE", "The bot check service is temporarily unavailable. Please try signing in again in a moment."],
     ["error=DATABASE_UNAVAILABLE", "The service is temporarily unavailable. Please try again in a moment."],
+    ["error=TOO_MANY_REQUESTS", "Too many sign-in attempts. Wait a minute, then try again."],
     ["error=AUTH_FAILED", "Please try signing in again in this browser tab."],
     ["error=%3Cscript%3E", "Please try signing in again in this browser tab."],
   ])("shows the copy for #%s once the sign-in failed", async (fragment, copy) => {

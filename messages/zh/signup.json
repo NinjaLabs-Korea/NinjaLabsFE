@@ -173,7 +173,8 @@
     "errors": {
       "TURNSTILE_FAILED": "人机验证未通过。请返回登录页面，重新完成验证后再试。",
       "TURNSTILE_UNAVAILABLE": "人机验证服务暂时不可用，请稍后重新登录。",
-      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
+      "TOO_MANY_REQUESTS": "登录尝试次数过多，请等待一分钟后再试。"
     },
     "backToSignIn": "返回登录"
   }

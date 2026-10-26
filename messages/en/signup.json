@@ -173,7 +173,8 @@
     "errors": {
       "TURNSTILE_FAILED": "The bot check did not pass. Go back to the sign-in page, complete the check again and retry.",
       "TURNSTILE_UNAVAILABLE": "The bot check service is temporarily unavailable. Please try signing in again in a moment.",
-      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "TOO_MANY_REQUESTS": "Too many sign-in attempts. Wait a minute, then try again."
     },
     "backToSignIn": "Back to sign in"
   }
