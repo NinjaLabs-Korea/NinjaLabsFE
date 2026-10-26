@@ -39,14 +39,14 @@ export function UserMenu() {
         <span className="grid size-8 place-items-center rounded-full bg-primary-soft-border font-display text-[13px] font-bold text-primary-strong">
           {user.initials}
         </span>
-        <span className="text-sm font-semibold text-ink">{user.handle}</span>
+        <span className="max-w-[9rem] truncate text-sm font-semibold text-ink">{user.handle}</span>
         <span aria-hidden="true" className="text-xs text-ink-muted">{menu.open ? "▴" : "▾"}</span>
       </button>
 
       {menu.open ? (
         <div aria-label={t("accountNavigation")} className={`${menuPanelClass} w-56`} {...menu.menuProps}>
           <div className="border-b border-border px-3 pt-2.5 pb-2">
-            <p className="text-sm font-semibold text-ink">{user.handle}</p>
+            <p className="break-words text-sm font-semibold text-ink">{user.handle}</p>
             {user.walletAddress ? (
               <p className="whitespace-nowrap text-xs text-ink-muted" title={user.walletAddress}>
                 <span className="sr-only">{t("walletAddress", { wallet: user.walletAddress })}</span>

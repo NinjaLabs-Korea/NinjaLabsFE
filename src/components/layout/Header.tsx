@@ -31,7 +31,7 @@ export function Header() {
           <span className="hidden whitespace-nowrap font-display text-xl font-bold text-ink sm:inline">Ninja Labs</span>
         </Link>
 
-        <nav className="col-start-2 hidden gap-7 md:flex" aria-label={t("mainNavigation")}>
+        <nav className="col-start-2 hidden gap-7 lg:flex" aria-label={t("mainNavigation")}>
           <NavLinks links={links} variant="desktop" />
         </nav>
 
