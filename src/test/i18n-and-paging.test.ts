@@ -106,6 +106,15 @@ describe("public list paging", () => {
     expect(requested(request)[0]).toBe(`https://api.example/bounties?page=1&pageSize=${PUBLIC_PAGE_SIZE}`);
   });
 
+  it("reads every page through the Data Cache window, so list views do not each cost ceil(total/50) BE calls", async () => {
+    const request = stubPages(120);
+    await fetchAllPublicPages("/bounties");
+    for (const [, init] of request.mock.calls as Array<[string, RequestInit & { next?: { revalidate: number } }]>) {
+      expect(init.next).toEqual({ revalidate: 30 });
+      expect(init.cache).toBeUndefined();
+    }
+  });
+
   it("drops rows that shifted onto a later page while loading", async () => {
     stubPages(60, (page) => (page === 1 ? ["a", "b"] : ["b", "c"]));
     await expect(fetchAllPublicPages("/bounties")).resolves.toEqual([{ id: "a" }, { id: "b" }, { id: "c" }]);
