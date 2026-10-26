@@ -33,7 +33,13 @@ const applyStatuses = [
 export async function generateMetadata({ params }: BountyDetailPageProps): Promise<Metadata> {
   const { locale, id } = await params;
   const t = await getTranslations({ locale, namespace: "bounties.meta" });
-  const bounty = (await validateDetailId("bounties", id)) ? await getRuntimeBounty(id, locale) : undefined;
+  let bounty;
+  try {
+    bounty = (await validateDetailId("bounties", id)) ? await getRuntimeBounty(id, locale) : undefined;
+  } catch {
+    // BE outage: the render below throws into error.tsx; the 500 page still gets a title instead of none.
+    return { alternates: {}, title: t("unavailable") };
+  }
 
   if (!bounty) {
     return { alternates: {}, title: t("notFound") };

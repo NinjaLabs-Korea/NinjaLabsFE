@@ -9,6 +9,7 @@
       "description": "바로 제출할 수 있는 바운티도 있고, 제출 전에 스폰서 승인이 필요한 바운티도 있습니다."
     },
     "notFound": "페이지를 찾을 수 없음 | Ninja Labs",
+    "unavailable": "문제가 발생했습니다 | Ninja Labs",
     "detailTitle": "{title} | Ninja Labs"
   },
   "categories": {

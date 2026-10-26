@@ -9,6 +9,7 @@
       "description": "部分赏金可直接提交作品，另一些则需要赞助方批准后才能提交。"
     },
     "notFound": "页面未找到 | Ninja Labs",
+    "unavailable": "出了点问题 | Ninja Labs",
     "detailTitle": "{title} | Ninja Labs"
   },
   "categories": {
