@@ -251,7 +251,7 @@ describe("API auth adapter login handoff", () => {
   it("a failed exchange without any session ends signed-out and sends no logout", async () => {
     await createLoginChallenge();
     window.history.replaceState(null, "", "/en/auth/callback#loginCode=expired-code");
-    const request = vi.fn(async (_url: string) => new Response(null, { status: 401 }));
+    const request = vi.fn<(url: string) => Promise<Response>>(async () => new Response(null, { status: 401 }));
     vi.stubGlobal("fetch", request);
     const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
