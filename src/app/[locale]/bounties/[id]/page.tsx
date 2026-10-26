@@ -8,7 +8,7 @@ import { BountyAgentPanel } from "@/components/agents/BountyAgentPanel";
 import { BountyAccessBadges } from "@/components/bounties/BountyAccessBadges";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import { Markdown } from "@/components/ui/Markdown";
-import { isRewardUnset, RewardPill } from "@/components/ui/RewardPill";
+import { formatRewardAmount, isRewardUnset, RewardPill } from "@/components/ui/RewardPill";
 import { Link } from "@/i18n/navigation";
 import { getRuntimeBounty } from "@/lib/bounties";
 import { validateDetailId } from "@/lib/detail-id";
@@ -97,7 +97,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
-          <article className="rounded-card border border-border bg-surface p-[21px] shadow-card">
+          <article className="rounded-card border border-border bg-surface p-[21px] shadow-card [overflow-wrap:anywhere]">
             <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("detail.description")}</p>
             <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">{applicationRequired ? t("detail.descriptionHeadingApply") : t("detail.descriptionHeading")}</h2>
             {applicationRequired && bounty.applicationDescription ? (
@@ -147,11 +147,11 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
           ) : null}
         </div>
 
-        <aside className="space-y-5">
+        <aside className="min-w-0 space-y-5 [overflow-wrap:anywhere]">
           <section className="rounded-card border border-primary-soft-border bg-primary-soft p-[21px]">
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("detail.rewardInfo")}</p>
-              {rewards.map((reward) => <SponsorPaysPill key={reward.currency} label={t("detail.sponsorPays", { reward: isRewardUnset(reward) ? tReward("tbd") : `${format.number(reward.amount, { maximumFractionDigits: 6 })} ${reward.currency}` })} reward={reward} />)}
+              {rewards.map((reward) => <SponsorPaysPill key={reward.currency} label={t("detail.sponsorPays", { reward: isRewardUnset(reward) ? tReward("tbd") : `${formatRewardAmount(reward.amount, format.number)} ${reward.currency}` })} reward={reward} />)}
             </div>
             <ol className="mt-4 space-y-3">
               {(["flow", "token", "noSwap"] as const).map((note, index) => (
@@ -196,7 +196,7 @@ function SponsorPaysPill({ label, reward }: { label: string; reward: Reward }) {
 
 function MetaCell({ children, label }: { children: ReactNode; label: string }) {
   return (
-    <div className="rounded-tile border border-primary-soft-border bg-primary-soft p-4">
+    <div className="min-w-0 rounded-tile border border-primary-soft-border bg-primary-soft p-4 [overflow-wrap:anywhere]">
       <p className="text-sm font-bold text-ink">{label}</p>
       <div className="mt-2 flex flex-col gap-1 text-sm text-ink-muted">{children}</div>
     </div>

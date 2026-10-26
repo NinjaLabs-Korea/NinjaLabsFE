@@ -22,7 +22,9 @@ const linkClass = "font-semibold text-primary-strong underline underline-offset-
 const allowedElements = ["p", "a", "strong", "em", "ul", "ol", "li", "h2", "h3", "code", "pre", "blockquote", "br", "del"];
 
 export function Markdown({ children }: { children: string }) {
+  // `overflow-wrap: anywhere`: a long unbroken string (URL, inline code, link text) must wrap inside its card, not widen the page.
   return (
+    <div className="min-w-0 [overflow-wrap:anywhere]">
     <ReactMarkdown
       allowedElements={allowedElements}
       unwrapDisallowed
@@ -59,5 +61,6 @@ export function Markdown({ children }: { children: string }) {
     >
       {children}
     </ReactMarkdown>
+    </div>
   );
 }
