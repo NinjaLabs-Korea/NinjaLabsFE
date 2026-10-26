@@ -14,7 +14,7 @@ const notice = (slug: string, category: string, publishedAt: string, eventDate?:
 describe("getRuntimeCommunity", () => {
   afterEach(() => Object.values(sources).forEach((source) => source.mockReset()));
 
-  it("asks for the notices once, sorted by event date, and derives both the activities and the news from it", async () => {
+  it("asks for the notices once, sorted by event date, and derives the activities from it", async () => {
     sources.notices.mockResolvedValue([
       notice("e-new", "Events", "2026.05.01", "2026-09-01"),
       notice("e-old", "Events", "2026.08.01", "2026-01-01"),
@@ -28,7 +28,6 @@ describe("getRuntimeCommunity", () => {
     expect(sources.notices).toHaveBeenCalledTimes(1);
     expect(sources.notices).toHaveBeenCalledWith({ sort: "eventDate" });
     expect(community.events.map((item) => item.slug)).toEqual(["e-new", "e-old", "e-undated"]);
-    expect(community.news.map((item) => item.slug)).toEqual(["announce", "e-old", "e-new"]);
     expect(community.members).toHaveLength(4);
     expect(community.unavailable).toEqual({ notices: false, hall: false, members: false });
   });
@@ -39,7 +38,6 @@ describe("getRuntimeCommunity", () => {
     sources.members.mockRejectedValue(new Error("down"));
     const community = await getRuntimeCommunity("en");
     expect(community.events).toEqual([]);
-    expect(community.news).toEqual([]);
     expect(community.unavailable).toEqual({ notices: true, hall: false, members: true });
   });
 });

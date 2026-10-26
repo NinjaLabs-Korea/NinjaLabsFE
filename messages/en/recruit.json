@@ -209,5 +209,8 @@
     "unavailable": "Your applications are temporarily unavailable.",
     "retry": "Try again",
     "empty": "You have not applied to a cohort yet."
+  },
+  "heroCta": {
+    "apply": "Apply to join {name}"
   }
 }

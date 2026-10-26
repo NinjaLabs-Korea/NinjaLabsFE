@@ -7,12 +7,12 @@ import { AchievementsSection } from "@/components/community/AchievementsSection"
 import { ActivitiesSection } from "@/components/community/ActivitiesSection";
 import { CommunitySections } from "@/components/community/CommunitySections";
 import { MembersPreviewSection } from "@/components/community/MembersPreviewSection";
-import { NewsSection } from "@/components/community/NewsSection";
+import { OpenBountiesSection } from "@/components/community/OpenBountiesSection";
 import { NoticeRow } from "@/components/cards/NoticeRow";
 import type { CommunityData } from "@/lib/community";
 import type { ApiClient } from "@/lib/contracts/api";
 import { createMockApiClient } from "@/lib/mocks/api-client";
-import type { Member, Notice } from "@/lib/types";
+import type { Bounty, Member, Notice } from "@/lib/types";
 import { renderWithIntl } from "@/test/intl";
 
 vi.mock("@/i18n/navigation", () => ({
@@ -28,8 +28,12 @@ const notice = (overrides: Partial<Notice> = {}): Notice => ({
 const member = (overrides: Partial<Member> = {}): Member => ({
   slug: "mina", name: "Mina", initials: "MI", role: "Dev", title: "", bio: "", isMember: true, links: { profile: "/members/mina" }, ...overrides,
 });
+const openBounty: Bounty = {
+  slug: "b1", title: "Open one", summary: "Build it", category: "Dev", status: "active", reward: { amount: 5, currency: "INJ" },
+  sponsor: "Injective", deadline: "Open", daysLeft: 3, coverImage: "",
+};
 const data = (overrides: Partial<CommunityData> = {}): CommunityData => ({
-  events: [], news: [], hall: { stats: [], highlights: [], milestones: [], partners: [] }, members: [],
+  events: [], hall: { stats: [], highlights: [], milestones: [], partners: [] }, members: [],
   unavailable: { notices: false, hall: false, members: false }, ...overrides,
 });
 
@@ -72,11 +76,30 @@ describe("ActivitiesSection", () => {
   });
 });
 
-describe("NewsSection, AchievementsSection, MembersPreviewSection", () => {
-  it("lists the latest news with the publish date", () => {
-    renderWithIntl(<NewsSection news={[notice({ category: "Ninja Labs" })]} unavailable={false} />);
-    expect(screen.getByText("2026.06.20")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "View all →" }).getAttribute("href")).toBe("/notices");
+describe("AchievementsSection, MembersPreviewSection, OpenBountiesSection", () => {
+  const highlights = [{ category: "Milestone" as const, title: "First", body: "Body", href: "/notices", image: null }];
+
+  it("hides the stat cards while every stat is zero and shows them once one is above zero", () => {
+    const zero = renderWithIntl(<AchievementsSection hall={{ stats: [{ value: "0", labelKey: "bountiesCompleted" }, { value: "0", labelKey: "buildersRewarded" }], milestones: [], partners: [], highlights }} locale="en" unavailable={false} />);
+    expect(zero.container.querySelector("dl")).toBeNull();
+    expect(screen.getByText("First")).toBeTruthy();
+    zero.unmount();
+    const some = renderWithIntl(<AchievementsSection hall={{ stats: [{ value: "0", labelKey: "bountiesCompleted" }, { value: "4", labelKey: "buildersRewarded" }], milestones: [], partners: [], highlights }} locale="en" unavailable={false} />);
+    expect(some.container.querySelectorAll("dl > div")).toHaveLength(2);
+  });
+
+  it("shows the empty state when there are only zero stats and no highlights", () => {
+    renderWithIntl(<AchievementsSection hall={{ stats: [{ value: "0", labelKey: "bountiesCompleted" }], milestones: [], partners: [], highlights: [] }} locale="en" unavailable={false} />);
+    expect(screen.getByText(/shipped|appear here/i)).toBeTruthy();
+  });
+
+  it("previews open bounties with a link to /bounties, and renders nothing when there are none", () => {
+    const empty = renderWithIntl(<OpenBountiesSection bounties={[]} />);
+    expect(empty.container.innerHTML).toBe("");
+    empty.unmount();
+    renderWithIntl(<OpenBountiesSection bounties={[openBounty]} />);
+    expect(screen.getByText("Open one")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "View all →" }).getAttribute("href")).toBe("/bounties");
   });
 
   it("shows the hall of fame stats and the first highlights, linking to the hall of fame", () => {
@@ -101,27 +124,32 @@ describe("NewsSection, AchievementsSection, MembersPreviewSection", () => {
   });
 
   it("gives every section an unavailable state that is not the empty state", () => {
-    renderWithIntl(<><NewsSection news={[]} unavailable /><AchievementsSection hall={data().hall} locale="en" unavailable /><MembersPreviewSection members={[]} unavailable /></>);
-    expect(screen.getAllByRole("status").map((node) => node.textContent)).toEqual(expect.arrayContaining([expect.stringContaining("Recent news is temporarily unavailable"), expect.stringContaining("Achievements are temporarily unavailable"), expect.stringContaining("Members are temporarily unavailable")]));
+    renderWithIntl(<><ActivitiesSection events={[]} unavailable /><AchievementsSection hall={data().hall} locale="en" unavailable /><MembersPreviewSection members={[]} unavailable /></>);
+    expect(screen.getAllByRole("status").map((node) => node.textContent)).toEqual(expect.arrayContaining([expect.stringContaining("Past activities are temporarily unavailable"), expect.stringContaining("Achievements are temporarily unavailable"), expect.stringContaining("Members are temporarily unavailable")]));
   });
 });
 
 describe("CommunitySections (shared by the Intro and /about)", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it("renders About, the recruitment banner, the slot, then activities, news, achievements and members, in that order", async () => {
-    renderWithIntl(<CommunitySections data={data({ events: [notice()], news: [notice({ slug: "n3", title: "News item", category: "Ninja Labs" })], members: [member()] })} locale="en"><h2>Open bounties slot</h2></CommunitySections>);
+  it("renders activities, members, achievements, open bounties and the recruitment banner in that order, with no About on the Intro", async () => {
+    renderWithIntl(<CommunitySections data={data({ events: [notice()], members: [member()] })} locale="en" openBounties={[openBounty]} />);
     await screen.findByText("Ninja Labs 2nd cohort is recruiting members");
     const order = screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
     expect(order).toEqual([
-      "Learn, build and move on Injective",
-      "Ninja Labs 2nd cohort is recruiting members",
-      "Open bounties slot",
       "What we have done together",
-      "Latest news",
-      "What the community has shipped",
       "Meet the members",
+      "What the community has shipped",
+      "Active bounties",
+      "Ninja Labs 2nd cohort is recruiting members",
     ]);
+  });
+
+  it("puts About first (as the page heading) on /about and drops the bounty preview when nothing is open", async () => {
+    renderWithIntl(<CommunitySections aboutLevel={1} data={data({ events: [notice()], members: [member()] })} locale="en" />);
+    await screen.findByText("Ninja Labs 2nd cohort is recruiting members");
+    expect(screen.getByRole("heading", { level: 1 })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Active bounties" })).toBeNull();
   });
 
   it("leaves the banner out when no cohort accepts applications", async () => {
