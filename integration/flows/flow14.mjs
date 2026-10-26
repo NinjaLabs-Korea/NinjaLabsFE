@@ -76,9 +76,34 @@ for (const route of concrete) {
   if (!FULL && !QUICK.has(route) && !QUICK_PREFIX.includes(route)) continue;
   const states = isAdminRoute(route) ? ['admin'] : route === '/auth/callback' ? ['out'] : ['out', 'user'];
   if (FULL && !isAdminRoute(route) && (route === '/' || route === '/home' || route === '/account')) states.push('admin');
-  for (const st of states) jobs.push({ route, st });
+  for (const st of states) {
+    jobs.push({ route, st });
+    // header menus open (mobile drawer below lg, account dropdown): they are closed <details> otherwise and not measured
+    if (['/', '/home', '/bounties', '/notices'].includes(route) && st !== 'admin') for (const menu of [0, 1]) jobs.push({ route, st, menu: menu + 1 });
+  }
 }
 console.log(`SWEEP ${FULL ? 'full' : 'quick'}: ${jobs.length} route/state pairs x ${LOCALES.length} locales x ${WIDTHS.length} widths`);
+
+// ---- the probe must flag what it is meant to flag: one fixture per kind on a blank page
+{
+  const p = await b.newPage(await b.newContext());
+  await p.goto('/en/page-not-found');
+  await p.send('Emulation.setDeviceMetricsOverride', { width: 400, height: 900, deviceScaleFactor: 1, mobile: false });
+  await p.eval(`(() => { const d = document.createElement('div'); d.id = 'fx'; d.style.cssText = 'position:relative;z-index:9';
+    d.innerHTML = '<div style="height:20px;overflow:hidden;font-size:14px;line-height:20px;width:200px">first line of text<br>second line is cut off</div>'
+      + '<span style="display:inline-block;width:80px;overflow:hidden;white-space:nowrap">a label that is far wider than its box</span>'
+      + '<div style="width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">intentional ellipsis truncation</div>'
+      + '<div style="display:flow-root"><svg width="12" height="12" style="display:block"></svg>label under an icon</div>'
+      + '<div style="width:1000px;height:10px;background:red"><p style="margin:0;white-space:nowrap;width:1000px">sticks out of the viewport to the right</p></div>'
+      + '<div style="width:26px;word-break:break-all;font-size:14px">squeezed text goes here</div>'
+      + '<button style="position:relative;width:80px;height:30px">one</button><button style="position:relative;left:-40px;width:80px;height:30px">two</button>';
+    document.body.prepend(d); })()`);
+  const kinds = new Set((await p.eval(`(${denseProbe})()`)).issues.map((i) => i.kind));
+  for (const kind of ['clipped', 'icon-wrapped', 'page-overflow', 'squeezed', 'overlap']) check(`probe self-test: flags ${kind}`, kinds.has(kind), [...kinds]);
+  const clipped = (await p.eval(`(${denseProbe})()`)).issues.filter((i) => i.kind === 'clipped');
+  check('probe self-test: ellipsis truncation is not a hit', !clipped.some((i) => i.text.startsWith('intentional')), clipped.map((i) => i.text));
+  await p.close();
+}
 
 // ---- sweep
 const found = new Map(); // key -> { kind, sig, text, detail, widths:Set, where:Set }
@@ -86,11 +111,13 @@ let shotNo = 0;
 const PROBE = `(${denseProbe})()`;
 const slug = (s) => s.replace(/[^a-zA-Z0-9]+/g, '_').slice(0, 40);
 
-async function sweepPage(p, locale, st, route) {
+async function sweepPage(p, locale, st, route, menu) {
   const url = `/${locale}${route === '/' ? '' : route}`;
   await p.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
   await p.goto(url);
   await sleep(500);
+  if (menu) await p.eval(`[...document.querySelectorAll('header details')].forEach((d, i) => { d.open = i === ${menu - 1}; })`);
+  const stName = menu ? `${st}+menu${menu}` : st;
   for (const width of WIDTHS) {
     await p.send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false });
     await sleep(90);
@@ -100,7 +127,7 @@ async function sweepPage(p, locale, st, route) {
       const key = `${issue.kind}|${issue.sig}`;
       let rec = found.get(key);
       if (!rec) {
-        rec = { key, kind: issue.kind, sig: issue.sig, text: issue.text, detail: issue.detail, widths: new Set(), where: new Set(), shot: null, first: `${locale} ${st} ${url} @${width}` };
+        rec = { key, kind: issue.kind, sig: issue.sig, text: issue.text, detail: issue.detail, widths: new Set(), where: new Set(), shot: null, first: `${locale} ${stName} ${url} @${width}` };
         found.set(key, rec);
         if (shotNo < 120) {
           shotNo += 1;
@@ -108,14 +135,14 @@ async function sweepPage(p, locale, st, route) {
             await p.eval(`(() => { const s = document.createElement('style'); s.id = 'sweep-outline'; s.textContent = '[data-sweep-hit]{outline:2px solid #ff2d55 !important;outline-offset:1px} [data-sweep-hit=clipper]{outline-color:#f5a623 !important}'; document.head.appendChild(s); document.querySelector('[data-sweep-hit]:not([data-sweep-hit=clipper])')?.scrollIntoView({ block: 'center' }); })()`);
             await sleep(120);
             const { data } = await p.send('Page.captureScreenshot', { format: 'png' });
-            rec.shot = path.join(SHOTS, `dense__${String(shotNo).padStart(3, '0')}__${issue.kind}__${slug(route)}__${locale}__${st}__${width}.png`);
+            rec.shot = path.join(SHOTS, `dense__${String(shotNo).padStart(3, '0')}__${issue.kind}__${slug(route)}__${locale}__${stName}__${width}.png`);
             fs.writeFileSync(rec.shot, Buffer.from(data, 'base64'));
             await p.eval(`document.getElementById('sweep-outline')?.remove(); window.scrollTo(0, 0)`);
           } catch (e) { console.log('shot failed', String(e).slice(0, 120)); }
         }
       }
       rec.widths.add(width);
-      rec.where.add(`${locale}:${st}:${route}`);
+      rec.where.add(`${locale}:${stName}:${route}`);
     }
   }
 }
@@ -129,8 +156,8 @@ async function worker(locale) {
     if (st === 'admin') await signIn(p, ids.ADMIN);
     pages[st] = p;
   }
-  for (const { route, st } of jobs) {
-    try { await sweepPage(pages[st], locale, st, route); } catch (e) { check(`sweep ${locale} ${st} ${route} completed`, false, String(e).slice(0, 200)); }
+  for (const { route, st, menu } of jobs) {
+    try { await sweepPage(pages[st], locale, st, route, menu); } catch (e) { check(`sweep ${locale} ${st} ${route} completed`, false, String(e).slice(0, 200)); }
   }
   for (const p of Object.values(pages)) await p.close();
 }

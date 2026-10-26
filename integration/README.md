@@ -24,7 +24,7 @@ auth, the data layer, routing or a whole user flow.
 ## Run
 
 ```sh
-NINJA_BE_DIR=../NinjaLabsBE npm run test:integration          # flows 1-13
+NINJA_BE_DIR=../NinjaLabsBE npm run test:integration          # flows 1-14
 NINJA_BE_DIR=../NinjaLabsBE npm run test:integration -- 1 3    # a subset
 NINJA_IT_CHROME_FLAGS="--no-sandbox"  # extra Chrome flags (Linux CI)
 npm run test:integration -- --reap    # stop + delete the leftovers of dead runs
@@ -115,6 +115,7 @@ failed request.
 | 11 | Auth state | Header, hero CTA, signup step 1 and gated pages agree with the session in every state; a finished user's `/en` lands on the home. |
 | 12 | Member recruitment | Admin creates and opens a cohort in the UI; a signed-out visitor sees the banner and a sign-in link with `returnTo`; a sign-in that started from `/recruit` returns there; a finished user applies from the home, sees the status on `/recruit`, `/account` and the home, edits it; the admin filters, reviews with a confirm (internal note) and exports the CSV; the applicant sees the result and never the note (DOM and API); an unfinished sign-up is sent to its onboarding step and the BE answers `PROFILE_REQUIRED`; the proxy redirects a finished user from `/en` to `/en/home` (hint cookie) while `/en/about` stays; withdraw and reapply reopen the same row; a cohort with applications cannot be deleted; closing removes the banner and the form. |
 | 13 | Responsive community screens | Intro, about, home, recruit (status and form with errors), account, notices, admin recruitment (table, review dialog) and admin notices in Korean at 375, 768 and 1280 px: no horizontal scroll, nothing outside the viewport, no character-per-line wrapping, plus a screenshot of each in `<log dir>/shots/<screen>__<state>__<width>.png`. Gets a 20 minute budget (flow 12: 12 minutes). |
+| 14 | Dense-width layout audit | Every width 320 to 1440 px in 20 px steps, ko/en/zh, signed out / finished / admin: `lib/layout-audit.mjs` finds clipped content (overflow hidden/clip cutting text or images; ellipsis and line-clamp exempt), icons wrapped away from their label, horizontal page overflow, character-per-line text and overlapping or covered controls. Target: 0 hits. Default is a quick set (landing hero, badge-heavy public screens, a few signed-in and admin screens); `NINJA_IT_SWEEP=full` covers every route of `src/lib/locale-routes.ts` (30+ minutes), `NINJA_IT_SWEEP_STEP` / `NINJA_IT_SWEEP_ROUTES` narrow it. Outlined screenshots of each distinct problem go to `<log dir>/shots/dense__*.png`, the list to `<log dir>/dense-sweep.json`. The probe checks itself against a fixture page first. Needs 4 and 5 for agent/application data when run alone. |
 
 Flows depend on each other's data: 7 and 8 use 4's application and 5's agents, 9 uses 4's application and 5's agents (PendingBot), 10 uses B1's deposit, so run subsets with that in mind.
 
