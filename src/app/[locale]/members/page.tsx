@@ -34,7 +34,7 @@ export default async function MembersPage({ params }: PageProps<"/[locale]/membe
       </div>
       <section className="mt-12 rounded-card border border-border bg-surface p-[21px] shadow-card">
         <SectionHeader eyebrow={t("howItWorksEyebrow")} heading={t("howItWorks")} />
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {rules.map((rule) => (
             <p key={rule} className="rounded-tile bg-surface-subtle p-5 text-center text-sm font-semibold text-ink-secondary">{t(`rules.${rule}`)}</p>
           ))}

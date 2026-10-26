@@ -78,7 +78,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
 
       <section className="mt-8 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
         <div className="min-w-0">
-          <h1 className="font-display text-5xl -tracking-[0.48px] text-ink [overflow-wrap:anywhere]">
+          <h1 className="font-display text-4xl -tracking-[0.36px] text-ink [overflow-wrap:anywhere] sm:text-5xl sm:-tracking-[0.48px]">
             {applicationRequired && bounty.applicationTitle ? bounty.applicationTitle : bounty.title}
           </h1>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -95,7 +95,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
         <BountyAccessBadges />
       </section>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
           <article className="rounded-card border border-border bg-surface p-[21px] shadow-card">
             <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("detail.description")}</p>
@@ -109,7 +109,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             )}
             {!applicationRequired ? (
               <>
-                <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <MetaCell label={t("detail.deliverable")}>
                     {deliverables.length > 0
                       ? deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)

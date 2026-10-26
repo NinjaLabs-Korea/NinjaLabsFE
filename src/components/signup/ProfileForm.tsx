@@ -200,6 +200,7 @@ export function ProfileForm() {
             return (
               <button
                 aria-pressed={selected}
+                className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center"
                 key={tag.value}
                 onClick={() => toggleTag(tag.value)}
                 type="button"

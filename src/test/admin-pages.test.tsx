@@ -5,7 +5,7 @@ import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { createTranslator } from "next-intl";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminGate } from "@/components/admin/AdminGate";
-import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminApi } from "@/lib/contracts/api";
@@ -130,6 +130,28 @@ describe("AdminTable", () => {
     );
     expect(screen.getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual(["Alpha", "Beta"]);
     expect(screen.getAllByRole("row")).toHaveLength(2);
+  });
+
+  // The "작업" column of /ko/admin/notices once collapsed to a few pixels and split 수정 / 삭제 into one syllable per line.
+  it("never lets the action column or a row button wrap (Korean 수정 / 삭제 stay on one line)", () => {
+    const { container } = renderWithIntl(
+      <AdminTable columns={[{ id: "title", label: "Title", widthClass: "w-[35%]" }, { id: "action", label: "Action", widthClass: "w-[14%]" }]} minWidthClass="min-w-[820px]">
+        <tr><td className={adminLongTextCell}>t</td><td><button type="button">수정</button></td></tr>
+      </AdminTable>,
+    );
+    const [title, action] = screen.getAllByRole("columnheader");
+    expect(action.className).toMatch(/\bmin-w-\[/);
+    expect(action.className).toContain("whitespace-nowrap");
+    expect(title.className).not.toMatch(/\bmin-w-\[/);
+    // Selector variants on the table reach every cell button and button-styled link, whichever panel renders them.
+    expect(container.querySelector("table")?.className).toContain("[&_td_button]:whitespace-nowrap");
+    expect(container.querySelector("table")?.className).toContain("[&_td_a.rounded-control]:whitespace-nowrap");
+    // The table scrolls inside its own container, so a phone scrolls the table and not the page.
+    expect(container.querySelector("table")?.parentElement?.className).toContain("overflow-x-auto");
+  });
+
+  it("exposes the long-text cell opt-in as overflow-wrap:anywhere (short cells must not use it)", () => {
+    expect(adminLongTextCell).toBe("[overflow-wrap:anywhere]");
   });
 });
 

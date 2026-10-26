@@ -22,7 +22,7 @@ export function AdminTabs({ active }: { active: AdminTab }) {
         <Link
           // The active tab was conveyed by color alone; expose it to assistive tech too.
           aria-current={tab.active === active ? "page" : undefined}
-          className={`inline-flex h-6 items-center rounded-full px-2.5 text-xs font-semibold ${tab.active === active ? "bg-primary text-primary-soft" : "bg-primary-soft text-primary-strong"}`}
+          className={`inline-flex h-6 items-center rounded-full px-2.5 text-xs max-sm:h-10 max-sm:px-4 font-semibold ${tab.active === active ? "bg-primary text-primary-soft" : "bg-primary-soft text-primary-strong"}`}
           href={tab.href}
           key={tab.active}
         >

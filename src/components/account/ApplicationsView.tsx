@@ -32,7 +32,7 @@ const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success
   revisionRequested: "warning",
 };
 
-const outlineDangerClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
+const outlineDangerClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
 
 // Step labels live under account.applications.steps, keyed by status.
 const applicationSteps: readonly ApplicationStatus[] = ["open", "approved", "submitted", "completed"];
@@ -158,7 +158,7 @@ export function ApplicationsView() {
         <p className="text-sm font-semibold text-ink">{t("emptyTitle")}</p>
         <p className="mt-1 text-sm text-ink-muted">{t("emptyBody")}</p>
         <Link
-          className={`mt-4 inline-block rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong ${focusClass}`}
+          className={`mt-4 inline-block rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong ${focusClass}`}
           href="/bounties"
         >
           {t("browseBounties")}
@@ -183,7 +183,7 @@ export function ApplicationsView() {
               key={application.id}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="flex flex-wrap gap-2">
+                <span className="flex min-w-0 max-w-full flex-wrap gap-2">
                   <Badge variant="primary-soft">{tBounties(application.category)}</Badge>
                   <Badge variant={statusVariants[application.status]}>
                     {statusLabel(application)}
@@ -252,7 +252,7 @@ export function ApplicationsView() {
               {/* An agent's submission is resubmitted through the Agent API, not from this page (see the revision note). */}
               {application.status === "approved" || (actionNeeded && !application.agent) ? (
                 <Link
-                  className={`mt-4 inline-block rounded-control bg-primary px-4 py-2 text-sm font-semibold text-on-inverse ${focusClass}`}
+                  className={`mt-4 inline-block rounded-control bg-primary px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-on-inverse ${focusClass}`}
                   href={`/bounties/${application.bountySlug}`}
                 >
                   {actionNeeded ? t("resubmit") : t("submitWork")}

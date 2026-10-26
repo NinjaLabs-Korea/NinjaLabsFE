@@ -5,7 +5,7 @@ import { useCallback, useRef, useState, type ReactNode } from "react";
 import { AdminListStatus } from "@/components/admin/AdminListStatus";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
-import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
@@ -191,13 +191,13 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       <div className="mt-6 space-y-6">
       <AdminListStatus failedText={t("toast.loadFailedDescription")} onRetry={retry} state={loadState} />
       {loadState === "ready" ? (
-      <AdminTable columns={postColumns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[820px]">
+      <AdminTable columns={postColumns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[960px]">
         {records.map((post) => (
           <tr key={post.slug} className="border-t border-border">
-            <td className="px-5 py-4 text-sm font-semibold text-ink">{post.title}</td>
+            <td className={`px-5 py-4 text-sm font-semibold text-ink ${adminLongTextCell}`}>{post.title}</td>
             <td className="px-5 py-4 text-sm text-ink-secondary">{categoryLabel(post.category)}</td>
             <td className="px-5 py-4"><Badge variant={post.status === "published" ? "success" : "warning"}>{t(`statuses.${post.status}`)}</Badge></td>
-            <td className="px-5 py-4 text-sm text-ink-secondary">{post.publishedAt ?? "–"}</td>
+            <td className="whitespace-nowrap px-5 py-4 text-sm text-ink-secondary">{post.publishedAt ?? "–"}</td>
             <td className="px-5 py-4"><div className="flex gap-2"><button className="h-11 rounded-control border border-primary-outline bg-surface px-3 text-sm font-semibold text-primary-strong" onClick={() => editPost(post)} type="button">{tCommon("edit")}</button><button className="h-11 rounded-control border border-danger px-3 text-sm font-semibold text-danger" onClick={() => setPendingDelete(post)} type="button">{tCommon("delete")}</button></div></td>
           </tr>
         ))}
@@ -207,7 +207,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       <section className="rounded-card border border-border bg-surface p-[21px] shadow-card" ref={formRef}>
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{isEditing ? t("form.eyebrowEdit") : t("form.eyebrowCreate")}</p>
         <h2 className="mt-2 font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
-        <div className="mt-6 grid gap-5 md:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
           <label className="text-sm font-semibold text-ink">{t("form.title")}<input {...invalidProps("title")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" maxLength={200} onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} value={form.title} />{fieldError("title")}</label>
           <label className="text-sm font-semibold text-ink">
             {t("form.category")}

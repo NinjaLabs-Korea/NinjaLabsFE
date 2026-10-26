@@ -30,7 +30,7 @@ export default async function SignupProfilePage({ params }: PageProps<"/[locale]
         </div>
         <div className="mt-6">
           <SignupGate>
-            <div className="grid gap-5 lg:grid-cols-5">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
               <section className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] lg:col-span-3">
                 <div className="text-center">
                   <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("profile.eyebrow")}</p>

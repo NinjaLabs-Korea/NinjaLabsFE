@@ -54,7 +54,7 @@ export function ApiKeyReveal({ title, copy, apiKey, expiresLabel, className = ""
           value={apiKey}
         />
         <button
-          className={`rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 ${focusClass}`}
+          className={`rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong hover:opacity-90 ${focusClass}`}
           onClick={() => void copyKey()}
           type="button"
         >

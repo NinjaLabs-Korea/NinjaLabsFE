@@ -20,14 +20,14 @@ export function AuthArea({ variant }: AuthAreaProps) {
     return (
       <>
         <Link
-          className="hidden rounded-control px-[21px] py-3 text-sm leading-[21px] font-semibold text-ink-secondary md:inline-block"
+          className="hidden whitespace-nowrap rounded-control px-[21px] py-3 text-sm leading-[21px] font-semibold text-ink-secondary lg:inline-block"
           href="/bounties"
           prefetch={true}
         >
           {t("browse")}
         </Link>
         {user ? (
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <UserMenu />
           </div>
         ) : (
@@ -49,10 +49,10 @@ export function AuthArea({ variant }: AuthAreaProps) {
   return (
     <div className="mt-1 border-t border-border pt-2">
       <div className="flex items-center gap-2 px-3 py-2">
-        <span className="grid size-8 place-items-center rounded-full bg-primary-soft-border font-display text-[13px] font-bold text-primary-strong">
+        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary-soft-border font-display text-[13px] font-bold text-primary-strong">
           {user.initials}
         </span>
-        <span className="text-sm font-semibold text-ink">{user.handle}</span>
+        <span className="min-w-0 break-words text-sm font-semibold text-ink">{user.handle}</span>
       </div>
       <nav aria-label={tMenu("accountNavigation")} className="space-y-1 px-1 pb-1">
         {getAccountNavigationItems(user).map((item) => (

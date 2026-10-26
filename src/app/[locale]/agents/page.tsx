@@ -26,7 +26,7 @@ export default async function AgentsPage({ params }: AgentsPageProps) {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{tAccount("eyebrow")}</p>
-          <h1 className="mt-2 font-display text-5xl -tracking-[0.48px] text-ink">{t("heading")}</h1>
+          <h1 className="mt-2 font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">{t("heading")}</h1>
           <p className="mt-4 text-lg text-ink-muted">{t("intro")}</p>
         </div>
         <Link

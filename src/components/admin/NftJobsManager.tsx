@@ -2,7 +2,7 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { opsButton, opsDateTime, opsCell, opsPrimaryButton, opsShort } from "@/components/admin/ops-ui";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
@@ -90,7 +90,7 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
       <section className="mt-6 rounded-card border border-border bg-surface p-[21px] shadow-card">
         <div aria-label={t("filterLabel")} className="flex flex-wrap items-center gap-2" role="group">
           {NFT_JOB_STATUSES.map((option) => (
-            <button aria-pressed={status === option} className={`inline-flex h-6 items-center rounded-full px-2.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${status === option ? "bg-primary text-primary-soft" : "bg-primary-soft text-primary-strong"}`} key={option} onClick={() => {
+            <button aria-pressed={status === option} className={`inline-flex h-6 items-center rounded-full max-sm:h-10 max-sm:px-4 px-2.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${status === option ? "bg-primary text-primary-soft" : "bg-primary-soft text-primary-strong"}`} key={option} onClick={() => {
               // Another status is another list: drop the old rows so FAILED jobs (with Retry) never sit under the Pending tab while it loads.
               if (option === status) return;
               setStatus(option);
@@ -115,10 +115,10 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
           <AdminTable columns={columns.map((id) => ({ id, label: t(`columns.${id}`) }))} minWidthClass="min-w-[960px]">
             {data.items.map((job) => (
               <tr className="border-t border-border" key={job.id}>
-                <td className={opsCell}><p className="font-semibold text-ink">{t(`jobTypes.${job.jobType}`)}</p><p className="mt-1 text-xs text-ink-muted">{t("nftLine", { type: t(`nftTypes.${job.nftType}`), status: job.nftStatus })}</p>{job.bountyTitle ? <p className="mt-1 text-xs text-ink-muted">{job.bountyTitle}</p> : null}</td>
-                <td className={opsCell}>{job.ownerNickname ?? "–"}<p className="mt-1 font-mono text-xs text-ink-muted" title={job.ownerWalletAddress ?? undefined}>{opsShort(job.ownerWalletAddress)}</p></td>
+                <td className={`${opsCell} ${adminLongTextCell}`}><p className="font-semibold text-ink">{t(`jobTypes.${job.jobType}`)}</p><p className="mt-1 text-xs text-ink-muted">{t("nftLine", { type: t(`nftTypes.${job.nftType}`), status: job.nftStatus })}</p>{job.bountyTitle ? <p className="mt-1 text-xs text-ink-muted">{job.bountyTitle}</p> : null}</td>
+                <td className={`${opsCell} ${adminLongTextCell}`}>{job.ownerNickname ?? "–"}<p className="mt-1 font-mono text-xs text-ink-muted" title={job.ownerWalletAddress ?? undefined}>{opsShort(job.ownerWalletAddress)}</p></td>
                 <td className={opsCell}>{job.retryCount}</td>
-                <td className={`${opsCell} max-w-[320px] break-words font-mono text-xs`}>{job.lastError ?? "–"}</td>
+                <td className={`${opsCell} max-w-[320px] font-mono text-xs ${adminLongTextCell}`}>{job.lastError ?? "–"}</td>
                 <td className={opsCell}>{formatDate(job.updatedAt)}</td>
                 <td className={opsCell}>{job.status === "FAILED" ? <button className={opsPrimaryButton} disabled={retrying.has(job.id)} onClick={() => void retry(job.id)} type="button">{retrying.has(job.id) ? tOps("working") : t("retry")}</button> : null}</td>
               </tr>

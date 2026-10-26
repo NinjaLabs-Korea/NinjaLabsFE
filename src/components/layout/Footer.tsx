@@ -34,7 +34,7 @@ export function Footer() {
   return (
     <footer className="bg-inverse-surface text-on-inverse">
       <div className="mx-auto max-w-content px-6 pt-12">
-        <div className="flex flex-col justify-between gap-10 md:flex-row">
+        <div className="flex flex-col justify-between gap-10 lg:flex-row">
           <div>
             <Image
               src="/brand/ninja-labs-kr-logo.png"
