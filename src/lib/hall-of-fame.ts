@@ -64,7 +64,7 @@ export function formatStatValue(value: string, locale: string): string {
   return /^\d+$/.test(value) ? new Intl.NumberFormat(locale).format(Number(value)) : value;
 }
 
-/** Paid totals show with at most this many fraction digits — a headline stat, not a ledger. */
+/** Paid totals show with at most this many fraction digits - a headline stat, not a ledger. */
 const PAID_TOTAL_FRACTION_DIGITS = 2;
 
 /**

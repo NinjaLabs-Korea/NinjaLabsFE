@@ -29,7 +29,7 @@ vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const SITE_KEY = "1x00000000000000000000AA";
 
-/** Stand-in for Cloudflare's `window.turnstile` — tests drive the callbacks the real widget would call. */
+/** Stand-in for Cloudflare's `window.turnstile` - tests drive the callbacks the real widget would call. */
 function installFakeTurnstile() {
   const widgets: TurnstileRenderOptions[] = [];
   const api = {

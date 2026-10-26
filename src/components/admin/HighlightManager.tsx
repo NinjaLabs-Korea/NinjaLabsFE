@@ -15,7 +15,7 @@ import { isHttpUrlOrMediaPath, isHttpUrlOrSitePath, isSafeUrl } from "@/lib/url-
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 /**
- * 저장 전 검증 — BE `CreateHighlightDto`의 거울 (title/description @IsNotEmpty, imageUrl IsHttpUrlOrMediaPath, linkUrl IsHttpUrlOrSitePath, displayOrder @IsInt @Min(0) @MaxPgInt).
+ * 저장 전 검증 - BE `CreateHighlightDto`의 거울 (title/description @IsNotEmpty, imageUrl IsHttpUrlOrMediaPath, linkUrl IsHttpUrlOrSitePath, displayOrder @IsInt @Min(0) @MaxPgInt).
  * `stored`(수정할 행의 저장된 이미지/링크)와 같고 BE 완화 규칙(`isSafeUrl`)을 통과하는 값은 URL 검사를 건너뛴다:
  * 수정 DTO는 레거시 행을 위해 완화 규칙(`IsSafeUrl`)이라 엄격 규칙 이전에 저장된 `/uploads/x.png` 같은 값을 그대로 받는데,
  * 여기서 막으면 그 행은 이미지를 지워야만 저장된다.

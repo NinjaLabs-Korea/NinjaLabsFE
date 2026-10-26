@@ -84,7 +84,7 @@ const CATEGORY_CODES = Object.fromEntries(
   Object.entries(CATEGORY_LABELS).map(([code, label]) => [label, code]),
 ) as Record<BountyCategory, CategoryCode>;
 
-/** 알 수 없는 코드는 undefined — 호출부에서 기본값(보통 "Other")을 정한다 */
+/** 알 수 없는 코드는 undefined - 호출부에서 기본값(보통 "Other")을 정한다 */
 export function toCategoryLabel(code: string): BountyCategory | undefined {
   return Object.hasOwn(CATEGORY_LABELS, code) ? CATEGORY_LABELS[code as CategoryCode] : undefined;
 }
@@ -130,7 +130,7 @@ const NOTICE_CATEGORY_CODES = Object.fromEntries(
   Object.entries(NOTICE_CATEGORY_LABELS).map(([code, label]) => [label, code]),
 ) as Record<Notice["category"], NoticeCategoryCode>;
 
-/** 알 수 없는 코드는 undefined — 호출부에서 기본값(보통 "Other")을 정한다 */
+/** 알 수 없는 코드는 undefined - 호출부에서 기본값(보통 "Other")을 정한다 */
 export function toNoticeCategoryLabel(code: string): Notice["category"] | undefined {
   return Object.hasOwn(NOTICE_CATEGORY_LABELS, code) ? NOTICE_CATEGORY_LABELS[code as NoticeCategoryCode] : undefined;
 }
@@ -163,7 +163,7 @@ export function isHighlightTypeCode(code: string): code is HighlightTypeCode {
   return Object.hasOwn(HIGHLIGHT_TYPE_LABELS, code);
 }
 
-/** 알 수 없는 코드는 undefined — 공개 화면은 "Other"로 표시하고, 어드민은 원문 코드를 그대로 보여 주며 다른 유형으로 바꿔 보내지 않는다 */
+/** 알 수 없는 코드는 undefined - 공개 화면은 "Other"로 표시하고, 어드민은 원문 코드를 그대로 보여 주며 다른 유형으로 바꿔 보내지 않는다 */
 export function toHighlightTypeLabel(code: string): HighlightTypeLabel | undefined {
   return isHighlightTypeCode(code) ? HIGHLIGHT_TYPE_LABELS[code] : undefined;
 }
@@ -225,14 +225,14 @@ function toDecimalString(amount: number, decimals: number): string {
   return Number.isInteger(amount) ? BigInt(amount).toString() : amount.toFixed(decimals);
 }
 
-/** 심볼의 소수 자릿수 (대소문자 무시). 모르는 토큰은 null — 금액을 다른 자릿수로 잘못 환산하지 않는다. */
+/** 심볼의 소수 자릿수 (대소문자 무시). 모르는 토큰은 null - 금액을 다른 자릿수로 잘못 환산하지 않는다. */
 export function tokenDecimalsFor(symbol: string): number | null {
   const upper = symbol.toUpperCase();
   return isRewardCurrency(upper) ? TOKEN_DECIMALS[upper] : null;
 }
 
 /**
- * BE 최소 단위 정수 문자열 → 사람 단위 10진 문자열 (`formatUnits`, 지수 표기 없음 — 표시는 `lib/format.ts formatTokenAmount`).
+ * BE 최소 단위 정수 문자열 → 사람 단위 10진 문자열 (`formatUnits`, 지수 표기 없음 - 표시는 `lib/format.ts formatTokenAmount`).
  * 모르는 토큰·정수가 아닌 값·null은 null.
  */
 export function baseUnitsToHuman(base: string | null | undefined, symbol: string): string | null {
@@ -243,7 +243,7 @@ export function baseUnitsToHuman(base: string | null | undefined, symbol: string
 
 /**
  * 운영자가 입력한 사람 단위 금액(`12.5`) → BE에 보낼 최소 단위 정수 문자열. BE `TOKEN_AMOUNT`(양의 정수, 선행 0 없음)를
- * 만족하지 못하는 값 — 빈 값, 음수, 지수 표기, 토큰 자릿수보다 긴 소수, 0 — 과 모르는 토큰은 null.
+ * 만족하지 못하는 값 - 빈 값, 음수, 지수 표기, 토큰 자릿수보다 긴 소수, 0 - 과 모르는 토큰은 null.
  */
 export function humanToBaseUnits(value: string, symbol: string): string | null {
   const decimals = tokenDecimalsFor(symbol);

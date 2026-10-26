@@ -1,6 +1,6 @@
 import { loadRuntimeConfig } from "@/lib/runtime/config";
 
-/** 공개 페이지 SSR이 BE를 기다리는 상한 — BE가 멈춰도 Vercel 함수가 매달리지 않게 한다. */
+/** 공개 페이지 SSR이 BE를 기다리는 상한 - BE가 멈춰도 Vercel 함수가 매달리지 않게 한다. */
 export const PUBLIC_FETCH_TIMEOUT_MS = 8000;
 
 /** A non-2xx BE answer. `status` lets a detail loader tell "this id does not exist" (404) apart from an outage. */

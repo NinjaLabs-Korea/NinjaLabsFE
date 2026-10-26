@@ -1,5 +1,5 @@
 /**
- * BE(NinjaLabsBE) HTTP 전송 계층 — cookie 세션 모드.
+ * BE(NinjaLabsBE) HTTP 전송 계층 - cookie 세션 모드.
  *
  * - refresh 토큰은 JS가 절대 만지지 않는다: BE가 `ninja_rt` HttpOnly; Secure; SameSite=Strict; Path=/api/auth
  *   쿠키로 심는다. `/api/auth/*`는 `next.config.ts` rewrite로 BE `/auth/*`에 프록시되므로 브라우저 입장에서는
@@ -9,7 +9,7 @@
  * - access token(15분 JWT)은 이 모듈의 메모리에만 있다. localStorage/sessionStorage에 어떤 토큰도 쓰지 않는다.
  *   새로 고침/새 탭은 `initSession()`이 `POST /api/auth/refresh`를 한 번 보내 복원한다(쿠키 있으면 200, 없으면 401).
  * - 401을 받으면 refresh를 1회 시도한다. refresh가 401/403일 때만 세션을 끝내고, 429·5xx·네트워크 오류는
- *   `REFRESH_UNAVAILABLE`로 실패시키고 쿠키(서버 세션)는 그대로 둔다 — 다음 401에서 다시 시도한다.
+ *   `REFRESH_UNAVAILABLE`로 실패시키고 쿠키(서버 세션)는 그대로 둔다 - 다음 401에서 다시 시도한다.
  * - refresh는 탭 간에도 직렬화한다(Web Locks `ninja.auth.refresh`, 없으면 탭 안 single-flight만). 쿠키 저장소는
  *   탭이 공유하므로 직렬화된 두 번째 탭은 이미 회전된 쿠키를 보내 경쟁 401을 받지 않는다(락이 없을 때의 경쟁은
  *   BE의 30초 reuse grace가 흡수한다). access token은 탭마다 메모리에 있으므로 각 탭은 자기 refresh를 한다.
@@ -21,7 +21,7 @@
  *   교환/refresh 성공 시 쓰고, 로그아웃·refresh 401/403·다른 탭 로그아웃(`endLocalSession`) 시 지운다.
  *   `initSession()`은 힌트가 없으면 refresh를 보내지 않고 바로 signed-out으로 끝낸다(익명 방문마다 401 + BE per-IP
  *   예산 소모 방지). 예외: 레거시 `ninja.refreshToken`이 있으면(마이그레이션) 또는 `/auth/callback`에서는 시도한다.
- *   힌트는 권한 판단에 절대 쓰지 않는다 — refresh를 "시도할지"만 정한다. 서버가 거절하면 힌트도 지운다.
+ *   힌트는 권한 판단에 절대 쓰지 않는다 - refresh를 "시도할지"만 정한다. 서버가 거절하면 힌트도 지운다.
  * - 서버 렌더 중에는 어떤 저장소/네트워크 접근도 하지 않는다.
  */
 

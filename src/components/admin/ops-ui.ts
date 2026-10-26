@@ -13,7 +13,7 @@ export const opsPanel = "mt-6 rounded-card border border-border bg-surface p-[21
 export const opsPanelEyebrow = "text-xs font-bold uppercase tracking-[0.96px] text-primary";
 export const opsPanelTitle = "mt-2 font-display text-2xl -tracking-[0.24px] text-ink";
 
-/** Exact token amount (`formatUnits`, never rounded — operators copy these into multisig tools) + symbol; unknown tokens show base units. */
+/** Exact token amount (`formatUnits`, never rounded - operators copy these into multisig tools) + symbol; unknown tokens show base units. */
 export function opsAmount(base: string | null | undefined, symbol: string): string {
   if (!base) return "–";
   const human = baseUnitsToHuman(base, symbol);

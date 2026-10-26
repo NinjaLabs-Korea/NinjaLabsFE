@@ -38,7 +38,7 @@ export function WalletConnectButton({
   // would replace the first and fail its verify with 400).
   const verifyingRef = useRef(false);
   const [verificationState, setVerificationState] = useState<"idle" | "pending">("idle");
-  // 실패 문구 키 (`common.wallet.verifyErrors.<key>`) — BE 코드별 안내, 그 외는 generic. 실패한 주소에 묶는다:
+  // 실패 문구 키 (`common.wallet.verifyErrors.<key>`) - BE 코드별 안내, 그 외는 generic. 실패한 주소에 묶는다:
   // 지갑을 끊고 다른 주소로 다시 연결했을 때 이전 주소의 실패("이미 연결된 지갑" 등)를 새 주소 아래에 보여 주지 않는다.
   const [verifyFailure, setVerifyFailure] = useState<{ address: string; key: ErrorCopyKey<typeof ERROR_COPY.walletVerify> } | null>(null);
   const {

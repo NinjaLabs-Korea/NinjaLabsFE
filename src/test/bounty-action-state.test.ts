@@ -138,7 +138,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["revision requested and just resubmitted", { submitted: true, submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: true }],
 ];
 
-describe("deriveActionView — which bounty action section to show", () => {
+describe("deriveActionView - which bounty action section to show", () => {
   it.each(table)("%s", (_label, overrides, expected) => {
     expect(deriveActionView(input(overrides))).toEqual(expected);
   });
@@ -152,7 +152,7 @@ describe("deriveActionView — which bounty action section to show", () => {
   });
 });
 
-describe("splitRows — the owner's own row and an agent row never stand in for each other", () => {
+describe("splitRows - the owner's own row and an agent row never stand in for each other", () => {
   it("picks the first row of each kind", () => {
     const own = app("open");
     const agent = app("approved", bot);
@@ -162,7 +162,7 @@ describe("splitRows — the owner's own row and an agent row never stand in for 
   });
 });
 
-describe("bountyActionErrorCopy — bounties.action.errors key for a failed apply/submit", () => {
+describe("bountyActionErrorCopy - bounties.action.errors key for a failed apply/submit", () => {
   it.each(ERROR_COPY.bountyAction.codes)("a listed code uses its own key: %s", (code) => {
     expect(bountyActionErrorCopy(new ApiHttpError(400, code))).toEqual({ key: code });
   });

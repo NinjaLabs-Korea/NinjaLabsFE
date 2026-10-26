@@ -29,7 +29,7 @@ export function OperationsConsole({ bounties: initial, children, tabs }: { bount
   // instead of silently opening the first bounty where the admin could act on the wrong one.
   const [missing, setMissing] = useState<string | null>(null);
   const missingRef = useRef<string | null>(null);
-  // api mode renders with no rows and reads GET /admin/bounties after mount — "no bounties yet" only once that read answered empty.
+  // api mode renders with no rows and reads GET /admin/bounties after mount - "no bounties yet" only once that read answered empty.
   const [listState, setListState] = useState<"loading" | "ready" | "failed">(initial.length ? "ready" : "loading");
 
   const loadBounties = useCallback(() => api.getAdminBounties().then(

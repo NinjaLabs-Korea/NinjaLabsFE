@@ -59,9 +59,9 @@ function firstNumericCode(error: unknown, depth: number): number | undefined {
 }
 
 /**
- * 사용자가 지갑에서 거절했는가. cause 체인 어디든 viem `UserRejectedRequestError`가 있으면 거절로 본다 — wagmi는 체인을
+ * 사용자가 지갑에서 거절했는가. cause 체인 어디든 viem `UserRejectedRequestError`가 있으면 거절로 본다 - wagmi는 체인을
  * 추가한 뒤의 switch 거절을 provider code 4001 없이 이 에러로만 감싸 돌려준다. 예외: 그 래퍼가 4001이 아닌 숫자 code를
- * 가진 provider 에러(예: -32603 Internal JSON-RPC error)를 감싼 경우에만 실패(failed)로 본다 — injected 커넥터는
+ * 가진 provider 에러(예: -32603 Internal JSON-RPC error)를 감싼 경우에만 실패(failed)로 본다 - injected 커넥터는
  * `wallet_addEthereumChain` 실패를 전부 UserRejectedRequestError로 감싸기 때문이다. 코드 4001이 직접 붙은 에러도 거절이다.
  */
 function isUserRejection(error: unknown, depth = 0): boolean {
@@ -83,7 +83,7 @@ export function switchChainErrorKind(error: unknown): SwitchChainErrorKind | nul
 /**
  * Injective EVM 지갑 연결 상태와 동작을 한곳에 모은 훅.
  * 커넥터 선택, 네트워크 불일치 판단, 체인 전환 규칙은 여기서만 정한다.
- * 브라우저 확장(injected) 지갑만 지원한다 — 확장이 없으면 `connector`가 undefined (WalletConnect 경로는 wagmi 3 업그레이드에서 제거, AGENTS.md 참고).
+ * 브라우저 확장(injected) 지갑만 지원한다 - 확장이 없으면 `connector`가 undefined (WalletConnect 경로는 wagmi 3 업그레이드에서 제거, AGENTS.md 참고).
  */
 export function useWalletConnection(chainId: number) {
   const hasInjectedWallet = useSyncExternalStore(

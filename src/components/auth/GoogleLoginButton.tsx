@@ -26,7 +26,7 @@ export function GoogleLoginButton({ turnstileSiteKey }: GoogleLoginButtonProps =
   const isMock = mode === "mock";
   const pending = loginState === "pending";
   const failed = loginState === "error";
-  // Mock mode never reaches the BE, so it never needs (or renders) the widget — a preview host outside the site key's
+  // Mock mode never reaches the BE, so it never needs (or renders) the widget - a preview host outside the site key's
   // hostname list would otherwise leave the button disabled forever.
   const turnstileKey = isMock ? undefined : turnstileSiteKey;
   const awaitingTurnstile = Boolean(turnstileKey) && !turnstileToken;

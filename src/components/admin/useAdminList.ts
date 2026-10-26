@@ -6,7 +6,7 @@ export type AdminListLoadState = "loading" | "ready" | "failed";
 
 /**
  * A manager's record list: `initial` (the mock fixtures; empty in api mode, where the page renders before any read) plus the read after
- * mount and every re-read after a write. `loadState` tells "nothing loaded yet / the read failed" from "the BE answered empty" — without
+ * mount and every re-read after a write. `loadState` tells "nothing loaded yet / the read failed" from "the BE answered empty" - without
  * it an api-mode page shows an empty table and invites creating what already exists. A failed re-read keeps the rows on screen.
  * `fetchList` and `onLoadFailed` must be stable (`useCallback`); `onLoadFailed` raises the toast.
  */

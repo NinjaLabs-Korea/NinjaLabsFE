@@ -85,7 +85,7 @@ export function useMenuButton(itemCount: number) {
     closeMenu,
     /**
      * 감싸는 div에 펼쳐 넣는다: 포커스가 메뉴 밖의 다른 요소로 옮겨가면(Tab 등) 닫는다. `relatedTarget === null`(창 전환,
-     * 버튼을 포커스하지 않는 Safari/Firefox-macOS의 mousedown)은 무시한다 — 바깥 클릭은 pointerdown 리스너가 맡는다.
+     * 버튼을 포커스하지 않는 Safari/Firefox-macOS의 mousedown)은 무시한다 - 바깥 클릭은 pointerdown 리스너가 맡는다.
      */
     rootProps: {
       ref: rootRef,

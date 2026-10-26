@@ -20,14 +20,14 @@ export type BountyFormValues = {
   maxWinners: string;
   /**
    * BE가 돌려준 원본 ISO 마감. `deadline`(datetime-local 문자열)이 이 값의 로컬 표시와 같으면 저장 시 원본을 그대로 보낸다
-   * — 로컬 ↔ UTC 변환을 다시 거치면 초/밀리초가 잘리고, 같은 시각을 "변경"으로 재전송하게 된다.
+   * - 로컬 ↔ UTC 변환을 다시 거치면 초/밀리초가 잘리고, 같은 시각을 "변경"으로 재전송하게 된다.
    */
   originalSubmissionDeadline?: string;
   /** 폼에 입력란이 없는 지원 마감. 수정 시 손대지 않고 그대로 되돌려 준다. */
   originalApplicationDeadline?: string | null;
   /**
    * BE `requirements` 원문. `deliverables`/`submissionGuide` 입력란이 불러온 값과 같으면 저장 시 이 문자열을 바이트 그대로 보낸다
-   * — 줄 단위 split/join 왕복은 빈 줄과 들여쓰기를 잃는다.
+   * - 줄 단위 split/join 왕복은 빈 줄과 들여쓰기를 잃는다.
    */
   originalRequirements?: string;
   /** `deliverables` 입력란의 초기값 (변경 여부 비교용). */
@@ -93,7 +93,7 @@ export const emptyBountyForm = (): BountyFormValues => ({
 
 /**
  * 기존 바운티 → 수정 폼 초기값. 마감이 ISO로 해석되지 않으면(`"07.14"` 같은 값) 입력란은 비우고 원문은
- * `originalSubmissionDeadline`에 남겨 `validateBountyForm`이 `deadlineInvalid`로 막는다 — 조용히 받아 저장하지 않는다.
+ * `originalSubmissionDeadline`에 남겨 `validateBountyForm`이 `deadlineInvalid`로 막는다 - 조용히 받아 저장하지 않는다.
  */
 export function bountyToForm(bounty: AdminBounty): BountyFormValues {
   const deliverables = bounty.deliverables.join("\n");
@@ -178,7 +178,7 @@ export type BountyFormError =
   | "maxWinnersInvalid"
   | "tooLong";
 
-/** BE `CreateBountyDto`/`UpdateBountyDto`의 @MaxLength — 입력의 `maxLength`와 검증이 같은 값을 쓴다 */
+/** BE `CreateBountyDto`/`UpdateBountyDto`의 @MaxLength - 입력의 `maxLength`와 검증이 같은 값을 쓴다 */
 export const BOUNTY_TITLE_MAX = 200;
 export const BOUNTY_SPONSOR_MAX = 100;
 /** BE `CreateBountyDto` @MaxLength on the TEXT fields (description 50 000, requirements and evaluationCriteria 20 000); the PATCH limit is double, the stricter create limit applies to both. */
@@ -233,7 +233,7 @@ export function validateBountyForm(
   if (blank(form.reviewProcess)) errors.reviewProcess = "required";
   if (blank(form.deliverables) && blank(form.submissionGuide)) errors.deliverables = "deliverablesRequired";
 
-  // 상한을 넘기면 BE가 400 VALIDATION_FAILED(일반 문구)로 답한다 — 어느 칸이 문제인지 여기서 알려 준다. 길이는 BE와 같은 Trim 뒤 UTF-16 단위.
+  // 상한을 넘기면 BE가 400 VALIDATION_FAILED(일반 문구)로 답한다 - 어느 칸이 문제인지 여기서 알려 준다. 길이는 BE와 같은 Trim 뒤 UTF-16 단위.
   if (form.description.trim().length > BOUNTY_TEXT_MAX.description) errors.description = "tooLong";
   if (form.reviewProcess.trim().length > BOUNTY_TEXT_MAX.reviewProcess) errors.reviewProcess = "tooLong";
   if (!errors.deliverables && resolveRequirements(form).trim().length > BOUNTY_TEXT_MAX.deliverables) errors.deliverables = "tooLong";

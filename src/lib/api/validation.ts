@@ -5,7 +5,7 @@ import { ApiHttpError } from "@/lib/api/http";
  *
  * class-validator의 기본 메시지는 `<property> must …` / `<property> should not be empty` / `<property> is a reserved word`처럼
  * 속성 이름으로 시작한다 (중첩 DTO는 `reward.amount must …`). 첫 토큰을 속성으로 읽고, 같은 필드의 첫 메시지만 남긴다.
- * 화면 문구는 호출 쪽이 필드별 messages 키로 바꾼다 — 원문 영어를 그대로 보여 주지 않는다.
+ * 화면 문구는 호출 쪽이 필드별 messages 키로 바꾼다 - 원문 영어를 그대로 보여 주지 않는다.
  */
 const PROPERTY_MESSAGE = /^([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s+(?:must|should|is|has|contains|does)\b/;
 

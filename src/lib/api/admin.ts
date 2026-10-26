@@ -72,7 +72,7 @@ const bountyStatus = (status: string): AdminBounty["status"] => {
   return "completed";
 };
 
-/** 운영자 콘솔 API — BE 행(snake_case, 코드값)을 FE 어드민 타입으로 변환한다 */
+/** 운영자 콘솔 API - BE 행(snake_case, 코드값)을 FE 어드민 타입으로 변환한다 */
 export function createAdminApi(http: ApiHttp): AdminApi {
   return {
     uploadAdminMedia: async (file: File): Promise<{ id: string; url: string }> => {

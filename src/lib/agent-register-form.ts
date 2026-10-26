@@ -1,5 +1,5 @@
 /**
- * 에이전트 등록 폼 규칙 — NinjaLabsBE `RegisterAgentDto`(@Trim @Length(1,100) name, @MaxLength(1000) description)의 거울.
+ * 에이전트 등록 폼 규칙 - NinjaLabsBE `RegisterAgentDto`(@Trim @Length(1,100) name, @MaxLength(1000) description)의 거울.
  * BE 한도가 바뀌면 여기와 `src/test/agent-register-form.test.tsx`를 함께 고칠 것.
  */
 export const AGENT_NAME_MAX = 100;

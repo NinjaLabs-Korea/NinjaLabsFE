@@ -18,7 +18,7 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   const t = await p.text();
   check('signed out: signup step 1 shows the login', t.includes(LOGIN));
   check('signed out: no edge-case spec box', !/Edge case|Already signed-in user|declined or failed/i.test(t), t.slice(0, 300));
-  check('signed out: no em dash on the page', !t.includes('—'));
+  check('signed out: no em dash on the page', !t.includes('-'));
   clean(await report(p, 'signed-out signup', {}), { signedOut: true });
   for (const path of ['/en/account', '/en/applications', '/en/agents', '/en/admin']) {
     await p.goto(path); await sleep(500);

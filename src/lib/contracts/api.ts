@@ -39,7 +39,7 @@ export type AgentVerification = {
   expiresAt: string;
 };
 
-/** POST /agents/:id/keys/rotate — 새 원문 키는 이 응답에서 한 번만 노출된다 */
+/** POST /agents/:id/keys/rotate - 새 원문 키는 이 응답에서 한 번만 노출된다 */
 export type AgentKeyRotation = {
   agentId: string;
   apiKey: string;
@@ -101,7 +101,7 @@ export type WalletApi = {
 
 /** 가입 온보딩 (프로필 저장 / 완료 처리) */
 export type OnboardingApi = {
-  /** 공개 `GET /users/check-nickname?nickname=` — 예약어도 `available: false`. mock은 항상 available. */
+  /** 공개 `GET /users/check-nickname?nickname=` - 예약어도 `available: false`. mock은 항상 available. */
   checkNickname: (nickname: string) => Promise<{ available: boolean }>;
   completeProfile: (input: {
     nickname: string;
@@ -131,7 +131,7 @@ export type CohortApi = {
 /** 계정 설정 (본인 전용) */
 export type AccountSettingsApi = {
   /**
-   * `DELETE /users/me` `{confirmNickname}` — 회원 탈퇴. 성공하면 BE가 refresh 세션을 전부 폐기하므로 호출자는 이어서 signOut()한다.
+   * `DELETE /users/me` `{confirmNickname}` - 회원 탈퇴. 성공하면 BE가 refresh 세션을 전부 폐기하므로 호출자는 이어서 signOut()한다.
    * 400 `CONFIRM_NICKNAME_MISMATCH` / 409 `WITHDRAWAL_BLOCKED_OPEN_PAYOUTS`(지급 진행 중) / 409 `WITHDRAWAL_BLOCKED_PENDING_REWARDS`(승인됐지만 지급 요청 전인 보상) / 404 `USER_NOT_FOUND` / 503 `DATABASE_UNAVAILABLE`.
    */
   withdrawAccount: (confirmNickname: string) => Promise<void>;
@@ -140,7 +140,7 @@ export type AccountSettingsApi = {
 /** 운영자 콘솔 (AdminGuard 보호 엔드포인트) */
 export type AdminApi = {
   uploadAdminMedia: (file: File) => Promise<{ id: string; url: string }>;
-  /** GET /admin/users?q=&page= — the BE returns 30 rows per page (a short page is the last one). */
+  /** GET /admin/users?q=&page= - the BE returns 30 rows per page (a short page is the last one). */
   getAdminUsers: (query?: string, page?: number) => Promise<AdminUser[]>;
   setAdminMember: (userId: string, input: { isMember: boolean; role?: string; displayOrder?: number }) => Promise<void>;
   getAdminBounties: () => Promise<AdminBounty[]>;
@@ -159,25 +159,25 @@ export type AdminApi = {
    */
   saveAdminHighlight: (highlight: AdminHighlight, create: boolean, options?: { publish?: boolean; typeChanged?: boolean }) => Promise<{ id: string }>;
   deleteAdminHighlight: (highlightId: string) => Promise<void>;
-  /** GET /admin/bounties/:id/operations — amounts stay BE base-unit strings (see `lib/admin-operations.ts`). */
+  /** GET /admin/bounties/:id/operations - amounts stay BE base-unit strings (see `lib/admin-operations.ts`). */
   getAdminOperations: (bountyId: string) => Promise<AdminOperations>;
-  /** POST /admin/applications/:id/review — an empty note is omitted. */
+  /** POST /admin/applications/:id/review - an empty note is omitted. */
   reviewAdminApplication: (applicationId: string, input: { decision: "APPROVED" | "REJECTED"; note?: string }) => Promise<void>;
-  /** POST /admin/submissions/:id/review — `revisionNo` is the revision the admin looked at (SUBMISSION_REVISION_CHANGED otherwise). */
+  /** POST /admin/submissions/:id/review - `revisionNo` is the revision the admin looked at (SUBMISSION_REVISION_CHANGED otherwise). */
   reviewAdminSubmission: (submissionId: string, input: { decision: SubmissionDecision; revisionNo: number; comment?: string }) => Promise<void>;
-  /** POST /admin/rewards/:id/confirm-deposit — `depositedAmount` in base units (`lib/api/codecs.ts humanToBaseUnits`). */
+  /** POST /admin/rewards/:id/confirm-deposit - `depositedAmount` in base units (`lib/api/codecs.ts humanToBaseUnits`). */
   confirmAdminDeposit: (rewardId: string, input: { txHash: string; depositedAmount: string }) => Promise<void>;
-  /** POST /admin/payouts — `amount` in base units. */
+  /** POST /admin/payouts - `amount` in base units. */
   requestAdminPayout: (input: { rewardId: string; submissionId: string; amount: string }) => Promise<void>;
-  /** POST /admin/payouts/:id/approve — 403 PAYOUT_SELF_APPROVAL when the requesting admin approves (two-person rule). */
+  /** POST /admin/payouts/:id/approve - 403 PAYOUT_SELF_APPROVAL when the requesting admin approves (two-person rule). */
   approveAdminPayout: (payoutId: string) => Promise<void>;
   /** POST /admin/payouts/:id/paid */
   markAdminPayoutPaid: (payoutId: string, txHash: string) => Promise<void>;
   /** GET /admin/nft-jobs?status=&page= (30/page) */
   getAdminNftJobs: (status: NftJobStatus, page: number) => Promise<AdminNftJobPage>;
-  /** POST /admin/nft-jobs/:id/retry — 404 NFT_JOB_NOT_FOUND_OR_NOT_FAILED */
+  /** POST /admin/nft-jobs/:id/retry - 404 NFT_JOB_NOT_FOUND_OR_NOT_FAILED */
   retryAdminNftJob: (jobId: string) => Promise<void>;
-  /** GET /admin/audit-logs?entityType=&entityId=&page= (30/page, newest first) — 400 on a non-UUID entityId */
+  /** GET /admin/audit-logs?entityType=&entityId=&page= (30/page, newest first) - 400 on a non-UUID entityId */
   getAdminAuditLogs: (filter: AdminAuditLogFilter, page: number) => Promise<AdminAuditLogPage>;
 };
 

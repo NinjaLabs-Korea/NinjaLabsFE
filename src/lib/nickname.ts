@@ -1,7 +1,7 @@
 import { endsWithStaticFileExtension } from "@/lib/static-extensions";
 
 /**
- * 닉네임 규칙 — NinjaLabsBE `src/users/nickname.ts` + `CompleteProfileDto`(@Trim @Length(2,50) @Matches @IsNotReservedNickname)의 거울.
+ * 닉네임 규칙 - NinjaLabsBE `src/users/nickname.ts` + `CompleteProfileDto`(@Trim @Length(2,50) @Matches @IsNotReservedNickname)의 거울.
  * BE 규칙이 바뀌면 여기와 `src/test/nickname.test.ts`를 함께 고칠 것. `/users/:nickname` 경로에 그대로 쓰이는 값이다.
  *
  *   - 정규형은 trim + 유니코드 NFC (BE `normalizeNickname`): 자모로 풀어 쓴 한글·결합 악센트도 검증·전송 전에 합친다
@@ -10,10 +10,10 @@ import { endsWithStaticFileExtension } from "@/lib/static-extensions";
  *   - 전각/반각 문자(U+FF00 블록)와 수학용 영숫자(U+1D400 블록)는 불가: `ａｄｍｉｎ`처럼 NFKC로 라틴이 되는 모양만 같은 문자(사칭)
  *   - 라틴 글자와 키릴/그리스 글자를 한 이름에 섞을 수 없음 (`аdmin`의 키릴 а 같은 혼합 문자 동형이의어)
  *   - 처음과 끝은 문자/숫자 (`.ninja`, `ninja-`, `..`, `--` 불가)
- *   - 길이 2~50 (trim 후, **코드 포인트** 기준 — BE `@Length`/validator `isLength`는 서로게이트 쌍을 한 글자로 센다)
+ *   - 길이 2~50 (trim 후, **코드 포인트** 기준 - BE `@Length`/validator `isLength`는 서로게이트 쌍을 한 글자로 센다)
  *   - 라우트와 충돌하는 예약어는 대소문자 무관 거부. 비교는 BE `nicknameSkeleton`과 같은 골격(NFKC + 소문자 + 키릴/그리스 동형 글자를 라틴으로)
- *   - 탈퇴 익명화 이름의 접두사 `withdrawn_`도 대소문자 무관 거부 (BE `WITHDRAWN_NICKNAME_PREFIX` — 탈퇴자 사칭 방지)
- *   - 정적 파일 확장자(`.js`, `.JSON` …)로 끝나면 대소문자 무관 거부 — proxy matcher가 건너뛰는 경로라 `/members/<닉네임>`이
+ *   - 탈퇴 익명화 이름의 접두사 `withdrawn_`도 대소문자 무관 거부 (BE `WITHDRAWN_NICKNAME_PREFIX` - 탈퇴자 사칭 방지)
+ *   - 정적 파일 확장자(`.js`, `.JSON` …)로 끝나면 대소문자 무관 거부 - proxy matcher가 건너뛰는 경로라 `/members/<닉네임>`이
  *     페이지가 아닌 파일 요청이 된다. 목록은 `lib/static-extensions.ts` 한 곳 (`.inj`는 허용)
  */
 export const NICKNAME = /^(?!.*[\u115F\u1160\u3164\uFFA0\p{Variation_Selector}\uFF00-\uFFEF\u{1D400}-\u{1D7FF}])(?!(?=.*[A-Za-z\u00C0-\u024F])(?=.*[\p{Script=Cyrillic}\p{Script=Greek}]))(?!.*\p{M}{4})(?!.*[_.-]\p{M})[\p{L}\p{N}][\p{L}\p{N}\p{M}_.-]*[\p{L}\p{N}\p{M}]$/u;
@@ -49,7 +49,7 @@ const ALLOWED_CHARS = /^(?!.*[\u115F\u1160\u3164\uFFA0\p{Variation_Selector}])[\
 // More than 3 marks in a row, or a mark right after `_ . -`: BE `NICKNAME` lookaheads.
 const BAD_MARKS = /\p{M}{4}|[_.-]\p{M}/u;
 
-/** 탈퇴한 유저의 익명화 닉네임 접두사 (`withdrawn_<id 8hex>`) — 공개 프로필이 없으므로 상세 URL도 될 수 없다 */
+/** 탈퇴한 유저의 익명화 닉네임 접두사 (`withdrawn_<id 8hex>`) - 공개 프로필이 없으므로 상세 URL도 될 수 없다 */
 export const WITHDRAWN_NICKNAME_PREFIX = "withdrawn_";
 
 export function isReservedNickname(value: string): boolean {

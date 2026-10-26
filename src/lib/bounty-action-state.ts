@@ -37,7 +37,7 @@ import type { Bounty, PayoutStatus } from "@/lib/types";
  */
 export type AgentRowState = "applied" | "applicationRejected" | "applicationApproved" | "submitted" | "revisionRequested" | "approved" | "rejected";
 
-/** 심사 대기 중인 제출 상태 — 이 상태의 제출이 있으면 "심사 중" 화면/문구를 쓴다. */
+/** 심사 대기 중인 제출 상태 - 이 상태의 제출이 있으면 "심사 중" 화면/문구를 쓴다. */
 export const PENDING_SUBMISSION_STATUSES: readonly SubmissionStatus[] = ["submitted", "resubmitted", "in_review"];
 
 type ApplicationRow = Pick<AccountApplication, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountApplication, "reviewNote">>;
@@ -72,7 +72,7 @@ export type BountyActionView =
    * `cancelled`: 바운티가 취소돼(BE가 대기 중인 지원을 자동 거절) 거절된 지원자에게 "스폰서가 선택하지 않았다"고 말하면 거짓이다.
    */
   | { kind: "closed"; reason: "reviewing" | "closed" | "applications" | "cancelled" }
-  /** 에이전트 전용 바운티 — `POST /agent-api/v1/bounties/{id}/{endpoint}` 안내 */
+  /** 에이전트 전용 바운티 - `POST /agent-api/v1/bounties/{id}/{endpoint}` 안내 */
   | { kind: "agentMode"; endpoint: "applications" | "submissions" }
   | { kind: "checkingSession" }
   /** Figma 15/15v 비로그인 화면 (로그인 필요 배지 + 비활성 폼 미리보기) */
@@ -92,7 +92,7 @@ export type BountyActionView =
   | { kind: "submissionApproved"; payout?: PayoutStatus }
   /** `review`: 심사자 코멘트 (없으면 생략). `forfeited`면 승인됐지만 수상이 몰수된 건이다. */
   | { kind: "submissionRejected"; review?: ReviewNote }
-  /** 마감 후 심사 중 — 폼 없이 안내만 */
+  /** 마감 후 심사 중 - 폼 없이 안내만 */
   | { kind: "inReviewLocked" }
   /**
    * 제출 폼. `revising`(수정 요청 재제출)이 제목/버튼에서 `inReview`(심사 중 수정)보다 우선하고, 둘 다 false면 첫 제출이다.
@@ -203,7 +203,7 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
   }
 
   // 8~9. BE는 승인/거절 전까지 재제출을 받는다(마감 후엔 수정 요청일 때만). 단 바운티가 진행 중일 때만(`isInProgress`:
-  // OPEN / SUBMISSION_CLOSED / IN_REVIEW) — `closed`(COMPLETED / CANCELLED)는 BOUNTY_REVIEW_CLOSED이므로 재제출 폼을 주지 않는다.
+  // OPEN / SUBMISSION_CLOSED / IN_REVIEW) - `closed`(COMPLETED / CANCELLED)는 BOUNTY_REVIEW_CLOSED이므로 재제출 폼을 주지 않는다.
   // 단 마감일만 지난 OPEN 바운티도 FE 상태는 `closed`이지만 BE는 수정 요청 재제출을 받는다(`deadlinePassed`).
   const revising = submission?.status === "revision_requested" && (status !== "closed" || deadlinePassed);
   const inReview = submitted || (submission !== undefined && PENDING_SUBMISSION_STATUSES.includes(submission.status));

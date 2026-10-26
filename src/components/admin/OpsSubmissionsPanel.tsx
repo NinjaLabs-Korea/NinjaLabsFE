@@ -76,7 +76,7 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
                         <summary className="cursor-pointer font-semibold text-ink-secondary">{t("submissions.history", { count: submission.reviews.length })}</summary>
                         <ul className="mt-1 space-y-1">
                           {submission.reviews.map((review, index) => (
-                            <li key={`${review.createdAt}-${index}`}>{t("submissions.historyItem", { decision: t.has(`submissions.decisions.${review.decision}`) ? t(`submissions.decisions.${review.decision}`) : review.decision, revision: review.revisionNo ?? "–", date: formatDate(review.createdAt) })}{review.comment ? ` — ${review.comment}` : ""}</li>
+                            <li key={`${review.createdAt}-${index}`}>{t("submissions.historyItem", { decision: t.has(`submissions.decisions.${review.decision}`) ? t(`submissions.decisions.${review.decision}`) : review.decision, revision: review.revisionNo ?? "–", date: formatDate(review.createdAt) })}{review.comment ? ` - ${review.comment}` : ""}</li>
                           ))}
                         </ul>
                       </details>

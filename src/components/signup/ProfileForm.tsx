@@ -27,12 +27,12 @@ const fieldTags = [
 /** 저장 실패 문구 키 (`signup.profile.form.saveErrors.<key>`): 코드 키는 `ERROR_COPY.profileSave`, 나머지는 아래 상태 규칙. */
 type SaveErrorKey = (typeof ERROR_COPY.profileSave.codes)[number] | "network" | "session" | "invalid" | "generic";
 
-/** 닉네임 입력 후 중복 검사까지 기다리는 시간 (ms) — BE `check-nickname`은 30/min throttle이다 */
+/** 닉네임 입력 후 중복 검사까지 기다리는 시간 (ms) - BE `check-nickname`은 30/min throttle이다 */
 export const NICKNAME_CHECK_DEBOUNCE_MS = 400;
 
 /** 필드별 에러의 messages 키 (`signup.profile.form` 아래) */
 type FieldErrors = Partial<Record<"nickname" | "tags" | "bio", string>>;
-/** 마지막으로 끝난 중복 검사. `available: null`은 요청 실패(429 등) — 막지 않고 BE 저장에 맡긴다. */
+/** 마지막으로 끝난 중복 검사. `available: null`은 요청 실패(429 등) - 막지 않고 BE 저장에 맡긴다. */
 type NicknameCheck = { nickname: string; available: boolean | null };
 
 /**

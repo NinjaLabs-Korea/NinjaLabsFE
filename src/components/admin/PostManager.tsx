@@ -41,7 +41,7 @@ const emptyForm: PostForm = {
 };
 
 /**
- * 저장 전 검증 — BE `CreateNoticeDto`의 거울 (title/body @IsNotEmpty, thumbnailUrl IsHttpUrlOrMediaPath, externalUrl IsHttpUrl).
+ * 저장 전 검증 - BE `CreateNoticeDto`의 거울 (title/body @IsNotEmpty, thumbnailUrl IsHttpUrlOrMediaPath, externalUrl IsHttpUrl).
  * `stored`(수정할 행의 저장된 URL)와 같고 BE 완화 규칙(`isSafeUrl`)을 통과하는 값은 URL 검사를 건너뛴다:
  * 수정 DTO는 레거시 행을 위해 완화 규칙(`IsSafeUrl`)이라 엄격 규칙 이전에 저장된 값을 그대로 받는데,
  * 여기서 막으면 그 행은 URL을 지워야만 저장된다.
