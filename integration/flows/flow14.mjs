@@ -177,6 +177,7 @@ console.log(`SWEEP RESULT distinct=${list.length}`);
     await p.send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false });
     await p.goto(`/${locale}`);
     const r = await p.eval(`(() => { const img = document.querySelector('main img[src*="injective-icon"], section img[src*="injective-icon"]'); const badge = img?.closest('span.rounded-full'); if (!badge) return null; const i = img.getBoundingClientRect(), t = badge.getBoundingClientRect(); return { iconMid: i.top + i.height / 2, top: t.top, bottom: t.bottom, h: t.height }; })()`);
+    if (width === 530) { const { data } = await p.send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(path.join(SHOTS, `hero-badge__${locale}__${width}.png`), Buffer.from(data, 'base64')); }
     check(`hero badge ${locale} ${width}px: icon and label on one line inside the pill`, !!r && r.iconMid > r.top && r.iconMid < r.bottom && r.h < 40, r);
   }
   await p.close();
