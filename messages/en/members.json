@@ -35,6 +35,8 @@
   },
   "card": {
     "profile": "Profile",
+    "profileLabel": "Profile of {name}",
+    "linkLabel": "{link} of {name}",
     "defaultTitle": "Ninja Labs member",
     "defaultBio": "Building in the Injective ecosystem.",
     "links": {

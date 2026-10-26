@@ -65,6 +65,18 @@ describe("BountyActionPanel", () => {
     Object.assign(apiClient, defaultApiClient);
   });
 
+  it("sends one apply request when several submit events land in the same tick", async () => {
+    const applyToBounty = vi.fn(() => new Promise<never>(() => undefined));
+    Object.assign(apiClient, { applyToBounty });
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    const form = screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    await waitFor(() => expect(applyToBounty).toHaveBeenCalledTimes(1));
+  });
+
   it("shows the closed panel to signed-out visitors instead of the sign-in prompt", async () => {
     state.auth = signedOut;
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="closed" submissionMode="direct" />);
@@ -104,12 +116,23 @@ describe("BountyActionPanel", () => {
     state.applications = [application(status, agent)];
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
     expect(await screen.findByRole("heading", { name: "Handled by your agent" })).toBeTruthy();
-    expect(screen.getByText("Your agent market-scout-agent applied to this bounty. Manage that application through the Agent API; this page does not submit on its behalf.")).toBeTruthy();
+    expect(screen.getByText(status === "open"
+      ? "Your agent market-scout-agent applied to this bounty. Manage that application through the Agent API; this page does not submit on its behalf."
+      : /application\. It can now submit work through the Agent API/)).toBeTruthy();
     expect(screen.getByRole("link", { name: "Manage my agents" }).getAttribute("href")).toBe("/agents");
     // The agent row never unlocks the owner's direct actions: no apply form, no submit form (even for an approved agent application).
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Submit" })).toBeNull();
     expect(screen.queryByText("Application under review")).toBeNull();
+  });
+
+  it("shows the reviewer comment and the Agent API endpoint when a revision was requested from the agent (agent-only bounty)", async () => {
+    state.submissions = [submission("revision_requested", agent, "Add the repo link")];
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="agent" />);
+    expect(await screen.findByRole("heading", { name: "Your agent needs to revise its submission" })).toBeTruthy();
+    expect(screen.getByText("Reviewer comment: Add the repo link")).toBeTruthy();
+    expect(screen.getByText("POST /agent-api/v1/bounties/bounty-1/submissions")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Resubmit" })).toBeNull();
   });
 
   it("shows the informational panel when only the agent has submitted (apply-type and direct bounties)", async () => {
@@ -125,7 +148,7 @@ describe("BountyActionPanel", () => {
     state.applications = [];
     state.submissions = [submission("revision_requested", agent)];
     renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
-    expect(await screen.findByRole("heading", { name: "Handled by your agent" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Your agent needs to revise its submission" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Resubmit" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Submit" })).toBeNull();
   });

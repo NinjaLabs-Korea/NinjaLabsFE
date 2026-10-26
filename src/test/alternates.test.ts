@@ -22,6 +22,18 @@ describe("localeMetadata", () => {
     expect(metadata.twitter).toMatchObject({ title: "공지", description: "소식" });
   });
 
+  it("shares the site card (og:image and twitter:image) on every page, not only the locale home", () => {
+    const metadata = localeMetadata("ko", "/notices", { title: "공지" });
+    expect(metadata.openGraph).toMatchObject({ images: [{ url: "/ko/opengraph-image/social", width: 1200, height: 630 }] });
+    expect(metadata.twitter).toMatchObject({ images: ["/ko/opengraph-image/social"] });
+  });
+
+  it("uses a page's own image (a notice thumbnail) instead of the site card", () => {
+    const metadata = localeMetadata("en", "/notices/n1", { title: "t", image: "/media/abc" });
+    expect(metadata.openGraph).toMatchObject({ images: [{ url: "/media/abc" }] });
+    expect(metadata.twitter).toMatchObject({ images: ["/media/abc"] });
+  });
+
   it("falls back to the default locale's tags for an unknown locale", () => {
     expect(localeMetadata("xx", "/", { title: "t" }).openGraph).toMatchObject({ locale: "en_US", url: "/xx" });
   });

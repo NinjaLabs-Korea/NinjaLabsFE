@@ -54,7 +54,8 @@ export type AdminBounty = {
   intakeEnabled: boolean;
   submissionMode: "direct" | "agent";
   coverImage: string | null;
-  status: "draft" | "funding" | "active" | "reviewing" | "closed";
+  /** One value per BE status (`DRAFT` ... `CANCELLED`) so the list can tell a finished bounty from a cancelled one and a closed intake from a review in progress. */
+  status: "draft" | "funding" | "active" | "submissionClosed" | "reviewing" | "completed" | "cancelled";
   /** BE `submission_deadline` ISO 원문. mock fixture도 ISO — `bountyToForm`은 ISO가 아닌 값을 조용히 받지 않는다. */
   deadline: string;
   /** BE `application_deadline` — 폼에 입력란이 없으므로 수정 시 그대로 되돌려 준다 */

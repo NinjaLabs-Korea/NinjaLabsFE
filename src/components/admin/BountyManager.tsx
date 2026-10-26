@@ -28,7 +28,7 @@ const columns = [
 ];
 
 const tags = ["Dev", "Design", "Content", "Other"] as const;
-const statusVariants = { draft: "neutral", funding: "warning", active: "success", reviewing: "warning", closed: "danger" } as const;
+const statusVariants = { draft: "neutral", funding: "warning", active: "success", submissionClosed: "warning", reviewing: "warning", completed: "neutral", cancelled: "danger" } as const;
 
 type Mode = { kind: "create" } | { kind: "edit"; slug: string };
 
@@ -131,7 +131,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       const coverImage = coverFile ? (await api.uploadAdminMedia(coverFile)).url : form.coverImage;
       const existing = mode.kind === "edit" ? records.find((record) => record.slug === mode.slug) : undefined;
       const bounty = formToBounty(form, mode.kind === "edit"
-        ? { slug: mode.slug, coverImage, existingStatus: existing?.status ?? "draft", maxWinners: existing?.maxWinners }
+        ? { slug: mode.slug, coverImage, existingStatus: existing?.status ?? "draft" }
         : { slug: "", coverImage });
       await api.saveAdminBounty(bounty, mode.kind === "create");
       pushAdminToast({ variant: "success", title: mode.kind === "edit" ? t("toast.updatedTitle") : t("toast.createdTitle"), description: tCommon("savedDescription", { title: form.title }) });
@@ -235,6 +235,11 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               {fieldError("amount")}
               {editing ? <p className="mt-2 text-xs text-ink-muted">{t("form.rewardLockedHint")}</p> : null}
             </div>
+            <label className="block text-sm font-semibold text-ink">{t("form.maxWinners")}
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("maxWinners")} inputMode="numeric" onChange={(event) => updateForm("maxWinners", event.target.value)} type="text" value={form.maxWinners} />
+              {fieldError("maxWinners")}
+              <span className="mt-2 block text-xs font-normal text-ink-muted">{t("form.maxWinnersHint")}</span>
+            </label>
             <div>
               <p className="text-sm font-semibold text-ink">{t("form.intake")}</p>
               <div className="mt-2 w-fit"><AdminSelect formatOption={(option) => t(`intake.${option}`)} label={t("form.intake")} onChange={(value) => updateForm("intake", value as BountyFormValues["intake"])} options={["OFF", "ON"]} value={form.intake} /></div>

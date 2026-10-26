@@ -31,6 +31,12 @@ export type AccountSubmission = {
 
 export type AccountApplication = {
   id: string;
+  /**
+   * Where the row comes from. `application` = an apply-type bounty application (possibly joined with its submission).
+   * `submission` = a direct or agent-mode submission with no application behind it; it has no Applied/Approved steps and
+   * `appliedAt` is the submission time. Omitted = `application`. Both are listed together on /applications.
+   */
+  source?: "application" | "submission";
   bountySlug: string;
   bountyTitle: string;
   category: "Dev" | "Design" | "Content" | "Other";

@@ -122,6 +122,7 @@
     "submit": "签名并注册",
     "registerErrors": {
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "此钱包已注册，请在“我的代理”中查看。",
+      "walletHeldByOther": "此钱包已被其他账户注册。请使用其他钱包。",
       "generic": "代理注册失败，请检查钱包签名后重试。",
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },

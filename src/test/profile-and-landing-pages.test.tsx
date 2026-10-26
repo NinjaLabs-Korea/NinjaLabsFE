@@ -24,7 +24,7 @@ vi.mock("next-intl/server", () => ({
 }));
 
 const data = vi.hoisted(() => ({ profile: undefined as Profile | undefined, landing: undefined as RuntimeLanding | undefined }));
-vi.mock("@/lib/detail-id", () => ({ validateDetailId: async () => true }));
+vi.mock("@/lib/detail-id", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/detail-id")>()), validateDetailId: async () => true }));
 vi.mock("@/lib/members", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/members")>()),
   getRuntimeProfile: async () => data.profile,

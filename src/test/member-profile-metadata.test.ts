@@ -9,11 +9,11 @@ vi.mock("next-intl/server", () => ({
     return createTranslator({ locale: "en", messages: enMessages, namespace: namespace as never, timeZone: "UTC" });
   },
 }));
-vi.mock("@/lib/detail-id", () => ({ validateDetailId: async () => true }));
+vi.mock("@/lib/detail-id", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/detail-id")>()), validateDetailId: async () => true }));
 vi.mock("@/lib/members", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/members")>()),
   getRuntimeProfile: async (slug: string) =>
-    slug.toLowerCase() === "ninja.inj" ? { slug: "ninja.inj", handle: "ninja.inj", bio: "Builder" } : undefined,
+    slug.toLowerCase() === "ninja.inj" ? { slug: "ninja.inj", handle: "ninja.inj", bio: "Builder" } : slug === "김민수" ? { slug, handle: slug, bio: "Builder" } : undefined,
 }));
 
 const { generateMetadata } = await import("@/app/[locale]/members/[id]/page");
@@ -23,6 +23,11 @@ describe("member profile metadata", () => {
     const metadata = await generateMetadata({ params: Promise.resolve({ locale: "en", id: "NINJA.inj" }) } as never);
     expect(metadata.alternates?.canonical).toBe("/en/members/ninja.inj");
     expect(metadata.openGraph?.url).toBe("/en/members/ninja.inj");
+  });
+
+  it("decodes a percent-encoded non-ASCII nickname before the lookup", async () => {
+    const metadata = await generateMetadata({ params: Promise.resolve({ locale: "en", id: encodeURIComponent("김민수") }) } as never);
+    expect(metadata.alternates?.canonical).toBe("/en/members/김민수");
   });
 
   it("drops alternates for a missing profile", async () => {

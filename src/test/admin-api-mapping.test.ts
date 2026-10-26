@@ -30,10 +30,10 @@ describe("GET /admin/bounties row mapping", () => {
     ["DRAFT", "draft"],
     ["FUNDING_PENDING", "funding"],
     ["OPEN", "active"],
-    ["SUBMISSION_CLOSED", "reviewing"],
+    ["SUBMISSION_CLOSED", "submissionClosed"],
     ["IN_REVIEW", "reviewing"],
-    ["COMPLETED", "closed"],
-    ["CANCELLED", "closed"],
+    ["COMPLETED", "completed"],
+    ["CANCELLED", "cancelled"],
   ])("BE status %s -> %s", async (status, expected) => {
     const { http } = createHttp([bountyRow({ status })]);
     const [row] = await createAdminApi(http).getAdminBounties();

@@ -21,8 +21,10 @@ describe("agent skill markdown", () => {
       expect(markdown).toContain("60 requests per minute per API key");
       expect(markdown).toContain("429 Too Many Requests");
       expect(markdown).toContain("`Retry-After-agent-api`");
-      // The BE sends X-RateLimit-* only on allowed responses; a 429 carries Retry-After-agent-api alone (docs/agent-api.md).
-      expect(markdown).toContain("sends only `Retry-After-agent-api`");
+      // A 429 from the key bucket also carries the unsuffixed per-IP X-RateLimit-* headers (they can show quota left): the guide says to ignore them.
+      expect(markdown).toContain("sends `Retry-After-agent-api`");
+      expect(markdown).toContain("belong to the per-IP limit");
+      expect(markdown).not.toContain("without the `X-RateLimit-*` headers");
       expect(markdown).not.toContain("global 120/min per-IP");
       expect(markdown).toContain("`X-RateLimit-Limit-agent-api`");
       expect(markdown).toContain("`X-RateLimit-Remaining-agent-api`");
@@ -32,6 +34,11 @@ describe("agent skill markdown", () => {
     it("describes the IP limit as per route, not global (BE docs/agent-api.md)", () => {
       expect(markdown).toContain("per-IP limit of 120 per minute per route");
       expect(markdown).not.toContain("global 120/min");
+    });
+
+    it("does not promise a VALIDATION_FAILED code the BE never sends (Nest returns message[] with a plain 400)", () => {
+      expect(markdown).not.toContain("VALIDATION_FAILED");
+      expect(markdown).toContain("`message` array");
     });
 
     it("documents the DTO caps and the http(s)-only URL rule", () => {

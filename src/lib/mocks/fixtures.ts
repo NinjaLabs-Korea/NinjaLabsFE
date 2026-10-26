@@ -6,6 +6,7 @@ const daysFromNow = (days: number): string => new Date(Date.now() + days * DAY_M
 const applications: readonly AccountApplication[] = [
   {
     id: "application-1",
+    source: "application",
     bountySlug: "contract-security-audit",
     bountyTitle: "Smart contract audit for reward vault",
     category: "Dev",
@@ -19,6 +20,7 @@ const applications: readonly AccountApplication[] = [
   },
   {
     id: "application-2",
+    source: "application",
     bountySlug: "wallet-onboarding-states",
     bountyTitle: "Design a wallet onboarding flow",
     category: "Design",
@@ -33,6 +35,7 @@ const applications: readonly AccountApplication[] = [
   // Agent-made application: the owner sees it in My applications and the bounty detail treats it as "already applied".
   {
     id: "application-3",
+    source: "application",
     bountySlug: "neptune-api-docs",
     bountyTitle: "Neptune API docs structure",
     category: "Design",
@@ -47,6 +50,7 @@ const applications: readonly AccountApplication[] = [
   // Approved work whose award an admin forfeited (BE scripts/forfeit-award.js): submission REJECTED + comment `forfeited: <reason>`.
   {
     id: "application-4",
+    source: "application",
     bountySlug: "quest-copy-refresh",
     bountyTitle: "Quest copy refresh",
     category: "Content",
@@ -61,6 +65,7 @@ const applications: readonly AccountApplication[] = [
   // Approved work the reviewer sent back: submission REVISION_REQUESTED + comment; the bounty detail offers the resubmit form.
   {
     id: "application-5",
+    source: "application",
     bountySlug: "agent-skill-benchmark",
     bountyTitle: "Agent skill benchmark suite",
     category: "Dev",
@@ -75,6 +80,7 @@ const applications: readonly AccountApplication[] = [
   // Completed work with a partial payout (the public profile shows the same status for it).
   {
     id: "application-6",
+    source: "application",
     bountySlug: "hydro-liquidity-explainer",
     bountyTitle: "Hydro liquidity explainer",
     category: "Content",

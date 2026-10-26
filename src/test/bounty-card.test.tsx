@@ -37,4 +37,11 @@ describe("BountyCard status presentation", () => {
     expect(screen.queryByText("Active")).toBeNull();
     expect(screen.getByRole("link").className).toContain("opacity-70");
   });
+
+  it("lets a long unbroken sponsor name and title wrap instead of widening the card", () => {
+    // jsdom has no layout: assert the wrapping classes that keep the 375px list free of horizontal scroll.
+    renderWithIntl(<BountyCard bounty={{ ...base, title: "Supercalifragilistic".repeat(8), sponsor: "S".repeat(80) }} />);
+    expect(screen.getByText(/S{80}/).className).toContain("[overflow-wrap:anywhere]");
+    expect(screen.getByRole("heading").className).toContain("[overflow-wrap:anywhere]");
+  });
 });
