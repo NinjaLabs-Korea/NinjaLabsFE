@@ -32,6 +32,11 @@ export function denseProbe() {
   const visible = (el) => {
     if (!el.getClientRects().length) return false;
     const s = cs(el);
+    if (typeof el.checkVisibility === 'function' && !el.checkVisibility({ contentVisibilityAuto: true, visibilityProperty: true })) return false;
+    // closed <details>: its content is content-visibility:hidden (no layout), unless the element is the summary itself
+    for (let d = el.closest('details:not([open])'); d; d = d.parentElement ? d.parentElement.closest('details:not([open])') : null) {
+      if (!d.querySelector(':scope > summary')?.contains(el)) return false;
+    }
     return s.visibility !== 'hidden' && s.display !== 'contents' && !skipped(el);
   };
   const inScroller = (el) => {
@@ -39,6 +44,18 @@ export function denseProbe() {
       const s = cs(n);
       if (s.overflowX === 'auto' || s.overflowX === 'scroll') return true;
       if ((s.overflowX === 'hidden' || s.overflowX === 'clip') && n.scrollWidth > n.clientWidth + 1) return true;
+    }
+    return false;
+  };
+  // True when an ancestor with overflow hidden|clip hides the element completely (a collapsed drawer or menu): not on screen.
+  const clippedAway = (el) => {
+    const r = el.getBoundingClientRect();
+    for (let a = el.parentElement; a && a !== document.body && a !== document.documentElement; a = a.parentElement) {
+      const s = cs(a);
+      if (s.overflowX === 'visible' && s.overflowY === 'visible') continue;
+      const box = a.getBoundingClientRect();
+      if (s.overflowY !== 'visible' && (a.clientHeight === 0 || r.bottom <= box.top + 1 || r.top >= box.bottom - 1)) return true;
+      if (s.overflowX !== 'visible' && (a.clientWidth === 0 || r.right <= box.left + 1 || r.left >= box.right - 1)) return true;
     }
     return false;
   };
@@ -162,7 +179,7 @@ export function denseProbe() {
   // ---- overlap / covered -----------------------------------------------------------------------------------------------
   const interactive = [];
   for (const el of document.querySelectorAll('a[href], button, input:not([type="hidden"]), select, textarea, [role="button"], [role="tab"], [role="combobox"], [role="menuitem"]')) {
-    if (!visible(el) || el.closest('[aria-hidden="true"]')) continue;
+    if (!visible(el) || el.closest('[aria-hidden="true"]') || clippedAway(el)) continue;
     const r = el.getBoundingClientRect();
     if (r.width < 6 || r.height < 6 || r.right <= 0 || r.left >= vw) continue;
     const s = cs(el);

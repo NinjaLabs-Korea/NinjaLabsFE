@@ -264,7 +264,7 @@ async function main() {
   for (const f of flows) {
     const file = path.join(LOGS, `flow${f}.log`);
     log(`flow ${f} ...`);
-    const code = await runFlow(path.join(HERE, 'flows', `flow${f}.mjs`), file, { ...baseEnv(), NINJA_IT_STATE: statePath, NODE_TLS_REJECT_UNAUTHORIZED: '0' });
+    const code = await runFlow(path.join(HERE, 'flows', `flow${f}.mjs`), file, { ...baseEnv(), ...Object.fromEntries(Object.entries(env).filter(([k]) => k.startsWith('NINJA_IT_SWEEP'))), NINJA_IT_STATE: statePath, NODE_TLS_REJECT_UNAUTHORIZED: '0' });
     const text = fs.readFileSync(file, 'utf8');
     const summary = text.split('\n').find((l) => l.startsWith('FLOW ')) ?? `FLOW ${f} CRASHED (exit ${code})`;
     const failures = text.split('\n').filter((l) => l.startsWith('ASSERT FAIL'));
