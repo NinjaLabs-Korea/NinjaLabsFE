@@ -5,7 +5,7 @@ import { endsWithStaticFileExtension } from "@/lib/static-extensions";
  * BE 규칙이 바뀌면 여기와 `src/test/nickname.test.ts`를 함께 고칠 것. `/users/:nickname` 경로에 그대로 쓰이는 값이다.
  *
  *   - 정규형은 trim + 유니코드 NFC (BE `normalizeNickname`): 자모로 풀어 쓴 한글·결합 악센트도 검증·전송 전에 합친다
- *   - 유니코드 문자/숫자와 `_ . -`만, 공백 불가
+ *   - 유니코드 문자/숫자와 `_ . -`만, 공백 불가. 결합 문자(`\p{M}`: 힌디어 모음 기호·비라마, 태국어 성조·모음 기호, 악센트)는 글자 뒤에 연속 3개까지 (`_ . -` 바로 뒤 불가), 변이 선택자는 불가. 끝은 문자/숫자/결합 문자
  *   - 한글 채움 문자(U+115F, U+1160, U+3164, U+FFA0)는 불가 (BE 정규식): 범주는 문자(Lo)지만 빈칸으로 그려져 "보이지 않는 이름"이 된다
  *   - 전각/반각 문자(U+FF00 블록)와 수학용 영숫자(U+1D400 블록)는 불가: `ａｄｍｉｎ`처럼 NFKC로 라틴이 되는 모양만 같은 문자(사칭)
  *   - 라틴 글자와 키릴/그리스 글자를 한 이름에 섞을 수 없음 (`аdmin`의 키릴 а 같은 혼합 문자 동형이의어)
@@ -16,12 +16,12 @@ import { endsWithStaticFileExtension } from "@/lib/static-extensions";
  *   - 정적 파일 확장자(`.js`, `.JSON` …)로 끝나면 대소문자 무관 거부 — proxy matcher가 건너뛰는 경로라 `/members/<닉네임>`이
  *     페이지가 아닌 파일 요청이 된다. 목록은 `lib/static-extensions.ts` 한 곳 (`.inj`는 허용)
  */
-export const NICKNAME = /^(?!.*[\u115F\u1160\u3164\uFFA0\uFF00-\uFFEF\u{1D400}-\u{1D7FF}])(?!(?=.*[A-Za-z\u00C0-\u024F])(?=.*[\p{Script=Cyrillic}\p{Script=Greek}]))[\p{L}\p{N}][\p{L}\p{N}_.-]*[\p{L}\p{N}]$/u;
+export const NICKNAME = /^(?!.*[\u115F\u1160\u3164\uFFA0\p{Variation_Selector}\uFF00-\uFFEF\u{1D400}-\u{1D7FF}])(?!(?=.*[A-Za-z\u00C0-\u024F])(?=.*[\p{Script=Cyrillic}\p{Script=Greek}]))(?!.*\p{M}{4})(?!.*[_.-]\p{M})[\p{L}\p{N}][\p{L}\p{N}\p{M}_.-]*[\p{L}\p{N}\p{M}]$/u;
 /**
  * Lookup shape for `/members/<nickname>`: only the edges and the character classes, none of the look-alike rules above.
  * Rows created before those rules (the BE left them untouched) keep working URLs; the BE decides what exists.
  */
-export const NICKNAME_LOOKUP_SHAPE = /^[\p{L}\p{N}][\p{L}\p{N}_.-]*[\p{L}\p{N}]$/u;
+export const NICKNAME_LOOKUP_SHAPE = /^[\p{L}\p{N}][\p{L}\p{N}\p{M}_.-]*[\p{L}\p{N}\p{M}]$/u;
 export const NICKNAME_MIN = 2;
 export const NICKNAME_MAX = 50;
 export const RESERVED_NICKNAMES: readonly string[] = ["me", "check-nickname", "admin", "new", "edit"];
@@ -43,7 +43,11 @@ function nicknameSkeleton(value: string): string {
 }
 
 // Hangul filler letters (U+115F, U+1160, U+3164, U+FFA0) are category Lo but draw as blanks; the BE rejects them anywhere in the name.
-const ALLOWED_CHARS = /^(?!.*[\u115F\u1160\u3164\uFFA0])[\p{L}\p{N}_.-]+$/u;
+// Combining marks (\p{M}: Hindi vowel signs and virama, Thai tone marks, accents) are allowed after a letter, but not the invisible
+// variation selectors (also \p{M}; emoji styling) - BE `NICKNAME`.
+const ALLOWED_CHARS = /^(?!.*[\u115F\u1160\u3164\uFFA0\p{Variation_Selector}])[\p{L}\p{N}\p{M}_.-]+$/u;
+// More than 3 marks in a row, or a mark right after `_ . -`: BE `NICKNAME` lookaheads.
+const BAD_MARKS = /\p{M}{4}|[_.-]\p{M}/u;
 
 /** 탈퇴한 유저의 익명화 닉네임 접두사 (`withdrawn_<id 8hex>`) — 공개 프로필이 없으므로 상세 URL도 될 수 없다 */
 export const WITHDRAWN_NICKNAME_PREFIX = "withdrawn_";
@@ -54,7 +58,7 @@ export function isReservedNickname(value: string): boolean {
 }
 
 /** 실패 사유. 화면 문구는 messages `signup.profile.form.nicknameErrors.<사유>`에 있다. */
-export type NicknameError = "tooShort" | "tooLong" | "reserved" | "chars" | "lookalike" | "mixedScript" | "edge" | "staticExtension";
+export type NicknameError = "tooShort" | "tooLong" | "reserved" | "chars" | "marks" | "lookalike" | "mixedScript" | "edge" | "staticExtension";
 
 /** 코드 포인트 수 (`"𝐀".length === 2`지만 한 글자). `<input maxLength>`는 UTF-16 단위라 더 엄격할 뿐, 검증은 이 값으로 한다. */
 export function nicknameLength(value: string): number {
@@ -71,7 +75,7 @@ export function normalizeNickname(raw: string): string {
   return raw.trim().normalize("NFC");
 }
 
-/** BE와 같은 순서로 검사한다: trim·NFC → 길이 → 전각·혼합 문자 → 예약어 → 문자 집합 → 양 끝 → 정적 파일 확장자. 통과하면 null. */
+/** BE와 같은 순서로 검사한다: trim·NFC → 길이 → 전각·혼합 문자 → 예약어 → 문자 집합 → 결합 문자 → 양 끝 → 정적 파일 확장자. 통과하면 null. */
 export function validateNickname(raw: string): NicknameError | null {
   const value = normalizeNickname(raw);
   const length = nicknameLength(value);
@@ -82,6 +86,7 @@ export function validateNickname(raw: string): NicknameError | null {
   if (LOOKALIKE_BLOCKS.test(value)) return "lookalike";
   if (MIXED_SCRIPT.test(value)) return "mixedScript";
   if (isReservedNickname(value)) return "reserved";
+  if (BAD_MARKS.test(value)) return "marks";
   if (!NICKNAME.test(value)) return "edge";
   if (endsWithStaticFileExtension(value)) return "staticExtension";
   return null;

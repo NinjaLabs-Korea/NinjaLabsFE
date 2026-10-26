@@ -22,11 +22,11 @@ const MOCK_SLUG = /^[a-z0-9-]{1,64}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /**
  * api mode: member ids are BE nicknames - dots allowed inside (`ninja.inj`), never whitespace, control characters or
- * slashes. The edges must be a letter or digit (`lib/nickname.ts NICKNAME`), so the dot segments `.` and `..` are never an
+ * slashes. The edges must be a letter or digit (the last may be a combining mark: `हिन्दी`) (`lib/nickname.ts NICKNAME`), so the dot segments `.` and `..` are never an
  * id: `/members/%2e%2e` would otherwise make the server request `${api}/users/..`, the BE root. Reserved route words (`lib/nickname.ts RESERVED_NICKNAMES`: `me`, `check-nickname`, `admin`, ...) can never be a
  * profile, so they fail the shape check too.
  */
-const NICKNAME = /^[\p{L}\p{N}._-]{1,64}$/u;
+const NICKNAME = /^[\p{L}\p{N}\p{M}._-]{1,64}$/u;
 const isNicknameShape = (id: string) => NICKNAME.test(id) && NICKNAME_SHAPE.test(id);
 
 /**

@@ -124,6 +124,27 @@ describe("nicknameInitials", () => {
   });
 });
 
+describe("combining marks (BE `\\p{M}` rule: Hindi, Thai, stacked accents)", () => {
+  it("is the same regex as the BE NICKNAME (copy of NinjaLabsBE src/users/nickname.ts)", () => {
+    expect(NICKNAME.source).toBe(
+      "^(?!.*[\\u115F\\u1160\\u3164\\uFFA0\\p{Variation_Selector}\\uFF00-\\uFFEF\\u{1D400}-\\u{1D7FF}])(?!(?=.*[A-Za-z\\u00C0-\\u024F])(?=.*[\\p{Script=Cyrillic}\\p{Script=Greek}]))(?!.*\\p{M}{4})(?!.*[_.-]\\p{M})[\\p{L}\\p{N}][\\p{L}\\p{N}\\p{M}_.-]*[\\p{L}\\p{N}\\p{M}]$",
+    );
+  });
+
+  it.each(["हिन्दी", "ไทยแลนด์", "a\u0301\u0301\u0301b", "ninja.हिन्दी"])("accepts %p", (nickname) => {
+    expect(validateNickname(nickname)).toBeNull();
+  });
+
+  it.each([
+    ["b\u0301\u0301\u0301\u0301c", "marks"],
+    ["ab.\u0301c", "marks"],
+    ["ab\uFE0F", "chars"],
+    ["\u0301ab", "edge"],
+  ])("rejects %p as %s", (nickname, reason) => {
+    expect(validateNickname(nickname)).toBe(reason);
+  });
+});
+
 describe("BE look-alike rules (fullwidth, math alphanumerics, mixed scripts, confusable reserved words)", () => {
   it.each(["ａbc12", "ＡＤＭＩＮ", "ａｄｍｉｎ", "𝐚bcd"])("rejects %p as lookalike, with a specific reason", (nickname) => {
     expect(validateNickname(nickname)).toBe("lookalike");

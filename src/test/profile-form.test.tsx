@@ -48,7 +48,7 @@ describe("ProfileForm nickname rule + availability check", () => {
     renderWithIntl(<ProfileForm />);
     for (const [value, reason] of [
       [".ninja", "Start and end with a letter or digit."],
-      ["ninja dev", "Use only letters, digits, and _ . - (no spaces)."],
+      ["ninja dev", "Use only letters (with their accent or vowel marks), digits, and _ . - (no spaces)."],
       ["admin", "This word is reserved. Choose another nickname."],
       ["n", "Use at least 2 characters."],
     ] as const) {

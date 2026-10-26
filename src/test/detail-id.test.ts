@@ -29,10 +29,10 @@ describe("detail id shape", () => {
     expect(isValidDetailId("notices", uuid.toUpperCase(), "api")).toBe(true);
     expect(isValidDetailId("bounties", "does-not-exist", "api")).toBe(false);
     expect(isValidDetailId("notices", "\u0000", "api")).toBe(false);
-    for (const nickname of ["ninja.inj", "first.last", "jaemin", "닌자", "a_b-c"]) {
+    for (const nickname of ["ninja.inj", "first.last", "jaemin", "닌자", "a_b-c", "हिन्दी", "ไทยแลนด์", "a\u0301\u0301\u0301b"]) {
       expect(isValidDetailId("members", nickname, "api"), nickname).toBe(true);
     }
-    for (const garbage of ["\u0000", "", "a b", "a/b", "x".repeat(65), "<script>", "withdrawn_1a2b3c4d"]) {
+    for (const garbage of ["\u0000", "", "a b", "a/b", "x".repeat(65), "<script>", "withdrawn_1a2b3c4d", "\u0301ab", ".\u0301"]) {
       expect(isValidDetailId("members", garbage, "api"), JSON.stringify(garbage)).toBe(false);
     }
   });
@@ -137,7 +137,7 @@ describe("decodeDetailId", () => {
   });
   it("NFC-normalises a decomposed nickname so it reaches the same page as the composed one", () => {
     const nfd = "Cafe\u0301";
-    expect(isValidDetailId("members", nfd, "api")).toBe(false);
+    expect(isValidDetailId("members", nfd, "api")).toBe(true); // marks are part of the shape now; the page still looks up the composed name
     expect(decodeDetailId(encodeURIComponent(nfd))).toBe("Caf\u00e9");
     expect(isValidDetailId("members", decodeDetailId(encodeURIComponent(nfd)), "api")).toBe(true);
     const jamo = "\u1112\u1161\u11ab"; // Hangul jamo for 한

@@ -99,13 +99,14 @@
         "generic": "We couldn't save your profile. Please try again.",
         "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
       },
-      "nicknameHint": "2–50 characters: letters, digits, _ . -; starting and ending with a letter or digit.",
+      "nicknameHint": "2–50 characters: letters (with their accent or vowel marks), digits, _ . -; starting and ending with a letter or digit.",
       "signInAgain": "Sign in again (your entries are kept)",
       "nicknameErrors": {
         "tooShort": "Use at least 2 characters.",
         "tooLong": "Use at most 50 characters.",
         "reserved": "This word is reserved. Choose another nickname.",
-        "chars": "Use only letters, digits, and _ . - (no spaces).",
+        "chars": "Use only letters (with their accent or vowel marks), digits, and _ . - (no spaces).",
+        "marks": "Combining marks must follow a letter or digit, at most 3 in a row.",
         "lookalike": "Full-width and math-style letters are not allowed. Use plain letters.",
         "mixedScript": "Don't mix Latin letters with Cyrillic or Greek ones.",
         "edge": "Start and end with a letter or digit.",
