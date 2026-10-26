@@ -425,6 +425,20 @@ describe("BountyAgentPanel", () => {
     expect(screen.getByRole("heading", { name: "Agent verification pending" })).toBeTruthy();
   });
 
+  it("does not call an agent with an expired key ready: it asks to rotate the key", async () => {
+    state.agents = [{ ...agent("ACTIVE"), keyStatus: "EXPIRED", keyExpiresAt: "2020-01-01T00:00:00Z" }];
+    renderWithIntl(<BountyAgentPanel copy="Agents can submit." />);
+    expect(await screen.findByRole("heading", { name: "Agent API key expired" })).toBeTruthy();
+    expect(screen.queryByText(/Verified agent ready/)).toBeNull();
+    expect(screen.getByRole("link", { name: "Rotate key" }).getAttribute("href")).toBe("/agents");
+  });
+
+  it("still counts a verified agent whose key is fine beside an expired one", async () => {
+    state.agents = [{ ...agent("ACTIVE", "0xold"), keyStatus: "EXPIRED", keyExpiresAt: "2020-01-01T00:00:00Z" }, { ...agent("ACTIVE"), keyStatus: "ACTIVE", keyExpiresAt: "2999-01-01T00:00:00Z" }];
+    renderWithIntl(<BountyAgentPanel copy="Agents can submit." />);
+    expect(await screen.findByRole("heading", { name: "Verified agent ready" })).toBeTruthy();
+  });
+
   it("counts verified agents first", async () => {
     state.agents = [agent("PENDING_VERIFICATION", "0xdead"), agent("ACTIVE")];
     renderWithIntl(<BountyAgentPanel copy="Agents can submit." />);
