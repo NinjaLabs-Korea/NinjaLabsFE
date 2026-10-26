@@ -122,6 +122,11 @@ describe("BountyOperations", () => {
     fireEvent.submit(form);
     expect(within(dialog()).getByRole("alert").textContent).toBe("Add a comment explaining what needs to change.");
     expect(adminApi.reviewAdminSubmission).not.toHaveBeenCalled();
+    // A comment of only zero-width characters would reach the submitter as a blank revision request.
+    fireEvent.change(within(dialog()).getByRole("textbox"), { target: { value: "\u200b\u200b" } });
+    fireEvent.submit(form);
+    expect(within(dialog()).getByRole("alert").textContent).toBe("Add a comment explaining what needs to change.");
+    expect(adminApi.reviewAdminSubmission).not.toHaveBeenCalled();
     fireEvent.change(within(dialog()).getByRole("textbox"), { target: { value: "Add tests" } });
     fireEvent.submit(form);
     await waitFor(() => expect(adminApi.reviewAdminSubmission).toHaveBeenCalledWith("s1", { decision: "REQUEST_REVISION", revisionNo: 3, comment: "Add tests" }));

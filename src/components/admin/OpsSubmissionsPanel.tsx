@@ -1,5 +1,6 @@
 "use client";
 
+import { hasVisibleText } from "@/lib/visible-text";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
@@ -35,7 +36,7 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
   const submit = async () => {
     if (!target) return;
     const { submission, decision, revisionNo } = target;
-    if (submissionCommentRequired(decision, submission.status) && !comment.trim()) {
+    if (submissionCommentRequired(decision, submission.status) && !hasVisibleText(comment)) {
       setCommentError(true);
       return;
     }
