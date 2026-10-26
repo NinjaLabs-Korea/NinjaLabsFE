@@ -5,7 +5,7 @@ export const signup = {
     nickname: "jaemin",
     bio: "Frontend builder focused on Injective market data, wallet onboarding, and bounty-ready UI components.",
     // Keys under messages `signup.profile.requirements`.
-    requirementKeys: ["spamControl", "oneFlow", "noSkip"],
+    requirementKeys: ["spamControl"],
   },
   completion: {
     // `key` resolves under messages `signup.getStarted.actions`.

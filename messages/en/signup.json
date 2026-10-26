@@ -64,9 +64,7 @@
     "title": "Set up your profile",
     "whyRequired": "Spam control and profile quality",
     "requirements": {
-      "spamControl": "Nickname alone cannot filter spam sign-ups, so nickname, field tags, and bio are mandatory.",
-      "oneFlow": "More required fields may increase drop-off, so the team monitors the per-step funnel after launch.",
-      "noSkip": "No draft saving on exit; re-entry starts over from the beginning of onboarding."
+      "spamControl": "Nickname alone cannot filter spam sign-ups, so nickname, field tags, and bio are mandatory."
     },
     "form": {
       "nicknameLabel": "Nickname*",
