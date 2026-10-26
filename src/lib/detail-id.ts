@@ -1,7 +1,7 @@
 import { loadFromRuntime } from "@/lib/api/public";
 import { getBounty } from "@/lib/bounties";
 import { getProfile } from "@/lib/members";
-import { isReservedNickname, NICKNAME as NICKNAME_SHAPE } from "@/lib/nickname";
+import { isReservedNickname, NICKNAME_LOOKUP_SHAPE as NICKNAME_SHAPE } from "@/lib/nickname";
 import { getNotice } from "@/lib/notices";
 import type { RuntimeMode } from "@/lib/runtime/config";
 import { hasLocale } from "next-intl";
@@ -43,10 +43,12 @@ export function isValidDetailId(kind: DetailKind, id: string, mode: RuntimeMode)
  * (`/members/%EA%B9%80...`), so the nickname shape check failed and every Hangul/Cyrillic/accented profile was a 404.
  * Decode once at the boundary (same rule as `resolveDetailRoute`); an undecodable id becomes `""` and fails the shape check.
  * Idempotent for valid ids: `%` is never part of a nickname, UUID or slug.
+ * Also NFC-normalised like the BE does for nickname lookups: a decomposed URL (`Cafe%CC%81`, Hangul as jamo, as macOS
+ * file names and AirDrop paste them) is the same name as the composed one, and its combining marks would fail the shape check.
  */
 export function decodeDetailId(raw: string): string {
   try {
-    return decodeURIComponent(raw);
+    return decodeURIComponent(raw).normalize("NFC");
   } catch {
     return "";
   }
@@ -101,7 +103,7 @@ export function resolveDetailRoute(pathname: string): DetailRoute | null {
   const detailKind = kind as DetailKind;
   let id: string;
   try {
-    id = decodeURIComponent(rawId);
+    id = decodeURIComponent(rawId).normalize("NFC");
   } catch {
     id = "";
   }

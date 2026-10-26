@@ -13,7 +13,7 @@ import { resolveSignupAccess, returnPathFromReferrer, type SignupAccess, type Si
  * the login (step 1) only for signed-out visitors, steps 2-4 only for a signed-in user who still owes onboarding, and
  * a redirect for everyone else (never a flash of the wrong step). Mock mode keeps steps 2-4 previewable signed out.
  * Once a step has rendered it stays: finishing onboarding on the last step must not bounce the user off the page
- * that celebrates it.
+ * that celebrates it, and a session that ends mid-step must not wipe what the user typed.
  */
 export function SignupGate({ children, step }: { children: ReactNode; step: SignupStep }) {
   const t = useTranslations("signup.gate");
@@ -25,7 +25,9 @@ export function SignupGate({ children, step }: { children: ReactNode; step: Sign
   let access: SignupAccess = resolveSignupAccess(snapshot, step);
   if (mode === "mock" && step > 1 && snapshot.status === "signed-out") access = { kind: "show" };
   if (access.kind === "show" && !shown) setShown(true);
-  if (shown && access.kind === "leave") access = { kind: "show" };
+  // A session that ends while a step is open (revoked, expired, signed out in another tab) must not tear the step down:
+  // the form the user is typing into stays, and says why it cannot save (ProfileForm shows the session message).
+  if (shown && (access.kind === "leave" || access.kind === "sign-in-first")) access = { kind: "show" };
 
   const destination =
     access.kind === "resume" || access.kind === "sign-in-first"

@@ -272,9 +272,9 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
     case "closed":
       return (
         <StatusPanel
-          body={view.reason === "reviewing" ? t("reviewingBody") : t("closedBody")}
+          body={view.reason === "reviewing" ? t("reviewingBody") : view.reason === "applications" ? t("applicationsClosedBody") : t("closedBody")}
           link={{ href: "/bounties", label: t("browseOther") }}
-          title={t("closedHeading")}
+          title={view.reason === "applications" ? t("applicationsClosedHeading") : t("closedHeading")}
         />
       );
     case "agentMode":

@@ -8,6 +8,7 @@ import {
 } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
+import { describeAgentKey } from "@/lib/agent-keys";
 
 /** "Submit via agent" aside (Figma 15/15v): copy adapts to the viewer's agent status, the LOGIN badge shows until signed in. */
 export function BountyAgentPanel({ copy }: { copy: string }) {
@@ -15,7 +16,14 @@ export function BountyAgentPanel({ copy }: { copy: string }) {
   const auth = useAuthSnapshot();
   const apiClient = useAccountApi();
   const { data: agents, loading, unavailable, reason } = useAccountQuery(apiClient.getAgents);
-  const verifiedCount = agents?.filter((agent) => agent.verified).length ?? 0;
+  // A verified agent whose API key expired (or was revoked) cannot call the Agent API: it is not "ready", it needs a rotation.
+  const verifiedAgents = agents?.filter((agent) => agent.verified) ?? [];
+  const keyUnusable = (agent: (typeof verifiedAgents)[number]) => {
+    const key = describeAgentKey(agent).kind;
+    return key === "expired" || key === "revoked";
+  };
+  const verifiedCount = verifiedAgents.filter((agent) => !keyUnusable(agent)).length;
+  const expiredKeyCount = verifiedAgents.length - verifiedCount;
   // Only PENDING_VERIFICATION agents can still be finished; a REVOKED-only owner starts over with the register CTA.
   const pendingCount = agents?.filter((agent) => agent.status === "PENDING_VERIFICATION").length ?? 0;
 
@@ -43,6 +51,11 @@ export function BountyAgentPanel({ copy }: { copy: string }) {
     body = t("verifiedBody", { count: verifiedCount });
     href = "/agents";
     action = t("viewAgents");
+  } else if (expiredKeyCount > 0) {
+    title = t("keyExpiredTitle");
+    body = t("keyExpiredBody");
+    href = "/agents";
+    action = t("rotateKey");
   } else if (pendingCount > 0) {
     title = t("pendingTitle");
     body = t("pendingBody");

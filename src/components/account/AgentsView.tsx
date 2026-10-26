@@ -16,6 +16,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
 import { describeAgentKey } from "@/lib/agent-keys";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
+import { formatUtcDateTime } from "@/lib/format";
 import type { AccountAgent } from "@/lib/contracts/account";
 import type { AgentKeyRotation } from "@/lib/contracts/api";
 
@@ -141,7 +142,7 @@ export function AgentsView() {
     }
   };
 
-  const formatDate = (value: string) => format.dateTime(new Date(value), { dateStyle: "medium", timeStyle: "short", timeZoneName: "short" });
+  const formatDate = (value: string) => formatUtcDateTime(format, value);
 
   return (
     <>

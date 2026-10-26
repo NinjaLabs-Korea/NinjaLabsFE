@@ -119,6 +119,10 @@ describe("onboarding redirect", () => {
     ["/zh/auth/callback", "/zh/signup/profile"],
     ["/ko/signup/wallet", null],
     ["/signup/get-started", null],
+    // Account deletion must stay reachable before onboarding is finished.
+    ["/en/account", null],
+    ["/ko/account", null],
+    ["/accountant", "/signup/profile"],
     // `/signup` itself is not a step page: an unfinished user who lands there is sent on to their step.
     ["/en/signup", "/en/signup/profile"],
   ])("from %s an unfinished step-3 user goes to %s", (pathname, expected) => {
