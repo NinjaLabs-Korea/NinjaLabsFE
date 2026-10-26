@@ -42,9 +42,12 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   const p = await b.newPage(await b.newContext());
   await signIn(p, ids.BUILDER);
   await p.goto('/en'); await sleep(800);
-  const hero = await heroCta(p);
-  check('complete user: hero has no Get Started', !hero.some((l) => l.startsWith('Get Started')), hero);
-  check('complete user: hero CTA opens their profile', hero.some((l) => l === 'My profile -> /en/members/builderone'), hero);
+  // A finished user never sees the Intro: `/en` goes to their home, whose profile card links to the public profile.
+  await p.waitFor(`location.pathname.endsWith('/en/home')`, 8000);
+  check('complete user: /en lands on the home, not the Intro hero', (await p.url()).endsWith('/en/home'), await p.url());
+  const own = await links(p, 'main a');
+  check('complete user: the home links to their profile', own.some((l) => l === 'View my profile -> /en/members/builderone'), own);
+  check('complete user: no Get Started anywhere on the home', !own.some((l) => l.startsWith('Get Started')), own);
   check('complete user: header has no Get Started', !(await headerGetStarted(p)));
   clean(await report(p, 'complete landing', {}));
   // hard load / direct URL entry
