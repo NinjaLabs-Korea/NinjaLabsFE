@@ -113,7 +113,11 @@ async function screen(p, name, who, url, { waitText, prepare, label = name } = {
   const [, mineBody] = await apiAs(tokenFor(ids.BUILDER), 'GET', '/cohorts/applications/me');
   const mine = JSON.parse(mineBody)[0];
   if (mine) sql(`update cohort_application set status='WITHDRAWN' where id='${mine.id}'`); // whatever state flow 12 left it in
-  await screen(p, 'recruit-form', 'finished', '/ko/recruit', {
+  await screen(p, 'recruit-form', 'finished', '/ko/recruit', { waitText: '지원서 보내기', prepare: async (page) => {
+    const errors = await page.eval(`document.querySelectorAll('main [role=alert]').length`);
+    check('recruit-form: a pristine form shows no error text', errors === 0, errors);
+  } });
+  await screen(p, 'recruit-form-errors', 'finished', '/ko/recruit', {
     waitText: '지원서 보내기',
     prepare: async (page) => {
       await page.waitFor(`[...document.querySelectorAll('main button')].some(b=>b.innerText.trim()==='지원서 보내기')`, 8000);

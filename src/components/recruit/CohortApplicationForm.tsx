@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FocusEvent, type FormEvent } from "react";
 import { useCohortApi } from "@/components/auth/FoundationProvider";
 import { ChoiceChip } from "@/components/recruit/ChoiceChip";
 import { ERROR_COPY } from "@/lib/api/error-copy";
@@ -70,6 +70,12 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
     setErrors((current) => ({ ...current, [key]: undefined }));
   };
 
+  /** Shows a field's problem once the user leaves it (a pristine form shows nothing; submit validates everything). */
+  const blurField = (field: keyof CohortFormErrors) => setErrors((current) => ({ ...current, [field]: validateCohortDraft(draft)[field] }));
+  const blurGroup = (field: keyof CohortFormErrors) => (event: FocusEvent<HTMLFieldSetElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) blurField(field);
+  };
+
   const toggleInterest = (area: (typeof INTEREST_AREAS)[number]) =>
     update("interestAreas", draft.interestAreas.includes(area) ? draft.interestAreas.filter((item) => item !== area) : [...draft.interestAreas, area]);
 
@@ -123,6 +129,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
           autoComplete="name"
           className={inputClass}
           id="cohort-displayName"
+          onBlur={() => blurField("displayName")}
           maxLength={COHORT_DISPLAY_NAME_MAX}
           onChange={(event) => update("displayName", event.target.value)}
           placeholder={t("displayName.placeholder")}
@@ -142,6 +149,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
             autoComplete="off"
             className={inputClass}
             id="cohort-telegram"
+          onBlur={() => blurField("telegram")}
             maxLength={80}
             onChange={(event) => update("telegram", event.target.value)}
             placeholder={t("telegram.placeholder")}
@@ -160,6 +168,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
             autoComplete="off"
             className={inputClass}
             id="cohort-twitter"
+          onBlur={() => blurField("twitter")}
             maxLength={80}
             onChange={(event) => update("twitter", event.target.value)}
             placeholder={t("twitter.placeholder")}
@@ -172,7 +181,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
         </div>
       </div>
 
-      <fieldset {...described("web3Experience", "cohort-web3Experience-error")}>
+      <fieldset {...described("web3Experience", "cohort-web3Experience-error")} onBlur={blurGroup("web3Experience")}>
         <legend className={labelClass}>{t("web3Experience.label")}</legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {WEB3_EXPERIENCES.map((option) => (
@@ -191,7 +200,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
         {fieldError("web3Experience", "cohort-web3Experience-error")}
       </fieldset>
 
-      <fieldset {...described("activityType", "cohort-activityType-error")}>
+      <fieldset {...described("activityType", "cohort-activityType-error")} onBlur={blurGroup("activityType")}>
         <legend className={labelClass}>{t("activityType.label")}</legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {ACTIVITY_TYPES.map((option) => (
@@ -215,6 +224,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
               {...described("activityTypeOther", "cohort-activityTypeOther-error")}
               className={inputClass}
               id="cohort-activityTypeOther"
+          onBlur={() => blurField("activityTypeOther")}
               maxLength={COHORT_OTHER_DETAIL_MAX}
               onChange={(event) => update("activityTypeOther", event.target.value)}
               placeholder={t("activityType.otherPlaceholder")}
@@ -226,7 +236,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
         ) : null}
       </fieldset>
 
-      <fieldset {...described("interestAreas", "cohort-interestAreas-error")}>
+      <fieldset {...described("interestAreas", "cohort-interestAreas-error")} onBlur={blurGroup("interestAreas")}>
         <legend className={labelClass}>{t("interestAreas.label")}</legend>
         <p className={hintClass}>{t("interestAreas.hint")}</p>
         <div className="mt-2 flex flex-wrap gap-2">
@@ -251,6 +261,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
               {...described("interestOther", "cohort-interestOther-error")}
               className={inputClass}
               id="cohort-interestOther"
+          onBlur={() => blurField("interestOther")}
               maxLength={COHORT_OTHER_DETAIL_MAX}
               onChange={(event) => update("interestOther", event.target.value)}
               placeholder={t("interestAreas.otherPlaceholder")}
@@ -268,6 +279,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
           {...described("intro", "cohort-intro-error", "cohort-intro-hint")}
           className={`${inputClass} min-h-[160px]`}
           id="cohort-intro"
+          onBlur={() => blurField("intro")}
           maxLength={COHORT_INTRO_MAX}
           onChange={(event) => update("intro", event.target.value)}
           placeholder={t("intro.placeholder")}

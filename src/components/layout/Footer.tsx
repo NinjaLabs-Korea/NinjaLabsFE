@@ -14,11 +14,10 @@ const platformLinks = [
 // Official links from the Ninja Labs Korea Notion hub (injective.notion.site/ninjalabskr).
 // Ninja Labs has no Discord of its own; the Discord link is Injective's.
 
-const ninjaLabsLinks = (contributorLabel: string) => [
+const ninjaLabsLinks = [
   { href: "https://x.com/NinjaLabsKR", label: "X (@NinjaLabsKR)" },
   { href: "https://t.me/NinjaLabsKR", label: "Telegram (@NinjaLabsKR)" },
   { href: "https://t.me/+Nsy2KjGWtOE5NTY9", label: "Ninja Builders (Telegram)" },
-  { href: "https://tally.so/r/3E7XZA", label: contributorLabel },
 ];
 
 const injectiveLinks = [
@@ -55,7 +54,7 @@ export function Footer() {
               heading={t("platform")}
               links={platformLinks.map(({ href, key }) => ({ href, label: tNav(key) }))}
             />
-            <FooterLinkColumn heading={t("community")} links={ninjaLabsLinks(t("contributor"))} external />
+            <FooterLinkColumn heading={t("community")} links={ninjaLabsLinks} external />
             <FooterLinkColumn heading="Injective" links={injectiveLinks} external />
           </div>
         </div>
