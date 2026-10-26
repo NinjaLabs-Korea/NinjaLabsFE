@@ -38,7 +38,7 @@ export default async function SignupGetStartedPage({ params }: PageProps<"/[loca
               <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("getStarted.eyebrow")}</p>
               <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] text-ink">{t("getStarted.title")}</h1>
               <p className="mt-3 text-base text-ink-muted">{t("getStarted.subtitle")}</p>
-              <div className="mt-6 grid gap-5 text-left md:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-6 grid grid-cols-1 gap-5 text-left md:grid-cols-2 lg:grid-cols-3">
                 {signup.completion.actions.map((action) => (
                   <CompleteSignupLink
                     className="flex min-h-[230px] flex-col rounded-card border border-border bg-surface p-5 shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

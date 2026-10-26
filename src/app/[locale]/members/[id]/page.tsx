@@ -63,7 +63,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
       </section>
 
       <section className="mt-10 rounded-panel bg-[linear-gradient(160deg,var(--color-hero-from)_0%,var(--color-hero-via)_55%,var(--color-hero-to)_100%)] p-6 text-on-inverse shadow-frame sm:p-10">
-        <div className="grid gap-8 lg:grid-cols-5 lg:items-center">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:items-center">
           <div className="lg:col-span-2">
             <Badge variant="inverse">
               <Image alt="" className="mr-1.5 size-3.5 rounded-full" height={14} src="/figma/ninja-labs-mascot.png" width={14} />
@@ -75,8 +75,8 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
           <div className="rounded-card border border-on-inverse/15 bg-on-inverse/10 p-[21px] backdrop-blur-sm lg:col-span-3">
             <div className="flex items-center gap-3">
               <Image alt="" className="size-12 shrink-0 rounded-full" height={48} src="/figma/ninja-labs-mascot.png" width={48} />
-              <div>
-                <p className="text-base font-semibold">{profile.handle}</p>
+              <div className="min-w-0">
+                <p className="break-words text-base font-semibold">{profile.handle}</p>
                 <p className="text-sm text-on-inverse/75">{t("portfolio.memberSince", { date: profile.joinedAt })}</p>
               </div>
             </div>
@@ -111,7 +111,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
           action={completed ? { label: t("history.browseMore"), href: "/bounties" } : filledExampleHref ? { label: t("history.viewFilled"), href: filledExampleHref } : undefined}
         />
         {completed ? (
-          <div className="mt-6 grid gap-5 md:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-3">
             {profile.completions.slice(0, 3).map((completion) => {
               const badge = payoutBadge(completion.payoutStatus);
               return (
@@ -141,7 +141,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
       <section id="agents">
         <SectionHeader eyebrow={t("agents.eyebrow")} heading={t("agents.heading")} />
         {profile.agents.length ? (
-          <div className="mt-6 grid gap-5 md:grid-cols-2">
+          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
             {profile.agents.map((agent) => (
               <article key={agent.wallet} className="rounded-card border border-dashed border-border-dashed bg-surface p-6">
                 <div className="flex flex-wrap items-center justify-between gap-2">

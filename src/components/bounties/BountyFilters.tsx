@@ -19,7 +19,7 @@ const categoryOrder: BountyCategory[] = ["Dev", "Design", "Content", "Other"];
 const statusFilters: Exclude<StatusFilter, "All">[] = ["Active", "Closed"];
 // Filter values stay in English (matched against data); only the displayed labels are localized.
 const statusLabelKeys = { Active: "status.active", Closed: "status.closed" } as const;
-const chipButtonClass = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const chipButtonClass = "max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export function BountyFilters({ bounties }: BountyFiltersProps) {
   const t = useTranslations("bounties");
@@ -118,7 +118,7 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
         </label>
       </div>
       {visibleBounties.length > 0 ? (
-        <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {visibleBounties.map((bounty) => (
             <BountyCard bounty={bounty} key={bounty.slug} showSummary titleAs="h2" />
           ))}
@@ -128,7 +128,7 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
           <p className="text-sm font-semibold text-ink">{t("filters.emptyTitle")}</p>
           <p className="mt-1 text-sm text-ink-muted">{t("filters.emptyBody")}</p>
           <button
-            className="mt-4 rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="mt-4 rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             onClick={resetFilters}
             type="button"
           >

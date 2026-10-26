@@ -20,7 +20,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
     <>
       <section className="relative isolate overflow-hidden bg-[linear-gradient(160deg,var(--color-hero-from)_0%,var(--color-hero-via)_55%,var(--color-hero-to)_100%)] lg:flex lg:min-h-[870px] lg:items-center">
         <div className="pointer-events-none absolute -right-1/4 -top-1/4 h-[680px] w-[680px] bg-[radial-gradient(circle,var(--color-glow)_0%,transparent_70%)] opacity-30" />
-        <div className="relative mx-auto grid w-full max-w-content gap-12 px-4 py-28 sm:px-6 lg:grid-cols-2">
+        <div className="relative mx-auto grid grid-cols-1 w-full max-w-content gap-12 px-4 py-28 sm:px-6 lg:grid-cols-2">
           <div className="flex flex-col justify-center">
             <div className="self-start">
               <Badge variant="inverse">

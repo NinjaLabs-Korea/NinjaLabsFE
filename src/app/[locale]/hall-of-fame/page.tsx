@@ -75,7 +75,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
       {hallOfFame.highlights.length > 0 ? (
         <section className="py-14">
           <SectionHeader eyebrow={t("highlights.eyebrow")} heading={t("highlights.heading")} action={{ label: t("highlights.readNotices"), href: "/notices" }} />
-          <div className="mt-6 grid gap-5 md:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-3">
             {hallOfFame.highlights.map((highlight, index) => (
               // Admin-entered titles are not unique: the index keeps React keys distinct.
               <Link href={highlight.href} key={`${index}:${highlight.title}`} className="overflow-hidden rounded-card border border-border bg-surface shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
@@ -96,7 +96,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
       {hallOfFame.milestones.length > 0 ? (
         <section>
           <SectionHeader eyebrow={t("timeline.eyebrow")} heading={t("timeline.heading")} />
-          <ol className="relative mt-8 grid gap-8 md:grid-cols-3 md:before:absolute md:before:top-[17px] md:before:right-0 md:before:left-0 md:before:h-px md:before:bg-border">
+          <ol className="relative mt-8 grid grid-cols-1 gap-8 md:grid-cols-3 md:before:absolute md:before:top-[17px] md:before:right-0 md:before:left-0 md:before:h-px md:before:bg-border">
             {hallOfFame.milestones.map((milestone, index) => (
               <li key={`${index}:${milestone.title}`} className="relative">
                 <span aria-hidden className="block size-9 rounded-full border-4 border-primary-soft-border bg-primary" />

@@ -19,7 +19,7 @@ export default function GlobalErrorPage({ reset }: GlobalErrorPageProps) {
       <body className="bg-page text-ink font-sans antialiased min-h-dvh flex flex-col">
         <section className="mx-auto max-w-content px-6 py-24 text-center">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">ERROR</p>
-          <h1 className="mt-3 font-display text-5xl -tracking-[0.48px] text-ink">Something went wrong</h1>
+          <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">Something went wrong</h1>
           <p className="mt-4 text-lg text-ink-muted">We could not load this page. Please try again.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={reset} type="button">Try again</button>

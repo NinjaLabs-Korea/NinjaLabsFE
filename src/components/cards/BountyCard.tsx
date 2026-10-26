@@ -51,15 +51,15 @@ export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3
           <p className="mt-2 line-clamp-2 text-sm text-ink-muted">{bounty.summary}</p>
         ) : null}
         <div className="mt-4 flex items-center justify-between gap-3">
-          <span className="flex items-center gap-1.5">
+          <span className="flex min-w-0 items-center gap-1.5">
             <RewardPill reward={bounty.reward} />
             {bounty.rewards && bounty.rewards.length > 1 ? (
-              <span className="text-xs font-semibold text-ink-muted">+{bounty.rewards.length - 1}</span>
+              <span className="shrink-0 text-xs font-semibold text-ink-muted">+{bounty.rewards.length - 1}</span>
             ) : null}
           </span>
-          <span className="text-right text-xs text-ink-muted">
+          <span className="min-w-0 text-right text-xs text-ink-muted">
             {statusLabel ?? (daysLeft && daysLeftLabel ? (
-              daysLeft === daysLeftLabel ? daysLeft : <><span aria-hidden="true">{daysLeft}</span><span className="sr-only">{daysLeftLabel}</span></>
+              daysLeft === daysLeftLabel ? daysLeft : <><span aria-hidden="true" className="whitespace-nowrap">{daysLeft}</span><span className="sr-only">{daysLeftLabel}</span></>
             ) : t("status.active"))} · {bounty.sponsor}
           </span>
         </div>

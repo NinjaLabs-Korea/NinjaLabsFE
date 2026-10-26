@@ -28,8 +28,8 @@ export function NoticeFilters({ notices }: NoticeFiltersProps) {
   return (
     <>
       <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")} role="group">
-        <button aria-pressed={category === "All"} className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => setCategory("All")} type="button"><Badge variant={category === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
-        {categories.map((item) => <button aria-pressed={category === item} className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => setCategory(item)} type="button"><Badge variant={category === item ? "selected" : "primary-soft"}>{t(`categories.${noticeCategoryKeys[item]}`)}</Badge></button>)}
+        <button aria-pressed={category === "All"} className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => setCategory("All")} type="button"><Badge variant={category === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
+        {categories.map((item) => <button aria-pressed={category === item} className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => setCategory(item)} type="button"><Badge variant={category === item ? "selected" : "primary-soft"}>{t(`categories.${noticeCategoryKeys[item]}`)}</Badge></button>)}
       </div>
       {visibleNotices.length > 0 ? (
         <section className="mt-8 space-y-4" aria-label={t("filters.listAriaLabel")}>
@@ -46,7 +46,7 @@ export function NoticeFilters({ notices }: NoticeFiltersProps) {
           <p className="text-sm font-semibold text-ink">{t("filters.emptyTitle")}</p>
           <p className="mt-1 text-sm text-ink-muted">{t("filters.emptyBody")}</p>
           <button
-            className="mt-4 rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="mt-4 rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             onClick={resetFilters}
             type="button"
           >

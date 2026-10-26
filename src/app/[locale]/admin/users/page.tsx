@@ -29,7 +29,7 @@ export default async function AdminUsersPage({ params }: PageProps<"/[locale]/ad
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{tCommon("eyebrow")}</p>
-          <h1 className="mt-2 font-display text-5xl -tracking-[0.48px] text-ink">{t("title")}</h1>
+          <h1 className="mt-2 font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">{t("title")}</h1>
           <p className="mt-4 max-w-[768px] text-lg text-ink-muted">{t("description")}</p>
         </div>
         <Badge variant="neutral">{tCommon("adminOnly")}</Badge>

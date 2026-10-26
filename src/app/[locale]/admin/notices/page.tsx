@@ -29,7 +29,7 @@ export default async function AdminNoticesPage({ params }: PageProps<"/[locale]/
       <PostManager posts={posts} tabs={<div className="mt-8"><AdminTabs active="notices" /></div>}>
         <div className="max-w-[768px]">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{tCommon("eyebrow")}</p>
-          <h1 className="font-display text-5xl tracking-[-0.48px] text-ink">{t("title")}</h1>
+          <h1 className="font-display text-4xl tracking-[-0.36px] sm:text-5xl sm:tracking-[-0.48px] text-ink">{t("title")}</h1>
           <p className="mt-4 text-lg text-ink-muted">
             {t("description")}
           </p>

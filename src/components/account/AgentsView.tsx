@@ -21,8 +21,8 @@ import type { AgentKeyRotation } from "@/lib/contracts/api";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
-const outlineButtonClass = `rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong disabled:opacity-60 ${focusClass}`;
-const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
+const outlineButtonClass = `rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong disabled:opacity-60 ${focusClass}`;
+const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
 
 /** Per-agent action state: a request on one agent never disables or reports on another. */
 type AgentAction =
@@ -145,7 +145,7 @@ export function AgentsView() {
 
   return (
     <>
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         {agents.map((agent) => {
           const revoked = agent.status === "REVOKED";
           const key = describeAgentKey(agent);

@@ -56,3 +56,18 @@
   --font-sans: var(--font-inter);
   --font-display: var(--font-space-grotesk);
 }
+
+/* Safety net for every text block: a run with no break opportunity (URL, long nickname, hash) wraps instead of
+   overflowing its card. It does not shrink min-content widths (flex/grid items still need min-w-0, table cells the
+   `adminLongTextCell` opt-in), so short labels are never squeezed into one character per line. */
+body {
+  overflow-wrap: break-word;
+}
+
+/* Korean wraps between words (eojeol), never inside one (a 2-syllable label must not split into one syllable per line);
+   a run with no break opportunity (URL, long nickname) still wraps instead of overflowing. Chinese has no spaces, so
+   keep-all would make whole sentences unbreakable: ko only. */
+html:lang(ko) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}

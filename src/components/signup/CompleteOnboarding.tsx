@@ -70,7 +70,7 @@ export function CompleteOnboarding() {
     <div className="mb-6 flex flex-col items-start justify-between gap-3 rounded-tile border border-danger bg-danger-soft p-4 sm:flex-row sm:items-center" role="alert">
       <p className="text-sm text-danger">{t("message")}</p>
       <button
-        className="rounded-control bg-danger px-4 py-2 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="rounded-control bg-danger px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         onClick={retry}
         type="button"
       >

@@ -17,7 +17,7 @@ import { normalizeNickname } from "@/lib/nickname";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
-const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
+const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
 
 /** Same rule as the BE (`DELETE /users/me`): trimmed, NFC-normalized, case-insensitive. */
 export function confirmationMatches(nickname: string, typed: string): boolean {
@@ -91,7 +91,7 @@ export function AccountSettingsView() {
     <div className="space-y-8">
       <section aria-labelledby={`${inputId}-profile`} className="rounded-card border border-border bg-surface p-6 shadow-card">
         <h2 className="font-display text-xl font-bold text-ink" id={`${inputId}-profile`}>{t("profileHeading")}</h2>
-        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-[160px_1fr]">
+        <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-[160px_1fr]">
           <dt className="text-ink-muted">{t("nicknameLabel")}</dt>
           <dd className="font-semibold text-ink">{nickname}</dd>
           {user.walletAddress ? (

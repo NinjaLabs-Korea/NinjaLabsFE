@@ -23,7 +23,7 @@ export default async function NoticesPage({ params }: PageProps<"/[locale]/notic
       <section className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-[768px]">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("eyebrow")}</p>
-          <h1 className="font-display text-5xl tracking-[-0.48px] text-ink">{t("heading")}</h1>
+          <h1 className="font-display text-4xl tracking-[-0.36px] sm:text-5xl sm:tracking-[-0.48px] text-ink">{t("heading")}</h1>
           <p className="mt-4 text-lg text-ink-muted">
             {t("description")}
           </p>

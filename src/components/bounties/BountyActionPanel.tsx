@@ -89,7 +89,7 @@ function SignedOutPanel({ applicationRequired }: { applicationRequired: boolean 
       </div>
       {applicationRequired ? (
         <fieldset className="mt-4 space-y-3" disabled>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input aria-label={t("portfolioUrl")} className={inputClass} placeholder={t("portfolioUrl")} type="url" />
             <input aria-label={t("availability")} className={inputClass} placeholder={t("availability")} type="text" />
           </div>

@@ -31,9 +31,9 @@ export function RewardPill({ reward, variant = "pill" }: RewardPillProps) {
     return unset ? null : <TokenIcon currency={reward.currency} />;
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-control border border-primary-soft-border bg-primary-soft px-[13px] py-1.5">
+    <span className="inline-flex max-w-full items-center gap-1.5 rounded-control border border-primary-soft-border bg-primary-soft px-[13px] py-1.5">
       {unset ? null : <TokenIcon currency={reward.currency} />}
-      <span className="font-display text-sm font-bold text-ink">
+      <span className="min-w-0 truncate font-display text-sm font-bold text-ink">
         {unset ? t("tbd") : `${format.number(reward.amount, { maximumFractionDigits: 6 })} ${reward.currency}`}
       </span>
     </span>
