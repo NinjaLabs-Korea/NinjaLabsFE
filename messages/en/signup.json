@@ -64,13 +64,9 @@
   "profile": {
     "metadata": {
       "title": "Set up profile | Ninja Labs",
-      "description": "Spam control and profile quality"
+      "description": "Choose a nickname, field tags and a short bio for your public Ninja Labs profile."
     },
     "title": "Set up your profile",
-    "whyRequired": "Spam control and profile quality",
-    "requirements": {
-      "spamControl": "Nickname alone cannot filter spam sign-ups, so nickname, field tags, and bio are mandatory."
-    },
     "form": {
       "nicknameLabel": "Nickname*",
       "nicknamePlaceholder": "Enter your nickname",
@@ -126,8 +122,7 @@
       "saved": "Profile saved."
     },
     "eyebrow": "Profile",
-    "subtitle": "This is what sponsors and other builders see on your public portfolio.",
-    "whyRequiredEyebrow": "Why all required"
+    "subtitle": "This is what sponsors and other builders see on your public portfolio."
   },
   "getStarted": {
     "metadata": {

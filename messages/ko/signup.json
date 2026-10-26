@@ -64,13 +64,9 @@
   "profile": {
     "metadata": {
       "title": "프로필 설정 | Ninja Labs",
-      "description": "스팸 방지와 프로필 품질 관리"
+      "description": "공개 Ninja Labs 프로필에 쓸 닉네임, 분야 태그, 짧은 소개를 정하세요."
     },
     "title": "프로필을 설정하세요",
-    "whyRequired": "스팸 방지와 프로필 품질 관리",
-    "requirements": {
-      "spamControl": "닉네임만으로는 스팸 가입을 걸러낼 수 없어 닉네임, 분야 태그, 소개가 모두 필수입니다."
-    },
     "form": {
       "nicknameLabel": "닉네임*",
       "nicknamePlaceholder": "닉네임을 입력하세요",
@@ -126,8 +122,7 @@
       "saved": "프로필을 저장했어요."
     },
     "eyebrow": "프로필",
-    "subtitle": "스폰서와 다른 빌더가 공개 포트폴리오에서 보게 될 정보입니다.",
-    "whyRequiredEyebrow": "모든 항목이 필수인 이유"
+    "subtitle": "스폰서와 다른 빌더가 공개 포트폴리오에서 보게 될 정보입니다."
   },
   "getStarted": {
     "metadata": {
