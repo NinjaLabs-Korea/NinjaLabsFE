@@ -122,8 +122,7 @@ export function createAdminApi(http: ApiHttp): AdminApi {
         requirements: bounty.requirements,
         evaluationCriteria: bounty.reviewProcess,
         category: toCategoryCode(bounty.tags[0] ?? "Other"),
-        // 폼에 maxWinners 입력란이 없다: 신규는 1, 수정은 불러온 레코드의 값을 그대로 보내 BE 값을 덮어쓰지 않는다.
-        applicationRequired: bounty.intakeEnabled, maxWinners: create ? 1 : bounty.maxWinners,
+        applicationRequired: bounty.intakeEnabled, maxWinners: bounty.maxWinners,
         submissionMode: bounty.submissionMode === "agent" ? "AGENT" : "DIRECT",
         coverImageUrl: bounty.coverImage,
         submissionDeadline: bounty.deadline,

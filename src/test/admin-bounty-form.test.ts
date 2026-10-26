@@ -77,12 +77,23 @@ describe("admin bounty form mapping", () => {
 
   it("keeps the loaded record's maxWinners and application deadline on edit, and defaults to 1 on create", () => {
     const bounty = { ...getAdminBounties()[0], deadline: "2026-07-14T23:59:00.000Z", maxWinners: 3, applicationDeadline: "2026-07-01T00:00:00.000Z" };
-    const edited = formToBounty(bountyToForm(bounty), { slug: bounty.slug, coverImage: null, existingStatus: bounty.status, maxWinners: bounty.maxWinners });
+    const edited = formToBounty(bountyToForm(bounty), { slug: bounty.slug, coverImage: null, existingStatus: bounty.status });
     expect(edited.maxWinners).toBe(3);
     expect(edited.applicationDeadline).toBe("2026-07-01T00:00:00.000Z");
     const created = formToBounty({ ...emptyBountyForm(), deadline: "2026-07-14T23:59" }, { slug: "", coverImage: null });
     expect(created.maxWinners).toBe(1);
     expect(created.applicationDeadline).toBeNull();
+  });
+
+  it("sends the admin's max winners on create and edit, and rejects values the BE refuses", () => {
+    const form = { ...emptyBountyForm(), deadline: "2026-07-14T23:59", maxWinners: " 4 " };
+    expect(formToBounty(form, { slug: "", coverImage: null }).maxWinners).toBe(4);
+    for (const bad of ["", "0", "-1", "1.5", "1e2", "abc", "2147483648"]) {
+      expect(validateBountyForm({ ...{ ...emptyBountyForm(), title: "T", sponsor: "S", description: "D", deliverables: "R", reviewProcess: "P", deadline: "2026-07-14T23:59" }, maxWinners: bad }, { now: new Date("2026-01-01") }).maxWinners, bad).toBe("maxWinnersInvalid");
+    }
+    for (const ok of ["1", "3", "2147483647"]) {
+      expect(validateBountyForm({ ...{ ...emptyBountyForm(), title: "T", sponsor: "S", description: "D", deliverables: "R", reviewProcess: "P", deadline: "2026-07-14T23:59" }, maxWinners: ok }, { now: new Date("2026-01-01") }).maxWinners, ok).toBeUndefined();
+    }
   });
 });
 

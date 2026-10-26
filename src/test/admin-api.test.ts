@@ -108,9 +108,9 @@ describe("admin bounty save payload", () => {
     expect(Object.keys(init.body)).toContain("coverImageUrl");
   });
 
-  it("POST still sends maxWinners 1 because the form does not expose it", async () => {
+  it("POST sends the form's maxWinners", async () => {
     const { http, fetchJson } = createHttp();
-    await createAdminApi(http).saveAdminBounty(bounty, true);
+    await createAdminApi(http).saveAdminBounty({ ...bounty, maxWinners: 1 }, true);
     const [, init] = fetchJson.mock.calls[0] as unknown as [string, { body: Record<string, unknown> }];
     expect(init.body).toMatchObject({ maxWinners: 1 });
   });
