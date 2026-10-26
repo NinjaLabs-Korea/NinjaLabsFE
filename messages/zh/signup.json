@@ -102,11 +102,14 @@
         "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
       },
       "nicknameHint": "2–50 个字符：字母、数字、_ . -，且开头和结尾必须是字母或数字。",
+      "signInAgain": "重新登录（已填写的内容会保留）",
       "nicknameErrors": {
         "tooShort": "至少 2 个字符。",
         "tooLong": "最多 50 个字符。",
         "reserved": "该词为保留字，请换一个昵称。",
         "chars": "只能使用字母、数字和 _ . -（不能有空格）。",
+        "lookalike": "不能使用全角字符或数学字体字符，请使用普通字符。",
+        "mixedScript": "不能在同一昵称中混用拉丁字母与西里尔/希腊字母。",
         "edge": "开头和结尾必须是字母或数字。",
         "staticExtension": "昵称不能以 .js 等文件扩展名结尾。"
       },

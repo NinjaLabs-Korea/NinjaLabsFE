@@ -238,6 +238,12 @@ export type ApiHttp = {
   /** Page-load restore: legacy migration if needed, then one `POST /api/auth/refresh` (skipped without the session hint). */
   initSession: () => Promise<RefreshResult>;
   signOutRemote: () => Promise<void>;
+  /**
+   * User-initiated sign-out: asks the BE to revoke the session FIRST and ends the local session only when that worked
+   * (the HttpOnly cookie cannot be cleared from JS, so a failed call must not look like a sign-out). Resolves `false`
+   * when the revoke failed; the session is then untouched and the user can retry.
+   */
+  revokeSession: () => Promise<boolean>;
 };
 
 /**
@@ -291,11 +297,21 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
     });
   }
 
-  function postLogout(): Promise<void> {
-    // 서버 세션 폐기는 best-effort. 실패해도 로컬 로그아웃은 완료된 상태. 쿠키는 BE가 지운다(Set-Cookie 만료).
+  /**
+   * Revokes the server session; the BE clears the cookie (Set-Cookie expiry). Resolves whether the session is gone: 2xx,
+   * or 401/403 (no cookie / already revoked, nothing left to close). Other statuses and network errors resolve `false`.
+   * Callers that end the local session first treat it as best-effort; `revokeSession` waits for it.
+   */
+  function postLogout(): Promise<boolean> {
     return fetch(`${AUTH_PROXY_PATH}/logout`, cookieAuthInit({}))
-      .then((response) => onboardingLog("session.logout.completed", { status: response.status }))
-      .catch(() => onboardingLog("session.logout.failed", { reason: "NETWORK_ERROR" }));
+      .then((response) => {
+        onboardingLog("session.logout.completed", { status: response.status });
+        return response.ok || response.status === 401 || response.status === 403;
+      })
+      .catch(() => {
+        onboardingLog("session.logout.failed", { reason: "NETWORK_ERROR" });
+        return false;
+      });
   }
 
   /** 락 안에서 실행되는 실제 회전. `migrate`면 락 안에서 레거시 refresh 토큰을 다시 읽는다(다른 탭이 이미 옮겼을 수 있다). */
@@ -448,6 +464,14 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       onboardingLog("session.logout.requested");
       // Always sent: this tab cannot see whether the HttpOnly cookie exists.
       await postLogout();
+    },
+
+    revokeSession: async () => {
+      onboardingLog("session.logout.requested");
+      if (!(await postLogout())) return false;
+      endLocalSession();
+      options.broadcast?.("signed-out");
+      return true;
     },
   };
 }

@@ -7,8 +7,11 @@
 export const FLASH_STORAGE_KEY = "ninja.flash";
 export const FLASH_EVENT = "ninja:flash";
 
-export const flashKeys = ["accountDeleted", "signInRequired"] as const;
+export const flashKeys = ["accountDeleted", "signInRequired", "signOutFailed"] as const;
 export type FlashKey = (typeof flashKeys)[number];
+
+/** Flashes that report a failure (rendered as a danger toast); the rest are neutral confirmations. */
+export const FAILURE_FLASH_KEYS: readonly FlashKey[] = ["signOutFailed"];
 
 const isFlashKey = (value: unknown): value is FlashKey => flashKeys.includes(value as FlashKey);
 

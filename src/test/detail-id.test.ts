@@ -135,6 +135,15 @@ describe("decodeDetailId", () => {
       expect(isValidDetailId("members", decodeDetailId(encoded), "api")).toBe(true);
     }
   });
+  it("NFC-normalises a decomposed nickname so it reaches the same page as the composed one", () => {
+    const nfd = "Cafe\u0301";
+    expect(isValidDetailId("members", nfd, "api")).toBe(false);
+    expect(decodeDetailId(encodeURIComponent(nfd))).toBe("Caf\u00e9");
+    expect(isValidDetailId("members", decodeDetailId(encodeURIComponent(nfd)), "api")).toBe(true);
+    const jamo = "\u1112\u1161\u11ab"; // Hangul jamo for 한
+    expect(decodeDetailId(encodeURIComponent(jamo + "x"))).toBe("\ud55cx");
+    expect(resolveDetailRoute(`/en/members/${encodeURIComponent(nfd)}`)).toEqual({ locale: "en", kind: "members", id: "Caf\u00e9" });
+  });
   it("leaves plain ids alone and turns an undecodable id into an empty (invalid) one", () => {
     expect(decodeDetailId("builderone")).toBe("builderone");
     expect(decodeDetailId("%E0%A4%A")).toBe("");

@@ -22,6 +22,14 @@ describe.each([["en", en], ["ko", ko], ["zh", zh]] as const)("agents.register co
     expect(typeof register.withdrawalBadge).toBe("string");
   });
 
+  it("keeps developer wording out of the user-facing list and links to the pages that do the work", () => {
+    const items = Object.values(register.verificationItems as Record<string, string>).join(" ");
+    expect(items).not.toMatch(/database|1:N|데이터베이스|数据库/i);
+    expect(register).not.toHaveProperty("verificationItems.failure");
+    expect(register.profileNote as string).toContain("<link>");
+    expect(register.withdrawal as string).toContain("<link>");
+  });
+
   it("does not ask for a public key", () => {
     const steps = register.steps as Record<string, { heading: string }>;
     expect(steps.publicKey.heading).not.toMatch(/public key|公钥|공개 키/i);

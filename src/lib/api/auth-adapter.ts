@@ -15,6 +15,7 @@ import {
   LoginExchangeError,
 } from "@/lib/api/oauth";
 import { fetchMe, toClientUser } from "@/lib/api/me";
+import { pushFlash } from "@/lib/flash";
 import { getOnboardingPath, HOME_PATH } from "@/lib/auth-route";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
 import { takeReturnPath } from "@/lib/return-path";
@@ -22,12 +23,19 @@ import { stripLocale, withLocaleOf } from "@/i18n/routing";
 
 export { getOnboardingPath };
 
+/**
+ * Pages an unfinished sign-up may stay on after a session restore: the sign-up steps themselves, and `/account`, the only
+ * place to delete the account (`DELETE /users/me` works from onboarding step 2, so someone who only did the Google step
+ * must be able to leave without finishing a profile or wallet first).
+ */
+const ONBOARDING_EXEMPT = /^\/(?:signup\/|account(?:\/|$))/;
+
 export function shouldRedirectToOnboarding(
   user: AuthSnapshot["user"],
   pathname: string,
 ): string | null {
   const onboardingPath = getOnboardingPath(user);
-  if (!onboardingPath || stripLocale(pathname).startsWith("/signup/")) return null;
+  if (!onboardingPath || ONBOARDING_EXEMPT.test(stripLocale(pathname))) return null;
   return withLocaleOf(pathname, onboardingPath);
 }
 
@@ -217,11 +225,15 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     },
     signOut: async () => {
       onboardingLog("session.signout.started");
-      // The local session ends synchronously inside signOutRemote (token dropped, other tabs told); only the server-side
-      // revoke is awaited, and a hung BE can hold it for the request timeout. Show signed-out now, not after that wait.
-      const remote = http.signOutRemote();
+      // Signed-out is shown only after the BE confirmed the revoke: the 14-day HttpOnly cookie cannot be cleared from
+      // JS, so claiming sign-out after a failed call would leave a live session behind a "signed out" header (shared
+      // computers). On failure the session stays as it is, the user is told, and can press Sign out again.
+      if (!(await http.revokeSession())) {
+        onboardingLog("session.signout.failed");
+        pushFlash("signOutFailed");
+        return snapshot;
+      }
       const signedOut = setSnapshot({ status: "signed-out", user: null });
-      await remote;
       onboardingLog("session.signout.completed");
       return signedOut;
     },

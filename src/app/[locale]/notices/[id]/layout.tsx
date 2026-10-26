@@ -1,6 +1,16 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { validateDetailId } from "@/lib/detail-id";
 import { getRuntimeNotice } from "@/lib/notices";
+
+// Same as the member layout: the layout's notFound() skips the page's generateMetadata, so give it the not-found title.
+export async function generateMetadata({ params }: LayoutProps<"/[locale]/notices/[id]">): Promise<Metadata> {
+  const { locale, id } = await params;
+  if ((await validateDetailId("notices", id)) && (await getRuntimeNotice(id))) return {};
+  const t = await getTranslations({ locale, namespace: "notices.detail" });
+  return { alternates: {}, title: t("notFoundTitle") };
+}
 
 // 없는 id는 loading.tsx 스트리밍이 시작되기 전에 여기서 404로 끝낸다.
 // 스트리밍이 시작되면 상태 코드가 200으로 고정되기 때문이다 (Next docs: loading.js > Status Codes).

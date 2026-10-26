@@ -77,6 +77,19 @@ describe("proxy: in-locale routes (mock mode)", () => {
   });
 });
 
+describe("proxy: 404 rewrite keeps a CSP on nonce routes", () => {
+  it.each(["/en/agents/xyz", "/en/account/foo", "/en/admin/zzz", "/en/auth/callback/x", "/ko/agents/00000000-0000-0000-0000-000000000000"])(
+    "%s carries the public (non-nonce) policy",
+    async (pathname) => {
+      const { status, response } = await run(pathname);
+      expect(status).toBe(404);
+      const csp = response.headers.get("content-security-policy") ?? response.headers.get("content-security-policy-report-only");
+      expect(csp).toContain("script-src 'self' 'unsafe-inline'");
+      expect(csp).not.toContain("nonce-");
+    },
+  );
+});
+
 describe("proxy: detail ids in api mode (shape only, no BE call)", () => {
   it("lets well-formed ids through and 404s malformed or reserved ones", async () => {
     runtime.mode = "api";

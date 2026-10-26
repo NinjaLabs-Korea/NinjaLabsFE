@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuthActions, useAuthSnapshot, useOnboardingApi, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
@@ -46,6 +47,36 @@ export function saveErrorKey(error: unknown): SaveErrorKey {
   return ERROR_COPY.profileSave.fallback;
 }
 
+/**
+ * Onboarding draft kept across a session that ended mid-form: the sign-in goes through Google and back (same tab), so
+ * sessionStorage survives it. Public profile text only, no secrets; cleared on a successful save.
+ */
+const DRAFT_KEY = "ninja.profileDraft";
+type Draft = { nickname: string; bio: string; tags: string[] };
+
+function readDraft(): Draft | null {
+  try {
+    const raw = window.sessionStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const value: unknown = JSON.parse(raw);
+    if (!value || typeof value !== "object") return null;
+    const { nickname, bio, tags } = value as Record<string, unknown>;
+    if (typeof nickname !== "string" || typeof bio !== "string" || !Array.isArray(tags)) return null;
+    return { nickname, bio, tags: tags.filter((tag): tag is string => fieldTags.some((known) => known.value === tag)) };
+  } catch {
+    return null;
+  }
+}
+
+function writeDraft(draft: Draft | null): void {
+  try {
+    if (draft) window.sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    else window.sessionStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // storage blocked: the form on screen still keeps what was typed
+  }
+}
+
 type ProfileFormProps = {
   /**
    * `onboarding` (default): signup step 3, saves and continues to step 4. `edit`: the account page, prefilled from the signed-in
@@ -64,10 +95,17 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   const auth = useAuthSnapshot();
   const { refresh } = useAuthActions();
   const signedInUser = auth.status === "signed-in" ? auth.user : null;
+  // Signed in earlier on this form and signed out now (session revoked/expired, or another tab signed out): keep the form
+  // on screen with the typed values and say so, instead of sending the user to the login page empty-handed.
+  const [wasSignedIn, setWasSignedIn] = useState(false);
+  if (signedInUser && !wasSignedIn) setWasSignedIn(true);
+  const sessionEnded = mode === "api" && wasSignedIn && auth.status === "signed-out";
+  // Onboarding only: a draft left by an ended session pre-fills the form once the user is back.
+  const [draft] = useState(() => (!editing && mode === "api" && typeof window !== "undefined" ? readDraft() : null));
   // Edit mode starts from what is saved; onboarding starts empty (mock mode prefills a demo profile).
-  const [nickname, setNickname] = useState(editing && signedInUser ? signedInUser.handle : mode === "mock" ? signup.profile.nickname : "");
-  const [bio, setBio] = useState(editing && signedInUser ? signedInUser.bio ?? "" : mode === "mock" ? signup.profile.bio : "");
-  const [tags, setTags] = useState<string[]>(editing && signedInUser ? [...(signedInUser.tags ?? [])] : mode === "mock" ? ["DEV", "DESIGN"] : []);
+  const [nickname, setNickname] = useState(editing && signedInUser ? signedInUser.handle : draft ? draft.nickname : mode === "mock" ? signup.profile.nickname : "");
+  const [bio, setBio] = useState(editing && signedInUser ? signedInUser.bio ?? "" : draft ? draft.bio : mode === "mock" ? signup.profile.bio : "");
+  const [tags, setTags] = useState<string[]>(editing && signedInUser ? [...(signedInUser.tags ?? [])] : draft ? draft.tags : mode === "mock" ? ["DEV", "DESIGN"] : []);
   const [saved, setSaved] = useState(false);
   const [state, setState] = useState<"idle" | "pending" | "error">("idle");
   // 필드 검증 에러. 저장 실패(state "error", 예: 닉네임 중복)와는 따로 표시한다.
@@ -93,6 +131,10 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         : nicknameCheck.available
           ? "available"
           : "taken";
+
+  useEffect(() => {
+    if (sessionEnded && !editing) writeDraft({ nickname, bio, tags });
+  }, [sessionEnded, editing, nickname, bio, tags]);
 
   useEffect(() => {
     if (nicknameRuleError || isOwnNickname) return;
@@ -161,6 +203,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         return;
       }
       onboardingLog("profile.save.succeeded", { targetPath: "/signup/get-started" });
+      writeDraft(null);
       window.location.assign(withLocaleOf(window.location.pathname, "/signup/get-started"));
     } catch (error) {
       onboardingLog("profile.save.failed", onboardingErrorDetails(error));
@@ -266,7 +309,14 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         {state === "pending" ? t("saving") : editing ? t("save") : t("submit")}
       </button>
       {saved ? <p className="text-sm font-semibold text-success" role="status">{t("saved")}</p> : null}
-      {state === "error" ? (
+      {sessionEnded ? (
+        <div className="space-y-2" role="alert">
+          <p className="text-sm text-danger">{tSaveErrors("session")}</p>
+          <Link className="inline-block text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/signup">
+            {t("signInAgain")}
+          </Link>
+        </div>
+      ) : state === "error" ? (
         <p className="text-sm text-danger" role="alert">
           {tSaveErrors(saveError)}
         </p>
