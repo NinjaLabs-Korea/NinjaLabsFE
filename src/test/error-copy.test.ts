@@ -103,7 +103,8 @@ describe("knownCode / errorCopyKey", () => {
 
   it("falls back to the surface's fallback key", () => {
     expect(errorCopyKey(new ApiHttpError(409, "AGENT_NOT_ACTIVE"), ERROR_COPY.agentRotate)).toBe("AGENT_NOT_ACTIVE");
-    expect(errorCopyKey(new ApiHttpError(404, "AGENT_NOT_FOUND"), ERROR_COPY.agentRotate)).toBe("generic");
+    expect(errorCopyKey(new ApiHttpError(404, "AGENT_NOT_FOUND"), ERROR_COPY.agentRotate)).toBe("AGENT_NOT_FOUND");
+    expect(errorCopyKey(new ApiHttpError(500, "SOMETHING_ELSE"), ERROR_COPY.agentRotate)).toBe("generic");
     expect(errorCopyKey(new TypeError("Failed to fetch"), ERROR_COPY.applicationWithdraw)).toBe("generic");
   });
 });
