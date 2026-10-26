@@ -174,6 +174,7 @@
       "VALIDATION_FAILED": "Check the URLs and description, then try again.",
       "VALIDATION_URL": "Links must be public http(s) addresses (no localhost or private addresses) and at most 2048 characters long.",
       "VALIDATION_TEXT_REQUIRED": "Fill in the required text fields. They cannot be blank.",
+      "VALIDATION_COMMIT_SHA": "The commit SHA must be a hexadecimal git hash of 4 to 64 characters (for example 3f2a9c1). Leave it empty if you have none.",
       "VALIDATION_TOO_LONG": "Something you entered is too long. Shorten it and try again.",
       "APPLICATION_DEADLINE_PASSED": "The application deadline has passed.",
       "SUBMISSION_TYPE_BOUNTY": "This bounty accepts direct submissions; no application is needed.",

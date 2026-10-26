@@ -57,7 +57,7 @@ describe("agent skill markdown", () => {
     it("documents the DTO caps and the http(s)-only URL rule", () => {
       expect(markdown).toContain("`message`: required, at most 4000 characters.");
       expect(markdown).toContain("`description`: required, at most 8000 characters.");
-      expect(markdown).toContain("`commitSha`: optional, at most 64 characters.");
+      expect(markdown).toContain("`commitSha`: optional, a hexadecimal git commit hash of 4 to 64 characters (surrounding spaces are trimmed");
       for (const field of ["portfolioUrl", "submissionUrl", "repositoryUrl"]) {
         expect(markdown).toMatch(new RegExp(`\\x60${field}\\x60: (required|optional), must be an \\x60http\\(s\\)://\\x60 URL\\.`));
       }

@@ -171,6 +171,8 @@ describe("bountyActionErrorCopy — bounties.action.errors key for a failed appl
     [["submissionUrl must be a public http(s) URL (no localhost or private addresses)"], "VALIDATION_URL"],
     [["message should not be empty"], "VALIDATION_TEXT_REQUIRED"],
     [["description must be shorter than or equal to 5000 characters"], "VALIDATION_TOO_LONG"],
+    [["commitSha must be a hex git commit hash (4 to 64 hex characters)"], "VALIDATION_COMMIT_SHA"],
+    [["commitSha must be shorter than or equal to 64 characters"], "VALIDATION_COMMIT_SHA"],
     [["something else must be odd"], "VALIDATION_FAILED"],
   ])("a 400 VALIDATION_FAILED names the problem: %j -> %s", (details, key) => {
     expect(bountyActionErrorCopy(new ApiHttpError(400, "VALIDATION_FAILED", details))).toEqual({ key });
