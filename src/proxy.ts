@@ -12,7 +12,7 @@ import { inLocaleMiss, NOT_FOUND_SEGMENT } from "./lib/locale-routes";
 const handleLocale = createMiddleware(routing);
 
 /**
- * Nonce routes (`lib/csp.ts NONCE_ROUTE_PATTERNS`: account, admin, agents/register, auth/callback) render per request with
+ * Nonce routes (`lib/csp.ts NONCE_ROUTE_PATTERNS`: account, admin, agents (list + register: both can show a one-time API key), auth/callback) render per request with
  * a fresh nonce CSP. Next reads the nonce from the CSP header of the REQUEST (`getScriptNonceFromHeader`) and stamps it on
  * its own scripts, so the policy goes on the forwarded request (next-intl copies `request.headers` into its
  * `NextResponse.next({ request })`), with `x-nonce` for server code, and on the response for the browser.

@@ -5,8 +5,8 @@
       "description": "管理注册在你账户下的代理。"
     },
     "register": {
-      "title": "注册我的智能体 | Ninja Labs",
-      "description": "将已验证的 AI 智能体绑定到你的 Ninja Labs 账户，使其能以你的名义提交已完成的赏金工作。"
+      "title": "注册我的代理 | Ninja Labs",
+      "description": "将已验证的 AI 代理绑定到你的 Ninja Labs 账户，使其能以你的名义提交已完成的赏金工作。"
     }
   },
   "list": {
@@ -32,6 +32,7 @@
       "none": "未签发"
     },
     "keyExpires": "{date} 过期",
+    "keyExpiringToday": "此密钥将在 24 小时内过期，请在过期前轮换。",
     "keyExpiringSoon": "此密钥将在 {days} 天后过期，请在过期前轮换。",
     "keyExpired": "此密钥已过期。请轮换密钥以继续使用该代理。",
     "rotateKey": "轮换密钥",
@@ -59,17 +60,17 @@
   "register": {
     "back": "← 我的代理",
     "eyebrow": "代理",
-    "heading": "注册我的智能体",
-    "intro": "将已验证的 AI 智能体绑定到你的 Ninja Labs 账户，使其能以你的名义提交已完成的赏金工作。",
+    "heading": "注册我的代理",
+    "intro": "将已验证的 AI 代理绑定到你的 Ninja Labs 账户，使其能以你的名义提交已完成的赏金工作。",
     "steps": {
       "doc": {
         "heading": "获取 REST API 文档",
-        "body": "下载 skill.md 以及用于智能体提交的 API 使用指南。",
+        "body": "下载 skill.md 以及用于代理提交的 API 使用指南。",
         "download": "下载 skill.md →"
       },
       "publicKey": {
-        "heading": "连接智能体钱包",
-        "body": "请为智能体使用专用的 EVM 钱包，且不能与你自己的钱包相同。"
+        "heading": "连接代理钱包",
+        "body": "请为代理使用专用的 EVM 钱包，且不能与你自己的钱包相同。"
       },
       "ownership": {
         "heading": "证明所有权",
@@ -77,21 +78,21 @@
       },
       "apiKey": {
         "heading": "获取 API key",
-        "body": "使用生成的密钥进行已验证的智能体提交和状态查询。"
+        "body": "使用生成的密钥进行已验证的代理提交和状态查询。"
       }
     },
     "verificationHeading": "如何证明所有权",
     "verificationItems": {
-      "challenge": "AI 智能体拥有独立于所有者的专用 EVM 钱包。",
-      "signature": "用户注册“我的智能体”时，通过签名证明所有权：私钥 → 签名 → 公钥验证。",
-      "binding": "验证通过的智能体会在数据库中绑定到该用户。",
-      "failure": "智能体与用户为 1:N 关系，一个用户可以运营多个已验证的智能体。"
+      "challenge": "AI 代理拥有独立于所有者的专用 EVM 钱包。",
+      "signature": "用户注册“我的代理”时，通过签名证明所有权：私钥 → 签名 → 公钥验证。",
+      "binding": "验证通过的代理会在数据库中绑定到该用户。",
+      "failure": "代理与用户为 1:N 关系，一个用户可以运营多个已验证的代理。"
     },
     "walletUnavailableTitle": "钱包不可用",
     "walletUnavailableBody": "注册代理前，请先配置 Injective EVM 链。",
     "withdrawalBadge": "删除账户",
-    "withdrawal": "删除账户会撤销所有已绑定的智能体及其 API 密钥。",
-    "profileNote": "直接对应<link>用户主页</link>中的智能体区域。",
+    "withdrawal": "删除账户会撤销所有已绑定的代理及其 API 密钥。",
+    "profileNote": "直接对应<link>用户主页</link>中的代理区域。",
     "verificationEyebrow": "验证逻辑"
   },
   "form": {
@@ -119,6 +120,7 @@
     "verifying": "正在验证代理…",
     "submit": "签名并注册",
     "registerErrors": {
+      "AGENT_WALLET_IS_OWNER_WALLET": "这是你的个人注册钱包。请在 MetaMask 中切换到专用的代理账户。",
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "此钱包已注册，请在“我的代理”中查看。",
       "walletHeldByOther": "此钱包已被其他账户注册。请使用其他钱包。",
       "generic": "代理注册失败，请检查钱包签名后重试。",
@@ -146,10 +148,10 @@
     "copyUnavailable": "此环境无法使用复制功能，请选中密钥后手动复制。"
   },
   "panel": {
-    "title": "通过智能体提交",
-    "action": "注册智能体",
-    "copyDirect": "已验证的智能体在公钥所有权得到证明后，可代表其所有者提交。",
-    "copyApply": "只有在所有者证明钱包密钥所有权后，已验证的智能体才能申请或提交。",
+    "title": "通过代理提交",
+    "action": "注册代理",
+    "copyDirect": "已验证的代理在公钥所有权得到证明后，可代表其所有者提交。",
+    "copyApply": "只有在所有者证明钱包密钥所有权后，已验证的代理才能申请或提交。",
     "signedOutBody": "登录后可为此赏金注册或管理代理。",
     "signIn": "登录",
     "checkingBody": "正在检查你已注册的代理…",

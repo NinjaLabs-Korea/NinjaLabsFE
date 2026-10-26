@@ -203,8 +203,21 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
  * - 목록 밖 BE 코드 → `unknown` + 원 코드(`{code}`로 표시)
  * - 네트워크 등 HTTP 응답이 아닌 실패 → `generic` (레지스트리의 `fallback`)
  */
+/** `bounties.action.errors.<key>` for a 400 `VALIDATION_FAILED` whose message names what was wrong (more specific than the generic line). */
+type VALIDATION_DETAIL_KEYS = "VALIDATION_URL" | "VALIDATION_TEXT_REQUIRED" | "VALIDATION_TOO_LONG";
+
+function validationDetailKey(error: ApiHttpError): VALIDATION_DETAIL_KEYS | null {
+  const details = error.details.join(" | ");
+  // BE `IsPublicHttpUrl` answers this one message for a non-http(s) URL, a private/localhost host and an over-long URL alike.
+  if (/public http\(s\) URL/i.test(details)) return "VALIDATION_URL";
+  if (/should not be empty/i.test(details)) return "VALIDATION_TEXT_REQUIRED";
+  if (/shorter than or equal to|longer than/i.test(details)) return "VALIDATION_TOO_LONG";
+  return null;
+}
+
 export type BountyActionErrorCopy =
   | { key: (typeof ERROR_COPY.bountyAction.codes)[number] }
+  | { key: VALIDATION_DETAIL_KEYS }
   | { key: "unknown"; code: string }
   | { key: typeof ERROR_COPY.bountyAction.fallback };
 
@@ -219,6 +232,10 @@ export function isStaleRowsError(error: unknown): boolean {
 
 export function bountyActionErrorCopy(error: unknown): BountyActionErrorCopy {
   const code = knownCode(error, ERROR_COPY.bountyAction.codes);
+  if (code === "VALIDATION_FAILED" && error instanceof ApiHttpError) {
+    const detail = validationDetailKey(error);
+    if (detail) return { key: detail };
+  }
   if (code) return { key: code };
   if (error instanceof ApiHttpError) return { key: "unknown", code: error.code };
   return { key: ERROR_COPY.bountyAction.fallback };

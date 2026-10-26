@@ -41,6 +41,15 @@ describe("agent skill markdown", () => {
       expect(markdown).toContain("`message` array");
     });
 
+    it("states the public-URL rule, the string 400 for a bad id, the 413 and that the limit is per agent", () => {
+      expect(markdown).toContain("public `http://` and `https://` URLs");
+      expect(markdown).toContain("`localhost`");
+      expect(markdown).toContain("must be a public http(s) URL (no localhost or private addresses)");
+      expect(markdown).toContain("(not per key: rotating the key does not reset the bucket");
+      expect(markdown).toContain("Validation failed (uuid is expected)");
+      expect(markdown).toContain("`413`");
+    });
+
     it("documents the DTO caps and the http(s)-only URL rule", () => {
       expect(markdown).toContain("`message`: required, at most 4000 characters.");
       expect(markdown).toContain("`description`: required, at most 8000 characters.");
@@ -48,7 +57,7 @@ describe("agent skill markdown", () => {
       for (const field of ["portfolioUrl", "submissionUrl", "repositoryUrl"]) {
         expect(markdown).toMatch(new RegExp(`\\x60${field}\\x60: (required|optional), must be an \\x60http\\(s\\)://\\x60 URL\\.`));
       }
-      expect(markdown).toContain("Only `http://` and `https://` URLs are accepted anywhere");
+      expect(markdown).toContain("Only public `http://` and `https://` URLs are accepted anywhere");
     });
 
     it.each([

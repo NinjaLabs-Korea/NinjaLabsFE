@@ -73,6 +73,8 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<PostFieldErrors>({});
   const [saving, setSaving] = useState(false);
+  // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
+  const savingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminPost | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
@@ -132,7 +134,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   };
 
   const savePost = async () => {
-    if (saving) return;
+    if (savingRef.current) return;
     // A freshly picked file replaces the stored thumbnail, so only the kept URL is checked.
     const stored = mode === "create" ? undefined : records.find((item) => item.slug === mode);
     const nextErrors = validatePostForm({ ...form, thumbnail: thumbnailFile ? null : form.thumbnail }, stored);
@@ -141,6 +143,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
       return;
     }
+    savingRef.current = true;
     setSaving(true);
     try {
       const thumbnail = thumbnailFile ? (await api.uploadAdminMedia(thumbnailFile)).url : form.thumbnail;
@@ -157,6 +160,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };

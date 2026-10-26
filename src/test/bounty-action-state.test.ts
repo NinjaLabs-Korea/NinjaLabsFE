@@ -160,6 +160,15 @@ describe("bountyActionErrorCopy — bounties.action.errors key for a failed appl
     expect(bountyActionErrorCopy(new ApiHttpError(400, code))).toEqual({ key: code });
   });
 
+  it.each([
+    [["submissionUrl must be a public http(s) URL (no localhost or private addresses)"], "VALIDATION_URL"],
+    [["message should not be empty"], "VALIDATION_TEXT_REQUIRED"],
+    [["description must be shorter than or equal to 5000 characters"], "VALIDATION_TOO_LONG"],
+    [["something else must be odd"], "VALIDATION_FAILED"],
+  ])("a 400 VALIDATION_FAILED names the problem: %j -> %s", (details, key) => {
+    expect(bountyActionErrorCopy(new ApiHttpError(400, "VALIDATION_FAILED", details))).toEqual({ key });
+  });
+
   it("mock-mode errors take the same path", () => {
     expect(bountyActionErrorCopy(new MockApiError(409, "ALREADY_APPLIED"))).toEqual({ key: "ALREADY_APPLIED" });
   });

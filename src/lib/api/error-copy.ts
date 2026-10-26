@@ -109,7 +109,7 @@ export const ERROR_COPY = {
   /** 에이전트 등록 (register → 서명 → verify) — `agents/AgentRegisterForm.tsx`. 필드 검증(VALIDATION_FAILED)은 인라인으로 따로 처리한다. */
   agentRegister: {
     messages: "agents.form.registerErrors",
-    codes: ["AGENT_KEY_OR_WALLET_ALREADY_REGISTERED", "TOO_MANY_REQUESTS"],
+    codes: ["AGENT_KEY_OR_WALLET_ALREADY_REGISTERED", "AGENT_WALLET_IS_OWNER_WALLET", "TOO_MANY_REQUESTS"],
     fallback: "generic",
   },
   /**

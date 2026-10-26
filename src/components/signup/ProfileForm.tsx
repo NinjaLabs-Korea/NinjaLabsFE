@@ -125,16 +125,13 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
     event.preventDefault();
     if (inFlight.current) return;
     const nextErrors: FieldErrors = {
-      ...(nicknameRuleError
-        ? { nickname: `nicknameErrors.${nicknameRuleError}` }
-        : nicknameStatus === "taken"
-          ? { nickname: "nicknameCheck.taken" }
-          : {}),
+      ...(nicknameRuleError ? { nickname: `nicknameErrors.${nicknameRuleError}` } : {}),
       ...(tags.length === 0 ? { tags: "errors.tags" } : {}),
       ...(!bio.trim() ? { bio: "errors.bio" } : {}),
     };
     setFieldErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) {
+    // A taken nickname is announced once, by the status line under the field (`nickname-status`), not again as a field error.
+    if (Object.keys(nextErrors).length > 0 || nicknameStatus === "taken") {
       onboardingLog("profile.validation.failed", {
         nicknameLength: nickname.trim().length,
         bioLength: bio.trim().length,
@@ -174,11 +171,11 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         ...("nickname" in rejected ? { nickname: nicknameRuleError ? `nicknameErrors.${nicknameRuleError}` : "errors.nicknameRejected" } : {}),
         ...("bio" in rejected ? { bio: bio.trim() ? "errors.bioRejected" : "errors.bio" } : {}),
         ...("tags" in rejected ? { tags: "errors.tags" } : {}),
-        ...(key === "NICKNAME_TAKEN" ? { nickname: "nicknameCheck.taken" } : {}),
       });
       if (key === "NICKNAME_TAKEN") setNicknameCheck({ nickname: trimmedNickname, available: false });
       setSaveError(key);
-      setState("error");
+      // NICKNAME_TAKEN is already said by the status line under the field; a form-level alert would repeat it in other words.
+      setState(key === "NICKNAME_TAKEN" ? "idle" : "error");
       inFlight.current = false;
     }
   };
@@ -202,7 +199,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
           minLength={NICKNAME_MIN}
           name="nickname"
           aria-describedby={nicknameDescribedBy}
-          aria-invalid={fieldErrors.nickname ? true : undefined}
+          aria-invalid={fieldErrors.nickname || nicknameStatus === "taken" ? true : undefined}
           onChange={(event) => {
             setNickname(event.target.value);
             setSaved(false);

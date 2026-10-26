@@ -141,7 +141,7 @@ export function AgentsView() {
     }
   };
 
-  const formatDate = (value: string) => format.dateTime(new Date(value), { dateStyle: "medium", timeStyle: "short" });
+  const formatDate = (value: string) => format.dateTime(new Date(value), { dateStyle: "medium", timeStyle: "short", timeZoneName: "short" });
 
   return (
     <>
@@ -159,14 +159,16 @@ export function AgentsView() {
             : key.kind === "expired"
               ? t("keyExpired")
               : key.kind === "active" && key.expiringSoon && key.daysLeft !== null
-                ? t("keyExpiringSoon", { days: key.daysLeft })
+                ? key.withinDay
+                  ? t("keyExpiringToday")
+                  : t("keyExpiringSoon", { days: key.daysLeft })
                 : null;
 
           return (
-            <article className={`rounded-card border border-dashed border-border bg-surface p-5${revoked ? " opacity-70" : ""}`} key={agent.id}>
+            <article className={`min-w-0 rounded-card border border-dashed border-border bg-surface p-5${revoked ? " opacity-70" : ""}`} key={agent.id}>
               <div className="flex flex-wrap items-center gap-2">
                 <h2
-                  className="min-w-0 break-words font-display text-lg font-bold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  className="min-w-0 [overflow-wrap:anywhere] font-display text-lg font-bold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   ref={(element) => {
                     if (element) headingRefs.current.set(agent.id, element);
                     else headingRefs.current.delete(agent.id);

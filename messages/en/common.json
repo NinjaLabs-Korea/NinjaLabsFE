@@ -79,7 +79,7 @@
       "CHALLENGE_NOT_FOUND": "The verification request was not found. Select Verify wallet again to get a new one.",
       "CHALLENGE_EXPIRED": "The verification request expired or was already used. Select Verify wallet again and sign the new message.",
       "INVALID_SIGNATURE": "The signature does not match this wallet. Sign with the connected address and try again.",
-      "WALLET_ALREADY_LINKED": "This wallet is already linked to another account, or your account already has a wallet. Use a different wallet, or sign in with the account that owns this one.",
+      "WALLET_ALREADY_LINKED": "This wallet is already linked to another account, or your account already has a wallet. A linked wallet cannot be changed here. If it is the wrong one, or it belongs to another account, contact the Ninja Labs team.",
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     },
