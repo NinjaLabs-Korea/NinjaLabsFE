@@ -56,7 +56,7 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
   // Only a session ended from outside (refresh rejected, another tab) says "expired"; the user's own Sign out or this
   // page's account deletion shows the plain "sign in" gate.
   if (authSnapshot.status === "signed-out") {
-    return <SignedOutPanel message={authSnapshot.reason === "session-ended" ? tAccount("sessionExpired") : t("signedOutMessage")} />;
+    return <SignedOutPanel message={authSnapshot.reason === "session-ended" ? tAccount("sessionExpired") : t("signedOutMessage")} returnTo="/account" />;
   }
 
   if (authSnapshot.status !== "signed-in") {

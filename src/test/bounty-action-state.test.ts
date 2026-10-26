@@ -58,6 +58,9 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["session still loading", { auth: "loading" }, { kind: "checkingSession" }],
   ["session loading on a closed bounty (a revision may still be resubmittable)", { auth: "loading", status: "closed" }, { kind: "checkingSession" }],
   ["signed out on an active bounty", { auth: "signed-out", applicationRequired: true }, { kind: "signedOut" }],
+  // 2b. 지원 마감 후엔 비로그인에게도 지원 CTA가 없다
+  ["signed out, application deadline passed", { auth: "signed-out", applicationRequired: true, applicationClosed: true }, { kind: "closed", reason: "applications" }],
+  ["signed out, application deadline passed but no application needed", { auth: "signed-out", applicationRequired: false, applicationClosed: true }, { kind: "signedOut" }],
   // 4. 내 행 조회
   ["submissions loading", { submissions: loading }, { kind: "checkingStatus" }],
   ["applications loading on an apply bounty", { applicationRequired: true, applications: loading }, { kind: "checkingStatus" }],
@@ -94,6 +97,9 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["rows for other bounties do not count", { applicationRequired: true, applications: loaded([app("approved", null, "other")]) }, { kind: "applyForm" }],
   ["application rejected", { applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["application rejected with the operator's note", { applicationRequired: true, applications: loaded([{ ...app("rejected"), reviewNote: "Portfolio too thin" }]) }, { kind: "applicationRejected", note: "Portfolio too thin" }],
+  ["application auto-rejected by a cancelled bounty", { status: "closed", applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "closed", reason: "cancelled" }],
+  ["rejection on a completed bounty stays a rejection", { status: "closed", completed: true, applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
+  ["rejection on a bounty only past its deadline stays a rejection", { status: "closed", deadlinePassed: true, applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["rejection beats the local applied flag", { applicationRequired: true, applied: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["application under review", { applicationRequired: true, applications: loaded([app("open")]) }, { kind: "applicationUnderReview" }],
   ["the local applied flag does not hide an approved server row", { applicationRequired: true, applied: true, applications: loaded([app("approved")]) }, firstSubmit],

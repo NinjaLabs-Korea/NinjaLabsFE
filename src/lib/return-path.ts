@@ -81,3 +81,8 @@ export function takeReturnPath(): string | null {
   clearReturnPath();
   return value;
 }
+
+/** `Link` href for "sign in, then come back here": `/signup?returnTo=<path>` (the sign-in button remembers it; see `rememberReturnPath`). */
+export function signInHref(returnTo: string) {
+  return { pathname: "/signup", query: { returnTo } } as const;
+}

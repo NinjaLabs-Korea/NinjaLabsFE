@@ -6,6 +6,7 @@ import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
+import { signInHref } from "@/lib/return-path";
 import { APPLICATION_MESSAGE_MAX, COMMIT_SHA_MAX, SUBMISSION_DESCRIPTION_MAX } from "@/lib/input-limits";
 import { payoutBadge } from "@/lib/payout";
 import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
@@ -72,8 +73,10 @@ function StatusPanel({ title, body, note, tone = "muted", feedback, link, headin
 }
 
 /** Figma 15/15v public (signed-out) state: heading + LOGIN REQUIRED badge, "Sign in first", and a disabled preview of the form. */
-function SignedOutPanel({ applicationRequired }: { applicationRequired: boolean }) {
+function SignedOutPanel({ applicationRequired, bountyId }: { applicationRequired: boolean; bountyId: string }) {
   const t = useTranslations("bounties.action");
+  // After Google sign-in and onboarding the visitor comes back to this bounty (`lib/return-path.ts`).
+  const signIn = signInHref(`/bounties/${bountyId}`);
   return (
     <section className={panelClass}>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -87,7 +90,7 @@ function SignedOutPanel({ applicationRequired }: { applicationRequired: boolean 
         {applicationRequired ? (
           <Link className={outlineButtonClass} href="/bounties/apply">{t("viewIntakeRules")}</Link>
         ) : (
-          <Link className={outlineButtonClass} href="/signup">{t("signInFirst")}</Link>
+          <Link className={outlineButtonClass} href={signIn}>{t("signInFirst")}</Link>
         )}
       </div>
       {applicationRequired ? (
@@ -98,14 +101,14 @@ function SignedOutPanel({ applicationRequired }: { applicationRequired: boolean 
           </div>
           <textarea aria-label={t("applyMessage")} className="min-h-28 w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder" placeholder={t("applyMessage")} />
           <div className="flex flex-wrap gap-3">
-            <Link className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href="/signup">{t("apply")}</Link>
+            <Link className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href={signIn}>{t("apply")}</Link>
             <span className="rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong opacity-60">{t("submitDisabled")}</span>
           </div>
         </fieldset>
       ) : (
         <fieldset className="mt-4 flex flex-col gap-3 sm:flex-row" disabled>
           <input aria-label={t("submissionUrl")} className={inputClass} placeholder={t("submissionUrl")} type="url" />
-          <Link className="shrink-0 rounded-control bg-primary px-5 py-3 text-center text-sm font-semibold text-on-inverse" href="/signup">{t("submit")}</Link>
+          <Link className="shrink-0 rounded-control bg-primary px-5 py-3 text-center text-sm font-semibold text-on-inverse" href={signIn}>{t("submit")}</Link>
         </fieldset>
       )}
     </section>
@@ -126,6 +129,8 @@ type BountyActionPanelProps = {
   applicationClosed?: boolean;
   /** `Bounty.deadlinePassed`: closed only by the deadline, so a requested revision can still be resubmitted. */
   deadlinePassed?: boolean;
+  /** `Bounty.completed`: closed because the work was finished (BE COMPLETED); with `deadlinePassed` unset, a `closed` bounty is a cancelled one. */
+  completed?: boolean;
 };
 
 export function BountyActionPanel(props: BountyActionPanelProps) {
@@ -149,7 +154,7 @@ export function BountyActionPanel(props: BountyActionPanelProps) {
   );
 }
 
-function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, deadlinePassed, status, submissionMode, announce, sessionEnded }: BountyActionPanelProps & {
+function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, deadlinePassed, completed, status, submissionMode, announce, sessionEnded }: BountyActionPanelProps & {
   announce: (text: string) => void;
   /** The session ended after this page saw a signed-in user: keep an open form (and its text) and say so. */
   sessionEnded: boolean;
@@ -244,7 +249,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
 
   // The rule for which section to show lives in lib/bounty-action-state.ts (documented by src/test/bounty-action-state.test.ts).
   const derivedView = deriveActionView({
-    bountyId, applicationRequired, applicationClosed, deadlinePassed, status, submissionMode,
+    bountyId, applicationRequired, applicationClosed, deadlinePassed, completed, status, submissionMode,
     auth: auth.status,
     applications: applicationsQuery,
     submissions: submissionsQuery,
@@ -264,7 +269,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const sessionEndedLine = sessionEnded ? (
     <p className="mt-3 text-sm text-danger" role="alert">
       {t("sessionEnded")}{" "}
-      <Link className="font-semibold underline" href="/signup" rel="noopener" target="_blank">{t("signInAgain")}</Link>
+      <Link className="font-semibold underline" href={signInHref(`/bounties/${bountyId}`)} rel="noopener" target="_blank">{t("signInAgain")}</Link>
     </p>
   ) : null;
 
@@ -272,7 +277,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
     case "closed":
       return (
         <StatusPanel
-          body={view.reason === "reviewing" ? t("reviewingBody") : view.reason === "applications" ? t("applicationsClosedBody") : t("closedBody")}
+          body={view.reason === "reviewing" ? t("reviewingBody") : view.reason === "applications" ? t("applicationsClosedBody") : view.reason === "cancelled" ? t("cancelledBody") : t("closedBody")}
           link={{ href: "/bounties", label: t("browseOther") }}
           title={view.reason === "applications" ? t("applicationsClosedHeading") : t("closedHeading")}
         />
@@ -291,7 +296,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
     case "checkingSession":
       return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingSession")}</p></section>;
     case "signedOut":
-      return <SignedOutPanel applicationRequired={applicationRequired} />;
+      return <SignedOutPanel applicationRequired={applicationRequired} bountyId={bountyId} />;
     case "checkingStatus":
       return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingStatus")}</p></section>;
     case "statusUnavailable":

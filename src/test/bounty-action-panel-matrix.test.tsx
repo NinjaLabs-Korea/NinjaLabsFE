@@ -7,12 +7,13 @@ import type { AccountApplication, AccountSubmission } from "@/lib/contracts/acco
 import type { ApiClient, ApiResult } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { Bounty } from "@/lib/types";
+import { hrefString } from "@/test/support/link";
 import { renderWithIntl } from "@/test/intl";
 import { signedIn } from "@/test/support/auth";
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href, ...props }: ComponentProps<"a">) => (
-    <a href={href} {...props}>
+  Link: ({ children, href, ...props }: Omit<ComponentProps<"a">, "href"> & { href: Parameters<typeof hrefString>[0] }) => (
+    <a href={hrefString(href)} {...props}>
       {children}
     </a>
   ),
@@ -139,6 +140,21 @@ describe("BountyActionPanel transitional states", () => {
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
   });
 
+  it("sends a signed-out visitor of a direct bounty to sign-in with the bounty as the return path", async () => {
+    state.auth = auths["signed-out"];
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    for (const name of ["Sign in first", "Submit"]) {
+      expect((await screen.findByRole("link", { name })).getAttribute("href"), name).toBe("/signup?returnTo=%2Fbounties%2Fbounty-1");
+    }
+  });
+
+  it("does not offer a signed-out visitor an Apply path once the application deadline has passed", async () => {
+    state.auth = auths["signed-out"];
+    renderWithIntl(<BountyActionPanel applicationClosed applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    expect(await screen.findByText("Applications closed")).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Apply" })).toBeNull();
+  });
+
   it("ignores an unavailable applications read on a direct (non-apply) bounty", async () => {
     state.applications = Promise.resolve({ status: "unavailable", reason: "server-error" });
     state.submissions = Promise.resolve({ status: "available", data: [] });
@@ -152,7 +168,7 @@ describe("BountyActionPanel transitional states", () => {
     const note = await screen.findByRole("textbox", { name: "Application note" });
     expect((note.closest("fieldset") as HTMLFieldSetElement).disabled).toBe(true);
     expect(screen.getByRole("link", { name: "View intake rules" }).getAttribute("href")).toBe("/bounties/apply");
-    expect(screen.getByRole("link", { name: "Apply" }).getAttribute("href")).toBe("/signup");
+    expect(screen.getByRole("link", { name: "Apply" }).getAttribute("href")).toBe("/signup?returnTo=%2Fbounties%2Fbounty-1");
     expect(screen.getByText("Submit disabled until approved")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
   });

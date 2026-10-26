@@ -79,7 +79,7 @@ export function AgentsView() {
 
   // The BE rejected the session (401/403 after refresh): ask to sign in again instead of blaming the server.
   if (unavailable && reason === "unauthorized") {
-    return <SignedOutPanel message={tAccount("sessionExpired")} />;
+    return <SignedOutPanel message={tAccount("sessionExpired")} returnTo="/agents" />;
   }
 
   if (unavailable) {
@@ -92,7 +92,7 @@ export function AgentsView() {
   }
 
   if (authSnapshot.status === "signed-out") {
-    return <SignedOutPanel message={t("signedOutMessage")} />;
+    return <SignedOutPanel message={t("signedOutMessage")} returnTo="/agents" />;
   }
 
   if (authSnapshot.status === "loading" || !agents) {

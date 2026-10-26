@@ -92,7 +92,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               : <Badge variant="neutral">{submissionMode === "agent" ? t("detail.agentSubmission") : t("detail.directSubmission")}</Badge>}
           </div>
         </div>
-        <BountyAccessBadges />
+        <BountyAccessBadges actionsOpen={bounty.status === "active"} />
       </section>
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -130,7 +130,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             ) : null}
           </article>
 
-          <BountyActionPanel bountyId={bounty.slug} applicationRequired={applicationRequired} applicationClosed={bounty.applicationClosed} deadlinePassed={bounty.deadlinePassed} status={bounty.status} submissionMode={submissionMode} />
+          <BountyActionPanel bountyId={bounty.slug} applicationRequired={applicationRequired} applicationClosed={bounty.applicationClosed} deadlinePassed={bounty.deadlinePassed} completed={bounty.completed} status={bounty.status} submissionMode={submissionMode} />
 
           {applicationRequired ? (
             <section className="rounded-card border border-border bg-surface p-[21px] shadow-card">
@@ -174,7 +174,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             </ol>
           </section>
           {/* Only AGENT-mode bounties take agent requests: the BE answers DIRECT_SUBMISSION_REQUIRED to an agent key on a DIRECT bounty. */}
-          {submissionMode === "agent" ? <BountyAgentPanel copy={applicationRequired ? tAgents("copyApply") : tAgents("copyDirect")} /> : null}
+          {submissionMode === "agent" ? <BountyAgentPanel returnTo={`/bounties/${bounty.slug}`} copy={applicationRequired ? tAgents("copyApply") : tAgents("copyDirect")} /> : null}
         </aside>
       </div>
 

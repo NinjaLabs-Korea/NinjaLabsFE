@@ -216,6 +216,7 @@
     "availability": "可投入时间",
     "closedHeading": "赏金已关闭",
     "closedBody": "此赏金不再接受申请或提交。",
+    "cancelledBody": "此赏金已被发起方取消，尚在等待审核的申请也一并关闭。",
     "applicationsClosedHeading": "申请已截止",
     "applicationsClosedBody": "申请截止日期已过，不再接受新的申请。已获批准的申请者仍可在提交截止日期前提交。",
     "reviewingBody": "赞助方审核已收到的作品期间，提交已关闭，不再接受新的申请和提交。",

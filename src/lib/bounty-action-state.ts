@@ -8,6 +8,7 @@
  *  2. 에이전트 전용 바운티: 로그인 전 → `agentMode`(진행 중) / `closed`; 로그인 후 내 에이전트의 행이 있으면 `agentRow`
  *     (지원 상태·제출 상태·수정 요청·지급 배지), 없으면 `agentMode`(Agent API 엔드포인트 안내) / `closed`.
  *     행 조회 중이면 `checkingStatus`, 조회 실패면 행 없음으로 본다(안내는 계정 상태 없이도 유효하다).
+ *  2b. 지원 필요 바운티의 지원 마감이 지났고 비로그인 → `closed`+`applications` (지원 CTA 없음)
  *  3. 세션 확인 중 → `checkingSession`, 비로그인 → `signedOut`
  *  4. 내 제출(+지원 필요 바운티면 내 지원) 조회 중 → `checkingStatus`, 조회 실패 → `statusUnavailable`
  *  5. 내 직접 행은 없고 에이전트가 만든 행만 있음 → `agentRow` (직접 지원/제출 폼을 띄우지 않는다)
@@ -54,6 +55,8 @@ export type BountyActionInput = {
   applicationClosed?: boolean;
   /** `Bounty.deadlinePassed`: `status` is `closed` only because the deadline passed; a requested revision is still resubmittable. */
   deadlinePassed?: boolean;
+  /** `Bounty.completed`: closed because the work was finished (BE COMPLETED). A `closed` bounty that is neither completed nor `deadlinePassed` was cancelled. */
+  completed?: boolean;
   auth: AuthStatus;
   applications: AccountRowsQuery<ApplicationRow>;
   submissions: AccountRowsQuery<SubmissionRow>;
@@ -66,8 +69,9 @@ export type BountyActionView =
   /**
    * 새 지원/제출을 받지 않음. `reason`이 제목·본문 문구를 고른다 (`reviewingBody` / `closedBody` / `applicationsClosedBody`).
    * `applications`: 지원 마감만 지났다 (제출 마감 전, 승인된 지원자는 계속 제출할 수 있다): "bounty closed"라고 말하면 거짓이다.
+   * `cancelled`: 바운티가 취소돼(BE가 대기 중인 지원을 자동 거절) 거절된 지원자에게 "스폰서가 선택하지 않았다"고 말하면 거짓이다.
    */
-  | { kind: "closed"; reason: "reviewing" | "closed" | "applications" }
+  | { kind: "closed"; reason: "reviewing" | "closed" | "applications" | "cancelled" }
   /** 에이전트 전용 바운티 — `POST /agent-api/v1/bounties/{id}/{endpoint}` 안내 */
   | { kind: "agentMode"; endpoint: "applications" | "submissions" }
   | { kind: "checkingSession" }
@@ -146,7 +150,7 @@ function deriveAgentBountyView(input: BountyActionInput, closed: BountyActionVie
 }
 
 export function deriveActionView(input: BountyActionInput): BountyActionView {
-  const { applicationRequired, applicationClosed = false, deadlinePassed = false, status, submissionMode, auth, applications, submissions, applied, submitted } = input;
+  const { applicationRequired, applicationClosed = false, deadlinePassed = false, completed = false, status, submissionMode, auth, applications, submissions, applied, submitted } = input;
   const acceptingNew = status === "active";
   const closed: BountyActionView = { kind: "closed", reason: status === "reviewing" ? "reviewing" : "closed" };
 
@@ -154,6 +158,8 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
   if (!acceptingNew && auth === "signed-out") return closed;
   // 2. 에이전트 전용 바운티의 직접 폼은 없다 (Agent API 안내 패널은 컴포넌트 몫). 로그인했으면 내 에이전트의 진행 상태를 먼저 보여 준다.
   if (submissionMode === "agent") return deriveAgentBountyView(input, closed);
+  // 2b. 지원 마감이 지난 지원 필요 바운티는 비로그인에게도 지원 경로가 없다 ("지원하려고 가입했더니 마감"을 막는다).
+  if (auth === "signed-out" && applicationRequired && applicationClosed) return { kind: "closed", reason: "applications" };
   // 3. 세션
   if (auth === "loading") return { kind: "checkingSession" };
   if (auth !== "signed-in") return { kind: "signedOut" };
@@ -177,6 +183,8 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
       if (!acceptingNew) return closed;
       return applicationClosed ? { kind: "closed", reason: "applications" } : { kind: "applyForm" };
     }
+    // The BE auto-rejects pending applications when the sponsor cancels the bounty: that is not "the sponsor did not select you".
+    if (application?.status === "rejected" && status === "closed" && !completed && !deadlinePassed) return { kind: "closed", reason: "cancelled" };
     if (application?.status === "rejected") return application.reviewNote ? { kind: "applicationRejected", note: application.reviewNote } : { kind: "applicationRejected" };
     // `applied` only bridges the gap until the server row arrives; a row that already moved on (approved...) wins.
     if (application ? application.status === "open" : applied) {
