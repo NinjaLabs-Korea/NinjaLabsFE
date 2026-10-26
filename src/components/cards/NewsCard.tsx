@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { safeHttpUrl } from "@/lib/api/codecs";
-import { formatEventDate } from "@/lib/community";
+import { noticeEventDateLabel } from "@/lib/community";
 import { imageProps } from "@/lib/image";
 import { noticeCategoryKeys } from "@/lib/notice-categories";
 import type { NoticePreview } from "@/lib/types";
@@ -18,7 +18,7 @@ type NewsCardProps = {
 export function NewsCard({ notice, dateKind = "published" }: NewsCardProps) {
   const t = useTranslations("notices.categories");
   const tNotices = useTranslations("notices");
-  const eventDate = dateKind === "event" ? formatEventDate(notice.eventDate) : "";
+  const eventDate = dateKind === "event" ? noticeEventDateLabel(notice) : "";
   const thumbnail = safeHttpUrl(notice.thumbnail);
   return (
     <Link

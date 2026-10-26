@@ -282,6 +282,18 @@ describe("PostManager", () => {
 });
 
 describe("PostManager event date", () => {
+  it("offers the event date only for the Events category and never sends one for another category", async () => {
+    adminApi.saveAdminPost.mockResolvedValue({ id: "n1" });
+    adminApi.getAdminPosts.mockResolvedValueOnce([{ ...post, category: "Other", eventDate: "2026-11-11" }]);
+    renderWithIntl(<PostManager posts={[{ ...post, category: "Other", eventDate: "2026-11-11" }]} tabs={null}>{null}</PostManager>);
+    await waitFor(() => expect(adminApi.getAdminPosts).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.queryByLabelText(/Event date \(optional\)/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(adminApi.saveAdminPost).toHaveBeenCalledTimes(1));
+    expect(adminApi.saveAdminPost.mock.calls[0][0]).toMatchObject({ eventDate: null });
+  });
+
   it("lists the event date, prefills it on edit, and sends a changed or cleared one", async () => {
     adminApi.getAdminPosts.mockResolvedValueOnce([{ ...post, eventDate: "2026-06-18" }]);
     adminApi.saveAdminPost.mockResolvedValue({ id: "n1" });

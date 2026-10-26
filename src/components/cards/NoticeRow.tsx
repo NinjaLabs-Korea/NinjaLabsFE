@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { safeHttpUrl } from "@/lib/api/codecs";
-import { formatEventDate } from "@/lib/community";
+import { noticeEventDateLabel } from "@/lib/community";
 import { imageProps } from "@/lib/image";
 import { noticeCategoryKeys } from "@/lib/notice-categories";
 import type { Notice } from "@/lib/types";
@@ -16,7 +16,7 @@ type NoticeRowProps = {
 export function NoticeRow({ notice }: NoticeRowProps) {
   const t = useTranslations("notices.categories");
   const tNotices = useTranslations("notices");
-  const eventDate = formatEventDate(notice.eventDate);
+  const eventDate = noticeEventDateLabel(notice);
   const thumbnail = safeHttpUrl(notice.thumbnail);
   return (
     <Link

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Markdown } from "@/components/ui/Markdown";
 import { Link } from "@/i18n/navigation";
 import { safeHttpUrl } from "@/lib/api/codecs";
-import { formatEventDate } from "@/lib/community";
+import { noticeEventDateLabel } from "@/lib/community";
 import { validateDetailId } from "@/lib/detail-id";
 import { imageProps } from "@/lib/image";
 import { getRuntimeNotice, noticeCategoryKeys } from "@/lib/notices";
@@ -43,7 +43,7 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
   // Admin-entered URLs: anything but http(s)/same-origin renders the placeholder / no link.
   const coverImage = safeHttpUrl(notice.coverImage);
   const externalUrl = safeHttpUrl(notice.externalUrl);
-  const eventDate = formatEventDate(notice.eventDate);
+  const eventDate = noticeEventDateLabel(notice);
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">

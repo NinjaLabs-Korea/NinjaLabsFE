@@ -49,6 +49,14 @@ export async function getRuntimeCommunity(locale: string): Promise<CommunityData
   };
 }
 
+/**
+ * The event date label a notice may show: only `Events` notices have an event date (the BE stores whatever it is given, so
+ * an old `Other` notice can still carry one; it must not read as "Event date" on a non-event). `""` when none.
+ */
+export function noticeEventDateLabel(notice: { category: string; eventDate?: string | null }): string {
+  return notice.category === "Events" ? formatEventDate(notice.eventDate ?? undefined) : "";
+}
+
 /** `2026-06-18` -> `2026.06.18` (the Figma date label used by every notice date); anything else yields `""`. */
 export function formatEventDate(eventDate: string | undefined): string {
   return eventDate && /^\d{4}-\d{2}-\d{2}$/.test(eventDate) ? eventDate.replaceAll("-", ".") : "";

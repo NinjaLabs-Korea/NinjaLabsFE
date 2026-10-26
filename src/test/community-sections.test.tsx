@@ -140,4 +140,9 @@ describe("NoticeRow event date", () => {
     renderWithIntl(<NoticeRow notice={notice()} />);
     expect(screen.queryByText(/Event date/)).toBeNull();
   });
+
+  it("ignores an event date stored on a notice that is not an event", () => {
+    renderWithIntl(<NoticeRow notice={notice({ category: "Other", eventDate: "2026-11-11" })} />);
+    expect(screen.queryByText(/Event date/)).toBeNull();
+  });
 });

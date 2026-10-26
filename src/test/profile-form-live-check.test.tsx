@@ -82,12 +82,14 @@ describe("ProfileForm nickname live check", () => {
     await waitFor(() => expect(completeProfile).toHaveBeenCalledWith({ nickname: "ninja_dev", bio: "Builder", tags: ["DEV"] }));
   });
 
-  it("clears the verdict as soon as the nickname breaks the local rule", async () => {
+  it("replaces the verdict with the rule violation as soon as the nickname breaks the local rule", async () => {
     checkNickname.mockResolvedValue({ available: false });
     renderWithIntl(<ProfileForm />);
     typeNickname("ninja_dev");
     await waitFor(() => expect(status()).toBe("That nickname is already taken."), { timeout: 1500 });
     typeNickname("n");
+    expect(status()).toBe("Use at least 2 characters.");
+    typeNickname("");
     expect(status()).toBe("");
   });
 
