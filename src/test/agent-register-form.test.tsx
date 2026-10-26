@@ -198,7 +198,7 @@ describe("AgentRegisterForm connected-wallet check", () => {
     expect(field.value).toBe("nl_live_first_key");
     expect(field.readOnly).toBe(true);
     expect(screen.getByText("Agent verified")).toBeTruthy();
-    expect(screen.getByRole("status").textContent).toBe("API key ready — copy it now.");
+    expect(screen.getByRole("status").textContent).toBe("API key ready, copy it now.");
     fireEvent.click(screen.getByRole("button", { name: "Copy" }));
     expect(await screen.findByText("API key copied to the clipboard.")).toBeTruthy();
     expect(writeText).toHaveBeenCalledWith("nl_live_first_key");
@@ -228,6 +228,22 @@ describe("AgentRegisterForm connected-wallet check", () => {
     } finally {
       authState.current = signedIn;
     }
+  });
+});
+
+describe("AgentRegisterForm auth state", () => {
+  afterEach(() => {
+    authState.current = signedIn;
+  });
+
+  it("asks a signed-out visitor to sign in, but never a user whose session is still being restored", () => {
+    authState.current = { status: "loading", user: null };
+    const { unmount } = renderWithIntl(<AgentRegisterForm chainId={1439} />);
+    expect(screen.queryByText("Sign in before registering an agent.")).toBeNull();
+    unmount();
+    authState.current = { status: "signed-out", user: null };
+    renderWithIntl(<AgentRegisterForm chainId={1439} />);
+    expect(screen.getByText("Sign in before registering an agent.")).toBeTruthy();
   });
 });
 
