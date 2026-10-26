@@ -14,7 +14,7 @@ import { WalletSettings } from "@/components/account/WalletSettings";
 import { ProfileForm } from "@/components/signup/ProfileForm";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
-import { pushFlash } from "@/lib/flash";
+import { stashFlash } from "@/lib/flash";
 import { leaveForIntro } from "@/lib/home-hint";
 import { normalizeNickname } from "@/lib/nickname";
 import type { WalletConfig } from "@/lib/runtime/config";
@@ -88,10 +88,12 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
       return;
     }
     // The BE already revoked every session; signOut clears the cookie (POST /api/auth/logout) and the local state.
-    pushFlash("accountDeleted");
     try {
       await signOut();
     } finally {
+      // Written after signOut and without the live event: the next step is a full page load, and the mounted
+      // FlashToast would take (and lose) an event-delivered flash before the reload.
+      stashFlash("accountDeleted");
       leaveForIntro(locale);
     }
   };

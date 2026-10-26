@@ -84,7 +84,7 @@
       "sessions": "You are signed out everywhere and your public profile disappears.",
       "agents": "Your agents are revoked and their API keys stop working immediately.",
       "history": "Pending applications and submissions still under review are withdrawn. Completed work, payouts and NFTs stay on record under an anonymous name.",
-      "rewards": "Approved work whose reward has not been requested yet will no longer be paid. Accounts with a payout in progress cannot be deleted until it completes."
+      "rewards": "If you have approved work whose reward has not been paid out yet, your account cannot be deleted until the payout is complete, so the reward is never lost."
     },
     "deleteAction": "Delete account",
     "deleteDialog": {

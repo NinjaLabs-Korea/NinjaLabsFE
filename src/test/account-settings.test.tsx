@@ -98,7 +98,9 @@ describe("AccountSettingsView", () => {
   it("deletes the account, signs out, leaves a flash and goes home", async () => {
     const withdrawAccount = vi.fn(async () => undefined);
     Object.assign(apiClient, { withdrawAccount });
-    renderWithIntl(<AccountSettingsView />);
+    // FlashToast is mounted like in the real shell: it must not swallow the flash before the full reload.
+    renderWithIntl(<><FlashToast /><AccountSettingsView /></>);
+    await new Promise((resolve) => setTimeout(resolve, 20)); // FlashToast's deferred mount read has run
     fireEvent.change(openDialog(), { target: { value: " jaemin.inj " } });
     fireEvent.click(confirmButton());
     await waitFor(() => expect(hardNavigate).toHaveBeenCalledWith("/en"));
