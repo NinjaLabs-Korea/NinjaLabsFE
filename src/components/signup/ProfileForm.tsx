@@ -122,7 +122,11 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   const ownNickname = auth.status === "signed-in" ? normalizeNickname(auth.user.handle).toLowerCase() : null;
   const isOwnNickname = ownNickname !== null && trimmedNickname.toLowerCase() === ownNickname;
   // 규칙을 통과한 값만 BE에 묻는다; 마지막 검사 결과가 현재 입력과 다르면 아직 확인 중이다.
-  const nicknameStatus: "idle" | "checking" | "available" | "taken" = nicknameRuleError || isOwnNickname
+  // A typed name that breaks a rule says why right away (no request is sent for it, so the status line would stay empty and
+  // the field would look fine); an empty field is only reported on save.
+  const nicknameStatus: "idle" | "invalid" | "checking" | "available" | "taken" = nicknameRuleError && trimmedNickname !== ""
+    ? "invalid"
+    : nicknameRuleError || isOwnNickname
     ? "idle"
     : nicknameCheck?.nickname !== trimmedNickname
       ? "checking"
@@ -167,13 +171,14 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
     event.preventDefault();
     if (inFlight.current) return;
     const nextErrors: FieldErrors = {
-      ...(nicknameRuleError ? { nickname: `nicknameErrors.${nicknameRuleError}` } : {}),
+      // A non-empty rule violation is already said by the status line under the field (`nickname-status`).
+      ...(nicknameRuleError && nicknameStatus !== "invalid" ? { nickname: `nicknameErrors.${nicknameRuleError}` } : {}),
       ...(tags.length === 0 ? { tags: "errors.tags" } : {}),
       ...(!bio.trim() ? { bio: "errors.bio" } : {}),
     };
     setFieldErrors(nextErrors);
     // A taken nickname is announced once, by the status line under the field (`nickname-status`), not again as a field error.
-    if (Object.keys(nextErrors).length > 0 || nicknameStatus === "taken") {
+    if (Object.keys(nextErrors).length > 0 || nicknameStatus === "taken" || nicknameStatus === "invalid") {
       onboardingLog("profile.validation.failed", {
         nicknameLength: nickname.trim().length,
         bioLength: bio.trim().length,
@@ -242,7 +247,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
           minLength={NICKNAME_MIN}
           name="nickname"
           aria-describedby={nicknameDescribedBy}
-          aria-invalid={fieldErrors.nickname || nicknameStatus === "taken" ? true : undefined}
+          aria-invalid={fieldErrors.nickname || nicknameStatus === "taken" || nicknameStatus === "invalid" ? true : undefined}
           onChange={(event) => {
             setNickname(event.target.value);
             setSaved(false);
@@ -253,8 +258,8 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
           value={nickname}
         />
         {fieldErrors.nickname ? <p className="mt-2 text-xs text-danger" id="nickname-error" role="alert">{t(fieldErrors.nickname)}</p> : null}
-        <p aria-live="polite" className={nicknameStatus === "taken" ? "mt-2 text-xs text-danger" : nicknameStatus === "available" ? "mt-2 text-xs text-success" : "mt-2 text-xs text-ink-muted"} id="nickname-status" role="status">
-          {nicknameStatus === "idle" ? "" : t(`nicknameCheck.${nicknameStatus}`)}
+        <p aria-live="polite" className={nicknameStatus === "taken" || nicknameStatus === "invalid" ? "mt-2 text-xs text-danger" : nicknameStatus === "available" ? "mt-2 text-xs text-success" : "mt-2 text-xs text-ink-muted"} id="nickname-status" role="status">
+          {nicknameStatus === "idle" ? "" : nicknameStatus === "invalid" && nicknameRuleError ? t(`nicknameErrors.${nicknameRuleError}`) : t(`nicknameCheck.${nicknameStatus}`)}
         </p>
         <p className="mt-1 text-xs text-ink-muted" id="nickname-hint">{t("nicknameHint")}</p>
       </div>

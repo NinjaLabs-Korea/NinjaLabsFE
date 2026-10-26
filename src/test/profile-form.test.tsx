@@ -44,6 +44,27 @@ describe("ProfileForm nickname rule + availability check", () => {
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Nickname is available."));
   });
 
+  it("says why a rule-breaking nickname is refused as soon as it is typed, with no request and no save", async () => {
+    renderWithIntl(<ProfileForm />);
+    expect(screen.getByRole("status").textContent).toBe("");
+    for (const [value, reason] of [
+      ["Admin", "This word is reserved. Choose another nickname."],
+      ["ninja.png", "Nicknames can't end with a file extension like .js."],
+      ["x y", "Use only letters (with their accent or vowel marks), digits, and _ . - (no spaces)."],
+      ["ab-", "Start and end with a letter or digit."],
+      ["a", "Use at least 2 characters."],
+    ] as const) {
+      typeNickname(value);
+      expect(screen.getByRole("status").textContent, value).toBe(reason);
+      expect(nicknameInput().getAttribute("aria-invalid"), value).toBe("true");
+    }
+    typeNickname("");
+    expect(screen.getByRole("status").textContent).toBe("");
+    expect(nicknameInput().getAttribute("aria-invalid")).toBeNull();
+    await sleep(NICKNAME_CHECK_DEBOUNCE_MS + 100);
+    expect(checkNickname).not.toHaveBeenCalled();
+  });
+
   it("does not call the API for an invalid nickname and reports the specific reason on submit", async () => {
     renderWithIntl(<ProfileForm />);
     for (const [value, reason] of [
