@@ -152,7 +152,11 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         setFieldErrors(rejected);
         setErrorMessage(t("errorInvalid"));
       } else {
-        setErrorMessage(tRegisterErrors(errorCopyKey(caught, ERROR_COPY.agentRegister)));
+        const key = errorCopyKey(caught, ERROR_COPY.agentRegister);
+        // The BE answers one code for "your own agent holds this wallet" and "another account's pending agent holds it".
+        // "View it in My agents" only helps in the first case: tell the user when /agents/me (already loaded) has no such agent.
+        const heldByOthers = key === "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED" && Boolean(agents) && !agents?.some((agent) => agent.walletAddress.toLowerCase() === agentAddress.toLowerCase());
+        setErrorMessage(tRegisterErrors(heldByOthers ? "walletHeldByOther" : key));
       }
     } finally {
       setSubmissionState("idle");
