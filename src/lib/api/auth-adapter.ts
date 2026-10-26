@@ -63,7 +63,7 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
   const endSignedInSession = () => {
     if (snapshot.status !== "signed-in") return;
     onboardingLog("session.ended", { reason: "SESSION_CLEARED" });
-    setSnapshot({ status: "signed-out", user: null });
+    setSnapshot({ status: "signed-out", user: null, reason: "session-ended" });
   };
 
   const events = createAuthEventBus();

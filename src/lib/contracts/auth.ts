@@ -19,6 +19,8 @@ export type ClientUser = {
 export type SignedOutAuthSnapshot = {
   status: "loading" | "signed-out";
   user: null;
+  /** Set only when a signed-in session was ended from outside (refresh rejected, another tab signed out); a voluntary sign-out leaves it unset. */
+  reason?: "session-ended";
 };
 
 export type SignedInAuthSnapshot = {

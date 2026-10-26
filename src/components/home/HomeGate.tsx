@@ -1,11 +1,11 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, type ReactNode } from "react";
 import { useAuthSnapshot, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { useRouter } from "@/i18n/navigation";
 import { resolveHomeAccess } from "@/lib/auth-route";
-import { setHomeHint } from "@/lib/home-hint";
+import { leaveForIntro } from "@/lib/home-hint";
 
 /**
  * Everything on `/home` renders through this gate, which follows `lib/auth-route.ts resolveHomeAccess`: the home only for a
@@ -16,15 +16,17 @@ import { setHomeHint } from "@/lib/home-hint";
 export function HomeGate({ children }: { children: ReactNode }) {
   const t = useTranslations("home.gate");
   const router = useRouter();
+  const locale = useLocale();
   const access = resolveHomeAccess(useAuthSnapshot(), { preview: useFoundationMode() === "mock" });
   const destination = access.kind === "intro" || access.kind === "resume" ? access.href : null;
   const leavingForIntro = access.kind === "intro";
 
   useEffect(() => {
     if (!destination) return;
-    if (leavingForIntro) setHomeHint(false);
-    router.replace(destination);
-  }, [destination, leavingForIntro, router]);
+    // The Intro is left for with a full load (see `leaveForIntro`); the onboarding step is a normal soft navigation.
+    if (leavingForIntro) leaveForIntro(locale);
+    else router.replace(destination);
+  }, [destination, leavingForIntro, locale, router]);
 
   if (access.kind === "show") return children;
   return (

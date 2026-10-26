@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useId, useRef, useState } from "react";
 import { SignedOutPanel } from "@/components/account/SignedOutPanel";
 import {
@@ -13,9 +13,9 @@ import { MyCohortApplications } from "@/components/account/MyCohortApplications"
 import { WalletSettings } from "@/components/account/WalletSettings";
 import { ProfileForm } from "@/components/signup/ProfileForm";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { useRouter } from "@/i18n/navigation";
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { pushFlash } from "@/lib/flash";
+import { leaveForIntro } from "@/lib/home-hint";
 import { normalizeNickname } from "@/lib/nickname";
 import type { WalletConfig } from "@/lib/runtime/config";
 
@@ -42,7 +42,7 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
   const mode = useFoundationMode();
   const settingsApi = useAccountSettingsApi();
   const { signOut } = useAuthActions();
-  const router = useRouter();
+  const locale = useLocale();
   const inputId = useId();
   const errorId = useId();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -53,14 +53,10 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
   // Synchronous guard: a second click lands before the `busy` state update.
   const pendingRef = useRef(false);
 
-  // Signed out after being signed in on this page, and not because this page just deleted the account: the session ended
-  // (a delete confirmation hit a revoked session, say). Say so instead of showing the plain "sign in" gate.
-  const [seenSignedIn, setSeenSignedIn] = useState(false);
-  const [withdrawn, setWithdrawn] = useState(false);
-  if (authSnapshot.status === "signed-in" && !seenSignedIn) setSeenSignedIn(true);
-
+  // Only a session ended from outside (refresh rejected, another tab) says "expired"; the user's own Sign out or this
+  // page's account deletion shows the plain "sign in" gate.
   if (authSnapshot.status === "signed-out") {
-    return <SignedOutPanel message={seenSignedIn && !withdrawn ? tAccount("sessionExpired") : t("signedOutMessage")} />;
+    return <SignedOutPanel message={authSnapshot.reason === "session-ended" ? tAccount("sessionExpired") : t("signedOutMessage")} />;
   }
 
   if (authSnapshot.status !== "signed-in") {
@@ -92,12 +88,11 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
       return;
     }
     // The BE already revoked every session; signOut clears the cookie (POST /api/auth/logout) and the local state.
-    setWithdrawn(true);
     pushFlash("accountDeleted");
     try {
       await signOut();
     } finally {
-      router.replace("/");
+      leaveForIntro(locale);
     }
   };
 

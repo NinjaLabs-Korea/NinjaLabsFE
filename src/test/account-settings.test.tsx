@@ -15,6 +15,8 @@ import { renderWithIntl } from "@/test/intl";
 import { signedInAs } from "@/test/support/auth";
 
 const replace = vi.fn();
+const hardNavigate = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/hard-navigate", () => ({ hardNavigate }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
   useRouter: () => ({ replace }),
@@ -46,6 +48,7 @@ describe("AccountSettingsView", () => {
     state.auth = signedIn;
     apiClient = createMockApiClient();
     replace.mockReset();
+    hardNavigate.mockReset();
     signOut.mockClear();
     window.sessionStorage.clear();
   });
@@ -68,6 +71,18 @@ describe("AccountSettingsView", () => {
     expect(screen.getByText("Sign in to manage your account")).toBeTruthy();
   });
 
+  it("says the session expired only when it was ended from outside, never after the user's own sign-out", () => {
+    state.auth = signedIn;
+    const { rerender } = renderWithIntl(<AccountSettingsView />);
+    state.auth = { status: "signed-out", user: null };
+    rerender(<AccountSettingsView />);
+    expect(screen.getByText("Sign in to manage your account")).toBeTruthy();
+    expect(screen.queryByText(/session has expired/)).toBeNull();
+    state.auth = { status: "signed-out", user: null, reason: "session-ended" };
+    rerender(<AccountSettingsView />);
+    expect(screen.getByText(/session has expired/)).toBeTruthy();
+  });
+
   it("keeps the confirm action disabled until the nickname is typed (trimmed, case-insensitive)", () => {
     renderWithIntl(<AccountSettingsView />);
     expect(screen.getByText("jaemin.inj")).toBeTruthy();
@@ -86,7 +101,7 @@ describe("AccountSettingsView", () => {
     renderWithIntl(<AccountSettingsView />);
     fireEvent.change(openDialog(), { target: { value: " jaemin.inj " } });
     fireEvent.click(confirmButton());
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(hardNavigate).toHaveBeenCalledWith("/en"));
     expect(withdrawAccount).toHaveBeenCalledWith("jaemin.inj");
     expect(signOut).toHaveBeenCalledTimes(1);
     expect(window.sessionStorage.getItem(FLASH_STORAGE_KEY)).toBe("accountDeleted");
@@ -140,7 +155,7 @@ describe("AccountSettingsView", () => {
     fireEvent.keyDown(input, { key: "Enter", isComposing: true });
     expect(withdrawAccount).not.toHaveBeenCalled();
     fireEvent.keyDown(input, { key: "Enter" });
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(hardNavigate).toHaveBeenCalledWith("/en"));
     expect(withdrawAccount).toHaveBeenCalledTimes(1);
   });
 
@@ -155,7 +170,7 @@ describe("AccountSettingsView", () => {
     expect(withdrawAccount).toHaveBeenCalledTimes(1);
     expect(confirmButton().textContent).toBe("Deleting…");
     resolve();
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(hardNavigate).toHaveBeenCalledWith("/en"));
   });
 });
 

@@ -492,7 +492,7 @@ describe("API auth adapter cross-tab sign-out", () => {
     tabB.subscribe(listener);
     await tabA.signOut();
     expect(FakeBroadcastChannel.instances.map((channel) => channel.name)).toEqual([AUTH_CHANNEL_NAME, AUTH_CHANNEL_NAME]);
-    expect(tabB.getSnapshot()).toEqual({ status: "signed-out", user: null });
+    expect(tabB.getSnapshot()).toEqual({ status: "signed-out", user: null, reason: "session-ended" });
     expect(listener).toHaveBeenCalled();
     // The receiving tab dropped its access token and does not refresh into the revoked cookie.
     await expect(tabB.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ status: 401 });
@@ -675,7 +675,7 @@ describe("API auth adapter session end without reload", () => {
     });
     await expect(adapter.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ status: 401 });
     expect(getAccessToken()).toBeNull();
-    expect(adapter.getSnapshot()).toEqual({ status: "signed-out", user: null });
+    expect(adapter.getSnapshot()).toEqual({ status: "signed-out", user: null, reason: "session-ended" });
   });
 
   it("stays signed-in when the refresh is only throttled", async () => {
