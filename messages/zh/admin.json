@@ -651,6 +651,14 @@
       "NINJA_PARENT": "忍者 NFT",
       "BOUNTY_COMPLETION_CHILD": "完成 NFT"
     },
+    "nftStatuses": {
+      "PENDING": "待处理",
+      "MINTING": "铸造中",
+      "MINTED": "已铸造",
+      "ATTACHING": "关联中",
+      "ATTACHED": "已关联",
+      "FAILED": "失败"
+    },
     "nftLine": "{type} · NFT {status}",
     "retry": "重试",
     "pagination": "任务分页",

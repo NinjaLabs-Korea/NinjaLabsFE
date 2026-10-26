@@ -651,6 +651,14 @@
       "NINJA_PARENT": "닌자 NFT",
       "BOUNTY_COMPLETION_CHILD": "완료 NFT"
     },
+    "nftStatuses": {
+      "PENDING": "대기",
+      "MINTING": "민팅 중",
+      "MINTED": "민팅됨",
+      "ATTACHING": "연결 중",
+      "ATTACHED": "연결됨",
+      "FAILED": "실패"
+    },
     "nftLine": "{type} · NFT {status}",
     "retry": "재시도",
     "pagination": "잡 페이지",

@@ -651,6 +651,14 @@
       "NINJA_PARENT": "Ninja NFT",
       "BOUNTY_COMPLETION_CHILD": "Completion NFT"
     },
+    "nftStatuses": {
+      "PENDING": "Pending",
+      "MINTING": "Minting",
+      "MINTED": "Minted",
+      "ATTACHING": "Attaching",
+      "ATTACHED": "Attached",
+      "FAILED": "Failed"
+    },
     "nftLine": "{type} · NFT {status}",
     "retry": "Retry",
     "pagination": "Job pages",

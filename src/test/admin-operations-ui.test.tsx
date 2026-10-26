@@ -333,6 +333,15 @@ describe("NftJobsManager", () => {
     expect(screen.queryByText("No jobs in this status.")).toBeNull();
   });
 
+  it("shows the NFT status as a label, not the raw enum value, and keeps an unknown status as sent", async () => {
+    const job = (id: string, nftStatus: string) => ({ id, nftId: `${id}-n`, jobType: "MINT_PARENT", status: "FAILED", retryCount: 5, lastError: `err ${id}`, scheduledAt: null, updatedAt: null, nftType: "NINJA_PARENT", nftStatus, bountyTitle: null, ownerNickname: null, ownerWalletAddress: null });
+    adminApi.getAdminNftJobs.mockResolvedValue({ page: 1, pageSize: 30, total: 2, items: [job("a", "FAILED"), job("b", "SOMETHING_NEW")] });
+    renderWithIntl(<><NftJobsManager tabs={null}>{null}</NftJobsManager><AdminToastHost /></>);
+    expect(await screen.findByText("Ninja NFT · NFT Failed")).toBeTruthy();
+    expect(screen.getByText("Ninja NFT · NFT SOMETHING_NEW")).toBeTruthy();
+    expect(screen.queryByText(/NFT FAILED/)).toBeNull();
+  });
+
   it("steps back to the page on screen when fetching another page fails", async () => {
     const job = (id: string) => ({ id, nftId: `${id}-n`, jobType: "MINT_PARENT", status: "FAILED", retryCount: 5, lastError: `err ${id}`, scheduledAt: null, updatedAt: null, nftType: "NINJA_PARENT", nftStatus: "FAILED", bountyTitle: null, ownerNickname: null, ownerWalletAddress: null });
     adminApi.getAdminNftJobs.mockImplementation(async (_status: string, page: number) => ({ page, pageSize: 30, total: 61, items: [job(`p${page}`)] }));

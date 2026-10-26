@@ -10,6 +10,10 @@ import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { NFT_JOB_STATUSES, opsErrorCode, type AdminNftJobPage, type NftJobStatus } from "@/lib/admin-operations";
 
+/** BE `nft.status` values with a label under `admin.nftJobs.nftStatuses`; anything else is shown as the BE sent it. */
+const NFT_STATUSES = ["PENDING", "MINTING", "MINTED", "ATTACHING", "ATTACHED", "FAILED"] as const;
+const isNftStatus = (value: string): value is (typeof NFT_STATUSES)[number] => (NFT_STATUSES as readonly string[]).includes(value);
+
 const columns = ["job", "owner", "attempts", "lastError", "updated", "action"] as const;
 
 /** NFT job console: FAILED (default) / PENDING / PROCESSING pages from GET /admin/nft-jobs, and retry for FAILED jobs. */
@@ -17,6 +21,7 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
   const api = useAdminApi();
   const t = useTranslations("admin.nftJobs");
   const tOps = useTranslations("admin.operations");
+  const nftStatusLabel = (value: string) => (isNftStatus(value) ? t(`nftStatuses.${value}`) : value);
   const format = useFormatter();
   const timeZone = useBrowserTimeZone();
   const [status, setStatus] = useState<NftJobStatus>("FAILED");
@@ -115,7 +120,7 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
           <AdminTable columns={columns.map((id) => ({ id, label: t(`columns.${id}`) }))} minWidthClass="min-w-[960px]">
             {data.items.map((job) => (
               <tr className="border-t border-border" key={job.id}>
-                <td className={`${opsCell} ${adminLongTextCell}`}><p className="font-semibold text-ink">{t(`jobTypes.${job.jobType}`)}</p><p className="mt-1 text-xs text-ink-muted">{t("nftLine", { type: t(`nftTypes.${job.nftType}`), status: job.nftStatus })}</p>{job.bountyTitle ? <p className="mt-1 text-xs text-ink-muted">{job.bountyTitle}</p> : null}</td>
+                <td className={`${opsCell} ${adminLongTextCell}`}><p className="font-semibold text-ink">{t(`jobTypes.${job.jobType}`)}</p><p className="mt-1 text-xs text-ink-muted">{t("nftLine", { type: t(`nftTypes.${job.nftType}`), status: nftStatusLabel(job.nftStatus) })}</p>{job.bountyTitle ? <p className="mt-1 text-xs text-ink-muted">{job.bountyTitle}</p> : null}</td>
                 <td className={`${opsCell} ${adminLongTextCell}`}>{job.ownerNickname ?? "–"}<p className="mt-1 font-mono text-xs text-ink-muted" title={job.ownerWalletAddress ?? undefined}>{opsShort(job.ownerWalletAddress)}</p></td>
                 <td className={opsCell}>{job.retryCount}</td>
                 <td className={`${opsCell} max-w-[320px] font-mono text-xs ${adminLongTextCell}`}>{job.lastError ?? "–"}</td>
