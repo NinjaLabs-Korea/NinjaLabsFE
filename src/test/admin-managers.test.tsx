@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { BountyManager } from "@/components/admin/BountyManager";
@@ -100,6 +100,23 @@ describe("BountyManager", () => {
     expect(adminApi.saveAdminBounty).toHaveBeenCalledTimes(1);
     // Untouched deliverables/guide: the raw requirements string goes back byte-identical.
     expect(adminApi.saveAdminBounty).toHaveBeenCalledWith(expect.objectContaining({ requirements: "- Repo\n\n  note", coverImage: bounty.coverImage }), false);
+    pending.resolve();
+    await waitFor(() => expect((screen.getByRole("button", { name: "Create" }) as HTMLButtonElement).disabled).toBe(false));
+  });
+
+  it("sends one save when several submit events land in the same tick (before React re-renders `saving`)", async () => {
+    const pending = deferred("b1");
+    adminApi.saveAdminBounty.mockReturnValue(pending.promise);
+    renderWithIntl(<BountyManager bounties={[bounty]} tabs={null}>{null}</BountyManager>);
+    await waitFor(() => expect(adminApi.getAdminBounties).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const form = (screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).closest("form") as HTMLFormElement;
+    act(() => {
+      fireEvent.submit(form);
+      fireEvent.submit(form);
+      fireEvent.submit(form);
+    });
+    expect(adminApi.saveAdminBounty).toHaveBeenCalledTimes(1);
     pending.resolve();
     await waitFor(() => expect((screen.getByRole("button", { name: "Create" }) as HTMLButtonElement).disabled).toBe(false));
   });

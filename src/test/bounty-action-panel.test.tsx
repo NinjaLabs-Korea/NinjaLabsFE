@@ -77,6 +77,22 @@ describe("BountyActionPanel", () => {
     await waitFor(() => expect(applyToBounty).toHaveBeenCalledTimes(1));
   });
 
+  it("keeps a half-filled submit form and says so when the session ends under it", async () => {
+    const view = renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const url = (await screen.findByPlaceholderText("Completed work link")) as HTMLInputElement;
+    fireEvent.change(url, { target: { value: "https://example.com/work" } });
+    fireEvent.change(screen.getByPlaceholderText("Describe what you completed"), { target: { value: "A long description" } });
+
+    state.auth = signedOut;
+    view.rerender(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    // Same input element (not remounted), same text, an explanation, and no submit while there is no session.
+    expect(screen.getByPlaceholderText("Completed work link")).toBe(url);
+    expect(url.value).toBe("https://example.com/work");
+    expect(screen.getByRole("alert").textContent).toContain("Your session has expired");
+    expect((screen.getByRole("button", { name: "Submit" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByText("Login required")).toBeNull();
+  });
+
   it("shows the closed panel to signed-out visitors instead of the sign-in prompt", async () => {
     state.auth = signedOut;
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="closed" submissionMode="direct" />);

@@ -85,7 +85,7 @@ export function ApplicationsView() {
   const format = useFormatter();
   const statusLabel = (application: AccountApplication): string => {
     const { status } = application;
-    if (status === "approved") return t("approvedStatus");
+    if (status === "approved") return application.agent ? t("agentApprovedStatus", { name: application.agent.name }) : t("approvedStatus");
     if (status === "revisionRequested") return t("revisionRequestedStatus");
     if (status === "rejected") return t("rejectedStatus");
     if (status === "notAccepted") return parseReviewComment(application.reviewComment)?.forfeited ? t("forfeitedStatus") : t("notAcceptedStatus");
@@ -250,7 +250,7 @@ export function ApplicationsView() {
               {application.status === "approved" ? <ApplicationNote application={application} /> : null}
               {actionNeeded ? <RevisionNote application={application} /> : null}
               {/* An agent's submission is resubmitted through the Agent API, not from this page (see the revision note). */}
-              {application.status === "approved" || (actionNeeded && !application.agent) ? (
+              {(application.status === "approved" && !application.agent) || (actionNeeded && !application.agent) ? (
                 <Link
                   className={`mt-4 inline-block rounded-control bg-primary px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-on-inverse ${focusClass}`}
                   href={`/bounties/${application.bountySlug}`}

@@ -9,10 +9,17 @@ export const AGENT_DESCRIPTION_MAX = 1000;
 export type AgentFieldError = "required" | "tooLong" | "rejected";
 export type AgentRegisterErrors = Partial<Record<"name" | "description", AgentFieldError>>;
 
+/** Zero-width and Hangul filler characters draw as nothing: a name made only of them is blank to the reader (like the nickname rule). */
+const INVISIBLE = /[\u200B-\u200F\u2060\u2062-\u2064\uFEFF\u115F\u1160\u3164\uFFA0]/gu;
+
+export function hasVisibleText(value: string): boolean {
+  return value.replace(INVISIBLE, "").trim().length > 0;
+}
+
 export function validateAgentRegisterForm(input: { name: string; description: string }): AgentRegisterErrors {
   const errors: AgentRegisterErrors = {};
   const name = input.name.trim();
-  if (name.length === 0) errors.name = "required";
+  if (name.length === 0 || !hasVisibleText(name)) errors.name = "required";
   else if (name.length > AGENT_NAME_MAX) errors.name = "tooLong";
   if (input.description.trim().length > AGENT_DESCRIPTION_MAX) errors.description = "tooLong";
   return errors;

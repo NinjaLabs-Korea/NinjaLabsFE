@@ -42,9 +42,11 @@ describe("describeAgentKey", () => {
     expect(describeAgentKey({ keyStatus: "REVOKED", keyExpiresAt: days(30) }, now)).toEqual({ kind: "revoked" });
     expect(describeAgentKey({ keyStatus: "EXPIRED", keyExpiresAt: days(-1) }, now)).toEqual({ kind: "expired" });
     expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: days(-1) }, now)).toEqual({ kind: "expired" });
-    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: days(13) }, now)).toEqual({ kind: "active", daysLeft: 13, expiringSoon: true });
-    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: days(14) }, now)).toEqual({ kind: "active", daysLeft: 14, expiringSoon: false });
-    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: null }, now)).toEqual({ kind: "active", daysLeft: null, expiringSoon: false });
+    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: days(13) }, now)).toEqual({ kind: "active", daysLeft: 13, expiringSoon: true, withinDay: false });
+    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: days(14) }, now)).toEqual({ kind: "active", daysLeft: 14, expiringSoon: false, withinDay: false });
+    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: null }, now)).toEqual({ kind: "active", daysLeft: null, expiringSoon: false, withinDay: false });
+    // 3 hours left rounds up to "1 day": it must be flagged so the copy says "less than a day".
+    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: new Date(now + 3 * 3_600_000).toISOString() }, now)).toEqual({ kind: "active", daysLeft: 1, expiringSoon: true, withinDay: true });
   });
 });
 

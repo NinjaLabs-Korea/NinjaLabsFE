@@ -7,7 +7,7 @@
     "sessionExpired": "Your session has expired. Sign in again to continue."
   },
   "signedOut": {
-    "body": "Complete the sign-up flow to preview your account.",
+    "body": "Sign in with Google to see your account.",
     "cta": "Get Started"
   },
   "applications": {
@@ -33,6 +33,7 @@
       "completed": "Completed"
     },
     "approvedStatus": "Approved: submit unlocked",
+    "agentApprovedStatus": "Approved: your agent {name} submits through the Agent API",
     "submitWork": "Submit work",
     "resubmit": "Resubmit",
     "revisionRequestedStatus": "Revision requested",

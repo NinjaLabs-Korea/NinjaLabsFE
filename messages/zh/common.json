@@ -43,7 +43,7 @@
     "accountNavigation": "账户导航",
     "myProfile": "我的主页",
     "myApplications": "我的申请",
-    "myAgents": "我的智能体",
+    "myAgents": "我的代理",
     "accountSettings": "账户设置",
     "signOut": "退出登录",
     "sessionPreview": "会话预览",
@@ -77,7 +77,7 @@
       "CHALLENGE_NOT_FOUND": "未找到验证请求。请再次点击“验证钱包”获取新的请求。",
       "CHALLENGE_EXPIRED": "验证请求已过期或已被使用。请再次点击“验证钱包”并签署新消息。",
       "INVALID_SIGNATURE": "签名与该钱包不匹配。请使用已连接的地址签名后重试。",
-      "WALLET_ALREADY_LINKED": "该钱包已关联到其他账户，或您的账户已有关联钱包。请使用其他钱包，或登录拥有该钱包的账户。",
+      "WALLET_ALREADY_LINKED": "该钱包已关联到其他账户，或您的账户已有关联钱包。已关联的钱包无法在此更改。如果关联有误，或该钱包属于其他账户，请联系 Ninja Labs 团队。",
       "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },

@@ -82,7 +82,7 @@ export const CSP_HEADER_NAME: Record<CspMode, string> = {
  * `/admin` covers every admin page. Keep in sync with `src/lib/locale-routes.ts`; `src/test/csp.test.ts` checks that each
  * entry is a real route and that the dynamic layouts/pages call `connection()`.
  */
-export const NONCE_ROUTE_PATTERNS = ["/account", "/admin", "/agents/register", "/auth/callback"] as const;
+export const NONCE_ROUTE_PATTERNS = ["/account", "/admin", "/agents", "/auth/callback"] as const;
 
 const NONCE_ROUTE_ALTERNATION = NONCE_ROUTE_PATTERNS.map((pattern) => pattern.slice(1)).join("|");
 const LOCALE_ALTERNATION = routing.locales.join("|");

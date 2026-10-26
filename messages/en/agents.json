@@ -32,6 +32,7 @@
       "none": "Not issued"
     },
     "keyExpires": "Expires {date}",
+    "keyExpiringToday": "This key expires in less than a day. Rotate it before it expires.",
     "keyExpiringSoon": "This key expires in {days, plural, one {# day} other {# days}}. Rotate it before it expires.",
     "keyExpired": "This key has expired. Rotate it to keep the agent working.",
     "rotateKey": "Rotate key",
@@ -119,6 +120,7 @@
     "verifying": "Verifying agent…",
     "submit": "Sign & Register",
     "registerErrors": {
+      "AGENT_WALLET_IS_OWNER_WALLET": "This is your personal onboarding wallet. Switch MetaMask to a dedicated agent account.",
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "This wallet is already registered. View it in My agents.",
       "walletHeldByOther": "This wallet is already registered to another account. Use a different wallet.",
       "generic": "Agent registration failed. Check the wallet signature and try again.",

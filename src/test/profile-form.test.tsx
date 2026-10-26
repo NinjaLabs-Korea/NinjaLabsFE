@@ -69,8 +69,24 @@ describe("ProfileForm nickname rule + availability check", () => {
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));
     fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
     fireEvent.submit(nicknameInput().closest("form")!);
-    expect((await screen.findByRole("alert")).textContent).toBe("That nickname is already taken.");
+    // Said once, by the status line under the field: no second field alert and no form-level alert.
+    await waitFor(() => expect(nicknameInput().getAttribute("aria-invalid")).toBe("true"));
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getAllByText("That nickname is already taken.")).toHaveLength(1);
     expect(completeProfile).not.toHaveBeenCalled();
+  });
+
+  it("announces a nickname taken at save time (409 race) once, under the field", async () => {
+    completeProfile.mockRejectedValue(new ApiHttpError(409, "NICKNAME_TAKEN"));
+    renderWithIntl(<ProfileForm />);
+    typeNickname("ninja_dev");
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Nickname is available."), { timeout: 1500 });
+    fireEvent.click(screen.getByRole("button", { name: "Dev" }));
+    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.submit(nicknameInput().closest("form")!);
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("That nickname is already taken."));
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getAllByText(/nickname is already/i)).toHaveLength(1);
   });
 
   it("caps the bio input at the BE limit", () => {

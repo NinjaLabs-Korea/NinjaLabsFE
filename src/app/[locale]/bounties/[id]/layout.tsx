@@ -1,6 +1,18 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getRuntimeBounty } from "@/lib/bounties";
 import { validateDetailId } from "@/lib/detail-id";
+
+// The layout's own notFound() below renders the [locale] boundary without the page's generateMetadata, so a missing id
+// would fall back to the site's home title. Give the layout the same not-found title; a found bounty returns nothing and
+// the page's own metadata applies.
+export async function generateMetadata({ params }: LayoutProps<"/[locale]/bounties/[id]">): Promise<Metadata> {
+  const { locale, id } = await params;
+  if ((await validateDetailId("bounties", id)) && (await getRuntimeBounty(id, locale))) return {};
+  const t = await getTranslations({ locale, namespace: "bounties.meta" });
+  return { alternates: {}, title: t("notFound") };
+}
 
 // 없는 id는 loading.tsx 스트리밍이 시작되기 전에 여기서 404로 끝낸다.
 // 스트리밍이 시작되면 상태 코드가 200으로 고정되기 때문이다 (Next docs: loading.js > Status Codes).

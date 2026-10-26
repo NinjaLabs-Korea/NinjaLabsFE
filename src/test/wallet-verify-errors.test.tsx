@@ -103,4 +103,15 @@ describe("WalletConnectButton verification errors", () => {
     await vi.waitFor(() => expect(push).toHaveBeenCalledWith("/signup/profile"));
     expect(screen.queryByRole("alert")).toBeNull();
   });
+
+  it("sends one challenge, one signature request and one verify for a same-tick double click", async () => {
+    renderWithIntl(<WalletConnectButton chainId={1439} />);
+    const verify = screen.getByRole("button", { name: "Verify wallet" });
+    fireEvent.click(verify);
+    fireEvent.click(verify);
+    await vi.waitFor(() => expect(push).toHaveBeenCalledWith("/signup/profile"));
+    expect(walletApi.createWalletChallenge).toHaveBeenCalledTimes(1);
+    expect(signMessageAsync).toHaveBeenCalledTimes(1);
+    expect(walletApi.verifyWallet).toHaveBeenCalledTimes(1);
+  });
 });
