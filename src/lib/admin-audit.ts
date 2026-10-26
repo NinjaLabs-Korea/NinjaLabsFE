@@ -3,6 +3,8 @@ export type AdminAuditLog = {
   id: string;
   actorUserId: string | null;
   actorAgentId: string | null;
+  /** Nickname of `actorUserId` (BE `actor_nickname`); null/absent when there is no user actor or the account has no nickname. */
+  actorNickname?: string | null;
   action: string;
   entityType: string;
   entityId: string | null;

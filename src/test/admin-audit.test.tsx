@@ -69,6 +69,18 @@ describe("AuditLogViewer", () => {
     expect(within(rows[1]).getByText("aaaaaaaa…0000")).toBeTruthy();
   });
 
+  it("shows the actor's nickname (id in the tooltip) and a localized action label above the raw code", async () => {
+    adminApi.getAdminAuditLogs.mockResolvedValue({ items: [log(1, { actorNickname: "adminninja" }), log(2, { action: "SOME_FUTURE_ACTION", actorNickname: null })], page: 1, pageSize: 30, total: 2 });
+    render();
+    const rows = await screen.findAllByRole("row");
+    expect(within(rows[1]).getByText("adminninja").getAttribute("title")).toBe("aaaaaaaa-0000-4000-8000-000000000000");
+    expect(within(rows[1]).getByText("Payout approved")).toBeTruthy();
+    expect(within(rows[1]).getByText("PAYOUT_APPROVED")).toBeTruthy();
+    // Unknown action: the raw code only; no nickname: the short id.
+    expect(within(rows[2]).getByText("SOME_FUTURE_ACTION")).toBeTruthy();
+    expect(within(rows[2]).getByText("aaaaaaaa…0000")).toBeTruthy();
+  });
+
   it("pages with previous / next", async () => {
     render();
     await screen.findByText("Page 1 of 3");
