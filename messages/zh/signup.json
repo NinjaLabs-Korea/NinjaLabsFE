@@ -14,6 +14,11 @@
     "eyebrow": "创建账户"
   },
   "wallet": {
+    "linked": {
+      "badge": "钱包已连接",
+      "note": "此钱包已与您的账户绑定，无需再次验证。",
+      "continue": "继续"
+    },
     "metadata": {
       "title": "连接钱包 | Ninja Labs",
       "descriptionApi": "连接并验证 Injective 钱包。",

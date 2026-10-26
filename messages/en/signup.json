@@ -14,6 +14,11 @@
     "eyebrow": "Create account"
   },
   "wallet": {
+    "linked": {
+      "badge": "Wallet connected",
+      "note": "This wallet is already linked to your account, so there is nothing to verify again.",
+      "continue": "Continue"
+    },
     "metadata": {
       "title": "Connect wallet | Ninja Labs",
       "descriptionApi": "Connect and verify an Injective wallet.",
