@@ -5,7 +5,7 @@ vi.mock("@/lib/runtime/config", () => ({
   loadRuntimeConfig: () => ({ runtimeMode: runtime.mode, apiUrl: runtime.apiUrl }),
 }));
 
-const { detailMayExist, isValidDetailId, resolveDetailRoute, validateDetailId } = await import("@/lib/detail-id");
+const { decodeDetailId, detailMayExist, isValidDetailId, resolveDetailRoute, validateDetailId } = await import("@/lib/detail-id");
 
 const uuid = "4f2c3f0e-9d2a-4a5b-8c6d-1e2f3a4b5c6d";
 
@@ -124,5 +124,20 @@ describe("detailMayExist (proxy)", () => {
       await expect(detailMayExist("members", reserved), reserved).resolves.toBe(false);
     }
     expect(isValidDetailId("members", "me2", "api")).toBe(true);
+  });
+});
+
+describe("decodeDetailId", () => {
+  it("decodes the percent-encoded segment Next passes for non-ASCII nicknames so the shape check accepts it", () => {
+    for (const nickname of ["김민수", "한글닉349", "éxy", "Ünal", "日本語名", "Привет", "𝐀𝐁"]) {
+      const encoded = encodeURIComponent(nickname);
+      expect(isValidDetailId("members", encoded, "api")).toBe(false);
+      expect(isValidDetailId("members", decodeDetailId(encoded), "api")).toBe(true);
+    }
+  });
+  it("leaves plain ids alone and turns an undecodable id into an empty (invalid) one", () => {
+    expect(decodeDetailId("builderone")).toBe("builderone");
+    expect(decodeDetailId("%E0%A4%A")).toBe("");
+    expect(isValidDetailId("members", decodeDetailId("%2e%2e"), "api")).toBe(false);
   });
 });

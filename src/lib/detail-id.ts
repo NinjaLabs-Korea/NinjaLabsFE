@@ -38,6 +38,20 @@ export function isValidDetailId(kind: DetailKind, id: string, mode: RuntimeMode)
   return kind === "members" ? isNicknameShape(id) && !isReservedNickname(id) : UUID.test(id);
 }
 
+/**
+ * Next hands dynamic segments to layouts/pages/generateMetadata percent-encoded when they hold non-ASCII characters
+ * (`/members/%EA%B9%80...`), so the nickname shape check failed and every Hangul/Cyrillic/accented profile was a 404.
+ * Decode once at the boundary (same rule as `resolveDetailRoute`); an undecodable id becomes `""` and fails the shape check.
+ * Idempotent for valid ids: `%` is never part of a nickname, UUID or slug.
+ */
+export function decodeDetailId(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return "";
+  }
+}
+
 /** Runtime-mode shape check for the detail pages/layouts (`notFound()` when false, before the record fetch). */
 export function validateDetailId(kind: DetailKind, id: string): Promise<boolean> {
   return loadFromRuntime({
