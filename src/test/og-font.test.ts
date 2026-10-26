@@ -1,6 +1,7 @@
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { fontFileUrlFromCss, loadOgFont, ogFontFamily } from "@/lib/og-font";
+import { fitOgHeadlineSize, fontFileUrlFromCss, loadOgFont, ogFontFamily } from "@/lib/og-font";
 
 const CSS = `@font-face {
   font-family: 'Noto Sans KR';
@@ -43,5 +44,24 @@ describe("Open Graph CJK font", () => {
   it("falls back to the default font instead of failing the build when Google Fonts is unreachable", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
     expect(await loadOgFont("zh", "忍者")).toBeNull();
+  });
+});
+
+describe("fitOgHeadlineSize", () => {
+  const messages = (locale: string) => (JSON.parse(readFileSync(`messages/${locale}/common.json`, "utf8")) as { site: { og: { headline: string; highlight: string } } }).site.og;
+
+  it("shrinks the Korean headline until its longest line fits one line, and leaves zh at full size", () => {
+    const ko = messages("ko");
+    const size = fitOgHeadlineSize([ko.headline, ko.highlight], 1040, 72);
+    expect(size).toBeLessThan(72);
+    // Every Korean syllable is roughly one em wide: the line must fit the width at that size.
+    expect((ko.headline.match(/[가-힣]/g) ?? []).length * size).toBeLessThanOrEqual(1040);
+    // zh lines are short enough for the full size.
+    const zh = messages("zh");
+    expect(fitOgHeadlineSize([zh.headline, zh.highlight], 1040, 72)).toBe(72);
+  });
+
+  it("never returns less than a readable minimum", () => {
+    expect(fitOgHeadlineSize(["가".repeat(200)], 1040, 72)).toBe(24);
   });
 });
