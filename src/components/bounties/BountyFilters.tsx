@@ -1,14 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { BountyCard } from "@/components/cards/BountyCard";
 import { Badge } from "@/components/ui/Badge";
+import { parseBountyFilters, serializeBountyFilters, type BountyCategoryFilter as CategoryFilter, type BountyStatusFilter as StatusFilter } from "@/lib/bounty-filter-params";
 import type { Bounty, BountyCategory } from "@/lib/types";
-
-type CategoryFilter = "All" | BountyCategory;
-type StatusFilter = "All" | "Active" | "Closed";
 
 type BountyFiltersProps = {
   bounties: Bounty[];
@@ -26,6 +24,35 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
   const [category, setCategory] = useState<CategoryFilter>("All");
   const [status, setStatus] = useState<StatusFilter>("All");
   const [query, setQuery] = useState("");
+  // Filters live in the URL so Back from a card restores them. Server render and first client render use the defaults
+  // (no hydration mismatch); the URL is applied right after mount (in a timer callback), and `restored` keeps the
+  // write-back from clobbering it.
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const fromUrl = parseBountyFilters(window.location.search);
+      setCategory(fromUrl.category);
+      setStatus(fromUrl.status);
+      setQuery(fromUrl.query);
+      setRestored(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+  useEffect(() => {
+    if (!restored) return;
+    // Debounced: Safari throws SecurityError past ~100 history writes per 30 s, which fast typing would reach.
+    const timer = window.setTimeout(() => {
+      const search = serializeBountyFilters({ category, status, query });
+      const next = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`;
+      if (next === `${window.location.pathname}${window.location.search}${window.location.hash}`) return;
+      try {
+        window.history.replaceState(window.history.state, "", next);
+      } catch {
+        // History writes blocked: the filters still work, they just are not remembered.
+      }
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [restored, category, status, query]);
   const resetFilters = () => {
     setCategory("All");
     setStatus("All");

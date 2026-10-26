@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { fireEvent, screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { BountyFilters } from "@/components/bounties/BountyFilters";
 import type { Bounty } from "@/lib/types";
@@ -52,6 +52,26 @@ const bounties: Bounty[] = [
     coverImage: "",
   },
 ];
+
+describe("BountyFilters in the URL", () => {
+  afterEach(() => {
+    window.history.replaceState(null, "", "/");
+    vi.useRealTimers();
+  });
+
+  it("restores filters from the URL (Back from a card) and writes changes back with replaceState", async () => {
+    window.history.replaceState(null, "", "/en/bounties?category=Design&q=design");
+    renderWithIntl(<BountyFilters bounties={bounties} />);
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 10)); });
+    expect(screen.getByText("Active design bounty")).toBeTruthy();
+    expect(screen.queryByText("Active dev bounty")).toBeNull();
+    expect((screen.getByRole("searchbox") as HTMLInputElement).value).toBe("design");
+
+    fireEvent.click(screen.getByRole("button", { name: "Closed" }));
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400)); });
+    expect(window.location.search).toBe("?category=Design&status=Closed&q=design");
+  });
+});
 
 describe("BountyFilters", () => {
   it("applies category and status as independent filters and resets both with All", () => {
