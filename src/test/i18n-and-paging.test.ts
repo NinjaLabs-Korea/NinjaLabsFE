@@ -109,7 +109,7 @@ describe("public list paging", () => {
   it("reads every page through the Data Cache window, so list views do not each cost ceil(total/50) BE calls", async () => {
     const request = stubPages(120);
     await fetchAllPublicPages("/bounties");
-    for (const [, init] of request.mock.calls as Array<[string, RequestInit & { next?: { revalidate: number } }]>) {
+    for (const [, init] of request.mock.calls as unknown as Array<[string, RequestInit & { next?: { revalidate: number } }]>) {
       expect(init.next).toEqual({ revalidate: 30 });
       expect(init.cache).toBeUndefined();
     }

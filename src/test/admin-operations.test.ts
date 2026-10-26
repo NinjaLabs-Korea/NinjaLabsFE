@@ -16,7 +16,7 @@ import {
   type AdminOperations,
 } from "@/lib/admin-operations";
 import { createAdminApi, toAdminOperations } from "@/lib/api/admin";
-import { baseUnitsToHuman, humanToBaseUnits, tokenDecimalsFor } from "@/lib/api/codecs";
+import { baseUnitsToHuman, humanToBaseUnits, operatorAmountFromBaseUnits, operatorAmountToBaseUnits, tokenDecimalsFor } from "@/lib/api/codecs";
 import { ApiHttpError, type ApiHttp } from "@/lib/api/http";
 
 const HASH = "ab".repeat(32);
@@ -127,6 +127,17 @@ describe("token amount codecs", () => {
     expect(humanToBaseUnits("0.000000000000000001", "INJ")).toBe("1");
     for (const bad of ["", "0", "0.0", "-1", "1e3", "1,000", "abc", "0.0000001"]) expect(humanToBaseUnits(bad, "USDC")).toBeNull();
     expect(humanToBaseUnits("1", "DOGE")).toBeNull();
+  });
+
+  it("lets an operator enter whole base units for a token the UI has no decimals for (e.g. ERC20 USDT)", () => {
+    expect(operatorAmountToBaseUnits("25000000", "USDT")).toBe("25000000");
+    expect(operatorAmountToBaseUnits(" 7 ", "usdt")).toBe("7");
+    for (const bad of ["", "0", "012", "1.5", "-1", "1e3", "abc"]) expect(operatorAmountToBaseUnits(bad, "USDT"), bad).toBeNull();
+    // Known tokens keep token units.
+    expect(operatorAmountToBaseUnits("12.5", "INJ")).toBe("12500000000000000000");
+    expect(operatorAmountToBaseUnits("25000000", "USDC")).toBe("25000000000000");
+    expect(operatorAmountFromBaseUnits("25000000", "USDT")).toBe("25000000");
+    expect(operatorAmountFromBaseUnits("250500000", "USDC")).toBe("250.5");
   });
 
   it("formats base units exactly (no rounding) and refuses unknown tokens or non-integers", () => {

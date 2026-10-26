@@ -551,7 +551,9 @@
       "txHash": "Transaction hash",
       "txHashInvalid": "Enter a 32-byte hex transaction hash (64 hex characters, optional 0x).",
       "amountInvalid": "Enter a positive {symbol} amount with no more decimals than the token supports.",
+      "amountInvalidBaseUnits": "Enter a positive whole number of {symbol} base units.",
       "amountHint": "Token units (e.g. 12.5); converted to base units before sending.",
+      "amountHintBaseUnits": "This token is not known here, so enter the amount in base units (a whole number, e.g. 25000000).",
       "noteOptional": "Note (optional)",
       "commentOptional": "Comment (optional)",
       "commentRequired": "Comment (required)"

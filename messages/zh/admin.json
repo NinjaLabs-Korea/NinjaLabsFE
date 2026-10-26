@@ -551,7 +551,9 @@
       "txHash": "交易哈希",
       "txHashInvalid": "请输入 32 字节的十六进制交易哈希（64 个十六进制字符，0x 可选）。",
       "amountInvalid": "请输入正数 {symbol} 金额，小数位不得超过代币精度。",
+      "amountInvalidBaseUnits": "请输入 {symbol} 最小单位的正整数。",
       "amountHint": "代币单位（如 12.5），发送前会换算为最小单位。",
+      "amountHintBaseUnits": "此处无法识别该代币，请按最小单位输入（整数，例如 25000000）。",
       "noteOptional": "备注（可选）",
       "commentOptional": "评语（可选）",
       "commentRequired": "评语（必填）"

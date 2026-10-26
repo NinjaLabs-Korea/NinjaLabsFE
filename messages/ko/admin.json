@@ -551,7 +551,9 @@
       "txHash": "거래 해시",
       "txHashInvalid": "32바이트 16진수 거래 해시를 입력하세요(16진수 64자, 0x는 선택).",
       "amountInvalid": "토큰이 지원하는 소수 자릿수 이내의 양수 {symbol} 금액을 입력하세요.",
+      "amountInvalidBaseUnits": "{symbol} 기본 단위의 양의 정수를 입력하세요.",
       "amountHint": "토큰 단위(예: 12.5), 전송 전에 최소 단위로 변환됩니다.",
+      "amountHintBaseUnits": "이 토큰은 여기서 단위를 알 수 없으므로 기본 단위(정수, 예: 25000000)로 입력하세요.",
       "noteOptional": "메모(선택)",
       "commentOptional": "코멘트(선택)",
       "commentRequired": "코멘트(필수)"

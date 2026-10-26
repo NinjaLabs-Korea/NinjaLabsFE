@@ -242,6 +242,24 @@ export function baseUnitsToHuman(base: string | null | undefined, symbol: string
 }
 
 /**
+ * The amount an operator types in the operations console. A token this UI knows (INJ, USDC) is entered in token units (`12.5`,
+ * `humanToBaseUnits`). A token it does not know (any other ERC20 symbol the BE accepts, e.g. USDT) has no decimals here, and the
+ * console already shows its amounts as base units, so the operator enters whole base units: a positive integer without leading
+ * zeros (the BE `TOKEN_AMOUNT` rule). Null when the input is not acceptable.
+ */
+export function operatorAmountToBaseUnits(value: string, symbol: string): string | null {
+  if (tokenDecimalsFor(symbol) !== null) return humanToBaseUnits(value, symbol);
+  const trimmed = value.trim();
+  return /^[1-9]\d*$/.test(trimmed) ? trimmed : null;
+}
+
+/** What to prefill an amount input with: token units for a known token, the base-unit integer itself for an unknown one. */
+export function operatorAmountFromBaseUnits(base: string | null | undefined, symbol: string): string {
+  if (tokenDecimalsFor(symbol) !== null) return baseUnitsToHuman(base, symbol) ?? "";
+  return base && /^\d+$/.test(base) ? base : "";
+}
+
+/**
  * 운영자가 입력한 사람 단위 금액(`12.5`) → BE에 보낼 최소 단위 정수 문자열. BE `TOKEN_AMOUNT`(양의 정수, 선행 0 없음)를
  * 만족하지 못하는 값 - 빈 값, 음수, 지수 표기, 토큰 자릿수보다 긴 소수, 0 - 과 모르는 토큰은 null.
  */

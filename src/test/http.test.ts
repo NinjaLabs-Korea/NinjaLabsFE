@@ -409,7 +409,7 @@ describe("API auth adapter session restore", () => {
     const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
-    expect(adapter.getSnapshot().reason).toBe("unavailable");
+    expect((adapter.getSnapshot() as { reason?: string }).reason).toBe("unavailable");
   });
 
   it("reports a failing /auth/me (503) as unavailable but a rejected one (401) as plain signed-out", async () => {
@@ -419,13 +419,13 @@ describe("API auth adapter session restore", () => {
     const flaky = createApiAuthAdapter(API);
     flaky.initialize?.();
     await vi.waitFor(() => expect(flaky.getSnapshot().status).toBe("signed-out"));
-    expect(flaky.getSnapshot().reason).toBe("unavailable");
+    expect((flaky.getSnapshot() as { reason?: string }).reason).toBe("unavailable");
 
     meStatus.value = 401;
     const rejected = createApiAuthAdapter(API);
     rejected.initialize?.();
     await vi.waitFor(() => expect(rejected.getSnapshot().status).toBe("signed-out"));
-    expect(rejected.getSnapshot().reason).toBeUndefined();
+    expect((rejected.getSnapshot() as { reason?: string }).reason).toBeUndefined();
   });
 
   it("migrates a legacy refresh token during initialize and never leaves tokens in localStorage", async () => {
