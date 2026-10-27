@@ -96,6 +96,7 @@ async function screen(p, name, who, url, { waitText, prepare, label = name } = {
   const p = await b.newPage(await b.newContext());
   await screen(p, 'intro', 'signed-out', '/ko', { waitText: '함께 해 온 활동' });
   await screen(p, 'about', 'signed-out', '/ko/about', { waitText: '함께 해 온 활동' });
+  await screen(p, 'bounties', 'signed-out', '/ko/bounties', { waitText: '바운티를 완료하고' });
   await screen(p, 'recruit', 'signed-out', '/ko/recruit', { waitText: '로그인' });
   await p.close();
 }
@@ -106,6 +107,7 @@ async function screen(p, name, who, url, { waitText, prepare, label = name } = {
   await signIn(p, ids.BUILDER);
   await screen(p, 'home', 'finished', '/ko/home', { waitText: '님, 안녕하세요' });
   await screen(p, 'about', 'finished', '/ko/about', { waitText: '함께 해 온 활동' });
+  await screen(p, 'bounties', 'finished', '/ko/bounties', { waitText: '바운티를 완료하고' });
   await screen(p, 'recruit-status', 'finished', '/ko/recruit', { waitText: '심사 대기' });
   await screen(p, 'account', 'finished', '/ko/account', { waitText: '기수 지원 현황' });
   await screen(p, 'notices', 'finished', '/ko/notices', { waitText: '행사일' });

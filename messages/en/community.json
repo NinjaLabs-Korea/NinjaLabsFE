@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "About Ninja Labs | Ninja Labs",
-    "description": "Meet the Contributor Hub for people who learn, build and move on Injective: past activities, news, achievements and members."
+    "description": "Meet the Contributor Hub for people who learn, build and move on Injective: past activities, achievements and members."
   },
   "about": {
     "eyebrow": "About Ninja Labs",
@@ -33,14 +33,6 @@
     "unavailable": "Past activities are temporarily unavailable.",
     "unavailableBody": "We couldn’t reach the server. Please reload shortly.",
     "empty": "No events have been posted yet. Check back soon."
-  },
-  "news": {
-    "eyebrow": "Community news",
-    "heading": "Latest news",
-    "viewAll": "View all →",
-    "unavailable": "Recent news is temporarily unavailable.",
-    "unavailableBody": "We couldn’t reach the server. Please reload shortly.",
-    "empty": "No news yet. Check back soon."
   },
   "achievements": {
     "eyebrow": "Recent achievements",

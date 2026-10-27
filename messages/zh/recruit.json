@@ -209,5 +209,8 @@
     "unavailable": "暂时无法加载你的申请。",
     "retry": "重试",
     "empty": "你还没有申请过任何期别。"
+  },
+  "heroCta": {
+    "apply": "申请加入 {name}"
   }
 }

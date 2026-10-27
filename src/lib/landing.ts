@@ -1,42 +1,31 @@
 import type { Bounty, NoticePreview } from './types';
-import { getRuntimeBounties } from './bounties';
+import { getRuntimeBounties, loadRuntimeBounties } from './bounties';
 import { getRuntimeNotices } from './notices';
-import { emptyHallOfFame, getRuntimeHallOfFame, type HallStatKey } from './hall-of-fame';
+import { emptyHallOfFame, getRuntimeHallOfFame, visibleStats, type HallStatKey } from './hall-of-fame';
 
-// Hero copy (eyebrow, title, description, CTA labels) lives in messages `landing.hero`;
-// CTA `labelKey` and stat `labelKey` resolve there and under `hallOfFame.stats`.
-type LandingData = {
-  hero: {
-    /** Signed-out label; `StartLink` swaps the target and label by auth state (`lib/auth-route.ts`). */
-    primaryCta: { labelKey: 'getStarted'; href: string };
-    secondaryCta: { labelKey: 'browseBounties'; href: string };
-    stats: Array<{ value: string; labelKey: HallStatKey }>;
-    portfolio: {
-      handle: string;
-      memberSince: number;
-      completed: string[];
-      totalCompleted: number;
-    };
+// Two surfaces read this module. The signed-in home (`/home`) takes `getRuntimeLanding` (open bounties + latest notices). The
+// bounty hero at the top of `/bounties` (headline, CTAs, NFT portfolio showcase, stats) takes `getBountyHero`; its copy is
+// messages `bounties.hero`, the stat `labelKey` resolves under `hallOfFame.stats`. The Intro (`/`) is community copy
+// (`landing.hero`) and has no data fixture; its bounty preview takes `getRuntimeOpenBounties`.
+
+export type BountyHero = {
+  stats: Array<{ value: string; labelKey: HallStatKey }>;
+  portfolio: {
+    handle: string;
+    memberSince: number;
+    completed: string[];
+    totalCompleted: number;
   };
+  /** The Hall of Fame stats read failed: the hero hides the stats and the "N completed" line instead of showing zeros. */
+  statsUnavailable: boolean;
+};
+
+/** Showcase fixture of the NFT portfolio card; the completed titles and the count are filled from live data. */
+const showcase = { handle: 'ninja.inj', memberSince: 2026 } as const;
+
+export type RuntimeLanding = {
   bounties: Bounty[];
   news: NoticePreview[];
-};
-
-/**
- * Static hero fixture. Bounties, news, and stats are never read from here:
- * `getRuntimeLanding` derives them from the bounty/notice/hall-of-fame sources
- * so the landing page cannot drift from the list pages.
- */
-export const landing: Pick<LandingData, 'hero'> = {
-  hero: {
-    primaryCta: { labelKey: 'getStarted', href: '/signup' },
-    secondaryCta: { labelKey: 'browseBounties', href: '/bounties' },
-    stats: [],
-    portfolio: { handle: 'ninja.inj', memberSince: 2026, completed: [], totalCompleted: 0 },
-  },
-};
-
-export type RuntimeLanding = LandingData & {
   /** Sections whose API source failed; the page renders an unavailable state instead of throwing. */
   unavailable: { bounties: boolean; news: boolean; stats: boolean };
 };
@@ -50,27 +39,40 @@ export async function getRuntimeLanding(locale: string): Promise<RuntimeLanding>
     getRuntimeNotices(),
     getRuntimeHallOfFame(locale),
   ]);
-  const bounties = settledValue(bountiesResult, []);
-  const notices = settledValue(noticesResult, []);
-  const hall = settledValue(hallResult, emptyHallOfFame);
-  const completed = bounties.filter((bounty) => bounty.completed).slice(0, 5);
   return {
-    hero: {
-      ...landing.hero,
-      stats: hall.stats.map(({ value, labelKey }) => ({ value, labelKey })),
-      portfolio: {
-        handle: landing.hero.portfolio.handle,
-        memberSince: landing.hero.portfolio.memberSince,
-        completed: completed.map((bounty) => bounty.title),
-        totalCompleted: Number(hall.stats[0]?.value ?? 0),
-      },
-    },
-    bounties: bounties.filter((bounty) => bounty.status === 'active').slice(0, 4),
-    news: notices.slice(0, 3),
+    bounties: settledValue(bountiesResult, []).filter((bounty) => bounty.status === 'active').slice(0, 4),
+    news: settledValue(noticesResult, []).slice(0, 3),
     unavailable: {
       bounties: bountiesResult.status === 'rejected',
       news: noticesResult.status === 'rejected',
       stats: hallResult.status === 'rejected',
     },
+  };
+}
+
+/** Open bounties for the Intro preview: at most four `active` ones; `[]` when there are none or the API failed (the section then does not render). */
+export async function getRuntimeOpenBounties(locale: string): Promise<Bounty[]> {
+  const { bounties } = await loadRuntimeBounties(locale);
+  return bounties.filter((bounty) => bounty.status === 'active').slice(0, 4);
+}
+
+/**
+ * The bounty hero data: stats (hidden while every value is zero, shown on their own once one is above zero) and the portfolio
+ * card, derived from the bounty list the page already loaded plus the Hall of Fame stats. A failed stats read hides them
+ * instead of throwing.
+ */
+export async function getBountyHero(locale: string, bounties: Bounty[]): Promise<BountyHero> {
+  const hall = await getRuntimeHallOfFame(locale).then(
+    (value) => ({ value, failed: false }),
+    () => ({ value: emptyHallOfFame, failed: true }),
+  );
+  return {
+    stats: visibleStats(hall.value.stats).map(({ value, labelKey }) => ({ value, labelKey })),
+    portfolio: {
+      ...showcase,
+      completed: bounties.filter((bounty) => bounty.completed).slice(0, 5).map((bounty) => bounty.title),
+      totalCompleted: Number(hall.value.stats[0]?.value ?? 0),
+    },
+    statsUnavailable: hall.failed,
   };
 }

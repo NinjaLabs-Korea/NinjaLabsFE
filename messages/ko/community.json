@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "닌자랩스 소개 | Ninja Labs",
-    "description": "Injective 위에서 배우고, 만들고, 움직이는 사람들의 Contributor Hub. 지난 활동, 소식, 성과, 멤버를 만나 보세요."
+    "description": "Injective 위에서 배우고, 만들고, 움직이는 사람들의 Contributor Hub. 지난 활동, 성과, 멤버를 만나 보세요."
   },
   "about": {
     "eyebrow": "닌자랩스 소개",
@@ -33,14 +33,6 @@
     "unavailable": "지난 활동을 일시적으로 불러올 수 없습니다.",
     "unavailableBody": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요.",
     "empty": "아직 올라온 행사 소식이 없습니다. 곧 다시 확인해 주세요."
-  },
-  "news": {
-    "eyebrow": "커뮤니티 소식",
-    "heading": "최근 소식",
-    "viewAll": "전체 보기 →",
-    "unavailable": "최근 소식을 일시적으로 불러올 수 없습니다.",
-    "unavailableBody": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요.",
-    "empty": "아직 소식이 없습니다. 곧 다시 확인해 주세요."
   },
   "achievements": {
     "eyebrow": "최근 성과",

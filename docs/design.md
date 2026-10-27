@@ -158,6 +158,7 @@ with a `next/image` `object-contain` logo in an `h-12` box; linked tiles add `tr
 - **Recruitment strip** (`recruit/RecruitmentBanner`, `home/HomeRecruitment`): `rounded-card border border-primary-soft-border bg-primary-soft p-5 shadow-card`, a `selected` Badge, an `h2` in `font-display text-2xl` and the primary button. It appears only while a cohort accepts applications.
 - **Status card** (`recruit/CohortApplicationCard`): the bordered `rounded-card` surface, eyebrow + title, a status `Badge` (warning / success / neutral), one muted sentence, small outline and danger buttons. Never prints a reviewer note.
 - **Section states** (`community/CommunitySectionState`, `recruit/RecruitNotice`): the dashed `rounded-tile border-dashed bg-surface-subtle` tile with a semibold title and a muted line; `role="status"`.
+- **Hero** (`ui/HeroSurface` + `ui/HeroTitle`, used by `community/CommunityHero` on `/` and `bounties/BountyHero` on `/bounties`): the inverse gradient surface with a glass card (`border-on-inverse/12 bg-on-inverse/6 backdrop-blur`) as the visual; `size="full"` is the first-screen height, `size="masthead"` the shorter one above a list. Exactly one `<h1>` per page, in the hero. Copy on it uses `on-inverse` at 75% or more. A stat row inside or next to a hero renders only when `lib/hall-of-fame.ts visibleStats` returns something (all-zero stats are hidden).
 - **Past activity card**: `NewsCard` with `dateKind="event"`; a notice without an event date falls back to its publish date.
 
 ## Third-party widgets

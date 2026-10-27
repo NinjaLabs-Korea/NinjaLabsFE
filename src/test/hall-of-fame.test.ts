@@ -7,7 +7,7 @@ vi.mock("@/lib/api/public", () => ({
 }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
-const { formatPaidTotals, hallOfFame: hallOfFameFixture, loadRuntimeHallOfFame } = await import("@/lib/hall-of-fame");
+const { formatPaidTotals, hallOfFame: hallOfFameFixture, isZeroStatValue, loadRuntimeHallOfFame, visibleStats } = await import("@/lib/hall-of-fame");
 
 const highlight = (type: string, title: string, image_url: string | null, link_url: string | null = null) => ({
   id: title, type, title, description: "", image_url, link_url, published_at: null,
@@ -111,5 +111,24 @@ describe("hall of fame rewards paid stat", () => {
   it("ships an API-shaped mock fixture instead of a placeholder value", () => {
     expect(hallOfFameFixture.stats.map((stat) => stat.value)).not.toContain("$-");
     expect(formatPaidTotals(hallOfFameFixture.paidTotals, "en")).toBe("12,500 USDC · 300 INJ");
+  });
+});
+
+describe("visibleStats (zero stats are hidden)", () => {
+  const stat = (value: string) => ({ value, labelKey: "bountiesCompleted" as const });
+
+  it("treats a value with no non-zero digit as zero", () => {
+    for (const zero of ["0", "00", "0.0", "0 USDC", "0 USDC · 0 INJ", ""]) expect(isZeroStatValue(zero)).toBe(true);
+    for (const some of ["1", "10", "0.5", "12,500 USDC · 300 INJ", "0 USDC · 3 INJ"]) expect(isZeroStatValue(some)).toBe(false);
+  });
+
+  it("hides the whole block while every value is zero", () => {
+    expect(visibleStats([stat("0"), stat("0"), stat("0")])).toEqual([]);
+    expect(visibleStats([])).toEqual([]);
+  });
+
+  it("shows the whole block as soon as one value is above zero, keeping the zero ones", () => {
+    const stats = [stat("0"), stat("2"), stat("0")];
+    expect(visibleStats(stats)).toEqual(stats);
   });
 });
