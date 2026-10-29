@@ -70,7 +70,7 @@ export function Footer() {
             <Link className="inline-flex min-h-10 items-center sm:min-h-0 text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/terms">
               {t("terms")}
             </Link>
-            <span className="inline-flex min-h-10 flex-wrap items-center sm:min-h-0">
+            <span className="inline-flex min-h-10 flex-wrap items-center gap-x-1 sm:min-h-0">
               {t("contact")}{" "}
               <a className="inline-flex min-h-10 items-center sm:min-h-0 text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`mailto:${CONTACT_EMAIL}`}>
                 {CONTACT_EMAIL}
