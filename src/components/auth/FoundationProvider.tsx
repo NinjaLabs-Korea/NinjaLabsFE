@@ -21,6 +21,7 @@ import type {
   WalletApi,
 } from "@/lib/contracts/api";
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
+import { registerTabFoundationReset } from "./tab-foundation-reset";
 import { createApiApiClient } from "@/lib/api/api-client";
 import { createApiAuthAdapter } from "@/lib/api/auth-adapter";
 
@@ -123,6 +124,7 @@ function stateForMount(config: FoundationConfig): FoundationState {
 export function resetTabFoundationForTests(): void {
   tabFoundation = null;
 }
+registerTabFoundationReset(resetTabFoundationForTests);
 
 export function FoundationProvider({
   children,
