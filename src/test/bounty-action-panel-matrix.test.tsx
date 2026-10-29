@@ -2,6 +2,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { resetAccountQueryCache } from "@/components/account/useAccountQuery";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import type { AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { ApiClient, ApiResult } from "@/lib/contracts/api";
@@ -91,6 +92,9 @@ const modes: Mode[] = ["direct", "agent"];
 const matrix = statuses.flatMap((status) =>
   authStatuses.flatMap((auth) => modes.flatMap((mode) => [true, false].map((applicationRequired) => [status, auth, mode, applicationRequired] as const))),
 );
+
+// The module-level reads are shared by every test: forget the answers remembered for the previous one.
+beforeEach(() => resetAccountQueryCache());
 
 describe("BountyActionPanel state matrix (no existing rows)", () => {
   beforeEach(() => {

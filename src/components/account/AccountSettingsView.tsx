@@ -68,7 +68,8 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
   }
 
   if (authSnapshot.status === "loading") {
-    return <p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p>;
+    // min-h-dvh: the signed-in settings are several screens tall, so a short placeholder would let the footer jump.
+    return <div className="min-h-dvh"><p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p></div>;
   }
 
   const user = authSnapshot.status === "signed-in" ? authSnapshot.user : lastUser;
@@ -114,23 +115,23 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
         <h2 className="font-display text-xl font-bold text-ink" id={`${inputId}-profile`}>{t("profileHeading")}</h2>
         <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-[160px_1fr]">
           <dt className="text-ink-muted">{t("nicknameLabel")}</dt>
-          <dd className="font-semibold text-ink">{nickname}</dd>
+          <dd className="min-w-0 font-semibold text-ink [overflow-wrap:anywhere]">{nickname}</dd>
           {user.bio ? (
             <>
               <dt className="text-ink-muted">{t("bioLabel")}</dt>
-              <dd className="min-w-0 whitespace-pre-wrap break-words text-ink-secondary">{user.bio}</dd>
+              <dd className="min-w-0 whitespace-pre-wrap break-words text-ink-secondary [overflow-wrap:anywhere]">{user.bio}</dd>
             </>
           ) : null}
           {user.tags && user.tags.length > 0 ? (
             <>
               <dt className="text-ink-muted">{t("tagsLabel")}</dt>
-              <dd className="font-semibold text-ink">{user.tags.map((tag) => tTags(tag.toLowerCase())).join(", ")}</dd>
+              <dd className="min-w-0 font-semibold text-ink">{user.tags.map((tag) => tTags(tag.toLowerCase())).join(", ")}</dd>
             </>
           ) : null}
           {user.walletAddress ? (
             <>
               <dt className="text-ink-muted">{t("walletLabel")}</dt>
-              <dd className="break-all font-semibold text-ink">{user.walletAddress}</dd>
+              <dd className="min-w-0 break-all font-semibold text-ink [overflow-wrap:anywhere]">{user.walletAddress}</dd>
             </>
           ) : null}
         </dl>
