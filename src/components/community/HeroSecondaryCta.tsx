@@ -8,6 +8,8 @@ import { Link } from "@/i18n/navigation";
 import { isFinishedUser } from "@/lib/auth-route";
 import type { PublicCohort } from "@/lib/cohorts";
 
+const WRAP_CLASS = "max-w-full min-w-0 [overflow-wrap:anywhere]";
+
 /**
  * The hub hero's second call to action: "{cohort} 멤버 지원하기" -> `/recruit` while the open cohort accepts applications
  * ("지원 현황 보기" once I applied), otherwise the fallback link (past activities). The cohort is read in the browser so the hub
@@ -15,7 +17,9 @@ import type { PublicCohort } from "@/lib/cohorts";
  * are still loading and decide the label, the button keeps its box with an invisible label. The fallback link shows only once
  * the read settled with no accepting cohort, or failed.
  */
-export function HeroSecondaryCta({ className, fallbackHref, fallbackLabel }: { className: string; fallbackHref: string; fallbackLabel: string }) {
+export function HeroSecondaryCta({ className: base, fallbackHref, fallbackLabel }: { className: string; fallbackHref: string; fallbackLabel: string }) {
+  // A long cohort name has no break opportunity: let the label wrap inside the hero instead of pushing the button past it.
+  const className = `${base} ${WRAP_CLASS}`;
   const { status, cohort } = useCurrentCohort();
   const auth = useAuthSnapshot();
   if (status === "loading") return <Placeholder className={className} />;
