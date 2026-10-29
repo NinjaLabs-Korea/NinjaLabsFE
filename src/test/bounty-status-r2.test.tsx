@@ -73,3 +73,18 @@ describe("applicationStatusLabel for closed bounties (#32, #33)", () => {
     expect(applicationStatusLabel(t, { ...base, status: "open", bountyStatus: "OPEN", submissionDeadline: "2026-12-01T00:00:00Z" }, NOW)).toBe("steps.open");
   });
 });
+
+describe("pending application that can no longer be approved (#33)", () => {
+  const app = [{ bountySlug: BOUNTY, status: "open" as const, agent: null }];
+  const base = { applicationRequired: true, applications: loaded(app) };
+  it("past the deadline reads as applications closed", () => {
+    expect(deriveActionView(input({ ...base, status: "closed", deadlinePassed: true }))).toEqual({ kind: "closed", reason: "applications" });
+  });
+  it("on a reviewing or completed bounty reads as closed", () => {
+    expect(deriveActionView(input({ ...base, status: "reviewing" }))).toEqual({ kind: "closed", reason: "reviewing" });
+    expect(deriveActionView(input({ ...base, status: "closed", completed: true }))).toEqual({ kind: "closed", reason: "closed" });
+  });
+  it("on an open bounty it is still under review", () => {
+    expect(deriveActionView(input(base))).toEqual({ kind: "applicationUnderReview" });
+  });
+});
