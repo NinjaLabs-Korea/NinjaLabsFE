@@ -42,7 +42,7 @@ describe("ProfileForm when the session ends mid-form", () => {
   });
 
   it("pre-fills a fresh onboarding form from the draft left by the ended session", () => {
-    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ nickname: "ninja_dev", bio: "I build things", tags: ["DEV", "bogus"] }));
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ userId: "user-1", nickname: "ninja_dev", bio: "I build things", tags: ["DEV", "bogus"] }));
     renderWithIntl(<ProfileForm />);
     expect((screen.getByLabelText("Nickname*") as HTMLInputElement).value).toBe("ninja_dev");
     expect((screen.getByLabelText(/^Bio/) as HTMLTextAreaElement).value).toBe("I build things");
