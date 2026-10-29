@@ -63,9 +63,10 @@ export function AuthArea({ variant }: AuthAreaProps) {
       <nav aria-label={tMenu("accountNavigation")} className="space-y-1 px-1 pb-1">
         {getAccountNavigationItems(user).map((item) => (
           <Link
-            className="block rounded-control px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="motion-control motion-press block rounded-control px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             href={item.href}
             key={item.key}
+            prefetch={true}
           >
             {tMenu(item.key)}
           </Link>

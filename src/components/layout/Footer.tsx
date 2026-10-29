@@ -108,7 +108,7 @@ function FooterLinkColumn({
                 {label}
               </a>
             ) : (
-              <Link className="text-sm text-on-inverse-secondary" href={href}>
+              <Link className="text-sm text-on-inverse-secondary" href={href} prefetch={true}>
                 {label}
               </Link>
             )}

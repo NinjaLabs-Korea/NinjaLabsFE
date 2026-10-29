@@ -196,6 +196,14 @@ describe("Header", () => {
     ]);
   });
 
+  it("prefetches every nav link, so closed-menu and below-the-fold routes load before the click", () => {
+    state.auth = { status: "signed-out", user: null };
+    renderWithIntl(<Header />);
+    const links = screen.getAllByRole("link", { hidden: true }).filter((link) => ["/about", "/members", "/hall-of-fame", "/notices", "/bounties", "/recruit"].includes(link.getAttribute("href") ?? ""));
+    expect(links.length).toBeGreaterThanOrEqual(12);
+    expect(links.every((link) => link.hasAttribute("data-prefetch"))).toBe(true);
+  });
+
   it("offers Get Started to visitors and the account menu to signed-in users", () => {
     state.auth = { status: "signed-out", user: null };
     const view = renderWithIntl(<Header />);
