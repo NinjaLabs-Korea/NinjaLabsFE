@@ -59,7 +59,7 @@ describe("owner-private account pages", () => {
 
   it("renders the /applications h1 for signed-out visitors with the sign-in panel as content", async () => {
     renderWithIntl(await ApplicationsPage({ params }));
-    expect(screen.getByRole("heading", { level: 1, name: "My applications" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1, name: "Applications" })).toBeTruthy();
     expect(await screen.findByRole("link", { name: "Get Started" })).toBeTruthy();
     expect(screen.getByText("Sign in to see your applications")).toBeTruthy();
   });

@@ -96,7 +96,7 @@ describe("UserMenu", () => {
     expect(menu.getAttribute("aria-label")).toBe("Account navigation");
 
     const items = within(menu).getAllByRole("menuitem");
-    expect(items.map((item) => item.textContent)).toEqual(["My activity", "My profile", "My applications", "My agents", "Account settings", "Sign out"]);
+    expect(items.map((item) => item.textContent)).toEqual(["My activity", "My profile", "Applications", "My agents", "Account settings", "Sign out"]);
     expect(items.slice(0, 5).map((item) => item.getAttribute("href"))).toEqual(["/home", "/members/jaemin", "/applications", "/agents", "/account"]);
     expect(document.activeElement).toBe(items[0]);
     // Roving tabindex: only the active item is in the tab order.
@@ -137,7 +137,7 @@ describe("UserMenu", () => {
     expect(screen.queryByRole("menu")).toBeNull();
 
     fireEvent.click(trigger());
-    fireEvent.click(screen.getByRole("menuitem", { name: "My applications" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Applications" }));
     expect(screen.queryByRole("menu")).toBeNull();
   });
 
