@@ -4,18 +4,9 @@
     "description": "认识运营 Ninja Labs、审核赏金提交并帮助 Injective 建设者交付成果的人们。"
   },
   "list": {
-    "eyebrow": "官方成员",
-    "heading": "团队",
-    "description": "认识运营 Ninja Labs、审核赏金提交并帮助 Injective 建设者交付成果的人们。",
-    "public": "公开",
-    "howItWorks": "成员分配规则",
-    "rules": {
-      "registration": "与普通用户走同一注册流程，无需单独的成员注册。",
-      "adminEnables": "注册后，由管理员将用户标记为成员并分配角色。",
-      "memberEdits": "成员通过自己的公开主页撰写和编辑简介。",
-      "unassign": "取消分配后会立即从此页移除，但主页仍然保留。"
-    },
-    "howItWorksEyebrow": "运作方式"
+    "eyebrow": "成员",
+    "heading": "Ninja Labs 成员",
+    "description": "一起打造 Ninja Labs 的人们。"
   },
   "filters": {
     "ariaLabel": "成员角色",

@@ -50,7 +50,6 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
           <SectionHeader eyebrow={t("header.eyebrow")} heading={t("header.heading")} level={1} size="xl" />
           <p className="mt-4 max-w-[768px] text-lg text-ink-muted">{t("header.description")}</p>
         </div>
-        <Badge variant="success">{t("header.public")}</Badge>
       </div>
 
       {unavailable ? (
@@ -115,7 +114,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
           <SectionHeader eyebrow={t("partners.eyebrow")} heading={t("partners.heading")} />
           <ul className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
             {hallOfFame.partners.map((partner, index) => {
-              const logo = <span className="relative block h-12 w-full"><Image {...imageProps(partner.logo)} alt={partner.name} className="object-contain" fill sizes="(max-width: 640px) 50vw, 240px" /></span>;
+              const logo = <span className="relative block h-12 w-full rounded-tile bg-surface-subtle"><Image {...imageProps(partner.logo)} alt={partner.name} className="object-contain" fill sizes="(max-width: 640px) 50vw, 240px" /></span>;
               const tileClass = "flex h-28 items-center justify-center rounded-card border border-border bg-surface p-5 shadow-card";
               return (
                 <li key={`${index}:${partner.name}`}>
