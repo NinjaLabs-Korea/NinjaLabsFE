@@ -36,7 +36,7 @@
     "tagline": "Learn, build and move together on Injective.",
     "platform": "Platform",
     "community": "Community",
-    "legal": "© 2026 Ninja Labs · All content viewable without login",
+    "legal": "© 2026 Ninja Labs",
     "contact": "Contact",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
@@ -113,13 +113,13 @@
     "title": "Something went wrong",
     "description": "We could not load this page. Please try again.",
     "retry": "Try again",
-    "home": "Back to home"
+    "home": "Back to start"
   },
   "notFound": {
     "title": "Page not found",
-    "description": "The page you are looking for does not exist or may have moved.",
-    "home": "Back to home",
-    "browseBounties": "Browse bounties",
+    "description": "The page may have moved or does not exist.",
+    "home": "Back to start",
+    "notices": "See notices",
     "metaTitle": "Page not found | Ninja Labs"
   },
   "reward": {

@@ -5,7 +5,7 @@ import type { Locale } from "@/i18n/routing";
 /** Server-side `common.notFound` strings for one locale (explicit locale: no request headers are read). */
 export async function getNotFoundCopy(locale?: Locale): Promise<NotFoundCopy> {
   const t = locale ? await getTranslations({ locale, namespace: "common.notFound" }) : await getTranslations("common.notFound");
-  return { title: t("title"), description: t("description"), home: t("home"), browseBounties: t("browseBounties") };
+  return { title: t("title"), description: t("description"), home: t("home"), notices: t("notices") };
 }
 
 /**
