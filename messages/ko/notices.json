@@ -1,12 +1,12 @@
 {
   "metadata": {
     "title": "공지사항 | Ninja Labs",
-    "description": "Ninja Labs가 함께한 행사, Injective 생태계 소식, 공지를 한곳에서 볼 수 있어요."
+    "description": "Ninja Labs의 행사와 소식을 모았어요."
   },
   "list": {
     "eyebrow": "공지 / 소식",
     "heading": "Ninja Labs 소식",
-    "description": "Ninja Labs가 함께한 행사, Injective 생태계 소식, 공지를 한곳에서 볼 수 있어요.",
+    "description": "Ninja Labs의 행사와 소식을 모았어요.",
     "badge": "행사 · 생태계 소식 · 공지"
   },
   "filters": {
