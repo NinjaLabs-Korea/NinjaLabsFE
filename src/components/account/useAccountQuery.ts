@@ -27,7 +27,24 @@ const loadingState = {
   data: null,
 } as const;
 
-export function useAccountQuery<T>(read: AccountQueryRead<T>): AccountQueryResult<T> {
+/**
+ * Last successful answer per (read function, signed-in user key), used only by callers that pass `reuseLast`: display-only
+ * reads (the cohort CTA, the home recruitment card), never data that gates an action. A locale switch or a page hop remounts
+ * the readers; starting from the last answer keeps them from flashing a placeholder while the fresh read (which always runs
+ * and replaces it) is in flight. The key starts with `signed-in:<id>`, so another account never sees these rows.
+ */
+const lastGood = new WeakMap<object, Map<string, unknown>>();
+
+function initialState<T>(read: object, queryKey: string): AccountQueryState<T> {
+  const rows = lastGood.get(read);
+  if (queryKey.startsWith("signed-in:") && rows?.has(queryKey)) {
+    return { loading: false, unavailable: false, reason: null, data: rows.get(queryKey) as T };
+  }
+  return loadingState;
+}
+
+export function useAccountQuery<T>(read: AccountQueryRead<T>, options: { reuseLast?: boolean } = {}): AccountQueryResult<T> {
+  const reuseLast = options.reuseLast === true;
   const authSnapshot = useAuthSnapshot();
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((current) => current + 1), []);
@@ -40,7 +57,7 @@ export function useAccountQuery<T>(read: AccountQueryRead<T>): AccountQueryResul
     state: AccountQueryState<T>;
   }>({
     key: queryKey,
-    state: loadingState,
+    state: reuseLast ? initialState<T>(read, queryKey) : loadingState,
   });
 
   useEffect(() => {
@@ -52,6 +69,11 @@ export function useAccountQuery<T>(read: AccountQueryRead<T>): AccountQueryResul
           return;
         }
 
+        if (reuseLast && response.status !== "unavailable") {
+          const rows = lastGood.get(read) ?? new Map<string, unknown>();
+          rows.set(queryKey, response.data);
+          lastGood.set(read, rows);
+        }
         setResult((previous) => {
           // A re-read that fails (after a mutation succeeded, or a token refresh) keeps the rows already on screen for
           // the same user: replacing them with "unavailable" would make a succeeded apply/submit look failed.
@@ -72,7 +94,7 @@ export function useAccountQuery<T>(read: AccountQueryRead<T>): AccountQueryResul
     return () => {
       active = false;
     };
-  }, [authSnapshot, queryKey, read, version]);
+  }, [authSnapshot, queryKey, read, reuseLast, version]);
 
   return { ...(result.key === queryKey ? result.state : loadingState), refresh };
 }
