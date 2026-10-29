@@ -78,7 +78,7 @@ describe("Intro (/) hero", () => {
     renderWithIntl(await CommunityHero());
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Learn, build, and move together on Injective.");
     expect(screen.getByText("Injective Contributor Hub")).toBeTruthy();
-    expect(screen.getByText(/Contributor Hub for people who learn, build and move on Injective/)).toBeTruthy();
+    expect(screen.getByText("Developers, marketers, researchers and creators are all welcome.")).toBeTruthy();
     expect(screen.queryByText("Complete bounties. Collect proof.")).toBeNull();
     expect(screen.queryByText("ninja.inj")).toBeNull();
     for (const role of ["Developers", "Marketers", "Researchers", "Creators"]) expect(screen.getByText(role)).toBeTruthy();

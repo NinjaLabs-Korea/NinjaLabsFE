@@ -54,3 +54,22 @@ describe("noticeCategoryFromQuery (the ?category= link from the community pages)
     for (const bad of [undefined, "", "nope", "__proto__"]) expect(noticeCategoryFromQuery(bad)).toBeUndefined();
   });
 });
+
+describe("hub copy is not repeated", () => {
+  const en = (file: string) => JSON.parse(readFileSync(join(root, "messages", "en", file), "utf8"));
+  it("keeps the hero welcome and the /about body different", () => {
+    for (const locale of ["ko", "en", "zh"]) {
+      const read = (file: string) => JSON.parse(readFileSync(join(root, "messages", locale, file), "utf8"));
+      expect(read("landing.json").hero.description, locale).not.toBe(read("community.json").about.body);
+    }
+    expect(en("landing.json").hero.description).toBe("Developers, marketers, researchers and creators are all welcome.");
+  });
+
+  it("writes zh landing and community copy with full-width , ; : after a CJK character", () => {
+    const CJK_THEN_ASCII = /[㐀-鿿][,;:]/;
+    for (const file of ["landing.json", "community.json"]) {
+      const text = readFileSync(join(root, "messages", "zh", file), "utf8");
+      expect(CJK_THEN_ASCII.test(text), file).toBe(false);
+    }
+  });
+});

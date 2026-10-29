@@ -31,15 +31,16 @@ const highlightLabelKeys = {
 export function AchievementsSection({ hall, locale, unavailable }: { hall: RuntimeHallOfFame; locale: string; unavailable: boolean }) {
   const t = useTranslations("community.achievements");
   const tHall = useTranslations("hallOfFame");
+  const tRetry = useTranslations("community");
   const stats = visibleStats(hall.stats);
   const highlights = hall.highlights.slice(0, COMMUNITY_HIGHLIGHT_LIMIT);
   return (
     <section className="mx-auto max-w-content px-4 pb-16 sm:px-6">
       <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={2} size="lg" action={{ label: t("viewAll"), href: "/hall-of-fame" }} />
       {unavailable ? (
-        <CommunitySectionState title={t("unavailable")} body={t("unavailableBody")} />
+        <CommunitySectionState title={t("unavailable")} body={t("unavailableBody")} retryLabel={tRetry("retry")} />
       ) : stats.length === 0 && highlights.length === 0 ? (
-        <CommunitySectionState body={t("empty")} />
+        <CommunitySectionState body={t("empty")} action={{ label: t("emptyAction"), href: "/hall-of-fame" }} />
       ) : (
         <>
           {stats.length > 0 ? (

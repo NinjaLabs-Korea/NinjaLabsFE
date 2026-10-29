@@ -8,6 +8,7 @@ import type { Member, Notice } from "@/lib/types";
 import { enMessages, renderWithIntl } from "@/test/intl";
 
 vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({ refresh: () => undefined }),
   Link: ({ children, href, ...props }: ComponentProps<"a">) => (
     <a data-i18n-link="" href={href} {...props}>
       {children}
@@ -126,18 +127,20 @@ describe("Hall of Fame page", () => {
 });
 
 describe("Members page", () => {
-  it("renders the team heading, the role filter over the runtime members and the assignment rules", async () => {
+  it("renders the team heading, the role filter over the runtime members and no rules block", async () => {
     data.members = [
       { slug: "a", name: "Ana", initials: "AN", role: "Core", title: "", bio: "", isMember: true, links: {} },
       { slug: "b", name: "Ben", initials: "BE", role: "Ops", title: "", bio: "", isMember: true, links: {} },
     ];
     renderWithIntl(await MembersPage(pageProps));
-    expect(screen.getByRole("heading", { level: 1, name: "Team" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1, name: "Ninja Labs members" })).toBeTruthy();
     const list = screen.getByRole("region", { name: "Members" });
     expect(within(list).getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Ana", "Ben"]);
     fireEvent.click(screen.getByRole("button", { name: "Ops" }));
     expect(within(screen.getByRole("region", { name: "Members" })).getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Ben"]);
-    expect(screen.getByText("Same sign-up path as any user, with no separate member registration.")).toBeTruthy();
+    expect(screen.queryByText("Member assignment rules")).toBeNull();
+    expect(screen.queryByText("Same sign-up path as any user, with no separate member registration.")).toBeNull();
+    expect(screen.queryByText("Public")).toBeNull();
   });
 });
 
@@ -147,7 +150,11 @@ describe("Notices page", () => {
       { slug: "n1", title: "Launch", excerpt: "x", bodyMarkdown: "", category: "Events", publishedAt: "Oct 1, 2026", thumbnail: "" },
     ];
     renderWithIntl(await NoticesPage(pageProps));
-    expect(screen.getByRole("heading", { level: 1, name: "News from Ninja Labs" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1, name: "Notices" })).toBeTruthy();
+    expect(screen.getByText("Events and news, all in one place.")).toBeTruthy();
+    expect(screen.queryByText("Public")).toBeNull();
+    expect(screen.queryByText(/Events . Ecosystem news . Notices/)).toBeNull();
+    expect(screen.queryByText("Notices / News")).toBeNull();
     expect(within(screen.getByRole("region", { name: "Notices" })).getByRole("link").getAttribute("href")).toBe("/notices/n1");
     expect(within(screen.getByRole("group", { name: "Notice categories" })).getAllByRole("button").map((b) => b.textContent)).toEqual(["All", "Events"]);
   });
