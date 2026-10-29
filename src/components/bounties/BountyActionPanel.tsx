@@ -18,8 +18,8 @@ import type { Bounty } from "@/lib/types";
 const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card";
 const outlineButtonClass = "inline-flex rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong";
 const outlineLinkClass = `mt-4 ${outlineButtonClass}`;
-const inputClass = "h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
-const textareaClass = "w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
+const inputClass = "h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
+const textareaClass = "w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
 const labelTextClass = "mb-1.5 block text-sm font-semibold text-ink";
 // Headings that receive focus after a successful apply/submit (tabIndex={-1}); the ring matches the focus recipe.
 const headingClass = "font-display text-2xl -tracking-[0.24px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -99,7 +99,7 @@ function SignedOutPanel({ applicationRequired, bountyId }: { applicationRequired
             <input aria-label={t("portfolioUrl")} className={inputClass} placeholder={t("portfolioUrl")} type="url" />
             <input aria-label={t("availability")} className={inputClass} placeholder={t("availability")} type="text" />
           </div>
-          <textarea aria-label={t("applyMessage")} className="min-h-28 w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder" placeholder={t("applyMessage")} />
+          <textarea aria-label={t("applyMessage")} className="min-h-28 w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" placeholder={t("applyMessage")} />
           <div className="flex flex-wrap gap-3">
             <Link className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href={signIn}>{t("apply")}</Link>
             <span className="rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong opacity-60">{t("submitDisabled")}</span>
