@@ -21,7 +21,7 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 let api: ApiClient;
 vi.mock("@/components/auth/FoundationProvider", async () =>
-  (await import("./support/foundation")).foundationMock({ useCohortApi: () => api }));
+  (await import("./support/foundation")).foundationMock({ useAuthSnapshot: () => ({ status: "signed-out", user: null }), useCohortApi: () => api }));
 
 const notice = (overrides: Partial<Notice> = {}): Notice => ({
   slug: "n1", title: "Builder meetup", excerpt: "We met.", bodyMarkdown: "We met.", category: "Events", publishedAt: "2026.06.20", thumbnail: "", ...overrides,
