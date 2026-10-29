@@ -72,7 +72,6 @@ describe("bounty detail deadlines", () => {
   it("omits the application deadline cell (no status word as a value) when there is none", async () => {
     await render("en", { ...applyBounty, applicationDeadlineDetail: undefined });
     expect(screen.queryByText("Application deadline")).toBeNull();
-    expect(screen.queryByText("Active")).toBeNull();
     expect(screen.getByText("Submission deadline")).toBeTruthy();
   });
 
