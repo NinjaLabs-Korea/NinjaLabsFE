@@ -38,7 +38,7 @@ function hubOrReturnPath(currentPathname: string, returnPath: string | null): st
  * The community hub (`/`) and `/about` are exempt too: the hub is the primary service and reachable by everyone, so an unfinished
  * sign-up who opens the site sees it (its hero offers "Continue sign-up") instead of being pushed into a step.
  */
-const ONBOARDING_EXEMPT = /^\/(?:$|about(?:\/|$)|signup\/|account(?:\/|$)|(?:privacy|terms)(?:\/|$))/;
+const ONBOARDING_EXEMPT = /^\/(?:$|about(?:\/|$)|signup\/|recruit(?:\/|$)|account(?:\/|$)|(?:privacy|terms)(?:\/|$))/;
 
 export function shouldRedirectToOnboarding(
   user: AuthSnapshot["user"],
