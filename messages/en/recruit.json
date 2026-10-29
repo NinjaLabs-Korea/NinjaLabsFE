@@ -146,7 +146,7 @@
     },
     "saveErrors": {
       "network": "We couldn’t send your application. Check your connection and try again.",
-      "session": "Your session has ended. Sign in again to continue.",
+      "session": "Your session expired. What you wrote is still here. Sign in again in a new tab, then come back and send it.",
       "invalid": "Check every field and try again.",
       "generic": "We couldn’t save your application. Please try again.",
       "PROFILE_REQUIRED": "Finish your sign-up (profile step) before applying.",
