@@ -203,6 +203,9 @@
       "generic": "We couldn’t withdraw this application. Please try again shortly."
     }
   },
+  "past": {
+    "heading": "Your earlier applications"
+  },
   "account": {
     "heading": "Cohort applications",
     "recruitLink": "Open the application page",

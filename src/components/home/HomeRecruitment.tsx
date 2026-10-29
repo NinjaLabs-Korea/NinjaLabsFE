@@ -9,13 +9,19 @@ import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 
 const SECTION_CLASS = "mx-auto max-w-content px-6 pt-16";
+/**
+ * One height for every state of this section (the invite card, my application's status card, the loading reserve): the status
+ * card is taller than the invite, so reserving only the invite's box made a builder with an application push the sections below
+ * down after the read landed. Values measured at 375 and 768+ px in en.
+ */
+const CARD_MIN_HEIGHT = "min-h-[268px] md:min-h-[245px]";
 
 /** The invitation card; `hidden` renders the same box with invisible content, to reserve its height while the reads load. */
 function InviteCard({ name, closes, hidden = false }: { name: string; closes: string | null; hidden?: boolean }) {
   const t = useTranslations("home.recruit");
   const format = useFormatter();
   return (
-    <div className={`flex flex-col gap-5 rounded-card border border-primary-soft-border bg-primary-soft p-5 shadow-card sm:p-[21px] md:flex-row md:items-center md:justify-between${hidden ? " invisible" : ""}`}>
+    <div className={`flex flex-col gap-5 rounded-card border border-primary-soft-border bg-primary-soft p-5 shadow-card sm:p-[21px] md:flex-row md:items-center md:justify-between ${CARD_MIN_HEIGHT}${hidden ? " invisible" : ""}`}>
       <div className="min-w-0">
         <Badge variant="selected">{t("badge")}</Badge>
         <h2 className="mt-3 break-words font-display text-2xl text-ink">{t("title", { name })}</h2>
@@ -66,7 +72,7 @@ export function HomeRecruitment() {
       {invite && cohort ? (
         <InviteCard closes={cohort.closesAt} name={cohort.name} />
       ) : latest ? (
-        <div>
+        <div className={CARD_MIN_HEIGHT}>
           <CohortApplicationCard application={latest} onChanged={mine.refresh} variant="compact" />
           <Link className="mt-3 inline-block text-sm font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/recruit">{t("details")}</Link>
         </div>
