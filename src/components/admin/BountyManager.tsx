@@ -7,7 +7,7 @@ import { AdminSelect } from "@/components/admin/AdminSelect";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
-import { useAdminList } from "@/components/admin/useAdminList";
+import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlight } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { type AdminBounty, adminErrorDescription } from "@/lib/admin-helpers";
@@ -46,9 +46,6 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const [errors, setErrors] = useState<BountyFormErrors>({});
   const [originalDeadline, setOriginalDeadline] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
-  // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
-  const savingRef = useRef(false);
-  const deletingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminBounty | null>(null);
   // Bounties with a transition in flight: a second click would send the same target again and answer INVALID_TRANSITION right after the success toast.
   const transitioning = useRef(new Set<string>());
@@ -77,7 +74,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   // `reload` re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
   // (never "save failed": a retry of an already-created bounty would create a duplicate).
   const fetchBounties = useCallback(() => api.getAdminBounties(), [api]);
-  const toastLoadFailed = useCallback(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }), [t]);
+  const toastLoadFailed = useLoadFailedToast(t("toast.loadFailedTitle"), t("toast.loadFailedDescription"));
   const { records, setRecords, loadState, reload, retry } = useAdminList(fetchBounties, bounties, toastLoadFailed);
 
   const updateForm = <Key extends keyof BountyFormValues>(key: Key, value: BountyFormValues[Key]) => {
@@ -118,16 +115,13 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     setForm((current) => ({ ...current, tags: [tag] }));
   };
 
-  const save = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (savingRef.current) return;
+  const saveBounty = useSingleFlight(async () => {
     const nextErrors = validateBountyForm(form, { originalDeadline, editing });
     if (Object.values(nextErrors).some(Boolean)) {
       setErrors(nextErrors);
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("form.errors.summary") });
       return;
     }
-    savingRef.current = true;
     setSaving(true);
     try {
       const coverImage = coverFile ? (await api.uploadAdminMedia(coverFile)).url : form.coverImage;
@@ -142,9 +136,13 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
-      savingRef.current = false;
       setSaving(false);
     }
+  });
+
+  const save = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void saveBounty();
   };
 
   const transition = async (bounty: AdminBounty) => {
@@ -167,25 +165,18 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     }
   };
 
-  const remove = async (bounty: AdminBounty) => {
-    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
-    if (deletingRef.current) return;
-    deletingRef.current = true;
-    setPendingDelete(null);
-    try {
-      await api.deleteAdminBounty(bounty.slug);
-      setRecords((current) => current.filter((item) => item.slug !== bounty.slug));
-      // The form may be editing the record that just went away: a later save would PATCH a missing row.
-      if (mode.kind === "edit" && mode.slug === bounty.slug) startCreate();
-      pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: bounty.title });
-    } catch (error) {
-      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
-      // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
-      void reload();
-    } finally {
-      deletingRef.current = false;
-    }
-  };
+  const remove = useAdminRecordDelete<AdminBounty>({
+    call: (bounty) => api.deleteAdminBounty(bounty.slug),
+    keyOf: (bounty) => bounty.slug,
+    setRecords,
+    closeDialog: () => setPendingDelete(null),
+    // The form may be editing the record that just went away: a later save would PATCH a missing row.
+    onRemoved: (bounty) => { if (mode.kind === "edit" && mode.slug === bounty.slug) startCreate(); },
+    describeError: (error) => adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")),
+    successToast: (bounty) => ({ title: t("toast.deletedTitle"), description: bounty.title }),
+    failedTitle: tCommon("deleteFailed"),
+    reload,
+  });
 
   return (
     <>
