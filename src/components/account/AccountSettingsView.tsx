@@ -68,7 +68,8 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
   }
 
   if (authSnapshot.status === "loading") {
-    return <p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p>;
+    // min-h-dvh: the signed-in settings are several screens tall, so a short placeholder would let the footer jump.
+    return <div className="min-h-dvh"><p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p></div>;
   }
 
   const user = authSnapshot.status === "signed-in" ? authSnapshot.user : lastUser;
