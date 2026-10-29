@@ -132,7 +132,7 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
         <div className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("form.eyebrow")}</p>
           <h2 className="mt-1 font-display text-2xl text-ink">{t("form.title")}</h2>
-          <p className="mt-2 text-sm text-ink-muted">{view.reapply ? t("form.reapplyIntro") : t("form.intro")}</p>
+          <p className="mt-2 text-sm text-ink-muted">{view.reapply ? t("form.reapplyIntro") : t("form.lead")}</p>
           <div className="mt-6">
             <CohortApplicationForm
               cohortId={cohort.id}
