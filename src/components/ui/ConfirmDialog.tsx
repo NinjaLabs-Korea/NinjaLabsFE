@@ -19,7 +19,7 @@ type ConfirmDialogProps = {
   returnFocusTo?: () => HTMLElement | null | undefined;
   /** Extra content between the callout and the actions, e.g. a typed-confirmation field. */
   children?: ReactNode;
-  /** Disables the confirm action (typed confirmation not matched yet, request in flight). */
+  /** Disables the confirm action (typed confirmation not matched yet). `pending` also disables it. */
   confirmDisabled?: boolean;
   /** Request in flight: shows a spinner before the label and marks the confirm button aria-busy. */
   pending?: boolean;
@@ -87,7 +87,7 @@ export function ConfirmDialog({
             destructive ? "bg-danger" : "bg-primary"
           }`}
           aria-busy={pending || undefined}
-          disabled={confirmDisabled}
+          disabled={confirmDisabled || pending}
           onClick={onConfirm}
         >
           {pending ? <span aria-hidden="true" className="spinner mr-2" /> : null}

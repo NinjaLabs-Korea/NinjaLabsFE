@@ -10,7 +10,7 @@ import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { HIGHLIGHT_DESCRIPTION_MAX, HIGHLIGHT_TITLE_MAX } from "@/lib/input-limits";
 import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
 import { opsInput, opsTextarea } from "@/components/admin/ops-ui";
-import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlight } from "@/components/admin/useAdminList";
+import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlightCallback } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { DISPLAY_ORDER_MAX, highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminErrorDescription } from "@/lib/admin-helpers";
 import { HIGHLIGHT_TYPE_CODES, isHighlightTypeCode } from "@/lib/api/codecs";
@@ -144,7 +144,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   }
 
   // Validation runs outside the single-flight guard: a rejected form must not hold it (a fixed retry right after has to go through).
-  const persistHighlight = useSingleFlight(async () => {
+  const persistHighlight = useSingleFlightCallback(async () => {
     setSaving(true);
     try {
       const uploadedImage = imageFile ? (await api.uploadAdminMedia(imageFile)).url : image;

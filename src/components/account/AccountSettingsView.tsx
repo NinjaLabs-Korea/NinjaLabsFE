@@ -164,7 +164,8 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
 
       <ConfirmDialog
         calloutText={t("deleteDialog.callout")}
-        confirmDisabled={!matches || busy}
+        confirmDisabled={!matches}
+        pending={busy}
         confirmLabel={busy ? t("deleteDialog.deleting") : t("deleteDialog.confirm")}
         description={t("deleteDialog.description")}
         destructive

@@ -251,7 +251,7 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
 
       <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void deleteCohort(pendingDelete)} title={pendingDelete?.name ?? null} />
       <ConfirmDialog
-        confirmDisabled={transitioning}
+        pending={transitioning}
         confirmLabel={transitioning ? tCommon("saving") : t(`transition.${pendingKey}.confirm`)}
         description={t(`transition.${pendingKey}.description`)}
         eyebrow={t("transition.eyebrow")}

@@ -9,10 +9,12 @@ type DeleteConfirmDialogProps = {
   title: string | null;
   onCancel: () => void;
   onConfirm: () => void;
+  /** Delete request in flight (spinner, confirm disabled). */
+  pending?: boolean;
 };
 
 /** Admin delete confirmation (shared copy under `admin.common`), replacing `window.confirm`. */
-export function DeleteConfirmDialog({ title, onCancel, onConfirm }: DeleteConfirmDialogProps) {
+export function DeleteConfirmDialog({ title, onCancel, onConfirm, pending }: DeleteConfirmDialogProps) {
   const t = useTranslations("admin.common");
   return (
     <ConfirmDialog
@@ -23,6 +25,7 @@ export function DeleteConfirmDialog({ title, onCancel, onConfirm }: DeleteConfir
       eyebrow={t("deleteEyebrow")}
       onCancel={onCancel}
       onConfirm={onConfirm}
+      pending={pending}
       open={title !== null}
       title={t("deleteConfirm", { title: title ?? "" })}
     />

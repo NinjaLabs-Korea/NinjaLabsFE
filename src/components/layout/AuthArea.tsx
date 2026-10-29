@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useAuthActions, useAuthSnapshot } from "@/components/auth/FoundationProvider";
-import { getAccountNavigationItems, UserMenu } from "@/components/layout/UserMenu";
+import { getAccountNavigationItems, userChipAvatarSizeClass, userChipBoxClass, UserMenu } from "@/components/layout/UserMenu";
 import { Link } from "@/i18n/navigation";
 import { useSessionHint } from "@/lib/foundation/session-hint";
 
@@ -35,9 +35,11 @@ export function AuthArea({ variant }: AuthAreaProps) {
         ) : snapshot.status === "loading" || (snapshot.status === "signed-out" && snapshot.reason === "unavailable") ? (
           // Session still being restored (or it could not be checked and the cookie is kept): keep the box, hide the
           // label, so a signed-in visitor never sees "Get started". This tab already had a signed-in session (locale
-          // switch remount): reserve the user chip's box instead (about 42px tall, 10rem wide) so nothing shifts.
+          // switch remount): reserve the user chip's box instead (same box classes as the trigger, 10rem wide) so nothing shifts.
           hadSession ? (
-            <span aria-hidden="true" className="invisible hidden h-[42px] w-40 xl:block" />
+            <span aria-hidden="true" className={`invisible hidden w-40 border-transparent xl:flex ${userChipBoxClass}`}>
+              <span className={userChipAvatarSizeClass} />
+            </span>
           ) : (
             <span aria-hidden="true" className="invisible whitespace-nowrap rounded-control px-4 py-3 text-sm leading-[21px] font-semibold sm:px-[21px]">
               {t("getStarted")}

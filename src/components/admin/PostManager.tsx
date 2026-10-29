@@ -12,7 +12,7 @@ import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { NOTICE_BODY_MAX, NOTICE_TITLE_MAX } from "@/lib/input-limits";
 import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
 import { opsInput, opsTextareaTall } from "@/components/admin/ops-ui";
-import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlight } from "@/components/admin/useAdminList";
+import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlightCallback } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { markdownToPlainSummary } from "@/lib/markdown-summary";
 import { postCategoryLabelKeys, publishOptionFor, summaryForPostUpdate, type AdminPost, adminErrorDescription } from "@/lib/admin-helpers";
@@ -136,7 +136,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   };
 
   // Validation runs outside the single-flight guard: a rejected form must not hold it (a fixed retry right after has to go through).
-  const persistPost = useSingleFlight(async () => {
+  const persistPost = useSingleFlightCallback(async () => {
     const stored = mode === "create" ? undefined : records.find((item) => item.slug === mode);
     setSaving(true);
     try {

@@ -10,7 +10,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { BOUNTY_SPONSOR_MAX, BOUNTY_TEXT_MAX, BOUNTY_TITLE_MAX } from "@/lib/input-limits";
 import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
 import { opsInput, opsTextarea } from "@/components/admin/ops-ui";
-import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlight } from "@/components/admin/useAdminList";
+import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlightCallback } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { type AdminBounty, adminErrorDescription } from "@/lib/admin-helpers";
@@ -119,7 +119,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   };
 
   // Validation runs outside the single-flight guard: a rejected form must not hold it (a fixed retry right after has to go through).
-  const persistBounty = useSingleFlight(async () => {
+  const persistBounty = useSingleFlightCallback(async () => {
     setSaving(true);
     try {
       const coverImage = coverFile ? (await api.uploadAdminMedia(coverFile)).url : form.coverImage;

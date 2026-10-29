@@ -17,6 +17,10 @@ export function getAccountNavigationItems(user: Pick<ClientUser, "profileSlug">)
   ] as const;
 }
 
+/** Box of the trigger chip (without colors); `AuthArea` reserves the same box while the session is restored. */
+export const userChipBoxClass = "flex items-center gap-2.5 rounded-full border py-1 pl-1 pr-3";
+export const userChipAvatarSizeClass = "size-8";
+
 export function UserMenu() {
   const t = useTranslations("common.userMenu");
   const snapshot = useAuthSnapshot();
@@ -35,9 +39,9 @@ export function UserMenu() {
     <div className="relative" {...menu.rootProps}>
       <button
         {...menu.buttonProps()}
-        className={`flex items-center gap-2.5 rounded-full border bg-surface py-1 pl-1 pr-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary${menu.open ? " border-primary-outline" : " border-border"}`}
+        className={`${userChipBoxClass} bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary${menu.open ? " border-primary-outline" : " border-border"}`}
       >
-        <span className="grid size-8 place-items-center rounded-full bg-primary-soft-border font-display text-[13px] font-bold text-primary-strong">
+        <span className={`grid ${userChipAvatarSizeClass} place-items-center rounded-full bg-primary-soft-border font-display text-[13px] font-bold text-primary-strong`}>
           {user.initials}
         </span>
         <span className="max-w-[9rem] truncate text-sm font-semibold text-ink">{user.handle}</span>

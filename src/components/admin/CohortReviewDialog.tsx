@@ -55,7 +55,8 @@ export function CohortReviewDialog({ application, busy, error, onCancel, onConfi
 
   return (
     <ConfirmDialog
-      confirmDisabled={busy || decision === null}
+      confirmDisabled={decision === null}
+      pending={busy}
       confirmLabel={busy ? t("saving") : decision ? t(`confirm.${decision}`) : t("confirm.none")}
       description={
         <>

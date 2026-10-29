@@ -1,18 +1,18 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useAdminRecordDelete, useSingleFlight } from "@/components/admin/useAdminList";
+import { useAdminRecordDelete, useSingleFlightCallback } from "@/components/admin/useAdminList";
 
 const pushAdminToast = vi.hoisted(() => vi.fn());
 vi.mock("@/components/admin/AdminToastHost", () => ({ pushAdminToast }));
 
 beforeEach(() => pushAdminToast.mockClear());
 
-describe("useSingleFlight", () => {
+describe("useSingleFlightCallback", () => {
   it("ignores calls while one is in flight and accepts the next after it settles", async () => {
     let release!: () => void;
     const fn = vi.fn(() => new Promise<void>((resolve) => { release = resolve; }));
-    const { result } = renderHook(() => useSingleFlight(fn));
+    const { result } = renderHook(() => useSingleFlightCallback(fn));
     const first = result.current();
     void result.current();
     expect(fn).toHaveBeenCalledTimes(1);
@@ -23,7 +23,7 @@ describe("useSingleFlight", () => {
 
   it("releases the guard when the handler throws", async () => {
     const fn = vi.fn().mockRejectedValueOnce(new Error("x")).mockResolvedValue(undefined);
-    const { result } = renderHook(() => useSingleFlight(fn));
+    const { result } = renderHook(() => useSingleFlightCallback(fn));
     await act(async () => { await result.current().catch(() => undefined); });
     await act(async () => { await result.current(); });
     expect(fn).toHaveBeenCalledTimes(2);

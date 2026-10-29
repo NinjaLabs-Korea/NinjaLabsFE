@@ -116,7 +116,7 @@ export function CohortApplicationCard({ application, variant = "full", onEdit, o
 
       <ConfirmDialog
         calloutText={t("mine.withdrawDialog.callout")}
-        confirmDisabled={busy}
+        pending={busy}
         confirmLabel={busy ? t("mine.withdrawing") : t("mine.withdrawDialog.confirm")}
         description={t("mine.withdrawDialog.description")}
         destructive

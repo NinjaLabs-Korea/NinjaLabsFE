@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
+import { useSingleFlight } from "@/components/ui/useSingleFlight";
 
 export type AdminListLoadState = "loading" | "ready" | "failed";
 
@@ -49,24 +50,18 @@ export function useAdminList<T>(fetchList: () => Promise<T[]>, initial: T[], onL
 }
 
 /**
- * Wraps an async handler so a second call is ignored while one is in flight. A ref (not state) because several events can land in one
- * tick, before React re-renders a `saving` flag. The wrapper is stable; it always runs the latest `fn`.
+ * Wraps an async handler so a second call is ignored while one is in flight (the ui `useSingleFlight` guard). The wrapper is stable;
+ * it always runs the latest `fn`.
  */
-export function useSingleFlight<A extends unknown[]>(fn: (...args: A) => Promise<void>): (...args: A) => Promise<void> {
-  const busy = useRef(false);
+export function useSingleFlightCallback<A extends unknown[]>(fn: (...args: A) => Promise<void>): (...args: A) => Promise<void> {
+  const { run } = useSingleFlight();
   const latest = useRef(fn);
   useEffect(() => {
     latest.current = fn;
   });
   return useCallback(async (...args: A) => {
-    if (busy.current) return;
-    busy.current = true;
-    try {
-      await latest.current(...args);
-    } finally {
-      busy.current = false;
-    }
-  }, []);
+    await run(() => latest.current(...args));
+  }, [run]);
 }
 
 /** The "could not load the list" toast of a manager (stable, for `useAdminList`'s `onLoadFailed`). */
@@ -90,7 +85,7 @@ export function useAdminRecordDelete<T>({ call, keyOf, setRecords, closeDialog, 
   failedTitle: string;
   reload: () => Promise<void>;
 }): (record: T) => Promise<void> {
-  return useSingleFlight(async (record: T) => {
+  return useSingleFlightCallback(async (record: T) => {
     closeDialog();
     try {
       await call(record);
