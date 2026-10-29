@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
+import { pushFlash } from "@/lib/flash";
 import type { AccountApplication, ApplicationStatus } from "@/lib/contracts/account";
 import type { PayoutStatus } from "@/lib/types";
 import { payoutBadge } from "@/lib/payout";
@@ -143,6 +144,8 @@ export function ApplicationsView() {
     try {
       await bountyApi.withdrawApplication(application.id);
       setNotice(t("withdrawn"));
+      // The card (and its button) disappears, so the sr-only line alone leaves sighted users without a result.
+      pushFlash("applicationWithdrawn");
       refresh();
     } catch (error) {
       const key = errorCopyKey(error, ERROR_COPY.applicationWithdraw);

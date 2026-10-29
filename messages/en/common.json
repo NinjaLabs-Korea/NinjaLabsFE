@@ -140,6 +140,10 @@
     "profileSaved": {
       "title": "Profile saved",
       "description": "Your changes are now on your account and public profile."
+    },
+    "applicationWithdrawn": {
+      "title": "Application withdrawn",
+      "description": "You can apply again while the bounty is open."
     }
   }
 }

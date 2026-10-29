@@ -1,14 +1,18 @@
 // @vitest-environment jsdom
 // QA round 2, package FE-3: what a builder sees for cancelled / closed / unreachable bounty states.
-import { screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { ApplicationsView } from "@/components/account/ApplicationsView";
+import { FLASH_EVENT } from "@/lib/flash";
+import { signedIn } from "@/test/support/auth";
 import { BountyAccessBadges } from "@/components/bounties/BountyAccessBadges";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { renderWithIntl } from "@/test/intl";
 import { signedOut } from "@/test/support/auth";
+import type { AccountApplication } from "@/lib/contracts/account";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => <a href={href} {...props}>{children}</a>,
@@ -16,11 +20,12 @@ vi.mock("@/i18n/navigation", () => ({
 
 const auth: { current: AuthSnapshot } = { current: signedOut };
 const none = async () => ({ status: "available" as const, data: [] });
-const apiClient = { getApplications: none, getSubmissions: none } as unknown as ApiClient;
+const apiClient = { getApplications: none, getSubmissions: none } as unknown as ApiClient & Record<string, unknown>;
 vi.mock("@/components/auth/FoundationProvider", () => ({
   useAuthSnapshot: () => auth.current,
   useAccountApi: () => apiClient,
   useBountyApi: () => apiClient,
+  useFoundationMode: () => "api",
 }));
 import { createApiApiClient } from "@/lib/api/api-client";
 import { deriveActionView, type BountyActionInput } from "@/lib/bounty-action-state";
@@ -161,5 +166,30 @@ describe("shared in-flight account reads (#5)", () => {
     await client.getSubmissions(signedIn);
     await client.getSubmissions(signedIn);
     expect(calls).toEqual(["/submissions/me", "/submissions/me"]);
+  });
+});
+
+describe("withdraw result is visible (#8)", () => {
+  beforeAll(() => {
+    HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute("open", ""); };
+    HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) { this.removeAttribute("open"); };
+  });
+
+  it("pushes the shell flash after a successful withdraw", async () => {
+    auth.current = signedIn;
+    const open: AccountApplication = {
+      id: "app-1", bountySlug: "b-1", bountyTitle: "Open one", category: "Dev", appliedAt: "2026-10-01T00:00:00Z", note: "hi",
+      status: "open", agent: null, reviewComment: null, reviewNote: null, paymentStatus: "NONE",
+    };
+    let rows = [open];
+    apiClient.getApplications = async () => ({ status: "available" as const, data: rows });
+    apiClient.withdrawApplication = vi.fn(async () => { rows = []; return { id: "app-1", status: "WITHDRAWN" }; });
+    const flashes: string[] = [];
+    window.addEventListener(FLASH_EVENT, (event) => flashes.push((event as CustomEvent<string>).detail));
+    renderWithIntl(<ApplicationsView />);
+    const article = (await screen.findByRole("link", { name: "Open one" })).closest("article") as HTMLElement;
+    fireEvent.click(within(article).getByRole("button", { name: "Withdraw" }));
+    fireEvent.click(within(screen.getByRole("alertdialog", { hidden: true })).getByRole("button", { name: "Withdraw application" }));
+    await waitFor(() => expect(flashes).toEqual(["applicationWithdrawn"]));
   });
 });

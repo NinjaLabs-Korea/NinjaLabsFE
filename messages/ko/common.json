@@ -140,6 +140,10 @@
     "profileSaved": {
       "title": "프로필을 저장했습니다",
       "description": "변경 내용이 계정과 공개 프로필에 반영되었습니다."
+    },
+    "applicationWithdrawn": {
+      "title": "지원을 철회했습니다",
+      "description": "바운티가 열려 있는 동안 다시 지원할 수 있습니다."
     }
   }
 }
