@@ -49,4 +49,15 @@ describe("responsive layout contract", () => {
     expect(read("components/layout/AuthArea.tsx")).toContain("xl:inline-block");
     expect(read("components/layout/AuthArea.tsx")).toContain("hidden xl:block");
   });
+
+  // Touch targets: 44px on phones. Source-level pin; the rendered height is measured in integration flow 14.
+  it("keeps the phone tap targets of the mobile menu, notice chips, recruit chips and footer legal links at 44px", () => {
+    const read = (path: string) => readFileSync(join(srcDir, path), "utf8");
+    expect(read("components/layout/NavLinks.tsx")).toContain("rounded-control px-3 py-3 text-sm");
+    expect(read("components/notices/NoticeFilters.tsx")).not.toContain("max-sm:min-h-10");
+    expect(read("components/notices/NoticeFilters.tsx")).toContain("max-sm:min-h-11");
+    expect(read("components/recruit/ChoiceChip.tsx")).toContain("max-sm:min-h-11");
+    const footer = read("components/layout/Footer.tsx");
+    for (const href of ["/privacy", "/terms"]) expect(footer).toMatch(new RegExp(`max-sm:min-h-11[^"]*" href="${href}"`));
+  });
 });
