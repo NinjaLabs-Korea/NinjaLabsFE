@@ -203,6 +203,9 @@
       "generic": "지원서를 철회하지 못했어요. 잠시 후 다시 시도해 주세요."
     }
   },
+  "past": {
+    "heading": "이전 지원 내역"
+  },
   "account": {
     "heading": "기수 지원 현황",
     "recruitLink": "지원 페이지로 이동",

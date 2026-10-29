@@ -4,6 +4,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { useAuthSnapshot, useCohortApi, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { MyCohortApplications } from "@/components/account/MyCohortApplications";
 import { CohortApplicationCard } from "@/components/recruit/CohortApplicationCard";
 import { CohortApplicationForm } from "@/components/recruit/CohortApplicationForm";
 import { RecruitNotice } from "@/components/recruit/RecruitNotice";
@@ -201,6 +202,9 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
           ) : null}
           {body}
         </div>
+        {finished && current.status === "ready" ? (
+          <div className="mx-auto mt-8 max-w-[896px]"><MyCohortApplications pastOf={cohort?.id ?? null} /></div>
+        ) : null}
       </section>
     </>
   );

@@ -203,6 +203,9 @@
       "generic": "无法撤回申请,请稍后再试。"
     }
   },
+  "past": {
+    "heading": "以往的申请"
+  },
   "account": {
     "heading": "期别申请",
     "recruitLink": "前往申请页面",
