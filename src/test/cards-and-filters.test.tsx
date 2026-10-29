@@ -239,8 +239,8 @@ describe("NoticeFilters", () => {
 
 describe("filters keep their chip in the URL", () => {
   const notices: Notice[] = [
-    { slug: "a", title: "A", summary: "s", category: "Events", date: "2026-01-01" } as Notice,
-    { slug: "b", title: "B", summary: "s", category: "Other", date: "2026-01-02" } as Notice,
+    { slug: "a", title: "A", summary: "s", category: "Events", date: "2026-01-01" } as unknown as Notice,
+    { slug: "b", title: "B", summary: "s", category: "Other", date: "2026-01-02" } as unknown as Notice,
   ];
   const members: Member[] = [
     { slug: "m1", name: "One", role: "Dev", links: {} } as Member,
