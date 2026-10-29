@@ -176,8 +176,8 @@ describe("BountyActionPanel transitional states", () => {
   it("sends the optional submission fields only when filled", async () => {
     renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
     fireEvent.change(await screen.findByLabelText("Completed work link"), { target: { value: "https://example.test/w" } });
-    fireEvent.change(screen.getByLabelText("Repository URL (optional)"), { target: { value: "https://github.com/x/y" } });
-    fireEvent.change(screen.getByLabelText("Commit SHA (optional)"), { target: { value: "abc1234" } });
+    fireEvent.change(screen.getByLabelText("Code repository (optional)"), { target: { value: "https://github.com/x/y" } });
+    fireEvent.change(screen.getByLabelText("Commit hash (optional, code work only)"), { target: { value: "abc1234" } });
     fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "Done" } });
     fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
     await waitFor(() => expect(submitBounty).toHaveBeenCalledTimes(1));
