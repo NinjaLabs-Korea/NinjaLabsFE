@@ -69,10 +69,11 @@ describe("bounty detail deadlines", () => {
     expect(screen.getByText(/Applications closed/)).toBeTruthy();
   });
 
-  it("falls back to the status label when the application deadline is unknown", async () => {
+  it("omits the application deadline cell (no status word as a value) when there is none", async () => {
     await render("en", { ...applyBounty, applicationDeadlineDetail: undefined });
-    expect(screen.getByText("Application deadline")).toBeTruthy();
-    expect(screen.getAllByText("Active").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Application deadline")).toBeNull();
+    expect(screen.queryByText("Active")).toBeNull();
+    expect(screen.getByText("Submission deadline")).toBeTruthy();
   });
 
   it("keeps the single Deadline cell on a direct bounty", async () => {

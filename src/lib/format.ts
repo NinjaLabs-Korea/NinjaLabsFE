@@ -35,3 +35,21 @@ export function formatUtcDateTime(format: Pick<ReturnType<typeof useFormatter>, 
     year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short",
   });
 }
+
+/**
+ * Same fields as `formatUtcDateTime` but in the viewer's own zone (`Nov 9, 2026, 6:36 AM GMT+9`). The zone is read from the
+ * browser and passed explicitly because the next-intl provider's `timeZone` is a fixed site-wide value, not the viewer's.
+ * Returns "" when the value or the browser zone cannot be used, so callers keep their UTC text.
+ */
+export function formatLocalDateTime(format: Pick<ReturnType<typeof useFormatter>, "dateTime">, value: string | Date, timeZone?: string): string {
+  try {
+    const date = typeof value === "string" ? new Date(value) : value;
+    if (Number.isNaN(date.getTime())) return "";
+    return format.dateTime(date, {
+      year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+      timeZone: timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone, timeZoneName: "short",
+    });
+  } catch {
+    return "";
+  }
+}
