@@ -1,25 +1,21 @@
 {
+  "metadata": {
+    "title": "Ninja Labs | Injective Contributor Hub",
+    "description": "The Contributor Hub for people who learn, build and move on Injective. Developers, marketers, researchers and creators can meet the community, see past activities and join in."
+  },
   "hero": {
-    "eyebrow": "Built on Injective",
-    "title": "Complete bounties. Collect proof.",
-    "titleHighlight": "Own your track record.",
-    "description": "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.",
+    "eyebrow": "Injective Contributor Hub",
+    "title": "Learn, build, and move together",
+    "titleHighlight": "on Injective.",
+    "description": "Ninja Labs is the Contributor Hub for people who learn, build and move on Injective. Developers, marketers, researchers and creators are all free to take part.",
     "getStarted": "Get Started",
-    "browseBounties": "Browse Bounties",
     "continueSignup": "Continue sign-up",
-    "portfolioMeta": "Ninja NFT · member since {year}",
-    "next": "+ next",
-    "portfolioSummary": "{count, plural, one {# bounty completed} other {# bounties completed}} · a growing on-chain portfolio"
+    "exploreActivities": "See past activities",
+    "rolesTitle": "Everyone is welcome"
   },
   "bounties": {
     "eyebrow": "Marketplace",
     "heading": "Active bounties",
-    "viewAll": "View all →",
-    "unavailable": "Active bounties are temporarily unavailable.",
-    "empty": "No active bounties right now. New sponsor opportunities will appear here."
-  },
-  "unavailableBody": "We couldn't reach the server. Please refresh in a moment.",
-  "stats": {
-    "unavailable": "Community stats are temporarily unavailable."
+    "viewAll": "View all →"
   }
 }

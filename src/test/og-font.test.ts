@@ -50,15 +50,15 @@ describe("Open Graph CJK font", () => {
 describe("fitOgHeadlineSize", () => {
   const messages = (locale: string) => (JSON.parse(readFileSync(`messages/${locale}/common.json`, "utf8")) as { site: { og: { headline: string; highlight: string } } }).site.og;
 
-  it("shrinks the Korean headline until its longest line fits one line, and leaves zh at full size", () => {
+  it("shrinks the Korean headline until its longest line fits one line, and keeps zh near full size", () => {
     const ko = messages("ko");
     const size = fitOgHeadlineSize([ko.headline, ko.highlight], 1040, 72);
     expect(size).toBeLessThan(72);
     // Every Korean syllable is roughly one em wide: the line must fit the width at that size.
     expect((ko.headline.match(/[가-힣]/g) ?? []).length * size).toBeLessThanOrEqual(1040);
-    // zh lines are short enough for the full size.
+    // zh lines are short: at most a slight shrink for the community-first headline copy.
     const zh = messages("zh");
-    expect(fitOgHeadlineSize([zh.headline, zh.highlight], 1040, 72)).toBe(72);
+    expect(fitOgHeadlineSize([zh.headline, zh.highlight], 1040, 72)).toBeGreaterThanOrEqual(64);
   });
 
   it("never returns less than a readable minimum", () => {

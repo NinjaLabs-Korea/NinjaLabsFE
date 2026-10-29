@@ -6,7 +6,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import type { HighlightTypeLabel } from "@/lib/api/codecs";
 import { COMMUNITY_HIGHLIGHT_LIMIT } from "@/lib/community";
-import { formatStatValue, type RuntimeHallOfFame } from "@/lib/hall-of-fame";
+import { formatStatValue, visibleStats, type RuntimeHallOfFame } from "@/lib/hall-of-fame";
 
 // Same label keys and badge colors as the Hall of Fame page (messages `hallOfFame.highlights.categories`).
 const highlightVariants = {
@@ -27,23 +27,24 @@ const highlightLabelKeys = {
   Other: "other",
 } as const satisfies Record<HighlightTypeLabel, string>;
 
-/** "최근 성과": the Hall of Fame stats and the first highlights. */
+/** "최근 성과": the Hall of Fame stats (hidden while every value is zero) and the first highlights. */
 export function AchievementsSection({ hall, locale, unavailable }: { hall: RuntimeHallOfFame; locale: string; unavailable: boolean }) {
   const t = useTranslations("community.achievements");
   const tHall = useTranslations("hallOfFame");
+  const stats = visibleStats(hall.stats);
   const highlights = hall.highlights.slice(0, COMMUNITY_HIGHLIGHT_LIMIT);
   return (
     <section className="mx-auto max-w-content px-4 pb-16 sm:px-6">
       <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={2} size="lg" action={{ label: t("viewAll"), href: "/hall-of-fame" }} />
       {unavailable ? (
         <CommunitySectionState title={t("unavailable")} body={t("unavailableBody")} />
-      ) : hall.stats.length === 0 && highlights.length === 0 ? (
+      ) : stats.length === 0 && highlights.length === 0 ? (
         <CommunitySectionState body={t("empty")} />
       ) : (
         <>
-          {hall.stats.length > 0 ? (
+          {stats.length > 0 ? (
             <dl className="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {hall.stats.map((stat) => (
+              {stats.map((stat) => (
                 <div key={stat.labelKey} className="rounded-card border border-border bg-surface p-5 text-center shadow-card">
                   <dd className={`font-display font-bold text-ink ${stat.labelKey === "rewardsPaid" ? "break-words text-2xl" : "text-4xl"}`}>{formatStatValue(stat.value, locale)}</dd>
                   <dt className="mt-2 text-sm text-ink-muted">{tHall(`stats.${stat.labelKey}`)}</dt>

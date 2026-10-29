@@ -64,6 +64,19 @@ export function formatStatValue(value: string, locale: string): string {
   return /^\d+$/.test(value) ? new Intl.NumberFormat(locale).format(Number(value)) : value;
 }
 
+/** A stat value with no non-zero digit ("0", "0 USDC", "") counts as zero. */
+export function isZeroStatValue(value: string): boolean {
+  return !/[1-9]/.test(value);
+}
+
+/**
+ * Stats to show: none while every value is zero, so a brand-new platform does not open on a row of zeros. The block comes
+ * back on its own as soon as one value is above zero. One rule for the bounty hero, the Intro/About achievements and the Hall of Fame.
+ */
+export function visibleStats<T extends { value: string }>(stats: readonly T[]): T[] {
+  return stats.every((stat) => isZeroStatValue(stat.value)) ? [] : [...stats];
+}
+
 /** Paid totals show with at most this many fraction digits - a headline stat, not a ledger. */
 const PAID_TOTAL_FRACTION_DIGITS = 2;
 

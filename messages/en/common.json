@@ -1,12 +1,12 @@
 {
   "site": {
-    "title": "Ninja Labs | Build. Complete. Own your track record.",
-    "description": "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.",
+    "title": "Ninja Labs | Injective Contributor Hub",
+    "description": "The Contributor Hub for people who learn, build and move on Injective. Developers, marketers, researchers and creators can meet the community, see past activities and join in.",
     "og": {
-      "alt": "Ninja Labs | Build. Complete. Own your track record.",
-      "headline": "Complete bounties. Collect proof.",
-      "highlight": "Own your track record.",
-      "tagline": "A builder community and bounty marketplace for the Injective ecosystem."
+      "alt": "Ninja Labs | Injective Contributor Hub",
+      "headline": "Learn, build, and move together",
+      "highlight": "on Injective.",
+      "tagline": "The Contributor Hub for people who learn, build and move on Injective."
     }
   },
   "layout": {

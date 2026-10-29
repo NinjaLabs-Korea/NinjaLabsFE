@@ -1,7 +1,7 @@
 {
   "meta": {
     "list": {
-      "title": "赏金 | Ninja Labs",
+      "title": "赏金市场 | Ninja Labs",
       "description": "寻找 Injective 生态赞助方发布的有偿任务，交付有价值的成果，并为你的 Ninja 作品集积累链上证明。"
     },
     "apply": {
@@ -11,6 +11,17 @@
     "notFound": "页面未找到 | Ninja Labs",
     "unavailable": "出了点问题 | Ninja Labs",
     "detailTitle": "{title} | Ninja Labs"
+  },
+  "hero": {
+    "eyebrow": "基于 Injective 构建",
+    "title": "完成赏金任务，收集成果证明。",
+    "titleHighlight": "拥有你的履历。",
+    "description": "面向 Injective 生态的建设者社区与赏金市场。每完成一项任务都会铸造一枚链上 NFT，它们共同构成真正属于你的作品集。",
+    "getStarted": "立即开始",
+    "continueSignup": "继续注册",
+    "portfolioMeta": "Ninja NFT · {year} 年加入",
+    "next": "+ 下一个",
+    "portfolioSummary": "已完成 {count} 个赏金 · 持续成长的链上作品集"
   },
   "categories": {
     "Dev": "开发",
@@ -26,9 +37,7 @@
   "list": {
     "eyebrow": "市场",
     "heading": "赏金",
-    "publicBadge": "公开",
     "howApplying": "了解申请流程 →",
-    "intro": "寻找 Injective 生态赞助方发布的有偿任务，交付有价值的成果，并为你的 Ninja 作品集积累链上证明。",
     "resultsLabel": "赏金筛选与结果",
     "payoutNote": "赞助方可使用 INJ、USDC 等任意代币发布赏金。奖励按原样发放，建设者自行兑换；Ninja Labs 不提供平台内兑换。",
     "unavailable": "暂时无法加载赏金。"

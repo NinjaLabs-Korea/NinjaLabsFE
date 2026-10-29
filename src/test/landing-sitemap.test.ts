@@ -6,16 +6,20 @@ const sources = {
   hall: vi.fn(),
   members: vi.fn(),
 };
-vi.mock("@/lib/bounties", () => ({ getRuntimeBounties: () => sources.bounties() }));
+vi.mock("@/lib/bounties", () => ({
+  getRuntimeBounties: () => sources.bounties(),
+  loadRuntimeBounties: () => sources.bounties().then((bounties: unknown) => ({ bounties, unavailable: false }), () => ({ bounties: [], unavailable: true })),
+}));
 vi.mock("@/lib/notices", () => ({ getRuntimeNotices: () => sources.notices() }));
-vi.mock("@/lib/hall-of-fame", () => ({
+vi.mock("@/lib/hall-of-fame", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/hall-of-fame")>()),
   getRuntimeHallOfFame: () => sources.hall(),
   emptyHallOfFame: { stats: [], highlights: [], milestones: [], partners: [] },
 }));
 vi.mock("@/lib/members", () => ({ getRuntimeMembers: () => sources.members() }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api", origin: "https://ninja.test" }) }));
 
-const { getRuntimeLanding } = await import("@/lib/landing");
+const { getBountyHero, getRuntimeLanding, getRuntimeOpenBounties } = await import("@/lib/landing");
 const { default: sitemap } = await import("@/app/sitemap");
 
 const bounty = { slug: "b1", title: "B1", status: "active" };
@@ -31,29 +35,43 @@ describe("landing and sitemap with a partially unavailable API", () => {
     expect(landing.unavailable).toEqual({ bounties: false, news: true, stats: true });
     expect(landing.bounties).toEqual([bounty]);
     expect(landing.news).toEqual([]);
-    expect(landing.hero.stats).toEqual([]);
   });
 
-  it("passes the hall of fame stats, including the rewards paid total, through to the hero", async () => {
-    sources.bounties.mockResolvedValue([]);
-    sources.notices.mockResolvedValue([]);
+  it("gives the Intro only open bounties, at most four, and nothing when the API is down", async () => {
+    sources.bounties.mockResolvedValue([bounty, { slug: "closed", title: "C", status: "closed" }, ...Array.from({ length: 5 }, (_, index) => ({ slug: `a${index}`, title: "A", status: "active" }))]);
+    expect((await getRuntimeOpenBounties("en")).map((item) => item.slug)).toEqual(["b1", "a0", "a1", "a2"]);
+    sources.bounties.mockRejectedValue(new Error("down"));
+    expect(await getRuntimeOpenBounties("en")).toEqual([]);
+  });
+
+  it("passes the hall of fame stats, including the rewards paid total, through to the bounty hero", async () => {
     const stats = [
       { value: "3", labelKey: "bountiesCompleted" },
       { value: "12,500 USDC · 300 INJ", labelKey: "rewardsPaid" },
     ];
     sources.hall.mockResolvedValue({ stats, highlights: [], milestones: [], partners: [] });
-    const landing = await getRuntimeLanding("en");
-    expect(landing.hero.stats).toEqual(stats);
-    expect(landing.hero.portfolio.totalCompleted).toBe(3);
+    const hero = await getBountyHero("en", []);
+    expect(hero.stats).toEqual(stats);
+    expect(hero.portfolio.totalCompleted).toBe(3);
+    expect(hero.statsUnavailable).toBe(false);
   });
 
-  it("shows only completed bounties as finished work in the hero, not cancelled or expired ones", async () => {
+  it("hides the bounty hero stats while every value is zero and brings them back once one is above zero", async () => {
+    const zeros = [{ value: "0", labelKey: "bountiesCompleted" }, { value: "0", labelKey: "buildersRewarded" }];
+    sources.hall.mockResolvedValue({ stats: zeros, highlights: [], milestones: [], partners: [] });
+    expect((await getBountyHero("en", [])).stats).toEqual([]);
+    const some = [{ value: "0", labelKey: "bountiesCompleted" }, { value: "1", labelKey: "buildersRewarded" }];
+    sources.hall.mockResolvedValue({ stats: some, highlights: [], milestones: [], partners: [] });
+    expect((await getBountyHero("en", [])).stats).toEqual(some);
+  });
+
+  it("flags a failed stats read instead of throwing, and shows only completed bounties as finished work", async () => {
     const done = { slug: "done", title: "Done", status: "closed", completed: true };
-    sources.bounties.mockResolvedValue([done, { slug: "cancelled", title: "Cancelled", status: "closed" }, bounty]);
-    sources.notices.mockResolvedValue([]);
-    sources.hall.mockResolvedValue({ stats: [], highlights: [], milestones: [], partners: [] });
-    const landing = await getRuntimeLanding("en");
-    expect(landing.hero.portfolio.completed).toEqual(["Done"]);
+    sources.hall.mockRejectedValue(new Error("down"));
+    const hero = await getBountyHero("en", [done, { slug: "cancelled", title: "Cancelled", status: "closed" }, bounty] as never);
+    expect(hero.statsUnavailable).toBe(true);
+    expect(hero.stats).toEqual([]);
+    expect(hero.portfolio.completed).toEqual(["Done"]);
   });
 
   it("lists static routes and the sources that loaded", async () => {

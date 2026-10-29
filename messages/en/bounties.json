@@ -1,7 +1,7 @@
 {
   "meta": {
     "list": {
-      "title": "Bounties | Ninja Labs",
+      "title": "Bounty Marketplace | Ninja Labs",
       "description": "Find paid work from Injective ecosystem sponsors, ship useful pieces, and collect on-chain proof for your Ninja portfolio."
     },
     "apply": {
@@ -11,6 +11,17 @@
     "notFound": "Page not found | Ninja Labs",
     "unavailable": "Something went wrong | Ninja Labs",
     "detailTitle": "{title} | Ninja Labs"
+  },
+  "hero": {
+    "eyebrow": "Built on Injective",
+    "title": "Complete bounties. Collect proof.",
+    "titleHighlight": "Own your track record.",
+    "description": "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.",
+    "getStarted": "Get Started",
+    "continueSignup": "Continue sign-up",
+    "portfolioMeta": "Ninja NFT · member since {year}",
+    "next": "+ next",
+    "portfolioSummary": "{count, plural, one {# bounty completed} other {# bounties completed}} · a growing on-chain portfolio"
   },
   "categories": {
     "Dev": "Dev",
@@ -26,9 +37,7 @@
   "list": {
     "eyebrow": "Marketplace",
     "heading": "Bounties",
-    "publicBadge": "Public",
     "howApplying": "How applying works →",
-    "intro": "Find paid work from Injective ecosystem sponsors, ship useful pieces, and collect on-chain proof for your Ninja portfolio.",
     "resultsLabel": "Bounty filters and results",
     "payoutNote": "Sponsors post in any token such as INJ or USDC. Rewards are sent as-is, so builders swap on their own; Ninja Labs does not run a platform-side swap.",
     "unavailable": "Bounties are temporarily unavailable."

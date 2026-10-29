@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Real-browser integration run: builds the BE (from $NINJA_BE_DIR) and this FE checkout into a temp dir, starts a private
-// Postgres, BE, FE, two TLS proxies and headless Chrome on configurable ports, seeds, runs flows 1-11 in order, and always
+// Postgres, BE, FE, two TLS proxies and headless Chrome on configurable ports, seeds, runs flows 1-15 in order, and always
 // tears everything down. Never writes into either checkout (FE logs go to integration/.logs, which is git-ignored).
 //
 //   NINJA_BE_DIR=/path/to/NinjaLabsBE npm run test:integration            # all flows
@@ -21,10 +21,10 @@ import { alive, reapStale, reapDir, writePids, TMP_PREFIX } from './lib/reaper.m
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FE_DIR = path.resolve(HERE, '..');
 // Flow 10 runs last: it leaves an open payout on the funded bounty B1.
-const ALL_FLOWS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'];
+const ALL_FLOWS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15'];
 const FLOW_TIMEOUT_MS = 6 * 60_000;
 /** Flows 12 (recruitment lifecycle across four sessions) and 13 (every community screen at three widths, screenshots included) get a longer budget. */
-const flowTimeoutMs = (script) => (/flow13\.mjs$/.test(script) ? 20 * 60_000 : /flow12\.mjs$/.test(script) ? 12 * 60_000 : FLOW_TIMEOUT_MS);
+const flowTimeoutMs = (script) => (/flow14\.mjs$/.test(script) ? 75 * 60_000 : /flow13\.mjs$/.test(script) ? 20 * 60_000 : /flow12\.mjs$/.test(script) ? 12 * 60_000 : FLOW_TIMEOUT_MS);
 
 const env = process.env;
 const port = (name, def) => Number(env[`NINJA_IT_${name}_PORT`] ?? def);
@@ -264,7 +264,7 @@ async function main() {
   for (const f of flows) {
     const file = path.join(LOGS, `flow${f}.log`);
     log(`flow ${f} ...`);
-    const code = await runFlow(path.join(HERE, 'flows', `flow${f}.mjs`), file, { ...baseEnv(), NINJA_IT_STATE: statePath, NODE_TLS_REJECT_UNAUTHORIZED: '0' });
+    const code = await runFlow(path.join(HERE, 'flows', `flow${f}.mjs`), file, { ...baseEnv(), ...Object.fromEntries(Object.entries(env).filter(([k]) => k.startsWith('NINJA_IT_SWEEP'))), NINJA_IT_STATE: statePath, NODE_TLS_REJECT_UNAUTHORIZED: '0' });
     const text = fs.readFileSync(file, 'utf8');
     const summary = text.split('\n').find((l) => l.startsWith('FLOW ')) ?? `FLOW ${f} CRASHED (exit ${code})`;
     const failures = text.split('\n').filter((l) => l.startsWith('ASSERT FAIL'));

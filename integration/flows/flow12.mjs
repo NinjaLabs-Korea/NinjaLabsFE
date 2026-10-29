@@ -40,7 +40,7 @@ check('DB: audit rows for create and open', sql(`select string_agg(action, ',' o
   clean(await report(p, 'signed-out Intro with banner'), { signedOut: true });
   check('signed out: Intro carries the recruitment banner with a link to /recruit', (await p.eval(`[...document.querySelectorAll('main a')].some(a=>a.innerText.trim()==='Apply now' && new URL(a.href).pathname==='/en/recruit')`)));
     const intro = await p.text();
-  check('signed out: Intro shows the community sections', /Past activities/i.test(intro) && /Recent achievements/i.test(intro) && /Latest news/i.test(intro) && /Meet the members/i.test(intro), intro.slice(0, 200));
+  check('signed out: Intro shows the community sections', /Past activities/i.test(intro) && /Recent achievements/i.test(intro) && /Meet the members/i.test(intro), intro.slice(0, 200));
   await p.goto('/en/recruit'); await p.waitText('Sign in to apply', 8000);
   const link = await p.eval(`(()=>{const a=[...document.querySelectorAll('main a')].find(a=>a.innerText.trim()==='Sign in and apply'); return a && a.getAttribute('href')})()`);
   check('signed out: /recruit shows the cohort and a sign-in link carrying returnTo', link === '/en/signup?returnTo=%2Frecruit', link);
@@ -186,7 +186,7 @@ check('home: shows the accepted status', (await mainText(bp)).includes('Accepted
   check('finished user: the logo points at the home', logo === '/en/home', logo);
   await p.goto('/en/about'); await sleep(500);
   const about = await p.text();
-  check('finished user: /about shows the community sections and stays put', (await p.url()).endsWith('/en/about') && /past activities/i.test(about) && /latest news/i.test(about));
+  check('finished user: /about shows the community sections and stays put', (await p.url()).endsWith('/en/about') && /past activities/i.test(about));
   clean(await report(p, '/about (finished)'));
   await p.goto('/en/signup/get-started');
   await p.close();
