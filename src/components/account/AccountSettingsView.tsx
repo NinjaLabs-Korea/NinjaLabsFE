@@ -19,6 +19,7 @@ import { stashFlash } from "@/lib/flash";
 import { hardNavigate } from "@/lib/hard-navigate";
 import { normalizeNickname } from "@/lib/nickname";
 import type { WalletConfig } from "@/lib/runtime/config";
+import { PageLoading } from "@/components/ui/PageLoading";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -66,7 +67,7 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
   }
 
   if (authSnapshot.status === "loading") {
-    return <p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p>;
+    return <PageLoading label={tAccount("loading")} />;
   }
 
   const user = authSnapshot.status === "signed-in" ? authSnapshot.user : lastUser;
