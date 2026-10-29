@@ -3,7 +3,7 @@ import { act, fireEvent, screen, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { BountyFilters } from "@/components/bounties/BountyFilters";
+import { BOUNTY_FILTER_URL_DEBOUNCE_MS, BountyFilters } from "@/components/bounties/BountyFilters";
 import type { Bounty } from "@/lib/types";
 import { renderWithIntl } from "@/test/intl";
 
@@ -61,14 +61,19 @@ describe("BountyFilters in the URL", () => {
 
   it("restores filters from the URL (Back from a card) and writes changes back with replaceState", async () => {
     window.history.replaceState(null, "", "/en/bounties?category=Design&q=design");
+    vi.useFakeTimers();
     renderWithIntl(<BountyFilters bounties={bounties} />);
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 10)); });
+    act(() => { vi.advanceTimersByTime(0); });
     expect(screen.getByText("Active design bounty")).toBeTruthy();
     expect(screen.queryByText("Active dev bounty")).toBeNull();
     expect((screen.getByRole("searchbox") as HTMLInputElement).value).toBe("design");
 
     fireEvent.click(screen.getByRole("button", { name: "Closed" }));
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 400)); });
+    // Nothing is written before the debounce elapses, exactly one write at it.
+    const before = window.location.search;
+    act(() => { vi.advanceTimersByTime(BOUNTY_FILTER_URL_DEBOUNCE_MS - 1); });
+    expect(window.location.search).toBe(before);
+    act(() => { vi.advanceTimersByTime(1); });
     expect(window.location.search).toBe("?category=Design&status=Closed&q=design");
   });
 });

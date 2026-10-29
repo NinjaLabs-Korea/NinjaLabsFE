@@ -17,6 +17,8 @@ const categoryOrder: BountyCategory[] = ["Dev", "Design", "Content", "Other"];
 const statusFilters: Exclude<StatusFilter, "All">[] = ["Active", "Closed"];
 // Filter values stay in English (matched against data); only the displayed labels are localized.
 const statusLabelKeys = { Active: "status.active", Closed: "status.closed" } as const;
+/** Delay before filter changes are written to the URL (exported so tests advance by the constant, not a magic sleep). */
+export const BOUNTY_FILTER_URL_DEBOUNCE_MS = 300;
 const chipButtonClass = "max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export function BountyFilters({ bounties }: BountyFiltersProps) {
@@ -50,7 +52,7 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
       } catch {
         // History writes blocked: the filters still work, they just are not remembered.
       }
-    }, 300);
+    }, BOUNTY_FILTER_URL_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [restored, category, status, query]);
   const resetFilters = () => {
