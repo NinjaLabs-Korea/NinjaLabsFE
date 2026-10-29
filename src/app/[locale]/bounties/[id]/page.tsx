@@ -70,6 +70,10 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   const deliverables = bounty.deliverables ?? [];
   const rewards = bounty.rewards ?? [bounty.reward];
   const isClosedDeadline = bounty.deadline === "Closed";
+  // Application-required bounties lead with the short summary; the full markdown follows unless it is only that summary again.
+  const fullDescription = applicationRequired && bounty.applicationDescription
+    ? (bounty.descriptionMarkdown !== bounty.summary ? bounty.descriptionMarkdown : undefined)
+    : (bounty.descriptionMarkdown ?? bounty.summary);
   const stepKeys = applicationRequired ? afterApprovalStepKeys : completionStepKeys;
   const stepNamespace = applicationRequired ? "detail.afterApprovalSteps" : "detail.completionSteps";
 
@@ -108,30 +112,37 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">{applicationRequired ? t("detail.descriptionHeadingApply") : t("detail.descriptionHeading")}</h2>
             {applicationRequired && bounty.applicationDescription ? (
               <p className="mt-4 text-base text-ink-secondary">{bounty.applicationDescription}</p>
-            ) : (
+            ) : null}
+            {fullDescription ? (
               <div className="mt-4">
-                <Markdown>{bounty.descriptionMarkdown ?? bounty.summary}</Markdown>
+                <Markdown>{fullDescription}</Markdown>
               </div>
-            )}
-            {!applicationRequired ? (
-              <>
-                <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <MetaCell label={t("detail.deliverable")}>
-                    {deliverables.length > 0
-                      ? deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)
-                      : <span>{bounty.submissionGuideMarkdown ? t("detail.deliverableSeeGuide") : t("detail.deliverableDescribed")}</span>}
+            ) : null}
+            <div className={`mt-8 grid grid-cols-1 gap-3 ${applicationRequired ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+              <MetaCell label={t("detail.deliverable")}>
+                {deliverables.length > 0
+                  ? deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)
+                  : <span>{bounty.submissionGuideMarkdown ? t("detail.deliverableSeeGuide") : t("detail.deliverableDescribed")}</span>}
+              </MetaCell>
+              {applicationRequired ? (
+                <>
+                  <MetaCell label={t("detail.applicationDeadline")}>
+                    {bounty.applicationDeadlineDetail || t(bounty.applicationClosed ? "status.closed" : "status.active")}
+                    {bounty.applicationClosed ? <span className="font-semibold text-danger">{t("detail.applicationsClosed")}</span> : null}
                   </MetaCell>
-                  <MetaCell label={t("detail.deadline")}>{bounty.deadlineDetail || t(isClosedDeadline ? "status.closed" : "status.active")}</MetaCell>
-                  <MetaCell label={t("detail.review")}>{bounty.reviewProcess ?? t("detail.defaultReview")}</MetaCell>
+                  <MetaCell label={t("detail.submissionDeadline")}>{bounty.deadlineDetail || t(isClosedDeadline ? "status.closed" : "status.active")}</MetaCell>
+                </>
+              ) : (
+                <MetaCell label={t("detail.deadline")}>{bounty.deadlineDetail || t(isClosedDeadline ? "status.closed" : "status.active")}</MetaCell>
+              )}
+              <MetaCell label={t("detail.review")}>{bounty.reviewProcess ?? t("detail.defaultReview")}</MetaCell>
+            </div>
+            {bounty.submissionGuideMarkdown ? (
+              <>
+                <h3 className="mt-8 font-display text-lg font-bold text-ink">{t("detail.submissionGuide")}</h3>
+                <div className="mt-3">
+                  <Markdown>{bounty.submissionGuideMarkdown}</Markdown>
                 </div>
-                {bounty.submissionGuideMarkdown ? (
-                  <>
-                    <h3 className="mt-8 font-display text-lg font-bold text-ink">{t("detail.submissionGuide")}</h3>
-                    <div className="mt-3">
-                      <Markdown>{bounty.submissionGuideMarkdown}</Markdown>
-                    </div>
-                  </>
-                ) : null}
               </>
             ) : null}
           </article>
