@@ -19,6 +19,7 @@
     "urlHint": "https://… 或 /media/… 路径",
     "httpUrlHint": "https://…（仅限 http 或 https）",
     "urlInvalid": "请输入 http(s) URL（或允许的站内路径）。",
+    "publicUrl": "请输入公开的 http(s) 网址，不允许使用 localhost 或内网地址。",
     "orderInvalid": "请输入大于等于 0 的整数。",
     "required": "此项为必填项。",
     "tooLong": "内容过长：最多 {max} 个字符。",

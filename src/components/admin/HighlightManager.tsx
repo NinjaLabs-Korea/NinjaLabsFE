@@ -9,9 +9,9 @@ import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
-import { DISPLAY_ORDER_MAX, highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminErrorDescription } from "@/lib/admin-helpers";
+import { DISPLAY_ORDER_MAX, highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminErrorDescription, adminUrlFieldErrors } from "@/lib/admin-helpers";
 import { HIGHLIGHT_TYPE_CODES, isHighlightTypeCode } from "@/lib/api/codecs";
-import { isHttpUrlOrMediaPath, isHttpUrlOrSitePath, isSafeUrl } from "@/lib/url-rules";
+import { isPublicHttpUrlOrMediaPath, isPublicHttpUrlOrSitePath, isSafeUrl, urlErrorKind } from "@/lib/url-rules";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 /**
@@ -20,7 +20,7 @@ import { useAdminApi } from "@/components/auth/FoundationProvider";
  * 수정 DTO는 레거시 행을 위해 완화 규칙(`IsSafeUrl`)이라 엄격 규칙 이전에 저장된 `/uploads/x.png` 같은 값을 그대로 받는데,
  * 여기서 막으면 그 행은 이미지를 지워야만 저장된다.
  */
-type HighlightFieldErrors = Partial<Record<"title" | "description" | "image" | "link" | "order", "required" | "urlInvalid" | "orderInvalid">>;
+type HighlightFieldErrors = Partial<Record<"title" | "description" | "image" | "link" | "order", "required" | "urlInvalid" | "publicUrl" | "orderInvalid">>;
 export function validateHighlightForm(
   input: { title: string; description: string; image: string | null; link: string; order: number },
   stored?: { image: string | null; link: string | undefined },
@@ -28,8 +28,8 @@ export function validateHighlightForm(
   const errors: HighlightFieldErrors = {};
   if (!input.title.trim()) errors.title = "required";
   if (!input.description.trim()) errors.description = "required";
-  if (input.image && !isHttpUrlOrMediaPath(input.image) && !(input.image === stored?.image && isSafeUrl(input.image))) errors.image = "urlInvalid";
-  if (input.link.trim() && !isHttpUrlOrSitePath(input.link.trim()) && !(input.link.trim() === stored?.link && isSafeUrl(stored.link))) errors.link = "urlInvalid";
+  if (input.image && !isPublicHttpUrlOrMediaPath(input.image) && !(input.image === stored?.image && isSafeUrl(input.image))) errors.image = urlErrorKind(input.image);
+  if (input.link.trim() && !isPublicHttpUrlOrSitePath(input.link.trim()) && !(input.link.trim() === stored?.link && isSafeUrl(stored.link))) errors.link = urlErrorKind(input.link.trim());
   if (!Number.isInteger(input.order) || input.order < 0 || input.order > DISPLAY_ORDER_MAX) errors.order = "orderInvalid";
   return errors;
 }
@@ -179,7 +179,11 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
       resetForm();
       await reload();
     } catch (error) {
-      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
+      // The BE rejected a URL the form let through: show it on the field, not only as a generic toast.
+      const urlErrors = adminUrlFieldErrors(error);
+      const inline: HighlightFieldErrors = { ...(urlErrors.imageUrl ? { image: urlErrors.imageUrl } : {}), ...(urlErrors.linkUrl ? { link: urlErrors.linkUrl } : {}) };
+      if (Object.keys(inline).length) setErrors((current) => ({ ...current, ...inline }));
+      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: Object.keys(inline).length ? tCommon("fixFields") : adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
       savingRef.current = false;
       setSaving(false);

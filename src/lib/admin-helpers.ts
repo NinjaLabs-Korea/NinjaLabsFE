@@ -4,6 +4,7 @@
 import { isHighlightTypeCode, type HighlightTypeCode } from "./api/codecs";
 import { ERROR_COPY, knownCode } from "./api/error-copy";
 import { ApiHttpError } from "./api/http";
+import { validationFieldsFromError } from "./api/validation";
 import { noticeCategoryKeys } from "./notice-categories";
 import type { Notice } from "./types";
 
@@ -27,6 +28,21 @@ export function adminApiErrorCode(error: unknown): AdminApiErrorCode | null {
 export function adminErrorDescription(error: unknown, translate: (key: `errors.${AdminApiErrorCode}`) => string, fallback: string): string {
   const code = adminApiErrorCode(error);
   return code ? translate(`errors.${code}`) : fallback;
+}
+
+/**
+ * A BE 400 `VALIDATION_FAILED` that names URL properties (`externalUrl`, `thumbnailUrl`, `imageUrl`, `linkUrl`, `coverImageUrl`) as inline
+ * field errors instead of the generic save-failed toast. `publicUrl` when the BE message says the host must be public, else `urlInvalid`.
+ * Keys are BE property names; callers map them to their own form fields. Empty when the error is something else.
+ */
+export const ADMIN_URL_PROPERTIES = ["externalUrl", "thumbnailUrl", "imageUrl", "linkUrl", "coverImageUrl"] as const;
+export function adminUrlFieldErrors(error: unknown): Partial<Record<(typeof ADMIN_URL_PROPERTIES)[number], "publicUrl" | "urlInvalid">> {
+  const fields = validationFieldsFromError(error);
+  const result: Partial<Record<(typeof ADMIN_URL_PROPERTIES)[number], "publicUrl" | "urlInvalid">> = {};
+  for (const property of ADMIN_URL_PROPERTIES) {
+    if (Object.hasOwn(fields, property)) result[property] = fields[property].includes("public http(s)") ? "publicUrl" : "urlInvalid";
+  }
+  return result;
 }
 
 /** Postgres INTEGER ceiling: BE `MaxPgInt` on `displayOrder` (member and highlight ordering). Above it the BE answers 400. */

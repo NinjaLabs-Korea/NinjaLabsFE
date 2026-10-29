@@ -19,6 +19,7 @@
     "urlHint": "https://… or /media/… path",
     "httpUrlHint": "https://… (http or https only)",
     "urlInvalid": "Enter an http(s) URL (or an allowed site path).",
+    "publicUrl": "Enter a public http(s) URL. Localhost and private network addresses are not allowed.",
     "orderInvalid": "Enter a whole number from 0 up.",
     "required": "This field is required.",
     "tooLong": "Too long: use at most {max} characters.",
