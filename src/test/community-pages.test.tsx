@@ -147,7 +147,7 @@ describe("Notices page", () => {
       { slug: "n1", title: "Launch", excerpt: "x", bodyMarkdown: "", category: "Events", publishedAt: "Oct 1, 2026", thumbnail: "" },
     ];
     renderWithIntl(await NoticesPage(pageProps));
-    expect(screen.getByRole("heading", { level: 1, name: "What Ninja Labs & the Injective ecosystem are up to" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1, name: "News from Ninja Labs" })).toBeTruthy();
     expect(within(screen.getByRole("region", { name: "Notices" })).getByRole("link").getAttribute("href")).toBe("/notices/n1");
     expect(within(screen.getByRole("group", { name: "Notice categories" })).getAllByRole("button").map((b) => b.textContent)).toEqual(["All", "Events"]);
   });

@@ -1,22 +1,22 @@
 {
   "metadata": {
     "title": "Notices | Ninja Labs",
-    "description": "A community feed of activity and news that shows the community is alive, shipping, and onboarding new sponsors."
+    "description": "Events and news from Ninja Labs."
   },
   "list": {
     "eyebrow": "Notices / News",
-    "heading": "What Ninja Labs & the Injective ecosystem are up to",
-    "description": "A community feed of activity and news that shows the community is alive, shipping, and onboarding new sponsors.",
-    "badge": "Community feed, not just ops notices"
+    "heading": "News from Ninja Labs",
+    "description": "Events and news from Ninja Labs.",
+    "badge": "Events · Ecosystem news · Announcements"
   },
   "filters": {
     "ariaLabel": "Notice categories",
     "all": "All",
     "listAriaLabel": "Notices",
-    "emptyTitle": "No notices match your filters",
-    "emptyBody": "Try a different category or clear the search.",
-    "feedEmptyTitle": "No notices yet",
-    "feedEmptyBody": "Announcements will appear here once they are published.",
+    "emptyTitle": "Nothing in this category yet",
+    "emptyBody": "Try another category.",
+    "feedEmptyTitle": "No news yet",
+    "feedEmptyBody": "New posts will show up here.",
     "reset": "Reset filters"
   },
   "categories": {
