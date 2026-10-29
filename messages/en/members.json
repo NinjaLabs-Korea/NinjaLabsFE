@@ -4,18 +4,9 @@
     "description": "Meet the people operating Ninja Labs, reviewing bounty submissions, and helping Injective builders ship useful work."
   },
   "list": {
-    "eyebrow": "Official members",
-    "heading": "Team",
-    "description": "Meet the people operating Ninja Labs, reviewing bounty submissions, and helping Injective builders ship useful work.",
-    "public": "Public",
-    "howItWorks": "Member assignment rules",
-    "rules": {
-      "registration": "Same sign-up path as any user, with no separate member registration.",
-      "adminEnables": "After sign-up, an admin flags the user as a member and assigns a role.",
-      "memberEdits": "Members write and edit their own intro through their public profile.",
-      "unassign": "When unassigned, they drop from this tab immediately while the profile stays live."
-    },
-    "howItWorksEyebrow": "How it works"
+    "eyebrow": "Members",
+    "heading": "Ninja Labs members",
+    "description": "The people behind Ninja Labs."
   },
   "filters": {
     "ariaLabel": "Member roles",

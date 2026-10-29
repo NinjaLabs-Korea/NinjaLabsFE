@@ -6,8 +6,7 @@
   "header": {
     "eyebrow": "社区里程碑",
     "heading": "名人堂",
-    "description": "记录推动社区前进的建设者、赏金与合作伙伴。",
-    "public": "公开"
+    "description": "记录推动社区前进的建设者、赏金与合作伙伴。"
   },
   "stats": {
     "bountiesRun": "已发布赏金",
@@ -19,7 +18,7 @@
     "completionNfts": "完成 NFT"
   },
   "highlights": {
-    "eyebrow": "管理员精选",
+    "eyebrow": "精选动态",
     "heading": "精选亮点",
     "readNotices": "查看公告",
     "categories": {

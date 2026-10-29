@@ -4,27 +4,18 @@
     "description": "Ninja Labs를 운영하고, 바운티 제출물을 검토하며, Injective 빌더가 유용한 결과물을 만들도록 돕는 사람들을 만나 보세요."
   },
   "list": {
-    "eyebrow": "공식 멤버",
-    "heading": "팀",
-    "description": "Ninja Labs를 운영하고, 바운티 제출물을 검토하며, Injective 빌더가 유용한 결과물을 만들도록 돕는 사람들을 만나 보세요.",
-    "public": "공개",
-    "howItWorks": "멤버 지정 규칙",
-    "rules": {
-      "registration": "별도의 멤버 가입 없이 일반 사용자와 같은 경로로 가입합니다.",
-      "adminEnables": "가입 후 관리자가 멤버로 지정하고 역할을 부여합니다.",
-      "memberEdits": "멤버는 공개 프로필에서 직접 소개를 작성하고 수정합니다.",
-      "unassign": "지정이 해제되면 이 탭에서 바로 사라지지만 프로필은 그대로 유지됩니다."
-    },
-    "howItWorksEyebrow": "운영 방식"
+    "eyebrow": "멤버",
+    "heading": "Ninja Labs 멤버",
+    "description": "Ninja Labs를 함께 만들어 가는 사람들이에요."
   },
   "filters": {
     "ariaLabel": "멤버 역할",
     "all": "전체",
     "listAriaLabel": "멤버",
-    "emptyTitle": "필터에 맞는 멤버가 없습니다",
-    "emptyBody": "다른 카테고리를 선택하거나 검색을 초기화해 보세요.",
-    "feedEmptyTitle": "아직 멤버가 없습니다",
-    "feedEmptyBody": "팀이 멤버를 지정하면 여기에 표시됩니다.",
+    "emptyTitle": "필터에 맞는 멤버가 없어요",
+    "emptyBody": "다른 카테고리를 선택하거나 필터를 초기화해 보세요.",
+    "feedEmptyTitle": "아직 멤버가 없어요",
+    "feedEmptyBody": "팀이 멤버를 지정하면 여기에 표시돼요.",
     "reset": "필터 초기화"
   },
   "roles": {
