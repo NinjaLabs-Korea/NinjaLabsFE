@@ -116,14 +116,18 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   const nicknameRuleError = validateNickname(trimmedNickname);
   // 이미 저장한 내 닉네임(뒤로 가기·재방문)은 BE `check-nickname`(공개, 익명)에게 "사용 중"이지만 저장은 허용된다(자기 행 UPDATE).
   // 그 값은 묻지도 막지도 않는다. BE 비교는 대소문자 무시(`lower(nickname)`).
-  const ownNickname = auth.status === "signed-in" ? normalizeNickname(auth.user.handle).toLowerCase() : null;
+  // The last signed-in handle is remembered: once the session has ended the user's own name must not start looking taken.
+  const [lastHandle, setLastHandle] = useState<string | null>(signedInUser?.handle ?? null);
+  if (signedInUser && signedInUser.handle !== lastHandle) setLastHandle(signedInUser.handle);
+  const ownHandle = signedInUser?.handle ?? lastHandle;
+  const ownNickname = ownHandle ? normalizeNickname(ownHandle).toLowerCase() : null;
   const isOwnNickname = ownNickname !== null && trimmedNickname.toLowerCase() === ownNickname;
   // 규칙을 통과한 값만 BE에 묻는다; 마지막 검사 결과가 현재 입력과 다르면 아직 확인 중이다.
   // A typed name that breaks a rule says why right away (no request is sent for it, so the status line would stay empty and
   // the field would look fine); an empty field is only reported on save.
   const nicknameStatus: "idle" | "invalid" | "checking" | "available" | "taken" = nicknameRuleError && trimmedNickname !== ""
     ? "invalid"
-    : nicknameRuleError || isOwnNickname
+    : nicknameRuleError || isOwnNickname || sessionEnded
     ? "idle"
     : nicknameCheck?.nickname !== trimmedNickname
       ? "checking"
@@ -142,7 +146,8 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   }, [editing, mode, nickname, bio, tags, draftOwner, draftChecked]);
 
   useEffect(() => {
-    if (nicknameRuleError || isOwnNickname) return;
+    // A session that ended cannot save anyway (the session banner says so): no availability request for it.
+    if (nicknameRuleError || isOwnNickname || sessionEnded) return;
     let cancelled = false;
     const timer = window.setTimeout(() => {
       apiClient
@@ -158,7 +163,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [apiClient, isOwnNickname, nicknameRuleError, trimmedNickname]);
+  }, [apiClient, isOwnNickname, nicknameRuleError, sessionEnded, trimmedNickname]);
 
   // Back from /signup/get-started restores this page from the bfcache in its "Saving profile..." state (the save already
   // succeeded and the auth snapshot is stale): start over, and in onboarding reload so the gate re-reads the session.
