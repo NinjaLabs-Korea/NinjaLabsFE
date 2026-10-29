@@ -46,6 +46,8 @@
     "cancelledNote": "This bounty was cancelled by the sponsor, so your application was closed.",
     "approvedClosedNote": "Approved, but this bounty is no longer accepting submissions.",
     "viewBounty": "View bounty",
+    "cancelledSubmissionStatus": "Closed: bounty cancelled",
+    "cancelledSubmissionNote": "The sponsor cancelled this bounty, so your submission was closed without a review.",
     "notAcceptedStatus": "Submission not accepted",
     "forfeitedStatus": "Award forfeited",
     "notAcceptedNote": "The sponsor reviewed your submission and did not accept it. This result is final.",

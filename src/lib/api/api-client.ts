@@ -57,7 +57,16 @@ type SubmissionRow = {
   payment_status?: string;
   /** latest `submission_review.comment`; older BE omits it */
   review_comment?: string | null;
+  /** Added with BE-2 (`GET /submissions/me`); older BEs omit all three. */
+  bounty_status?: BountyStatusCode;
+  submission_deadline?: string;
+  has_review?: boolean;
 };
+
+/** A REJECTED submission that no reviewer ever looked at because the sponsor cancelled the bounty. Unknown (fields absent) = false. */
+function closedByCancellation(row: SubmissionRow): boolean {
+  return row.status === "REJECTED" && row.has_review === false && row.bounty_status === "CANCELLED";
+}
 
 function toAgentRef(agent: AgentRef | undefined): AccountAgentRef | null {
   return agent ? { id: agent.id, name: agent.name } : null;
@@ -79,6 +88,7 @@ function toSubmission(row: SubmissionRow): AccountSubmission {
     agent: toAgentRef(row.agent),
     paymentStatus: toPayoutStatus(row.payment_status) ?? "NONE",
     reviewComment: row.review_comment?.trim() || null,
+    ...(closedByCancellation(row) ? { closedByCancellation: true } : {}),
   };
 }
 
@@ -107,6 +117,9 @@ function submissionToRow(row: SubmissionRow): AccountApplication {
     reviewComment: submission.reviewComment,
     reviewNote: null,
     paymentStatus: submission.paymentStatus,
+    ...(submission.closedByCancellation ? { closedByCancellation: true } : {}),
+    ...(row.bounty_status ? { bountyStatus: row.bounty_status } : {}),
+    ...(row.submission_deadline ? { submissionDeadline: row.submission_deadline } : {}),
   };
 }
 
@@ -198,7 +211,12 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
               if (!submission || application.status !== "approved") return application;
               // REJECTED is final (also a forfeited award: approved work, no payout) - not another "Submitted" step.
               if (submission.status === "REJECTED") {
-                return { ...application, status: "notAccepted" as const, reviewComment: submission.review_comment?.trim() || null };
+                return {
+                  ...application,
+                  status: "notAccepted" as const,
+                  reviewComment: submission.review_comment?.trim() || null,
+                  ...(closedByCancellation(submission) ? { closedByCancellation: true } : {}),
+                };
               }
               if (submission.status === "REVISION_REQUESTED") {
                 return { ...application, status: "revisionRequested" as const, reviewComment: submission.review_comment?.trim() || null };

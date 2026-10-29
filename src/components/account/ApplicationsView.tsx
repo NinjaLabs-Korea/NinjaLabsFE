@@ -46,12 +46,13 @@ const submissionSteps: readonly ApplicationStatus[] = ["submitted", "completed"]
  */
 export function applicationStatusLabel(
   t: (key: string, values?: Record<string, string>) => string,
-  application: Pick<AccountApplication, "status" | "agent" | "reviewComment">,
+  application: Pick<AccountApplication, "status" | "agent" | "reviewComment"> & Partial<Pick<AccountApplication, "closedByCancellation">>,
 ): string {
   const { status } = application;
   if (status === "approved") return application.agent ? t("agentApprovedStatus", { name: application.agent.name }) : t("approvedStatus");
   if (status === "revisionRequested") return t("revisionRequestedStatus");
   if (status === "rejected") return t("rejectedStatus");
+  if (status === "notAccepted" && application.closedByCancellation) return t("cancelledSubmissionStatus");
   if (status === "notAccepted") return parseReviewComment(application.reviewComment)?.forfeited ? t("forfeitedStatus") : t("notAcceptedStatus");
   return t(`steps.${status}`);
 }
@@ -208,7 +209,7 @@ export function ApplicationsView() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="flex min-w-0 max-w-full flex-wrap gap-2">
                   <Badge variant="primary-soft">{tBounties(application.category)}</Badge>
-                  <Badge variant={statusVariants[application.status]}>
+                  <Badge variant={application.closedByCancellation ? "neutral" : statusVariants[application.status]}>
                     {statusLabel(application)}
                   </Badge>
                   {application.agent ? (
@@ -232,7 +233,7 @@ export function ApplicationsView() {
                   <ApplicationNote application={application} />
                 </>
               ) : application.status === "notAccepted" ? (
-                <NotAcceptedNote application={application} />
+                application.closedByCancellation ? <p className="mt-4 text-sm text-ink-muted">{t("cancelledSubmissionNote")}</p> : <NotAcceptedNote application={application} />
               ) : (
                 <ol
                   aria-label={t("progressLabel")}

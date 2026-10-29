@@ -14,7 +14,7 @@
  *  5. 내 직접 행은 없고 에이전트가 만든 행만 있음 → `agentRow` (직접 지원/제출 폼을 띄우지 않는다)
  *  6. 지원 필요 바운티: 지원 전 → `applyForm`(진행 중이고 지원 마감 전일 때만, 지원 마감만 지났으면 `closed`+`applications`, 그 밖엔 `closed`) / 거절 → `applicationRejected` /
  *     방금 지원했거나 심사 중(`open`) → `applicationUnderReview`(바운티가 완료/취소로 끝났거나 제출이 닫혀 심사 중이면 `closed`) / 승인 등 → 7로 내려간다
- *  7. 제출 승인 → `submissionApproved`, 제출 거절 → `submissionRejected`
+ *  7. 제출 승인 → `submissionApproved`, 취소로 심사 없이 닫힌 거절 → `closed`(cancelled), 제출 거절 → `submissionRejected`
  *  8. 진행 중이 아니고 수정 요청도 아님 → 취소된 바운티면 `closed`(cancelled), 심사 중인 제출이 있으면 `inReviewLocked`, 없으면 `closed`
  *  9. 나머지 → `submitForm` (처음 제출 / 심사 중 수정 / 수정 요청 재제출)
  *
@@ -41,7 +41,7 @@ export type AgentRowState = "applied" | "applicationRejected" | "applicationAppr
 export const PENDING_SUBMISSION_STATUSES: readonly SubmissionStatus[] = ["submitted", "resubmitted", "in_review"];
 
 type ApplicationRow = Pick<AccountApplication, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountApplication, "reviewNote">>;
-type SubmissionRow = Pick<AccountSubmission, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountSubmission, "reviewComment" | "paymentStatus">>;
+type SubmissionRow = Pick<AccountSubmission, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountSubmission, "reviewComment" | "paymentStatus" | "closedByCancellation">>;
 
 /** `useAccountQuery` 결과 중 이 규칙이 읽는 부분. `data`는 내 전체 행(모든 바운티)이다. */
 export type AccountRowsQuery<T> = { loading: boolean; unavailable: boolean; data: readonly T[] | null };
@@ -197,6 +197,8 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
 
   // 7. 확정된 제출
   if (submission?.status === "approved") return submission.paymentStatus ? { kind: "submissionApproved", payout: submission.paymentStatus } : { kind: "submissionApproved" };
+  // Rejected only because the sponsor cancelled the bounty (no review happened): not "reviewed and not accepted".
+  if (submission?.status === "rejected" && submission.closedByCancellation) return { kind: "closed", reason: "cancelled" };
   if (submission?.status === "rejected") {
     const review = parseReviewComment(submission.reviewComment);
     return review ? { kind: "submissionRejected", review } : { kind: "submissionRejected" };

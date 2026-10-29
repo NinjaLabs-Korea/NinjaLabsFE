@@ -27,6 +27,11 @@ export type AccountSubmission = {
   paymentStatus: PayoutStatus;
   /** BE `review_comment`: the latest reviewer comment (revision request, rejection, or `forfeited: <reason>`); null when none. */
   reviewComment: string | null;
+  /**
+   * True when the BE says this REJECTED submission was closed by the sponsor cancelling the bounty without any review
+   * (`bounty_status` CANCELLED and `has_review` false). Absent when the BE predates those fields (today's copy applies).
+   */
+  closedByCancellation?: boolean;
 };
 
 export type AccountApplication = {
@@ -51,6 +56,8 @@ export type AccountApplication = {
   reviewNote: string | null;
   /** Payout status of the joined APPROVED submission (meaningful for `completed` rows; NONE otherwise). Same rule as `AccountSubmission.paymentStatus`. */
   paymentStatus: PayoutStatus;
+  /** Set on a `notAccepted` row whose submission was closed by a bounty cancellation with no review (see `AccountSubmission.closedByCancellation`). */
+  closedByCancellation?: boolean;
   /** BE `bounty_status` of the bounty behind the row. Absent when the BE predates the field (the card then renders from the application status alone). */
   bountyStatus?: BountyStatusCode;
   /** BE `submission_deadline` (ISO); absent with the field above. */

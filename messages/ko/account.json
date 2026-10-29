@@ -46,6 +46,8 @@
     "cancelledNote": "스폰서가 이 바운티를 취소해 지원이 종료되었습니다.",
     "approvedClosedNote": "승인되었지만 이 바운티는 더 이상 제출을 받지 않습니다.",
     "viewBounty": "바운티 보기",
+    "cancelledSubmissionStatus": "종료됨: 바운티 취소",
+    "cancelledSubmissionNote": "스폰서가 바운티를 취소해 제출이 심사 없이 종료되었습니다.",
     "notAcceptedStatus": "제출 미채택",
     "forfeitedStatus": "수상 몰수",
     "notAcceptedNote": "스폰서가 제출물을 검토한 뒤 채택하지 않았습니다. 이 결과는 최종입니다.",

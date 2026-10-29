@@ -46,6 +46,8 @@
     "cancelledNote": "赞助方已取消此赏金，你的申请已关闭。",
     "approvedClosedNote": "已获批准，但此赏金已不再接受提交。",
     "viewBounty": "查看赏金",
+    "cancelledSubmissionStatus": "已关闭：赏金已取消",
+    "cancelledSubmissionNote": "赞助方取消了该赏金，您的提交未经审核即已关闭。",
     "notAcceptedStatus": "提交未被采纳",
     "forfeitedStatus": "奖励已被没收",
     "notAcceptedNote": "赞助方审核后未采纳您的提交。此结果为最终结果。",
