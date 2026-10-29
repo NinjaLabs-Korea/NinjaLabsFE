@@ -144,8 +144,10 @@
     "errors": {
       "nameRequired": "에이전트 이름을 입력하세요.",
       "nameTooLong": "최대 {max}자까지 입력할 수 있습니다.",
-      "nameRejected": "서버가 이 이름을 거부했습니다. 더 짧거나 단순하게 바꿔 주세요.",
+      "nameRejected": "서버가 이 이름을 받지 않았습니다. 글자와 길이를 확인해 주세요.",
+      "nameInvalidChars": "이름에서 줄바꿈, 탭, 글자 방향 제어 문자나 폭이 없는 문자를 지워 주세요.",
       "descriptionTooLong": "최대 {max}자까지 입력할 수 있습니다.",
+      "descriptionInvalidChars": "설명에서 저장할 수 없는 문자(NUL 등)를 지워 주세요.",
       "descriptionRejected": "서버가 이 설명을 거부했습니다. 더 짧게 줄여 주세요."
     }
   },

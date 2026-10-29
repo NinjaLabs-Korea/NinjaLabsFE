@@ -9,6 +9,9 @@ import { endsWithStaticFileExtension } from "@/lib/static-extensions";
  *   - 한글 채움 문자(U+115F, U+1160, U+3164, U+FFA0)는 불가 (BE 정규식): 범주는 문자(Lo)지만 빈칸으로 그려져 "보이지 않는 이름"이 된다
  *   - 전각/반각 문자(U+FF00 블록)와 수학용 영숫자(U+1D400 블록)는 불가: `ａｄｍｉｎ`처럼 NFKC로 라틴이 되는 모양만 같은 문자(사칭)
  *   - 라틴 글자와 키릴/그리스 글자를 한 이름에 섞을 수 없음 (`аdmin`의 키릴 а 같은 혼합 문자 동형이의어)
+ *   - 라틴 글자와 모양이 같은 라틴 확장 문자 거부 (BE-3 규칙과 같은 범위): U+0250-02FF(IPA 확장·수정 문자), U+1D00-1DBF(음성 확장),
+ *     U+2100-218F(문자형 기호·숫자 형태), U+0131(ı), U+0237(ȷ), U+A730-A7FF(라틴 확장 D), U+AB30-AB6F(라틴 확장 E). `ɑdmin`, `ᴀdmin`, `ℓinja`류
+ *   - 라틴 글자는 한글·한자·히라가나·가타카나 글자와만 한 이름에 섞을 수 있다. 그 밖의 문자 체계(키릴, 그리스, 아르메니아 `ո` 등)와 섞이면 거부
  *   - 처음과 끝은 문자/숫자 (`.ninja`, `ninja-`, `..`, `--` 불가)
  *   - 길이 2~50 (trim 후, **코드 포인트** 기준 - BE `@Length`/validator `isLength`는 서로게이트 쌍을 한 글자로 센다)
  *   - 라우트와 충돌하는 예약어는 대소문자 무관 거부. 비교는 BE `nicknameSkeleton`과 같은 골격(NFKC + 소문자 + 키릴/그리스 동형 글자를 라틴으로)
@@ -16,7 +19,7 @@ import { endsWithStaticFileExtension } from "@/lib/static-extensions";
  *   - 정적 파일 확장자(`.js`, `.JSON` …)로 끝나면 대소문자 무관 거부 - proxy matcher가 건너뛰는 경로라 `/members/<닉네임>`이
  *     페이지가 아닌 파일 요청이 된다. 목록은 `lib/static-extensions.ts` 한 곳 (`.inj`는 허용)
  */
-export const NICKNAME = /^(?!.*[\u115F\u1160\u3164\uFFA0\p{Variation_Selector}\uFF00-\uFFEF\u{1D400}-\u{1D7FF}])(?!(?=.*[A-Za-z\u00C0-\u024F])(?=.*[\p{Script=Cyrillic}\p{Script=Greek}]))(?!.*\p{M}{4})(?!.*[_.-]\p{M})[\p{L}\p{N}][\p{L}\p{N}\p{M}_.-]*[\p{L}\p{N}\p{M}]$/u;
+export const NICKNAME = /^(?!.*[\u115F\u1160\u3164\uFFA0\p{Variation_Selector}\uFF00-\uFFEF\u{1D400}-\u{1D7FF}])(?!.*[\u0131\u0237\u0250-\u02FF\u1D00-\u1DBF\u2100-\u218F\uA730-\uA7FF\uAB30-\uAB6F])(?!(?=.*\p{Script=Latin})(?=.*[^\p{Script=Latin}\p{Script=Hangul}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\P{L}\u30FC]))(?!.*\p{M}{4})(?!.*[_.-]\p{M})[\p{L}\p{N}][\p{L}\p{N}\p{M}_.-]*[\p{L}\p{N}\p{M}]$/u;
 /**
  * Lookup shape for `/members/<nickname>`: only the edges and the character classes, none of the look-alike rules above.
  * Rows created before those rules (the BE left them untouched) keep working URLs; the BE decides what exists.
@@ -28,8 +31,10 @@ export const RESERVED_NICKNAMES: readonly string[] = ["me", "check-nickname", "a
 
 // BE NICKNAME의 선행 부정 탐색을 분리한 것: 전각/반각 블록과 수학용 영숫자 (NFKC로 라틴이 되는 사칭용 모양).
 const LOOKALIKE_BLOCKS = /[\uFF00-\uFFEF\u{1D400}-\u{1D7FF}]/u;
-// 라틴(기본 + 라틴 확장 A/B)과 키릴/그리스가 한 이름에 같이 있음.
-const MIXED_SCRIPT = /(?=.*[A-Za-z\u00C0-\u024F])(?=.*[\p{Script=Cyrillic}\p{Script=Greek}])/u;
+// BE-3과 같은 범위: 라틴 글자와 모양이 같은 라틴 확장 문자.
+const LATIN_LOOKALIKES = /[\u0131\u0237\u0250-\u02FF\u1D00-\u1DBF\u2100-\u218F\uA730-\uA7FF\uAB30-\uAB6F]/u;
+// 라틴 글자가 있고, 한글/한자/히라가나/가타카나(와 장음 부호 U+30FC) 말고 다른 문자 체계의 글자도 있음.
+const MIXED_SCRIPT = /(?=.*\p{Script=Latin})(?=.*[^\p{Script=Latin}\p{Script=Hangul}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\P{L}\u30FC])/u;
 
 /** 라틴 글자와 모양이 같은 키릴/그리스 소문자 -> 라틴 (BE `CONFUSABLE_TO_LATIN`과 같은 표). */
 const CONFUSABLE_TO_LATIN: Readonly<Record<string, string>> = {
@@ -83,7 +88,7 @@ export function validateNickname(raw: string): NicknameError | null {
   if (length > NICKNAME_MAX) return "tooLong";
   if (!ALLOWED_CHARS.test(value)) return "chars";
   // Before `reserved`: `ＡＤＭＩＮ` / `аdmin` skeleton to "admin", but the useful answer is why the characters themselves are refused.
-  if (LOOKALIKE_BLOCKS.test(value)) return "lookalike";
+  if (LOOKALIKE_BLOCKS.test(value) || LATIN_LOOKALIKES.test(value)) return "lookalike";
   if (MIXED_SCRIPT.test(value)) return "mixedScript";
   if (isReservedNickname(value)) return "reserved";
   if (BAD_MARKS.test(value)) return "marks";

@@ -2,7 +2,7 @@
  * 에이전트 등록 폼 규칙 - NinjaLabsBE `RegisterAgentDto`(@Trim @Length(1,100) name, @MaxLength(1000) description)의 거울.
  * BE 한도가 바뀌면 여기와 `src/test/agent-register-form.test.tsx`를 함께 고칠 것.
  */
-import { hasVisibleText } from "@/lib/visible-text";
+import { hasStorableBodyText, hasVisibleText, isPlainDisplayText } from "@/lib/visible-text";
 
 export { hasVisibleText };
 
@@ -10,15 +10,17 @@ export const AGENT_NAME_MAX = 100;
 export const AGENT_DESCRIPTION_MAX = 1000;
 
 /** 화면 문구는 messages `agents.form.errors.<field><Reason>` */
-export type AgentFieldError = "required" | "tooLong" | "rejected";
+export type AgentFieldError = "required" | "tooLong" | "rejected" | "invalidChars";
 export type AgentRegisterErrors = Partial<Record<"name" | "description", AgentFieldError>>;
 
 export function validateAgentRegisterForm(input: { name: string; description: string }): AgentRegisterErrors {
   const errors: AgentRegisterErrors = {};
   const name = input.name.trim();
   if (name.length === 0 || !hasVisibleText(name)) errors.name = "required";
+  else if (!isPlainDisplayText(name)) errors.name = "invalidChars";
   else if (name.length > AGENT_NAME_MAX) errors.name = "tooLong";
   if (input.description.trim().length > AGENT_DESCRIPTION_MAX) errors.description = "tooLong";
+  else if (!hasStorableBodyText(input.description)) errors.description = "invalidChars";
   return errors;
 }
 

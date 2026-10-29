@@ -144,8 +144,10 @@
     "errors": {
       "nameRequired": "请输入代理名称。",
       "nameTooLong": "最多 {max} 个字符。",
-      "nameRejected": "服务器拒绝了此名称，请缩短或简化。",
+      "nameRejected": "服务器拒绝了此名称，请检查字符和长度。",
+      "nameInvalidChars": "请从名称中删除换行符、制表符、文字方向控制字符或零宽字符。",
       "descriptionTooLong": "最多 {max} 个字符。",
+      "descriptionInvalidChars": "请从描述中删除无法保存的字符（例如 NUL）。",
       "descriptionRejected": "服务器拒绝了此描述，请缩短。"
     }
   },
