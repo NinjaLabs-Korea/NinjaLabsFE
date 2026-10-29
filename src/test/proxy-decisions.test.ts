@@ -77,6 +77,19 @@ describe("proxy: in-locale routes (mock mode)", () => {
   });
 });
 
+describe("proxy: 404 rewrite keeps a CSP on nonce routes", () => {
+  it.each(["/en/agents/xyz", "/en/account/foo", "/en/admin/zzz", "/en/auth/callback/x", "/ko/agents/00000000-0000-0000-0000-000000000000"])(
+    "%s carries the public (non-nonce) policy",
+    async (pathname) => {
+      const { status, response } = await run(pathname);
+      expect(status).toBe(404);
+      const csp = response.headers.get("content-security-policy") ?? response.headers.get("content-security-policy-report-only");
+      expect(csp).toContain("script-src 'self' 'unsafe-inline'");
+      expect(csp).not.toContain("nonce-");
+    },
+  );
+});
+
 describe("proxy: detail ids in api mode (shape only, no BE call)", () => {
   it("lets well-formed ids through and 404s malformed or reserved ones", async () => {
     runtime.mode = "api";
@@ -103,5 +116,37 @@ describe("proxy: locale cookie on the 404 rewrite", () => {
     const plain = await run("/ko/bounties");
     const notFound = await run("/ko/nope");
     expect(notFound.response.headers.getSetCookie()).toEqual(plain.response.headers.getSetCookie());
+  });
+});
+
+describe("proxy: finished users skip the Intro (hint cookie)", () => {
+  it.each([
+    ["/en", "/en/home"],
+    ["/ko/", "/ko/home"],
+    ["/zh", "/zh/home"],
+  ])("redirects %s to %s when the hint cookie is set, privately", async (pathname, target) => {
+    const result = await run(pathname, { cookie: "ninja_home=1" });
+    expect(result.status).toBe(307);
+    expect(result.location).toBe(target);
+    expect(result.response.headers.get("cache-control")).toBe("private, no-store");
+  });
+
+  it("leaves everything else alone: no cookie, another value, the about page, the home itself and deeper pages", async () => {
+    for (const [pathname, cookie] of [["/en", undefined], ["/en", "ninja_home=0"], ["/en", "ninja_home="], ["/en/about", "ninja_home=1"], ["/en/home", "ninja_home=1"], ["/ko/bounties", "ninja_home=1"], ["/xx", "ninja_home=1"]] as const) {
+      const result = await run(pathname, cookie ? { cookie } : {});
+      expect(result.location === null || !result.location.endsWith("/home"), `${pathname} ${cookie}`).toBe(true);
+    }
+  });
+
+  it("serves the new public pages in api mode too", async () => {
+    runtime.mode = "api";
+    for (const pathname of ["/en/about", "/ko/recruit", "/zh/home", "/en/admin/recruitment"]) expect((await run(pathname)).status, pathname).toBe(200);
+  });
+});
+
+describe("proxy: hreflang has one source", () => {
+  it.each(["/ko/notices", "/en", "/zh/bounties"])("%s carries no next-intl Link alternate header (the head and the sitemap own hreflang)", async (pathname) => {
+    const { response } = await run(pathname);
+    expect(response.headers.get("link")).toBeNull();
   });
 });

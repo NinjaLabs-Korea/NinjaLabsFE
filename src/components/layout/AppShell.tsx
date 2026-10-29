@@ -4,6 +4,7 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
 import { FoundationProvider } from "@/components/auth/FoundationProvider";
 import { FlashToast } from "@/components/layout/FlashToast";
+import { HomeHint } from "@/components/layout/HomeHint";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { shellNamespaces } from "@/components/layout/PageMessages";
@@ -54,6 +55,7 @@ export async function AppShell({ locale, children }: { locale: Locale; children:
             <main className="flex-1" id="main-content">{children}</main>
             <Footer />
             <FlashToast />
+            <HomeHint />
           </FoundationProvider>
         </NextIntlClientProvider>
       </body>

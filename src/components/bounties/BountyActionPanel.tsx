@@ -6,6 +6,7 @@ import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
+import { signInHref } from "@/lib/return-path";
 import { APPLICATION_MESSAGE_MAX, COMMIT_SHA_MAX, SUBMISSION_DESCRIPTION_MAX } from "@/lib/input-limits";
 import { payoutBadge } from "@/lib/payout";
 import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
@@ -42,7 +43,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function StatusPanel({ title, body, note, tone = "muted", feedback, link, headingRef, badge }: {
+function StatusPanel({ title, body, note, tone = "muted", feedback, link, headingRef, badge, code }: {
   title: string;
   body: string;
   /** Reviewer comment shown under the body. */
@@ -54,6 +55,8 @@ function StatusPanel({ title, body, note, tone = "muted", feedback, link, headin
   headingRef?: Ref<HTMLHeadingElement>;
   /** Small status badge under the body (payout status). */
   badge?: { variant: "warning" | "success"; label: string } | null;
+  /** Agent API endpoint the next step goes through (agent revision requests). */
+  code?: string;
 }) {
   const bodyClass = tone === "danger" ? "text-danger" : tone === "success" ? "text-success" : "text-ink-muted";
   return (
@@ -62,6 +65,7 @@ function StatusPanel({ title, body, note, tone = "muted", feedback, link, headin
       <p className={`mt-2 text-sm ${bodyClass} ${REVIEW_TEXT_CLASS}`}>{body}</p>
       {note ? <p className={`mt-2 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{note}</p> : null}
       {badge ? <div className="mt-3"><Badge variant={badge.variant}>{badge.label}</Badge></div> : null}
+      {code ? <div className="mt-4 rounded-tile bg-surface-subtle p-4 text-sm text-ink-secondary"><code className="break-all">{code}</code></div> : null}
       {link ? <Link className={outlineLinkClass} href={link.href}>{link.label}</Link> : null}
       {feedback ? <p className="mt-3 text-sm text-success">{feedback}</p> : null}
     </section>
@@ -69,8 +73,10 @@ function StatusPanel({ title, body, note, tone = "muted", feedback, link, headin
 }
 
 /** Figma 15/15v public (signed-out) state: heading + LOGIN REQUIRED badge, "Sign in first", and a disabled preview of the form. */
-function SignedOutPanel({ applicationRequired }: { applicationRequired: boolean }) {
+function SignedOutPanel({ applicationRequired, bountyId }: { applicationRequired: boolean; bountyId: string }) {
   const t = useTranslations("bounties.action");
+  // After Google sign-in and onboarding the visitor comes back to this bounty (`lib/return-path.ts`).
+  const signIn = signInHref(`/bounties/${bountyId}`);
   return (
     <section className={panelClass}>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -84,25 +90,25 @@ function SignedOutPanel({ applicationRequired }: { applicationRequired: boolean 
         {applicationRequired ? (
           <Link className={outlineButtonClass} href="/bounties/apply">{t("viewIntakeRules")}</Link>
         ) : (
-          <Link className={outlineButtonClass} href="/signup">{t("signInFirst")}</Link>
+          <Link className={outlineButtonClass} href={signIn}>{t("signInFirst")}</Link>
         )}
       </div>
       {applicationRequired ? (
         <fieldset className="mt-4 space-y-3" disabled>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <input aria-label={t("portfolioUrl")} className={inputClass} placeholder={t("portfolioUrl")} type="url" />
             <input aria-label={t("availability")} className={inputClass} placeholder={t("availability")} type="text" />
           </div>
           <textarea aria-label={t("applyMessage")} className="min-h-28 w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder" placeholder={t("applyMessage")} />
           <div className="flex flex-wrap gap-3">
-            <Link className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href="/signup">{t("apply")}</Link>
+            <Link className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href={signIn}>{t("apply")}</Link>
             <span className="rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong opacity-60">{t("submitDisabled")}</span>
           </div>
         </fieldset>
       ) : (
         <fieldset className="mt-4 flex flex-col gap-3 sm:flex-row" disabled>
           <input aria-label={t("submissionUrl")} className={inputClass} placeholder={t("submissionUrl")} type="url" />
-          <Link className="shrink-0 rounded-control bg-primary px-5 py-3 text-center text-sm font-semibold text-on-inverse" href="/signup">{t("submit")}</Link>
+          <Link className="shrink-0 rounded-control bg-primary px-5 py-3 text-center text-sm font-semibold text-on-inverse" href={signIn}>{t("submit")}</Link>
         </fieldset>
       )}
     </section>
@@ -123,6 +129,8 @@ type BountyActionPanelProps = {
   applicationClosed?: boolean;
   /** `Bounty.deadlinePassed`: closed only by the deadline, so a requested revision can still be resubmitted. */
   deadlinePassed?: boolean;
+  /** `Bounty.completed`: closed because the work was finished (BE COMPLETED); with `deadlinePassed` unset, a `closed` bounty is a cancelled one. */
+  completed?: boolean;
 };
 
 export function BountyActionPanel(props: BountyActionPanelProps) {
@@ -131,17 +139,25 @@ export function BountyActionPanel(props: BountyActionPanelProps) {
   const [announcement, setAnnouncement] = useState("");
   // The body keeps "I just applied/submitted" flags and feedback in state. They describe one account, so the body is
   // keyed by user id: a different account on this page (switched in another tab) starts from the server rows only.
-  const accountKey = useAuthSnapshot().user?.id ?? "";
+  const auth = useAuthSnapshot();
+  // The user this page last saw signed in. When the session ends under an open form (refresh rejected), the key must not
+  // change to "": that would remount the body and wipe what the person typed.
+  const [lastUserId, setLastUserId] = useState<string | null>(null);
+  if (auth.user && auth.user.id !== lastUserId) setLastUserId(auth.user.id);
+  const sessionEnded = auth.status === "signed-out" && lastUserId !== null;
+  const accountKey = auth.user?.id ?? lastUserId ?? "";
   return (
     <>
       <p aria-live="polite" className="sr-only">{announcement}</p>
-      <BountyActionPanelBody key={accountKey} {...props} announce={setAnnouncement} />
+      <BountyActionPanelBody key={accountKey} {...props} announce={setAnnouncement} sessionEnded={sessionEnded} />
     </>
   );
 }
 
-function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, deadlinePassed, status, submissionMode, announce }: BountyActionPanelProps & {
+function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, deadlinePassed, completed, status, submissionMode, announce, sessionEnded }: BountyActionPanelProps & {
   announce: (text: string) => void;
+  /** The session ended after this page saw a signed-in user: keep an open form (and its text) and say so. */
+  sessionEnded: boolean;
 }) {
   const t = useTranslations("bounties.action");
   const tError = useTranslations("bounties.action.errors");
@@ -151,6 +167,8 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const applicationsQuery = useAccountQuery(applicationRequired ? accountApi.getApplications : noApplications);
   const submissionsQuery = useAccountQuery(accountApi.getSubmissions);
   const [busy, setBusy] = useState(false);
+  // Synchronous in-flight guard: several submit events can land in one tick (automation, assistive tools) before React re-renders `busy`.
+  const inFlight = useRef(false);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [applied, setApplied] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -175,6 +193,8 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (inFlight.current) return;
+    inFlight.current = true;
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     setBusy(true);
@@ -196,12 +216,15 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       setFeedback({ kind: "error", text: errorText(error, tError) });
       if (isStaleRowsError(error)) refreshRows();
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   };
 
   const apply = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (inFlight.current) return;
+    inFlight.current = true;
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     setBusy(true);
@@ -219,26 +242,44 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       setFeedback({ kind: "error", text: errorText(error, tError) });
       if (isStaleRowsError(error)) refreshRows();
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   };
 
   // The rule for which section to show lives in lib/bounty-action-state.ts (documented by src/test/bounty-action-state.test.ts).
-  const view = deriveActionView({
-    bountyId, applicationRequired, applicationClosed, deadlinePassed, status, submissionMode,
+  const derivedView = deriveActionView({
+    bountyId, applicationRequired, applicationClosed, deadlinePassed, completed, status, submissionMode,
     auth: auth.status,
     applications: applicationsQuery,
     submissions: submissionsQuery,
     applied, submitted,
   });
 
+  // Remember the last form on screen so a session that ends under it does not swap the form (and its typed text) for the
+  // signed-out panel without a word.
+  const formSignature = derivedView.kind === "applyForm" || derivedView.kind === "submitForm" ? JSON.stringify(derivedView) : null;
+  const [heldForm, setHeldForm] = useState<{ signature: string; view: typeof derivedView } | null>(null);
+  if (formSignature) {
+    if (heldForm?.signature !== formSignature) setHeldForm({ signature: formSignature, view: derivedView });
+  } else if (heldForm && derivedView.kind !== "signedOut" && derivedView.kind !== "checkingSession") {
+    setHeldForm(null);
+  }
+  const view = sessionEnded && derivedView.kind === "signedOut" && heldForm ? heldForm.view : derivedView;
+  const sessionEndedLine = sessionEnded ? (
+    <p className="mt-3 text-sm text-danger" role="alert">
+      {t("sessionEnded")}{" "}
+      <Link className="font-semibold underline" href={signInHref(`/bounties/${bountyId}`)} rel="noopener" target="_blank">{t("signInAgain")}</Link>
+    </p>
+  ) : null;
+
   switch (view.kind) {
     case "closed":
       return (
         <StatusPanel
-          body={view.reason === "reviewing" ? t("reviewingBody") : t("closedBody")}
+          body={view.reason === "reviewing" ? t("reviewingBody") : view.reason === "applications" ? t("applicationsClosedBody") : view.reason === "cancelled" ? t("cancelledBody") : t("closedBody")}
           link={{ href: "/bounties", label: t("browseOther") }}
-          title={t("closedHeading")}
+          title={view.reason === "applications" ? t("applicationsClosedHeading") : t("closedHeading")}
         />
       );
     case "agentMode":
@@ -255,19 +296,36 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
     case "checkingSession":
       return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingSession")}</p></section>;
     case "signedOut":
-      return <SignedOutPanel applicationRequired={applicationRequired} />;
+      return <SignedOutPanel applicationRequired={applicationRequired} bountyId={bountyId} />;
     case "checkingStatus":
       return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingStatus")}</p></section>;
     case "statusUnavailable":
       return <section className={panelClass}><p className="text-sm text-danger">{t("statusUnavailable")}</p></section>;
-    case "agentRow":
-      return (
-        <StatusPanel
-          body={view.row === "submission" ? t("agentSubmittedBody", { name: view.agentName }) : t("agentAppliedBody", { name: view.agentName })}
-          link={{ href: "/agents", label: t("manageAgents") }}
-          title={t("agentRowHeading")}
-        />
-      );
+    case "agentRow": {
+      const { agentName, state } = view;
+      const payout = view.payout ? payoutBadge(view.payout, { showPaid: true }) : null;
+      const review = view.review;
+      const link = { href: "/agents", label: t("manageAgents") };
+      const submissionsEndpoint = `POST /agent-api/v1/bounties/${bountyId}/submissions`;
+      switch (state) {
+        case "applied":
+          return <StatusPanel body={t("agentAppliedBody", { name: agentName })} link={link} title={t("agentRowHeading")} />;
+        case "applicationRejected":
+          return <StatusPanel body={t("agentApplicationRejectedBody", { name: agentName })} link={link} title={t("agentRowHeading")} tone="danger" />;
+        case "applicationApproved":
+          return <StatusPanel body={t("agentApplicationApprovedBody", { name: agentName })} code={submissionsEndpoint} link={link} title={t("agentRowHeading")} />;
+        case "revisionRequested":
+          return <StatusPanel body={t("agentRevisionBody", { name: agentName })} code={submissionsEndpoint} link={link} note={review ? t("reviewerComment", { comment: review.text }) : undefined} title={t("agentRevisionHeading")} tone="danger" />;
+        case "approved":
+          return <StatusPanel badge={payout ? { variant: payout.variant, label: t(payout.key) } : null} body={t("agentApprovedBody", { name: agentName })} link={link} title={t("agentApprovedHeading")} tone="success" />;
+        case "rejected":
+          return review?.forfeited
+            ? <StatusPanel body={t("agentForfeitedBody", { name: agentName, reason: review.text })} link={link} title={t("submissionForfeitedHeading")} tone="danger" />
+            : <StatusPanel body={t("agentRejectedBody", { name: agentName })} link={link} note={review ? t("reviewerComment", { comment: review.text }) : undefined} title={t("submissionRejectedHeading")} tone="danger" />;
+        default:
+          return <StatusPanel body={t("agentSubmittedBody", { name: agentName })} link={link} title={t("agentRowHeading")} />;
+      }
+    }
     case "applyForm":
       return (
         <section className={panelClass}>
@@ -279,8 +337,9 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
             <Field label={t("applyMessage")}>
               <textarea className={`min-h-28 ${textareaClass}`} maxLength={APPLICATION_MESSAGE_MAX} name="message" placeholder={t("applyMessage")} required {...invalidProps} />
             </Field>
-            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy} type="submit">{busy ? t("applying") : t("apply")}</button>
+            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy || sessionEnded} type="submit">{busy ? t("applying") : t("apply")}</button>
           </form>
+          {sessionEndedLine}
           {errorLine}
         </section>
       );
@@ -325,8 +384,9 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
             <Field label={t("submissionDescription")}>
               <textarea className={`min-h-24 ${textareaClass}`} maxLength={SUBMISSION_DESCRIPTION_MAX} name="description" placeholder={t("submissionDescription")} required {...invalidProps} />
             </Field>
-            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy} type="submit">{busy ? t("submitting") : actionLabel}</button>
+            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy || sessionEnded} type="submit">{busy ? t("submitting") : actionLabel}</button>
           </form>
+          {sessionEndedLine}
           {feedback?.kind === "success" ? <p className="mt-3 text-sm text-success">{feedback.text}</p> : errorLine}
         </section>
       );

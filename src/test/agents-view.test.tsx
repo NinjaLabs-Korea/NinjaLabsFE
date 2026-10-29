@@ -42,9 +42,11 @@ describe("describeAgentKey", () => {
     expect(describeAgentKey({ keyStatus: "REVOKED", keyExpiresAt: days(30) }, now)).toEqual({ kind: "revoked" });
     expect(describeAgentKey({ keyStatus: "EXPIRED", keyExpiresAt: days(-1) }, now)).toEqual({ kind: "expired" });
     expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: days(-1) }, now)).toEqual({ kind: "expired" });
-    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: days(13) }, now)).toEqual({ kind: "active", daysLeft: 13, expiringSoon: true });
-    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: days(14) }, now)).toEqual({ kind: "active", daysLeft: 14, expiringSoon: false });
-    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: null }, now)).toEqual({ kind: "active", daysLeft: null, expiringSoon: false });
+    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: days(13) }, now)).toEqual({ kind: "active", daysLeft: 13, expiringSoon: true, withinDay: false });
+    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: days(14) }, now)).toEqual({ kind: "active", daysLeft: 14, expiringSoon: false, withinDay: false });
+    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: null }, now)).toEqual({ kind: "active", daysLeft: null, expiringSoon: false, withinDay: false });
+    // 3 hours left rounds up to "1 day": it must be flagged so the copy says "less than a day".
+    expect(describeAgentKey({ keyStatus: "ACTIVE", keyExpiresAt: new Date(now + 3 * 3_600_000).toISOString() }, now)).toEqual({ kind: "active", daysLeft: 1, expiringSoon: true, withinDay: true });
   });
 });
 
@@ -111,6 +113,18 @@ describe("AgentsView", () => {
     expect(screen.queryByText("Loading your account…")).toBeNull();
   });
 
+  it.each([
+    ["AGENT_NOT_ACTIVE", 409, "Only active agents can rotate keys."],
+    ["AGENT_NOT_FOUND", 404, "This agent no longer exists. The list was refreshed."],
+  ])("re-reads the list when rotating answers %s, so the card does not keep offering a key that cannot rotate", async (code, status, copy) => {
+    const getAgents = vi.fn(apiClient.getAgents);
+    Object.assign(apiClient, { getAgents, rotateAgentKey: vi.fn(async () => { throw new ApiHttpError(status, code); }) });
+    renderWithIntl(<AgentsView />);
+    fireEvent.click((await screen.findAllByRole("button", { name: "Rotate key" }))[0]);
+    expect(await screen.findByText(copy)).toBeTruthy();
+    await waitFor(() => expect(getAgents.mock.calls.length).toBeGreaterThanOrEqual(2));
+  });
+
   it("rotates a key and reveals the new key once in a copyable field, announcing only that it is ready", async () => {
     renderWithIntl(<AgentsView />);
     fireEvent.click((await screen.findAllByRole("button", { name: "Rotate key" }))[0]);
@@ -121,7 +135,7 @@ describe("AgentsView", () => {
     expect(screen.getByRole("button", { name: "Copy" })).toBeTruthy();
     // The live region never carries the secret.
     const statuses = screen.getAllByRole("status").map((element) => element.textContent ?? "");
-    expect(statuses).toContain("API key ready — copy it now.");
+    expect(statuses).toContain("API key ready, copy it now.");
     expect(statuses.some((text) => text.includes("nl_preview_rotated_key"))).toBe(false);
     // The list re-reads /agents/me: the masked key changes while the raw key is never part of the row.
     await waitFor(() => expect(screen.getByText("nl_live_····…new1")).toBeTruthy());

@@ -1,7 +1,9 @@
+import { hasLocale } from "next-intl";
 import createMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
 import { routing } from "./i18n/routing";
 import { createNonce, contentSecurityPolicy, cspMode, CSP_HEADER_NAME, isNonceRoute } from "./lib/csp";
+import { HOME_HINT_COOKIE, HOME_PATH } from "./lib/auth-route";
 import { detailMayExist, resolveDetailRoute } from "./lib/detail-id";
 import { inLocaleMiss, NOT_FOUND_SEGMENT } from "./lib/locale-routes";
 
@@ -10,7 +12,7 @@ import { inLocaleMiss, NOT_FOUND_SEGMENT } from "./lib/locale-routes";
 const handleLocale = createMiddleware(routing);
 
 /**
- * Nonce routes (`lib/csp.ts NONCE_ROUTE_PATTERNS`: account, admin, agents/register, auth/callback) render per request with
+ * Nonce routes (`lib/csp.ts NONCE_ROUTE_PATTERNS`: account, admin, agents (list + register: both can show a one-time API key), auth/callback) render per request with
  * a fresh nonce CSP. Next reads the nonce from the CSP header of the REQUEST (`getScriptNonceFromHeader`) and stamps it on
  * its own scripts, so the policy goes on the forwarded request (next-intl copies `request.headers` into its
  * `NextResponse.next({ request })`), with `x-nonce` for server code, and on the response for the browser.
@@ -28,6 +30,24 @@ function withNonce(request: NextRequest) {
   return { header, request: new NextRequest(request, { headers }) };
 }
 
+/** The Intro is `/<locale>` (or `/<locale>/`): the only path the "finished user" hint redirects. */
+const LOCALE_ROOT = /^\/([^/]+)\/?$/;
+
+/**
+ * A returning finished user (hint cookie `ninja_home`, written by `components/layout/HomeHint`) who opens the Intro goes to
+ * `/<locale>/home` before anything renders: the Intro stays a static page and never flashes. The hint is not authorization;
+ * `/home` re-checks the session. Returns the redirect, or null when the request is not an Intro visit with a hint.
+ */
+function homeRedirect(request: NextRequest): NextResponse | null {
+  if (request.cookies.get(HOME_HINT_COOKIE)?.value !== "1") return null;
+  const locale = LOCALE_ROOT.exec(request.nextUrl.pathname)?.[1];
+  if (!locale || !hasLocale(routing.locales, locale)) return null;
+  const redirect = NextResponse.redirect(new URL(`/${locale}${HOME_PATH}`, request.url));
+  // Per-visitor answer: a shared cache must not hand it to a visitor without the hint.
+  redirect.headers.set("cache-control", "private, no-store");
+  return redirect;
+}
+
 /**
  * `/<locale>/...` paths that match no route (`lib/locale-routes.ts`) or name a detail id that cannot exist
  * (`lib/detail-id.ts detailMayExist`, shape-based, no BE round trip) are rewritten with status 404 to the STATIC
@@ -42,6 +62,8 @@ function withNonce(request: NextRequest) {
  */
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const home = homeRedirect(request);
+  if (home) return home;
   const nonced = isNonceRoute(pathname) ? withNonce(request) : null;
   const response = handleLocale(nonced?.request ?? request);
   if (nonced) response.headers.set(nonced.header.key, nonced.header.value);
@@ -51,6 +73,13 @@ export default async function proxy(request: NextRequest) {
 
   const notFound = NextResponse.rewrite(new URL(`/${locale}/${NOT_FOUND_SEGMENT}`, request.url), { status: 404 });
   for (const cookie of response.headers.getSetCookie()) notFound.headers.append("set-cookie", cookie);
+  // The shared CSP from `next.config.ts headers()` skips nonce-route paths (the proxy was meant to send theirs), but this
+  // rewrite lands on the STATIC, cacheable page-not-found page: it cannot carry a per-request nonce, and it still runs the
+  // auth provider (session UI, in-memory access token). Give it the public policy instead of none.
+  if (nonced) {
+    const mode = cspMode();
+    notFound.headers.set(CSP_HEADER_NAME[mode], contentSecurityPolicy(mode));
+  }
   return notFound;
 }
 

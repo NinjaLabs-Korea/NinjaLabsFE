@@ -30,10 +30,10 @@ describe("GET /admin/bounties row mapping", () => {
     ["DRAFT", "draft"],
     ["FUNDING_PENDING", "funding"],
     ["OPEN", "active"],
-    ["SUBMISSION_CLOSED", "reviewing"],
+    ["SUBMISSION_CLOSED", "submissionClosed"],
     ["IN_REVIEW", "reviewing"],
-    ["COMPLETED", "closed"],
-    ["CANCELLED", "closed"],
+    ["COMPLETED", "completed"],
+    ["CANCELLED", "cancelled"],
   ])("BE status %s -> %s", async (status, expected) => {
     const { http } = createHttp([bountyRow({ status })]);
     const [row] = await createAdminApi(http).getAdminBounties();
@@ -179,8 +179,8 @@ describe("admin notice and highlight reads", () => {
       { id: "n2", title: "T", body: "B", category: "WHATEVER", status: "ARCHIVED", published_at: null, thumbnail_url: "/media/x", external_url: null },
     ]);
     expect(await createAdminApi(http).getAdminPosts()).toEqual([
-      { slug: "n1", title: "T", category: "Recruitment", status: "published", publishedAt: "2026-07-01", bodyMarkdown: "B", thumbnail: null, externalUrl: "https://x.y" },
-      { slug: "n2", title: "T", category: "Other", status: "draft", publishedAt: null, bodyMarkdown: "B", thumbnail: "/media/x", externalUrl: null },
+      { slug: "n1", title: "T", category: "Recruitment", status: "published", publishedAt: "2026-07-01", bodyMarkdown: "B", thumbnail: null, externalUrl: "https://x.y", eventDate: null },
+      { slug: "n2", title: "T", category: "Other", status: "draft", publishedAt: null, bodyMarkdown: "B", thumbnail: "/media/x", externalUrl: null, eventDate: null },
     ]);
   });
 

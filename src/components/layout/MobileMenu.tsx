@@ -36,7 +36,7 @@ export function MobileMenu({ label, children }: { label: string; children: React
 
   return (
     <details
-      className="relative md:hidden"
+      className="relative lg:hidden"
       onClick={closeOnLinkClick}
       onToggle={(event: SyntheticEvent<HTMLDetailsElement>) => setOpen(event.currentTarget.open)}
       ref={detailsRef}

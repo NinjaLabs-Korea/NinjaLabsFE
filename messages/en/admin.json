@@ -17,6 +17,7 @@
     "deleteDescription": "This removes the record from the platform. Public pages update immediately.",
     "deleteCallout": "This cannot be undone.",
     "urlHint": "https://… or /media/… path",
+    "httpUrlHint": "https://… (http or https only)",
     "urlInvalid": "Enter an http(s) URL (or an allowed site path).",
     "orderInvalid": "Enter a whole number from 0 up.",
     "required": "This field is required.",
@@ -35,9 +36,11 @@
       "NOTICE_NOT_FOUND": "This notice no longer exists (another admin may have deleted it). The list was refreshed.",
       "HIGHLIGHT_NOT_FOUND": "This highlight no longer exists (another admin may have deleted it). The list was refreshed.",
       "USER_NOT_FOUND": "This user no longer exists or has withdrawn. Reload the page to refresh the list.",
+      "PROFILE_REQUIRED": "This user has not finished signing up (profile not saved yet), so a member role cannot be assigned. Try again after they complete onboarding.",
       "USDC_EVM_CONTRACT_NOT_CONFIGURED": "The server has no USDC contract address configured, so a USDC reward cannot be created. Ask the operator to set it, or use INJ.",
       "INJECTIVE_EVM_CHAIN_NOT_CONFIGURED": "The server has no Injective EVM chain ID configured, so a USDC reward cannot be created. Ask the operator to set it, or use INJ.",
       "DEADLINE_IN_PAST": "The deadline cannot be moved into the past. Pick a future date and time, or keep the saved deadline.",
+      "MAX_WINNERS_BELOW_APPROVED": "The maximum number of winners cannot be lower than the number of submissions already approved.",
       "MEDIA_FILE_TOO_LARGE": "The image is larger than 5 MB. Choose a smaller file and try again.",
       "MEDIA_FILE_TYPE_UNSUPPORTED": "Only PNG, JPEG and WebP images can be uploaded. Choose a different file and try again.",
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
@@ -53,14 +56,17 @@
     "notices": "Notices",
     "operations": "Operations",
     "nftJobs": "NFT Jobs",
-    "audit": "Audit log"
+    "audit": "Audit log",
+    "recruitment": "Recruitment"
   },
   "gate": {
     "checking": "Checking admin access…",
     "signInRequired": "Admin sign-in required",
     "signIn": "Sign in",
     "accessOnly": "Admin access only",
-    "noPermission": "Your account does not have administrator permission."
+    "noPermission": "Your account does not have administrator permission.",
+    "sessionExpired": "Your session has expired. What you typed is kept on this page. Sign in again in a new tab, then come back here and save.",
+    "signInAgain": "Sign in again"
   },
   "users": {
     "metaTitle": "Admin · Users | Ninja Labs",
@@ -149,8 +155,10 @@
       "draft": "Draft",
       "funding": "Funding",
       "active": "Active",
-      "reviewing": "Reviewing",
-      "closed": "Closed"
+      "submissionClosed": "Submissions closed",
+      "reviewing": "In review",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
     },
     "tags": {
       "Dev": "Dev",
@@ -174,6 +182,8 @@
       "rewardCurrency": "Reward token",
       "rewardAmount": "Reward amount",
       "amountPlaceholder": "500",
+      "maxWinners": "Max winners",
+      "maxWinnersHint": "How many submissions can be approved and paid. It cannot go below the number already approved.",
       "intake": "Application intake",
       "intakeHint": "Allow submissions from the public bounty page.",
       "submissionMode": "Submission mode",
@@ -182,11 +192,9 @@
       "tags": "Field tags",
       "description": "Description (markdown)",
       "descriptionPlaceholder": "Describe requirements, deliverables, and sponsor context.",
-      "submissionGuide": "Submission guide / evaluation criteria",
-      "submissionGuidePlaceholder": "Explain what reviewers will check before reward release.",
-      "deliverables": "Deliverables",
-      "deliverablesPlaceholder": "One deliverable per line",
-      "deliverablesHint": "One item per line; saved as the public requirements list.",
+      "deliverables": "Deliverables and submission guide",
+      "deliverablesPlaceholder": "One deliverable per line (start with - for a list). Add the submission guide and what reviewers will check as normal text.",
+      "deliverablesHint": "Both are saved together as the public requirements text: bullet lines also appear as the deliverables list.",
       "reviewProcess": "Review process",
       "reviewProcessPlaceholder": "Ninja Labs triage plus sponsor approval",
       "create": "Create",
@@ -198,12 +206,13 @@
         "deadlineInvalid": "Enter a valid date and time.",
         "deadlinePast": "Choose a deadline in the future.",
         "amountInvalid": "Enter an amount greater than 0 with no more decimals than the token supports (USDC 6, INJ 18), or leave it empty for a draft.",
-        "deliverablesRequired": "Add at least one deliverable or a submission guide.",
+        "deliverablesRequired": "Add the deliverables or a submission guide.",
+        "maxWinnersInvalid": "Enter a whole number of 1 or more.",
         "titleTooLong": "Use at most 200 characters.",
         "sponsorTooLong": "Use at most 100 characters."
       },
       "rewardLockedHint": "Reward is fixed once the bounty exists; it cannot be changed here.",
-      "rewardNote": "On creation, the reward token is locked. Reward flow = lock → release → transfer, with no swap."
+      "rewardNote": "After you create it, the sponsor sends the reward to the multisig wallet and an admin confirms the deposit in Operations. Only then can the bounty open. The reward cannot be changed once the bounty exists."
     },
     "toast": {
       "loadFailedTitle": "Bounties unavailable",
@@ -292,7 +301,8 @@
       "category": "Category",
       "status": "Status",
       "published": "Published",
-      "action": "Action"
+      "action": "Action",
+      "eventDate": "Event date"
     },
     "categories": {
       "ninjaLabs": "Ninja Labs",
@@ -317,8 +327,11 @@
       "externalLink": "External link (optional)",
       "body": "Body (markdown)",
       "bodyPlaceholder": "Write the notice body, summary links, and sponsor context.",
+      "bodyHint": "Headings, bold, lists and links are shown. Images, tables and raw HTML are not: they are dropped from the page, so use the thumbnail for a poster or picture.",
       "status": "Status",
-      "externalLinkPlaceholder": "https://injective.com/..."
+      "externalLinkPlaceholder": "https://injective.com/...",
+      "eventDate": "Event date (optional)",
+      "eventDateHint": "The day the event or activity took place. Past activities are listed by this date."
     },
     "toast": {
       "loadFailedTitle": "Notices unavailable",
@@ -337,6 +350,8 @@
     "description": "Confirm reward deposits, review applications and submissions, run payouts and move bounties through their lifecycle.",
     "adminOnlyBadge": "ADMIN ONLY",
     "pickBounty": "Bounty",
+    "pickBountyPlaceholder": "Select a bounty",
+    "bountyNotFound": "No bounty with the id “{id}” was found (it may have been deleted). Pick one from the list.",
     "noBounties": "No bounties yet. Create one under Bounty Mgmt first.",
     "loading": "Loading operations…",
     "loadFailed": "The operations data could not be loaded.",
@@ -404,7 +419,7 @@
     "lifecycle": {
       "eyebrow": "Lifecycle",
       "title": "Status transitions",
-      "none": "No further transitions — this bounty is finished.",
+      "none": "No further transitions, this bounty is finished.",
       "to": "→ {status}",
       "actions": {
         "FUNDING_PENDING": "Mark funding pending",
@@ -486,7 +501,7 @@
       "repoLink": "Repository",
       "history": "Review history ({count})",
       "historyItem": "{decision} · rev {revision} · {date}",
-      "noWallet": "No linked wallet — a payout cannot be requested",
+      "noWallet": "No linked wallet, a payout cannot be requested",
       "decisions": {
         "START_REVIEW": "Start review",
         "REQUEST_REVISION": "Request revision",
@@ -538,7 +553,9 @@
       "txHash": "Transaction hash",
       "txHashInvalid": "Enter a 32-byte hex transaction hash (64 hex characters, optional 0x).",
       "amountInvalid": "Enter a positive {symbol} amount with no more decimals than the token supports.",
+      "amountInvalidBaseUnits": "Enter a positive whole number of {symbol} base units.",
       "amountHint": "Token units (e.g. 12.5); converted to base units before sending.",
+      "amountHintBaseUnits": "This token is not known here, so enter the amount in base units (a whole number, e.g. 25000000).",
       "noteOptional": "Note (optional)",
       "commentOptional": "Comment (optional)",
       "commentRequired": "Comment (required)"
@@ -614,7 +631,7 @@
       "PROCESSING": "Processing"
     },
     "hints": {
-      "FAILED": "Jobs that failed all 5 attempts. Fix the cause (gas, contract, wallet), then retry — the worker picks them up within a minute.",
+      "FAILED": "Jobs that failed all 5 attempts. Fix the cause (gas, contract, wallet), then retry, the worker picks them up within a minute.",
       "PENDING": "Queued or waiting for their next attempt (failed attempts retry every 10 minutes).",
       "PROCESSING": "Being minted right now. Jobs stuck here for 15 minutes are requeued automatically."
     },
@@ -637,6 +654,14 @@
     "nftTypes": {
       "NINJA_PARENT": "Ninja NFT",
       "BOUNTY_COMPLETION_CHILD": "Completion NFT"
+    },
+    "nftStatuses": {
+      "PENDING": "Pending",
+      "MINTING": "Minting",
+      "MINTED": "Minted",
+      "ATTACHING": "Attaching",
+      "ATTACHED": "Attached",
+      "FAILED": "Failed"
     },
     "nftLine": "{type} · NFT {status}",
     "retry": "Retry",
@@ -676,6 +701,45 @@
       "agent": "Agent",
       "unknown": "Unknown"
     },
+    "actions": {
+      "ADMIN_GRANTED": "Admin granted",
+      "ADMIN_REVOKED": "Admin revoked",
+      "AGENT_VERIFIED": "Agent verified",
+      "AGENT_KEY_ROTATED": "Agent key rotated",
+      "AGENT_REVOKED": "Agent revoked",
+      "APPLICATION_APPROVED": "Application approved",
+      "APPLICATION_REAPPLIED": "Re-applied after withdrawal",
+      "BOUNTY_CREATED": "Bounty created",
+      "BOUNTY_UPDATED": "Bounty updated",
+      "BOUNTY_CANCELLED": "Bounty cancelled",
+      "BOUNTY_DELETED": "Bounty deleted",
+      "COHORT_CREATED": "Cohort created",
+      "COHORT_UPDATED": "Cohort updated",
+      "COHORT_DELETED": "Cohort deleted",
+      "COHORT_APPLICATION_REJECTED": "Cohort application rejected",
+      "HIGHLIGHT_CREATED": "Highlight created",
+      "HIGHLIGHT_UPDATED": "Highlight updated",
+      "HIGHLIGHT_DELETED": "Highlight deleted",
+      "NFT_JOB_RETRIED": "NFT job retried",
+      "NFT_JOB_REQUEUED": "NFT job requeued (script)",
+      "NOTICE_CREATED": "Notice created",
+      "NOTICE_UPDATED": "Notice updated",
+      "NOTICE_PUBLISHED": "Notice published",
+      "NOTICE_DELETED": "Notice deleted",
+      "PAYOUT_REQUESTED": "Payout requested",
+      "PAYOUT_APPROVED": "Payout approved",
+      "PAYOUT_SELF_APPROVED": "Payout approved by its requester",
+      "PAYOUT_CORRECTED_MANUAL": "Payout corrected by hand",
+      "PAYOUT_CANCELLED_MANUAL": "Payout cancelled by hand",
+      "REWARD_DEPOSIT_CONFIRMED": "Reward deposit confirmed",
+      "REWARD_REFUNDED": "Reward refund recorded",
+      "SUBMISSION_AWARD_FORFEITED": "Award forfeited",
+      "USER_MEMBER_GRANTED": "Member role assigned",
+      "USER_MEMBER_REVOKED": "Member role removed",
+      "USER_NICKNAME_CHANGED": "Nickname changed",
+      "USER_WITHDRAWN": "Account deleted",
+      "SYSTEM": "System"
+    },
     "empty": "No audit log entries match.",
     "pagination": "Audit log pages",
     "previous": "Previous",
@@ -685,6 +749,189 @@
     "toast": {
       "loadFailedTitle": "Audit log unavailable",
       "loadFailedDescription": "Could not load the audit log."
+    }
+  },
+  "recruitment": {
+    "metaTitle": "Recruitment | Ninja Labs Admin",
+    "metaDescription": "Create cohorts, open and close recruitment, and review applications.",
+    "title": "Member recruitment",
+    "description": "Create a cohort, open it for applications, review who applied and export the list. Accepting an applicant does not make them a member: set that on the Users tab.",
+    "newCohort": "New cohort",
+    "empty": "No cohorts yet. Create the first one below.",
+    "selectHint": "Choose Applications on a cohort to review who applied.",
+    "deleteBlocked": "Cohorts with applications can’t be deleted. Close it instead.",
+    "columns": {
+      "name": "Cohort",
+      "status": "Status",
+      "window": "Application window",
+      "applications": "Applications",
+      "action": "Actions"
+    },
+    "statuses": {
+      "DRAFT": "Draft",
+      "OPEN": "Open",
+      "CLOSED": "Closed"
+    },
+    "counts": "{total} total · {submitted} waiting · {accepted} accepted · {rejected} not selected",
+    "window": {
+      "unbounded": "no limit",
+      "none": "No window (open while the cohort is open)"
+    },
+    "actions": {
+      "applications": "Applications",
+      "open": "Open",
+      "reopen": "Re-open",
+      "close": "Close"
+    },
+    "transition": {
+      "eyebrow": "Recruitment status",
+      "open": {
+        "title": "Open {name} for applications?",
+        "description": "Applicants can send applications right away (inside the window, if you set one). Only one cohort can be open at a time.",
+        "confirm": "Open recruitment"
+      },
+      "reopen": {
+        "title": "Re-open {name}?",
+        "description": "Applicants can send and edit applications again. Only one cohort can be open at a time.",
+        "confirm": "Re-open recruitment"
+      },
+      "close": {
+        "title": "Close {name}?",
+        "description": "New applications and edits stop. Applicants can still withdraw, and you can re-open the cohort later.",
+        "confirm": "Close recruitment"
+      }
+    },
+    "form": {
+      "eyebrowCreate": "New cohort form",
+      "eyebrowEdit": "Edit cohort form",
+      "titleCreate": "Create a cohort",
+      "titleEdit": "Edit cohort",
+      "name": "Name",
+      "namePlaceholder": "Ninja Labs 2nd cohort",
+      "description": "Description (shown to applicants)",
+      "descriptionPlaceholder": "What this cohort is about and who it is for.",
+      "opensAt": "Applications open (optional)",
+      "closesAt": "Applications close (optional)",
+      "windowHint": "Times are in your browser’s time zone. An empty side has no limit: the cohort accepts while it is open.",
+      "draftNote": "A new cohort starts as a draft. Use Open on the list when you are ready.",
+      "errors": {
+        "required": "This field is required.",
+        "tooLong": "Too long. Up to {max} characters.",
+        "window": "The closing time must be after the opening time."
+      }
+    },
+    "toast": {
+      "loadFailedTitle": "Couldn’t load",
+      "loadFailedDescription": "The cohort list could not be loaded. Try again.",
+      "createdTitle": "Cohort created",
+      "updatedTitle": "Cohort updated",
+      "deletedTitle": "Cohort deleted",
+      "transitioned": {
+        "OPEN": "Recruitment opened",
+        "CLOSED": "Recruitment closed"
+      }
+    },
+    "applications": {
+      "eyebrow": "Applications",
+      "heading": "Applications for {name}",
+      "export": "Export CSV",
+      "exporting": "Exporting…",
+      "filters": {
+        "label": "Filter applications",
+        "status": "Status",
+        "activityType": "Activity type",
+        "interestArea": "Interest area",
+        "search": "Search",
+        "searchPlaceholder": "Name, Telegram, X, nickname, email",
+        "all": "All",
+        "apply": "Apply",
+        "reset": "Reset"
+      },
+      "statuses": {
+        "SUBMITTED": "Waiting",
+        "ACCEPTED": "Accepted",
+        "REJECTED": "Not selected",
+        "WITHDRAWN": "Withdrawn"
+      },
+      "decisions": {
+        "ACCEPTED": "accepted",
+        "REJECTED": "not selected"
+      },
+      "columns": {
+        "applicant": "Applicant",
+        "contact": "Contact",
+        "experience": "Web3 experience",
+        "activity": "Activity",
+        "interests": "Interests",
+        "status": "Status",
+        "applied": "Applied",
+        "action": "Actions"
+      },
+      "loading": "Loading applications…",
+      "empty": "No applications yet.",
+      "emptyFiltered": "No application matches these filters.",
+      "total": "{total} applications",
+      "pagination": "Applications pages",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {pages}",
+      "review": "Review",
+      "changeDecision": "Change decision",
+      "withdrawnNote": "Withdrawn",
+      "toast": {
+        "loadFailedTitle": "Couldn’t load",
+        "loadFailedDescription": "The applications could not be loaded. Try again.",
+        "exportFailedTitle": "Export failed",
+        "reviewedTitle": "Decision saved",
+        "reviewedDescription": "{name}: {decision}"
+      }
+    },
+    "review": {
+      "eyebrow": "Review application",
+      "title": "Review {name}’s application",
+      "description": "The note is for operators only. The applicant sees the result (accepted or not selected), never the note.",
+      "memberNote": "Accepting does not make the applicant a member.",
+      "memberLink": "Set members on the Users tab.",
+      "fields": {
+        "applicant": "Applicant",
+        "status": "Current status"
+      },
+      "statuses": {
+        "SUBMITTED": "Waiting",
+        "ACCEPTED": "Accepted",
+        "REJECTED": "Not selected",
+        "WITHDRAWN": "Withdrawn"
+      },
+      "decision": "Decision",
+      "decisions": {
+        "ACCEPTED": "Accept",
+        "REJECTED": "Do not select"
+      },
+      "note": "Internal note (optional)",
+      "notePlaceholder": "Why you decided this, follow-ups for the team",
+      "noteHint": "Up to 2000 characters. A new decision starts with the note you write here.",
+      "saving": "Saving…",
+      "confirm": {
+        "ACCEPTED": "Accept application",
+        "REJECTED": "Mark as not selected",
+        "none": "Choose a decision"
+      }
+    },
+    "errors": {
+      "COHORT_NOT_FOUND": "This cohort no longer exists. The list was refreshed.",
+      "COHORT_ALREADY_OPEN": "Another cohort is already open. Close it first, then open this one.",
+      "COHORT_HAS_APPLICATIONS": "This cohort has applications (withdrawn ones count), so it can’t be deleted. Close it instead.",
+      "COHORT_INVALID_WINDOW": "The closing time must be after the opening time.",
+      "COHORT_INVALID_TRANSITION": "That status change is not allowed from the current status. The list was refreshed.",
+      "COHORT_APPLICATION_NOT_FOUND": "This application no longer exists. The list was refreshed.",
+      "COHORT_APPLICATION_WITHDRAWN": "The applicant withdrew this application, so it can’t be reviewed.",
+      "INVALID_CHARACTER": "A field contains characters that cannot be saved (for example a NUL character). Remove them and try again.",
+      "INVALID_DATE": "That date or time does not exist on the calendar. Fix it and try again.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "ADMIN_ONLY": "This account no longer has admin access.",
+      "UNAUTHORIZED": "Your session has expired. Sign in again.",
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
+      "generic": "The request failed. Please try again."
     }
   }
 }

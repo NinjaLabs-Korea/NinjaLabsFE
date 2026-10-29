@@ -22,6 +22,15 @@ describe("fetchPublicJson", () => {
     expect(PUBLIC_FETCH_TIMEOUT_MS).toBe(8000);
   });
 
+  it("lets a list fetch use the shared Data Cache instead of no-store when asked", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true })));
+    vi.stubGlobal("fetch", fetchMock);
+    await fetchPublicJson("/bounties?page=1", { revalidateSeconds: 30 });
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit & { next?: { revalidate: number } }];
+    expect(init.next).toEqual({ revalidate: 30 });
+    expect(init.cache).toBeUndefined(); // both at once makes Next warn and pick no-store
+  });
+
   it("rejects when the BE hangs past the timeout", async () => {
     // AbortSignal.timeout runs on a native timer that fake timers do not control, so use a short real one.
     const real = AbortSignal.timeout.bind(AbortSignal);

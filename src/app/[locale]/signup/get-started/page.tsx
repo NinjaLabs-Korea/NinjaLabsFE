@@ -5,7 +5,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SignupGate } from "@/components/signup/SignupGate";
 import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
 import { CompleteOnboarding } from "@/components/signup/CompleteOnboarding";
-import { StepIndicator } from "@/components/ui/StepIndicator";
+import { ReturnPathNotice } from "@/components/signup/ReturnPathNotice";
+import { SignupStepIndicator } from "@/components/signup/SignupStepIndicator";
 import { signup } from "@/lib/signup";
 import { localeAlternates } from "@/i18n/alternates";
 
@@ -29,16 +30,17 @@ export default async function SignupGetStartedPage({ params }: PageProps<"/[loca
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="mx-auto max-w-[896px]">
         <div>
-          <StepIndicator current={4} />
+          <SignupStepIndicator current={4} />
         </div>
         <div className="mt-6">
-          <SignupGate>
+          <SignupGate step={4}>
             <CompleteOnboarding />
+            <ReturnPathNotice />
             <section className="rounded-card border border-border bg-surface p-5 text-center shadow-card sm:p-[21px]">
               <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("getStarted.eyebrow")}</p>
               <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] text-ink">{t("getStarted.title")}</h1>
               <p className="mt-3 text-base text-ink-muted">{t("getStarted.subtitle")}</p>
-              <div className="mt-6 grid gap-5 text-left md:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-6 grid grid-cols-1 gap-5 text-left md:grid-cols-2 lg:grid-cols-3">
                 {signup.completion.actions.map((action) => (
                   <CompleteSignupLink
                     className="flex min-h-[230px] flex-col rounded-card border border-border bg-surface p-5 shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

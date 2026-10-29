@@ -17,6 +17,7 @@
     "deleteDescription": "将从平台中删除此记录，公开页面会立即更新。",
     "deleteCallout": "此操作无法撤销。",
     "urlHint": "https://… 或 /media/… 路径",
+    "httpUrlHint": "https://…（仅限 http 或 https）",
     "urlInvalid": "请输入 http(s) URL（或允许的站内路径）。",
     "orderInvalid": "请输入大于等于 0 的整数。",
     "required": "此项为必填项。",
@@ -35,9 +36,11 @@
       "NOTICE_NOT_FOUND": "该公告已不存在（可能已被其他管理员删除）。列表已刷新。",
       "HIGHLIGHT_NOT_FOUND": "该精选已不存在（可能已被其他管理员删除）。列表已刷新。",
       "USER_NOT_FOUND": "该用户已不存在或已注销。请刷新页面以更新列表。",
+      "PROFILE_REQUIRED": "该用户尚未完成注册（资料未保存），因此无法分配成员角色。请待其完成注册后再试。",
       "USDC_EVM_CONTRACT_NOT_CONFIGURED": "服务器未配置 USDC 合约地址，无法创建 USDC 奖励。请联系运维设置，或改用 INJ。",
       "INJECTIVE_EVM_CHAIN_NOT_CONFIGURED": "服务器未配置 Injective EVM 链 ID，无法创建 USDC 奖励。请联系运维设置，或改用 INJ。",
       "DEADLINE_IN_PAST": "截止时间不能改到过去。请选择未来的日期和时间，或保留已保存的截止时间。",
+      "MAX_WINNERS_BELOW_APPROVED": "最多获奖者数不能少于已批准的提交数。",
       "MEDIA_FILE_TOO_LARGE": "图片超过 5 MB。请选择更小的文件后重试。",
       "MEDIA_FILE_TYPE_UNSUPPORTED": "仅支持上传 PNG、JPEG 和 WebP 图片。请选择其他文件后重试。",
       "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
@@ -53,14 +56,17 @@
     "notices": "公告",
     "operations": "运营",
     "nftJobs": "NFT 任务",
-    "audit": "审计日志"
+    "audit": "审计日志",
+    "recruitment": "成员招募"
   },
   "gate": {
     "checking": "正在检查管理员权限…",
     "signInRequired": "需要管理员登录",
     "signIn": "登录",
     "accessOnly": "仅限管理员访问",
-    "noPermission": "你的账户没有管理员权限。"
+    "noPermission": "你的账户没有管理员权限。",
+    "sessionExpired": "会话已过期。你输入的内容仍保留在此页面。请在新标签页重新登录，然后回到这里保存。",
+    "signInAgain": "重新登录"
   },
   "users": {
     "metaTitle": "管理后台 · 用户 | Ninja Labs",
@@ -149,8 +155,10 @@
       "draft": "草稿",
       "funding": "注资中",
       "active": "进行中",
+      "submissionClosed": "提交已截止",
       "reviewing": "审核中",
-      "closed": "已关闭"
+      "completed": "已完成",
+      "cancelled": "已取消"
     },
     "tags": {
       "Dev": "开发",
@@ -174,6 +182,8 @@
       "rewardCurrency": "奖励代币",
       "rewardAmount": "奖励金额",
       "amountPlaceholder": "500",
+      "maxWinners": "最多获奖者",
+      "maxWinnersHint": "可被批准并发放奖励的提交数量。不能低于已批准的数量。",
       "intake": "申请接收",
       "intakeHint": "允许通过公开赏金页面提交。",
       "submissionMode": "提交方式",
@@ -182,11 +192,9 @@
       "tags": "领域标签",
       "description": "描述（Markdown）",
       "descriptionPlaceholder": "描述要求、交付物和赞助方背景。",
-      "submissionGuide": "提交指南 / 评审标准",
-      "submissionGuidePlaceholder": "说明评审者在发放奖励前会检查的内容。",
-      "deliverables": "交付物",
-      "deliverablesPlaceholder": "每行一个交付物",
-      "deliverablesHint": "每行一项，将保存为公开的要求列表。",
+      "deliverables": "交付物与提交指南",
+      "deliverablesPlaceholder": "每行一个交付物（列表以 - 开头）。提交指南和评审标准以普通文字补充。",
+      "deliverablesHint": "两者作为同一份公开要求文本一起保存：项目符号行也会显示在交付物列表中。",
       "reviewProcess": "评审流程",
       "reviewProcessPlaceholder": "Ninja Labs 初审后由赞助方批准",
       "create": "创建",
@@ -198,12 +206,13 @@
         "deadlineInvalid": "请输入有效的日期和时间。",
         "deadlinePast": "截止时间必须晚于当前时间。",
         "amountInvalid": "请输入大于 0 且小数位不超过代币精度（USDC 6、INJ 18）的金额，或留空以保存为草稿。",
-        "deliverablesRequired": "请至少填写一项交付物或提交指南。",
+        "deliverablesRequired": "请填写交付物或提交指南。",
+        "maxWinnersInvalid": "请输入不小于 1 的整数。",
         "titleTooLong": "最多 200 个字符。",
         "sponsorTooLong": "最多 100 个字符。"
       },
       "rewardLockedHint": "奖励在悬赏创建后即固定，无法在此修改。",
-      "rewardNote": "创建后奖励代币即被锁定。奖励流程 = 锁定 → 释放 → 转账，不进行兑换。"
+      "rewardNote": "创建后，赞助方需将奖励转入多签钱包，管理员在 Operations 中确认存款，赏金任务才能开放。任务创建后无法更改奖励。"
     },
     "toast": {
       "loadFailedTitle": "无法获取赏金",
@@ -292,7 +301,8 @@
       "category": "分类",
       "status": "状态",
       "published": "发布时间",
-      "action": "操作"
+      "action": "操作",
+      "eventDate": "活动日期"
     },
     "categories": {
       "ninjaLabs": "Ninja Labs",
@@ -317,8 +327,11 @@
       "externalLink": "外部链接（可选）",
       "body": "正文（Markdown）",
       "bodyPlaceholder": "撰写公告正文、摘要链接和赞助方背景。",
+      "bodyHint": "标题、粗体、列表和链接会显示。图片、表格和原始 HTML 不会显示，海报或图片请使用缩略图。",
       "status": "状态",
-      "externalLinkPlaceholder": "https://injective.com/..."
+      "externalLinkPlaceholder": "https://injective.com/...",
+      "eventDate": "活动日期(可选)",
+      "eventDateHint": "活动举办的日期。往期活动按此日期排序。"
     },
     "toast": {
       "loadFailedTitle": "无法获取公告",
@@ -337,6 +350,8 @@
     "description": "确认奖励存款、审核申请与提交、处理付款，并推进赏金生命周期。",
     "adminOnlyBadge": "ADMIN ONLY",
     "pickBounty": "赏金",
+    "pickBountyPlaceholder": "选择赏金",
+    "bountyNotFound": "未找到 id 为“{id}”的赏金（可能已被删除）。请从列表中选择。",
     "noBounties": "还没有赏金。请先在赏金管理中创建。",
     "loading": "正在加载运营数据…",
     "loadFailed": "无法加载运营数据。",
@@ -404,7 +419,7 @@
     "lifecycle": {
       "eyebrow": "生命周期",
       "title": "状态流转",
-      "none": "无法继续流转 — 该赏金已结束。",
+      "none": "无法继续流转，该赏金已结束。",
       "to": "→ {status}",
       "actions": {
         "FUNDING_PENDING": "标记为等待存款",
@@ -486,7 +501,7 @@
       "repoLink": "代码仓库",
       "history": "审核记录（{count}）",
       "historyItem": "{decision} · 第 {revision} 版 · {date}",
-      "noWallet": "未绑定钱包 — 无法申请付款",
+      "noWallet": "未绑定钱包，无法申请付款",
       "decisions": {
         "START_REVIEW": "开始审核",
         "REQUEST_REVISION": "要求修改",
@@ -538,7 +553,9 @@
       "txHash": "交易哈希",
       "txHashInvalid": "请输入 32 字节的十六进制交易哈希（64 个十六进制字符，0x 可选）。",
       "amountInvalid": "请输入正数 {symbol} 金额，小数位不得超过代币精度。",
+      "amountInvalidBaseUnits": "请输入 {symbol} 最小单位的正整数。",
       "amountHint": "代币单位（如 12.5），发送前会换算为最小单位。",
+      "amountHintBaseUnits": "此处无法识别该代币，请按最小单位输入（整数，例如 25000000）。",
       "noteOptional": "备注（可选）",
       "commentOptional": "评语（可选）",
       "commentRequired": "评语（必填）"
@@ -638,6 +655,14 @@
       "NINJA_PARENT": "忍者 NFT",
       "BOUNTY_COMPLETION_CHILD": "完成 NFT"
     },
+    "nftStatuses": {
+      "PENDING": "待处理",
+      "MINTING": "铸造中",
+      "MINTED": "已铸造",
+      "ATTACHING": "关联中",
+      "ATTACHED": "已关联",
+      "FAILED": "失败"
+    },
     "nftLine": "{type} · NFT {status}",
     "retry": "重试",
     "pagination": "任务分页",
@@ -676,6 +701,45 @@
       "agent": "代理",
       "unknown": "未知"
     },
+    "actions": {
+      "ADMIN_GRANTED": "授予管理员",
+      "ADMIN_REVOKED": "撤销管理员",
+      "AGENT_VERIFIED": "代理已验证",
+      "AGENT_KEY_ROTATED": "代理密钥已轮换",
+      "AGENT_REVOKED": "代理已撤销",
+      "APPLICATION_APPROVED": "申请已通过",
+      "APPLICATION_REAPPLIED": "撤回后重新申请",
+      "BOUNTY_CREATED": "赏金任务已创建",
+      "BOUNTY_UPDATED": "赏金任务已更新",
+      "BOUNTY_CANCELLED": "赏金任务已取消",
+      "BOUNTY_DELETED": "赏金任务已删除",
+      "COHORT_CREATED": "期次已创建",
+      "COHORT_UPDATED": "期次已更新",
+      "COHORT_DELETED": "期次已删除",
+      "COHORT_APPLICATION_REJECTED": "期次申请被拒绝",
+      "HIGHLIGHT_CREATED": "亮点已创建",
+      "HIGHLIGHT_UPDATED": "亮点已更新",
+      "HIGHLIGHT_DELETED": "亮点已删除",
+      "NFT_JOB_RETRIED": "NFT 任务已重试",
+      "NFT_JOB_REQUEUED": "NFT 任务已重新入队（脚本）",
+      "NOTICE_CREATED": "公告已创建",
+      "NOTICE_UPDATED": "公告已更新",
+      "NOTICE_PUBLISHED": "公告已发布",
+      "NOTICE_DELETED": "公告已删除",
+      "PAYOUT_REQUESTED": "已申请发放",
+      "PAYOUT_APPROVED": "发放已批准",
+      "PAYOUT_SELF_APPROVED": "申请人自行批准发放",
+      "PAYOUT_CORRECTED_MANUAL": "手动更正发放记录",
+      "PAYOUT_CANCELLED_MANUAL": "手动取消发放",
+      "REWARD_DEPOSIT_CONFIRMED": "奖励存款已确认",
+      "REWARD_REFUNDED": "已记录奖励退款",
+      "SUBMISSION_AWARD_FORFEITED": "奖项已没收",
+      "USER_MEMBER_GRANTED": "已分配成员角色",
+      "USER_MEMBER_REVOKED": "已移除成员角色",
+      "USER_NICKNAME_CHANGED": "昵称已修改",
+      "USER_WITHDRAWN": "账户已删除",
+      "SYSTEM": "系统"
+    },
     "empty": "没有符合条件的审计日志。",
     "pagination": "审计日志分页",
     "previous": "上一页",
@@ -685,6 +749,189 @@
     "toast": {
       "loadFailedTitle": "审计日志不可用",
       "loadFailedDescription": "无法加载审计日志。"
+    }
+  },
+  "recruitment": {
+    "metaTitle": "成员招募 | Ninja Labs 管理",
+    "metaDescription": "创建期别、开放与关闭招募、审核申请。",
+    "title": "成员招募管理",
+    "description": "创建期别、开放申请、审核申请人并导出名单。通过不等于成为成员,成员请在“用户”标签页另行指定。",
+    "newCohort": "新建期别",
+    "empty": "还没有期别,请在下方创建。",
+    "selectHint": "点击期别的“申请”按钮查看申请人。",
+    "deleteBlocked": "已有申请的期别无法删除,请改为关闭。",
+    "columns": {
+      "name": "期别",
+      "status": "状态",
+      "window": "申请时间",
+      "applications": "申请",
+      "action": "操作"
+    },
+    "statuses": {
+      "DRAFT": "草稿",
+      "OPEN": "开放中",
+      "CLOSED": "已关闭"
+    },
+    "counts": "共 {total} · 待审 {submitted} · 通过 {accepted} · 未通过 {rejected}",
+    "window": {
+      "unbounded": "不限",
+      "none": "无时间限制(期别开放期间均可)"
+    },
+    "actions": {
+      "applications": "申请",
+      "open": "开放",
+      "reopen": "重新开放",
+      "close": "关闭"
+    },
+    "transition": {
+      "eyebrow": "招募状态变更",
+      "open": {
+        "title": "开放 {name} 的申请?",
+        "description": "申请人可立即提交申请(如设置了时间窗则在窗内)。同一时间只能开放一个期别。",
+        "confirm": "开放招募"
+      },
+      "reopen": {
+        "title": "重新开放 {name}?",
+        "description": "申请人可再次提交与修改申请。同一时间只能开放一个期别。",
+        "confirm": "重新开放"
+      },
+      "close": {
+        "title": "关闭 {name}?",
+        "description": "将停止新申请与修改。申请人仍可撤回,之后也可重新开放。",
+        "confirm": "关闭招募"
+      }
+    },
+    "form": {
+      "eyebrowCreate": "新建期别表单",
+      "eyebrowEdit": "编辑期别表单",
+      "titleCreate": "创建期别",
+      "titleEdit": "编辑期别",
+      "name": "名称",
+      "namePlaceholder": "Ninja Labs 第 2 期",
+      "description": "说明(向申请人显示)",
+      "descriptionPlaceholder": "说明本期招募的内容与对象。",
+      "opensAt": "开始时间(可选)",
+      "closesAt": "截止时间(可选)",
+      "windowHint": "时间按浏览器时区。留空表示不限,期别开放期间均可申请。",
+      "draftNote": "新建期别为草稿。准备好后在列表中点击“开放”。",
+      "errors": {
+        "required": "此项为必填。",
+        "tooLong": "太长了,最多 {max} 个字符。",
+        "window": "截止时间必须晚于开始时间。"
+      }
+    },
+    "toast": {
+      "loadFailedTitle": "加载失败",
+      "loadFailedDescription": "无法加载期别列表,请重试。",
+      "createdTitle": "期别已创建",
+      "updatedTitle": "期别已更新",
+      "deletedTitle": "期别已删除",
+      "transitioned": {
+        "OPEN": "招募已开放",
+        "CLOSED": "招募已关闭"
+      }
+    },
+    "applications": {
+      "eyebrow": "申请",
+      "heading": "{name} 的申请",
+      "export": "导出 CSV",
+      "exporting": "导出中…",
+      "filters": {
+        "label": "筛选申请",
+        "status": "状态",
+        "activityType": "活动类型",
+        "interestArea": "参与领域",
+        "search": "搜索",
+        "searchPlaceholder": "姓名、Telegram、X、昵称、邮箱",
+        "all": "全部",
+        "apply": "应用",
+        "reset": "重置"
+      },
+      "statuses": {
+        "SUBMITTED": "待审",
+        "ACCEPTED": "通过",
+        "REJECTED": "未通过",
+        "WITHDRAWN": "已撤回"
+      },
+      "decisions": {
+        "ACCEPTED": "通过",
+        "REJECTED": "未通过"
+      },
+      "columns": {
+        "applicant": "申请人",
+        "contact": "联系方式",
+        "experience": "Web3 经验",
+        "activity": "活动类型",
+        "interests": "参与领域",
+        "status": "状态",
+        "applied": "申请时间",
+        "action": "操作"
+      },
+      "loading": "正在加载申请…",
+      "empty": "还没有申请。",
+      "emptyFiltered": "没有符合条件的申请。",
+      "total": "共 {total} 份申请",
+      "pagination": "申请分页",
+      "previous": "上一页",
+      "next": "下一页",
+      "pageOf": "第 {page} / {pages} 页",
+      "review": "审核",
+      "changeDecision": "修改决定",
+      "withdrawnNote": "已撤回",
+      "toast": {
+        "loadFailedTitle": "加载失败",
+        "loadFailedDescription": "无法加载申请,请重试。",
+        "exportFailedTitle": "导出失败",
+        "reviewedTitle": "审核结果已保存",
+        "reviewedDescription": "{name}:{decision}"
+      }
+    },
+    "review": {
+      "eyebrow": "审核申请",
+      "title": "审核 {name} 的申请",
+      "description": "备注仅供运营人员查看。申请人只会看到结果(通过或未通过),看不到备注。",
+      "memberNote": "通过并不会让申请人成为成员。",
+      "memberLink": "请在“用户”标签页指定成员。",
+      "fields": {
+        "applicant": "申请人",
+        "status": "当前状态"
+      },
+      "statuses": {
+        "SUBMITTED": "待审",
+        "ACCEPTED": "通过",
+        "REJECTED": "未通过",
+        "WITHDRAWN": "已撤回"
+      },
+      "decision": "决定",
+      "decisions": {
+        "ACCEPTED": "通过",
+        "REJECTED": "不通过"
+      },
+      "note": "内部备注(可选)",
+      "notePlaceholder": "做出该决定的理由、团队后续事项",
+      "noteHint": "最多 2000 字。修改决定后将以此处的备注重新保存。",
+      "saving": "保存中…",
+      "confirm": {
+        "ACCEPTED": "通过申请",
+        "REJECTED": "标记为未通过",
+        "none": "请选择决定"
+      }
+    },
+    "errors": {
+      "COHORT_NOT_FOUND": "该期别已不存在,列表已刷新。",
+      "COHORT_ALREADY_OPEN": "已有其他期别处于开放状态。请先关闭它,再开放这一期。",
+      "COHORT_HAS_APPLICATIONS": "已有申请的期别无法删除(含已撤回)。请改为关闭。",
+      "COHORT_INVALID_WINDOW": "截止时间必须晚于开始时间。",
+      "COHORT_INVALID_TRANSITION": "当前状态下不允许该变更,列表已刷新。",
+      "COHORT_APPLICATION_NOT_FOUND": "该申请已不存在,列表已刷新。",
+      "COHORT_APPLICATION_WITHDRAWN": "申请人已撤回此申请,无法审核。",
+      "INVALID_CHARACTER": "内容包含无法保存的字符(如 NUL),请删除后重试。",
+      "INVALID_DATE": "该日期或时间不存在,请修改后重试。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用,请稍后再试。",
+      "ADMIN_ONLY": "此账户不再拥有管理员权限。",
+      "UNAUTHORIZED": "登录已过期,请重新登录。",
+      "TOO_MANY_REQUESTS": "请求过多,请稍后再试。",
+      "generic": "请求失败,请重试。"
     }
   }
 }

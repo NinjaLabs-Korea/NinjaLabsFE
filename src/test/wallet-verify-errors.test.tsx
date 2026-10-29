@@ -9,6 +9,7 @@ import { renderWithIntl } from "@/test/intl";
 const push = vi.fn();
 vi.mock("@/i18n/navigation", () => ({ useRouter: () => ({ push }) }));
 
+const refresh = vi.fn(async () => ({ status: "signed-in" }));
 const walletApi = {
   createWalletChallenge: vi.fn(async () => ({ message: "Sign in to Ninja Labs: nonce" })),
   verifyWallet: vi.fn(async (): Promise<unknown> => ({})),
@@ -16,6 +17,7 @@ const walletApi = {
 vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({
     useWalletApi: () => walletApi,
+    useAuthActions: () => ({ signIn: vi.fn(), signOut: vi.fn(), refresh }),
     useFoundationMode: () => "api",
   }));
 
@@ -51,6 +53,7 @@ async function verifyAndReadAlert(): Promise<string> {
 describe("WalletConnectButton verification errors", () => {
   beforeEach(() => {
     push.mockReset();
+    refresh.mockClear();
     wallet.address = FIRST_ADDRESS;
     walletApi.createWalletChallenge.mockClear();
     walletApi.verifyWallet.mockReset();
@@ -64,6 +67,7 @@ describe("WalletConnectButton verification errors", () => {
     [400, "CHALLENGE_NOT_FOUND", "The verification request was not found."],
     [401, "INVALID_SIGNATURE", "The signature does not match this wallet."],
     [503, "DATABASE_UNAVAILABLE", "The service is temporarily unavailable."],
+    [400, "AGENT_WALLET_IS_OWNER_WALLET", "already used as the wallet of one of your agents"],
   ])("explains a %i %s from verify", async (status, code, copy) => {
     walletApi.verifyWallet.mockRejectedValue(new ApiHttpError(status, code));
     expect(await verifyAndReadAlert()).toContain(copy);
@@ -97,10 +101,29 @@ describe("WalletConnectButton verification errors", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
+  it("re-reads the session before leaving, so Back shows the linked wallet instead of the connect UI", async () => {
+    renderWithIntl(<WalletConnectButton chainId={1439} />);
+    fireEvent.click(screen.getByRole("button", { name: "Verify wallet" }));
+    await vi.waitFor(() => expect(push).toHaveBeenCalledWith("/signup/profile"));
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(refresh.mock.invocationCallOrder[0]).toBeLessThan(push.mock.invocationCallOrder[0]);
+  });
+
   it("navigates to the profile step on success", async () => {
     renderWithIntl(<WalletConnectButton chainId={1439} />);
     fireEvent.click(screen.getByRole("button", { name: "Verify wallet" }));
     await vi.waitFor(() => expect(push).toHaveBeenCalledWith("/signup/profile"));
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("sends one challenge, one signature request and one verify for a same-tick double click", async () => {
+    renderWithIntl(<WalletConnectButton chainId={1439} />);
+    const verify = screen.getByRole("button", { name: "Verify wallet" });
+    fireEvent.click(verify);
+    fireEvent.click(verify);
+    await vi.waitFor(() => expect(push).toHaveBeenCalledWith("/signup/profile"));
+    expect(walletApi.createWalletChallenge).toHaveBeenCalledTimes(1);
+    expect(signMessageAsync).toHaveBeenCalledTimes(1);
+    expect(walletApi.verifyWallet).toHaveBeenCalledTimes(1);
   });
 });

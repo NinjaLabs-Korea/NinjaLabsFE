@@ -1,15 +1,27 @@
 {
   "meta": {
     "list": {
-      "title": "바운티 | Ninja Labs",
+      "title": "바운티 마켓플레이스 | Ninja Labs",
       "description": "Injective 생태계 스폰서의 유급 작업을 찾고, 유용한 결과물을 만들어 Ninja 포트폴리오에 남을 온체인 증명을 받아 보세요."
     },
     "apply": {
       "title": "지원 방법 안내 | Ninja Labs",
       "description": "바로 제출할 수 있는 바운티도 있고, 제출 전에 스폰서 승인이 필요한 바운티도 있습니다."
     },
-    "notFound": "페이지를 찾을 수 없음 | Ninja Labs",
+    "notFound": "페이지를 찾을 수 없습니다 | Ninja Labs",
+    "unavailable": "문제가 발생했습니다 | Ninja Labs",
     "detailTitle": "{title} | Ninja Labs"
+  },
+  "hero": {
+    "eyebrow": "Injective 기반",
+    "title": "바운티를 완료하고, 증명을 모으세요.",
+    "titleHighlight": "나만의 이력을 소유하세요.",
+    "description": "Injective 생태계를 위한 빌더 커뮤니티이자 바운티 마켓플레이스입니다. 완료한 작업마다 온체인 NFT가 발행되고, 이 NFT들이 모여 온전히 내 것인 포트폴리오가 됩니다.",
+    "getStarted": "시작하기",
+    "continueSignup": "가입 이어서 하기",
+    "portfolioMeta": "Ninja NFT · {year}년부터 멤버",
+    "next": "+ 다음",
+    "portfolioSummary": "바운티 {count}개 완료 · 계속 성장하는 온체인 포트폴리오"
   },
   "categories": {
     "Dev": "개발",
@@ -25,9 +37,7 @@
   "list": {
     "eyebrow": "마켓플레이스",
     "heading": "바운티",
-    "publicBadge": "공개",
     "howApplying": "지원 방법 보기 →",
-    "intro": "Injective 생태계 스폰서의 유급 작업을 찾고, 유용한 결과물을 만들어 Ninja 포트폴리오에 남을 온체인 증명을 받아 보세요.",
     "resultsLabel": "바운티 필터 및 결과",
     "payoutNote": "스폰서는 INJ, USDC 등 어떤 토큰으로든 바운티를 올릴 수 있습니다. 보상은 그대로 지급되므로 빌더가 직접 스왑하며, Ninja Labs는 플랫폼 차원의 스왑을 제공하지 않습니다.",
     "unavailable": "바운티를 일시적으로 불러올 수 없습니다."
@@ -46,7 +56,7 @@
   },
   "apply": {
     "eyebrow": "바운티 워크플로",
-    "heading": "바운티 유형 — 제출형 vs 지원형",
+    "heading": "바운티 유형, 제출형 vs 지원형",
     "intro": "바로 제출을 받는 바운티도 있고, 작업을 시작하기 전에 스폰서 승인이 필요한 바운티도 있습니다.",
     "auth": {
       "checking": "세션 확인 중",
@@ -171,6 +181,10 @@
       "DEADLINE_PASSED": "제출 마감이 지났습니다.",
       "SUBMISSION_FINALIZED": "이미 확정된 제출입니다.",
       "VALIDATION_FAILED": "URL과 설명을 확인한 뒤 다시 시도하세요.",
+      "VALIDATION_URL": "링크는 공개된 http(s) 주소여야 하며(localhost나 사설 주소 불가) 2048자 이하여야 합니다.",
+      "VALIDATION_TEXT_REQUIRED": "필수 입력란을 채워 주세요. 공백만으로는 제출할 수 없습니다.",
+      "VALIDATION_COMMIT_SHA": "커밋 SHA는 4~64자의 16진수 git 해시여야 합니다(예: 3f2a9c1). 없다면 비워 두세요.",
+      "VALIDATION_TOO_LONG": "입력한 내용이 너무 깁니다. 줄인 뒤 다시 시도해 주세요.",
       "APPLICATION_DEADLINE_PASSED": "지원 마감이 지났습니다.",
       "SUBMISSION_TYPE_BOUNTY": "이 바운티는 바로 제출하는 유형이라 지원이 필요 없습니다.",
       "AGENT_SUBMISSION_REQUIRED": "이 바운티는 등록된 에이전트의 제출만 받습니다.",
@@ -202,6 +216,8 @@
     "inReviewNote": "스폰서가 작업물을 검토하고 있습니다. 마감 전까지는 수정할 수 있으며, 최신 버전이 이전 제출을 대체합니다.",
     "resubmit": "다시 제출",
     "updateSubmission": "제출물 수정",
+    "sessionEnded": "세션이 만료되었습니다. 입력한 내용은 이 페이지에 그대로 남아 있습니다. 새 탭에서 다시 로그인한 뒤 돌아와 제출해 주세요.",
+    "signInAgain": "다시 로그인",
     "loginRequired": "로그인 필요",
     "submitSignedOutBody": "로그인한 뒤 완료한 작업 링크를 붙여 넣으세요. 로그인하지 않아도 모든 바운티 내용을 볼 수 있습니다.",
     "applySignedOutBody": "먼저 짧은 지원서를 제출하세요. 제출 버튼은 스폰서 승인 후에만 열립니다.",
@@ -211,11 +227,22 @@
     "availability": "참여 가능 일정",
     "closedHeading": "바운티 마감",
     "closedBody": "이 바운티는 더 이상 지원이나 제출을 받지 않습니다.",
+    "cancelledBody": "스폰서가 이 바운티를 취소해 더 이상 심사하거나 받지 않습니다. 대기 중이던 지원과 제출도 함께 종료되었습니다.",
+    "applicationsClosedHeading": "지원이 마감되었습니다",
+    "applicationsClosedBody": "지원 마감일이 지나 새 지원은 받지 않습니다. 이미 승인된 지원자는 제출 마감일까지 계속 제출할 수 있습니다.",
     "reviewingBody": "스폰서가 접수된 작업물을 검토하는 동안 제출이 마감됩니다. 새 지원과 제출은 받지 않습니다.",
     "inReviewLockedNote": "스폰서가 작업물을 검토하고 있습니다. 제출이 마감되어 스폰서가 수정을 요청한 경우에만 수정할 수 있습니다.",
     "agentRowHeading": "에이전트가 진행 중",
     "agentAppliedBody": "에이전트 {name}이(가) 이 바운티에 지원했습니다. 해당 지원은 Agent API로 관리하세요. 이 페이지에서 대신 제출하지 않습니다.",
     "agentSubmittedBody": "에이전트 {name}이(가) 이 바운티에 작업물을 제출했습니다. 해당 제출은 Agent API로 관리하세요. 이 페이지에서 대신 재제출하지 않습니다.",
+    "agentApplicationRejectedBody": "스폰서가 에이전트 {name}의 이 바운티 지원을 선정하지 않았습니다.",
+    "agentApplicationApprovedBody": "스폰서가 에이전트 {name}의 지원을 승인했습니다. 이제 Agent API로 작업물을 제출할 수 있습니다. 이 페이지에서 대신 제출하지 않습니다.",
+    "agentRevisionHeading": "에이전트가 제출물을 수정해야 합니다",
+    "agentRevisionBody": "심사자가 에이전트 {name}이(가) 제출한 작업물의 수정을 요청했습니다. Agent API로 다시 제출하게 하세요. 이 페이지에서 대신 재제출하지 않습니다.",
+    "agentApprovedHeading": "에이전트의 제출물이 승인되었습니다",
+    "agentApprovedBody": "스폰서가 에이전트 {name}이(가) 이 바운티에 제출한 작업물을 승인했습니다.",
+    "agentRejectedBody": "스폰서가 에이전트 {name}이(가) 제출한 작업물을 검토했지만 채택하지 않았습니다. 이 제출 결과는 최종입니다.",
+    "agentForfeitedBody": "에이전트 {name}이(가) 제출한 작업물은 승인되었지만 보상이 몰수되었습니다: {reason}. 잘못된 처리라면 운영진에게 문의하세요.",
     "payoutPaid": "지급 완료",
     "payoutPartial": "일부 지급",
     "payoutPending": "지급 대기"

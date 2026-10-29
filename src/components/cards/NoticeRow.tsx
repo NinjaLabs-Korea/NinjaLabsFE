@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { safeHttpUrl } from "@/lib/api/codecs";
+import { noticeEventDateLabel } from "@/lib/community";
 import { imageProps } from "@/lib/image";
 import { noticeCategoryKeys } from "@/lib/notice-categories";
 import type { Notice } from "@/lib/types";
@@ -14,6 +15,8 @@ type NoticeRowProps = {
 
 export function NoticeRow({ notice }: NoticeRowProps) {
   const t = useTranslations("notices.categories");
+  const tNotices = useTranslations("notices");
+  const eventDate = noticeEventDateLabel(notice);
   const thumbnail = safeHttpUrl(notice.thumbnail);
   return (
     <Link
@@ -31,6 +34,7 @@ export function NoticeRow({ notice }: NoticeRowProps) {
         <h2 className="mt-2 break-words font-display text-xl font-bold tracking-[-0.2px] text-ink">
           {notice.title}
         </h2>
+        {eventDate ? <p className="mt-1 text-sm font-semibold text-primary">{tNotices("eventDate", { date: eventDate })}</p> : null}
         <p className="mt-2 break-words text-sm text-ink-muted">{notice.excerpt}</p>
       </div>
     </Link>

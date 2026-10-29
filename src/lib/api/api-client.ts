@@ -1,8 +1,10 @@
-import type { Account, AccountAgent, AccountAgentRef, AccountApplication, AccountSubmission, SubmissionStatus } from "@/lib/contracts/account";
+import { newestFirst } from "@/lib/account-order";
+import type { Account, AccountAgent, AccountAgentRef, AccountApplication, AccountSubmission, ApplicationStatus, SubmissionStatus } from "@/lib/contracts/account";
 import type { ApiClient, ApiResult, ApiUnavailable } from "@/lib/contracts/api";
 import { ApiHttpError, type ApiHttp } from "@/lib/api/http";
 import { fetchMe, toClientUser } from "@/lib/api/me";
 import { createAdminApi } from "@/lib/api/admin";
+import { createAdminCohortApi, createCohortApi } from "@/lib/api/cohorts";
 import { toCategoryLabel, toPayoutStatus, type CategoryCode } from "@/lib/api/codecs";
 
 /** Agent that acted on the owner's behalf (null = the owner acted directly). Rows for agent-made entries are included in /me lists. */
@@ -39,6 +41,11 @@ type AgentRow = {
 };
 
 type SubmissionRow = {
+  id?: string;
+  bounty_title?: string;
+  category?: string;
+  submitted_at?: string;
+  description?: string;
   status: "SUBMITTED" | "RESUBMITTED" | "IN_REVIEW" | "REVISION_REQUESTED" | "APPROVED" | "REJECTED";
   bounty_id: string;
   agent?: AgentRef;
@@ -71,9 +78,38 @@ function toSubmission(row: SubmissionRow): AccountSubmission {
   };
 }
 
+/** A submission with no application behind it (direct or agent-mode bounty) as a /applications row. */
+const SUBMISSION_AS_APPLICATION: Record<SubmissionRow["status"], ApplicationStatus> = {
+  SUBMITTED: "submitted",
+  RESUBMITTED: "submitted",
+  IN_REVIEW: "submitted",
+  REVISION_REQUESTED: "revisionRequested",
+  APPROVED: "completed",
+  REJECTED: "notAccepted",
+};
+
+function submissionToRow(row: SubmissionRow): AccountApplication {
+  const submission = toSubmission(row);
+  return {
+    id: `submission:${row.id ?? `${row.bounty_id}:${row.agent?.id ?? "self"}`}`,
+    source: "submission",
+    bountySlug: row.bounty_id,
+    bountyTitle: row.bounty_title ?? row.bounty_id,
+    category: toCategoryLabel(row.category ?? "") ?? "Other",
+    appliedAt: row.submitted_at ?? new Date(0).toISOString(),
+    note: row.description ?? "",
+    status: SUBMISSION_AS_APPLICATION[row.status] ?? "submitted",
+    agent: submission.agent,
+    reviewComment: submission.reviewComment,
+    reviewNote: null,
+    paymentStatus: submission.paymentStatus,
+  };
+}
+
 function toApplication(row: ApplicationRow): AccountApplication {
   return {
     id: row.id,
+    source: "application",
     bountySlug: row.bounty_id,
     bountyTitle: row.bounty_title,
     category: toCategoryLabel(row.category) ?? "Other",
@@ -141,16 +177,19 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
         // Owner and agent rows can coexist on one bounty: match each application to its own submission.
         const submissionKey = (bountyId: string, agent: AgentRef | undefined) => `${bountyId}:${agent?.id ?? "self"}`;
         const submissionsByRow = new Map(submissions.map((submission) => [submissionKey(submission.bounty_id, submission.agent), submission]));
+        // Submissions that belong to an application row are joined below; the rest (direct and agent-mode bounties) are listed on their own.
+        const applicationKeys = new Set(rows.filter((row) => row.status !== "WITHDRAWN").map((row) => submissionKey(row.bounty_id, row.agent)));
+        const standalone = submissions.filter((submission) => !applicationKeys.has(submissionKey(submission.bounty_id, submission.agent))).map(submissionToRow);
         return {
           status: "available",
           // 철회 건은 FE 진행 단계 모델에 없으므로 제외. 반려 건은 상세/목록에서 상태를 보여주기 위해 유지
-          data: rows
+          data: newestFirst([...rows
             .filter((row) => row.status !== "WITHDRAWN")
             .map((row) => {
               const application = toApplication(row);
               const submission = submissionsByRow.get(submissionKey(row.bounty_id, row.agent));
               if (!submission || application.status !== "approved") return application;
-              // REJECTED is final (also a forfeited award: approved work, no payout) — not another "Submitted" step.
+              // REJECTED is final (also a forfeited award: approved work, no payout) - not another "Submitted" step.
               if (submission.status === "REJECTED") {
                 return { ...application, status: "notAccepted" as const, reviewComment: submission.review_comment?.trim() || null };
               }
@@ -161,7 +200,7 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
                 return { ...application, status: "completed" as const, paymentStatus: toSubmission(submission).paymentStatus };
               }
               return { ...application, status: "submitted" as const };
-            }),
+            }), ...standalone]),
         };
       } catch (error) {
         return unavailable<readonly AccountApplication[]>(error);
@@ -251,6 +290,8 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
     withdrawAccount: async (confirmNickname) => {
       await http.fetchJson("/users/me", { method: "DELETE", body: { confirmNickname } });
     },
+    ...createCohortApi(http),
     ...createAdminApi(http),
+    ...createAdminCohortApi(http),
   };
 }

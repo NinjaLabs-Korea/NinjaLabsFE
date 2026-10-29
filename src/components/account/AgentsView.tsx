@@ -15,14 +15,15 @@ import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
 import { describeAgentKey } from "@/lib/agent-keys";
-import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
+import { ERROR_COPY, errorCopyKey, knownCode } from "@/lib/api/error-copy";
+import { formatUtcDateTime } from "@/lib/format";
 import type { AccountAgent } from "@/lib/contracts/account";
 import type { AgentKeyRotation } from "@/lib/contracts/api";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
-const outlineButtonClass = `rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong disabled:opacity-60 ${focusClass}`;
-const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
+const outlineButtonClass = `rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong disabled:opacity-60 ${focusClass}`;
+const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
 
 /** Per-agent action state: a request on one agent never disables or reports on another. */
 type AgentAction =
@@ -78,7 +79,7 @@ export function AgentsView() {
 
   // The BE rejected the session (401/403 after refresh): ask to sign in again instead of blaming the server.
   if (unavailable && reason === "unauthorized") {
-    return <SignedOutPanel message={tAccount("sessionExpired")} />;
+    return <SignedOutPanel message={tAccount("sessionExpired")} returnTo="/agents" />;
   }
 
   if (unavailable) {
@@ -91,7 +92,7 @@ export function AgentsView() {
   }
 
   if (authSnapshot.status === "signed-out") {
-    return <SignedOutPanel message={t("signedOutMessage")} />;
+    return <SignedOutPanel message={t("signedOutMessage")} returnTo="/agents" />;
   }
 
   if (authSnapshot.status === "loading" || !agents) {
@@ -117,7 +118,11 @@ export function AgentsView() {
       setAgentAction(agent.id, null);
       refresh();
     } catch (error) {
-      setAgentAction(agent.id, { kind: "error", message: tRotateErrors(errorCopyKey(error, ERROR_COPY.agentRotate)) });
+      const key = errorCopyKey(error, ERROR_COPY.agentRotate);
+      setAgentAction(agent.id, { kind: "error", message: tRotateErrors(key) });
+      // The card is stale (revoked or deleted elsewhere): retrying cannot help, so re-read the list instead of leaving
+      // Active/Rotate/Revoke on a card that no longer matches the account.
+      if (key === "AGENT_NOT_ACTIVE" || key === "AGENT_NOT_FOUND") refresh();
     } finally {
       pendingRef.current.delete(agent.id);
     }
@@ -134,18 +139,20 @@ export function AgentsView() {
       await agentApi.revokeAgent(agent.id);
       setAgentAction(agent.id, null);
       refresh();
-    } catch {
+    } catch (error) {
       setAgentAction(agent.id, { kind: "error", message: t("revokeFailed") });
+      // A 404 means the agent is already gone from this account: show the real list.
+      if (knownCode(error, ["AGENT_NOT_FOUND"] as const)) refresh();
     } finally {
       pendingRef.current.delete(agent.id);
     }
   };
 
-  const formatDate = (value: string) => format.dateTime(new Date(value), { dateStyle: "medium", timeStyle: "short" });
+  const formatDate = (value: string) => formatUtcDateTime(format, value);
 
   return (
     <>
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         {agents.map((agent) => {
           const revoked = agent.status === "REVOKED";
           const key = describeAgentKey(agent);
@@ -159,14 +166,16 @@ export function AgentsView() {
             : key.kind === "expired"
               ? t("keyExpired")
               : key.kind === "active" && key.expiringSoon && key.daysLeft !== null
-                ? t("keyExpiringSoon", { days: key.daysLeft })
+                ? key.withinDay
+                  ? t("keyExpiringToday")
+                  : t("keyExpiringSoon", { days: key.daysLeft })
                 : null;
 
           return (
-            <article className={`rounded-card border border-dashed border-border bg-surface p-5${revoked ? " opacity-70" : ""}`} key={agent.id}>
+            <article className={`min-w-0 rounded-card border border-dashed border-border bg-surface p-5${revoked ? " opacity-70" : ""}`} key={agent.id}>
               <div className="flex flex-wrap items-center gap-2">
                 <h2
-                  className="min-w-0 break-words font-display text-lg font-bold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  className="min-w-0 [overflow-wrap:anywhere] font-display text-lg font-bold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   ref={(element) => {
                     if (element) headingRefs.current.set(agent.id, element);
                     else headingRefs.current.delete(agent.id);

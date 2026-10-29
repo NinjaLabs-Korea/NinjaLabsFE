@@ -32,6 +32,7 @@
       "none": "미발급"
     },
     "keyExpires": "{date} 만료",
+    "keyExpiringToday": "이 키는 24시간 안에 만료됩니다. 만료 전에 교체하세요.",
     "keyExpiringSoon": "이 키는 {days}일 후 만료됩니다. 만료 전에 교체하세요.",
     "keyExpired": "이 키는 만료되었습니다. 에이전트를 계속 사용하려면 키를 교체하세요.",
     "rotateKey": "키 교체",
@@ -41,6 +42,7 @@
     "rotateErrors": {
       "generic": "키를 교체하지 못했습니다. 다시 시도해 주세요.",
       "AGENT_NOT_ACTIVE": "활성 상태의 에이전트만 키를 교체할 수 있습니다.",
+      "AGENT_NOT_FOUND": "이 에이전트는 더 이상 없습니다. 목록을 새로 불러왔습니다.",
       "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
     },
     "revokeAgent": "에이전트 폐기",
@@ -84,16 +86,14 @@
     "verificationItems": {
       "challenge": "AI 에이전트는 소유자와 별개인 전용 EVM 지갑을 가집니다.",
       "signature": "사용자가 \"내 에이전트\"를 등록할 때 서명으로 소유권을 증명합니다: 개인 키 → 서명 → 공개 키 검증.",
-      "binding": "인증된 에이전트는 데이터베이스에서 해당 사용자에게 연결됩니다.",
-      "failure": "에이전트는 사용자에게 1:N으로 속하므로 한 사용자가 여러 인증 에이전트를 운영할 수 있습니다."
+      "binding": "인증된 에이전트는 내 계정에 연결되어 내 에이전트 목록에 표시됩니다.",
+      "multiple": "한 계정으로 여러 인증 에이전트를 운영할 수 있습니다."
     },
     "walletUnavailableTitle": "지갑을 사용할 수 없음",
     "walletUnavailableBody": "에이전트를 등록하기 전에 Injective EVM 체인을 설정하세요.",
-    "edgeCaseBadge": "예외 상황",
-    "edgeCase": "서명 검증에 실패하면 등록이 거부되며, 새로운 챌린지로 다시 시도합니다.",
     "withdrawalBadge": "계정 삭제",
-    "withdrawal": "계정을 삭제하면 연결된 모든 에이전트와 API 키가 폐기됩니다.",
-    "profileNote": "<link>사용자 프로필</link>의 보유 에이전트 영역과 바로 연결됩니다.",
+    "withdrawal": "<link>계정 설정</link>에서 계정을 삭제하면 연결된 모든 에이전트와 API 키가 폐기됩니다.",
+    "profileNote": "키 재발급과 에이전트 관리는 <link>내 에이전트</link>에서 할 수 있습니다.",
     "verificationEyebrow": "인증 로직"
   },
   "form": {
@@ -121,7 +121,9 @@
     "verifying": "에이전트 인증 중…",
     "submit": "서명하고 등록하기",
     "registerErrors": {
+      "AGENT_WALLET_IS_OWNER_WALLET": "개인 온보딩 지갑입니다. MetaMask에서 에이전트 전용 계정으로 전환하세요.",
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "이미 등록된 지갑입니다. 내 에이전트에서 확인하세요.",
+      "walletHeldByOther": "이 지갑은 다른 계정에 이미 등록되어 있습니다. 다른 지갑을 사용하세요.",
       "generic": "에이전트 등록에 실패했습니다. 지갑 서명을 확인하고 다시 시도해 주세요.",
       "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
     },
@@ -140,7 +142,7 @@
     }
   },
   "keyReveal": {
-    "keyReady": "API key가 준비되었습니다 — 지금 복사하세요.",
+    "keyReady": "API key가 준비되었습니다, 지금 복사하세요.",
     "keyLabel": "새 API key",
     "copy": "복사",
     "copied": "API key를 클립보드에 복사했습니다.",
@@ -160,6 +162,9 @@
     "viewAgents": "내 에이전트 보기",
     "verifiedTitle": "{count, plural, other {인증된 에이전트 준비 완료}}",
     "verifiedBody": "이 바운티에 사용할 수 있는 인증된 에이전트가 {count, plural, other {#개}} 있습니다.",
+    "keyExpiredTitle": "에이전트 API 키 만료",
+    "keyExpiredBody": "인증된 에이전트의 API 키가 만료되어 Agent API를 호출할 수 없습니다. 내 에이전트에서 키를 재발급하세요.",
+    "rotateKey": "키 재발급",
     "pendingTitle": "에이전트 인증 대기 중",
     "pendingBody": "바운티에 사용하기 전에 에이전트 지갑으로 서명을 완료하세요.",
     "finish": "인증 완료하기",

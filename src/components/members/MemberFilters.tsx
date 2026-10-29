@@ -22,11 +22,11 @@ export function MemberFilters({ members }: MemberFiltersProps) {
   return (
     <>
       <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")} role="group">
-        <button aria-pressed={role === "All"} className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => setRole("All")} type="button"><Badge variant={role === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
-        {roles.map((item) => <button aria-pressed={role === item} className="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => setRole(item)} type="button"><Badge variant={role === item ? "selected" : "primary-soft"}>{t(`roles.${item.toLowerCase()}`)}</Badge></button>)}
+        <button aria-pressed={role === "All"} className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => setRole("All")} type="button"><Badge variant={role === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
+        {roles.map((item) => <button aria-pressed={role === item} className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => setRole(item)} type="button"><Badge variant={role === item ? "selected" : "primary-soft"}>{t(`roles.${item.toLowerCase()}`)}</Badge></button>)}
       </div>
       {visibleMembers.length > 0 ? (
-        <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4" aria-label={t("filters.listAriaLabel")}>
+        <section className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4" aria-label={t("filters.listAriaLabel")}>
           {visibleMembers.map((member) => <MemberCard key={member.slug} member={member} />)}
         </section>
       ) : members.length === 0 ? (
@@ -40,7 +40,7 @@ export function MemberFilters({ members }: MemberFiltersProps) {
           <p className="text-sm font-semibold text-ink">{t("filters.emptyTitle")}</p>
           <p className="mt-1 text-sm text-ink-muted">{t("filters.emptyBody")}</p>
           <button
-            className="mt-4 rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="mt-4 rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             onClick={resetFilters}
             type="button"
           >

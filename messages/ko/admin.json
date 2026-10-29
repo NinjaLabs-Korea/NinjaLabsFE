@@ -17,6 +17,7 @@
     "deleteDescription": "플랫폼에서 이 항목을 삭제합니다. 공개 페이지에 즉시 반영됩니다.",
     "deleteCallout": "되돌릴 수 없습니다.",
     "urlHint": "https://… 또는 /media/… 경로",
+    "httpUrlHint": "https://… (http 또는 https만 가능)",
     "urlInvalid": "http(s) URL(또는 허용된 사이트 경로)을 입력하세요.",
     "orderInvalid": "0 이상의 정수를 입력하세요.",
     "required": "필수 항목입니다.",
@@ -35,9 +36,11 @@
       "NOTICE_NOT_FOUND": "이 공지가 더 이상 없습니다(다른 운영자가 삭제했을 수 있습니다). 목록을 새로 불러왔습니다.",
       "HIGHLIGHT_NOT_FOUND": "이 하이라이트가 더 이상 없습니다(다른 운영자가 삭제했을 수 있습니다). 목록을 새로 불러왔습니다.",
       "USER_NOT_FOUND": "이 사용자가 더 이상 없거나 탈퇴했습니다. 페이지를 새로고침해 목록을 갱신하세요.",
+      "PROFILE_REQUIRED": "이 사용자는 아직 가입(프로필 저장)을 끝내지 않아 멤버 역할을 지정할 수 없습니다. 온보딩을 마친 뒤 다시 시도하세요.",
       "USDC_EVM_CONTRACT_NOT_CONFIGURED": "서버에 USDC 컨트랙트 주소가 설정되어 있지 않아 USDC 보상을 만들 수 없습니다. 운영 설정을 요청하거나 INJ를 사용하세요.",
       "INJECTIVE_EVM_CHAIN_NOT_CONFIGURED": "서버에 Injective EVM 체인 ID가 설정되어 있지 않아 USDC 보상을 만들 수 없습니다. 운영 설정을 요청하거나 INJ를 사용하세요.",
       "DEADLINE_IN_PAST": "마감일을 과거로 옮길 수 없습니다. 미래의 날짜와 시간을 고르거나 저장된 마감일을 그대로 두세요.",
+      "MAX_WINNERS_BELOW_APPROVED": "최대 당선자 수는 이미 승인된 제출 수보다 적을 수 없습니다.",
       "MEDIA_FILE_TOO_LARGE": "이미지가 5MB를 넘습니다. 더 작은 파일을 골라 다시 시도하세요.",
       "MEDIA_FILE_TYPE_UNSUPPORTED": "PNG, JPEG, WebP 이미지만 업로드할 수 있습니다. 다른 파일을 골라 다시 시도하세요.",
       "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
@@ -53,14 +56,17 @@
     "notices": "공지사항",
     "operations": "운영",
     "nftJobs": "NFT 잡",
-    "audit": "감사 로그"
+    "audit": "감사 로그",
+    "recruitment": "멤버 모집"
   },
   "gate": {
     "checking": "관리자 권한을 확인하는 중…",
     "signInRequired": "관리자 로그인이 필요합니다",
     "signIn": "로그인",
     "accessOnly": "관리자만 접근할 수 있습니다",
-    "noPermission": "현재 계정에는 관리자 권한이 없습니다."
+    "noPermission": "현재 계정에는 관리자 권한이 없습니다.",
+    "sessionExpired": "세션이 만료되었습니다. 입력한 내용은 이 페이지에 그대로 남아 있습니다. 새 탭에서 다시 로그인한 뒤 이 페이지로 돌아와 저장하세요.",
+    "signInAgain": "다시 로그인"
   },
   "users": {
     "metaTitle": "관리자 · 사용자 | Ninja Labs",
@@ -149,8 +155,10 @@
       "draft": "초안",
       "funding": "펀딩 중",
       "active": "진행 중",
-      "reviewing": "검토 중",
-      "closed": "종료"
+      "submissionClosed": "제출 마감",
+      "reviewing": "심사 중",
+      "completed": "완료",
+      "cancelled": "취소됨"
     },
     "tags": {
       "Dev": "개발",
@@ -174,6 +182,8 @@
       "rewardCurrency": "보상 토큰",
       "rewardAmount": "보상 금액",
       "amountPlaceholder": "500",
+      "maxWinners": "최대 당선자 수",
+      "maxWinnersHint": "승인해 보상을 지급할 수 있는 제출 수입니다. 이미 승인된 수보다 줄일 수 없습니다.",
       "intake": "지원 접수",
       "intakeHint": "공개 바운티 페이지에서 제출을 받습니다.",
       "submissionMode": "제출 방식",
@@ -182,11 +192,9 @@
       "tags": "분야 태그",
       "description": "설명 (마크다운)",
       "descriptionPlaceholder": "요구 사항, 산출물, 스폰서 배경을 설명하세요.",
-      "submissionGuide": "제출 가이드 / 평가 기준",
-      "submissionGuidePlaceholder": "보상 지급 전 검토자가 확인할 내용을 설명하세요.",
-      "deliverables": "결과물",
-      "deliverablesPlaceholder": "한 줄에 결과물 하나씩",
-      "deliverablesHint": "한 줄에 항목 하나씩 입력하세요. 공개 요구 사항 목록으로 저장됩니다.",
+      "deliverables": "결과물 및 제출 가이드",
+      "deliverablesPlaceholder": "한 줄에 결과물 하나씩 입력하세요(목록은 -로 시작). 제출 가이드와 검토 기준은 일반 문장으로 덧붙이세요.",
+      "deliverablesHint": "둘은 하나의 공개 요구 사항 텍스트로 함께 저장됩니다. 글머리표 줄은 결과물 목록에도 표시됩니다.",
       "reviewProcess": "검토 절차",
       "reviewProcessPlaceholder": "Ninja Labs 1차 검토 후 스폰서 승인",
       "create": "생성",
@@ -198,12 +206,13 @@
         "deadlineInvalid": "올바른 날짜와 시간을 입력하세요.",
         "deadlinePast": "마감일은 현재 이후로 설정하세요.",
         "amountInvalid": "토큰이 지원하는 소수 자릿수(USDC 6, INJ 18) 이내의 0보다 큰 금액을 입력하거나, 초안으로 저장하려면 비워 두세요.",
-        "deliverablesRequired": "산출물을 하나 이상 입력하거나 제출 가이드를 작성하세요.",
+        "deliverablesRequired": "결과물이나 제출 가이드를 입력하세요.",
+        "maxWinnersInvalid": "1 이상의 정수를 입력하세요.",
         "titleTooLong": "최대 200자까지 입력할 수 있습니다.",
         "sponsorTooLong": "최대 100자까지 입력할 수 있습니다."
       },
       "rewardLockedHint": "보상은 바운티 생성 후에는 바꿀 수 없습니다.",
-      "rewardNote": "생성 시 보상 토큰이 고정됩니다. 보상 흐름 = 예치 → 릴리스 → 전송이며 스왑은 없습니다."
+      "rewardNote": "생성한 뒤 스폰서가 멀티시그 지갑으로 보상을 입금하고, 운영자가 Operations에서 입금을 확인해야 바운티를 열 수 있습니다. 바운티가 생성된 뒤에는 보상을 바꿀 수 없습니다."
     },
     "toast": {
       "loadFailedTitle": "바운티를 불러올 수 없음",
@@ -292,7 +301,8 @@
       "category": "카테고리",
       "status": "상태",
       "published": "게시일",
-      "action": "작업"
+      "action": "작업",
+      "eventDate": "행사일"
     },
     "categories": {
       "ninjaLabs": "Ninja Labs",
@@ -317,8 +327,11 @@
       "externalLink": "외부 링크 (선택)",
       "body": "본문 (마크다운)",
       "bodyPlaceholder": "공지 본문, 요약 링크, 스폰서 배경을 작성하세요.",
+      "bodyHint": "제목, 굵게, 목록, 링크는 표시됩니다. 이미지, 표, HTML은 페이지에서 제외되므로 포스터나 사진은 썸네일로 올리세요.",
       "status": "상태",
-      "externalLinkPlaceholder": "https://injective.com/..."
+      "externalLinkPlaceholder": "https://injective.com/...",
+      "eventDate": "행사 날짜 (선택)",
+      "eventDateHint": "행사·활동이 열린 날짜예요. 지난 활동 목록은 이 날짜 순으로 정렬돼요."
     },
     "toast": {
       "loadFailedTitle": "공지사항을 불러올 수 없음",
@@ -337,6 +350,8 @@
     "description": "보상 입금 확인, 지원/제출 심사, 지급 처리, 바운티 상태 전이를 한곳에서 관리합니다.",
     "adminOnlyBadge": "ADMIN ONLY",
     "pickBounty": "바운티",
+    "pickBountyPlaceholder": "바운티 선택",
+    "bountyNotFound": "id “{id}”인 바운티를 찾을 수 없습니다(삭제되었을 수 있습니다). 목록에서 선택하세요.",
     "noBounties": "아직 바운티가 없습니다. 먼저 바운티 관리에서 등록하세요.",
     "loading": "운영 데이터를 불러오는 중…",
     "loadFailed": "운영 데이터를 불러오지 못했습니다.",
@@ -404,7 +419,7 @@
     "lifecycle": {
       "eyebrow": "라이프사이클",
       "title": "상태 전이",
-      "none": "더 이상 전이할 수 없습니다 — 종료된 바운티입니다.",
+      "none": "더 이상 전이할 수 없습니다, 종료된 바운티입니다.",
       "to": "→ {status}",
       "actions": {
         "FUNDING_PENDING": "입금 대기로 전환",
@@ -486,7 +501,7 @@
       "repoLink": "저장소",
       "history": "심사 기록 ({count})",
       "historyItem": "{decision} · 리비전 {revision} · {date}",
-      "noWallet": "연결된 지갑 없음 — 지급을 요청할 수 없습니다",
+      "noWallet": "연결된 지갑 없음, 지급을 요청할 수 없습니다",
       "decisions": {
         "START_REVIEW": "심사 시작",
         "REQUEST_REVISION": "수정 요청",
@@ -538,7 +553,9 @@
       "txHash": "거래 해시",
       "txHashInvalid": "32바이트 16진수 거래 해시를 입력하세요(16진수 64자, 0x는 선택).",
       "amountInvalid": "토큰이 지원하는 소수 자릿수 이내의 양수 {symbol} 금액을 입력하세요.",
-      "amountHint": "토큰 단위(예: 12.5) — 전송 전에 최소 단위로 변환됩니다.",
+      "amountInvalidBaseUnits": "{symbol} 기본 단위의 양의 정수를 입력하세요.",
+      "amountHint": "토큰 단위(예: 12.5), 전송 전에 최소 단위로 변환됩니다.",
+      "amountHintBaseUnits": "이 토큰은 여기서 단위를 알 수 없으므로 기본 단위(정수, 예: 25000000)로 입력하세요.",
       "noteOptional": "메모(선택)",
       "commentOptional": "코멘트(선택)",
       "commentRequired": "코멘트(필수)"
@@ -638,6 +655,14 @@
       "NINJA_PARENT": "닌자 NFT",
       "BOUNTY_COMPLETION_CHILD": "완료 NFT"
     },
+    "nftStatuses": {
+      "PENDING": "대기",
+      "MINTING": "민팅 중",
+      "MINTED": "민팅됨",
+      "ATTACHING": "연결 중",
+      "ATTACHED": "연결됨",
+      "FAILED": "실패"
+    },
     "nftLine": "{type} · NFT {status}",
     "retry": "재시도",
     "pagination": "잡 페이지",
@@ -676,6 +701,45 @@
       "agent": "에이전트",
       "unknown": "알 수 없음"
     },
+    "actions": {
+      "ADMIN_GRANTED": "관리자 권한 부여",
+      "ADMIN_REVOKED": "관리자 권한 회수",
+      "AGENT_VERIFIED": "에이전트 인증",
+      "AGENT_KEY_ROTATED": "에이전트 키 교체",
+      "AGENT_REVOKED": "에이전트 폐기",
+      "APPLICATION_APPROVED": "지원 승인",
+      "APPLICATION_REAPPLIED": "철회 후 재지원",
+      "BOUNTY_CREATED": "바운티 생성",
+      "BOUNTY_UPDATED": "바운티 수정",
+      "BOUNTY_CANCELLED": "바운티 취소",
+      "BOUNTY_DELETED": "바운티 삭제",
+      "COHORT_CREATED": "기수 생성",
+      "COHORT_UPDATED": "기수 수정",
+      "COHORT_DELETED": "기수 삭제",
+      "COHORT_APPLICATION_REJECTED": "기수 지원 거절",
+      "HIGHLIGHT_CREATED": "하이라이트 생성",
+      "HIGHLIGHT_UPDATED": "하이라이트 수정",
+      "HIGHLIGHT_DELETED": "하이라이트 삭제",
+      "NFT_JOB_RETRIED": "NFT 작업 재시도",
+      "NFT_JOB_REQUEUED": "NFT 작업 재등록 (스크립트)",
+      "NOTICE_CREATED": "공지 생성",
+      "NOTICE_UPDATED": "공지 수정",
+      "NOTICE_PUBLISHED": "공지 게시",
+      "NOTICE_DELETED": "공지 삭제",
+      "PAYOUT_REQUESTED": "지급 요청",
+      "PAYOUT_APPROVED": "지급 승인",
+      "PAYOUT_SELF_APPROVED": "요청자가 직접 지급 승인",
+      "PAYOUT_CORRECTED_MANUAL": "지급 기록 수동 정정",
+      "PAYOUT_CANCELLED_MANUAL": "지급 수동 취소",
+      "REWARD_DEPOSIT_CONFIRMED": "보상 입금 확인",
+      "REWARD_REFUNDED": "보상 환불 기록",
+      "SUBMISSION_AWARD_FORFEITED": "수상 몰수",
+      "USER_MEMBER_GRANTED": "멤버 역할 지정",
+      "USER_MEMBER_REVOKED": "멤버 역할 해제",
+      "USER_NICKNAME_CHANGED": "닉네임 변경",
+      "USER_WITHDRAWN": "계정 탈퇴",
+      "SYSTEM": "시스템"
+    },
     "empty": "조건에 맞는 감사 로그가 없습니다.",
     "pagination": "감사 로그 페이지",
     "previous": "이전",
@@ -685,6 +749,189 @@
     "toast": {
       "loadFailedTitle": "감사 로그를 사용할 수 없음",
       "loadFailedDescription": "감사 로그를 불러오지 못했습니다."
+    }
+  },
+  "recruitment": {
+    "metaTitle": "멤버 모집 | Ninja Labs 관리자",
+    "metaDescription": "기수를 만들고, 모집을 열고 닫고, 지원서를 심사합니다.",
+    "title": "멤버 모집 관리",
+    "description": "기수를 만들고, 모집을 열고, 지원자를 심사하고, 목록을 내보냅니다. 합격은 멤버 지정이 아니에요. 멤버는 사용자 탭에서 따로 지정하세요.",
+    "newCohort": "새 기수",
+    "empty": "아직 기수가 없습니다. 아래에서 첫 기수를 만드세요.",
+    "selectHint": "기수의 ‘지원서’ 버튼을 누르면 지원자를 볼 수 있습니다.",
+    "deleteBlocked": "지원서가 있는 기수는 삭제할 수 없습니다. 마감 처리하세요.",
+    "columns": {
+      "name": "기수",
+      "status": "상태",
+      "window": "접수 기간",
+      "applications": "지원서",
+      "action": "작업"
+    },
+    "statuses": {
+      "DRAFT": "초안",
+      "OPEN": "모집 중",
+      "CLOSED": "마감"
+    },
+    "counts": "전체 {total} · 대기 {submitted} · 합격 {accepted} · 불합격 {rejected}",
+    "window": {
+      "unbounded": "제한 없음",
+      "none": "기간 없음 (기수가 열려 있는 동안)"
+    },
+    "actions": {
+      "applications": "지원서",
+      "open": "모집 열기",
+      "reopen": "다시 열기",
+      "close": "모집 마감"
+    },
+    "transition": {
+      "eyebrow": "모집 상태 변경",
+      "open": {
+        "title": "{name} 모집을 열까요?",
+        "description": "지원자가 바로 지원서를 보낼 수 있어요(접수 기간을 정했다면 그 안에서). 한 번에 하나의 기수만 열 수 있습니다.",
+        "confirm": "모집 열기"
+      },
+      "reopen": {
+        "title": "{name} 모집을 다시 열까요?",
+        "description": "지원자가 다시 지원서를 보내고 수정할 수 있어요. 한 번에 하나의 기수만 열 수 있습니다.",
+        "confirm": "다시 열기"
+      },
+      "close": {
+        "title": "{name} 모집을 마감할까요?",
+        "description": "새 지원과 수정이 멈춰요. 지원자는 철회할 수 있고, 나중에 다시 열 수도 있어요.",
+        "confirm": "모집 마감"
+      }
+    },
+    "form": {
+      "eyebrowCreate": "새 기수 양식",
+      "eyebrowEdit": "기수 수정 양식",
+      "titleCreate": "기수 만들기",
+      "titleEdit": "기수 수정",
+      "name": "이름",
+      "namePlaceholder": "닌자랩스 2기",
+      "description": "설명 (지원자에게 보여요)",
+      "descriptionPlaceholder": "이 기수가 어떤 모집이고 어떤 사람을 찾는지 적어 주세요.",
+      "opensAt": "접수 시작 (선택)",
+      "closesAt": "접수 종료 (선택)",
+      "windowHint": "시각은 브라우저의 시간대 기준이에요. 비워 두면 제한이 없고, 기수가 열려 있는 동안 지원을 받아요.",
+      "draftNote": "새 기수는 초안으로 시작해요. 준비가 되면 목록에서 ‘모집 열기’를 누르세요.",
+      "errors": {
+        "required": "필수 항목입니다.",
+        "tooLong": "너무 깁니다. 최대 {max}자까지 입력할 수 있습니다.",
+        "window": "접수 종료 시각은 시작 시각보다 늦어야 합니다."
+      }
+    },
+    "toast": {
+      "loadFailedTitle": "불러오지 못했습니다",
+      "loadFailedDescription": "기수 목록을 불러오지 못했습니다. 다시 시도하세요.",
+      "createdTitle": "기수를 만들었습니다",
+      "updatedTitle": "기수를 수정했습니다",
+      "deletedTitle": "기수를 삭제했습니다",
+      "transitioned": {
+        "OPEN": "모집을 열었습니다",
+        "CLOSED": "모집을 마감했습니다"
+      }
+    },
+    "applications": {
+      "eyebrow": "지원서",
+      "heading": "{name} 지원서",
+      "export": "CSV 내보내기",
+      "exporting": "내보내는 중…",
+      "filters": {
+        "label": "지원서 필터",
+        "status": "상태",
+        "activityType": "활동 유형",
+        "interestArea": "참여 분야",
+        "search": "검색",
+        "searchPlaceholder": "이름, Telegram, X, 닉네임, 이메일",
+        "all": "전체",
+        "apply": "적용",
+        "reset": "초기화"
+      },
+      "statuses": {
+        "SUBMITTED": "대기",
+        "ACCEPTED": "합격",
+        "REJECTED": "불합격",
+        "WITHDRAWN": "철회"
+      },
+      "decisions": {
+        "ACCEPTED": "합격",
+        "REJECTED": "불합격"
+      },
+      "columns": {
+        "applicant": "지원자",
+        "contact": "연락처",
+        "experience": "Web3 경력",
+        "activity": "활동 유형",
+        "interests": "참여 분야",
+        "status": "상태",
+        "applied": "지원일",
+        "action": "작업"
+      },
+      "loading": "지원서를 불러오는 중…",
+      "empty": "아직 지원서가 없습니다.",
+      "emptyFiltered": "조건에 맞는 지원서가 없습니다.",
+      "total": "지원서 {total}건",
+      "pagination": "지원서 페이지",
+      "previous": "이전",
+      "next": "다음",
+      "pageOf": "{page} / {pages} 페이지",
+      "review": "심사",
+      "changeDecision": "결정 변경",
+      "withdrawnNote": "철회됨",
+      "toast": {
+        "loadFailedTitle": "불러오지 못했습니다",
+        "loadFailedDescription": "지원서를 불러오지 못했습니다. 다시 시도하세요.",
+        "exportFailedTitle": "내보내기 실패",
+        "reviewedTitle": "심사 결과를 저장했습니다",
+        "reviewedDescription": "{name}: {decision}"
+      }
+    },
+    "review": {
+      "eyebrow": "지원서 심사",
+      "title": "{name}님 지원서 심사",
+      "description": "메모는 운영진만 봅니다. 지원자에게는 결과(합격/불합격)만 보이고 메모는 보이지 않아요.",
+      "memberNote": "합격해도 멤버가 되는 것은 아닙니다.",
+      "memberLink": "멤버 지정은 사용자 탭에서 하세요.",
+      "fields": {
+        "applicant": "지원자",
+        "status": "현재 상태"
+      },
+      "statuses": {
+        "SUBMITTED": "대기",
+        "ACCEPTED": "합격",
+        "REJECTED": "불합격",
+        "WITHDRAWN": "철회"
+      },
+      "decision": "결정",
+      "decisions": {
+        "ACCEPTED": "합격",
+        "REJECTED": "불합격"
+      },
+      "note": "내부 메모 (선택)",
+      "notePlaceholder": "결정 이유, 팀이 이어서 할 일",
+      "noteHint": "최대 2000자. 결정을 바꾸면 여기에 쓴 메모로 새로 저장돼요.",
+      "saving": "저장하는 중…",
+      "confirm": {
+        "ACCEPTED": "합격 처리",
+        "REJECTED": "불합격 처리",
+        "none": "결정을 선택하세요"
+      }
+    },
+    "errors": {
+      "COHORT_NOT_FOUND": "이 기수가 더 이상 없습니다. 목록을 새로 불러왔습니다.",
+      "COHORT_ALREADY_OPEN": "다른 기수가 이미 열려 있습니다. 그 기수를 먼저 마감한 뒤 여세요.",
+      "COHORT_HAS_APPLICATIONS": "지원서가 있는 기수는 삭제할 수 없습니다(철회한 지원서 포함). 마감 처리하세요.",
+      "COHORT_INVALID_WINDOW": "접수 종료 시각은 시작 시각보다 늦어야 합니다.",
+      "COHORT_INVALID_TRANSITION": "현재 상태에서는 할 수 없는 변경입니다. 목록을 새로 불러왔습니다.",
+      "COHORT_APPLICATION_NOT_FOUND": "이 지원서가 더 이상 없습니다. 목록을 새로 불러왔습니다.",
+      "COHORT_APPLICATION_WITHDRAWN": "지원자가 철회한 지원서라 심사할 수 없습니다.",
+      "INVALID_CHARACTER": "저장할 수 없는 문자(예: NUL 문자)가 들어 있습니다. 지우고 다시 시도하세요.",
+      "INVALID_DATE": "달력에 없는 날짜나 시각입니다. 값을 고치고 다시 시도하세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "ADMIN_ONLY": "이 계정에는 더 이상 관리자 권한이 없습니다.",
+      "UNAUTHORIZED": "세션이 만료되었습니다. 다시 로그인하세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
+      "generic": "요청을 처리하지 못했습니다. 다시 시도해 주세요."
     }
   }
 }

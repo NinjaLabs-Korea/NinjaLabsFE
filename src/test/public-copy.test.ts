@@ -22,6 +22,14 @@ describe.each([["en", en], ["ko", ko], ["zh", zh]] as const)("agents.register co
     expect(typeof register.withdrawalBadge).toBe("string");
   });
 
+  it("keeps developer wording out of the user-facing list and links to the pages that do the work", () => {
+    const items = Object.values(register.verificationItems as Record<string, string>).join(" ");
+    expect(items).not.toMatch(/database|1:N|데이터베이스|数据库/i);
+    expect(register).not.toHaveProperty("verificationItems.failure");
+    expect(register.profileNote as string).toContain("<link>");
+    expect(register.withdrawal as string).toContain("<link>");
+  });
+
   it("does not ask for a public key", () => {
     const steps = register.steps as Record<string, { heading: string }>;
     expect(steps.publicKey.heading).not.toMatch(/public key|公钥|공개 키/i);
@@ -57,5 +65,36 @@ describe.each([["en", enLegal], ["ko", koLegal], ["zh", zhLegal]] as const)("leg
   it("does not claim sign-in tokens live in browser storage", () => {
     const access = items.find((item) => /User-Agent/.test(item)) ?? "";
     expect(access).not.toMatch(/browser's storage|브라우저 저장소|浏览器存储/);
+  });
+});
+
+// Spec annotations ("Edge case: signed-in user clicks Get Started -> ...") are design notes, not product copy, and U+2014
+// is banned in everything we ship. Both leaked into user-facing pages before.
+describe("user-facing messages", () => {
+  const files = import.meta.glob("../../messages/*/*.json", { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
+
+  it("contain no em dash in any locale", () => {
+    const offenders = Object.entries(files).filter(([, text]) => text.includes("\u2014")).map(([file]) => file);
+    expect(offenders).toEqual([]);
+  });
+
+  it("carry no edge-case spec boxes on the signup and agent register pages", () => {
+    for (const [file, text] of Object.entries(files)) {
+      if (/\/(signup|agents)\.json$/.test(file)) {
+        expect(text, file).not.toMatch(/"edgeCases?"|"edgeCaseBadge"|"statusTitle"/);
+      }
+    }
+  });
+});
+
+// The project rule is "no U+2014 anywhere" (code comments, admin UI strings, docs). Source files leaked it into admin dropdowns
+// and review-history lines before; this keeps it out of everything under src/ and integration/.
+describe("source files", () => {
+  const sources = import.meta.glob(["../**/*.{ts,tsx}", "../../integration/**/*.{mjs,js,ts}"], { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
+
+  it("contain no em dash", () => {
+    expect(Object.keys(sources).length).toBeGreaterThan(100); // the glob really found the tree
+    const offenders = Object.entries(sources).filter(([, text]) => text.includes("\u2014")).map(([file]) => file);
+    expect(offenders).toEqual([]);
   });
 });

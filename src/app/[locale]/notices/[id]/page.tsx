@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Markdown } from "@/components/ui/Markdown";
 import { Link } from "@/i18n/navigation";
 import { safeHttpUrl } from "@/lib/api/codecs";
+import { noticeEventDateLabel } from "@/lib/community";
 import { validateDetailId } from "@/lib/detail-id";
 import { imageProps } from "@/lib/image";
 import { getRuntimeNotice, noticeCategoryKeys } from "@/lib/notices";
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: NoticeDetailPageProps): Promi
     return { alternates: {}, title: t("notFoundTitle") };
   }
 
-  return localeMetadata(locale, `/notices/${notice.slug}`, { title: t("pageTitle", { title: notice.title }), description: notice.excerpt });
+  return localeMetadata(locale, `/notices/${notice.slug}`, { title: t("pageTitle", { title: notice.title }), description: notice.excerpt, ...(notice.thumbnail ? { image: notice.thumbnail } : {}) });
 }
 
 export default async function NoticeDetailPage({ params }: NoticeDetailPageProps) {
@@ -42,6 +43,7 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
   // Admin-entered URLs: anything but http(s)/same-origin renders the placeholder / no link.
   const coverImage = safeHttpUrl(notice.coverImage);
   const externalUrl = safeHttpUrl(notice.externalUrl);
+  const eventDate = noticeEventDateLabel(notice);
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
@@ -59,8 +61,9 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
         <div className="flex flex-wrap items-center gap-3">
           <Badge>{t(`categories.${noticeCategoryKeys[notice.category]}`)}</Badge>
           <span className="text-sm text-ink-muted">{notice.publishedAt}</span>
+          {eventDate ? <span className="text-sm font-semibold text-primary">{t("eventDate", { date: eventDate })}</span> : null}
         </div>
-        <h1 className="mt-5 break-words font-display text-5xl tracking-[-0.48px] text-ink">{notice.title}</h1>
+        <h1 className="mt-5 break-words font-display text-4xl tracking-[-0.36px] sm:text-5xl sm:tracking-[-0.48px] text-ink">{notice.title}</h1>
         <p className="mt-5 break-words text-lg text-ink-muted">{notice.excerpt}</p>
       </section>
 
@@ -68,7 +71,7 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
         {coverImage ? <Image {...imageProps(coverImage)} alt="" className="object-cover" fill priority sizes="(max-width: 1200px) 100vw, 1152px" /> : null}
       </div>
 
-      <div className="mt-8 grid gap-8 md:grid-cols-4">
+      <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-4">
         <article className="min-w-0 rounded-card border border-border bg-surface p-5 shadow-card md:col-span-3">
           <div className="break-words text-base text-ink-secondary">
             <Markdown>{notice.bodyMarkdown}</Markdown>

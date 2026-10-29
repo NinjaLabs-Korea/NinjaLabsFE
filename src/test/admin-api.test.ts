@@ -52,6 +52,16 @@ describe("admin notice save payload", () => {
     expect(init.body.summary).toBe("Kickoff Join the hackathon at Injective. Prizes code");
   });
 
+  it("never overwrites the stored summary on an edit: omitted unless the caller supplied one", async () => {
+    const { http, fetchJson } = createHttp();
+    const api = createAdminApi(http);
+    await api.saveAdminPost({ ...post, bodyMarkdown: "# Hello\nWelcome builders." }, false);
+    await api.saveAdminPost({ ...post, summary: "Kept, hand written" }, false);
+    const bodies = fetchJson.mock.calls.map((call) => (call as unknown as [string, { body: Record<string, unknown> }])[1].body);
+    expect(bodies[0]).not.toHaveProperty("summary");
+    expect(bodies[1]).toMatchObject({ summary: "Kept, hand written" });
+  });
+
   it("sends cleared thumbnail/external URLs as null so the BE clears the columns (never an omitted key)", async () => {
     const { http, fetchJson } = createHttp();
     await createAdminApi(http).saveAdminPost({ ...post, thumbnail: null, externalUrl: null }, false);
@@ -108,9 +118,9 @@ describe("admin bounty save payload", () => {
     expect(Object.keys(init.body)).toContain("coverImageUrl");
   });
 
-  it("POST still sends maxWinners 1 because the form does not expose it", async () => {
+  it("POST sends the form's maxWinners", async () => {
     const { http, fetchJson } = createHttp();
-    await createAdminApi(http).saveAdminBounty(bounty, true);
+    await createAdminApi(http).saveAdminBounty({ ...bounty, maxWinners: 1 }, true);
     const [, init] = fetchJson.mock.calls[0] as unknown as [string, { body: Record<string, unknown> }];
     expect(init.body).toMatchObject({ maxWinners: 1 });
   });
@@ -165,5 +175,19 @@ describe("admin highlight save payload", () => {
     await api.saveAdminHighlight({ ...highlight, published: true }, true);
     expect(body(fetchJson, 0)).toMatchObject({ method: "POST", body: { type: "PARTNERSHIP", publish: false } });
     expect(body(fetchJson, 1)).toMatchObject({ method: "POST", body: { type: "PARTNERSHIP", publish: true } });
+  });
+});
+
+describe("admin notice event date", () => {
+  it("sends eventDate on create and edit, and null when it was cleared (an omitted key would keep the old date)", async () => {
+    const { http, fetchJson } = createHttp();
+    const api = createAdminApi(http);
+    await api.saveAdminPost({ ...post, eventDate: "2026-06-18" }, true);
+    await api.saveAdminPost({ ...post, eventDate: null }, false);
+    await api.saveAdminPost(post, false);
+    const bodies = fetchJson.mock.calls.map((call) => (call as unknown as [string, { body: Record<string, unknown> }])[1].body);
+    expect(bodies[0]).toMatchObject({ eventDate: "2026-06-18" });
+    expect(bodies[1]).toMatchObject({ eventDate: null });
+    expect(bodies[2]).toHaveProperty("eventDate", null);
   });
 });

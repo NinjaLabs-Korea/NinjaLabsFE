@@ -37,10 +37,10 @@ const fail = (status: number, code: string): never => {
 };
 
 const STATUS_FROM_ADMIN: Record<AdminBounty["status"], BountyStatusCode> = {
-  draft: "DRAFT", funding: "FUNDING_PENDING", active: "OPEN", reviewing: "IN_REVIEW", closed: "COMPLETED",
+  draft: "DRAFT", funding: "FUNDING_PENDING", active: "OPEN", submissionClosed: "SUBMISSION_CLOSED", reviewing: "IN_REVIEW", completed: "COMPLETED", cancelled: "CANCELLED",
 };
 export const ADMIN_STATUS_FROM_CODE: Record<string, AdminBounty["status"]> = {
-  DRAFT: "draft", FUNDING_PENDING: "funding", OPEN: "active", SUBMISSION_CLOSED: "reviewing", IN_REVIEW: "reviewing",
+  DRAFT: "draft", FUNDING_PENDING: "funding", OPEN: "active", SUBMISSION_CLOSED: "submissionClosed", IN_REVIEW: "reviewing", COMPLETED: "completed", CANCELLED: "cancelled",
 };
 
 /** Deterministic per-bounty operations seed: one pending + one approved application, a resubmitted entry, an approved agent entry with a payout requested by another admin. */
@@ -138,7 +138,7 @@ export function lifecycleFor(ops: AdminOperations): AdminOperations["lifecycle"]
   if (unresolved) blockers.COMPLETED.push({ code: "UNRESOLVED_SUBMISSIONS", count: unresolved });
   if (unpaid || unawarded) {
     blockers.COMPLETED.push({ code: "UNPAID_WINNERS" });
-    // Cancelling would refund deposit minus PAID, handing an unpaid winner's share back to the sponsor — same rule, same code.
+    // Cancelling would refund deposit minus PAID, handing an unpaid winner's share back to the sponsor - same rule, same code.
     blockers.CANCELLED.push({ code: "UNPAID_WINNERS" });
   }
   return { blockers, allowedTransitions: [...(BOUNTY_TRANSITIONS[ops.bounty.status as BountyStatusCode] ?? [])] };

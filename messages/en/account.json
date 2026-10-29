@@ -4,10 +4,12 @@
     "unavailableBody": "We couldn’t reach the server. Please try again shortly.",
     "mockNote": "Session preview: demo data, resets on reload.",
     "loading": "Loading your account…",
-    "sessionExpired": "Your session has expired. Sign in again to continue."
+    "sessionExpired": "Your session has expired. Sign in again to continue.",
+    "sessionUnavailableTitle": "We can't check your sign-in right now.",
+    "retry": "Try again"
   },
   "signedOut": {
-    "body": "Complete the sign-up flow to preview your account.",
+    "body": "Sign in with Google to see your account.",
     "cta": "Get Started"
   },
   "applications": {
@@ -18,11 +20,13 @@
     "unavailableTitle": "Applications are temporarily unavailable.",
     "signedOutMessage": "Sign in to see your applications",
     "emptyTitle": "You have not applied to any bounty yet.",
-    "emptyBody": "Apply-type bounties show up here once you apply.",
+    "emptyBody": "Bounties you applied to or submitted work for show up here.",
     "browseBounties": "Browse bounties",
     "heading": "My applications",
-    "intro": "Track every apply-type bounty you applied to. Submitting unlocks after sponsor approval.",
+    "intro": "Track every bounty you applied to or submitted work for, including direct submissions and your agents' work. Submitting unlocks after sponsor approval on apply-type bounties.",
     "appliedAt": "Applied {date}",
+    "submittedAt": "Submitted {date}",
+    "agentRevisionNote": "The reviewer asked for changes to the work your agent {name} submitted. Have it resubmit through the Agent API.",
     "progressLabel": "Application progress",
     "steps": {
       "open": "Applied",
@@ -31,6 +35,7 @@
       "completed": "Completed"
     },
     "approvedStatus": "Approved: submit unlocked",
+    "agentApprovedStatus": "Approved: your agent {name} submits through the Agent API",
     "submitWork": "Submit work",
     "resubmit": "Resubmit",
     "revisionRequestedStatus": "Revision requested",
@@ -81,7 +86,7 @@
       "sessions": "You are signed out everywhere and your public profile disappears.",
       "agents": "Your agents are revoked and their API keys stop working immediately.",
       "history": "Pending applications and submissions still under review are withdrawn. Completed work, payouts and NFTs stay on record under an anonymous name.",
-      "rewards": "Approved work whose reward has not been requested yet will no longer be paid. Accounts with a payout in progress cannot be deleted until it completes."
+      "rewards": "If you have approved work whose reward has not been paid out yet, your account cannot be deleted until the payout is complete, so the reward is never lost."
     },
     "deleteAction": "Delete account",
     "deleteDialog": {
@@ -100,6 +105,18 @@
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
       "generic": "We couldn’t delete your account. Please try again shortly.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
+    },
+    "bioLabel": "Bio",
+    "tagsLabel": "Field tags",
+    "editProfile": "Edit profile",
+    "cancelEdit": "Cancel editing",
+    "wallet": {
+      "heading": "Wallet",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "linkedNote": "A linked wallet is fixed to your account and can’t be changed or unlinked here. Contact the operators if you need a different one.",
+      "body": "If you chose “Connect later” while signing up, connect your wallet here. Connecting a wallet issues your Ninja NFT.",
+      "unavailable": "Wallet connection is not available in this environment."
     }
   }
 }

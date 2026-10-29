@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { BountyManager } from "@/components/admin/BountyManager";
@@ -100,6 +100,23 @@ describe("BountyManager", () => {
     expect(adminApi.saveAdminBounty).toHaveBeenCalledTimes(1);
     // Untouched deliverables/guide: the raw requirements string goes back byte-identical.
     expect(adminApi.saveAdminBounty).toHaveBeenCalledWith(expect.objectContaining({ requirements: "- Repo\n\n  note", coverImage: bounty.coverImage }), false);
+    pending.resolve();
+    await waitFor(() => expect((screen.getByRole("button", { name: "Create" }) as HTMLButtonElement).disabled).toBe(false));
+  });
+
+  it("sends one save when several submit events land in the same tick (before React re-renders `saving`)", async () => {
+    const pending = deferred("b1");
+    adminApi.saveAdminBounty.mockReturnValue(pending.promise);
+    renderWithIntl(<BountyManager bounties={[bounty]} tabs={null}>{null}</BountyManager>);
+    await waitFor(() => expect(adminApi.getAdminBounties).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const form = (screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).closest("form") as HTMLFormElement;
+    act(() => {
+      fireEvent.submit(form);
+      fireEvent.submit(form);
+      fireEvent.submit(form);
+    });
+    expect(adminApi.saveAdminBounty).toHaveBeenCalledTimes(1);
     pending.resolve();
     await waitFor(() => expect((screen.getByRole("button", { name: "Create" }) as HTMLButtonElement).disabled).toBe(false));
   });
@@ -237,6 +254,13 @@ describe("HighlightManager", () => {
 });
 
 describe("PostManager", () => {
+  it("hints that the external link takes http(s) only (a /media path is the thumbnail rule, not this field's)", async () => {
+    renderWithIntl(<PostManager posts={[post]} tabs={null}>{null}</PostManager>);
+    await waitFor(() => expect(adminApi.getAdminPosts).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(document.getElementById("post-externalUrl-hint")?.textContent).toBe("https://… (http or https only)");
+  });
+
   it("sends cleared external link and thumbnail as null and blocks double saves", async () => {
     const pending = deferred("n1");
     adminApi.saveAdminPost.mockReturnValue(pending.promise);
@@ -254,6 +278,68 @@ describe("PostManager", () => {
     expect(adminApi.saveAdminPost).toHaveBeenCalledWith(expect.objectContaining({ slug: "n1", externalUrl: null, thumbnail: null }), false, undefined);
     pending.resolve();
     await waitFor(() => expect(save.disabled).toBe(false));
+  });
+});
+
+describe("admin form accessibility and previews", () => {
+  it("shows the stored notice thumbnail as an image in the edit form, not only its path", async () => {
+    renderWithIntl(<PostManager posts={[post]} tabs={null}>{null}</PostManager>);
+    await waitFor(() => expect(adminApi.getAdminPosts).toHaveBeenCalled());
+    expect(screen.queryByTestId("thumbnail-preview")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const preview = screen.getByTestId("thumbnail-preview");
+    expect(preview.querySelector("img")?.getAttribute("src")).toContain("11111111-1111-4111-8111-111111111111");
+    fireEvent.click(screen.getByRole("button", { name: "Remove image" }));
+    expect(screen.queryByTestId("thumbnail-preview")).toBeNull();
+  });
+
+  it("names the Hall of Fame image upload input for assistive technology", async () => {
+    renderWithIntl(<HighlightManager highlights={[]} />);
+    await waitFor(() => expect(adminApi.getAdminHighlights).toHaveBeenCalled());
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(input.getAttribute("aria-label")).toBe("Image upload");
+  });
+
+  it("tells the admin that markdown images are not shown in a notice body", async () => {
+    renderWithIntl(<PostManager posts={[]} tabs={null}>{null}</PostManager>);
+    expect(await screen.findByText(/Images, tables and raw HTML are not/)).toBeTruthy();
+  });
+});
+
+describe("PostManager event date", () => {
+  it("offers the event date only for the Events category and never sends one for another category", async () => {
+    adminApi.saveAdminPost.mockResolvedValue({ id: "n1" });
+    adminApi.getAdminPosts.mockResolvedValueOnce([{ ...post, category: "Other", eventDate: "2026-11-11" }]);
+    renderWithIntl(<PostManager posts={[{ ...post, category: "Other", eventDate: "2026-11-11" }]} tabs={null}>{null}</PostManager>);
+    await waitFor(() => expect(adminApi.getAdminPosts).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.queryByLabelText(/Event date \(optional\)/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(adminApi.saveAdminPost).toHaveBeenCalledTimes(1));
+    expect(adminApi.saveAdminPost.mock.calls[0][0]).toMatchObject({ eventDate: null });
+  });
+
+  it("lists the event date, prefills it on edit, and sends a changed or cleared one", async () => {
+    adminApi.getAdminPosts.mockResolvedValueOnce([{ ...post, eventDate: "2026-06-18" }]);
+    adminApi.saveAdminPost.mockResolvedValue({ id: "n1" });
+    renderWithIntl(<PostManager posts={[{ ...post, eventDate: "2026-06-18" }]} tabs={null}>{null}</PostManager>);
+    await waitFor(() => expect(adminApi.getAdminPosts).toHaveBeenCalled());
+    expect(screen.getByRole("columnheader", { name: "Event date" })).toBeTruthy();
+    expect(screen.getByText("2026-06-18")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const input = screen.getByLabelText(/Event date \(optional\)/) as HTMLInputElement;
+    expect(input.type).toBe("date");
+    expect(input.value).toBe("2026-06-18");
+    fireEvent.change(input, { target: { value: "2026-07-01" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(adminApi.saveAdminPost).toHaveBeenCalledTimes(1));
+    expect(adminApi.saveAdminPost.mock.calls[0][0]).toMatchObject({ eventDate: "2026-07-01" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    fireEvent.change(screen.getByLabelText(/Event date \(optional\)/), { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(adminApi.saveAdminPost).toHaveBeenCalledTimes(2));
+    expect(adminApi.saveAdminPost.mock.calls[1][0]).toMatchObject({ eventDate: null });
   });
 });
 

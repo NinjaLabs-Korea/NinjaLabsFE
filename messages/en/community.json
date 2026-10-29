@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "title": "About Ninja Labs | Ninja Labs",
+    "description": "Meet the Contributor Hub for people who learn, build and move on Injective: past activities, achievements and members."
+  },
+  "about": {
+    "eyebrow": "About Ninja Labs",
+    "heading": "Learn, build and move on Injective",
+    "body": "Ninja Labs is the Contributor Hub for people who learn, build and move on Injective. Developers, marketers, researchers and creators are all free to take part.",
+    "roles": {
+      "developer": {
+        "title": "Developers",
+        "description": "Ship contracts, tools and integrations on Injective."
+      },
+      "marketer": {
+        "title": "Marketers",
+        "description": "Grow the community and tell the Injective story."
+      },
+      "researcher": {
+        "title": "Researchers",
+        "description": "Dig into protocols and share what you find."
+      },
+      "creator": {
+        "title": "Creators",
+        "description": "Make guides, designs and content builders want to use."
+      }
+    }
+  },
+  "activities": {
+    "eyebrow": "Past activities",
+    "heading": "What we have done together",
+    "viewAll": "See all events →",
+    "unavailable": "Past activities are temporarily unavailable.",
+    "unavailableBody": "We couldn’t reach the server. Please reload shortly.",
+    "empty": "No events have been posted yet. Check back soon."
+  },
+  "achievements": {
+    "eyebrow": "Recent achievements",
+    "heading": "What the community has shipped",
+    "viewAll": "Open the Hall of Fame →",
+    "unavailable": "Achievements are temporarily unavailable.",
+    "unavailableBody": "We couldn’t reach the server. Please reload shortly.",
+    "empty": "Achievements will show up here as the community ships."
+  },
+  "members": {
+    "eyebrow": "Members",
+    "heading": "Meet the members",
+    "viewAll": "All members →",
+    "unavailable": "Members are temporarily unavailable.",
+    "unavailableBody": "We couldn’t reach the server. Please reload shortly.",
+    "empty": "Official members will be listed here."
+  }
+}

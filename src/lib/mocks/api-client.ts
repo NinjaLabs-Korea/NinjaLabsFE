@@ -1,3 +1,4 @@
+import { newestFirst } from "@/lib/account-order";
 import type { AdminApi, ApiClient } from "@/lib/contracts/api";
 import type { AccountAgent, AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
@@ -7,6 +8,7 @@ import { getBounty } from "@/lib/bounties";
 import { createMockFixtures, getMockFixtureSnapshot, type MockAccountFixtures } from "@/lib/mocks/fixtures";
 import { getAdminBounties, getAdminHighlights, getAdminPosts, getAdminUsers } from "@/lib/admin";
 import { ADMIN_STATUS_FROM_CODE, createMockOperationsApi } from "@/lib/mocks/admin-operations";
+import { createMockCohortApis } from "@/lib/mocks/cohorts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const daysFromNow = (days: number): string => new Date(Date.now() + days * DAY_MS).toISOString();
@@ -28,6 +30,7 @@ function toPreviewApplication(id: string, bountyId: string, message: string): Ac
   const bounty = getBounty(bountyId);
   return {
     id,
+    source: "application",
     bountySlug: bountyId,
     bountyTitle: bounty?.applicationTitle ?? bounty?.title ?? bountyId,
     category: bounty?.category ?? "Other",
@@ -73,6 +76,7 @@ export function createMockApiClient(seed = "default"): ApiClient {
     agents = agents.map((agent) => (agent.id === agentId ? next : agent));
     return next;
   };
+  const cohorts = createMockCohortApis({ nextId, ownerId: fixtureSnapshot.account.user.id, isOwner: (auth) => isFixtureOwner(auth, fixtureSnapshot) });
   return {
     getAccount: async (auth) => {
       if (!isFixtureOwner(auth, fixtureSnapshot)) {
@@ -86,7 +90,7 @@ export function createMockApiClient(seed = "default"): ApiClient {
         return { status: "available", data: [] };
       }
 
-      return { status: "available", data: applications.map((application) => ({ ...application })) };
+      return { status: "available", data: newestFirst(applications.map((application) => ({ ...application }))) };
     },
     getSubmissions: async (auth) => {
       if (!isFixtureOwner(auth, fixtureSnapshot)) {
@@ -198,19 +202,13 @@ export function createMockApiClient(seed = "default"): ApiClient {
         throw new MockApiError(400, "CONFIRM_NICKNAME_MISMATCH");
       }
     },
+    ...cohorts.applicantApi,
     ...createMockAdminApi(nextId),
+    ...cohorts.adminApi,
   };
 }
 
-const ADMIN_BOUNTY_STATUS: Record<string, AdminBounty["status"]> = {
-  DRAFT: "draft",
-  FUNDING_PENDING: "funding",
-  OPEN: "active",
-  SUBMISSION_CLOSED: "reviewing",
-  IN_REVIEW: "reviewing",
-};
-
-/** 운영자 콘솔 mock — fixture로 시작해 이 탭 안의 생성·수정·전이·삭제를 메모리에 반영한다 (새로고침하면 초기화). */
+/** 운영자 콘솔 mock - fixture로 시작해 이 탭 안의 생성·수정·전이·삭제를 메모리에 반영한다 (새로고침하면 초기화). */
 function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
   let users: AdminUser[] = getAdminUsers();
   let bounties: AdminBounty[] = getAdminBounties();
@@ -267,7 +265,7 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
       requireOne(bounties, (item) => item.slug === bountyId, "BOUNTY_NOT_FOUND");
       // A bounty opened in the operations console enforces the BE transition table + lifecycle blockers on its mock rows.
       if (openedOperations.has(bountyId)) transitionOperations(bountyId, to);
-      const status = ADMIN_BOUNTY_STATUS[to] ?? ADMIN_STATUS_FROM_CODE[to] ?? "closed";
+      const status = ADMIN_STATUS_FROM_CODE[to] ?? "completed";
       bounties = bounties.map((item) => (item.slug === bountyId ? { ...item, status } : item));
     },
     deleteAdminBounty: async (bountyId) => {
@@ -288,7 +286,7 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
       // `publish` is only sent when the state toggled; a plain edit keeps the stored publishedAt (BE contract).
       const status = options?.publish === undefined ? current.status : options.publish ? "published" : "draft";
       const publishedAt = options?.publish === undefined ? current.publishedAt : options.publish ? today : null;
-      posts = posts.map((item) => (item.slug === post.slug ? { ...post, status, publishedAt } : item));
+      posts = posts.map((item) => (item.slug === post.slug ? { ...post, summary: post.summary ?? item.summary, status, publishedAt } : item));
       return { id: post.slug };
     },
     deleteAdminPost: async (noticeId) => {

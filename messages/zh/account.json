@@ -4,10 +4,12 @@
     "unavailableBody": "无法连接服务器，请稍后重试。",
     "mockNote": "会话预览：演示数据，刷新后将重置。",
     "loading": "正在加载账户信息…",
-    "sessionExpired": "会话已过期，请重新登录。"
+    "sessionExpired": "会话已过期，请重新登录。",
+    "sessionUnavailableTitle": "暂时无法确认你的登录状态。",
+    "retry": "重试"
   },
   "signedOut": {
-    "body": "完成注册流程即可预览你的账户。",
+    "body": "使用 Google 登录即可查看你的账户。",
     "cta": "开始使用"
   },
   "applications": {
@@ -18,11 +20,13 @@
     "unavailableTitle": "暂时无法获取申请记录。",
     "signedOutMessage": "登录后查看你的申请",
     "emptyTitle": "你还没有申请任何赏金任务。",
-    "emptyBody": "申请制赏金任务在你申请后会显示在这里。",
+    "emptyBody": "你申请过或提交过作品的赏金会显示在这里。",
     "browseBounties": "浏览赏金任务",
     "heading": "我的申请",
-    "intro": "跟踪你申请过的所有申请型赏金。赞助方批准后即可提交。",
+    "intro": "跟踪你申请过或提交过作品的所有赏金（包括直接提交和你的代理的提交）。申请型赏金需赞助方批准后才能提交。",
     "appliedAt": "申请于 {date}",
+    "submittedAt": "提交于 {date}",
+    "agentRevisionNote": "审核人要求修改你的代理 {name} 提交的作品。请让它通过 Agent API 重新提交。",
     "progressLabel": "申请进度",
     "steps": {
       "open": "已申请",
@@ -31,6 +35,7 @@
       "completed": "已完成"
     },
     "approvedStatus": "已批准：可以提交",
+    "agentApprovedStatus": "已批准：你的代理 {name} 通过 Agent API 提交",
     "submitWork": "提交作品",
     "resubmit": "重新提交",
     "revisionRequestedStatus": "已要求修改",
@@ -81,7 +86,7 @@
       "sessions": "你将在所有设备上退出登录，公开主页也会消失。",
       "agents": "你的代理将被吊销，其 API 密钥会立即失效。",
       "history": "待审核的申请和尚在审核中的提交将被撤回。已完成的工作、付款记录和 NFT 会以匿名名称保留。",
-      "rewards": "已通过但尚未申请付款的奖励将不再发放。若有付款正在进行，需等其完成后才能删除账户。"
+      "rewards": "如果你有已通过审核但奖励尚未发放的作品,在发放完成之前无法删除账户,以确保奖励不会丢失。"
     },
     "deleteAction": "删除账户",
     "deleteDialog": {
@@ -100,6 +105,18 @@
       "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
       "generic": "无法删除你的账户，请稍后重试。",
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
+    },
+    "bioLabel": "简介",
+    "tagsLabel": "领域标签",
+    "editProfile": "编辑资料",
+    "cancelEdit": "取消编辑",
+    "wallet": {
+      "heading": "钱包",
+      "connected": "已连接",
+      "notConnected": "未连接",
+      "linkedNote": "已连接的钱包与账户绑定,无法在此更换或解绑。如需更换请联系运营团队。",
+      "body": "如果注册时选择了“稍后连接”,可以在这里连接钱包。连接钱包后会发放你的 Ninja NFT。",
+      "unavailable": "当前环境无法使用钱包连接。"
     }
   }
 }

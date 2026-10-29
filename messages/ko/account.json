@@ -4,10 +4,12 @@
     "unavailableBody": "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
     "mockNote": "세션 미리보기: 데모 데이터이며 새로고침하면 초기화됩니다.",
     "loading": "계정 정보를 불러오는 중…",
-    "sessionExpired": "세션이 만료되었습니다. 다시 로그인해 주세요."
+    "sessionExpired": "세션이 만료되었습니다. 다시 로그인해 주세요.",
+    "sessionUnavailableTitle": "지금은 로그인 상태를 확인할 수 없습니다.",
+    "retry": "다시 시도"
   },
   "signedOut": {
-    "body": "가입 절차를 완료하면 내 계정을 미리 볼 수 있습니다.",
+    "body": "Google로 로그인하면 내 계정을 볼 수 있습니다.",
     "cta": "시작하기"
   },
   "applications": {
@@ -18,11 +20,13 @@
     "unavailableTitle": "지원 내역을 일시적으로 불러올 수 없습니다.",
     "signedOutMessage": "로그인하고 지원 내역을 확인하세요",
     "emptyTitle": "아직 지원한 바운티가 없습니다.",
-    "emptyBody": "지원형 바운티에 지원하면 여기에 표시됩니다.",
+    "emptyBody": "지원했거나 작업물을 제출한 바운티가 여기에 표시됩니다.",
     "browseBounties": "바운티 둘러보기",
     "heading": "내 지원 내역",
-    "intro": "지원한 모든 지원형 바운티를 확인하세요. 스폰서가 승인하면 제출할 수 있습니다.",
+    "intro": "지원했거나 작업물을 제출한 모든 바운티(직접 제출과 에이전트 제출 포함)를 확인하세요. 지원형 바운티는 스폰서가 승인하면 제출할 수 있습니다.",
     "appliedAt": "{date} 지원",
+    "submittedAt": "{date} 제출",
+    "agentRevisionNote": "심사자가 에이전트 {name}이(가) 제출한 작업물의 수정을 요청했습니다. Agent API로 다시 제출하게 하세요.",
     "progressLabel": "지원 진행 상황",
     "steps": {
       "open": "지원 완료",
@@ -31,6 +35,7 @@
       "completed": "완료"
     },
     "approvedStatus": "승인됨: 제출 가능",
+    "agentApprovedStatus": "승인됨: 에이전트 {name}이(가) Agent API로 제출합니다",
     "submitWork": "작업 제출하기",
     "resubmit": "다시 제출",
     "revisionRequestedStatus": "수정 요청됨",
@@ -81,7 +86,7 @@
       "sessions": "모든 기기에서 로그아웃되고 공개 프로필이 사라집니다.",
       "agents": "내 에이전트가 폐기되고 API 키는 즉시 사용할 수 없게 됩니다.",
       "history": "대기 중인 지원과 아직 심사 중인 제출은 철회됩니다. 완료한 작업, 지급 내역, NFT 기록은 익명 이름으로 남습니다.",
-      "rewards": "승인됐지만 아직 지급 요청되지 않은 보상은 더 이상 지급되지 않습니다. 지급이 진행 중이면 완료될 때까지 계정을 삭제할 수 없습니다."
+      "rewards": "승인된 작업의 보상이 아직 지급되지 않았다면, 보상이 사라지지 않도록 지급이 끝날 때까지 계정을 삭제할 수 없습니다."
     },
     "deleteAction": "계정 삭제",
     "deleteDialog": {
@@ -100,6 +105,18 @@
       "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
       "generic": "계정을 삭제하지 못했습니다. 잠시 후 다시 시도하세요.",
       "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
+    },
+    "bioLabel": "소개",
+    "tagsLabel": "분야 태그",
+    "editProfile": "프로필 수정",
+    "cancelEdit": "수정 취소",
+    "wallet": {
+      "heading": "지갑",
+      "connected": "연결됨",
+      "notConnected": "미연결",
+      "linkedNote": "연결된 지갑은 계정에 고정되어 여기서 바꾸거나 해제할 수 없어요. 바꿔야 한다면 운영진에게 문의해 주세요.",
+      "body": "가입할 때 ‘나중에 연결하기’를 선택했다면 여기서 연결할 수 있어요. 지갑을 연결하면 Ninja NFT가 발급돼요.",
+      "unavailable": "이 환경에서는 지갑 연결을 사용할 수 없어요."
     }
   }
 }

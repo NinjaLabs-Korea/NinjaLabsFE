@@ -1,12 +1,12 @@
 {
   "site": {
-    "title": "Ninja Labs | Build. Complete. Own your track record.",
-    "description": "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.",
+    "title": "Ninja Labs | Injective Contributor Hub",
+    "description": "The Contributor Hub for people who learn, build and move on Injective. Developers, marketers, researchers and creators can meet the community, see past activities and join in.",
     "og": {
-      "alt": "Ninja Labs | Build. Complete. Own your track record.",
-      "headline": "Complete bounties. Collect proof.",
-      "highlight": "Own your track record.",
-      "tagline": "A builder community and bounty marketplace for the Injective ecosystem."
+      "alt": "Ninja Labs | Injective Contributor Hub",
+      "headline": "Learn, build, and move together",
+      "highlight": "on Injective.",
+      "tagline": "The Contributor Hub for people who learn, build and move on Injective."
     }
   },
   "layout": {
@@ -19,7 +19,9 @@
     "bounties": "Bounties",
     "hallOfFame": "Hall of Fame",
     "members": "Members",
-    "notices": "Notices"
+    "notices": "Notices",
+    "about": "About",
+    "recruit": "Join us"
   },
   "header": {
     "homeLabel": "Ninja Labs home",
@@ -34,7 +36,6 @@
     "platform": "Platform",
     "community": "Community",
     "legal": "© 2026 Ninja Labs · All content viewable without login",
-    "contributor": "Become a contributor",
     "contact": "Contact",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
@@ -77,7 +78,8 @@
       "CHALLENGE_NOT_FOUND": "The verification request was not found. Select Verify wallet again to get a new one.",
       "CHALLENGE_EXPIRED": "The verification request expired or was already used. Select Verify wallet again and sign the new message.",
       "INVALID_SIGNATURE": "The signature does not match this wallet. Sign with the connected address and try again.",
-      "WALLET_ALREADY_LINKED": "This wallet is already linked to another account, or your account already has a wallet. Use a different wallet, or sign in with the account that owns this one.",
+      "WALLET_ALREADY_LINKED": "This wallet is already linked to another account, or your account already has a wallet. A linked wallet cannot be changed here. If it is the wrong one, or it belongs to another account, contact the Ninja Labs team.",
+      "AGENT_WALLET_IS_OWNER_WALLET": "This address is already used as the wallet of one of your agents. Connect a different personal wallet for your account.",
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     },
@@ -125,6 +127,18 @@
     "accountDeleted": {
       "title": "Your account was deleted",
       "description": "You have been signed out. You can sign up again with the same Google account at any time."
+    },
+    "signInRequired": {
+      "title": "Sign in to continue",
+      "description": "Signing up starts with Google sign-in. Sign in first, then connect a wallet and set up your profile."
+    },
+    "signOutFailed": {
+      "title": "Sign out did not complete",
+      "description": "We could not reach the server to end your session, so you are still signed in. Check your connection and press Sign out again."
+    },
+    "profileSaved": {
+      "title": "Profile saved",
+      "description": "Your changes are now on your account and public profile."
     }
   }
 }

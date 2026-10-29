@@ -12,6 +12,7 @@ const onboardingApi = { checkNickname, completeProfile, completeOnboarding: vi.f
 const session = { handle: "user_ab12cd" };
 vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({
+    useAuthActions: () => ({ signIn: vi.fn(), signOut: vi.fn() }),
     useOnboardingApi: () => onboardingApi,
     useFoundationMode: () => "api",
     useAuthSnapshot: () => ({ status: "signed-in", user: { id: "u1", handle: session.handle, walletAddress: null } }),
@@ -26,6 +27,7 @@ describe("ProfileForm nickname live check", () => {
   beforeEach(() => {
     checkNickname.mockReset();
     completeProfile.mockReset();
+    sessionStorage.clear(); // the onboarding form keeps a draft of what was typed
   });
 
   it("ignores a slow answer for a nickname the user has already changed", async () => {
@@ -81,12 +83,14 @@ describe("ProfileForm nickname live check", () => {
     await waitFor(() => expect(completeProfile).toHaveBeenCalledWith({ nickname: "ninja_dev", bio: "Builder", tags: ["DEV"] }));
   });
 
-  it("clears the verdict as soon as the nickname breaks the local rule", async () => {
+  it("replaces the verdict with the rule violation as soon as the nickname breaks the local rule", async () => {
     checkNickname.mockResolvedValue({ available: false });
     renderWithIntl(<ProfileForm />);
     typeNickname("ninja_dev");
     await waitFor(() => expect(status()).toBe("That nickname is already taken."), { timeout: 1500 });
     typeNickname("n");
+    expect(status()).toBe("Use at least 2 characters.");
+    typeNickname("");
     expect(status()).toBe("");
   });
 

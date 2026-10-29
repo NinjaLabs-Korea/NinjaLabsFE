@@ -1,14 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { BountyCard } from "@/components/cards/BountyCard";
 import { Badge } from "@/components/ui/Badge";
+import { parseBountyFilters, serializeBountyFilters, type BountyCategoryFilter as CategoryFilter, type BountyStatusFilter as StatusFilter } from "@/lib/bounty-filter-params";
 import type { Bounty, BountyCategory } from "@/lib/types";
-
-type CategoryFilter = "All" | BountyCategory;
-type StatusFilter = "All" | "Active" | "Closed";
 
 type BountyFiltersProps = {
   bounties: Bounty[];
@@ -19,13 +17,42 @@ const categoryOrder: BountyCategory[] = ["Dev", "Design", "Content", "Other"];
 const statusFilters: Exclude<StatusFilter, "All">[] = ["Active", "Closed"];
 // Filter values stay in English (matched against data); only the displayed labels are localized.
 const statusLabelKeys = { Active: "status.active", Closed: "status.closed" } as const;
-const chipButtonClass = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const chipButtonClass = "max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export function BountyFilters({ bounties }: BountyFiltersProps) {
   const t = useTranslations("bounties");
   const [category, setCategory] = useState<CategoryFilter>("All");
   const [status, setStatus] = useState<StatusFilter>("All");
   const [query, setQuery] = useState("");
+  // Filters live in the URL so Back from a card restores them. Server render and first client render use the defaults
+  // (no hydration mismatch); the URL is applied right after mount (in a timer callback), and `restored` keeps the
+  // write-back from clobbering it.
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const fromUrl = parseBountyFilters(window.location.search);
+      setCategory(fromUrl.category);
+      setStatus(fromUrl.status);
+      setQuery(fromUrl.query);
+      setRestored(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+  useEffect(() => {
+    if (!restored) return;
+    // Debounced: Safari throws SecurityError past ~100 history writes per 30 s, which fast typing would reach.
+    const timer = window.setTimeout(() => {
+      const search = serializeBountyFilters({ category, status, query });
+      const next = `${window.location.pathname}${search ? `?${search}` : ""}${window.location.hash}`;
+      if (next === `${window.location.pathname}${window.location.search}${window.location.hash}`) return;
+      try {
+        window.history.replaceState(window.history.state, "", next);
+      } catch {
+        // History writes blocked: the filters still work, they just are not remembered.
+      }
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [restored, category, status, query]);
   const resetFilters = () => {
     setCategory("All");
     setStatus("All");
@@ -118,7 +145,7 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
         </label>
       </div>
       {visibleBounties.length > 0 ? (
-        <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {visibleBounties.map((bounty) => (
             <BountyCard bounty={bounty} key={bounty.slug} showSummary titleAs="h2" />
           ))}
@@ -128,7 +155,7 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
           <p className="text-sm font-semibold text-ink">{t("filters.emptyTitle")}</p>
           <p className="mt-1 text-sm text-ink-muted">{t("filters.emptyBody")}</p>
           <button
-            className="mt-4 rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="mt-4 rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             onClick={resetFilters}
             type="button"
           >

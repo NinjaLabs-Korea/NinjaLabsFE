@@ -35,6 +35,8 @@
   },
   "card": {
     "profile": "Profile",
+    "profileLabel": "Profile of {name}",
+    "linkLabel": "{link} of {name}",
     "defaultTitle": "Ninja Labs member",
     "defaultBio": "Building in the Injective ecosystem.",
     "links": {
@@ -45,7 +47,7 @@
     }
   },
   "profile": {
-    "notFoundTitle": "Not found | Ninja Labs",
+    "notFoundTitle": "Page not found | Ninja Labs",
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "{count, plural, one {# bounty completed} other {# bounties completed}}",
     "newBuilder": "New builder",
@@ -58,22 +60,21 @@
     "portfolio": {
       "eyebrow": "Portfolio",
       "headingCompleted": "On-chain proof that keeps growing",
-      "headingEmpty": "Your trophy shelf starts here",
+      "headingEmpty": "No completed bounties yet",
       "bodyCompleted": "The Ninja NFT is the parent identity. Every approved bounty mints a child NFT beneath it, turning completed work into a portable builder portfolio.",
-      "bodyEmpty": "The Ninja NFT is already minted as the parent identity. The first approved bounty will add a child NFT to this public collection.",
-      "bodyEmptyPending": "The Ninja NFT parent identity is being minted. Once it lands, the first approved bounty will add a child NFT to this public collection.",
-      "bodyEmptyNotMinted": "The Ninja NFT parent identity is not minted yet. It is issued after onboarding, and approved bounties then add child NFTs to this public collection.",
+      "bodyEmpty": "The Ninja NFT is already minted as the parent identity. Approved bounties add child NFTs to this public collection.",
+      "bodyEmptyPending": "The Ninja NFT parent identity is being minted. Approved bounties will add child NFTs to this public collection.",
+      "bodyEmptyNotMinted": "No Ninja NFT has been minted for this member yet. Approved bounties will add child NFTs to this public collection once it is.",
       "token": "Token {id}",
       "tx": "Tx {hash}",
       "untitledNft": "Bounty NFT",
       "next": "+ next",
       "emptyTitle": "No bounty NFTs yet",
       "emptyBodyCompleted": "Approved work appears here after payout and minting begins.",
-      "emptyBodyNew": "Complete an active bounty and the first child NFT will appear here as on-chain proof.",
-      "browse": "Browse active bounties",
+      "emptyBodyNew": "Child NFTs for approved bounties appear here as on-chain proof.",
       "memberSince": "Ninja NFT · member since {date}",
       "summaryCompleted": "{count, plural, one {# bounty completed} other {# bounties completed}} · a growing on-chain portfolio",
-      "summaryEmpty": "0 bounties completed · ready for the first proof"
+      "summaryEmpty": "0 bounties completed"
     },
     "nftStatus": {
       "PENDING": "PENDING",
@@ -89,8 +90,7 @@
       "viewFilled": "View filled profile",
       "completedOn": "Completed {date} · {reward}",
       "emptyTitle": "No completed bounties yet",
-      "emptyBody": "The next completed task will show its title, completion date, reward, and minted child NFT proof.",
-      "findFirst": "Find a first bounty",
+      "emptyBody": "Completed bounties appear here with their completion date, reward, and child NFT proof.",
       "headingEmpty": "Bounty completions",
       "browseMore": "Browse more",
       "completedDate": "Completed {date}"
@@ -101,11 +101,10 @@
       "verified": "Verified",
       "completed": "{count, plural, one {# bounty completed} other {# bounties completed}}",
       "emptyTitle": "No registered agents yet",
-      "emptyBody": "Advanced users can register verified agents after proving ownership by wallet signature.",
-      "register": "Register agent",
+      "emptyBody": "This member has not registered any verified agents.",
       "wallet": "Registered wallet: {wallet}"
     },
-    "shareable": "Shareable URL — no login needed",
+    "shareable": "Shareable URL, no login needed",
     "payoutPending": "Payout pending",
     "payoutPartial": "Partially paid",
     "payoutPaid": "Paid"

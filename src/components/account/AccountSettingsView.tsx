@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useId, useRef, useState } from "react";
 import { SignedOutPanel } from "@/components/account/SignedOutPanel";
 import {
@@ -9,15 +9,21 @@ import {
   useAuthSnapshot,
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
+import { MyCohortApplications } from "@/components/account/MyCohortApplications";
+import { WalletSettings } from "@/components/account/WalletSettings";
+import { ProfileForm } from "@/components/signup/ProfileForm";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { useRouter } from "@/i18n/navigation";
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
-import { pushFlash } from "@/lib/flash";
+import type { ClientUser } from "@/lib/contracts/auth";
+import { stashFlash } from "@/lib/flash";
+import { leaveForIntro } from "@/lib/home-hint";
 import { normalizeNickname } from "@/lib/nickname";
+import type { WalletConfig } from "@/lib/runtime/config";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
-const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
+const secondaryButtonClass = `rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong ${focusClass}`;
+const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
 
 /** Same rule as the BE (`DELETE /users/me`): trimmed, NFC-normalized, case-insensitive. */
 export function confirmationMatches(nickname: string, typed: string): boolean {
@@ -29,32 +35,42 @@ export function confirmationMatches(nickname: string, typed: string): boolean {
 const deleteErrors = ERROR_COPY.accountDelete;
 type KnownError = (typeof deleteErrors.codes)[number];
 
-export function AccountSettingsView() {
+export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain config for the wallet card (server-composed runtime config); null → no wallet connect here. */ wallet?: WalletConfig | null } = {}) {
   const t = useTranslations("account.settings");
   const tAccount = useTranslations("account.common");
+  const tTags = useTranslations("signup.profile.form.tags");
   const authSnapshot = useAuthSnapshot();
   const mode = useFoundationMode();
   const settingsApi = useAccountSettingsApi();
   const { signOut } = useAuthActions();
-  const router = useRouter();
+  const locale = useLocale();
   const inputId = useId();
   const errorId = useId();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  // The last signed-in user: while the profile editor is open and the session ends from outside, the page keeps showing it
+  // (with the typed values) instead of swapping in the sign-in prompt.
+  const [lastUser, setLastUser] = useState<ClientUser | null>(null);
+  if (authSnapshot.status === "signed-in" && lastUser !== authSnapshot.user) setLastUser(authSnapshot.user);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<KnownError | "generic" | null>(null);
   // Synchronous guard: a second click lands before the `busy` state update.
   const pendingRef = useRef(false);
 
-  if (authSnapshot.status === "signed-out") {
-    return <SignedOutPanel message={t("signedOutMessage")} />;
+  // Only a session ended from outside (refresh rejected, another tab) says "expired"; the user's own Sign out or this
+  // page's account deletion shows the plain "sign in" gate.
+  const heldForEdit = authSnapshot.status === "signed-out" && authSnapshot.reason === "session-ended" && editingProfile && lastUser !== null;
+  if (authSnapshot.status === "signed-out" && !heldForEdit) {
+    return <SignedOutPanel message={authSnapshot.reason === "session-ended" ? tAccount("sessionExpired") : t("signedOutMessage")} returnTo="/account" />;
   }
 
-  if (authSnapshot.status !== "signed-in") {
+  if (authSnapshot.status === "loading") {
     return <p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p>;
   }
 
-  const { user } = authSnapshot;
+  const user = authSnapshot.status === "signed-in" ? authSnapshot.user : lastUser;
+  if (!user) return null;
   const nickname = user.handle;
   const matches = confirmationMatches(nickname, typed);
 
@@ -79,11 +95,13 @@ export function AccountSettingsView() {
       return;
     }
     // The BE already revoked every session; signOut clears the cookie (POST /api/auth/logout) and the local state.
-    pushFlash("accountDeleted");
     try {
       await signOut();
     } finally {
-      router.replace("/");
+      // Written after signOut and without the live event: the next step is a full page load, and the mounted
+      // FlashToast would take (and lose) an event-delivered flash before the reload.
+      stashFlash("accountDeleted");
+      leaveForIntro(locale);
     }
   };
 
@@ -91,9 +109,21 @@ export function AccountSettingsView() {
     <div className="space-y-8">
       <section aria-labelledby={`${inputId}-profile`} className="rounded-card border border-border bg-surface p-6 shadow-card">
         <h2 className="font-display text-xl font-bold text-ink" id={`${inputId}-profile`}>{t("profileHeading")}</h2>
-        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-[160px_1fr]">
+        <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-[160px_1fr]">
           <dt className="text-ink-muted">{t("nicknameLabel")}</dt>
           <dd className="font-semibold text-ink">{nickname}</dd>
+          {user.bio ? (
+            <>
+              <dt className="text-ink-muted">{t("bioLabel")}</dt>
+              <dd className="min-w-0 whitespace-pre-wrap break-words text-ink-secondary">{user.bio}</dd>
+            </>
+          ) : null}
+          {user.tags && user.tags.length > 0 ? (
+            <>
+              <dt className="text-ink-muted">{t("tagsLabel")}</dt>
+              <dd className="font-semibold text-ink">{user.tags.map((tag) => tTags(tag.toLowerCase())).join(", ")}</dd>
+            </>
+          ) : null}
           {user.walletAddress ? (
             <>
               <dt className="text-ink-muted">{t("walletLabel")}</dt>
@@ -101,7 +131,19 @@ export function AccountSettingsView() {
             </>
           ) : null}
         </dl>
+        {editingProfile ? (
+          <div className="mt-2 border-t border-border pt-4">
+            <ProfileForm mode="edit" onSaved={() => setEditingProfile(false)} />
+            <button className={`mt-3 ${secondaryButtonClass}`} onClick={() => setEditingProfile(false)} type="button">{t("cancelEdit")}</button>
+          </div>
+        ) : (
+          <button className={`mt-5 ${secondaryButtonClass}`} onClick={() => setEditingProfile(true)} type="button">{t("editProfile")}</button>
+        )}
       </section>
+
+      <WalletSettings wallet={wallet} />
+
+      <MyCohortApplications />
 
       <section aria-labelledby={`${inputId}-danger`} className="rounded-card border border-danger-soft bg-surface p-6">
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-danger">{t("dangerEyebrow")}</p>

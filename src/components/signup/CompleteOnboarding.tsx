@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAuthSnapshot, useOnboardingApi } from "@/components/auth/FoundationProvider";
+import { useAuthActions, useAuthSnapshot, useOnboardingApi } from "@/components/auth/FoundationProvider";
 import { withLocaleOf } from "@/i18n/routing";
 import { ApiHttpError } from "@/lib/api/http";
 import { getOnboardingPath } from "@/lib/api/auth-adapter";
@@ -12,6 +12,7 @@ export function CompleteOnboarding() {
   const t = useTranslations("signup.getStarted.completeError");
   const apiClient = useOnboardingApi();
   const auth = useAuthSnapshot();
+  const { refresh } = useAuthActions();
   const [state, setState] = useState<"pending" | "done" | "error">("pending");
   const signedIn = auth.status === "signed-in";
   const alreadyCompleted = signedIn && auth.user.onboardingCompleted === true;
@@ -35,6 +36,8 @@ export function CompleteOnboarding() {
       () => {
         onboardingLog("onboarding.complete.succeeded");
         setState("done");
+        // The session snapshot still says "unfinished"; re-read it so the home, the logo and the Intro redirect see a finished user.
+        void refresh?.().catch(() => undefined);
       },
       (error: unknown) => {
         onboardingLog("onboarding.complete.failed", onboardingErrorDetails(error));
@@ -48,7 +51,7 @@ export function CompleteOnboarding() {
         setState("error");
       },
     );
-  }, [apiClient]);
+  }, [apiClient, refresh]);
 
   useEffect(() => {
     if (owedStep) {
@@ -70,7 +73,7 @@ export function CompleteOnboarding() {
     <div className="mb-6 flex flex-col items-start justify-between gap-3 rounded-tile border border-danger bg-danger-soft p-4 sm:flex-row sm:items-center" role="alert">
       <p className="text-sm text-danger">{t("message")}</p>
       <button
-        className="rounded-control bg-danger px-4 py-2 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="rounded-control bg-danger px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         onClick={retry}
         type="button"
       >

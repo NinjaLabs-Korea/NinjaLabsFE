@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "title": "关于 Ninja Labs | Ninja Labs",
+    "description": "认识在 Injective 上学习、构建与行动的 Contributor Hub:往期活动、成果与成员。"
+  },
+  "about": {
+    "eyebrow": "关于 Ninja Labs",
+    "heading": "在 Injective 上学习、构建、行动",
+    "body": "Ninja Labs 是在 Injective 上学习、构建与行动的人们的 Contributor Hub。开发者、营销人员、研究员、创作者,任何人都可以自由参与。",
+    "roles": {
+      "developer": {
+        "title": "开发者",
+        "description": "在 Injective 上开发合约、工具与集成。"
+      },
+      "marketer": {
+        "title": "营销人员",
+        "description": "壮大社区,讲好 Injective 的故事。"
+      },
+      "researcher": {
+        "title": "研究员",
+        "description": "深入研究协议并分享发现。"
+      },
+      "creator": {
+        "title": "创作者",
+        "description": "制作开发者乐于使用的指南、设计与内容。"
+      }
+    }
+  },
+  "activities": {
+    "eyebrow": "往期活动",
+    "heading": "我们一起做过的事",
+    "viewAll": "查看全部活动 →",
+    "unavailable": "暂时无法加载往期活动。",
+    "unavailableBody": "无法连接到服务器,请稍后刷新。",
+    "empty": "还没有活动动态,请稍后再来。"
+  },
+  "achievements": {
+    "eyebrow": "近期成果",
+    "heading": "社区的成果",
+    "viewAll": "查看荣誉殿堂 →",
+    "unavailable": "暂时无法加载成果。",
+    "unavailableBody": "无法连接到服务器,请稍后刷新。",
+    "empty": "随着社区的推进,成果将显示在这里。"
+  },
+  "members": {
+    "eyebrow": "成员",
+    "heading": "认识成员",
+    "viewAll": "全部成员 →",
+    "unavailable": "暂时无法加载成员。",
+    "unavailableBody": "无法连接到服务器,请稍后刷新。",
+    "empty": "官方成员确定后将显示在这里。"
+  }
+}

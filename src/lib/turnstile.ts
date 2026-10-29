@@ -1,5 +1,5 @@
 /**
- * Cloudflare Turnstile loader (explicit rendering). The script is loaded once per page from Cloudflare — it must not be
+ * Cloudflare Turnstile loader (explicit rendering). The script is loaded once per page from Cloudflare - it must not be
  * bundled or proxied (https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/). The CSP in
  * `next.config.ts` allows https://challenges.cloudflare.com in script-src, frame-src and connect-src.
  */

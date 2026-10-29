@@ -52,9 +52,11 @@ export type Notice = {
   thumbnail: string;
   coverImage?: string;
   externalUrl?: string;
+  /** Event date (`YYYY-MM-DD`, BE `event_date`): when the activity happened, set by the operator; absent for plain announcements. */
+  eventDate?: string;
   related?: { label: string; href: string }[];
 };
-export type NoticePreview = Pick<Notice, "slug" | "title" | "excerpt" | "category" | "publishedAt" | "thumbnail">;
+export type NoticePreview = Pick<Notice, "slug" | "title" | "excerpt" | "category" | "publishedAt" | "thumbnail" | "eventDate">;
 
 export type Member = {
   slug: string;

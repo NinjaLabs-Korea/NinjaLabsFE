@@ -52,7 +52,7 @@ describe("a succeeded write followed by a failed re-read", () => {
     type("Sponsor", "Injective");
     type("Deadline", "2099-03-01T12:30");
     type("Description (markdown)", "Body");
-    type("Deliverables", "- Repo");
+    type("Deliverables and submission guide", "- Repo");
     type("Review process", "Triage");
     vi.spyOn(api, "getAdminBounties").mockRejectedValue(new Error("offline"));
     fireEvent.submit(screen.getByRole("button", { name: "Create" }).closest("form") as HTMLFormElement);

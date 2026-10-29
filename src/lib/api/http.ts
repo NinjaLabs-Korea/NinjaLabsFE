@@ -1,5 +1,5 @@
 /**
- * BE(NinjaLabsBE) HTTP 전송 계층 — cookie 세션 모드.
+ * BE(NinjaLabsBE) HTTP 전송 계층 - cookie 세션 모드.
  *
  * - refresh 토큰은 JS가 절대 만지지 않는다: BE가 `ninja_rt` HttpOnly; Secure; SameSite=Strict; Path=/api/auth
  *   쿠키로 심는다. `/api/auth/*`는 `next.config.ts` rewrite로 BE `/auth/*`에 프록시되므로 브라우저 입장에서는
@@ -9,7 +9,7 @@
  * - access token(15분 JWT)은 이 모듈의 메모리에만 있다. localStorage/sessionStorage에 어떤 토큰도 쓰지 않는다.
  *   새로 고침/새 탭은 `initSession()`이 `POST /api/auth/refresh`를 한 번 보내 복원한다(쿠키 있으면 200, 없으면 401).
  * - 401을 받으면 refresh를 1회 시도한다. refresh가 401/403일 때만 세션을 끝내고, 429·5xx·네트워크 오류는
- *   `REFRESH_UNAVAILABLE`로 실패시키고 쿠키(서버 세션)는 그대로 둔다 — 다음 401에서 다시 시도한다.
+ *   `REFRESH_UNAVAILABLE`로 실패시키고 쿠키(서버 세션)는 그대로 둔다 - 다음 401에서 다시 시도한다.
  * - refresh는 탭 간에도 직렬화한다(Web Locks `ninja.auth.refresh`, 없으면 탭 안 single-flight만). 쿠키 저장소는
  *   탭이 공유하므로 직렬화된 두 번째 탭은 이미 회전된 쿠키를 보내 경쟁 401을 받지 않는다(락이 없을 때의 경쟁은
  *   BE의 30초 reuse grace가 흡수한다). access token은 탭마다 메모리에 있으므로 각 탭은 자기 refresh를 한다.
@@ -21,7 +21,7 @@
  *   교환/refresh 성공 시 쓰고, 로그아웃·refresh 401/403·다른 탭 로그아웃(`endLocalSession`) 시 지운다.
  *   `initSession()`은 힌트가 없으면 refresh를 보내지 않고 바로 signed-out으로 끝낸다(익명 방문마다 401 + BE per-IP
  *   예산 소모 방지). 예외: 레거시 `ninja.refreshToken`이 있으면(마이그레이션) 또는 `/auth/callback`에서는 시도한다.
- *   힌트는 권한 판단에 절대 쓰지 않는다 — refresh를 "시도할지"만 정한다. 서버가 거절하면 힌트도 지운다.
+ *   힌트는 권한 판단에 절대 쓰지 않는다 - refresh를 "시도할지"만 정한다. 서버가 거절하면 힌트도 지운다.
  * - 서버 렌더 중에는 어떤 저장소/네트워크 접근도 하지 않는다.
  */
 
@@ -231,11 +231,19 @@ export type ApiHttp = {
   /** 인증 헤더를 붙여 요청. 401이면 refresh 회전 후 1회 재시도. */
   fetchJson: <T>(path: string, init?: { method?: string; body?: unknown }) => Promise<T>;
   fetchForm: <T>(path: string, form: FormData) => Promise<T>;
+  /** GET that returns the body as text (the cohort CSV export); same auth, refresh-and-retry and error mapping as `fetchJson`. */
+  fetchText: (path: string) => Promise<string>;
   /** True while this tab holds an access token (after a login exchange or a successful refresh). */
   hasSession: () => boolean;
   /** Page-load restore: legacy migration if needed, then one `POST /api/auth/refresh` (skipped without the session hint). */
   initSession: () => Promise<RefreshResult>;
   signOutRemote: () => Promise<void>;
+  /**
+   * User-initiated sign-out: asks the BE to revoke the session FIRST and ends the local session only when that worked
+   * (the HttpOnly cookie cannot be cleared from JS, so a failed call must not look like a sign-out). Resolves `false`
+   * when the revoke failed; the session is then untouched and the user can retry.
+   */
+  revokeSession: () => Promise<boolean>;
 };
 
 /**
@@ -289,11 +297,21 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
     });
   }
 
-  function postLogout(): Promise<void> {
-    // 서버 세션 폐기는 best-effort. 실패해도 로컬 로그아웃은 완료된 상태. 쿠키는 BE가 지운다(Set-Cookie 만료).
+  /**
+   * Revokes the server session; the BE clears the cookie (Set-Cookie expiry). Resolves whether the session is gone: 2xx,
+   * or 401/403 (no cookie / already revoked, nothing left to close). Other statuses and network errors resolve `false`.
+   * Callers that end the local session first treat it as best-effort; `revokeSession` waits for it.
+   */
+  function postLogout(): Promise<boolean> {
     return fetch(`${AUTH_PROXY_PATH}/logout`, cookieAuthInit({}))
-      .then((response) => onboardingLog("session.logout.completed", { status: response.status }))
-      .catch(() => onboardingLog("session.logout.failed", { reason: "NETWORK_ERROR" }));
+      .then((response) => {
+        onboardingLog("session.logout.completed", { status: response.status });
+        return response.ok || response.status === 401 || response.status === 403;
+      })
+      .catch(() => {
+        onboardingLog("session.logout.failed", { reason: "NETWORK_ERROR" });
+        return false;
+      });
   }
 
   /** 락 안에서 실행되는 실제 회전. `migrate`면 락 안에서 레거시 refresh 토큰을 다시 읽는다(다른 탭이 이미 옮겼을 수 있다). */
@@ -410,6 +428,21 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       return readSuccessBody<T>(res);
     },
 
+    fetchText: async (path: string): Promise<string> => {
+      onboardingLog("http.request.started", { method: "GET", path });
+      const sentToken = accessToken;
+      let res = await rawFetch(path);
+      onboardingLog("http.response.received", { path, status: res.status, attempt: 1 });
+      if ((await isSessionExpiry(res)) && (await retryAfterRefresh(sentToken))) {
+        res = await rawFetch(path);
+        onboardingLog("http.response.received", { path, status: res.status, attempt: 2 });
+      }
+      if (!res.ok) {
+        throw await toApiHttpError(res);
+      }
+      return res.text();
+    },
+
     fetchForm: async <T>(path: string, form: FormData): Promise<T> => {
       onboardingLog("http.request.started", { method: "POST", path });
       const sentToken = accessToken;
@@ -431,6 +464,14 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       onboardingLog("session.logout.requested");
       // Always sent: this tab cannot see whether the HttpOnly cookie exists.
       await postLogout();
+    },
+
+    revokeSession: async () => {
+      onboardingLog("session.logout.requested");
+      if (!(await postLogout())) return false;
+      endLocalSession();
+      options.broadcast?.("signed-out");
+      return true;
     },
   };
 }

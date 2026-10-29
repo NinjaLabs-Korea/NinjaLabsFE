@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { LinkedWalletGate } from "@/components/signup/LinkedWalletGate";
 import { SignupGate } from "@/components/signup/SignupGate";
 import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
 import { Badge } from "@/components/ui/Badge";
-import { StepIndicator } from "@/components/ui/StepIndicator";
+import { SignupStepIndicator } from "@/components/signup/SignupStepIndicator";
 import { Link } from "@/i18n/navigation";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { composeFoundationRuntime } from "@/lib/runtime/config";
@@ -37,11 +38,11 @@ export default async function SignupWalletPage({ params }: PageProps<"/[locale]/
     <section className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="mx-auto max-w-[1024px]">
         <div>
-          <StepIndicator current={2} />
+          <SignupStepIndicator current={2} />
         </div>
         <div className="mt-6">
-          <SignupGate>
-            <div className="grid gap-5 lg:grid-cols-5">
+          <SignupGate step={2}>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
               <article className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] lg:col-span-3">
                 <div className="text-center">
                   <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("wallet.eyebrow")}</p>
@@ -52,46 +53,48 @@ export default async function SignupWalletPage({ params }: PageProps<"/[locale]/
                     {isApiMode ? t("wallet.introApi") : t("wallet.introMock")}
                   </p>
                 </div>
-                <div className="mt-5 [&_button]:w-full">
-                  {walletConnectionConfig ? (
-                    <WalletProvider
-                      chainId={walletConnectionConfig.chainId}
-                      rpcUrl={walletConnectionConfig.rpcUrl}
-                    >
-                      <WalletConnectButton chainId={walletConnectionConfig.chainId} />
-                    </WalletProvider>
-                  ) : (
-                    <div className="flex flex-col items-start gap-2">
-                      <button
-                        className="w-full rounded-control border border-border bg-surface px-5 py-3 text-base font-semibold text-ink-secondary disabled:cursor-not-allowed disabled:opacity-60"
-                        disabled
-                        type="button"
+                <LinkedWalletGate>
+                  <div className="mt-5 [&_button]:w-full">
+                    {walletConnectionConfig ? (
+                      <WalletProvider
+                        chainId={walletConnectionConfig.chainId}
+                        rpcUrl={walletConnectionConfig.rpcUrl}
                       >
-                        {t("wallet.unavailableButton")}
-                      </button>
-                      <p className="text-xs text-ink-muted" role="status">
-                        {t("wallet.unavailableNote")}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-5 rounded-tile border border-border bg-primary-soft p-4">
-                  <Badge variant="primary-soft">
-                    {isApiMode ? t("wallet.badgeApi") : t("wallet.badgeMock")}
-                  </Badge>
-                  <p className="mt-2 text-sm text-ink-notice">
-                    {isApiMode ? t("wallet.noteApi") : t("wallet.noteMock")}
+                        <WalletConnectButton chainId={walletConnectionConfig.chainId} />
+                      </WalletProvider>
+                    ) : (
+                      <div className="flex flex-col items-start gap-2">
+                        <button
+                          className="w-full rounded-control border border-border bg-surface px-5 py-3 text-base font-semibold text-ink-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled
+                          type="button"
+                        >
+                          {t("wallet.unavailableButton")}
+                        </button>
+                        <p className="text-xs text-ink-muted" role="status">
+                          {t("wallet.unavailableNote")}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-5 rounded-tile border border-border bg-primary-soft p-4">
+                    <Badge variant="primary-soft">
+                      {isApiMode ? t("wallet.badgeApi") : t("wallet.badgeMock")}
+                    </Badge>
+                    <p className="mt-2 text-sm text-ink-notice">
+                      {isApiMode ? t("wallet.noteApi") : t("wallet.noteMock")}
+                    </p>
+                  </div>
+                  <Link
+                    className="mt-5 block w-full rounded-control border border-primary-outline px-5 py-3 text-center text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    href="/signup/profile"
+                  >
+                    {t("wallet.connectLater")}
+                  </Link>
+                  <p className="mt-4 text-center text-sm text-ink-muted">
+                    {t("wallet.optionalNote")}
                   </p>
-                </div>
-                <Link
-                  className="mt-5 block w-full rounded-control border border-primary-outline px-5 py-3 text-center text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  href="/signup/profile"
-                >
-                  {t("wallet.connectLater")}
-                </Link>
-                <p className="mt-4 text-center text-sm text-ink-muted">
-                  {t("wallet.optionalNote")}
-                </p>
+                </LinkedWalletGate>
               </article>
               <aside className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] lg:col-span-2">
                 <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("wallet.whatHappensEyebrow")}</p>

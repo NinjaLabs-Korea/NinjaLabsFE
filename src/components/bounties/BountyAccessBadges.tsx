@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/Badge";
  * `loading` auth snapshot (see `useAuthSnapshot`), which keeps the signed-out copy, so the HTML never mismatches; once the
  * session is restored a signed-in visitor sees that actions are available instead of "Actions require login".
  */
-export function BountyAccessBadges() {
+export function BountyAccessBadges({ actionsOpen = true }: { /** The bounty still takes applications/submissions; a closed one claims no available actions. */ actionsOpen?: boolean } = {}) {
   const t = useTranslations("bounties.detail");
   const signedIn = useAuthSnapshot().status === "signed-in";
   return (
@@ -17,12 +17,12 @@ export function BountyAccessBadges() {
       {signedIn ? (
         <>
           <Badge variant="success">{t("signedInView")}</Badge>
-          <Badge variant="primary-soft">{t("actionsAvailable")}</Badge>
+          {actionsOpen ? <Badge variant="primary-soft">{t("actionsAvailable")}</Badge> : null}
         </>
       ) : (
         <>
           <Badge variant="success">{t("publicView")}</Badge>
-          <Badge variant="danger">{t("actionsRequireLogin")}</Badge>
+          {actionsOpen ? <Badge variant="danger">{t("actionsRequireLogin")}</Badge> : null}
         </>
       )}
     </div>

@@ -22,7 +22,8 @@ import { parseReviewComment, REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
-const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success" | "primary-soft" | "danger"> = {
+/** Badge color of each application status (also used by the home page's activity list). */
+export const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success" | "primary-soft" | "danger"> = {
   open: "neutral",
   approved: "success",
   submitted: "primary-soft",
@@ -32,10 +33,28 @@ const statusVariants: Record<ApplicationStatus, "neutral" | "warning" | "success
   revisionRequested: "warning",
 };
 
-const outlineDangerClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
+const outlineDangerClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
 
 // Step labels live under account.applications.steps, keyed by status.
 const applicationSteps: readonly ApplicationStatus[] = ["open", "approved", "submitted", "completed"];
+// A submission with no application behind it (direct or agent-mode bounty) skips Applied/Approved.
+const submissionSteps: readonly ApplicationStatus[] = ["submitted", "completed"];
+
+/**
+ * The status words of a row (badge text). Single source for the My applications page and the home activity list, so a
+ * forfeited award reads the same everywhere. `t` is `useTranslations("account.applications")`.
+ */
+export function applicationStatusLabel(
+  t: (key: string, values?: Record<string, string>) => string,
+  application: Pick<AccountApplication, "status" | "agent" | "reviewComment">,
+): string {
+  const { status } = application;
+  if (status === "approved") return application.agent ? t("agentApprovedStatus", { name: application.agent.name }) : t("approvedStatus");
+  if (status === "revisionRequested") return t("revisionRequestedStatus");
+  if (status === "rejected") return t("rejectedStatus");
+  if (status === "notAccepted") return parseReviewComment(application.reviewComment)?.forfeited ? t("forfeitedStatus") : t("notAcceptedStatus");
+  return t(`steps.${status}`);
+}
 
 /** Final state of an approved application whose submission was rejected; a forfeited award names the reason. */
 function NotAcceptedNote({ application }: { application: AccountApplication }) {
@@ -70,7 +89,7 @@ function RevisionNote({ application }: { application: AccountApplication }) {
   const review = parseReviewComment(application.reviewComment);
   return (
     <>
-      <p className="mt-4 text-sm text-warning">{t("revisionNote")}</p>
+      <p className="mt-4 text-sm text-warning">{application.agent ? t("agentRevisionNote", { name: application.agent.name }) : t("revisionNote")}</p>
       {review ? <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: review.text })}</p> : null}
     </>
   );
@@ -81,14 +100,7 @@ export function ApplicationsView() {
   const tAccount = useTranslations("account.common");
   const tBounties = useTranslations("bounties.categories");
   const format = useFormatter();
-  const statusLabel = (application: AccountApplication): string => {
-    const { status } = application;
-    if (status === "approved") return t("approvedStatus");
-    if (status === "revisionRequested") return t("revisionRequestedStatus");
-    if (status === "rejected") return t("rejectedStatus");
-    if (status === "notAccepted") return parseReviewComment(application.reviewComment)?.forfeited ? t("forfeitedStatus") : t("notAcceptedStatus");
-    return t(`steps.${status}`);
-  };
+  const statusLabel = (application: AccountApplication): string => applicationStatusLabel(t, application);
   const mode = useFoundationMode();
   const authSnapshot = useAuthSnapshot();
   const apiClient = useAccountApi();
@@ -128,7 +140,7 @@ export function ApplicationsView() {
 
   // The BE rejected the session (401/403 after refresh): ask to sign in again instead of blaming the server.
   if (unavailable && reason === "unauthorized") {
-    return <SignedOutPanel message={tAccount("sessionExpired")} />;
+    return <SignedOutPanel message={tAccount("sessionExpired")} returnTo="/applications" />;
   }
 
   if (unavailable) {
@@ -141,7 +153,7 @@ export function ApplicationsView() {
   }
 
   if (authSnapshot.status === "signed-out") {
-    return <SignedOutPanel message={t("signedOutMessage")} />;
+    return <SignedOutPanel message={t("signedOutMessage")} returnTo="/applications" />;
   }
 
   if (authSnapshot.status === "loading" || !applications) {
@@ -156,7 +168,7 @@ export function ApplicationsView() {
         <p className="text-sm font-semibold text-ink">{t("emptyTitle")}</p>
         <p className="mt-1 text-sm text-ink-muted">{t("emptyBody")}</p>
         <Link
-          className={`mt-4 inline-block rounded-control border border-primary-outline px-4 py-2 text-sm font-semibold text-primary-strong ${focusClass}`}
+          className={`mt-4 inline-block rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong ${focusClass}`}
           href="/bounties"
         >
           {t("browseBounties")}
@@ -172,7 +184,8 @@ export function ApplicationsView() {
         {applications.map((application) => {
           const actionNeeded = application.status === "revisionRequested";
           // A requested revision is still the "Submitted" step; the marker says the next move is the applicant's.
-          const currentIndex = applicationSteps.indexOf(actionNeeded ? "submitted" : application.status);
+          const steps = application.source === "submission" ? submissionSteps : applicationSteps;
+          const currentIndex = steps.indexOf(actionNeeded ? "submitted" : application.status);
 
           return (
             <article
@@ -180,7 +193,7 @@ export function ApplicationsView() {
               key={application.id}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="flex flex-wrap gap-2">
+                <span className="flex min-w-0 max-w-full flex-wrap gap-2">
                   <Badge variant="primary-soft">{tBounties(application.category)}</Badge>
                   <Badge variant={statusVariants[application.status]}>
                     {statusLabel(application)}
@@ -189,7 +202,7 @@ export function ApplicationsView() {
                     <Badge variant="neutral">{t("viaAgent", { name: application.agent.name })}</Badge>
                   ) : null}
                 </span>
-                <span className="text-xs text-ink-muted">{t("appliedAt", { date: format.dateTime(new Date(application.appliedAt), { dateStyle: "medium" }) })}</span>
+                <span className="text-xs text-ink-muted">{t(application.source === "submission" ? "submittedAt" : "appliedAt", { date: format.dateTime(new Date(application.appliedAt), { dateStyle: "medium" }) })}</span>
               </div>
 
               <Link
@@ -212,7 +225,7 @@ export function ApplicationsView() {
                   aria-label={t("progressLabel")}
                   className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2"
                 >
-                  {applicationSteps.map((step, index) => (
+                  {steps.map((step, index) => (
                     <li
                       aria-current={index === currentIndex ? "step" : undefined}
                       className="flex items-center gap-2"
@@ -235,7 +248,7 @@ export function ApplicationsView() {
                         {t(`steps.${step}`)}
                       </span>
                       {actionNeeded && index === currentIndex ? <Badge variant="warning">{t("actionNeeded")}</Badge> : null}
-                      {index < applicationSteps.length - 1 ? (
+                      {index < steps.length - 1 ? (
                         <span aria-hidden="true" className="hidden h-px w-5 bg-primary-outline sm:block" />
                       ) : null}
                     </li>
@@ -246,9 +259,10 @@ export function ApplicationsView() {
               {application.status === "completed" && application.paymentStatus ? <PayoutLine status={application.paymentStatus} /> : null}
               {application.status === "approved" ? <ApplicationNote application={application} /> : null}
               {actionNeeded ? <RevisionNote application={application} /> : null}
-              {application.status === "approved" || actionNeeded ? (
+              {/* An agent's submission is resubmitted through the Agent API, not from this page (see the revision note). */}
+              {(application.status === "approved" && !application.agent) || (actionNeeded && !application.agent) ? (
                 <Link
-                  className={`mt-4 inline-block rounded-control bg-primary px-4 py-2 text-sm font-semibold text-on-inverse ${focusClass}`}
+                  className={`mt-4 inline-block rounded-control bg-primary px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-on-inverse ${focusClass}`}
                   href={`/bounties/${application.bountySlug}`}
                 >
                   {actionNeeded ? t("resubmit") : t("submitWork")}

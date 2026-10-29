@@ -1,11 +1,10 @@
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 
+import { CoverImage } from "@/components/cards/CoverImage";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { Link } from "@/i18n/navigation";
 import { safeHttpUrl } from "@/lib/api/codecs";
-import { imageProps } from "@/lib/image";
 import type { Bounty } from "@/lib/types";
 
 type BountyCardProps = {
@@ -33,33 +32,27 @@ export function BountyCard({ bounty, showSummary = true, titleAs: TitleTag = "h3
     >
       <div className="relative aspect-[368.67/207.37]">
         {coverImage ? (
-          <Image
-            {...imageProps(coverImage)}
-            alt=""
-            fill
-            sizes="(max-width: 768px) 100vw, 370px"
-            className="object-cover"
-          />
+          <CoverImage sizes="(max-width: 768px) 100vw, 370px" src={coverImage} />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary-soft-border to-surface-subtle" />
         )}
       </div>
       <div className="p-5">
         <Badge variant={isClosed ? "danger" : bounty.status === "reviewing" ? "warning" : "primary-soft"}>{statusLabel ?? t(`categories.${bounty.category}`)}</Badge>
-        <TitleTag className="mt-3 font-display text-base font-bold -tracking-[0.16px] text-ink">{bounty.title}</TitleTag>
+        <TitleTag className="mt-3 [overflow-wrap:anywhere] font-display text-base font-bold -tracking-[0.16px] text-ink">{bounty.title}</TitleTag>
         {showSummary && bounty.summary ? (
           <p className="mt-2 line-clamp-2 text-sm text-ink-muted">{bounty.summary}</p>
         ) : null}
         <div className="mt-4 flex items-center justify-between gap-3">
-          <span className="flex items-center gap-1.5">
+          <span className="flex min-w-0 items-center gap-1.5">
             <RewardPill reward={bounty.reward} />
             {bounty.rewards && bounty.rewards.length > 1 ? (
-              <span className="text-xs font-semibold text-ink-muted">+{bounty.rewards.length - 1}</span>
+              <span className="shrink-0 text-xs font-semibold text-ink-muted">+{bounty.rewards.length - 1}</span>
             ) : null}
           </span>
-          <span className="text-right text-xs text-ink-muted">
+          <span className="min-w-0 text-right text-xs text-ink-muted [overflow-wrap:anywhere]">
             {statusLabel ?? (daysLeft && daysLeftLabel ? (
-              daysLeft === daysLeftLabel ? daysLeft : <><span aria-hidden="true">{daysLeft}</span><span className="sr-only">{daysLeftLabel}</span></>
+              daysLeft === daysLeftLabel ? daysLeft : <><span aria-hidden="true" className="whitespace-nowrap">{daysLeft}</span><span className="sr-only">{daysLeftLabel}</span></>
             ) : t("status.active"))} · {bounty.sponsor}
           </span>
         </div>

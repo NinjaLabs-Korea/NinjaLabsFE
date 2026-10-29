@@ -78,7 +78,8 @@ export function getAdminBounties(): AdminBounty[] {
       intakeEnabled: bounty.applicationRequired ?? false,
       submissionMode: bounty.submissionMode ?? "direct",
       coverImage: bounty.coverImage || null,
-      status: overlay.status ?? bounty.status,
+      // The public status has no draft/funding/cancelled; a finished public bounty is a completed one.
+      status: overlay.status ?? (bounty.status === "closed" ? "completed" : bounty.status),
       deadline: overlay.deadline,
       applicationDeadline: null,
       maxWinners: 1,
@@ -116,6 +117,7 @@ export function getAdminPosts(): AdminPost[] {
       bodyMarkdown: notice.bodyMarkdown,
       thumbnail: notice.thumbnail,
       externalUrl: notice.externalUrl ?? null,
+      eventDate: notice.eventDate ?? null,
     })),
     {
       slug: "q3-roadmap-preview",
@@ -126,6 +128,7 @@ export function getAdminPosts(): AdminPost[] {
       bodyMarkdown: "A preview of Ninja Labs' third-quarter roadmap.",
       thumbnail: null,
       externalUrl: null,
+      eventDate: null,
     },
   ];
 }

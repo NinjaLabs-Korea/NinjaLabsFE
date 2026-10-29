@@ -4,19 +4,20 @@ import { Link } from "@/i18n/navigation";
 import { CONTACT_EMAIL } from "@/lib/contact";
 
 const platformLinks = [
+  { href: "/about", key: "about" },
   { href: "/bounties", key: "bounties" },
   { href: "/hall-of-fame", key: "hallOfFame" },
   { href: "/notices", key: "notices" },
+  { href: "/recruit", key: "recruit" },
 ] as const;
 
 // Official links from the Ninja Labs Korea Notion hub (injective.notion.site/ninjalabskr).
 // Ninja Labs has no Discord of its own; the Discord link is Injective's.
 
-const ninjaLabsLinks = (contributorLabel: string) => [
+const ninjaLabsLinks = [
   { href: "https://x.com/NinjaLabsKR", label: "X (@NinjaLabsKR)" },
   { href: "https://t.me/NinjaLabsKR", label: "Telegram (@NinjaLabsKR)" },
   { href: "https://t.me/+Nsy2KjGWtOE5NTY9", label: "Ninja Builders (Telegram)" },
-  { href: "https://tally.so/r/3E7XZA", label: contributorLabel },
 ];
 
 const injectiveLinks = [
@@ -34,7 +35,7 @@ export function Footer() {
   return (
     <footer className="bg-inverse-surface text-on-inverse">
       <div className="mx-auto max-w-content px-6 pt-12">
-        <div className="flex flex-col justify-between gap-10 md:flex-row">
+        <div className="flex flex-col justify-between gap-10 lg:flex-row">
           <div>
             <Image
               src="/brand/ninja-labs-kr-logo.png"
@@ -53,7 +54,7 @@ export function Footer() {
               heading={t("platform")}
               links={platformLinks.map(({ href, key }) => ({ href, label: tNav(key) }))}
             />
-            <FooterLinkColumn heading={t("community")} links={ninjaLabsLinks(t("contributor"))} external />
+            <FooterLinkColumn heading={t("community")} links={ninjaLabsLinks} external />
             <FooterLinkColumn heading="Injective" links={injectiveLinks} external />
           </div>
         </div>

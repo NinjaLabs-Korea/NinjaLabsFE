@@ -5,7 +5,7 @@
 // B) re-apply: builder applies from the FE bounty page, withdraws (API - the FE has no withdraw control), re-applies from the
 //    FE bounty page -> the same application row is PENDING again and /applications lists it.
 import { Browser, report } from '../lib/cdp.mjs'; 
-import { sql, ids, seed, check, clean, done, sleep, signIn, apiAs, mutations, tokenFor } from '../lib/harness.mjs';
+import { fillWhenReady, sql, ids, seed, check, clean, done, sleep, signIn, apiAs, mutations, tokenFor } from '../lib/harness.mjs';
 const A1 = tokenFor(ids.ADMIN, true);
 let ADMIN2 = sql(`select id from "user" where google_id='g-admin2'`);
 if (!ADMIN2) ADMIN2 = sql(`INSERT INTO "user"(google_id,email,nickname,bio,onboarding_step,onboarding_completed_at,is_admin) VALUES ('g-admin2','admin2@test.dev','secondadmin','Second admin',4,now(),true) RETURNING id`).split('\n')[0];
@@ -45,9 +45,9 @@ const body = (t) => { try { return JSON.parse(t); } catch { return t; } };
   await signIn(p, ids.BUILDER);
   const apply = async (label, url) => {
     await p.goto(`/en/bounties/${B4}`);
-    const formOk = await p.waitFor(`!!document.querySelector('form input[name=portfolioUrl]')`, 8000);
-    check(`B: ${label}: apply form shown on the bounty page`, formOk, (await p.text()).replace(/\s+/g, ' ').slice(0, 300));
-    await p.fill('form input[name=portfolioUrl]', url);
+    const formOk = await fillWhenReady(p, 'form input[name=portfolioUrl]', url, `B: ${label}: apply`);
+    check(`B: ${label}: apply form shown on the bounty page`, formOk);
+    if (!formOk) return;
     await p.eval(`(()=>{const f=document.querySelector('form'); for (const el of f.querySelectorAll('textarea')) { Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(el, 'I want to build this, ${label}.'); el.dispatchEvent(new Event('input',{bubbles:true})); } return true})()`);
     p.reset(); await p.click('css:form button[type=submit]'); await sleep(2000); await p.idle();
     const m = mutations(p); clean(await report(p, `B: ${label}`, { m }));

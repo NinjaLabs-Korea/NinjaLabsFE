@@ -1,7 +1,7 @@
 import { loadFromRuntime } from "@/lib/api/public";
 import { getBounty } from "@/lib/bounties";
 import { getProfile } from "@/lib/members";
-import { isReservedNickname, NICKNAME as NICKNAME_SHAPE } from "@/lib/nickname";
+import { isReservedNickname, NICKNAME_LOOKUP_SHAPE as NICKNAME_SHAPE } from "@/lib/nickname";
 import { getNotice } from "@/lib/notices";
 import type { RuntimeMode } from "@/lib/runtime/config";
 import { hasLocale } from "next-intl";
@@ -22,11 +22,11 @@ const MOCK_SLUG = /^[a-z0-9-]{1,64}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /**
  * api mode: member ids are BE nicknames - dots allowed inside (`ninja.inj`), never whitespace, control characters or
- * slashes. The edges must be a letter or digit (`lib/nickname.ts NICKNAME`), so the dot segments `.` and `..` are never an
+ * slashes. The edges must be a letter or digit (the last may be a combining mark: `हिन्दी`) (`lib/nickname.ts NICKNAME`), so the dot segments `.` and `..` are never an
  * id: `/members/%2e%2e` would otherwise make the server request `${api}/users/..`, the BE root. Reserved route words (`lib/nickname.ts RESERVED_NICKNAMES`: `me`, `check-nickname`, `admin`, ...) can never be a
  * profile, so they fail the shape check too.
  */
-const NICKNAME = /^[\p{L}\p{N}._-]{1,64}$/u;
+const NICKNAME = /^[\p{L}\p{N}\p{M}._-]{1,64}$/u;
 const isNicknameShape = (id: string) => NICKNAME.test(id) && NICKNAME_SHAPE.test(id);
 
 /**
@@ -36,6 +36,22 @@ const isNicknameShape = (id: string) => NICKNAME.test(id) && NICKNAME_SHAPE.test
 export function isValidDetailId(kind: DetailKind, id: string, mode: RuntimeMode): boolean {
   if (mode === "mock") return MOCK_SLUG.test(id);
   return kind === "members" ? isNicknameShape(id) && !isReservedNickname(id) : UUID.test(id);
+}
+
+/**
+ * Next hands dynamic segments to layouts/pages/generateMetadata percent-encoded when they hold non-ASCII characters
+ * (`/members/%EA%B9%80...`), so the nickname shape check failed and every Hangul/Cyrillic/accented profile was a 404.
+ * Decode once at the boundary (same rule as `resolveDetailRoute`); an undecodable id becomes `""` and fails the shape check.
+ * Idempotent for valid ids: `%` is never part of a nickname, UUID or slug.
+ * Also NFC-normalised like the BE does for nickname lookups: a decomposed URL (`Cafe%CC%81`, Hangul as jamo, as macOS
+ * file names and AirDrop paste them) is the same name as the composed one, and its combining marks would fail the shape check.
+ */
+export function decodeDetailId(raw: string): string {
+  try {
+    return decodeURIComponent(raw).normalize("NFC");
+  } catch {
+    return "";
+  }
 }
 
 /** Runtime-mode shape check for the detail pages/layouts (`notFound()` when false, before the record fetch). */
@@ -87,7 +103,7 @@ export function resolveDetailRoute(pathname: string): DetailRoute | null {
   const detailKind = kind as DetailKind;
   let id: string;
   try {
-    id = decodeURIComponent(rawId);
+    id = decodeURIComponent(rawId).normalize("NFC");
   } catch {
     id = "";
   }

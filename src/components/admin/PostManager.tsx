@@ -1,30 +1,37 @@
 "use client";
 
+import { CoverImage } from "@/components/cards/CoverImage";
+import { safeHttpUrl } from "@/lib/api/codecs";
 import { useTranslations } from "next-intl";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { AdminListStatus } from "@/components/admin/AdminListStatus";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
-import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
-import { postCategoryLabelKeys, publishOptionFor, type AdminPost, adminErrorDescription } from "@/lib/admin-helpers";
+import { markdownToPlainSummary } from "@/lib/markdown-summary";
+import { postCategoryLabelKeys, publishOptionFor, summaryForPostUpdate, type AdminPost, adminErrorDescription } from "@/lib/admin-helpers";
 import { isHttpUrl, isHttpUrlOrMediaPath, isSafeUrl } from "@/lib/url-rules";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const postColumns = [
-  { id: "title", widthClass: "w-[35%]" },
-  { id: "category", widthClass: "w-[22%]" },
-  { id: "status", widthClass: "w-[15%]" },
-  { id: "published", widthClass: "w-[14%]" },
-  { id: "action", widthClass: "w-[14%]" },
+  { id: "title", widthClass: "w-[29%]" },
+  { id: "category", widthClass: "w-[18%]" },
+  { id: "status", widthClass: "w-[12%]" },
+  { id: "published", widthClass: "w-[12%]" },
+  { id: "eventDate", widthClass: "w-[12%]" },
+  { id: "action", widthClass: "w-[17%]" },
 ];
 
 const categories: AdminPost["category"][] = ["Ninja Labs", "Injective ecosystem", "Events", "Recruitment", "Other"];
 const statuses: AdminPost["status"][] = ["draft", "published"];
 
-type PostForm = Pick<AdminPost, "title" | "category" | "thumbnail" | "externalUrl" | "bodyMarkdown" | "status">;
+type PostForm = Pick<AdminPost, "title" | "category" | "thumbnail" | "externalUrl" | "bodyMarkdown" | "status"> & {
+  /** `YYYY-MM-DD` from the date input, or "" for none (sent as `null`). */
+  eventDate: string;
+};
 
 const emptyForm: PostForm = {
   title: "",
@@ -33,10 +40,11 @@ const emptyForm: PostForm = {
   externalUrl: null,
   bodyMarkdown: "",
   status: "draft",
+  eventDate: "",
 };
 
 /**
- * 저장 전 검증 — BE `CreateNoticeDto`의 거울 (title/body @IsNotEmpty, thumbnailUrl IsHttpUrlOrMediaPath, externalUrl IsHttpUrl).
+ * 저장 전 검증 - BE `CreateNoticeDto`의 거울 (title/body @IsNotEmpty, thumbnailUrl IsHttpUrlOrMediaPath, externalUrl IsHttpUrl).
  * `stored`(수정할 행의 저장된 URL)와 같고 BE 완화 규칙(`isSafeUrl`)을 통과하는 값은 URL 검사를 건너뛴다:
  * 수정 DTO는 레거시 행을 위해 완화 규칙(`IsSafeUrl`)이라 엄격 규칙 이전에 저장된 값을 그대로 받는데,
  * 여기서 막으면 그 행은 URL을 지워야만 저장된다.
@@ -68,6 +76,9 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<PostFieldErrors>({});
   const [saving, setSaving] = useState(false);
+  // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
+  const savingRef = useRef(false);
+  const deletingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminPost | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
@@ -113,6 +124,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       externalUrl: post.externalUrl,
       bodyMarkdown: post.bodyMarkdown,
       status: post.status,
+      eventDate: post.eventDate ?? "",
     });
     clearThumbnailFile();
     setErrors({});
@@ -126,7 +138,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   };
 
   const savePost = async () => {
-    if (saving) return;
+    if (savingRef.current) return;
     // A freshly picked file replaces the stored thumbnail, so only the kept URL is checked.
     const stored = mode === "create" ? undefined : records.find((item) => item.slug === mode);
     const nextErrors = validatePostForm({ ...form, thumbnail: thumbnailFile ? null : form.thumbnail }, stored);
@@ -135,12 +147,13 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
       return;
     }
+    savingRef.current = true;
     setSaving(true);
     try {
       const thumbnail = thumbnailFile ? (await api.uploadAdminMedia(thumbnailFile)).url : form.thumbnail;
       // An emptied link is `null` (the API sends it as null so the BE clears the column), never an omitted key.
       const externalUrl = form.externalUrl?.trim() || null;
-      const post: AdminPost = { ...form, title: form.title.trim(), externalUrl, thumbnail, slug: mode === "create" ? "" : mode, publishedAt: null };
+      const post: AdminPost = { ...form, title: form.title.trim(), externalUrl, thumbnail, eventDate: form.category === "Events" ? form.eventDate || null : null, slug: mode === "create" ? "" : mode, publishedAt: null, ...(mode === "create" ? {} : { summary: summaryForPostUpdate(stored, form.bodyMarkdown, markdownToPlainSummary) }) };
       // Plain edits omit `publish` so the BE keeps published_at (see publishOptionFor).
       const previousStatus = records.find((item) => item.slug === mode)?.status;
       const options = publishOptionFor(previousStatus, form.status, mode === "create" ? "create" : "edit");
@@ -151,11 +164,15 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
 
   const deletePost = async (post: AdminPost) => {
+    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
+    if (deletingRef.current) return;
+    deletingRef.current = true;
     setPendingDelete(null);
     try {
       await api.deleteAdminPost(post.slug);
@@ -167,6 +184,8 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
       // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
       void reload();
+    } finally {
+      deletingRef.current = false;
     }
   };
 
@@ -191,13 +210,14 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       <div className="mt-6 space-y-6">
       <AdminListStatus failedText={t("toast.loadFailedDescription")} onRetry={retry} state={loadState} />
       {loadState === "ready" ? (
-      <AdminTable columns={postColumns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[820px]">
+      <AdminTable columns={postColumns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[1100px]">
         {records.map((post) => (
           <tr key={post.slug} className="border-t border-border">
-            <td className="px-5 py-4 text-sm font-semibold text-ink">{post.title}</td>
+            <td className={`px-5 py-4 text-sm font-semibold text-ink ${adminLongTextCell}`}>{post.title}</td>
             <td className="px-5 py-4 text-sm text-ink-secondary">{categoryLabel(post.category)}</td>
             <td className="px-5 py-4"><Badge variant={post.status === "published" ? "success" : "warning"}>{t(`statuses.${post.status}`)}</Badge></td>
-            <td className="px-5 py-4 text-sm text-ink-secondary">{post.publishedAt ?? "–"}</td>
+            <td className="whitespace-nowrap px-5 py-4 text-sm text-ink-secondary">{post.publishedAt ?? "–"}</td>
+            <td className="whitespace-nowrap px-5 py-4 text-sm text-ink-secondary">{post.category === "Events" ? post.eventDate ?? "–" : "–"}</td>
             <td className="px-5 py-4"><div className="flex gap-2"><button className="h-11 rounded-control border border-primary-outline bg-surface px-3 text-sm font-semibold text-primary-strong" onClick={() => editPost(post)} type="button">{tCommon("edit")}</button><button className="h-11 rounded-control border border-danger px-3 text-sm font-semibold text-danger" onClick={() => setPendingDelete(post)} type="button">{tCommon("delete")}</button></div></td>
           </tr>
         ))}
@@ -207,15 +227,18 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       <section className="rounded-card border border-border bg-surface p-[21px] shadow-card" ref={formRef}>
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{isEditing ? t("form.eyebrowEdit") : t("form.eyebrowCreate")}</p>
         <h2 className="mt-2 font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
-        <div className="mt-6 grid gap-5 md:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
           <label className="text-sm font-semibold text-ink">{t("form.title")}<input {...invalidProps("title")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" maxLength={200} onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} value={form.title} />{fieldError("title")}</label>
           <label className="text-sm font-semibold text-ink">
             {t("form.category")}
             <div className="mt-2"><AdminSelect formatOption={categoryLabel} label={t("form.category")} onChange={(value) => updateForm("category", value as AdminPost["category"])} options={categories} value={form.category} /></div>
           </label>
-          <div className="text-sm font-semibold text-ink"><label>{t("form.thumbnail")}<input accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-sm font-normal text-ink-secondary file:mr-3 file:rounded-control file:border file:border-primary-outline file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-strong" onChange={(event) => { setThumbnailFile(event.target.files?.[0] ?? null); setErrors((current) => ({ ...current, thumbnail: undefined })); }} ref={thumbnailInputRef} type="file" /></label><span className="mt-2 block text-xs font-normal text-ink-muted">{thumbnailFile?.name ?? form.thumbnail ?? tCommon("fileHint")}</span>{form.thumbnail || thumbnailFile ? <button className="mt-2 text-xs font-semibold text-danger hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={removeThumbnail} type="button">{tCommon("removeImage")}</button> : null}{fieldError("thumbnail")}</div>
-          <label className="text-sm font-semibold text-ink">{t("form.externalLink")}<input {...invalidProps("externalUrl", "post-externalUrl-hint")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" inputMode="url" onChange={(event) => updateForm("externalUrl", event.target.value || null)} placeholder={t("form.externalLinkPlaceholder")} type="url" value={form.externalUrl ?? ""} /><span className="mt-1 block text-xs font-normal text-ink-muted" id="post-externalUrl-hint">{tCommon("urlHint")}</span>{fieldError("externalUrl")}</label>
-          <label className="md:col-span-2 text-sm font-semibold text-ink">{t("form.body")}<textarea {...invalidProps("bodyMarkdown")} className="mt-2 min-h-[144px] w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" onChange={(event) => updateForm("bodyMarkdown", event.target.value)} placeholder={t("form.bodyPlaceholder")} value={form.bodyMarkdown} />{fieldError("bodyMarkdown")}</label>
+          <div className="text-sm font-semibold text-ink"><label>{t("form.thumbnail")}<input accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-sm font-normal text-ink-secondary file:mr-3 file:rounded-control file:border file:border-primary-outline file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-strong" onChange={(event) => { setThumbnailFile(event.target.files?.[0] ?? null); setErrors((current) => ({ ...current, thumbnail: undefined })); }} ref={thumbnailInputRef} type="file" /></label>{!thumbnailFile && safeHttpUrl(form.thumbnail) ? <div className="relative mt-2 h-24 w-40 overflow-hidden rounded-control border border-border bg-surface-subtle" data-testid="thumbnail-preview"><CoverImage sizes="160px" src={safeHttpUrl(form.thumbnail)!} /></div> : null}<span className="mt-2 block text-xs font-normal text-ink-muted">{thumbnailFile?.name ?? form.thumbnail ?? tCommon("fileHint")}</span>{form.thumbnail || thumbnailFile ? <button className="mt-2 text-xs font-semibold text-danger hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={removeThumbnail} type="button">{tCommon("removeImage")}</button> : null}{fieldError("thumbnail")}</div>
+          <label className="text-sm font-semibold text-ink">{t("form.externalLink")}<input {...invalidProps("externalUrl", "post-externalUrl-hint")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" inputMode="url" onChange={(event) => updateForm("externalUrl", event.target.value || null)} placeholder={t("form.externalLinkPlaceholder")} type="url" value={form.externalUrl ?? ""} /><span className="mt-1 block text-xs font-normal text-ink-muted" id="post-externalUrl-hint">{tCommon("httpUrlHint")}</span>{fieldError("externalUrl")}</label>
+          <label className="md:col-span-2 text-sm font-semibold text-ink">{t("form.body")}<textarea {...invalidProps("bodyMarkdown")} className="mt-2 min-h-[144px] w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" onChange={(event) => updateForm("bodyMarkdown", event.target.value)} placeholder={t("form.bodyPlaceholder")} value={form.bodyMarkdown} /><span className="mt-1 block text-xs font-normal text-ink-muted">{t("form.bodyHint")}</span>{fieldError("bodyMarkdown")}</label>
+          {form.category === "Events" ? (
+            <label className="text-sm font-semibold text-ink">{t("form.eventDate")}<input aria-describedby="post-eventDate-hint" className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary" onChange={(event) => updateForm("eventDate", event.target.value)} type="date" value={form.eventDate} /><span className="mt-1 block text-xs font-normal text-ink-muted" id="post-eventDate-hint">{t("form.eventDateHint")}</span></label>
+          ) : null}
           <label className="text-sm font-semibold text-ink">
             {t("form.status")}
             <div className="mt-2"><AdminSelect formatOption={(option) => t(`statuses.${option}`)} label={t("form.status")} onChange={(value) => updateForm("status", value === "published" ? "published" : "draft")} options={statuses} value={form.status} /></div>

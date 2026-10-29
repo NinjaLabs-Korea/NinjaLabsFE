@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { createFormatter } from "use-intl/core";
+import { describe, expect, it, vi } from "vitest";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { toReward } from "@/lib/api/codecs";
-import { formatTokenAmount } from "@/lib/format";
+import { formatTokenAmount, formatUtcDateTime } from "@/lib/format";
 import { renderWithIntl } from "@/test/intl";
 
 describe("formatTokenAmount", () => {
@@ -44,5 +45,19 @@ describe("RewardPill", () => {
     expect(reward).toEqual({ amount: 100000, currency: "INJ" });
     renderWithIntl(<RewardPill reward={reward!} />);
     expect(screen.getByText("100,000 INJ")).toBeTruthy();
+  });
+});
+
+describe("formatUtcDateTime", () => {
+  it("formats in UTC with the zone label and no Intl formatting error, whatever the machine zone", () => {
+    const onError = vi.fn();
+    const format = createFormatter({ locale: "en", timeZone: "Asia/Seoul", onError });
+    expect(formatUtcDateTime(format, "2027-01-25T16:23:47Z")).toBe("Jan 25, 2027, 4:23 PM UTC");
+    expect(onError).not.toHaveBeenCalled();
+  });
+  it("localizes the text", () => {
+    const format = createFormatter({ locale: "ko", timeZone: "Asia/Seoul" });
+    expect(formatUtcDateTime(format, "2027-01-25T16:23:47Z")).toContain("UTC");
+    expect(formatUtcDateTime(format, "2027-01-25T16:23:47Z")).toContain("2027");
   });
 });

@@ -43,7 +43,7 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
       <section className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
         <div className="max-w-[62rem]">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("eyebrow")}</p>
-          <h1 className="mt-3 font-display text-5xl -tracking-[0.48px] text-ink">{t("heading")}</h1>
+          <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">{t("heading")}</h1>
           <p className="mt-4 max-w-[48rem] text-lg text-ink-secondary">
             {t("intro")}
           </p>
@@ -51,7 +51,7 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
         <BountyApplyAuthBadge />
       </section>
 
-      <section className="mt-8 grid gap-5 md:grid-cols-2">
+      <section className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
         <article className="flex min-h-full flex-col rounded-card border border-border bg-surface p-[21px] shadow-card">
           <Badge variant="success">{t("submitType.badge")}</Badge>
           <h2 className="mt-4 font-display text-2xl font-bold -tracking-[0.24px] text-ink">{t("submitType.heading")}</h2>

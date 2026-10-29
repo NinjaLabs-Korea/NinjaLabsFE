@@ -27,12 +27,13 @@
     "other": "Other"
   },
   "detail": {
-    "notFoundTitle": "Not found | Ninja Labs",
+    "notFoundTitle": "Page not found | Ninja Labs",
     "pageTitle": "{title} | Ninja Labs",
     "back": "← Back to list",
     "public": "Public",
     "readMoreHeading": "Read more",
     "readMoreLink": "Read more →",
     "related": "Related"
-  }
+  },
+  "eventDate": "Event date {date}"
 }

@@ -32,6 +32,7 @@
       "none": "Not issued"
     },
     "keyExpires": "Expires {date}",
+    "keyExpiringToday": "This key expires in less than a day. Rotate it before it expires.",
     "keyExpiringSoon": "This key expires in {days, plural, one {# day} other {# days}}. Rotate it before it expires.",
     "keyExpired": "This key has expired. Rotate it to keep the agent working.",
     "rotateKey": "Rotate key",
@@ -41,6 +42,7 @@
     "rotateErrors": {
       "generic": "The key could not be rotated. Try again.",
       "AGENT_NOT_ACTIVE": "Only active agents can rotate keys.",
+      "AGENT_NOT_FOUND": "This agent no longer exists. The list was refreshed.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     },
     "revokeAgent": "Revoke agent",
@@ -84,16 +86,14 @@
     "verificationItems": {
       "challenge": "The AI agent has its own dedicated EVM wallet, separate from the owner's.",
       "signature": "When a user registers \"my agent\", ownership is proven by signature: private key → signature → public-key verification.",
-      "binding": "The verified agent is bound to that user in the database.",
-      "failure": "Agents can belong to a user 1:N, so one user can operate many verified agents."
+      "binding": "The verified agent is linked to your account and appears under My agents.",
+      "multiple": "One account can run several verified agents."
     },
     "walletUnavailableTitle": "Wallet unavailable",
     "walletUnavailableBody": "Configure an Injective EVM chain before registering an agent.",
-    "edgeCaseBadge": "Edge case",
-    "edgeCase": "Signature verification fails → registration rejected, retry with a fresh challenge.",
     "withdrawalBadge": "Account deletion",
-    "withdrawal": "Deleting your account revokes every bound agent and its API key.",
-    "profileNote": "Connects directly to the owned agents area of the <link>user profile</link>.",
+    "withdrawal": "Deleting your account in <link>Account settings</link> revokes every linked agent and its API key.",
+    "profileNote": "Rotate keys and manage your agents on <link>My agents</link>.",
     "verificationEyebrow": "Verification logic"
   },
   "form": {
@@ -121,7 +121,9 @@
     "verifying": "Verifying agent…",
     "submit": "Sign & Register",
     "registerErrors": {
+      "AGENT_WALLET_IS_OWNER_WALLET": "This is your personal onboarding wallet. Switch MetaMask to a dedicated agent account.",
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "This wallet is already registered. View it in My agents.",
+      "walletHeldByOther": "This wallet is already registered to another account. Use a different wallet.",
       "generic": "Agent registration failed. Check the wallet signature and try again.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     },
@@ -140,7 +142,7 @@
     }
   },
   "keyReveal": {
-    "keyReady": "API key ready — copy it now.",
+    "keyReady": "API key ready, copy it now.",
     "keyLabel": "New API key",
     "copy": "Copy",
     "copied": "API key copied to the clipboard.",
@@ -160,6 +162,9 @@
     "viewAgents": "View my agents",
     "verifiedTitle": "{count, plural, one {Verified agent ready} other {Verified agents ready}}",
     "verifiedBody": "You have {count, plural, one {# verified agent} other {# verified agents}} available for this bounty.",
+    "keyExpiredTitle": "Agent API key expired",
+    "keyExpiredBody": "Your verified agent's API key has expired, so it cannot call the Agent API. Rotate the key in My agents.",
+    "rotateKey": "Rotate key",
     "pendingTitle": "Agent verification pending",
     "pendingBody": "Finish signing with your agent wallet before using it for a bounty.",
     "finish": "Finish verification",

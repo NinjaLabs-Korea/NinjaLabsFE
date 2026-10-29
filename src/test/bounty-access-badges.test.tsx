@@ -39,6 +39,13 @@ describe("BountyAccessBadges", () => {
     expect(html).not.toContain("Signed in");
   });
 
+  it("claims no available (or login-required) actions on a bounty that no longer takes work", () => {
+    const html = renderToString(<IntlWrapper><FoundationProvider config={config}><BountyAccessBadges actionsOpen={false} /></FoundationProvider></IntlWrapper>);
+    expect(html).toContain("Public view");
+    expect(html).not.toContain("Actions require login");
+    expect(html).not.toContain("Actions available");
+  });
+
   it("switches a restored signed-in session to the signed-in copy without a hydration mismatch", async () => {
     sessionStorage.setItem(SESSION_PREVIEW_STORAGE_KEY, "signed-in");
     const { container, recoverable } = await hydrate();

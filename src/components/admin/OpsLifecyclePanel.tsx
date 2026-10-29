@@ -36,7 +36,7 @@ export function OpsLifecyclePanel({ ops, busy, run }: { ops: AdminOperations; bu
       {ops.lifecycle.allowedTransitions.length === 0 ? (
         <p className="mt-4 text-sm text-ink-muted">{t("lifecycle.none")}</p>
       ) : (
-        <ul className="mt-4 grid gap-4 md:grid-cols-2">
+        <ul className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           {ops.lifecycle.allowedTransitions.map((to) => {
             const blockers = ops.lifecycle.blockers[to] ?? [];
             const cancel = to === "CANCELLED";

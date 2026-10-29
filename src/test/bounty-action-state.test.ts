@@ -49,7 +49,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   // 1. 마감 + (에이전트 바운티 | 비로그인) → 계정 상태 없이 마감 안내
   ["reviewing bounty, signed out", { status: "reviewing", auth: "signed-out" }, { kind: "closed", reason: "reviewing" }],
   ["closed bounty, signed out", { status: "closed", auth: "signed-out" }, { kind: "closed", reason: "closed" }],
-  ["closed agent bounty, signed in", { status: "closed", submissionMode: "agent" }, { kind: "closed", reason: "closed" }],
+  ["closed agent bounty, signed in, no agent row", { status: "closed", submissionMode: "agent" }, { kind: "closed", reason: "closed" }],
   ["reviewing agent bounty, still loading session", { status: "reviewing", submissionMode: "agent", auth: "loading" }, { kind: "closed", reason: "reviewing" }],
   // 2. 에이전트 전용 바운티 → Agent API 안내 (로그인 여부·내 행과 무관)
   ["agent bounty that needs an application", { submissionMode: "agent", applicationRequired: true, auth: "signed-out" }, { kind: "agentMode", endpoint: "applications" }],
@@ -58,6 +58,9 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["session still loading", { auth: "loading" }, { kind: "checkingSession" }],
   ["session loading on a closed bounty (a revision may still be resubmittable)", { auth: "loading", status: "closed" }, { kind: "checkingSession" }],
   ["signed out on an active bounty", { auth: "signed-out", applicationRequired: true }, { kind: "signedOut" }],
+  // 2b. 지원 마감 후엔 비로그인에게도 지원 CTA가 없다
+  ["signed out, application deadline passed", { auth: "signed-out", applicationRequired: true, applicationClosed: true }, { kind: "closed", reason: "applications" }],
+  ["signed out, application deadline passed but no application needed", { auth: "signed-out", applicationRequired: false, applicationClosed: true }, { kind: "signedOut" }],
   // 4. 내 행 조회
   ["submissions loading", { submissions: loading }, { kind: "checkingStatus" }],
   ["applications loading on an apply bounty", { applicationRequired: true, applications: loading }, { kind: "checkingStatus" }],
@@ -66,11 +69,22 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["applications unavailable on an apply bounty", { applicationRequired: true, applications: unavailable }, { kind: "statusUnavailable" }],
   ["applications unavailable is ignored when no application is needed", { applications: unavailable }, firstSubmit],
   // 5. 에이전트만 참여 → 폼 없이 안내 (제출 행이 지원 행보다 우선)
-  ["only an agent applied", { applicationRequired: true, applications: loaded([app("open", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "application" }],
-  ["only an agent submitted", { submissions: loaded([sub("submitted", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "submission" }],
-  ["agent applied and submitted", { applications: loaded([app("submitted", bot)]), submissions: loaded([sub("in_review", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "submission" }],
-  ["agent applied on a no-application bounty still hides the form", { applications: loaded([app("open", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "application" }],
-  ["agent row on a closed bounty (signed in)", { status: "closed", submissions: loaded([sub("approved", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "submission" }],
+  ["only an agent applied", { applicationRequired: true, applications: loaded([app("open", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "application", state: "applied" }],
+  ["only an agent submitted", { submissions: loaded([sub("submitted", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "submitted" }],
+  ["agent applied and submitted", { applications: loaded([app("submitted", bot)]), submissions: loaded([sub("in_review", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "submitted" }],
+  ["agent applied on a no-application bounty still hides the form", { applications: loaded([app("open", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "application", state: "applied" }],
+  ["agent row on a closed bounty (signed in)", { status: "closed", submissions: loaded([sub("approved", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "approved" }],
+  ["agent submission with a revision request (direct bounty)", { submissions: loaded([sub("revision_requested", bot, BOUNTY, "add a README")]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "revisionRequested", review: { forfeited: false, text: "add a README" } }],
+  ["agent submission rejected, forfeited", { submissions: loaded([sub("rejected", bot, BOUNTY, "forfeited: wallet never connected")]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "rejected", review: { forfeited: true, text: "wallet never connected" } }],
+  ["agent submission approved carries the payout status", { submissions: loaded([{ ...sub("approved", bot), paymentStatus: "PAID" as const }]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "approved", payout: "PAID" }],
+  ["agent application rejected", { applicationRequired: true, applications: loaded([app("rejected", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "application", state: "applicationRejected" }],
+  // 2. 에이전트 전용 바운티: 내 에이전트의 진행 상태가 안내보다 우선
+  ["agent bounty, my agent has a revision request", { submissionMode: "agent", submissions: loaded([sub("revision_requested", bot, BOUNTY, "fix the link")]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "revisionRequested", review: { forfeited: false, text: "fix the link" } }],
+  ["agent bounty, revision request after the bounty closed", { submissionMode: "agent", status: "closed", submissions: loaded([sub("revision_requested", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "revisionRequested" }],
+  ["agent bounty, my agent applied", { submissionMode: "agent", applicationRequired: true, applications: loaded([app("open", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "application", state: "applied" }],
+  ["agent bounty, my agent was approved but has not submitted", { submissionMode: "agent", applicationRequired: true, applications: loaded([app("approved", bot)]) }, { kind: "agentMode", endpoint: "submissions" }],
+  ["agent bounty, status still loading", { submissionMode: "agent", submissions: loading }, { kind: "checkingStatus" }],
+  ["agent bounty, status unavailable falls back to the guide", { submissionMode: "agent", submissions: unavailable }, { kind: "agentMode", endpoint: "submissions" }],
   ["own row beside the agent row wins", { applicationRequired: true, applications: loaded([app("open", bot), app("rejected")]) }, { kind: "applicationRejected" }],
   ["just applied here beside an agent row", { applicationRequired: true, applied: true, applications: loaded([app("open", bot)]) }, { kind: "applicationUnderReview" }],
   ["just submitted here beside an agent row", { submitted: true, submissions: loaded([sub("in_review", bot)]) }, updateSubmit],
@@ -78,11 +92,14 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["apply bounty, no application yet", { applicationRequired: true }, { kind: "applyForm" }],
   ["apply bounty, no application, reviewing", { applicationRequired: true, status: "reviewing" }, { kind: "closed", reason: "reviewing" }],
   ["apply bounty, no application, closed", { applicationRequired: true, status: "closed" }, { kind: "closed", reason: "closed" }],
-  ["apply bounty past its application deadline, no application yet", { applicationRequired: true, applicationClosed: true }, { kind: "closed", reason: "closed" }],
+  ["apply bounty past its application deadline, no application yet", { applicationRequired: true, applicationClosed: true }, { kind: "closed", reason: "applications" }],
   ["apply bounty past its application deadline, approved applicant still submits", { applicationRequired: true, applicationClosed: true, applications: loaded([app("approved")]) }, firstSubmit],
   ["rows for other bounties do not count", { applicationRequired: true, applications: loaded([app("approved", null, "other")]) }, { kind: "applyForm" }],
   ["application rejected", { applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["application rejected with the operator's note", { applicationRequired: true, applications: loaded([{ ...app("rejected"), reviewNote: "Portfolio too thin" }]) }, { kind: "applicationRejected", note: "Portfolio too thin" }],
+  ["application auto-rejected by a cancelled bounty", { status: "closed", applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "closed", reason: "cancelled" }],
+  ["rejection on a completed bounty stays a rejection", { status: "closed", completed: true, applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
+  ["rejection on a bounty only past its deadline stays a rejection", { status: "closed", deadlinePassed: true, applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["rejection beats the local applied flag", { applicationRequired: true, applied: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["application under review", { applicationRequired: true, applications: loaded([app("open")]) }, { kind: "applicationUnderReview" }],
   ["the local applied flag does not hide an approved server row", { applicationRequired: true, applied: true, applications: loaded([app("approved")]) }, firstSubmit],
@@ -90,6 +107,9 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["just applied on a closed bounty", { applicationRequired: true, applied: true, status: "closed" }, { kind: "applicationUnderReview" }],
   ["application approved → submit form", { applicationRequired: true, applications: loaded([app("approved")]) }, firstSubmit],
   ["application approved, bounty reviewing, nothing submitted", { applicationRequired: true, status: "reviewing", applications: loaded([app("approved")]) }, { kind: "closed", reason: "reviewing" }],
+  ["pending application on an ended bounty (completed/cancelled) is shown as closed", { applicationRequired: true, status: "closed", applications: loaded([app("open")]) }, { kind: "closed", reason: "closed" }],
+  ["pending application on a bounty that moved to SUBMISSION_CLOSED / IN_REVIEW can no longer unlock a submission", { applicationRequired: true, status: "reviewing", applications: loaded([app("open")]) }, { kind: "closed", reason: "reviewing" }],
+  ["pending application on a bounty closed only by its deadline is still under review", { applicationRequired: true, status: "closed", deadlinePassed: true, applications: loaded([app("open")]) }, { kind: "applicationUnderReview" }],
   // 7. 확정된 제출
   ["submission approved", { submissions: loaded([sub("approved")]) }, { kind: "submissionApproved" }],
   ["submission approved carries its payout status", { submissions: loaded([{ ...sub("approved"), paymentStatus: "PARTIALLY_PAID" as const }]) }, { kind: "submissionApproved", payout: "PARTIALLY_PAID" }],
@@ -101,10 +121,13 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["submission rejected with a blank comment", { submissions: loaded([sub("rejected", null, BOUNTY, "   ")]) }, { kind: "submissionRejected" }],
   // 8. 진행 중이 아님
   ["reviewing, submission pending", { status: "reviewing", submissions: loaded([sub("in_review")]) }, { kind: "inReviewLocked" }],
-  ["closed, submission resubmitted", { status: "closed", submissions: loaded([sub("resubmitted")]) }, { kind: "inReviewLocked" }],
+  ["closed only by the deadline, submission resubmitted (the sponsor can still review)", { status: "closed", deadlinePassed: true, submissions: loaded([sub("resubmitted")]) }, { kind: "inReviewLocked" }],
+  ["cancelled bounty, submission pending: nobody is reviewing it", { status: "closed", submissions: loaded([sub("submitted")]) }, { kind: "closed", reason: "cancelled" }],
+  ["cancelled bounty, submission in review", { status: "closed", submissions: loaded([sub("in_review")]) }, { kind: "closed", reason: "cancelled" }],
   ["reviewing, just submitted", { status: "reviewing", submitted: true }, { kind: "inReviewLocked" }],
   ["reviewing, nothing submitted", { status: "reviewing" }, { kind: "closed", reason: "reviewing" }],
-  ["closed, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "closed" }],
+  ["cancelled, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "cancelled" }],
+  ["completed, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", completed: true, submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "closed" }],
   ["closed only by the deadline, revision requested (BE still resubmittable)", { status: "closed", deadlinePassed: true, submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: false }],
   ["closed only by the deadline, nothing submitted", { status: "closed", deadlinePassed: true }, { kind: "closed", reason: "closed" }],
   // 9. 제출 폼
@@ -118,7 +141,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["revision requested and just resubmitted", { submitted: true, submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: true }],
 ];
 
-describe("deriveActionView — which bounty action section to show", () => {
+describe("deriveActionView - which bounty action section to show", () => {
   it.each(table)("%s", (_label, overrides, expected) => {
     expect(deriveActionView(input(overrides))).toEqual(expected);
   });
@@ -132,7 +155,7 @@ describe("deriveActionView — which bounty action section to show", () => {
   });
 });
 
-describe("splitRows — the owner's own row and an agent row never stand in for each other", () => {
+describe("splitRows - the owner's own row and an agent row never stand in for each other", () => {
   it("picks the first row of each kind", () => {
     const own = app("open");
     const agent = app("approved", bot);
@@ -142,9 +165,20 @@ describe("splitRows — the owner's own row and an agent row never stand in for 
   });
 });
 
-describe("bountyActionErrorCopy — bounties.action.errors key for a failed apply/submit", () => {
+describe("bountyActionErrorCopy - bounties.action.errors key for a failed apply/submit", () => {
   it.each(ERROR_COPY.bountyAction.codes)("a listed code uses its own key: %s", (code) => {
     expect(bountyActionErrorCopy(new ApiHttpError(400, code))).toEqual({ key: code });
+  });
+
+  it.each([
+    [["submissionUrl must be a public http(s) URL (no localhost or private addresses)"], "VALIDATION_URL"],
+    [["message should not be empty"], "VALIDATION_TEXT_REQUIRED"],
+    [["description must be shorter than or equal to 5000 characters"], "VALIDATION_TOO_LONG"],
+    [["commitSha must be a hex git commit hash (4 to 64 hex characters)"], "VALIDATION_COMMIT_SHA"],
+    [["commitSha must be shorter than or equal to 64 characters"], "VALIDATION_COMMIT_SHA"],
+    [["something else must be odd"], "VALIDATION_FAILED"],
+  ])("a 400 VALIDATION_FAILED names the problem: %j -> %s", (details, key) => {
+    expect(bountyActionErrorCopy(new ApiHttpError(400, "VALIDATION_FAILED", details))).toEqual({ key });
   });
 
   it("mock-mode errors take the same path", () => {

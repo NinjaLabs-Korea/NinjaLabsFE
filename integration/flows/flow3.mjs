@@ -1,10 +1,10 @@
 // Flow 3: wallet step without an extension: signed-out page, step-2 redirect, "Wallet unavailable" disabled, no DB writes.
 import { Browser, report } from '../lib/cdp.mjs'; import { sql, ids, check, clean, done, sleep, signIn } from '../lib/harness.mjs';
 const b = await Browser.connect(); const ctx = await b.newContext(); const p = await b.newPage(ctx);
-await p.goto('/en/signup/wallet'); await sleep(800);
+await p.goto('/en/signup/wallet'); await p.waitFor(`location.pathname.endsWith('/en/signup')`, 8000); await sleep(800);
 const out = await p.text();
 clean(await report(p, 'wallet signed-out'), { signedOut: true });
-check('signed-out wallet page asks to sign in', out.includes('Sign in to continue signing up'));
+check('signed-out wallet page goes to step 1 with a message', out.includes('Sign in to continue') && out.includes('Continue with Google'), out.slice(0, 300));
 await signIn(p, ids.N2, { landing: '/signup/wallet' });
 await p.goto('/en/bounties'); await p.waitFor(`location.pathname.endsWith('/signup/wallet')`, 8000);
 const landed = await p.url(); clean(await report(p, 'step2 redirect', { landed }));

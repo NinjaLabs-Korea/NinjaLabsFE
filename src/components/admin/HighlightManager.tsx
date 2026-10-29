@@ -5,7 +5,7 @@ import { useCallback, useRef, useState, type ChangeEvent, type FormEvent } from 
 import { AdminListStatus } from "@/components/admin/AdminListStatus";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
-import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
@@ -15,7 +15,7 @@ import { isHttpUrlOrMediaPath, isHttpUrlOrSitePath, isSafeUrl } from "@/lib/url-
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 /**
- * 저장 전 검증 — BE `CreateHighlightDto`의 거울 (title/description @IsNotEmpty, imageUrl IsHttpUrlOrMediaPath, linkUrl IsHttpUrlOrSitePath, displayOrder @IsInt @Min(0) @MaxPgInt).
+ * 저장 전 검증 - BE `CreateHighlightDto`의 거울 (title/description @IsNotEmpty, imageUrl IsHttpUrlOrMediaPath, linkUrl IsHttpUrlOrSitePath, displayOrder @IsInt @Min(0) @MaxPgInt).
  * `stored`(수정할 행의 저장된 이미지/링크)와 같고 BE 완화 규칙(`isSafeUrl`)을 통과하는 값은 URL 검사를 건너뛴다:
  * 수정 DTO는 레거시 행을 위해 완화 규칙(`IsSafeUrl`)이라 엄격 규칙 이전에 저장된 `/uploads/x.png` 같은 값을 그대로 받는데,
  * 여기서 막으면 그 행은 이미지를 지워야만 저장된다.
@@ -69,6 +69,9 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   const [published, setPublished] = useState(true);
   const [errors, setErrors] = useState<HighlightFieldErrors>({});
   const [saving, setSaving] = useState(false);
+  // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
+  const savingRef = useRef(false);
+  const deletingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminHighlight | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -142,7 +145,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving) return;
+    if (savingRef.current) return;
     // A freshly picked file replaces the stored image, so only the kept URL is checked.
     const stored = isEditing ? records.find((item) => item.id === mode) : undefined;
     const nextErrors = validateHighlightForm({ title, description, image: imageFile ? null : image, link, order }, stored && { image: stored.image, link: stored.link });
@@ -151,6 +154,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
       return;
     }
+    savingRef.current = true;
     setSaving(true);
     try {
       const uploadedImage = imageFile ? (await api.uploadAdminMedia(imageFile)).url : image;
@@ -177,11 +181,15 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }
 
   async function handleDelete(highlight: AdminHighlight) {
+    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
+    if (deletingRef.current) return;
+    deletingRef.current = true;
     setPendingDelete(null);
     try {
       await api.deleteAdminHighlight(highlight.id);
@@ -193,6 +201,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
       pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
       // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
       void reload();
+    } finally {
+      deletingRef.current = false;
     }
   }
 
@@ -209,16 +219,16 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
         <div className="mt-6">
           <AdminListStatus failedText={t("toast.loadFailedDescription")} onRetry={retry} state={loadState} />
           {loadState === "ready" ? (
-          <AdminTable columns={highlightColumns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[760px]">
+          <AdminTable columns={highlightColumns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[900px]">
             {records.map((highlight) => (
               <tr key={highlight.id} className="border-t border-border">
                 <td className="px-5 py-4 text-sm text-ink-secondary">{typeLabel(highlight.type)}</td>
-                <td className="px-5 py-4 text-sm font-semibold text-ink">
+                <td className={`px-5 py-4 text-sm font-semibold text-ink ${adminLongTextCell}`}>
                   {highlight.title}
                   <span className="mt-1 block"><Badge variant={highlight.published ? "success" : "neutral"}>{t(`publishStates.${highlight.published ? "published" : "draft"}`)}</Badge></span>
                 </td>
                 <td className="px-5 py-4 text-sm text-ink-secondary">{highlight.order}</td>
-                <td className="px-5 py-4 text-sm text-ink-secondary">{highlight.link ?? "–"}</td>
+                <td className={`px-5 py-4 text-sm text-ink-secondary ${adminLongTextCell}`}>{highlight.link ?? "–"}</td>
                 <td className="px-5 py-4">
                   <div className="flex gap-2"><button className="h-11 rounded-control border border-primary-outline bg-surface px-3 text-sm font-semibold text-primary-strong" onClick={() => handleEdit(highlight)} type="button">{tCommon("edit")}</button><button className="h-11 rounded-control border border-danger px-3 text-sm font-semibold text-danger" onClick={() => setPendingDelete(highlight)} type="button">{tCommon("delete")}</button></div>
                 </td>
@@ -233,7 +243,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{isEditing ? t("form.eyebrowEdit") : t("form.eyebrowCreate")}</p>
         <h2 className="mt-2 font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
         <form noValidate onSubmit={handleSubmit}>
-          <div className="mt-6 grid gap-5 md:grid-cols-2">
+          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
             <div className="text-sm font-semibold text-ink">
               {t("form.type")}
               <div className="mt-2">
@@ -244,7 +254,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
             <label className="text-sm font-semibold text-ink md:col-span-2">{t("form.description")}<textarea {...invalidProps("description")} className="mt-2 min-h-24 w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary aria-[invalid]:border-danger" maxLength={2000} onChange={(event) => { setDescription(event.target.value); clearError("description"); }} required value={description} />{fieldError("description")}</label>
             <div className="text-sm font-semibold text-ink">{t("form.image")}
               <button className="mt-2 flex h-[46px] w-full items-center rounded-control border border-border px-4 text-left text-sm font-normal text-ink-placeholder hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => imageInputRef.current?.click()} type="button">{image ?? t("form.uploadImage")}</button>
-              <input accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleImageChange} ref={imageInputRef} type="file" />
+              <input accept="image/jpeg,image/png,image/webp" aria-label={t("form.image")} className="sr-only" onChange={handleImageChange} ref={imageInputRef} type="file" />
               <span className="mt-2 block text-xs font-normal text-ink-muted">{imageFile?.name ?? image ?? tCommon("fileHint")}</span>
               {image || imageFile ? <button className="mt-2 text-xs font-semibold text-danger hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={handleRemoveImage} type="button">{t("form.removeImage")}</button> : null}
               {fieldError("image")}

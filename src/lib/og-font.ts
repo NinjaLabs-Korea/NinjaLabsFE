@@ -9,6 +9,19 @@ const OG_FONT_FAMILY: Partial<Record<Locale, string>> = { ko: "Noto Sans KR", zh
 
 const OG_FONT_TIMEOUT_MS = 5000;
 
+/**
+ * Largest headline size (px, at most `maxSize`) at which the longest line still fits `availableWidth` on ONE line. Satori breaks
+ * CJK text between any two characters, so a 72px Korean headline wrapped mid-word and left an orphan "요." on its own line. A
+ * full-width character is about one em wide, a Latin one about 0.55 em, a space 0.3 em; 8% is kept as slack because the
+ * estimate is not font metrics.
+ */
+export function fitOgHeadlineSize(lines: readonly string[], availableWidth: number, maxSize: number): number {
+  const emWidth = (line: string) =>
+    [...line].reduce((sum, char) => sum + (char === " " ? 0.3 : /[\u1100-\u11ff\u3000-\u9fff\uac00-\ud7af\uff00-\uffef]/u.test(char) ? 1 : 0.55), 0);
+  const widest = Math.max(...lines.map(emWidth), 1);
+  return Math.max(24, Math.min(maxSize, Math.floor((availableWidth * 0.92) / widest)));
+}
+
 export function ogFontFamily(locale: Locale): string | null {
   return OG_FONT_FAMILY[locale] ?? null;
 }

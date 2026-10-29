@@ -9,12 +9,13 @@ import type { ApiClient, ApiResult } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import { previewUser } from "@/lib/mocks/fixtures";
+import { hrefString } from "@/test/support/link";
 import { renderWithIntl } from "@/test/intl";
 import { signedInAs } from "@/test/support/auth";
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href, ...props }: ComponentProps<"a">) => (
-    <a href={href} {...props}>
+  Link: ({ children, href, ...props }: Omit<ComponentProps<"a">, "href"> & { href: Parameters<typeof hrefString>[0] }) => (
+    <a href={hrefString(href)} {...props}>
       {children}
     </a>
   ),
@@ -75,6 +76,26 @@ describe("ApplicationsView", () => {
     renderWithIntl(<ApplicationsView />);
     expect(await screen.findByText("You have not applied to any bounty yet.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Browse bounties" }).getAttribute("href")).toBe("/bounties");
+  });
+
+  it("lists direct submissions without Applied/Approved steps, and sends only the owner (not an agent) back to the resubmit form", async () => {
+    serve({ status: "available", data: [
+      row("revisionRequested", { id: "submission:own", source: "submission", bountySlug: "d1", bountyTitle: "Direct own", reviewComment: "Fix the link" }),
+      row("revisionRequested", { id: "submission:agent", source: "submission", bountySlug: "d2", bountyTitle: "Direct agent", agent: { id: "ag1", name: "Scout" }, reviewComment: "Add repo" }),
+      row("completed", { id: "submission:paid", source: "submission", bountySlug: "d3", bountyTitle: "Direct paid", paymentStatus: "PAID" }),
+    ] });
+    renderWithIntl(<ApplicationsView />);
+    await screen.findByRole("link", { name: "Direct own" });
+    const own = card("Direct own");
+    expect(within(own).getByText(/^Submitted /)).toBeTruthy();
+    expect(within(own).queryByText("Applied")).toBeNull();
+    expect(within(own).getByText("Reviewer comment: Fix the link")).toBeTruthy();
+    expect(within(own).getByRole("link", { name: "Resubmit" }).getAttribute("href")).toBe("/bounties/d1");
+    const agent = card("Direct agent");
+    expect(within(agent).getByText("Reviewer comment: Add repo")).toBeTruthy();
+    expect(within(agent).getByText(/Have it resubmit through the Agent API/)).toBeTruthy();
+    expect(within(agent).queryByRole("link", { name: "Resubmit" })).toBeNull();
+    expect(within(card("Direct paid")).getByText("Paid")).toBeTruthy();
   });
 
   it("marks the current step for each status and shows the status badge copy", async () => {
@@ -160,7 +181,7 @@ describe("ApplicationsView", () => {
     renderWithIntl(<ApplicationsView />);
     await screen.findByRole("link", { name: "Bounty revisionRequested" });
     const article = card("Bounty revisionRequested");
-    const badge = within(article).getByText("Revision requested");
+    const badge = within(article).getByText("Revision requested").closest(".rounded-full") as HTMLElement;
     expect(badge.className).toContain("text-warning");
     expect(currentStep(article)).toContain("Submitted");
     expect(within(article).getByText("Action needed")).toBeTruthy();
@@ -247,7 +268,7 @@ describe("ApplicationsView", () => {
     serve({ status: "unavailable", reason: "unauthorized" });
     const view = renderWithIntl(<ApplicationsView />);
     expect(await screen.findByText("Your session has expired. Sign in again to continue.")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Get Started" }).getAttribute("href")).toBe("/signup");
+    expect(screen.getByRole("link", { name: "Get Started" }).getAttribute("href")).toBe("/signup?returnTo=%2Fapplications");
     view.unmount();
 
     for (const reason of ["server-error", "network-error"] as const) {

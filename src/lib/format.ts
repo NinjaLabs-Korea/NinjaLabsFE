@@ -1,3 +1,5 @@
+import type { useFormatter } from "next-intl";
+
 const MAX_FRACTION_DIGITS = 6;
 
 /** Integer part that `Number` can hold exactly (15 digits stays well below 2^53). */
@@ -21,4 +23,15 @@ export function formatTokenAmount(amount: number | string, locale: string, maxim
   if (!digits) return `${sign}${grouped}`;
   const separator = new Intl.NumberFormat(locale).formatToParts(1.1).find((part) => part.type === "decimal")?.value ?? ".";
   return `${sign}${grouped}${separator}${digits}`;
+}
+
+/**
+ * Date and time pinned to UTC with the zone label (`Jan 25, 2027, 4:23 PM UTC`), for timestamps that must read the same on
+ * every machine, such as an Agent API key's expiry. Explicit fields on purpose: `dateStyle`/`timeStyle` cannot be combined
+ * with `timeZoneName` (Intl throws, next-intl's `onError` then falls back to `String(date)` and logs FORMATTING_ERROR).
+ */
+export function formatUtcDateTime(format: Pick<ReturnType<typeof useFormatter>, "dateTime">, value: string | Date): string {
+  return format.dateTime(typeof value === "string" ? new Date(value) : value, {
+    year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short",
+  });
 }

@@ -6,6 +6,7 @@ import { useAuthActions, useFoundationMode } from "@/components/auth/FoundationP
 import { TurnstileWidget, type TurnstileHandle, type TurnstileStatus } from "@/components/auth/TurnstileWidget";
 import { useRouter } from "@/i18n/navigation";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
+import { rememberReturnPath } from "@/lib/return-path";
 
 type LoginState = "idle" | "pending" | "error";
 
@@ -25,7 +26,7 @@ export function GoogleLoginButton({ turnstileSiteKey }: GoogleLoginButtonProps =
   const isMock = mode === "mock";
   const pending = loginState === "pending";
   const failed = loginState === "error";
-  // Mock mode never reaches the BE, so it never needs (or renders) the widget — a preview host outside the site key's
+  // Mock mode never reaches the BE, so it never needs (or renders) the widget - a preview host outside the site key's
   // hostname list would otherwise leave the button disabled forever.
   const turnstileKey = isMock ? undefined : turnstileSiteKey;
   const awaitingTurnstile = Boolean(turnstileKey) && !turnstileToken;
@@ -48,6 +49,9 @@ export function GoogleLoginButton({ turnstileSiteKey }: GoogleLoginButtonProps =
   const handleSignIn = async (simulateFailure = false) => {
     onboardingLog("oauth.button.clicked", { mode, simulateFailure });
     setLoginState("pending");
+    // `/signup?returnTo=/recruit`: come back to the page that asked for the sign-in once it (and onboarding) is done.
+    const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+    if (returnTo) rememberReturnPath(returnTo);
 
     try {
       if (simulateFailure) {

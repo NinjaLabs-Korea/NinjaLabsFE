@@ -81,9 +81,11 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
 
   const actorCell = (log: AdminAuditLog) => {
     const kind = auditActorKind(log);
-    if (kind === "user") return <span className="font-mono text-xs" title={log.actorUserId ?? undefined}>{opsShort(log.actorUserId)}</span>;
+    // The nickname reads at a glance; the id stays in the tooltip (and the short id is the fallback for an account without one).
+    const userLabel = log.actorNickname ? <span className="text-sm font-semibold text-ink" title={log.actorUserId ?? undefined}>{log.actorNickname}</span> : <span className="font-mono text-xs" title={log.actorUserId ?? undefined}>{opsShort(log.actorUserId)}</span>;
+    if (kind === "user") return userLabel;
     if (kind === "agent") return <span className="flex items-center gap-2"><Badge variant="neutral">{t("actors.agent")}</Badge><span className="font-mono text-xs" title={log.actorAgentId ?? undefined}>{opsShort(log.actorAgentId)}</span></span>;
-    if (kind === "script") return <span className="flex items-center gap-2"><Badge variant="neutral">{t("actors.script")}</Badge>{log.actorUserId ? <span className="font-mono text-xs" title={log.actorUserId}>{opsShort(log.actorUserId)}</span> : null}</span>;
+    if (kind === "script") return <span className="flex items-center gap-2"><Badge variant="neutral">{t("actors.script")}</Badge>{log.actorUserId ? userLabel : null}</span>;
     return <Badge variant="neutral">{t("actors.unknown")}</Badge>;
   };
 
@@ -123,7 +125,10 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
               <tr className="border-t border-border" key={log.id}>
                 <td className={opsCell}>{opsDateTime(format, log.createdAt, timeZone)}</td>
                 <td className={opsCell}>{actorCell(log)}</td>
-                <td className={`${opsCell} font-mono text-xs font-semibold text-ink`}>{log.action}</td>
+                <td className={opsCell}>
+                  {t.has(`actions.${log.action}`) ? <p className="text-sm font-semibold text-ink">{t(`actions.${log.action}`)}</p> : null}
+                  <p className="font-mono text-xs text-ink-muted">{log.action}</p>
+                </td>
                 <td className={opsCell}>{log.entityType}<p className="mt-1 font-mono text-xs text-ink-muted" title={log.entityId ?? undefined}>{log.entityId ?? "–"}</p></td>
               </tr>
             ))}

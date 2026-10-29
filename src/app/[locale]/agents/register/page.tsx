@@ -19,7 +19,7 @@ const { wallet: walletConnectionConfig } = composeFoundationRuntime(previewUser)
 // Keys under agents.register.steps / agents.register.verificationItems.
 const steps = ["doc", "publicKey", "ownership", "apiKey"] as const;
 
-const verificationItems = ["challenge", "signature", "binding", "failure"] as const;
+const verificationItems = ["challenge", "signature", "binding", "multiple"] as const;
 
 type AgentRegisterPageProps = {
   params: Promise<{ locale: string }>;
@@ -51,13 +51,13 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
       <section className="mt-8 flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
         <div className="min-w-0 max-w-[48rem]">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("eyebrow")}</p>
-          <h1 className="mt-3 font-display text-5xl -tracking-[0.48px] text-ink">{t("heading")}</h1>
+          <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">{t("heading")}</h1>
           <p className="mt-4 text-lg text-ink-secondary">{t("intro")}</p>
         </div>
         <BountyApplyAuthBadge />
       </section>
 
-      <section className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {steps.map((step, index) => (
           <article className="rounded-card border border-border bg-surface p-[21px] shadow-card" key={step}>
             <span className="inline-flex size-6 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary-strong">{index + 1}</span>
@@ -77,7 +77,7 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
         ))}
       </section>
 
-      <section className="mt-8 grid gap-5 lg:grid-cols-5">
+      <section className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-5">
         <article className="rounded-card border border-border bg-surface p-[21px] shadow-card lg:col-span-3">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("verificationEyebrow")}</p>
           <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">{t("verificationHeading")}</h2>
@@ -108,14 +108,14 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
         )}
       </section>
 
-      <section className="mt-8 grid gap-5 md:grid-cols-2">
-        <article className="rounded-card border border-border bg-surface p-[21px] shadow-card">
-          <Badge variant="danger">{t("edgeCaseBadge")}</Badge>
-          <p className="mt-3 text-sm text-ink-secondary">{t("edgeCase")}</p>
-        </article>
+      <section className="mt-8">
         <article className="rounded-card border border-border bg-surface p-[21px] shadow-card">
           <Badge variant="warning">{t("withdrawalBadge")}</Badge>
-          <p className="mt-3 text-sm text-ink-secondary">{t("withdrawal")}</p>
+          <p className="mt-3 text-sm text-ink-secondary">
+            {t.rich("withdrawal", {
+              link: (chunks) => <Link className="font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/account">{chunks}</Link>,
+            })}
+          </p>
         </article>
       </section>
 

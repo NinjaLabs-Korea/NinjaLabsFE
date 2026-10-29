@@ -4,7 +4,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AdminListStatus } from "@/components/admin/AdminListStatus";
 import { AdminSelect } from "@/components/admin/AdminSelect";
-import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { useAdminList } from "@/components/admin/useAdminList";
@@ -28,7 +28,7 @@ const columns = [
 ];
 
 const tags = ["Dev", "Design", "Content", "Other"] as const;
-const statusVariants = { draft: "neutral", funding: "warning", active: "success", reviewing: "warning", closed: "danger" } as const;
+const statusVariants = { draft: "neutral", funding: "warning", active: "success", submissionClosed: "warning", reviewing: "warning", completed: "neutral", cancelled: "danger" } as const;
 
 type Mode = { kind: "create" } | { kind: "edit"; slug: string };
 
@@ -46,6 +46,9 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const [errors, setErrors] = useState<BountyFormErrors>({});
   const [originalDeadline, setOriginalDeadline] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
+  // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
+  const savingRef = useRef(false);
+  const deletingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminBounty | null>(null);
   // Bounties with a transition in flight: a second click would send the same target again and answer INVALID_TRANSITION right after the success toast.
   const transitioning = useRef(new Set<string>());
@@ -79,9 +82,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   const updateForm = <Key extends keyof BountyFormValues>(key: Key, value: BountyFormValues[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
-    // 산출물/제출 가이드는 둘 중 하나만 있으면 되므로 한쪽을 고치면 같은 에러를 지운다.
-    const cleared = key === "submissionGuide" ? "deliverables" : key;
-    setErrors((current) => ({ ...current, [cleared]: undefined }));
+    setErrors((current) => ({ ...current, [key]: undefined }));
   };
 
   const fieldError = (key: keyof BountyFormValues) => {
@@ -119,19 +120,20 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (saving) return;
+    if (savingRef.current) return;
     const nextErrors = validateBountyForm(form, { originalDeadline, editing });
     if (Object.values(nextErrors).some(Boolean)) {
       setErrors(nextErrors);
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("form.errors.summary") });
       return;
     }
+    savingRef.current = true;
     setSaving(true);
     try {
       const coverImage = coverFile ? (await api.uploadAdminMedia(coverFile)).url : form.coverImage;
       const existing = mode.kind === "edit" ? records.find((record) => record.slug === mode.slug) : undefined;
       const bounty = formToBounty(form, mode.kind === "edit"
-        ? { slug: mode.slug, coverImage, existingStatus: existing?.status ?? "draft", maxWinners: existing?.maxWinners }
+        ? { slug: mode.slug, coverImage, existingStatus: existing?.status ?? "draft" }
         : { slug: "", coverImage });
       await api.saveAdminBounty(bounty, mode.kind === "create");
       pushAdminToast({ variant: "success", title: mode.kind === "edit" ? t("toast.updatedTitle") : t("toast.createdTitle"), description: tCommon("savedDescription", { title: form.title }) });
@@ -140,6 +142,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
@@ -165,6 +168,9 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   };
 
   const remove = async (bounty: AdminBounty) => {
+    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
+    if (deletingRef.current) return;
+    deletingRef.current = true;
     setPendingDelete(null);
     try {
       await api.deleteAdminBounty(bounty.slug);
@@ -176,6 +182,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
       // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
       void reload();
+    } finally {
+      deletingRef.current = false;
     }
   };
 
@@ -193,16 +201,16 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       <div className="mt-6">
         <AdminListStatus failedText={t("toast.loadFailedDescription")} onRetry={retry} state={loadState} />
         {loadState === "ready" ? (
-        <AdminTable columns={columns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[900px]">
+        <AdminTable columns={columns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[1120px]">
           {records.map((bounty) => (
             <tr className="border-t border-border" key={bounty.slug}>
-              <td className="px-5 py-4 text-sm font-semibold text-ink">{bounty.title}</td>
-              <td className="px-5 py-4 text-sm text-ink-secondary">{bounty.sponsor}</td>
+              <td className={`px-5 py-4 text-sm font-semibold text-ink ${adminLongTextCell}`}>{bounty.title}</td>
+              <td className={`px-5 py-4 text-sm text-ink-secondary ${adminLongTextCell}`}>{bounty.sponsor}</td>
               <td className="px-5 py-4"><RewardPill reward={bounty.reward} />{bounty.rewardContractAddress ? <p className="mt-1 text-xs text-ink-muted" title={bounty.rewardContractAddress}>EVM {bounty.rewardChainId} · {bounty.rewardContractAddress.slice(0, 6)}…{bounty.rewardContractAddress.slice(-4)}</p> : null}</td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{t(`intake.${bounty.intakeEnabled ? "ON" : "OFF"}`)}<p className="mt-1 text-xs text-ink-muted">{t(`submissionModes.${bounty.submissionMode === "agent" ? "Agent" : "Direct"}`)}</p></td>
               <td className="px-5 py-4"><Badge variant={statusVariants[bounty.status]}>{t(`statuses.${bounty.status}`)}</Badge></td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{deadlineCell(bounty.deadline)}</td>
-              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong disabled:cursor-not-allowed disabled:opacity-60" disabled={transitioningSlugs.has(bounty.slug)} onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<Link className="rounded-control border border-primary-outline px-3 py-2 text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={{ pathname: "/admin/operations", query: { bounty: bounty.slug } }}>{t("operations")}</Link><button className="rounded-control border border-danger px-3 py-2 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
+              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong disabled:cursor-not-allowed disabled:opacity-60" disabled={transitioningSlugs.has(bounty.slug)} onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<Link className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={{ pathname: "/admin/operations", query: { bounty: bounty.slug } }}>{t("operations")}</Link><button className="rounded-control border border-danger px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
             </tr>
           ))}
         </AdminTable>
@@ -213,7 +221,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{editing ? t("form.eyebrowEdit") : t("form.eyebrowCreate")}</p>
         <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">{editing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
         <form noValidate onSubmit={save}>
-          <div className="mt-5 grid gap-5 md:grid-cols-2">
+          <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
             <label className="block text-sm font-semibold text-ink">{t("form.title")}
               <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("title")} maxLength={BOUNTY_TITLE_MAX} onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} type="text" value={form.title} />
               {fieldError("title")}
@@ -235,6 +243,11 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               {fieldError("amount")}
               {editing ? <p className="mt-2 text-xs text-ink-muted">{t("form.rewardLockedHint")}</p> : null}
             </div>
+            <label className="block text-sm font-semibold text-ink">{t("form.maxWinners")}
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("maxWinners")} inputMode="numeric" onChange={(event) => updateForm("maxWinners", event.target.value)} type="text" value={form.maxWinners} />
+              {fieldError("maxWinners")}
+              <span className="mt-2 block text-xs font-normal text-ink-muted">{t("form.maxWinnersHint")}</span>
+            </label>
             <div>
               <p className="text-sm font-semibold text-ink">{t("form.intake")}</p>
               <div className="mt-2 w-fit"><AdminSelect formatOption={(option) => t(`intake.${option}`)} label={t("form.intake")} onChange={(value) => updateForm("intake", value as BountyFormValues["intake"])} options={["OFF", "ON"]} value={form.intake} /></div>
@@ -255,15 +268,12 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
             <div>
               <p className="text-sm font-semibold text-ink" id="bounty-tags-label">{t("form.tags")}</p>
               <div aria-labelledby="bounty-tags-label" className="mt-2 flex flex-wrap gap-2" role="group">
-                {tags.map((tag) => <button aria-pressed={form.tags.includes(tag)} className={form.tags.includes(tag) ? "inline-flex h-6 items-center rounded-full bg-primary px-2.5 text-xs font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" : "inline-flex h-6 items-center rounded-full bg-primary-soft px-2.5 text-xs font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"} key={tag} onClick={() => selectTag(tag)} type="button">{t(`tags.${tag}`)}</button>)}
+                {tags.map((tag) => <button aria-pressed={form.tags.includes(tag)} className={form.tags.includes(tag) ? "inline-flex h-6 items-center rounded-full max-sm:h-10 bg-primary px-2.5 max-sm:px-4 text-xs font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" : "inline-flex h-6 items-center rounded-full max-sm:h-10 max-sm:px-4 bg-primary-soft px-2.5 text-xs font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"} key={tag} onClick={() => selectTag(tag)} type="button">{t(`tags.${tag}`)}</button>)}
               </div>
             </div>
             <label className="block text-sm font-semibold text-ink">{t("form.description")}
               <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("description")} onChange={(event) => updateForm("description", event.target.value)} placeholder={t("form.descriptionPlaceholder")} value={form.description} />
               {fieldError("description")}
-            </label>
-            <label className="block text-sm font-semibold text-ink">{t("form.submissionGuide")}
-              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("submissionGuide", event.target.value)} placeholder={t("form.submissionGuidePlaceholder")} value={form.submissionGuide} />
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.deliverables")}
               <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("deliverables")} onChange={(event) => updateForm("deliverables", event.target.value)} placeholder={t("form.deliverablesPlaceholder")} value={form.deliverables} />
@@ -276,7 +286,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
             </label>
           </div>
           <button className="mt-5 h-[45px] rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={saving} type="submit">{saving ? tCommon("saving") : editing ? t("form.save") : t("form.create")}</button>
-          <p className="mt-3 text-xs text-ink-muted">{t("form.rewardNote")} {tCommon("saveNotice")}</p>
+          <p className="mt-3 text-xs text-ink-muted">{t("form.rewardNote")}</p>
         </form>
       </section>
       <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void remove(pendingDelete)} title={pendingDelete?.title ?? null} />

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Real-browser integration run: builds the BE (from $NINJA_BE_DIR) and this FE checkout into a temp dir, starts a private
-// Postgres, BE, FE, two TLS proxies and headless Chrome on configurable ports, seeds, runs flows 1-10 in order, and always
+// Postgres, BE, FE, two TLS proxies and headless Chrome on configurable ports, seeds, runs flows 1-15 in order, and always
 // tears everything down. Never writes into either checkout (FE logs go to integration/.logs, which is git-ignored).
 //
 //   NINJA_BE_DIR=/path/to/NinjaLabsBE npm run test:integration            # all flows
@@ -21,8 +21,10 @@ import { alive, reapStale, reapDir, writePids, TMP_PREFIX } from './lib/reaper.m
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FE_DIR = path.resolve(HERE, '..');
 // Flow 10 runs last: it leaves an open payout on the funded bounty B1.
-const ALL_FLOWS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+const ALL_FLOWS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15'];
 const FLOW_TIMEOUT_MS = 6 * 60_000;
+/** Flows 12 (recruitment lifecycle across four sessions) and 13 (every community screen at three widths, screenshots included) get a longer budget. */
+const flowTimeoutMs = (script) => (/flow14\.mjs$/.test(script) ? 75 * 60_000 : /flow13\.mjs$/.test(script) ? 20 * 60_000 : /flow12\.mjs$/.test(script) ? 12 * 60_000 : FLOW_TIMEOUT_MS);
 
 const env = process.env;
 const port = (name, def) => Number(env[`NINJA_IT_${name}_PORT`] ?? def);
@@ -254,7 +256,7 @@ async function main() {
   const statePath = path.join(TMP, 'state.json');
   fs.writeFileSync(statePath, JSON.stringify({
     feOrigin: FE_ORIGIN, apiOrigin: API_ORIGIN, cdpPort: P.cdp, psql, pg: { host: '127.0.0.1', port: P.pg, user: 'postgres', db: 'ninja' },
-    jwtSecret, ...seeded,
+    jwtSecret, logDir: LOGS, ...seeded,
   }, null, 2));
 
   // Flows run strictly in order: 7 and 8 rely on 4's application/submission and 5's agents.
@@ -262,7 +264,7 @@ async function main() {
   for (const f of flows) {
     const file = path.join(LOGS, `flow${f}.log`);
     log(`flow ${f} ...`);
-    const code = await runFlow(path.join(HERE, 'flows', `flow${f}.mjs`), file, { ...baseEnv(), NINJA_IT_STATE: statePath, NODE_TLS_REJECT_UNAUTHORIZED: '0' });
+    const code = await runFlow(path.join(HERE, 'flows', `flow${f}.mjs`), file, { ...baseEnv(), ...Object.fromEntries(Object.entries(env).filter(([k]) => k.startsWith('NINJA_IT_SWEEP'))), NINJA_IT_STATE: statePath, NODE_TLS_REJECT_UNAUTHORIZED: '0' });
     const text = fs.readFileSync(file, 'utf8');
     const summary = text.split('\n').find((l) => l.startsWith('FLOW ')) ?? `FLOW ${f} CRASHED (exit ${code})`;
     const failures = text.split('\n').filter((l) => l.startsWith('ASSERT FAIL'));
@@ -283,7 +285,7 @@ function runFlow(script, logFile, flowEnv) {
   return new Promise((resolve) => {
     const out = fs.openSync(logFile, 'w');
     const child = spawn(process.execPath, [script], { cwd: path.dirname(script), env: flowEnv, stdio: ['ignore', out, out] });
-    const timer = setTimeout(() => { fs.appendFileSync(logFile, `\nTIMEOUT after ${FLOW_TIMEOUT_MS / 1000}s\n`); child.kill('SIGKILL'); }, FLOW_TIMEOUT_MS);
+    const timer = setTimeout(() => { fs.appendFileSync(logFile, `\nTIMEOUT after ${flowTimeoutMs(script) / 1000}s\n`); child.kill('SIGKILL'); }, flowTimeoutMs(script));
     child.on('exit', (code) => { clearTimeout(timer); fs.closeSync(out); resolve(code ?? 1); });
   });
 }

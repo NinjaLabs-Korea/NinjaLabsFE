@@ -1,0 +1,88 @@
+import { stripLocale } from "@/i18n/routing";
+
+/**
+ * "Where to go after sign-in": a same-site path remembered in this tab across the Google round trip.
+ * `/recruit` (and any login-gated screen) sends a signed-out visitor to `/signup?returnTo=/recruit`; the sign-in button
+ * stores the path before leaving for Google, and the callback goes there once onboarding is finished (an unfinished
+ * onboarding keeps the path, and the last signup step offers it). Paths are locale-less, like every `@/i18n/navigation` href.
+ */
+export const RETURN_PATH_STORAGE_KEY = "ninja.returnTo";
+
+const MAX_LENGTH = 200;
+// Where a return would loop or leave the product surface: the sign-up steps and the OAuth callback.
+// A percent-encoded control character or backslash (`%0d%0a`, `%5c`): the router would keep it verbatim in the destination.
+const ENCODED_CONTROL = /%(?:[01][0-9a-f]|7f|5c)/i;
+const NOT_A_RETURN_TARGET = /^\/(?:signup(?:\/|$|\?)|auth\/|api\/)/;
+
+/** A same-site absolute path (`/recruit`, `/bounties/x?y=1`): no scheme, no `//host`, no backslash or control character. */
+export function isReturnPath(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    value.length <= MAX_LENGTH &&
+    value.startsWith("/") &&
+    !value.startsWith("//") &&
+    !/[\u0000- \u007f\\]/.test(value) &&
+    !ENCODED_CONTROL.test(value) &&
+    !NOT_A_RETURN_TARGET.test(value)
+  );
+}
+
+function storage(): Storage | null {
+  try {
+    return typeof window === "undefined" ? null : window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The locale-less form of a copied URL path: `/en/bounties` -> `/bounties` (the locale-aware router prepends the locale
+ * again, which made `/en/en/bounties`). A bare locale (`/en`) is the home (`/`).
+ */
+function withoutLocale(path: string): string {
+  const [pathname = "", ...rest] = path.split(/(?=[?#])/);
+  const stripped = stripLocale(pathname);
+  return `${stripped === "" || stripped === "/" ? "/" : stripped}${rest.join("")}`;
+}
+
+/** Remembers `path` for after sign-in (a leading locale segment is dropped). An invalid value is ignored (and clears nothing). */
+export function rememberReturnPath(path: string): void {
+  if (typeof path !== "string") return;
+  const local = withoutLocale(path);
+  if (!isReturnPath(local)) return;
+  try {
+    storage()?.setItem(RETURN_PATH_STORAGE_KEY, local);
+  } catch {
+    // Blocked storage: the visitor lands on the home instead.
+  }
+}
+
+/** The remembered path without consuming it. */
+export function peekReturnPath(): string | null {
+  try {
+    const value = storage()?.getItem(RETURN_PATH_STORAGE_KEY);
+    return isReturnPath(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearReturnPath(): void {
+  try {
+    storage()?.removeItem(RETURN_PATH_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+/** The remembered path, consumed. */
+export function takeReturnPath(): string | null {
+  const value = peekReturnPath();
+  clearReturnPath();
+  return value;
+}
+
+/** `Link` href for "sign in, then come back here": `/signup?returnTo=<path>` (the sign-in button remembers it; see `rememberReturnPath`). */
+export function signInHref(returnTo: string) {
+  return { pathname: "/signup", query: { returnTo } } as const;
+}

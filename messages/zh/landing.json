@@ -1,31 +1,21 @@
 {
+  "metadata": {
+    "title": "Ninja Labs | Injective Contributor Hub",
+    "description": "在 Injective 上学习、构建与行动的人们的 Contributor Hub。开发者、营销人员、研究员、创作者都可以认识社区、了解往期活动并加入。"
+  },
   "hero": {
-    "eyebrow": "基于 Injective 构建",
-    "title": "完成赏金任务，收集成果证明。",
-    "titleHighlight": "拥有你的履历。",
-    "description": "面向 Injective 生态的建设者社区与赏金市场。每完成一项任务都会铸造一枚链上 NFT，它们共同构成真正属于你的作品集。",
+    "eyebrow": "Injective Contributor Hub",
+    "title": "在 Injective 上学习、构建，",
+    "titleHighlight": "一起行动的人。",
+    "description": "Ninja Labs 是在 Injective 上学习、构建与行动的人们的 Contributor Hub。开发者、营销人员、研究员、创作者,任何人都可以自由参与。",
     "getStarted": "立即开始",
-    "browseBounties": "浏览赏金",
-    "portfolioMeta": "Ninja NFT · {year} 年加入",
-    "next": "+ 下一个",
-    "portfolioSummary": "已完成 {count} 个赏金 · 持续成长的链上作品集"
+    "continueSignup": "继续注册",
+    "exploreActivities": "查看往期活动",
+    "rolesTitle": "欢迎所有人加入"
   },
   "bounties": {
     "eyebrow": "赏金市场",
     "heading": "进行中的赏金",
-    "viewAll": "查看全部 →",
-    "unavailable": "暂时无法加载进行中的赏金。",
-    "empty": "目前没有进行中的赏金。新的赞助机会将显示在这里。"
-  },
-  "news": {
-    "eyebrow": "来自社区",
-    "heading": "最新动态",
-    "viewAll": "查看全部 →",
-    "unavailable": "暂时无法加载最新动态。",
-    "empty": "暂无动态，请稍后再来查看。"
-  },
-  "unavailableBody": "无法连接服务器，请稍后刷新。",
-  "stats": {
-    "unavailable": "暂时无法加载社区统计数据。"
+    "viewAll": "查看全部 →"
   }
 }

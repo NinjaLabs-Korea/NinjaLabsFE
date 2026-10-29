@@ -8,7 +8,7 @@ import { formatIsoDate, rewardFromBaseUnits, rewardToBaseUnits, toCategoryCode, 
 
 type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: MemberRoleCode | null; member_display_order: number | null; created_at: string; wallet_address: string | null };
 type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: CategoryCode; status: string; application_required: boolean; submission_mode: "DIRECT" | "AGENT"; cover_image_url: string | null; submission_deadline: string; application_deadline: string | null; max_winners: number; rewards: Array<{ symbol: string; amount: string; tokenContractAddress?: string | null; evmChainId?: number | null }> };
-type NoticeRow = { id: string; title: string; body: string; category: string; status: string; published_at: string | null; thumbnail_url: string | null; external_url: string | null };
+type NoticeRow = { id: string; title: string; summary?: string; body: string; category: string; status: string; published_at: string | null; thumbnail_url: string | null; external_url: string | null; event_date?: string | null };
 type ActorColumns = { actor_kind: "USER" | "AGENT"; user_id: string | null; nickname: string | null; agent_id: string | null; agent_name: string | null };
 type OperationsResponse = {
   bounty: { id: string; title: string; status: string; submission_deadline: string | null; max_winners: number; application_required: boolean };
@@ -23,7 +23,7 @@ type OperationsResponse = {
   payouts: Array<{ id: string; bounty_reward_id: string; submission_id: string; status: string; amount: string; display_symbol: string; payout_tx_hash: string | null; recipient_address: string; requested_by: string; requested_by_nickname: string | null; requested_at: string; approved_by_nickname: string | null; approved_at: string | null; paid_at: string | null; requested_by_me: boolean }>;
   policy?: { payoutSelfApprovalAllowed?: boolean };
 };
-type AuditRow = { id: string; actor_user_id: string | null; actor_agent_id: string | null; action: string; entity_type: string; entity_id: string | null; created_at: string };
+type AuditRow = { id: string; actor_user_id: string | null; actor_agent_id: string | null; actor_nickname?: string | null; action: string; entity_type: string; entity_id: string | null; created_at: string };
 type NftJobRow = { id: string; nft_id: string; job_type: string; status: string; retry_count: number; last_error: string | null; scheduled_at: string | null; updated_at: string | null; nft_type: string; nft_status: string; bounty_title: string | null; owner_nickname: string | null; owner_wallet_address: string | null };
 
 const actorFrom = (row: ActorColumns): OpsActor => ({ kind: row.actor_kind === "AGENT" ? "AGENT" : "USER", userId: row.user_id, nickname: row.nickname, agentId: row.agent_id, agentName: row.agent_name });
@@ -65,11 +65,14 @@ const bountyStatus = (status: string): AdminBounty["status"] => {
   if (status === "DRAFT") return "draft";
   if (status === "FUNDING_PENDING") return "funding";
   if (status === "OPEN") return "active";
-  if (status === "IN_REVIEW" || status === "SUBMISSION_CLOSED") return "reviewing";
-  return "closed";
+  if (status === "SUBMISSION_CLOSED") return "submissionClosed";
+  if (status === "IN_REVIEW") return "reviewing";
+  if (status === "CANCELLED") return "cancelled";
+  // COMPLETED, and any status a newer BE adds: shown as finished rather than guessed.
+  return "completed";
 };
 
-/** 운영자 콘솔 API — BE 행(snake_case, 코드값)을 FE 어드민 타입으로 변환한다 */
+/** 운영자 콘솔 API - BE 행(snake_case, 코드값)을 FE 어드민 타입으로 변환한다 */
 export function createAdminApi(http: ApiHttp): AdminApi {
   return {
     uploadAdminMedia: async (file: File): Promise<{ id: string; url: string }> => {
@@ -122,8 +125,7 @@ export function createAdminApi(http: ApiHttp): AdminApi {
         requirements: bounty.requirements,
         evaluationCriteria: bounty.reviewProcess,
         category: toCategoryCode(bounty.tags[0] ?? "Other"),
-        // 폼에 maxWinners 입력란이 없다: 신규는 1, 수정은 불러온 레코드의 값을 그대로 보내 BE 값을 덮어쓰지 않는다.
-        applicationRequired: bounty.intakeEnabled, maxWinners: create ? 1 : bounty.maxWinners,
+        applicationRequired: bounty.intakeEnabled, maxWinners: bounty.maxWinners,
         submissionMode: bounty.submissionMode === "agent" ? "AGENT" : "DIRECT",
         coverImageUrl: bounty.coverImage,
         submissionDeadline: bounty.deadline,
@@ -140,13 +142,14 @@ export function createAdminApi(http: ApiHttp): AdminApi {
     deleteAdminBounty: async (bountyId: string) => { await http.fetchJson(`/admin/bounties/${encodeURIComponent(bountyId)}`, { method: "DELETE" }); },
     getAdminPosts: async (): Promise<AdminPost[]> => {
       const rows = await http.fetchJson<NoticeRow[]>("/admin/notices");
-      return rows.map((row) => ({ slug: row.id, title: row.title, category: toNoticeCategoryLabel(row.category) ?? "Other", status: row.status === "PUBLISHED" ? "published" : "draft", publishedAt: formatIsoDate(row.published_at) || null, bodyMarkdown: row.body, thumbnail: row.thumbnail_url, externalUrl: row.external_url }));
+      return rows.map((row) => ({ slug: row.id, title: row.title, category: toNoticeCategoryLabel(row.category) ?? "Other", status: row.status === "PUBLISHED" ? "published" : "draft", publishedAt: formatIsoDate(row.published_at) || null, bodyMarkdown: row.body, ...(row.summary !== undefined ? { summary: row.summary } : {}), thumbnail: row.thumbnail_url, externalUrl: row.external_url, eventDate: row.event_date ?? null }));
     },
     saveAdminPost: (post: AdminPost, create: boolean, options?: { publish?: boolean }): Promise<{ id: string }> => {
+      // An edit omits `summary` unless the caller supplied one (the form has no summary input; see `summaryForPostUpdate`).
       // BE resets published_at whenever `publish` is present, so edits send it only when the status was toggled.
       const publish = create ? post.status === "published" : options?.publish;
       // Cleared optional URLs go as null: the BE's `?? null` on create and its `!== undefined` filter on PATCH both write null, an omitted key would keep the old value.
-      return http.fetchJson(create ? "/admin/notices" : `/admin/notices/${encodeURIComponent(post.slug)}`, { method: create ? "POST" : "PATCH", body: { title: post.title, summary: markdownToPlainSummary(post.bodyMarkdown), body: post.bodyMarkdown, category: toNoticeCategoryCode(post.category), thumbnailUrl: post.thumbnail ?? null, externalUrl: post.externalUrl ?? null, ...(publish === undefined ? {} : { publish }) } });
+      return http.fetchJson(create ? "/admin/notices" : `/admin/notices/${encodeURIComponent(post.slug)}`, { method: create ? "POST" : "PATCH", body: { title: post.title, ...(create ? { summary: markdownToPlainSummary(post.bodyMarkdown) } : post.summary !== undefined ? { summary: post.summary } : {}), body: post.bodyMarkdown, category: toNoticeCategoryCode(post.category), thumbnailUrl: post.thumbnail ?? null, externalUrl: post.externalUrl ?? null, eventDate: post.eventDate ?? null, ...(publish === undefined ? {} : { publish }) } });
     },
     deleteAdminPost: async (id: string) => { await http.fetchJson(`/admin/notices/${encodeURIComponent(id)}`, { method: "DELETE" }); },
     getAdminHighlights: async (): Promise<AdminHighlight[]> => {
@@ -204,7 +207,7 @@ export function createAdminApi(http: ApiHttp): AdminApi {
       return {
         page: body.page, pageSize: body.pageSize, total: body.total,
         items: body.items.map((row) => ({
-          id: row.id, actorUserId: row.actor_user_id, actorAgentId: row.actor_agent_id, action: row.action,
+          id: row.id, actorUserId: row.actor_user_id, actorAgentId: row.actor_agent_id, actorNickname: row.actor_nickname ?? null, action: row.action,
           entityType: row.entity_type, entityId: row.entity_id, createdAt: row.created_at,
         })),
       };

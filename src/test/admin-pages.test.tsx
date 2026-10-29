@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 // Admin route shells: the gate, the tab strip, the server pages (mock vs api data source, metadata) and the index redirect.
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { createTranslator } from "next-intl";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminGate } from "@/components/admin/AdminGate";
-import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { AdminTabs } from "@/components/admin/AdminTabs";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminApi } from "@/lib/contracts/api";
@@ -91,6 +91,32 @@ describe("AdminGate", () => {
     expect(screen.queryByText("secret console")).toBeNull();
   });
 
+  it("keeps the page (and what was typed) when an admin's session ends, and says why", () => {
+    state.auth = signedInAs({ ...previewUser, isAdmin: true });
+    const form = <input aria-label="draft body" />;
+    const view = renderWithIntl(<AdminGate>{form}</AdminGate>);
+    fireEvent.change(screen.getByLabelText("draft body"), { target: { value: "long notice body" } });
+    const input = screen.getByLabelText("draft body") as HTMLInputElement;
+
+    state.auth = { status: "signed-out", user: null, reason: "session-ended" };
+    view.rerender(<AdminGate>{form}</AdminGate>);
+    expect(screen.getByRole("alert").textContent).toMatch(/Your session has expired\. What you typed is kept on this page/);
+    expect(screen.getByRole("link", { name: "Sign in again" }).getAttribute("target")).toBe("_blank");
+    expect(screen.getByLabelText("draft body")).toBe(input); // same DOM node: not remounted
+    expect(input.value).toBe("long notice body");
+
+    state.auth = signedInAs({ ...previewUser, isAdmin: true }); // signed in again from the other tab
+    view.rerender(<AdminGate>{form}</AdminGate>);
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByLabelText("draft body")).toBe(input);
+  });
+
+  it("still asks a visitor who was never an admin here to sign in after a session end", () => {
+    state.auth = { status: "signed-out", user: null, reason: "session-ended" };
+    renderWithIntl(<AdminGate>{content}</AdminGate>);
+    expect(screen.getByRole("heading", { level: 1, name: "Admin sign-in required" })).toBeTruthy();
+  });
+
   it("renders the console for an admin, and always in mock mode", () => {
     state.auth = signedInAs({ ...previewUser, isAdmin: true });
     const { unmount } = renderWithIntl(<AdminGate>{content}</AdminGate>);
@@ -113,11 +139,12 @@ describe("AdminTabs", () => {
       ["Bounty Mgmt", "/admin/bounties"],
       ["Operations", "/admin/operations"],
       ["NFT Jobs", "/admin/nft-jobs"],
+      ["Recruitment", "/admin/recruitment"],
       ["Hall of Fame", "/admin/hall-of-fame"],
       ["Notices", "/admin/notices"],
       ["Audit log", "/admin/audit"],
     ]);
-    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual([null, null, null, null, "page", null, null]);
+    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual([null, null, null, null, null, "page", null, null]);
   });
 });
 
@@ -130,6 +157,28 @@ describe("AdminTable", () => {
     );
     expect(screen.getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual(["Alpha", "Beta"]);
     expect(screen.getAllByRole("row")).toHaveLength(2);
+  });
+
+  // The "작업" column of /ko/admin/notices once collapsed to a few pixels and split 수정 / 삭제 into one syllable per line.
+  it("never lets the action column or a row button wrap (Korean 수정 / 삭제 stay on one line)", () => {
+    const { container } = renderWithIntl(
+      <AdminTable columns={[{ id: "title", label: "Title", widthClass: "w-[35%]" }, { id: "action", label: "Action", widthClass: "w-[14%]" }]} minWidthClass="min-w-[820px]">
+        <tr><td className={adminLongTextCell}>t</td><td><button type="button">수정</button></td></tr>
+      </AdminTable>,
+    );
+    const [title, action] = screen.getAllByRole("columnheader");
+    expect(action.className).toMatch(/\bmin-w-\[/);
+    expect(action.className).toContain("whitespace-nowrap");
+    expect(title.className).not.toMatch(/\bmin-w-\[/);
+    // Selector variants on the table reach every cell button and button-styled link, whichever panel renders them.
+    expect(container.querySelector("table")?.className).toContain("[&_td_button]:whitespace-nowrap");
+    expect(container.querySelector("table")?.className).toContain("[&_td_a.rounded-control]:whitespace-nowrap");
+    // The table scrolls inside its own container, so a phone scrolls the table and not the page.
+    expect(container.querySelector("table")?.parentElement?.className).toContain("overflow-x-auto");
+  });
+
+  it("exposes the long-text cell opt-in as overflow-wrap:anywhere (short cells must not use it)", () => {
+    expect(adminLongTextCell).toBe("[overflow-wrap:anywhere]");
   });
 });
 
@@ -152,10 +201,10 @@ describe("admin pages", () => {
     const { default: AdminLayout } = await import("@/app/[locale]/admin/layout");
     // The layout returns the async server <PageMessages>; resolve it the way the RSC renderer would.
     const tree = await AdminLayout({ children: <p>inner</p>, params });
-    expect(tree.props.namespaces).toEqual(["admin"]);
+    expect(tree.props.namespaces).toEqual(["admin", "recruit"]);
     const render = tree.type as (props: typeof tree.props) => Promise<ReactElement<{ messages: Record<string, unknown>; children: ReactNode }>>;
     const provider = await render(tree.props);
-    expect(Object.keys(provider.props.messages).sort()).toEqual(["admin", "common"]);
+    expect(Object.keys(provider.props.messages).sort()).toEqual(["admin", "common", "recruit"]);
     // Render what the provider wraps (the test wrapper already supplies the English messages and locale).
     renderWithIntl(<>{provider.props.children}</>);
     expect(screen.getByRole("heading", { level: 1, name: "Admin sign-in required" })).toBeTruthy();

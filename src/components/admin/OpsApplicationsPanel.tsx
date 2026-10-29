@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { AdminTable } from "@/components/admin/AdminTable";
+import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import type { OpsDateFormatter, OpsRunner } from "@/components/admin/BountyOperations";
 import { OpsActorCell } from "@/components/admin/OpsActorCell";
 import { OpsFormModal } from "@/components/admin/OpsFormModal";
@@ -15,7 +15,7 @@ import { safeHttpUrl } from "@/lib/api/codecs";
 const columns = ["applicant", "message", "status", "applied", "action"] as const;
 const appVariant = (status: string) => (status === "APPROVED" ? "success" : status === "REJECTED" ? "danger" : status === "PENDING" ? "warning" : "neutral");
 
-/** Applications: approve / reject with an optional note (BE APPLICATION_APPROVAL_CLOSED once intake has ended — only reject is offered then). */
+/** Applications: approve / reject with an optional note (BE APPLICATION_APPROVAL_CLOSED once intake has ended - only reject is offered then). */
 export function OpsApplicationsPanel({ ops, busy, run, formatDate }: { ops: AdminOperations; busy: ReadonlySet<string>; run: OpsRunner; formatDate: OpsDateFormatter }) {
   const api = useAdminApi();
   const t = useTranslations("admin.operations");
@@ -49,14 +49,14 @@ export function OpsApplicationsPanel({ ops, busy, run, formatDate }: { ops: Admi
               const portfolio = safeHttpUrl(application.portfolioUrl);
               return (
                 <tr className="border-t border-border" key={application.id}>
-                  <td className={opsCell}><OpsActorCell actor={application} /></td>
-                  <td className={`${opsCell} max-w-[320px]`}>
+                  <td className={`${opsCell} ${adminLongTextCell}`}><OpsActorCell actor={application} /></td>
+                  <td className={`${opsCell} max-w-[320px] ${adminLongTextCell}`}>
                     <p className="whitespace-pre-line break-words">{application.message}</p>
                     {portfolio ? <a className="mt-1 block break-all text-xs font-semibold text-primary-strong underline" href={portfolio} rel="noreferrer" target="_blank">{t("applications.portfolio")}</a> : null}
                     {application.reviewNote ? <p className="mt-2 text-xs text-ink-muted">{t("applications.reviewNote", { note: application.reviewNote })}</p> : null}
                   </td>
                   <td className={opsCell}><Badge variant={appVariant(application.status)}>{t(`applicationStatuses.${application.status}`)}</Badge></td>
-                  <td className={opsCell}>{formatDate(application.appliedAt)}</td>
+                  <td className={`${opsCell} whitespace-nowrap`}>{formatDate(application.appliedAt)}</td>
                   <td className={opsCell}>
                     <div className="flex flex-wrap gap-2">
                       {decisions.map((decision) => (

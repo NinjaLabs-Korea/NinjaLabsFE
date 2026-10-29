@@ -1,4 +1,5 @@
 import type { AdminBounty } from "./admin";
+import { deliverablesFromRequirements } from "./admin-helpers";
 import { humanToBaseUnits, rewardToBaseUnits, tokenDecimalsFor } from "./api/codecs";
 
 /** 어드민 바운티 폼의 입력 상태 (모든 값은 input/select가 다루는 문자열 형태) */
@@ -13,25 +14,27 @@ export type BountyFormValues = {
   coverImage: string | null;
   tags: AdminBounty["tags"];
   description: string;
-  submissionGuide: string;
+  /**
+   * The BE `requirements` text: ONE input for what used to be two ("Submission guide" and "Deliverables"), because the BE has a
+   * single `requirements` column. The public bounty page shows its bullet lines as the deliverables list and the whole text as the
+   * submission guide. Two inputs mapped onto one column dropped the guide at create and let a guide edit erase the deliverables.
+   */
   deliverables: string;
   reviewProcess: string;
+  /** 최대 당선자 수: 1 이상 정수 문자열(BE `maxWinners` `@Min(1)`). 신규 기본 "1". */
+  maxWinners: string;
   /**
    * BE가 돌려준 원본 ISO 마감. `deadline`(datetime-local 문자열)이 이 값의 로컬 표시와 같으면 저장 시 원본을 그대로 보낸다
-   * — 로컬 ↔ UTC 변환을 다시 거치면 초/밀리초가 잘리고, 같은 시각을 "변경"으로 재전송하게 된다.
+   * - 로컬 ↔ UTC 변환을 다시 거치면 초/밀리초가 잘리고, 같은 시각을 "변경"으로 재전송하게 된다.
    */
   originalSubmissionDeadline?: string;
   /** 폼에 입력란이 없는 지원 마감. 수정 시 손대지 않고 그대로 되돌려 준다. */
   originalApplicationDeadline?: string | null;
   /**
-   * BE `requirements` 원문. `deliverables`/`submissionGuide` 입력란이 불러온 값과 같으면 저장 시 이 문자열을 바이트 그대로 보낸다
-   * — 줄 단위 split/join 왕복은 빈 줄과 들여쓰기를 잃는다.
+   * BE `requirements` 원문. `deliverables` 입력란이 불러온 값과 같으면 저장 시 이 문자열을 바이트 그대로 보낸다
+   * - 끝 공백 정리도 하지 않는다(안 고친 바운티를 저장해도 바이트가 바뀌지 않게).
    */
   originalRequirements?: string;
-  /** `deliverables` 입력란의 초기값 (변경 여부 비교용). */
-  originalDeliverables?: string;
-  /** `submissionGuide` 입력란의 초기값 (변경 여부 비교용). */
-  originalSubmissionGuide?: string;
 };
 
 const pad2 = (value: number) => String(value).padStart(2, "0");
@@ -83,17 +86,16 @@ export const emptyBountyForm = (): BountyFormValues => ({
   coverImage: null,
   tags: ["Dev"],
   description: "",
-  submissionGuide: "",
   deliverables: "",
   reviewProcess: "",
+  maxWinners: "1",
 });
 
 /**
  * 기존 바운티 → 수정 폼 초기값. 마감이 ISO로 해석되지 않으면(`"07.14"` 같은 값) 입력란은 비우고 원문은
- * `originalSubmissionDeadline`에 남겨 `validateBountyForm`이 `deadlineInvalid`로 막는다 — 조용히 받아 저장하지 않는다.
+ * `originalSubmissionDeadline`에 남겨 `validateBountyForm`이 `deadlineInvalid`로 막는다 - 조용히 받아 저장하지 않는다.
  */
 export function bountyToForm(bounty: AdminBounty): BountyFormValues {
-  const deliverables = bounty.deliverables.join("\n");
   return {
     title: bounty.title,
     sponsor: bounty.sponsor,
@@ -106,30 +108,22 @@ export function bountyToForm(bounty: AdminBounty): BountyFormValues {
     coverImage: bounty.coverImage,
     tags: bounty.tags,
     description: bounty.description,
-    submissionGuide: bounty.submissionGuide,
-    deliverables,
+    // The raw BE text, not the parsed list: the list drops every non-bullet line (the guide prose).
+    deliverables: bounty.requirements,
     reviewProcess: bounty.reviewProcess,
+    maxWinners: String(bounty.maxWinners),
     originalSubmissionDeadline: bounty.deadline,
     originalApplicationDeadline: bounty.applicationDeadline,
     originalRequirements: bounty.requirements,
-    originalDeliverables: deliverables,
-    originalSubmissionGuide: bounty.submissionGuide,
   };
 }
 
 /**
- * 저장할 `requirements`: 두 입력란 모두 불러온 값 그대로면 BE 원문을 바이트 동일하게 돌려주고, 산출물 입력란을 고쳤으면 그 줄들
- * (비어 있으면 제출 가이드), 제출 가이드만 고쳤으면 제출 가이드(비어 있으면 산출물 줄들)를 보낸다. 신규 생성은 원문이 없으므로
- * 산출물 줄들 || 제출 가이드.
+ * 저장할 `requirements`: 입력란이 불러온 값 그대로면 BE 원문을 바이트 동일하게, 고쳤으면 입력한 텍스트(앞뒤 공백만 정리, 줄바꿈·들여쓰기 유지).
  */
 export function resolveRequirements(form: BountyFormValues): string {
-  const deliverableLines = form.deliverables.split("\n").map((line) => line.trim()).filter(Boolean).join("\n");
-  const guide = form.submissionGuide.trim();
-  const deliverablesChanged = form.deliverables !== (form.originalDeliverables ?? "");
-  const guideChanged = form.submissionGuide !== (form.originalSubmissionGuide ?? "");
-  if (form.originalRequirements !== undefined && !deliverablesChanged && !guideChanged) return form.originalRequirements;
-  if (deliverablesChanged || form.originalRequirements === undefined) return deliverableLines || guide;
-  return guide || deliverableLines;
+  if (form.originalRequirements !== undefined && form.deliverables === form.originalRequirements) return form.originalRequirements;
+  return form.deliverables.trim();
 }
 
 /**
@@ -138,9 +132,10 @@ export function resolveRequirements(form: BountyFormValues): string {
  */
 export function formToBounty(
   form: BountyFormValues,
-  target: { slug: string; coverImage: string | null; existingStatus?: AdminBounty["status"]; maxWinners?: number },
+  target: { slug: string; coverImage: string | null; existingStatus?: AdminBounty["status"] },
 ): AdminBounty {
   const amount = Number(form.amount) || 0;
+  const requirements = resolveRequirements(form);
   return {
     slug: target.slug,
     title: form.title.trim(),
@@ -151,13 +146,13 @@ export function formToBounty(
     coverImage: target.coverImage,
     deadline: resolveDeadlineIso(form.deadline, form.originalSubmissionDeadline),
     applicationDeadline: form.originalApplicationDeadline ?? null,
-    // 폼에는 입력란이 없다: 수정이면 불러온 레코드의 값을 유지하고, 신규는 1.
-    maxWinners: target.maxWinners ?? 1,
+    maxWinners: Number(form.maxWinners.trim()),
     tags: form.tags,
     description: form.description.trim(),
-    submissionGuide: form.submissionGuide.trim(),
-    requirements: resolveRequirements(form),
-    deliverables: form.deliverables.split("\n").map((line) => line.trim()).filter(Boolean),
+    // `submissionGuide` mirrors `requirements` (one BE column); see `BountyFormValues.deliverables`.
+    submissionGuide: requirements,
+    requirements,
+    deliverables: deliverablesFromRequirements(requirements),
     reviewProcess: form.reviewProcess.trim(),
     status: target.existingStatus ?? (amount > 0 ? "funding" : "draft"),
   };
@@ -172,23 +167,26 @@ export type BountyFormError =
   | "deadlinePast"
   | "amountInvalid"
   | "deliverablesRequired"
+  | "maxWinnersInvalid"
   | "tooLong";
 
-/** BE `CreateBountyDto`/`UpdateBountyDto`의 @MaxLength — 입력의 `maxLength`와 검증이 같은 값을 쓴다 */
+/** BE `CreateBountyDto`/`UpdateBountyDto`의 @MaxLength - 입력의 `maxLength`와 검증이 같은 값을 쓴다 */
 export const BOUNTY_TITLE_MAX = 200;
 export const BOUNTY_SPONSOR_MAX = 100;
 /** BE `CreateBountyDto` @MaxLength on the TEXT fields (description 50 000, requirements and evaluationCriteria 20 000); the PATCH limit is double, the stricter create limit applies to both. */
 export const BOUNTY_TEXT_MAX = { description: 50_000, deliverables: 20_000, reviewProcess: 20_000 } as const;
+/** Postgres INTEGER ceiling: BE `MaxPgInt` on `maxWinners`. */
+export const MAX_WINNERS_MAX = 2_147_483_647;
 export type BountyFormErrors = Partial<Record<keyof BountyFormValues, BountyFormError>>;
 
 /**
  * 보상 금액 입력이 BE에 보낼 수 있는 값인가: 일반 십진 표기(`1,5`·`0x10` 같은 입력은 값이 달라지거나 비어 버리므로 거부)이고 양수이며, 토큰 자릿수보다 긴 소수가 아니며(viem `parseUnits`는 초과 자릿수를 오류 없이
- * 반올림해 입력과 다른 금액을 보낸다), 최소 단위로 환산해도 0이 아니다(BE `TOKEN_AMOUNT`는 양의 정수). 지수 표기(`1e3`)는 환산에 맡긴다.
+ * 반올림해 입력과 다른 금액을 보낸다), 최소 단위로 환산해도 0이 아니다(BE `TOKEN_AMOUNT`는 양의 정수). 지수 표기(`1e3`)는 거부한다: 보상은 생성 뒤 수정할 수 없고, `5e`·`1e18` 같은 오타가 엉뚱한 금액으로 저장된다.
  */
 function isRewardAmountValid(raw: string, currency: BountyFormValues["currency"]): boolean {
   const text = raw.trim();
-  // `Number` also reads "0x10" (16) and "0b11" (3); only a plain decimal, optionally with an exponent, is an amount.
-  if (!/^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(text)) return false;
+  // `Number` also reads "0x10" (16), "0b11" (3) and "1e3" (1000); only a plain decimal is an amount.
+  if (!/^(\d+\.?\d*|\.\d+)$/.test(text)) return false;
   const amount = Number(text);
   const decimals = tokenDecimalsFor(currency);
   if (!Number.isFinite(amount) || amount <= 0 || decimals === null) return false;
@@ -197,7 +195,7 @@ function isRewardAmountValid(raw: string, currency: BountyFormValues["currency"]
     const baseUnits = rewardToBaseUnits({ amount, currency });
     // The form carries the amount as a JS number: more significant digits than a double holds (2^53) would be rounded to a
     // different amount than the one typed. The exact text conversion (plain decimals only) must agree with it.
-    if (!/e/i.test(text) && humanToBaseUnits(text.replace(/^\./, "0.").replace(/\.$/, ""), currency) !== baseUnits) return false;
+    if (humanToBaseUnits(text.replace(/^\./, "0.").replace(/\.$/, ""), currency) !== baseUnits) return false;
     return BigInt(baseUnits) > BigInt(0);
   } catch {
     return false;
@@ -225,9 +223,9 @@ export function validateBountyForm(
   else if (form.sponsor.trim().length > BOUNTY_SPONSOR_MAX) errors.sponsor = "sponsorTooLong";
   if (blank(form.description)) errors.description = "required";
   if (blank(form.reviewProcess)) errors.reviewProcess = "required";
-  if (blank(form.deliverables) && blank(form.submissionGuide)) errors.deliverables = "deliverablesRequired";
+  if (blank(form.deliverables)) errors.deliverables = "deliverablesRequired";
 
-  // 상한을 넘기면 BE가 400 VALIDATION_FAILED(일반 문구)로 답한다 — 어느 칸이 문제인지 여기서 알려 준다. 길이는 BE와 같은 Trim 뒤 UTF-16 단위.
+  // 상한을 넘기면 BE가 400 VALIDATION_FAILED(일반 문구)로 답한다 - 어느 칸이 문제인지 여기서 알려 준다. 길이는 BE와 같은 Trim 뒤 UTF-16 단위.
   if (form.description.trim().length > BOUNTY_TEXT_MAX.description) errors.description = "tooLong";
   if (form.reviewProcess.trim().length > BOUNTY_TEXT_MAX.reviewProcess) errors.reviewProcess = "tooLong";
   if (!errors.deliverables && resolveRequirements(form).trim().length > BOUNTY_TEXT_MAX.deliverables) errors.deliverables = "tooLong";
@@ -244,6 +242,9 @@ export function validateBountyForm(
     if (Number.isNaN(deadline.getTime())) errors.deadline = "deadlineInvalid";
     else if (changed && deadline.getTime() <= (options.now ?? new Date()).getTime()) errors.deadline = "deadlinePast";
   }
+
+  const winners = form.maxWinners.trim();
+  if (!/^\d+$/.test(winners) || Number(winners) < 1 || Number(winners) > MAX_WINNERS_MAX) errors.maxWinners = "maxWinnersInvalid";
 
   if (!options.editing && !blank(form.amount) && !isRewardAmountValid(form.amount, form.currency)) errors.amount = "amountInvalid";
 

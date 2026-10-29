@@ -23,6 +23,15 @@ export function isRewardUnset(reward: RewardPillProps["reward"]): boolean {
   return !(reward.amount > 0);
 }
 
+const REWARD_FRACTION_DIGITS = 6;
+const SMALLEST_SHOWN = 10 ** -REWARD_FRACTION_DIGITS;
+
+/** Display amount: rounded to 6 fraction digits, but a funded reward below that (dust) reads "<0.000001", never "0". */
+export function formatRewardAmount(amount: number, formatNumber: (value: number, options: { maximumFractionDigits: number }) => string): string {
+  const options = { maximumFractionDigits: REWARD_FRACTION_DIGITS };
+  return amount > 0 && amount < SMALLEST_SHOWN ? `<${formatNumber(SMALLEST_SHOWN, options)}` : formatNumber(amount, options);
+}
+
 export function RewardPill({ reward, variant = "pill" }: RewardPillProps) {
   const format = useFormatter();
   const t = useTranslations("common.reward");
@@ -31,10 +40,10 @@ export function RewardPill({ reward, variant = "pill" }: RewardPillProps) {
     return unset ? null : <TokenIcon currency={reward.currency} />;
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-control border border-primary-soft-border bg-primary-soft px-[13px] py-1.5">
+    <span className="inline-flex max-w-full items-center gap-1.5 rounded-control border border-primary-soft-border bg-primary-soft px-[13px] py-1.5">
       {unset ? null : <TokenIcon currency={reward.currency} />}
-      <span className="font-display text-sm font-bold text-ink">
-        {unset ? t("tbd") : `${format.number(reward.amount, { maximumFractionDigits: 6 })} ${reward.currency}`}
+      <span className="min-w-0 truncate font-display text-sm font-bold text-ink">
+        {unset ? t("tbd") : `${formatRewardAmount(reward.amount, format.number)} ${reward.currency}`}
       </span>
     </span>
   );

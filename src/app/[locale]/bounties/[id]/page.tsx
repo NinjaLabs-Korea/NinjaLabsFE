@@ -8,7 +8,7 @@ import { BountyAgentPanel } from "@/components/agents/BountyAgentPanel";
 import { BountyAccessBadges } from "@/components/bounties/BountyAccessBadges";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import { Markdown } from "@/components/ui/Markdown";
-import { isRewardUnset, RewardPill } from "@/components/ui/RewardPill";
+import { formatRewardAmount, isRewardUnset, RewardPill } from "@/components/ui/RewardPill";
 import { Link } from "@/i18n/navigation";
 import { getRuntimeBounty } from "@/lib/bounties";
 import { validateDetailId } from "@/lib/detail-id";
@@ -33,7 +33,13 @@ const applyStatuses = [
 export async function generateMetadata({ params }: BountyDetailPageProps): Promise<Metadata> {
   const { locale, id } = await params;
   const t = await getTranslations({ locale, namespace: "bounties.meta" });
-  const bounty = (await validateDetailId("bounties", id)) ? await getRuntimeBounty(id, locale) : undefined;
+  let bounty;
+  try {
+    bounty = (await validateDetailId("bounties", id)) ? await getRuntimeBounty(id, locale) : undefined;
+  } catch {
+    // BE outage: the render below throws into error.tsx; the 500 page still gets a title instead of none.
+    return { alternates: {}, title: t("unavailable") };
+  }
 
   if (!bounty) {
     return { alternates: {}, title: t("notFound") };
@@ -77,8 +83,8 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
       </Link>
 
       <section className="mt-8 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-        <div>
-          <h1 className="font-display text-5xl -tracking-[0.48px] text-ink">
+        <div className="min-w-0">
+          <h1 className="font-display text-4xl -tracking-[0.36px] text-ink [overflow-wrap:anywhere] sm:text-5xl sm:-tracking-[0.48px]">
             {applicationRequired && bounty.applicationTitle ? bounty.applicationTitle : bounty.title}
           </h1>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -92,12 +98,12 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               : <Badge variant="neutral">{submissionMode === "agent" ? t("detail.agentSubmission") : t("detail.directSubmission")}</Badge>}
           </div>
         </div>
-        <BountyAccessBadges />
+        <BountyAccessBadges actionsOpen={bounty.status === "active"} />
       </section>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
-          <article className="rounded-card border border-border bg-surface p-[21px] shadow-card">
+          <article className="rounded-card border border-border bg-surface p-[21px] shadow-card [overflow-wrap:anywhere]">
             <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("detail.description")}</p>
             <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">{applicationRequired ? t("detail.descriptionHeadingApply") : t("detail.descriptionHeading")}</h2>
             {applicationRequired && bounty.applicationDescription ? (
@@ -109,7 +115,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             )}
             {!applicationRequired ? (
               <>
-                <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <MetaCell label={t("detail.deliverable")}>
                     {deliverables.length > 0
                       ? deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)
@@ -130,7 +136,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             ) : null}
           </article>
 
-          <BountyActionPanel bountyId={bounty.slug} applicationRequired={applicationRequired} applicationClosed={bounty.applicationClosed} deadlinePassed={bounty.deadlinePassed} status={bounty.status} submissionMode={submissionMode} />
+          <BountyActionPanel bountyId={bounty.slug} applicationRequired={applicationRequired} applicationClosed={bounty.applicationClosed} deadlinePassed={bounty.deadlinePassed} completed={bounty.completed} status={bounty.status} submissionMode={submissionMode} />
 
           {applicationRequired ? (
             <section className="rounded-card border border-border bg-surface p-[21px] shadow-card">
@@ -147,11 +153,11 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
           ) : null}
         </div>
 
-        <aside className="space-y-5">
+        <aside className="min-w-0 space-y-5 [overflow-wrap:anywhere]">
           <section className="rounded-card border border-primary-soft-border bg-primary-soft p-[21px]">
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("detail.rewardInfo")}</p>
-              {rewards.map((reward) => <SponsorPaysPill key={reward.currency} label={t("detail.sponsorPays", { reward: isRewardUnset(reward) ? tReward("tbd") : `${format.number(reward.amount, { maximumFractionDigits: 6 })} ${reward.currency}` })} reward={reward} />)}
+              {rewards.map((reward) => <SponsorPaysPill key={reward.currency} label={t("detail.sponsorPays", { reward: isRewardUnset(reward) ? tReward("tbd") : `${formatRewardAmount(reward.amount, format.number)} ${reward.currency}` })} reward={reward} />)}
             </div>
             <ol className="mt-4 space-y-3">
               {(["flow", "token", "noSwap"] as const).map((note, index) => (
@@ -174,7 +180,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             </ol>
           </section>
           {/* Only AGENT-mode bounties take agent requests: the BE answers DIRECT_SUBMISSION_REQUIRED to an agent key on a DIRECT bounty. */}
-          {submissionMode === "agent" ? <BountyAgentPanel copy={applicationRequired ? tAgents("copyApply") : tAgents("copyDirect")} /> : null}
+          {submissionMode === "agent" ? <BountyAgentPanel returnTo={`/bounties/${bounty.slug}`} copy={applicationRequired ? tAgents("copyApply") : tAgents("copyDirect")} /> : null}
         </aside>
       </div>
 
@@ -196,7 +202,7 @@ function SponsorPaysPill({ label, reward }: { label: string; reward: Reward }) {
 
 function MetaCell({ children, label }: { children: ReactNode; label: string }) {
   return (
-    <div className="rounded-tile border border-primary-soft-border bg-primary-soft p-4">
+    <div className="min-w-0 rounded-tile border border-primary-soft-border bg-primary-soft p-4 [overflow-wrap:anywhere]">
       <p className="text-sm font-bold text-ink">{label}</p>
       <div className="mt-2 flex flex-col gap-1 text-sm text-ink-muted">{children}</div>
     </div>

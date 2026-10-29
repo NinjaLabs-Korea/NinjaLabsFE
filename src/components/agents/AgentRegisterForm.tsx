@@ -9,15 +9,18 @@ import {
   useAccountApi,
   useAgentApi,
 } from "@/components/auth/FoundationProvider";
+import { isSameWalletAddress } from "@/lib/injective-address";
 import { Link } from "@/i18n/navigation";
 import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
 import type { AgentVerification } from "@/lib/contracts/api";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
+import { formatUtcDateTime } from "@/lib/format";
 import { validationFieldsFromError } from "@/lib/api/validation";
 import {
   AGENT_DESCRIPTION_MAX,
   AGENT_NAME_MAX,
   agentErrorsFromValidationFields,
+  hasVisibleText,
   validateAgentRegisterForm,
   type AgentRegisterErrors,
 } from "@/lib/agent-register-form";
@@ -53,6 +56,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const [verificationOwner, setVerificationOwner] = useState(sessionUserId);
   // ...and a key that arrives after the session changed (verify still in flight) must never be shown to the new session.
   const sessionUserIdRef = useRef(sessionUserId);
+  const inFlightRef = useRef(false);
   useEffect(() => {
     sessionUserIdRef.current = sessionUserId;
   }, [sessionUserId]);
@@ -76,8 +80,9 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
     switchError,
   } = useWalletConnection(chainId);
   const isBusy = submissionState !== "idle";
-  const ownerWallet = auth.user?.walletAddress?.toLowerCase();
-  const isOwnerWallet = Boolean(address && ownerWallet === address.toLowerCase());
+  // The BE stores the owner's wallet as inj1..., the injected wallet reports 0x...: compare the decoded bytes.
+  const ownerWallet = auth.user?.walletAddress;
+  const isOwnerWallet = Boolean(address && ownerWallet && isSameWalletAddress(ownerWallet, address));
   // A REVOKED agent no longer claims its wallet: registering it again replaces it with a fresh pending agent (the BE soft-deletes the old row).
   const existingAgent = address
     ? agents?.find((agent) => agent.status !== "REVOKED" && agent.walletAddress.toLowerCase() === address.toLowerCase())
@@ -86,13 +91,16 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // Synchronous guard: several submit events can land in one tick, before `submissionState` (React state) is set and the
+    // button re-renders disabled. Each would otherwise register an agent, ask the wallet for a signature and verify.
+    if (inFlightRef.current) return;
     if (
       auth.status !== "signed-in" ||
       !address ||
       isWrongNetwork ||
       isOwnerWallet ||
       existingAgent?.verified ||
-      !name.trim()
+      !hasVisibleText(name)
     ) {
       return;
     }
@@ -104,6 +112,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       return;
     }
 
+    inFlightRef.current = true;
     const agentAddress = address;
     const requestingUserId = sessionUserId;
     setErrorMessage(null);
@@ -152,9 +161,14 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         setFieldErrors(rejected);
         setErrorMessage(t("errorInvalid"));
       } else {
-        setErrorMessage(tRegisterErrors(errorCopyKey(caught, ERROR_COPY.agentRegister)));
+        const key = errorCopyKey(caught, ERROR_COPY.agentRegister);
+        // The BE answers one code for "your own agent holds this wallet" and "another account's pending agent holds it".
+        // "View it in My agents" only helps in the first case: tell the user when /agents/me (already loaded) has no such agent.
+        const heldByOthers = key === "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED" && Boolean(agents) && !agents?.some((agent) => agent.walletAddress.toLowerCase() === agentAddress.toLowerCase());
+        setErrorMessage(tRegisterErrors(heldByOthers ? "walletHeldByOther" : key));
       }
     } finally {
+      inFlightRef.current = false;
       setSubmissionState("idle");
     }
   }
@@ -249,7 +263,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         )}
       </div>
 
-      {auth.status !== "signed-in" ? (
+      {auth.status === "signed-out" ? (
         <p className="mt-3 text-sm text-danger" role="alert">{t("signInRequired")}</p>
       ) : null}
       {isOwnerWallet ? (
@@ -257,7 +271,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
           {t("ownerWallet")}
         </p>
       ) : null}
-      {existingAgent?.verified ? (
+      {existingAgent?.verified && !verification ? (
         <div className="mt-3 rounded-tile border border-success-soft bg-success-soft p-3" role="status">
           <p className="text-sm font-semibold text-success">
             {t("alreadyRegistered", { name: existingAgent.name })}
@@ -311,7 +325,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
             isBusy ||
             isOwnerWallet ||
             existingAgent?.verified ||
-            !name.trim() ||
+            !hasVisibleText(name) ||
             Boolean(verification)
           }
           type="submit"
@@ -325,7 +339,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
           apiKey={verification.apiKey}
           className="mt-5"
           copy={t("copyKey")}
-          expiresLabel={t("expires", { date: format.dateTime(new Date(verification.expiresAt), { dateStyle: "medium", timeStyle: "short" }) })}
+          expiresLabel={t("expires", { date: formatUtcDateTime(format, verification.expiresAt) })}
           title={t("verified")}
         />
       ) : null}

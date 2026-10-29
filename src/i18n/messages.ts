@@ -14,6 +14,9 @@ export const namespaces = [
   "agents",
   "admin",
   "legal",
+  "community",
+  "recruit",
+  "home",
 ] as const;
 
 export type Namespace = (typeof namespaces)[number];

@@ -5,7 +5,7 @@ vi.mock("@/lib/runtime/config", () => ({
   loadRuntimeConfig: () => ({ runtimeMode: runtime.mode, apiUrl: runtime.apiUrl }),
 }));
 
-const { detailMayExist, isValidDetailId, resolveDetailRoute, validateDetailId } = await import("@/lib/detail-id");
+const { decodeDetailId, detailMayExist, isValidDetailId, resolveDetailRoute, validateDetailId } = await import("@/lib/detail-id");
 
 const uuid = "4f2c3f0e-9d2a-4a5b-8c6d-1e2f3a4b5c6d";
 
@@ -29,10 +29,10 @@ describe("detail id shape", () => {
     expect(isValidDetailId("notices", uuid.toUpperCase(), "api")).toBe(true);
     expect(isValidDetailId("bounties", "does-not-exist", "api")).toBe(false);
     expect(isValidDetailId("notices", "\u0000", "api")).toBe(false);
-    for (const nickname of ["ninja.inj", "first.last", "jaemin", "닌자", "a_b-c"]) {
+    for (const nickname of ["ninja.inj", "first.last", "jaemin", "닌자", "a_b-c", "हिन्दी", "ไทยแลนด์", "a\u0301\u0301\u0301b"]) {
       expect(isValidDetailId("members", nickname, "api"), nickname).toBe(true);
     }
-    for (const garbage of ["\u0000", "", "a b", "a/b", "x".repeat(65), "<script>", "withdrawn_1a2b3c4d"]) {
+    for (const garbage of ["\u0000", "", "a b", "a/b", "x".repeat(65), "<script>", "withdrawn_1a2b3c4d", "\u0301ab", ".\u0301"]) {
       expect(isValidDetailId("members", garbage, "api"), JSON.stringify(garbage)).toBe(false);
     }
   });
@@ -124,5 +124,29 @@ describe("detailMayExist (proxy)", () => {
       await expect(detailMayExist("members", reserved), reserved).resolves.toBe(false);
     }
     expect(isValidDetailId("members", "me2", "api")).toBe(true);
+  });
+});
+
+describe("decodeDetailId", () => {
+  it("decodes the percent-encoded segment Next passes for non-ASCII nicknames so the shape check accepts it", () => {
+    for (const nickname of ["김민수", "한글닉349", "éxy", "Ünal", "日本語名", "Привет", "𝐀𝐁"]) {
+      const encoded = encodeURIComponent(nickname);
+      expect(isValidDetailId("members", encoded, "api")).toBe(false);
+      expect(isValidDetailId("members", decodeDetailId(encoded), "api")).toBe(true);
+    }
+  });
+  it("NFC-normalises a decomposed nickname so it reaches the same page as the composed one", () => {
+    const nfd = "Cafe\u0301";
+    expect(isValidDetailId("members", nfd, "api")).toBe(true); // marks are part of the shape now; the page still looks up the composed name
+    expect(decodeDetailId(encodeURIComponent(nfd))).toBe("Caf\u00e9");
+    expect(isValidDetailId("members", decodeDetailId(encodeURIComponent(nfd)), "api")).toBe(true);
+    const jamo = "\u1112\u1161\u11ab"; // Hangul jamo for 한
+    expect(decodeDetailId(encodeURIComponent(jamo + "x"))).toBe("\ud55cx");
+    expect(resolveDetailRoute(`/en/members/${encodeURIComponent(nfd)}`)).toEqual({ locale: "en", kind: "members", id: "Caf\u00e9" });
+  });
+  it("leaves plain ids alone and turns an undecodable id into an empty (invalid) one", () => {
+    expect(decodeDetailId("builderone")).toBe("builderone");
+    expect(decodeDetailId("%E0%A4%A")).toBe("");
+    expect(isValidDetailId("members", decodeDetailId("%2e%2e"), "api")).toBe(false);
   });
 });

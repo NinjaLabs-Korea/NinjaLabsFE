@@ -6,6 +6,7 @@ const tabs = [
   { active: "bounties", href: "/admin/bounties", labelKey: "bounties" },
   { active: "operations", href: "/admin/operations", labelKey: "operations" },
   { active: "nft-jobs", href: "/admin/nft-jobs", labelKey: "nftJobs" },
+  { active: "recruitment", href: "/admin/recruitment", labelKey: "recruitment" },
   { active: "hall-of-fame", href: "/admin/hall-of-fame", labelKey: "hallOfFame" },
   { active: "notices", href: "/admin/notices", labelKey: "notices" },
   { active: "audit", href: "/admin/audit", labelKey: "audit" },
@@ -22,7 +23,7 @@ export function AdminTabs({ active }: { active: AdminTab }) {
         <Link
           // The active tab was conveyed by color alone; expose it to assistive tech too.
           aria-current={tab.active === active ? "page" : undefined}
-          className={`inline-flex h-6 items-center rounded-full px-2.5 text-xs font-semibold ${tab.active === active ? "bg-primary text-primary-soft" : "bg-primary-soft text-primary-strong"}`}
+          className={`inline-flex h-6 items-center rounded-full px-2.5 text-xs max-sm:h-10 max-sm:px-4 font-semibold ${tab.active === active ? "bg-primary text-primary-soft" : "bg-primary-soft text-primary-strong"}`}
           href={tab.href}
           key={tab.active}
         >
