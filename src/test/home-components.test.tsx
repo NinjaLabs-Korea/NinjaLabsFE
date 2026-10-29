@@ -148,9 +148,9 @@ describe("HomeRecruitment", () => {
 });
 
 describe("HomeQuickLinks", () => {
-  it("links to the places a member goes most, including the community overview", () => {
+  it("links only to the personal places the header lacks", () => {
     renderWithIntl(<HomeQuickLinks />);
-    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/bounties", "/applications", "/agents", "/hall-of-fame", "/members", "/about"]);
+    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/applications", "/agents"]);
   });
 });
 
