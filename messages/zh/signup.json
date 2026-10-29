@@ -128,11 +128,11 @@
   "getStarted": {
     "metadata": {
       "title": "开始使用 | Ninja Labs",
-      "description": "以下均可跳过。你可以随时从主导航返回这些选项。"
+      "description": "注册已完成。可以从赏金、Injective 文档或社区开始。"
     },
     "eyebrow": "注册完成",
-    "title": "接下来想做什么？",
-    "subtitle": "以下均可跳过。你可以随时从主导航返回这些选项。",
+    "title": "欢迎！先做点什么？",
+    "subtitle": "随便选一个，也可以全部跳过。",
     "actions": {
       "browseBounties": {
         "title": "浏览进行中的赏金",
@@ -147,8 +147,8 @@
         "description": "走进社区中心：活动、成员与成果。"
       }
     },
-    "skip": "跳过，回到首页",
-    "savedNote": "你的引导进度已保存。之后可以随时更新钱包和个人资料。",
+    "skip": "暂时跳过",
+    "savedNote": "注册已完成。钱包和个人资料可随时在账户设置中修改。",
     "completeError": {
       "message": "未能完成保存引导进度，请重试。",
       "retry": "重试"
