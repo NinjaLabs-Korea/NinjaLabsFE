@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { useEffect, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { FoundationProvider, useAccountApi, useAuthSnapshot } from "@/components/auth/FoundationProvider";
+import { FoundationProvider, useAccountApi, useAuthActions, useAuthSnapshot } from "@/components/auth/FoundationProvider";
 import { pickMessages } from "@/i18n/messages";
+import { getSessionHint } from "@/lib/foundation/session-hint";
 import { renderWithIntl } from "@/test/intl";
 import { FakeBroadcastChannel } from "@/test/fake-broadcast-channel";
 
@@ -29,6 +30,33 @@ describe("FoundationProvider (mock mode)", () => {
     );
     expect(screen.getByRole("status").textContent).toBe("loading/pending");
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe("signed-out/available"));
+  });
+});
+
+describe("FoundationProvider session hint", () => {
+  afterEach(() => window.sessionStorage.clear());
+
+  it("sets the tab's session hint on sign-in and clears it on sign-out", async () => {
+    let actions!: ReturnType<typeof useAuthActions>;
+    function Capture() {
+      actions = useAuthActions();
+      return <output>{useAuthSnapshot().status}</output>;
+    }
+    renderWithIntl(
+      <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
+        <Capture />
+      </FoundationProvider>,
+    );
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("signed-out"));
+    expect(getSessionHint()).toBe(false);
+
+    await act(async () => { await actions.signIn(); });
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("signed-in"));
+    expect(getSessionHint()).toBe(true);
+
+    await act(async () => { await actions.signOut(); });
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("signed-out"));
+    expect(getSessionHint()).toBe(false);
   });
 });
 
