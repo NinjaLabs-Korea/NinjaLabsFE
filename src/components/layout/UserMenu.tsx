@@ -41,7 +41,7 @@ export function UserMenu() {
           {user.initials}
         </span>
         <span className="max-w-[9rem] truncate text-sm font-semibold text-ink">{user.handle}</span>
-        <span aria-hidden="true" className="text-xs text-ink-muted">{menu.open ? "▴" : "▾"}</span>
+        <span aria-hidden="true" className={`text-xs text-ink-muted motion-control motion-reduce:transition-none${menu.open ? " rotate-180" : ""}`}>▾</span>
       </button>
 
       {menu.open ? (
@@ -76,7 +76,7 @@ export function UserMenu() {
             <div className="my-1.5 border-t border-border" />
             <button
               {...menu.itemProps(menuItems.length)}
-              className="w-full rounded-control px-3 py-2 text-left text-sm font-semibold text-danger hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="w-full motion-control rounded-control px-3 py-2 text-left text-sm font-semibold text-danger hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               onClick={() => {
                 void signOut();
                 menu.closeMenu();

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { useMenuButton } from "@/components/layout/useMenuButton";
+import { menuPanelClass, useMenuButton } from "@/components/layout/useMenuButton";
 
 function Menu() {
   const menu = useMenuButton(3);
@@ -24,6 +24,11 @@ function Menu() {
 const item = (name: string) => screen.getByRole("menuitem", { name });
 
 describe("useMenuButton", () => {
+  it("animates the panel in unless reduced motion is requested", () => {
+    expect(menuPanelClass).toContain("animate-pop-in");
+    expect(menuPanelClass).toContain("motion-reduce:animate-none");
+  });
+
   it("moves focus into the menu when it opens", () => {
     render(<Menu />);
     fireEvent.keyDown(screen.getByRole("button", { name: "Open" }), { key: "ArrowDown" });
