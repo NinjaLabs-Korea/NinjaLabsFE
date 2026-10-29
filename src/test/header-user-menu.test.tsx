@@ -96,11 +96,11 @@ describe("UserMenu", () => {
     expect(menu.getAttribute("aria-label")).toBe("Account navigation");
 
     const items = within(menu).getAllByRole("menuitem");
-    expect(items.map((item) => item.textContent)).toEqual(["My profile", "My applications", "My agents", "Account settings", "Sign out"]);
-    expect(items.slice(0, 4).map((item) => item.getAttribute("href"))).toEqual(["/members/jaemin", "/applications", "/agents", "/account"]);
+    expect(items.map((item) => item.textContent)).toEqual(["My activity", "My profile", "My applications", "My agents", "Account settings", "Sign out"]);
+    expect(items.slice(0, 5).map((item) => item.getAttribute("href"))).toEqual(["/home", "/members/jaemin", "/applications", "/agents", "/account"]);
     expect(document.activeElement).toBe(items[0]);
     // Roving tabindex: only the active item is in the tab order.
-    expect(items.map((item) => item.tabIndex)).toEqual([0, -1, -1, -1, -1]);
+    expect(items.map((item) => item.tabIndex)).toEqual([0, -1, -1, -1, -1, -1]);
   });
 
   it("wraps arrow navigation, jumps with Home/End and closes on Escape with focus back on the trigger", () => {
@@ -109,13 +109,13 @@ describe("UserMenu", () => {
     const items = () => screen.getAllByRole("menuitem");
 
     fireEvent.keyDown(items()[0], { key: "ArrowUp" });
-    expect(document.activeElement).toBe(items()[4]);
-    fireEvent.keyDown(items()[4], { key: "ArrowDown" });
+    expect(document.activeElement).toBe(items()[5]);
+    fireEvent.keyDown(items()[5], { key: "ArrowDown" });
     expect(document.activeElement).toBe(items()[0]);
     fireEvent.keyDown(items()[0], { key: "End" });
     expect(document.activeElement?.textContent).toBe("Sign out");
-    fireEvent.keyDown(items()[4], { key: "Home" });
-    expect(document.activeElement?.textContent).toBe("My profile");
+    fireEvent.keyDown(items()[5], { key: "Home" });
+    expect(document.activeElement?.textContent).toBe("My activity");
 
     fireEvent.keyDown(items()[0], { key: "Escape" });
     expect(screen.queryByRole("menu")).toBeNull();

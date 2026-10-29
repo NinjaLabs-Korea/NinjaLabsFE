@@ -1,6 +1,6 @@
 // Flow 12: member recruitment end to end. Admin creates and opens a cohort in the UI, a builder applies (home banner ->
 // /recruit form), sees the status on the home and /account, edits it, the admin reviews it, the applicant sees the result
-// (never the note), the admin closes the cohort. Also: the Intro skip for finished users, return path after sign-in,
+// (never the note), the admin closes the cohort. Also: the hub stays open to finished users, return path after sign-in,
 // onboarding gate, withdraw/reapply and the CSV export.
 import { Browser, report } from '../lib/cdp.mjs';
 import { sql, ids, check, clean, done, sleep, signIn, signInWithReturn, apiAs, tokenFor, fillLabel, rowButton, dialogButton, chip, mutations, mainText, API } from '../lib/harness.mjs';
@@ -41,13 +41,16 @@ check('DB: audit rows for create and open', sql(`select string_agg(action, ',' o
   check('signed out: Intro carries the recruitment banner with a link to /recruit', (await p.eval(`[...document.querySelectorAll('main a')].some(a=>a.innerText.trim()==='Apply now' && new URL(a.href).pathname==='/en/recruit')`)));
     const intro = await p.text();
   check('signed out: Intro shows the community sections', /Past activities/i.test(intro) && /Recent achievements/i.test(intro) && /Meet the members/i.test(intro), intro.slice(0, 200));
+  const sectionOrder = await p.eval(`[...document.querySelectorAll('main h2')].filter(e=>e.getClientRects().length).map(e=>e.innerText.trim())`);
+  const at = (re) => sectionOrder.findIndex((t) => re.test(t));
+  check('signed out: the recruitment banner comes before the past activities', at(/is recruiting members/i) >= 0 && at(/is recruiting members/i) < at(/done together/i), sectionOrder);
   await p.goto('/en/recruit'); await p.waitText('Sign in to apply', 8000);
   const link = await p.eval(`(()=>{const a=[...document.querySelectorAll('main a')].find(a=>a.innerText.trim()==='Sign in and apply'); return a && a.getAttribute('href')})()`);
   check('signed out: /recruit shows the cohort and a sign-in link carrying returnTo', link === '/en/signup?returnTo=%2Frecruit', link);
   check('signed out: no form until signed in', !(await p.eval(`!!document.querySelector('form')`)));
   clean(await report(p, 'signed-out /recruit'), { signedOut: true });
   await p.goto('/en/home'); await p.waitFor(`location.pathname==='/en'`, 8000);
-  check('signed out: /home goes back to the Intro', (await p.url()).endsWith('/en'), await p.url());
+  check('signed out: /home goes back to the hub', (await p.url()).endsWith('/en'), await p.url());
   await p.close();
 }
 
@@ -56,15 +59,19 @@ check('DB: audit rows for create and open', sql(`select string_agg(action, ',' o
   const p = await b.newPage(await b.newContext());
   await signInWithReturn(p, ids.BUILDER, '/recruit');
   await p.waitFor(`location.pathname==='/en/recruit'`, 8000);
-  check('return path: a finished user lands on /recruit after sign-in, not on the home', (await p.url()).endsWith('/en/recruit'), await p.url());
+  check('return path: a finished user lands on /recruit after sign-in, not on the hub', (await p.url()).endsWith('/en/recruit'), await p.url());
   check('return path: it is consumed', (await p.eval(`sessionStorage.getItem('ninja.returnTo')`)) === null);
   await p.close();
 }
 
 // ---- builder: home -> recruit -> apply -> status
 const builderCtx = await b.newContext(); const bp = await b.newPage(builderCtx);
-await signIn(bp, ids.BUILDER, { landing: '/en/home' });
-check('finished user lands on /home after sign-in', (await bp.url()).endsWith('/en/home'), await bp.url());
+await signIn(bp, ids.BUILDER);
+check('finished user lands on the hub (/) after sign-in, not on the dashboard', new URL(await bp.url()).pathname === '/en', await bp.url());
+await bp.goto('/en');
+await bp.waitText(`Apply to join ${NAME}`, 8000);
+check('hub: the hero offers the application while the cohort accepts', (await bp.eval(`[...document.querySelectorAll('main section:first-of-type a')].some(a=>a.innerText.trim()==='Apply to join ${NAME}' && new URL(a.href).pathname==='/en/recruit')`)));
+await bp.goto('/en/home');
 await bp.waitText('Welcome back, builderone', 8000); await bp.waitText(`${NAME} is recruiting members`, 8000);
 const home = await bp.text();
 check('home: greeting, activity and the recruitment invitation', home.includes('Welcome back, builderone') && home.includes('Applications and submissions') && home.includes(`${NAME} is recruiting members`));
@@ -100,6 +107,8 @@ check('/account: lists my cohort application with its status', account.includes(
 clean(await report(bp, '/account with cohort application'));
 await bp.goto('/en/home'); await bp.waitText('Under review', 8000);
 check('home: shows my application status instead of the invitation', !(await bp.text()).includes('Apply now'));
+await bp.goto('/en'); await bp.waitText('View my application', 8000);
+check('hub: once applied, the hero CTA is View my application -> /recruit (not Apply to join)', (await bp.eval(`[...document.querySelectorAll('main section:first-of-type a')].some(a=>a.innerText.trim()==='View my application' && new URL(a.href).pathname==='/en/recruit')`)) && !(await bp.eval(`[...document.querySelectorAll('main section:first-of-type a')].some(a=>/^Apply to join/.test(a.innerText.trim()))`)));
 
 // edit
 await bp.goto('/en/recruit'); await bp.waitText('Edit application', 8000);
@@ -159,7 +168,7 @@ clean(await report(bp, 'applicant sees result'));
 await bp.goto('/en/home'); await bp.waitText('Accepted', 8000);
 check('home: shows the accepted status', (await mainText(bp)).includes('Accepted'));
 
-// ---- an unfinished sign-up is sent to the step it owes from every page (including /recruit and the Intro); the API says PROFILE_REQUIRED
+// ---- an unfinished sign-up is sent to the step it owes from every page except the hub (/recruit included); the API says PROFILE_REQUIRED
 {
   const p = await b.newPage(await b.newContext());
   await signIn(p, INCOMPLETE);
@@ -169,21 +178,25 @@ check('home: shows the accepted status', (await mainText(bp)).includes('Accepted
   const [st, body] = await apiAs(tokenFor(INCOMPLETE), 'POST', `/cohorts/${cohortId}/applications`, { displayName: 'x', telegram: '@abcde', twitter: '@abc', web3Experience: 'LT_1Y', activityType: 'STUDENT', interestAreas: ['DEVELOPER'], intro: 'hi' });
   check('unfinished user: BE answers 409 PROFILE_REQUIRED', st === 409 && body.includes('PROFILE_REQUIRED'), [st, body]);
   clean(await report(p, 'unfinished /recruit'));
-  await p.goto('/en'); await p.waitFor(`location.pathname.endsWith('/signup/profile')`, 8000);
-  check('unfinished user: the Intro does not trap them either (onboarding step first)', (await p.url()).endsWith('/en/signup/profile'), await p.url());
+  await p.goto('/en'); await p.waitText('Continue sign-up', 8000);
+  const heroLinks = await p.eval(`[...document.querySelectorAll('main section:first-of-type a')].map(a=>a.innerText.trim()+' -> '+new URL(a.href).pathname)`);
+  check('unfinished user: the hub is open to them (no forced step) and its CTA continues the sign-up', new URL(await p.url()).pathname === '/en' && heroLinks.includes('Continue sign-up -> /en/signup/profile'), [await p.url(), heroLinks]);
+  clean(await report(p, 'unfinished hub'));
   await p.close();
 }
 
-// ---- finished user skips the Intro (hint cookie, proxy redirect), About stays reachable
+// ---- the hub is never skipped: a finished user stays on `/`, the logo goes to `/`, About stays reachable, a stale ninja_home cookie is ignored
 {
   const p = await b.newPage(builderCtx);
   p.reset();
+  await p.goto('/en/bounties');
+  await p.eval(`document.cookie = 'ninja_home=1; Path=/'; true`);
+  p.reset();
   await p.goto('/en');
   const redirects = await p.eval(`performance.getEntriesByType('navigation')[0].redirectCount`);
-  check('finished user: /en is redirected by the proxy (hint cookie) before any Intro renders, and ends on /home', (await p.url()).endsWith('/en/home') && redirects >= 1, [await p.url(), redirects]);
-  check('finished user: the hint cookie exists', (await p.eval(`document.cookie`)).includes('ninja_home=1'));
+  check('finished user: /en is served as the hub (no redirect, even with an old ninja_home cookie)', new URL(await p.url()).pathname === '/en' && redirects === 0, [await p.url(), redirects]);
   const logo = await p.eval(`document.querySelector('header a[aria-label="Ninja Labs home"]').getAttribute('href')`);
-  check('finished user: the logo points at the home', logo === '/en/home', logo);
+  check('finished user: the logo points at the hub', logo === '/en', logo);
   await p.goto('/en/about'); await sleep(500);
   const about = await p.text();
   check('finished user: /about shows the community sections and stays put', (await p.url()).endsWith('/en/about') && /past activities/i.test(about));

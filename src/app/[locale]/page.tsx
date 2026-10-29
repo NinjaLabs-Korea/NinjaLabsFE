@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { IntroRedirect } from "@/components/auth/IntroRedirect";
 import { CommunityHero } from "@/components/community/CommunityHero";
 import { CommunitySections } from "@/components/community/CommunitySections";
 import { ClientMessages } from "@/components/layout/ClientMessages";
@@ -16,9 +15,11 @@ export async function generateMetadata({ params }: PageProps<"/[locale]">): Prom
 }
 
 /**
- * The Intro: Ninja Labs as a community first. Hero -> past activities -> members -> achievements -> open bounties (only when
- * there are some) -> recruitment banner (only while a cohort accepts applications). The bounty marketing hero lives at the top
- * of `/bounties`. A user who finished onboarding is sent to `/home` (`proxy.ts` hint cookie, `IntroRedirect` as the fallback).
+ * The community hub: Ninja Labs as a community first, for everyone in every session state (signed in or not, finished or not;
+ * nothing redirects away from it). Hero -> ongoing/upcoming events (only when there are some) -> recruitment banner (only while a
+ * cohort accepts applications) -> past activities -> members -> achievements -> the bounty entry. The page is public data only;
+ * the CTAs that depend on the session render in the browser behind reserved-size placeholders. The bounty marketing hero lives
+ * at the top of `/bounties`.
  */
 export default async function Home({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
@@ -27,7 +28,6 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
 
   return (
     <>
-      <IntroRedirect />
       <ClientMessages namespaces={["recruit"]}>
         <CommunityHero />
         <div className="pt-16">

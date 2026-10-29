@@ -7,7 +7,8 @@ import { AchievementsSection } from "@/components/community/AchievementsSection"
 import { ActivitiesSection } from "@/components/community/ActivitiesSection";
 import { CommunitySections } from "@/components/community/CommunitySections";
 import { MembersPreviewSection } from "@/components/community/MembersPreviewSection";
-import { OpenBountiesSection } from "@/components/community/OpenBountiesSection";
+import { BountiesEntrySection } from "@/components/community/BountiesEntrySection";
+import { UpcomingEventsSection } from "@/components/community/UpcomingEventsSection";
 import { NoticeRow } from "@/components/cards/NoticeRow";
 import type { CommunityData } from "@/lib/community";
 import type { ApiClient } from "@/lib/contracts/api";
@@ -33,7 +34,7 @@ const openBounty: Bounty = {
   sponsor: "Injective", deadline: "Open", daysLeft: 3, coverImage: "",
 };
 const data = (overrides: Partial<CommunityData> = {}): CommunityData => ({
-  events: [], hall: { stats: [], highlights: [], milestones: [], partners: [] }, members: [],
+  events: [], upcoming: [], hall: { stats: [], highlights: [], milestones: [], partners: [] }, members: [],
   unavailable: { notices: false, hall: false, members: false }, ...overrides,
 });
 
@@ -76,7 +77,7 @@ describe("ActivitiesSection", () => {
   });
 });
 
-describe("AchievementsSection, MembersPreviewSection, OpenBountiesSection", () => {
+describe("AchievementsSection, MembersPreviewSection, BountiesEntrySection", () => {
   const highlights = [{ category: "Milestone" as const, title: "First", body: "Body", href: "/notices", image: null }];
 
   it("hides the stat cards while every stat is zero and shows them once one is above zero", () => {
@@ -93,13 +94,33 @@ describe("AchievementsSection, MembersPreviewSection, OpenBountiesSection", () =
     expect(screen.getByText(/shipped|appear here/i)).toBeTruthy();
   });
 
-  it("previews open bounties with a link to /bounties, and renders nothing when there are none", () => {
-    const empty = renderWithIntl(<OpenBountiesSection bounties={[]} />);
-    expect(empty.container.innerHTML).toBe("");
-    empty.unmount();
-    renderWithIntl(<OpenBountiesSection bounties={[openBounty]} />);
+  it("explains the bounties and previews the open ones with a link to /bounties", () => {
+    renderWithIntl(<BountiesEntrySection bounties={[openBounty]} />);
+    expect(screen.getByRole("heading", { level: 2, name: "Bounties" })).toBeTruthy();
+    expect(screen.getByText(/build an on-chain track record/)).toBeTruthy();
     expect(screen.getByText("Open one")).toBeTruthy();
     expect(screen.getByRole("link", { name: "View all →" }).getAttribute("href")).toBe("/bounties");
+  });
+
+  it("never disappears: with nothing open it is one call-to-action card to /bounties", () => {
+    renderWithIntl(<BountiesEntrySection bounties={[]} />);
+    expect(screen.getByRole("heading", { level: 2, name: "Bounties" })).toBeTruthy();
+    expect(screen.getByText("No open bounties right now")).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "View all →" })).toBeNull();
+    const links = screen.getAllByRole("link");
+    expect(links).toHaveLength(1);
+    expect(links[0].getAttribute("href")).toBe("/bounties");
+    expect(links[0].textContent).toBe("Browse bounties");
+  });
+
+  it("lists upcoming events with their event date and renders nothing when there are none", () => {
+    const empty = renderWithIntl(<UpcomingEventsSection events={[]} />);
+    expect(empty.container.innerHTML).toBe("");
+    empty.unmount();
+    renderWithIntl(<UpcomingEventsSection events={[notice({ slug: "u1", title: "Demo day", eventDate: "2999-01-01" })]} />);
+    expect(screen.getByRole("heading", { level: 2, name: "Ongoing and upcoming events" })).toBeTruthy();
+    expect(screen.getByText("Event date 2999.01.01")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "See all events →" }).getAttribute("href")).toBe("/notices?category=events");
   });
 
   it("shows the hall of fame stats and the first highlights, linking to the hall of fame", () => {
@@ -129,27 +150,30 @@ describe("AchievementsSection, MembersPreviewSection, OpenBountiesSection", () =
   });
 });
 
-describe("CommunitySections (shared by the Intro and /about)", () => {
+describe("CommunitySections (shared by the hub and /about)", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it("renders activities, members, achievements, open bounties and the recruitment banner in that order, with no About on the Intro", async () => {
-    renderWithIntl(<CommunitySections data={data({ events: [notice()], members: [member()] })} locale="en" openBounties={[openBounty]} />);
+  it("renders upcoming events, the recruitment banner, past activities, members, achievements and the bounty entry in that order", async () => {
+    renderWithIntl(<CommunitySections data={data({ upcoming: [notice({ slug: "u1", title: "Demo day", eventDate: "2999-01-01" })], events: [notice()], members: [member()] })} locale="en" openBounties={[openBounty]} />);
     await screen.findByText("Ninja Labs 2nd cohort is recruiting members");
     const order = screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
     expect(order).toEqual([
+      "Ongoing and upcoming events",
+      "Ninja Labs 2nd cohort is recruiting members",
       "What we have done together",
       "Meet the members",
       "What the community has shipped",
-      "Active bounties",
-      "Ninja Labs 2nd cohort is recruiting members",
+      "Bounties",
     ]);
   });
 
-  it("puts About first (as the page heading) on /about and drops the bounty preview when nothing is open", async () => {
+  it("hides the upcoming section when there is no upcoming event and keeps the bounty entry when nothing is open", async () => {
     renderWithIntl(<CommunitySections aboutLevel={1} data={data({ events: [notice()], members: [member()] })} locale="en" />);
     await screen.findByText("Ninja Labs 2nd cohort is recruiting members");
     expect(screen.getByRole("heading", { level: 1 })).toBeTruthy();
-    expect(screen.queryByRole("heading", { name: "Active bounties" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Ongoing and upcoming events" })).toBeNull();
+    expect(screen.getByRole("heading", { level: 2, name: "Bounties" })).toBeTruthy();
+    expect(screen.getByText("No open bounties right now")).toBeTruthy();
   });
 
   it("leaves the banner out when no cohort accepts applications", async () => {

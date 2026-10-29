@@ -48,7 +48,8 @@
     "accountSettings": "계정 설정",
     "signOut": "로그아웃",
     "sessionPreview": "세션 미리보기",
-    "walletAddress": "지갑 주소: {wallet}"
+    "walletAddress": "지갑 주소: {wallet}",
+    "myActivity": "내 활동"
   },
   "googleLogin": {
     "continue": "Google로 계속하기",

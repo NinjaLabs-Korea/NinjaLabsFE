@@ -36,7 +36,7 @@ export function CompleteOnboarding() {
       () => {
         onboardingLog("onboarding.complete.succeeded");
         setState("done");
-        // The session snapshot still says "unfinished"; re-read it so the home, the logo and the Intro redirect see a finished user.
+        // The session snapshot still says "unfinished"; re-read it so the hub CTA ("My activity") and the user menu see a finished user.
         void refresh?.().catch(() => undefined);
       },
       (error: unknown) => {

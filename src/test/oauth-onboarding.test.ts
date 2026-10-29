@@ -128,6 +128,14 @@ describe("onboarding redirect", () => {
     ["/ko/terms", null],
     ["/privacy", null],
     ["/privacyx", "/signup/profile"],
+    // The community hub is the primary service and stays open to an unfinished sign-up (its hero offers "Continue sign-up").
+    ["/", null],
+    ["/en", null],
+    ["/ko/", null],
+    ["/en/about", null],
+    ["/about", null],
+    ["/en/aboutx", "/en/signup/profile"],
+    ["/en/bounties", "/en/signup/profile"],
     // `/signup` itself is not a step page: an unfinished user who lands there is sent on to their step.
     ["/en/signup", "/en/signup/profile"],
   ])("from %s an unfinished step-3 user goes to %s", (pathname, expected) => {

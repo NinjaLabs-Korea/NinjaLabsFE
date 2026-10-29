@@ -9,6 +9,7 @@ import type { ClientUser } from "@/lib/contracts/auth";
 // `key` is a message key under `common.userMenu`.
 export function getAccountNavigationItems(user: Pick<ClientUser, "profileSlug">) {
   return [
+    { key: "myActivity", href: "/home" },
     { key: "myProfile", href: `/members/${user.profileSlug}` },
     { key: "myApplications", href: "/applications" },
     { key: "myAgents", href: "/agents" },

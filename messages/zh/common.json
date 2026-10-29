@@ -48,7 +48,8 @@
     "accountSettings": "账户设置",
     "signOut": "退出登录",
     "sessionPreview": "会话预览",
-    "walletAddress": "钱包地址：{wallet}"
+    "walletAddress": "钱包地址：{wallet}",
+    "myActivity": "我的活动"
   },
   "googleLogin": {
     "continue": "使用 Google 继续",

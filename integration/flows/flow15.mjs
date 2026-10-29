@@ -1,5 +1,5 @@
-// Flow 15: community-first landing. `/` introduces Ninja Labs (community hero, activities -> members -> achievements -> open bounties
-// -> recruitment banner), the bounty marketing hero sits at the top of `/bounties`, a stat block that is all zero is hidden, the
+// Flow 15: community-first landing. `/` is the hub for everyone (community hero, upcoming events when any -> recruitment banner -> past
+// activities -> members -> achievements -> bounty entry), the bounty marketing hero sits at the top of `/bounties`, a stat block that is all zero is hidden, the
 // page titles follow the new framing, and none of the changed screens is clipped at the in-between widths (340, 530, 700, 900,
 // 1100) in ko, en and zh, signed out and as a finished user (probe: lib/layout-audit.mjs; flow 14 sweeps every 20 px width).
 import { Browser, report } from '../lib/cdp.mjs';
@@ -50,13 +50,16 @@ console.log('hall of fame stats', JSON.stringify(stats), 'allZero', statsAllZero
   const parts = [/done together/i, /Meet the members/i, /community has shipped/i];
   check('Intro: activities, members, achievements in that order', parts.every((re) => idx(re) >= 0) && idx(parts[0]) < idx(parts[1]) && idx(parts[1]) < idx(parts[2]), order);
   check('Intro: no news section and no About section (the hero carries it)', !order.some((t) => /Latest news|Learn, build and move on Injective/.test(t)), order);
-  const bountyAt = idx(/Active bounties/i);
+  const upcomingAt = idx(/Ongoing and upcoming events/i);
   const banner = idx(/is recruiting members/i);
-  check('Intro: the recruitment banner is the last section', banner === order.length - 1, order);
-  if (bountyAt >= 0) {
-    check('Intro: open bounties come after achievements, before the banner, and link to /bounties', bountyAt > idx(parts[2]) && bountyAt < banner && (await links(p, 'main a')).some((l) => l.endsWith('-> /en/bounties')), order);
-    check('Intro: the bounty preview shows at least one bounty card', await p.eval(`document.querySelectorAll('main a[href*="/en/bounties/"]').length > 0`));
-  } else console.log('Intro: no open bounty section (no active bounty seeded)');
+  const bountyAt = idx(/^Bounties$/i);
+  check('Intro: the recruitment banner comes before the past activities (cohort is accepting)', banner >= 0 && banner < idx(parts[0]), order);
+  check('Intro: upcoming events, when any, come first, before the banner', upcomingAt === -1 || (upcomingAt === 0 && upcomingAt < banner), order);
+  check('Intro: the bounty entry is the last section and always present', bountyAt === order.length - 1, order);
+  const bountyLinks = await links(p, 'main a');
+  check('Intro: the bounty entry links to /bounties', bountyLinks.some((l) => l.endsWith('-> /en/bounties')), bountyLinks);
+  const hasCards = await p.eval(`document.querySelectorAll('main a[href*="/en/bounties/"]').length > 0`);
+  check('Intro: the bounty entry shows bounty cards, or a single call to action when none is open', hasCards || (await mainText(p)).includes('No open bounties right now'));
   check('Intro: the stat block follows the zero rule', (await p.eval(`!!document.querySelector('main dl')`)) === !statsAllZero, { statsAllZero });
   check('Intro: no em dash', !text.includes('\u2014'));
   clean(await report(p, 'Intro', {}), { signedOut: true });
@@ -90,25 +93,29 @@ console.log('hall of fame stats', JSON.stringify(stats), 'allZero', statsAllZero
   await p.close();
 }
 
-// ---- finished user: /bounties hero CTA is My profile
+// ---- finished user: the hub stays reachable, /bounties hero CTA is My profile
 {
   const p = await b.newPage(await b.newContext());
   await signIn(p, ids.BUILDER);
   await p.goto('/en/bounties'); await sleep(1200);
   const bLinks = await links(p, 'main section:first-of-type a');
   check('finished user: /bounties hero shows My profile, not Get Started', bLinks.some((l) => l.startsWith('My profile -> /en/members/')) && !bLinks.some((l) => l.startsWith('Get Started')), bLinks);
-  await p.goto('/en'); await p.waitFor(`location.pathname==='/en/home'`, 8000);
-  check('finished user: / goes to the home', (await p.url()).endsWith('/en/home'), await p.url());
+  await p.goto('/en'); await p.waitText('My activity', 8000);
+  check('finished user: / stays on the hub (no redirect to the home)', new URL(await p.url()).pathname === '/en', await p.url());
+  const hero = await links(p, 'main section:first-of-type a');
+  check('finished user: hero CTA is My activity -> /home', hero.includes('My activity -> /en/home'), hero);
   const logo = await p.eval(`document.querySelector('header a[aria-label="Ninja Labs home"]').getAttribute('href')`);
-  check('finished user: the logo points at the home', logo === '/en/home', logo);
-  clean(await report(p, 'finished /bounties and home', {}));
+  check('finished user: the logo points at the hub', logo === '/en', logo);
+  const fOrder = await h2s(p);
+  check('finished user: the same sections as a visitor, bounty entry last', /^Bounties$/.test(fOrder[fOrder.length - 1] ?? ''), fOrder);
+  clean(await report(p, 'finished hub', {}));
   await p.close();
 }
 
 // ---- in-between widths: nothing clipped on the changed screens
 const WIDTHS = [340, 530, 700, 900, 1100];
 const PROBE = `(${denseProbe})()`;
-const SCREENS = [['out', '/'], ['out', '/about'], ['out', '/bounties'], ['user', '/home'], ['user', '/bounties'], ['user', '/about']];
+const SCREENS = [['out', '/'], ['out', '/about'], ['out', '/bounties'], ['user', '/'], ['user', '/home'], ['user', '/bounties'], ['user', '/about']];
 let swept = 0;
 const problems = [];
 for (const locale of ['ko', 'en', 'zh']) {

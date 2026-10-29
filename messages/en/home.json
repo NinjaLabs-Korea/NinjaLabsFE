@@ -1,14 +1,14 @@
 {
   "metadata": {
-    "title": "Home | Ninja Labs",
-    "description": "Your Ninja Labs home: profile, applications, open bounties, news and recruitment."
+    "title": "My activity | Ninja Labs",
+    "description": "Your personal dashboard: profile, applications, open bounties, news and recruitment."
   },
   "gate": {
     "checking": "Checking your session…",
     "redirecting": "Taking you to the right place…"
   },
   "greeting": {
-    "eyebrow": "Home",
+    "eyebrow": "My activity",
     "title": "Welcome back, {name}"
   },
   "profile": {

@@ -11,11 +11,16 @@
     "getStarted": "立即开始",
     "continueSignup": "继续注册",
     "exploreActivities": "查看往期活动",
-    "rolesTitle": "欢迎所有人加入"
+    "rolesTitle": "欢迎所有人加入",
+    "myActivity": "我的活动"
   },
   "bounties": {
     "eyebrow": "赏金市场",
-    "heading": "进行中的赏金",
-    "viewAll": "查看全部 →"
+    "heading": "赏金",
+    "viewAll": "查看全部 →",
+    "description": "承接 Injective 生态中的任务，提交成果，积累链上记录。",
+    "emptyTitle": "目前没有开放的赏金",
+    "emptyBody": "新的赏金会最先出现在赏金页面。",
+    "cta": "浏览赏金"
   }
 }

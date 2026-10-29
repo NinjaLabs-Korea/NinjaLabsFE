@@ -1,14 +1,14 @@
 {
   "metadata": {
-    "title": "首页 | Ninja Labs",
-    "description": "你的 Ninja Labs 首页:资料、申请、开放的赏金、动态与招募。"
+    "title": "我的活动 | Ninja Labs",
+    "description": "你的个人面板：资料、申请、开放的赏金、动态与招募。"
   },
   "gate": {
     "checking": "正在确认登录状态…",
     "redirecting": "正在为你跳转…"
   },
   "greeting": {
-    "eyebrow": "首页",
+    "eyebrow": "我的活动",
     "title": "欢迎回来,{name}"
   },
   "profile": {

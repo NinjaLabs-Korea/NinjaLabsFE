@@ -17,20 +17,27 @@ import {
 } from "@/lib/api/oauth";
 import { fetchMe, readMe, toClientUser } from "@/lib/api/me";
 import { pushFlash } from "@/lib/flash";
-import { getOnboardingPath, HOME_PATH } from "@/lib/auth-route";
+import { getOnboardingPath } from "@/lib/auth-route";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
 import { takeReturnPath } from "@/lib/return-path";
 import { stripLocale, withLocaleOf } from "@/i18n/routing";
 
 export { getOnboardingPath };
 
+/** The post-login destination in the callback's locale: the remembered same-site path, else the hub (`/en`, not `/en/`: no extra redirect hop). */
+function hubOrReturnPath(currentPathname: string, returnPath: string | null): string {
+  return withLocaleOf(currentPathname, returnPath ?? "/").replace(/\/$/, "") || "/";
+}
+
 /**
  * Pages an unfinished sign-up may stay on after a session restore: the sign-up steps themselves, and `/account`, the only
  * place to delete the account (`DELETE /users/me` works from onboarding step 2, so someone who only did the Google step
  * must be able to leave without finishing a profile or wallet first), and the legal pages (`/privacy`, `/terms`): the
  * sign-up footer links to them, so a reload or a new tab must not bounce someone who is creating an account away from them.
+ * The community hub (`/`) and `/about` are exempt too: the hub is the primary service and reachable by everyone, so an unfinished
+ * sign-up who opens the site sees it (its hero offers "Continue sign-up") instead of being pushed into a step.
  */
-const ONBOARDING_EXEMPT = /^\/(?:signup\/|account(?:\/|$)|(?:privacy|terms)(?:\/|$))/;
+const ONBOARDING_EXEMPT = /^\/(?:$|about(?:\/|$)|signup\/|account(?:\/|$)|(?:privacy|terms)(?:\/|$))/;
 
 export function shouldRedirectToOnboarding(
   user: AuthSnapshot["user"],
@@ -130,11 +137,11 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     });
     // 콜백은 로케일 경로(/en/auth/callback)로 들어오므로 로케일을 떼고 비교하고, 같은 로케일의 홈으로 보낸다.
     const onCallback = isAuthCallbackPath(window.location.pathname);
-    // A finished user goes back to the page that asked for the sign-in (`lib/return-path.ts`), else to their home.
+    // A finished user goes back to the page that asked for the sign-in (`lib/return-path.ts`), else to the hub (`/`).
     // An unfinished onboarding keeps the remembered path: the last signup step offers it.
     const targetPath = onboardingPath ?? (
       onCallback && restored.status === "signed-in"
-        ? withLocaleOf(window.location.pathname, restored.user.onboardingCompleted === true ? takeReturnPath() ?? HOME_PATH : "/")
+        ? hubOrReturnPath(window.location.pathname, restored.user.onboardingCompleted === true ? takeReturnPath() : null)
         : null
     );
     if (targetPath) {
