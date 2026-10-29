@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { createApiApiClient } from "@/lib/api/api-client";
 import { deriveActionView, type BountyActionInput } from "@/lib/bounty-action-state";
+import { applicationStatusLabel } from "@/components/account/ApplicationsView";
 import type { ApiHttp } from "@/lib/api/http";
 
 const BOUNTY = "b-1";
@@ -49,5 +50,26 @@ describe("cancelled-bounty submissions (#31)", () => {
     const row = { bountySlug: BOUNTY, status: "rejected" as const, agent: null, closedByCancellation: true };
     expect(deriveActionView(input({ status: "closed", submissions: loaded([row]) }))).toEqual({ kind: "closed", reason: "cancelled" });
     expect(deriveActionView(input({ status: "closed", submissions: loaded([{ ...row, closedByCancellation: undefined }]) })).kind).toBe("submissionRejected");
+  });
+});
+
+describe("applicationStatusLabel for closed bounties (#32, #33)", () => {
+  const t = (key: string) => key;
+  const NOW = Date.parse("2026-10-30T00:00:00Z");
+  const base = { agent: null, reviewComment: null };
+
+  it("approved on a bounty that no longer takes submissions is not 'submit unlocked'", () => {
+    expect(applicationStatusLabel(t, { ...base, status: "approved", bountyStatus: "CANCELLED" }, NOW)).toBe("approvedClosedStatus");
+    expect(applicationStatusLabel(t, { ...base, status: "approved", bountyStatus: "OPEN", submissionDeadline: "2026-10-01T00:00:00Z" }, NOW)).toBe("approvedClosedStatus");
+  });
+
+  it("approved on an open bounty and approved with unknown bounty state keep today's label", () => {
+    expect(applicationStatusLabel(t, { ...base, status: "approved", bountyStatus: "OPEN", submissionDeadline: "2026-12-01T00:00:00Z" }, NOW)).toBe("approvedStatus");
+    expect(applicationStatusLabel(t, { ...base, status: "approved" }, NOW)).toBe("approvedStatus");
+  });
+
+  it("pending past the deadline reads as closed; pending before it stays 'Applied'", () => {
+    expect(applicationStatusLabel(t, { ...base, status: "open", bountyStatus: "OPEN", submissionDeadline: "2026-10-01T00:00:00Z" }, NOW)).toBe("pendingClosedStatus");
+    expect(applicationStatusLabel(t, { ...base, status: "open", bountyStatus: "OPEN", submissionDeadline: "2026-12-01T00:00:00Z" }, NOW)).toBe("steps.open");
   });
 });

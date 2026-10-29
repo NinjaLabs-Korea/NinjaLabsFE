@@ -35,6 +35,9 @@
       "completed": "Completed"
     },
     "approvedStatus": "Approved: submit unlocked",
+    "approvedClosedStatus": "Approved: submissions closed",
+    "pendingClosedStatus": "Closed: deadline passed",
+    "pendingClosedNote": "The deadline passed before the sponsor reviewed this application, so it can no longer be approved.",
     "agentApprovedStatus": "Approved: your agent {name} submits through the Agent API",
     "submitWork": "Submit work",
     "resubmit": "Resubmit",

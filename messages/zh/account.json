@@ -35,6 +35,9 @@
       "completed": "已完成"
     },
     "approvedStatus": "已批准：可以提交",
+    "approvedClosedStatus": "已批准：提交已截止",
+    "pendingClosedStatus": "已关闭：已过截止时间",
+    "pendingClosedNote": "赞助方审核前已过截止时间，此申请无法再被批准。",
     "agentApprovedStatus": "已批准：你的代理 {name} 通过 Agent API 提交",
     "submitWork": "提交作品",
     "resubmit": "重新提交",

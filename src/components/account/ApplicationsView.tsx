@@ -40,15 +40,29 @@ const applicationSteps: readonly ApplicationStatus[] = ["open", "approved", "sub
 // A submission with no application behind it (direct or agent-mode bounty) skips Applied/Approved.
 const submissionSteps: readonly ApplicationStatus[] = ["submitted", "completed"];
 
+/** The bounty behind the row no longer takes submissions. False when the BE did not send the bounty fields (older BE). */
+export function isClosedForSubmit(application: Pick<AccountApplication, "bountyStatus" | "submissionDeadline">, now: number = Date.now()): boolean {
+  const { bountyStatus, submissionDeadline } = application;
+  if (!bountyStatus) return false;
+  if (bountyStatus !== "OPEN") return true;
+  return submissionDeadline !== undefined && new Date(submissionDeadline).getTime() <= now;
+}
+
 /**
  * The status words of a row (badge text). Single source for the My applications page and the home activity list, so a
  * forfeited award reads the same everywhere. `t` is `useTranslations("account.applications")`.
  */
 export function applicationStatusLabel(
   t: (key: string, values?: Record<string, string>) => string,
-  application: Pick<AccountApplication, "status" | "agent" | "reviewComment"> & Partial<Pick<AccountApplication, "closedByCancellation">>,
+  application: Pick<AccountApplication, "status" | "agent" | "reviewComment"> & Partial<Pick<AccountApplication, "closedByCancellation" | "bountyStatus" | "submissionDeadline">>,
+  now: number = Date.now(),
 ): string {
   const { status } = application;
+  const closedForSubmit = isClosedForSubmit(application, now);
+  // An approved application on a bounty that stopped taking submissions: "submit unlocked" would be false.
+  if (status === "approved" && closedForSubmit) return t("approvedClosedStatus");
+  // The BE approves only an OPEN bounty before its submission deadline, so a pending application past either can never be approved.
+  if (status === "open" && closedForSubmit) return t("pendingClosedStatus");
   if (status === "approved") return application.agent ? t("agentApprovedStatus", { name: application.agent.name }) : t("approvedStatus");
   if (status === "revisionRequested") return t("revisionRequestedStatus");
   if (status === "rejected") return t("rejectedStatus");
@@ -96,20 +110,14 @@ function RevisionNote({ application }: { application: AccountApplication }) {
   );
 }
 
-/** The bounty behind the row no longer takes submissions. False when the BE did not send the bounty fields (older BE). */
-function isClosedForSubmit(application: AccountApplication, now: number): boolean {
-  const { bountyStatus, submissionDeadline } = application;
-  if (!bountyStatus) return false;
-  if (bountyStatus !== "OPEN") return true;
-  return submissionDeadline !== undefined && new Date(submissionDeadline).getTime() <= now;
-}
-
 export function ApplicationsView() {
   const t = useTranslations("account.applications");
   const tAccount = useTranslations("account.common");
+  // Page-load time: deadlines are compared once per visit (the BE re-checks on submit).
+  const [now] = useState(() => Date.now());
   const tBounties = useTranslations("bounties.categories");
   const format = useFormatter();
-  const statusLabel = (application: AccountApplication): string => applicationStatusLabel(t, application);
+  const statusLabel = (application: AccountApplication): string => applicationStatusLabel(t, application, now);
   const mode = useFoundationMode();
   const authSnapshot = useAuthSnapshot();
   const apiClient = useAccountApi();
@@ -120,8 +128,6 @@ export function ApplicationsView() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
-  // Page-load time: deadlines are compared once per visit (the BE re-checks on submit).
-  const [now] = useState(() => Date.now());
   const pendingRef = useRef(new Set<string>());
   const listRef = useRef<HTMLDivElement>(null);
   // The withdrawn card disappears with its button, so focus moves to the list instead of <body>.
@@ -197,6 +203,8 @@ export function ApplicationsView() {
           const cancelled = application.bountyStatus === "CANCELLED";
           // An approved application with no submission yet cannot start work on a closed bounty; resubmission rules stay on the detail page.
           const approvedClosed = application.status === "approved" && isClosedForSubmit(application, now);
+          // A pending application that can no longer be approved (deadline passed or bounty no longer OPEN): no progress steps, no Withdraw.
+          const pendingClosed = application.status === "open" && isClosedForSubmit(application, now);
           // A requested revision is still the "Submitted" step; the marker says the next move is the applicant's.
           const steps = application.source === "submission" ? submissionSteps : applicationSteps;
           const currentIndex = steps.indexOf(actionNeeded ? "submitted" : application.status);
@@ -209,7 +217,7 @@ export function ApplicationsView() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="flex min-w-0 max-w-full flex-wrap gap-2">
                   <Badge variant="primary-soft">{tBounties(application.category)}</Badge>
-                  <Badge variant={application.closedByCancellation ? "neutral" : statusVariants[application.status]}>
+                  <Badge variant={application.closedByCancellation || approvedClosed ? "neutral" : statusVariants[application.status]}>
                     {statusLabel(application)}
                   </Badge>
                   {application.agent ? (
@@ -232,6 +240,8 @@ export function ApplicationsView() {
                   <p className="mt-4 text-sm text-ink-muted">{t(cancelled ? "cancelledNote" : "rejectedNote")}</p>
                   <ApplicationNote application={application} />
                 </>
+              ) : pendingClosed ? (
+                <p className="mt-4 text-sm text-ink-muted">{t("pendingClosedNote")}</p>
               ) : application.status === "notAccepted" ? (
                 application.closedByCancellation ? <p className="mt-4 text-sm text-ink-muted">{t("cancelledSubmissionNote")}</p> : <NotAcceptedNote application={application} />
               ) : (
@@ -285,7 +295,7 @@ export function ApplicationsView() {
                   {actionNeeded ? t("resubmit") : approvedClosed ? t("viewBounty") : t("submitWork")}
                 </Link>
               ) : null}
-              {application.status === "open" ? (
+              {application.status === "open" && !pendingClosed ? (
                 <div className="mt-4">
                   <button
                     className={outlineDangerClass}
