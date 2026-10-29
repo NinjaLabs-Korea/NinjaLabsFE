@@ -31,10 +31,10 @@ export const bounties: Bounty[] = [
     slug: "agent-skill-benchmark", title: "Agent skill benchmark suite", summary: "Score agent submissions against a reproducible Injective task set.", descriptionMarkdown: "Build a benchmark suite that scores AI agent submissions against a reproducible set of Injective tasks. Submissions are in and the sponsor is reviewing them; a requested revision can still be resubmitted.\n\nDeliver a **runnable benchmark harness** with task definitions, scoring rules, and a results report.", submissionGuideMarkdown: "Submit the harness in a state reviewers can run end to end.\n\n- The benchmark repository with setup instructions\n- Task definitions and scoring rules\n- A results report for the reference agents", category: "Dev", status: "reviewing", reward: { amount: 400, currency: "INJ" }, sponsor: "Ninja Labs", deadline: "Closed", deadlineDetail: "July 10, 2026 at 23:59 UTC", coverImage: "", deliverables: ["Benchmark repository", "Task definitions and scoring rules", "Results report"], reviewProcess: "Ninja Labs scores the harness before sponsor approval.", submissionMode: "direct",
   },
   {
-    slug: "design-system-build", title: "Design system build", summary: "Component inventory and page polish for the first Ninja Labs client demo.", descriptionMarkdown: "Create a consistent design system for an Injective product with reusable foundations and components. The completed work should make future product surfaces easier to build and maintain.\n\nThe finished system paired a **reusable component library** with design foundations and usage guidance so teams could adopt it without guesswork.", category: "Design", status: "closed", completed: true, reward: { amount: 300, currency: "INJ" }, sponsor: "Helix", deadline: "Closed", coverImage: "", deliverables: ["Design foundations", "Component library", "Usage guidance"], reviewProcess: "Ninja Labs reviewed the system and approved the completed delivery.", submissionMode: "direct",
+    slug: "design-system-build", title: "Design system build", summary: "Component inventory and page polish for the first Ninja Labs client demo.", descriptionMarkdown: "Create a consistent design system for an Injective product with reusable foundations and components. The completed work should make future product surfaces easier to build and maintain.\n\nThe finished system paired a **reusable component library** with design foundations and usage guidance so teams could adopt it without guesswork.", category: "Design", status: "closed", closedReason: "completed", reward: { amount: 300, currency: "INJ" }, sponsor: "Helix", deadline: "Closed", coverImage: "", deliverables: ["Design foundations", "Component library", "Usage guidance"], reviewProcess: "Ninja Labs reviewed the system and approved the completed delivery.", submissionMode: "direct",
   },
   {
-    slug: "quest-copy-refresh", title: "Quest copy refresh", summary: "Rewrite onboarding quests to make first testnet actions easier to finish.", descriptionMarkdown: "Refresh onboarding quest copy so builders understand each step and its value. Keep the voice direct, useful, and consistent across the quest experience.\n\nThe refresh delivered **updated quest copy** alongside voice and terminology notes so future edits stay consistent with the builder-facing tone.", category: "Content", status: "closed", completed: true, reward: { amount: 150, currency: "USDC" }, sponsor: "Ninja Labs", deadline: "Closed", coverImage: "", deliverables: ["Updated quest copy", "Voice and terminology notes", "Change summary"], reviewProcess: "Ninja Labs and Injective approved the completed copy refresh.", submissionMode: "direct",
+    slug: "quest-copy-refresh", title: "Quest copy refresh", summary: "Rewrite onboarding quests to make first testnet actions easier to finish.", descriptionMarkdown: "Refresh onboarding quest copy so builders understand each step and its value. Keep the voice direct, useful, and consistent across the quest experience.\n\nThe refresh delivered **updated quest copy** alongside voice and terminology notes so future edits stay consistent with the builder-facing tone.", category: "Content", status: "closed", closedReason: "completed", reward: { amount: 150, currency: "USDC" }, sponsor: "Ninja Labs", deadline: "Closed", coverImage: "", deliverables: ["Updated quest copy", "Voice and terminology notes", "Change summary"], reviewProcess: "Ninja Labs and Injective approved the completed copy refresh.", submissionMode: "direct",
   },
 ];
 
@@ -112,7 +112,6 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     category: toCategoryLabel(row.category) ?? "Other",
     status,
     ...(closedReason ? { closedReason } : {}),
-    ...(closedReason === "completed" ? { completed: true } : {}),
     reward: rewards[0] ?? { amount: 0, currency: "INJ" },
     ...(rewards.length > 1 ? { rewards } : {}),
     sponsor: row.sponsor_name,
@@ -130,7 +129,6 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     applicationRequired: row.application_required,
     applicationTitle: row.application_required ? row.title : undefined,
     applicationDescription: row.application_required ? row.summary : undefined,
-    ...(closedReason === "deadline" ? { deadlinePassed: true } : {}),
     ...(row.application_required && isPast(row.application_deadline) ? { applicationClosed: true } : {}),
   };
 }

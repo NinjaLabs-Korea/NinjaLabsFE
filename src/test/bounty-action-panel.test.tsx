@@ -329,6 +329,17 @@ describe("BountyActionPanel", () => {
     expect((screen.getByLabelText("Commit hash (optional, code work only)") as HTMLInputElement).maxLength).toBe(64);
   });
 
+  it("treats a description made only of zero-width characters as empty, like the BE", async () => {
+    const submitBounty = vi.fn();
+    Object.assign(apiClient, { submitBounty });
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByLabelText("Completed work link"), { target: { value: "https://example.test/work" } });
+    fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "\u200B\u200B" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
+    expect((await screen.findByRole("alert")).textContent).toBeTruthy();
+    expect(submitBounty).not.toHaveBeenCalled();
+  });
+
   it("refetches submissions after a successful submit", async () => {
     const submitBounty = vi.fn(async () => {
       state.submissions = [submission("submitted")];

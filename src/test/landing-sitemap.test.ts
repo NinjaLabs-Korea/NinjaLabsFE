@@ -65,7 +65,7 @@ describe("landing and sitemap with a partially unavailable API", () => {
   });
 
   it("flags a failed stats read instead of throwing, and shows only completed bounties as finished work", async () => {
-    const done = { slug: "done", title: "Done", status: "closed", completed: true };
+    const done = { slug: "done", title: "Done", status: "closed", closedReason: "completed" };
     sources.hall.mockRejectedValue(new Error("down"));
     const hero = await getBountyHero("en", [done, { slug: "cancelled", title: "Cancelled", status: "closed" }, bounty] as never);
     expect(hero.statsUnavailable).toBe(true);

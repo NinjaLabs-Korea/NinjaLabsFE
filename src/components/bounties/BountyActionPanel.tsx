@@ -12,10 +12,12 @@ import { signInHref } from "@/lib/return-path";
 import { APPLICATION_MESSAGE_MAX, COMMIT_SHA_MAX, SUBMISSION_DESCRIPTION_MAX } from "@/lib/input-limits";
 import { payoutBadge } from "@/lib/payout";
 import { isHttpUrl } from "@/lib/url-rules";
+import { hasVisibleText } from "@/lib/visible-text";
 import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 import { bountyActionErrorCopy, deriveActionView, isStaleRowsError, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
 import type { AccountApplication } from "@/lib/contracts/account";
 import type { ApiResult } from "@/lib/contracts/api";
+import type { ClosedReason } from "@/lib/bounty-status";
 import type { Bounty } from "@/lib/types";
 
 // Panels fade in when they replace the loading placeholder (or another panel), instead of popping in.
@@ -66,11 +68,20 @@ const SUBMIT_FIELDS: FormFieldRule[] = [
   { name: "description", kind: "text", required: true },
 ];
 
+/** A rule looked up by field name, so reordering or inserting rules cannot hand an input another field's rule. */
+function ruleFor(rules: FormFieldRule[], name: string): FormFieldRule {
+  const rule = rules.find((candidate) => candidate.name === name);
+  if (!rule) throw new Error(`No form rule for field ${name}`);
+  return rule;
+}
+
 /** The same rule the API applies (`isHttpUrl`, mirror of the BE), so the person sees the locale message instead of the browser's tooltip. */
 function fieldProblem(rule: FormFieldRule, raw: string): FieldError | undefined {
+  // Text is empty when it has no visible character (the BE rule, `lib/visible-text.ts`); only a URL is trimmed.
+  if (rule.kind === "text") return rule.required && !hasVisibleText(raw) ? "required" : undefined;
   const value = raw.trim();
   if (!value) return rule.required ? "required" : undefined;
-  return rule.kind === "url" && !isHttpUrl(value) ? "url" : undefined;
+  return !isHttpUrl(value) ? "url" : undefined;
 }
 
 function StatusPanel({ title, body, note, tone = "muted", feedback, link, headingRef, badge, code }: {
@@ -171,10 +182,8 @@ type BountyActionPanelProps = {
   submissionMode: "direct" | "agent";
   /** Application deadline passed (`Bounty.applicationClosed`): no apply form for a first application. */
   applicationClosed?: boolean;
-  /** `Bounty.deadlinePassed`: closed only by the deadline, so a requested revision can still be resubmitted. */
-  deadlinePassed?: boolean;
-  /** `Bounty.completed`: closed because the work was finished (BE COMPLETED); with `deadlinePassed` unset, a `closed` bounty is a cancelled one. */
-  completed?: boolean;
+  /** `Bounty.closedReason`: why a `closed` bounty is closed; `deadline` means closed only by the deadline, so a requested revision can still be resubmitted. */
+  closedReason?: ClosedReason;
 };
 
 export function BountyActionPanel(props: BountyActionPanelProps) {
@@ -198,7 +207,7 @@ export function BountyActionPanel(props: BountyActionPanelProps) {
   );
 }
 
-function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, deadlinePassed, completed, status, submissionMode, announce, sessionEnded }: BountyActionPanelProps & {
+function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, closedReason, status, submissionMode, announce, sessionEnded }: BountyActionPanelProps & {
   announce: (text: string) => void;
   /** The session ended after this page saw a signed-in user: keep an open form (and its text) and say so. */
   sessionEnded: boolean;
@@ -323,7 +332,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
 
   // The rule for which section to show lives in lib/bounty-action-state.ts (documented by src/test/bounty-action-state.test.ts).
   const derivedView = deriveActionView({
-    bountyId, applicationRequired, applicationClosed, deadlinePassed, completed, status, submissionMode,
+    bountyId, applicationRequired, applicationClosed, closedReason, status, submissionMode,
     auth: auth.status,
     applications: applicationsQuery,
     submissions: submissionsQuery,
@@ -406,7 +415,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
           <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{t("applyHeading")}</h2>
           <form className="mt-4 space-y-3" noValidate onSubmit={apply}>
             <Field label={t("portfolioUrl")} error={fieldErrorLine("portfolioUrl")}>
-              <input className={inputClass} name="portfolioUrl" onBlur={checkUrlOnBlur(APPLY_FIELDS[0])} placeholder="https://" type="url" {...fieldProps("portfolioUrl")} />
+              <input className={inputClass} name="portfolioUrl" onBlur={checkUrlOnBlur(ruleFor(APPLY_FIELDS, "portfolioUrl"))} placeholder="https://" type="url" {...fieldProps("portfolioUrl")} />
             </Field>
             <Field label={t("applyMessage")} error={fieldErrorLine("message")}>
               <textarea className={`min-h-28 ${textareaClass}`} maxLength={APPLICATION_MESSAGE_MAX} name="message" required {...fieldProps("message")} />
@@ -447,10 +456,10 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
           {inReview && applicationRequired ? <Link className={outlineLinkClass} href="/applications">{t("viewApplications")}</Link> : null}
           <form className="mt-4 space-y-3" noValidate onSubmit={submit}>
             <Field label={t("submissionUrl")} error={fieldErrorLine("submissionUrl")}>
-              <input className={inputClass} name="submissionUrl" onBlur={checkUrlOnBlur(SUBMIT_FIELDS[0])} placeholder="https://" required type="url" {...fieldProps("submissionUrl")} />
+              <input className={inputClass} name="submissionUrl" onBlur={checkUrlOnBlur(ruleFor(SUBMIT_FIELDS, "submissionUrl"))} placeholder="https://" required type="url" {...fieldProps("submissionUrl")} />
             </Field>
             <Field label={t("repositoryUrl")} error={fieldErrorLine("repositoryUrl")}>
-              <input className={inputClass} name="repositoryUrl" onBlur={checkUrlOnBlur(SUBMIT_FIELDS[1])} placeholder="https://" type="url" {...fieldProps("repositoryUrl")} />
+              <input className={inputClass} name="repositoryUrl" onBlur={checkUrlOnBlur(ruleFor(SUBMIT_FIELDS, "repositoryUrl"))} placeholder="https://" type="url" {...fieldProps("repositoryUrl")} />
             </Field>
             <Field label={t("commitSha")}>
               <input className={inputClass} maxLength={COMMIT_SHA_MAX} name="commitSha" placeholder="3f2a9c1" type="text" {...invalidProps} />

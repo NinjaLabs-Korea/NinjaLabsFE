@@ -11,8 +11,6 @@ export type Bounty = {
   status: 'active' | 'reviewing' | 'closed';
   /** Why a `closed` bounty is closed (`lib/bounty-status.ts toClosedReason`): finished work, a cancellation, or only its deadline having passed. Omitted while `active` / `reviewing`. */
   closedReason?: 'completed' | 'cancelled' | 'deadline';
-  /** @deprecated Use `closedReason === 'completed'`. Closed because the work was finished (BE COMPLETED); the landing hero lists only these as completed work. */
-  completed?: boolean;
   /** Primary reward (first funded token); shown on cards. */
   reward: Reward;
   /** Every reward token the bounty pays, primary first. Omitted when only `reward` exists. */
@@ -39,8 +37,6 @@ export type Bounty = {
   applicationDescription?: string;
   /** Application-required bounty whose `application_deadline` has passed: new applications are refused (BE `APPLICATION_DEADLINE_PASSED`); approved applicants can still submit. */
   applicationClosed?: boolean;
-  /** @deprecated Use `closedReason === 'deadline'`. BE status is still `OPEN` but `submission_deadline` has passed, so `status` is `closed`: no new submissions, yet a requested revision can still be resubmitted (BE `canResubmitAfterIntakeClosed`). */
-  deadlinePassed?: boolean;
 };
 
 export type Notice = {

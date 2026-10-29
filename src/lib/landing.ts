@@ -65,7 +65,7 @@ export async function getBountyHero(locale: string, bounties: Bounty[]): Promise
     stats: visibleStats(hall.value.stats).map(({ value, labelKey }) => ({ value, labelKey })),
     portfolio: {
       ...showcase,
-      completed: bounties.filter((bounty) => bounty.completed).slice(0, 5).map((bounty) => bounty.title),
+      completed: bounties.filter((bounty) => bounty.closedReason === "completed").slice(0, 5).map((bounty) => bounty.title),
       totalCompleted: Number(hall.value.stats[0]?.value ?? 0),
     },
     statsUnavailable: hall.unavailable,
