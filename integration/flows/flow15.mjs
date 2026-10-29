@@ -75,10 +75,10 @@ console.log('hall of fame stats', JSON.stringify(stats), 'allZero', statsAllZero
   const bTitle = await p.eval(`document.querySelector('main h1')?.innerText`);
   check('/bounties: the hero headline moved here', /Complete bounties\. Collect proof\.\s*Own your track record\./.test(bTitle ?? ''), bTitle);
   const bText = await mainText(p);
-  check('/bounties: the NFT portfolio card is here', bText.includes('ninja.inj'));
+  check('/bounties: the mock NFT portfolio card is gone from the hero', !bText.includes('ninja.inj'));
   check('/bounties: one h1 only', (await p.eval(`document.querySelectorAll('main h1').length`)) === 1);
   const bLinks = await links(p, 'main a');
-  check('/bounties: Get Started -> signup and the how-applying link', bLinks.includes('Get Started -> /en/signup') && bLinks.some((l) => l.endsWith('-> /en/bounties/apply')), bLinks.slice(0, 8));
+  check('/bounties: the how-applying link is there, no Get Started button', !bLinks.includes('Get Started -> /en/signup') && bLinks.some((l) => l.endsWith('-> /en/bounties/apply')), bLinks.slice(0, 8));
   check('/bounties: the list is still below the hero', bLinks.some((l) => l.includes(`/en/bounties/${seed.B1}`)), bLinks.slice(0, 12));
   check('/bounties: hero stats follow the zero rule', (await p.eval(`!!document.querySelector('main section:first-of-type dl')`)) === !statsAllZero, { statsAllZero });
   clean(await report(p, '/bounties signed out', {}), { signedOut: true });
@@ -99,7 +99,7 @@ console.log('hall of fame stats', JSON.stringify(stats), 'allZero', statsAllZero
   await signIn(p, ids.BUILDER);
   await p.goto('/en/bounties'); await sleep(1200);
   const bLinks = await links(p, 'main section:first-of-type a');
-  check('finished user: /bounties hero shows My profile, not Get Started', bLinks.some((l) => l.startsWith('My profile -> /en/members/')) && !bLinks.some((l) => l.startsWith('Get Started')), bLinks);
+  check('finished user: /bounties hero has no Get Started button', !bLinks.some((l) => l.startsWith('Get Started')), bLinks);
   await p.goto('/en'); await p.waitText('My activity', 8000);
   check('finished user: / stays on the hub (no redirect to the home)', new URL(await p.url()).pathname === '/en', await p.url());
   const hero = await links(p, 'main section:first-of-type a');
