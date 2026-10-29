@@ -2,12 +2,9 @@
 
 // The global boundary replaces the root layout entirely, so it must load
 // global styles and font variables itself (Next 16 error convention).
-import { Inter, Space_Grotesk } from "next/font/google";
+import { inter, spaceGrotesk } from "@/components/layout/fonts";
 import Link from "next/link";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
 
 type GlobalErrorPageProps = {
   reset: () => void;
