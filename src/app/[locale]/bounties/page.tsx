@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { BountyFilters } from "@/components/bounties/BountyFilters";
-import { Badge } from "@/components/ui/Badge";
+import { BountyHero } from "@/components/bounties/BountyHero";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { Link } from "@/i18n/navigation";
 import { loadRuntimeBounties } from "@/lib/bounties";
+import { getBountyHero } from "@/lib/landing";
 import { localeMetadata } from "@/i18n/alternates";
 
 type BountiesPageProps = {
@@ -24,40 +24,30 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
   const t = await getTranslations("bounties.list");
   const tBounties = await getTranslations("bounties");
   const { bounties, unavailable } = await loadRuntimeBounties(locale);
+  const hero = await getBountyHero(locale, bounties);
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
-      <section>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={1} size="xl" />
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-            <Badge variant="success">{t("publicBadge")}</Badge>
-            <Link
-              className="rounded-control border border-primary-outline px-[21px] py-3 text-sm leading-[21px] font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              href="/bounties/apply"
-            >
-              {t("howApplying")}
-            </Link>
-          </div>
-        </div>
-        <p className="mt-4 max-w-[768px] text-lg text-ink-muted">
-          {t("intro")}
+    <>
+      <BountyHero hero={hero} locale={locale} />
+      <div className="mx-auto max-w-content px-6 py-16 pb-20">
+        <section>
+          <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={2} size="lg" />
+        </section>
+
+        <section className="mt-8" aria-label={t("resultsLabel")}>
+          {unavailable ? (
+            <div className="rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
+              <p className="text-sm font-semibold text-ink">{t("unavailable")}</p>
+              <p className="mt-1 text-sm text-ink-muted">{tBounties("unavailableBody")}</p>
+            </div>
+          ) : (
+            <BountyFilters bounties={bounties} />
+          )}
+        </section>
+
+        <p className="mt-8 text-sm text-ink-muted">
+          {t("payoutNote")}
         </p>
-      </section>
-
-      <section className="mt-8" aria-label={t("resultsLabel")}>
-        {unavailable ? (
-          <div className="rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
-            <p className="text-sm font-semibold text-ink">{t("unavailable")}</p>
-            <p className="mt-1 text-sm text-ink-muted">{tBounties("unavailableBody")}</p>
-          </div>
-        ) : (
-          <BountyFilters bounties={bounties} />
-        )}
-      </section>
-
-      <p className="mt-8 text-sm text-ink-muted">
-        {t("payoutNote")}
-      </p>
-    </div>
+      </div>
+    </>
   );
 }

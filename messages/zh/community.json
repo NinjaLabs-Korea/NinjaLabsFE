@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "关于 Ninja Labs | Ninja Labs",
-    "description": "认识在 Injective 上学习、构建与行动的 Contributor Hub:往期活动、动态、成果与成员。"
+    "description": "认识在 Injective 上学习、构建与行动的 Contributor Hub:往期活动、成果与成员。"
   },
   "about": {
     "eyebrow": "关于 Ninja Labs",
@@ -33,14 +33,6 @@
     "unavailable": "暂时无法加载往期活动。",
     "unavailableBody": "无法连接到服务器,请稍后刷新。",
     "empty": "还没有活动动态,请稍后再来。"
-  },
-  "news": {
-    "eyebrow": "社区动态",
-    "heading": "最新动态",
-    "viewAll": "查看全部 →",
-    "unavailable": "暂时无法加载最新动态。",
-    "unavailableBody": "无法连接到服务器,请稍后刷新。",
-    "empty": "暂无动态,请稍后再来。"
   },
   "achievements": {
     "eyebrow": "近期成果",

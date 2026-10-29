@@ -7,7 +7,9 @@ of UI actions.
 
 It is **not part of the required CI checks** (it needs Chrome, Postgres binaries and a BE checkout, and takes 15+ minutes).
 `.github/workflows/integration.yml` runs it on demand (`workflow_dispatch`, input `be_ref` = the BE branch/tag/SHA, default
-`main`) and nightly, and uploads `integration/.logs` as an artifact. Run it locally before merging anything that touches
+`main`) and nightly, and uploads `integration/.logs` as an artifact per job. CI runs the flows as four parallel jobs, each with
+its own stack: `1 2 3 4 5 7 8`, `6 9 10 11`, `12 13`, `14 15` (7 and 8 need 4 and 5, so they share a group; flows must not
+depend on data another group creates). The full dense sweep (`NINJA_IT_SWEEP=full`) is a separate opt-in job (`sweep_full` input). Run it locally before merging anything that touches
 auth, the data layer, routing or a whole user flow.
 
 ## Prerequisites
@@ -24,7 +26,7 @@ auth, the data layer, routing or a whole user flow.
 ## Run
 
 ```sh
-NINJA_BE_DIR=../NinjaLabsBE npm run test:integration          # flows 1-14
+NINJA_BE_DIR=../NinjaLabsBE npm run test:integration          # flows 1-15
 NINJA_BE_DIR=../NinjaLabsBE npm run test:integration -- 1 3    # a subset
 NINJA_IT_CHROME_FLAGS="--no-sandbox"  # extra Chrome flags (Linux CI)
 npm run test:integration -- --reap    # stop + delete the leftovers of dead runs
@@ -116,6 +118,7 @@ failed request.
 | 12 | Member recruitment | Admin creates and opens a cohort in the UI; a signed-out visitor sees the banner and a sign-in link with `returnTo`; a sign-in that started from `/recruit` returns there; a finished user applies from the home, sees the status on `/recruit`, `/account` and the home, edits it; the admin filters, reviews with a confirm (internal note) and exports the CSV; the applicant sees the result and never the note (DOM and API); an unfinished sign-up is sent to its onboarding step and the BE answers `PROFILE_REQUIRED`; the proxy redirects a finished user from `/en` to `/en/home` (hint cookie) while `/en/about` stays; withdraw and reapply reopen the same row; a cohort with applications cannot be deleted; closing removes the banner and the form. |
 | 13 | Responsive community screens | Intro, about, home, recruit (status and form with errors), account, notices, admin recruitment (table, review dialog) and admin notices in Korean at 375, 768 and 1280 px: no horizontal scroll, nothing outside the viewport, no character-per-line wrapping, plus a screenshot of each in `<log dir>/shots/<screen>__<state>__<width>.png`. Gets a 20 minute budget (flow 12: 12 minutes). |
 | 14 | Dense-width layout audit | Every width 320 to 1440 px in 20 px steps, ko/en/zh, signed out / finished / admin: `lib/layout-audit.mjs` finds clipped content (overflow hidden/clip cutting text or images; ellipsis and line-clamp exempt), icons wrapped away from their label, horizontal page overflow, character-per-line text and overlapping or covered controls. Target: 0 hits. Default is a quick set (landing hero, badge-heavy public screens, a few signed-in and admin screens); `NINJA_IT_SWEEP=full` covers every route of `src/lib/locale-routes.ts` (30+ minutes), `NINJA_IT_SWEEP_STEP` / `NINJA_IT_SWEEP_ROUTES` narrow it. Outlined screenshots of each distinct problem go to `<log dir>/shots/dense__*.png`, the list to `<log dir>/dense-sweep.json`. The probe checks itself against a fixture page first. Needs 4 and 5 for agent/application data when run alone. |
+| 15 | Community-first landing | `/` opens on the Ninja Labs community hero (no bounty marketing, no NFT card), "Apply to join {cohort}" while a cohort accepts applications, section order activities -> members -> achievements -> open bounties -> banner; the moved bounty hero (headline, NFT card, CTAs; My profile for a finished user) sits above the list on `/bounties`; all-zero stat blocks are hidden; titles and og:title use the new framing; no layout problems (probe `lib/layout-audit.mjs`) on `/`, `/about`, `/bounties`, `/home` at 340, 530, 700, 900 and 1100 px in ko, en and zh, signed out and finished. |
 
 Flows depend on each other's data: 7 and 8 use 4's application and 5's agents, 9 uses 4's application and 5's agents (PendingBot), 10 uses B1's deposit, so run subsets with that in mind.
 

@@ -3,7 +3,8 @@ import { screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { createFormatter, createTranslator } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
-import type { RuntimeLanding } from "@/lib/landing";
+import type { BountyHero as BountyHeroData } from "@/lib/landing";
+import { createMockApiClient } from "@/lib/mocks/api-client";
 import type { Profile } from "@/lib/types";
 import { enMessages, renderWithIntl } from "@/test/intl";
 
@@ -24,7 +25,7 @@ vi.mock("next-intl/server", () => ({
   getFormatter: async () => createFormatter({ locale: "en", timeZone: "UTC" }),
 }));
 
-const data = vi.hoisted(() => ({ profile: undefined as Profile | undefined, landing: undefined as RuntimeLanding | undefined }));
+const data = vi.hoisted(() => ({ profile: undefined as Profile | undefined, acceptingCohort: false }));
 vi.mock("@/lib/detail-id", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/detail-id")>()), validateDetailId: async () => true }));
 vi.mock("@/lib/members", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/members")>()),
@@ -32,11 +33,11 @@ vi.mock("@/lib/members", async (importOriginal) => ({
 }));
 vi.mock("@/lib/api/public", () => ({ loadFromRuntime: async ({ mock }: { mock: () => unknown }) => mock() }));
 vi.mock("@/components/auth/FoundationProvider", async () =>
-  (await import("./support/foundation")).foundationMock({ useAuthSnapshot: () => ({ status: "signed-out", user: null }), useCohortApi: () => ({ getCurrentCohort: async () => null }) }));
-vi.mock("@/lib/landing", () => ({ getRuntimeLanding: async () => data.landing }));
+  (await import("./support/foundation")).foundationMock({ useAuthSnapshot: () => ({ status: "signed-out", user: null }), useCohortApi: () => ({ getCurrentCohort: async () => (data.acceptingCohort ? createMockApiClient().getCurrentCohort() : null) }) }));
 
 const { default: MemberProfilePage } = await import("@/app/[locale]/members/[id]/page");
-const { default: Home } = await import("@/app/[locale]/page");
+const { CommunityHero } = await import("@/components/community/CommunityHero");
+const { BountyHero } = await import("@/components/bounties/BountyHero");
 
 describe("member profile page", () => {
   it("lets a 42-character agent wallet and a long agent name wrap on a narrow screen", async () => {
@@ -71,40 +72,66 @@ describe("member profile completion NFT tiles", () => {
   });
 });
 
-describe("landing page", () => {
+describe("Intro (/) hero", () => {
+  it("opens on the community hero, not the bounty marketing", async () => {
+    data.acceptingCohort = false;
+    renderWithIntl(await CommunityHero());
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Learn, build, and move together on Injective.");
+    expect(screen.getByText("Injective Contributor Hub")).toBeTruthy();
+    expect(screen.getByText(/Contributor Hub for people who learn, build and move on Injective/)).toBeTruthy();
+    expect(screen.queryByText("Complete bounties. Collect proof.")).toBeNull();
+    expect(screen.queryByText("ninja.inj")).toBeNull();
+    for (const role of ["Developers", "Marketers", "Researchers", "Creators"]) expect(screen.getByText(role)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Get Started" }).getAttribute("href")).toBe("/signup");
+    expect(screen.getByRole("link", { name: "See past activities" }).getAttribute("href")).toBe("/notices?category=events");
+  });
+
+  it("swaps the second call to action for the cohort application while a cohort accepts applications", async () => {
+    data.acceptingCohort = true;
+    renderWithIntl(await CommunityHero());
+    const apply = await screen.findByRole("link", { name: "Apply to join Ninja Labs 2nd cohort" });
+    expect(apply.getAttribute("href")).toBe("/recruit");
+    expect(screen.queryByRole("link", { name: "See past activities" })).toBeNull();
+  });
+});
+
+describe("bounty hero (top of /bounties)", () => {
+  const hero = (overrides: Partial<BountyHeroData> = {}): BountyHeroData => ({
+    stats: [],
+    portfolio: { handle: "ninja.inj", memberSince: 2026, completed: [], totalCompleted: 0 },
+    statsUnavailable: false,
+    ...overrides,
+  });
+
+  it("carries the moved headline, CTAs and the NFT portfolio card", async () => {
+    renderWithIntl(await BountyHero({ hero: hero(), locale: "en" }));
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Complete bounties. Collect proof. Own your track record.");
+    expect(screen.getByText("ninja.inj")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Get Started" }).getAttribute("href")).toBe("/signup");
+    expect(screen.getByRole("link", { name: "How applying works →" }).getAttribute("href")).toBe("/bounties/apply");
+  });
+
   it("renders closed bounties that share a title without duplicate-key warnings", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    data.landing = {
-      hero: {
-        primaryCta: { labelKey: "getStarted", href: "/signup" },
-        secondaryCta: { labelKey: "browseBounties", href: "/bounties" },
-        stats: [],
-        portfolio: { handle: "ninja.inj", memberSince: 2026, completed: ["Same", "Same"], totalCompleted: 2 },
-      },
-      bounties: [],
-      news: [],
-      unavailable: { bounties: false, news: false, stats: false },
-    };
-    renderWithIntl(await Home({ params: Promise.resolve({ locale: "en" }) } as never));
+    renderWithIntl(await BountyHero({ hero: hero({ portfolio: { handle: "ninja.inj", memberSince: 2026, completed: ["Same", "Same"], totalCompleted: 2 } }), locale: "en" }));
     expect(error.mock.calls.filter(([message]) => String(message).includes("same key"))).toEqual([]);
     error.mockRestore();
     expect(screen.getAllByText("Same")).toHaveLength(2);
   });
 
-  it("groups hero stat counts by locale like the Hall of Fame cards and leaves the paid total as is", async () => {
-    data.landing = {
-      hero: {
-        primaryCta: { labelKey: "getStarted", href: "/signup" },
-        secondaryCta: { labelKey: "browseBounties", href: "/bounties" },
-        stats: [{ value: "1234", labelKey: "bountiesCompleted" }, { value: "12,500 USDC · 300 INJ", labelKey: "rewardsPaid" }],
-        portfolio: { handle: "ninja.inj", memberSince: 2026, completed: [], totalCompleted: 1234 },
-      },
-      bounties: [],
-      news: [],
-      unavailable: { bounties: false, news: false, stats: false },
-    };
-    renderWithIntl(await Home({ params: Promise.resolve({ locale: "en" }) } as never));
+  it("shows no stat block and no completed line while there is nothing to count", async () => {
+    const view = renderWithIntl(await BountyHero({ hero: hero(), locale: "en" }));
+    expect(view.container.querySelector("dl")).toBeNull();
+    expect(screen.queryByText(/bounties? completed/)).toBeNull();
+  });
+
+  it("groups stat counts by locale like the Hall of Fame cards and leaves the paid total as is", async () => {
+    renderWithIntl(await BountyHero({
+      hero: hero({ stats: [{ value: "1234", labelKey: "bountiesCompleted" }, { value: "12,500 USDC · 300 INJ", labelKey: "rewardsPaid" }], portfolio: { handle: "ninja.inj", memberSince: 2026, completed: [], totalCompleted: 1234 } }),
+      locale: "en",
+    }));
     expect(screen.getByText("1,234", { selector: "dt" })).toBeTruthy();
     expect(screen.getByText("12,500 USDC · 300 INJ", { selector: "dt" })).toBeTruthy();
+    expect(screen.getByText("1,234 bounties completed · a growing on-chain portfolio")).toBeTruthy();
   });
 });
