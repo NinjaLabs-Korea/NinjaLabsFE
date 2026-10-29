@@ -24,7 +24,9 @@ export function HomeGate({ children }: { children: ReactNode }) {
 
   if (access.kind === "show") return children;
   return (
-    <section className="mx-auto max-w-content px-4 py-16 sm:px-6">
+    // min-h-dvh: the real dashboard is several screens tall, so a short placeholder would let the footer jump from the top
+    // of the page to the bottom (CLS ~0.4) when the session resolves. Reserving a viewport keeps the footer below the fold.
+    <section className="mx-auto min-h-dvh max-w-content px-4 py-16 sm:px-6">
       <p className="text-sm text-ink-muted" role="status">{destination ? t("redirecting") : t("checking")}</p>
     </section>
   );
