@@ -27,7 +27,7 @@ export function BountyApplyGuideCta({ bountyHref }: { bountyHref: string }) {
 
   return (
     <Link
-      className="mt-5 inline-flex w-fit rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      className="motion-control motion-press mt-5 inline-flex w-fit rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       href={bountyHref}
     >
       {label}

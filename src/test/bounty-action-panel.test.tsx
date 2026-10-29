@@ -10,7 +10,7 @@ import type { AccountApplication, AccountSubmission } from "@/lib/contracts/acco
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { renderWithIntl } from "@/test/intl";
-import { signedIn, signedInWith, signedOut } from "@/test/support/auth";
+import { loading, signedIn, signedInWith, signedOut } from "@/test/support/auth";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => (
@@ -63,6 +63,29 @@ describe("BountyActionPanel", () => {
     state.applications = [];
     state.submissions = [];
     Object.assign(apiClient, defaultApiClient);
+  });
+
+  it("reserves the settled panel height with an aria-hidden placeholder while the session loads, keeping the status text", () => {
+    state.auth = loading;
+    const { container } = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const placeholder = container.querySelector("[data-checking-placeholder]")!;
+    expect(placeholder.getAttribute("aria-hidden")).toBe("true");
+    expect(placeholder.className).toMatch(/min-h-\[/);
+    expect(placeholder.className).toContain("motion-reduce:animate-none");
+    const status = screen.getByRole("status");
+    expect(status.className).toContain("sr-only");
+    expect(status.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it("marks the pending apply button aria-busy with an aria-hidden spinner", async () => {
+    Object.assign(apiClient, { applyToBounty: vi.fn(() => new Promise<never>(() => undefined)) });
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
+    const button = await screen.findByRole("button", { name: /Applying/ });
+    expect(button.getAttribute("aria-busy")).toBe("true");
+    expect(button.querySelector('.spinner[aria-hidden="true"]')).toBeTruthy();
+    expect(button.className).toContain("motion-press");
   });
 
   it("sends one apply request when several submit events land in the same tick", async () => {
