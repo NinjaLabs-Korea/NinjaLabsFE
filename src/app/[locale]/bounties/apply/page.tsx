@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import {
-  BountyApplyAuthBadge,
-  BountyApplyGuideCta,
-} from "@/components/bounties/BountyApplyGuideCta";
+import { BountyApplyGuideCta } from "@/components/bounties/BountyApplyGuideCta";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { loadRuntimeBounties, pickGuideBounties } from "@/lib/bounties";
@@ -40,7 +37,7 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
-      <section className="flex flex-col justify-between gap-5 lg:flex-row lg:items-start">
+      <section>
         <div className="max-w-[62rem]">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("eyebrow")}</p>
           <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">{t("heading")}</h1>
@@ -48,18 +45,12 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
             {t("intro")}
           </p>
         </div>
-        <BountyApplyAuthBadge />
       </section>
 
       <section className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
         <article className="flex min-h-full flex-col rounded-card border border-border bg-surface p-[21px] shadow-card">
-          <Badge variant="success">{t("submitType.badge")}</Badge>
-          <h2 className="mt-4 font-display text-2xl font-bold -tracking-[0.24px] text-ink">{t("submitType.heading")}</h2>
+          <h2 className="font-display text-2xl font-bold -tracking-[0.24px] text-ink">{t("submitType.heading")}</h2>
           <p className="mt-3 text-base text-ink-secondary">{t("submitType.body")}</p>
-          <div className="mt-5 rounded-tile bg-primary-soft p-4">
-            <p className="text-base font-semibold text-ink">{t("submitType.flowTitle")}</p>
-            <p className="mt-1 text-sm text-ink-secondary">{t("submitType.flow")}</p>
-          </div>
           {directBounty ? (
             <Link
               className="mt-5 inline-flex w-fit rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -73,13 +64,9 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
         </article>
 
         <article className="flex min-h-full flex-col rounded-card border border-border bg-surface p-[21px] shadow-card">
-          <Badge variant="warning">{t("applyType.badge")}</Badge>
-          <h2 className="mt-4 font-display text-2xl font-bold -tracking-[0.24px] text-ink">{t("applyType.heading")}</h2>
+          <h2 className="font-display text-2xl font-bold -tracking-[0.24px] text-ink">{t("applyType.heading")}</h2>
           <p className="mt-3 text-base text-ink-secondary">{t("applyType.body")}</p>
-          <div className="mt-5 rounded-tile bg-primary-soft p-4">
-            <p className="text-base font-semibold text-ink">{t("applyType.flowTitle")}</p>
-            <p className="mt-1 text-sm text-ink-secondary">{t("applyType.flow")}</p>
-          </div>
+          <p className="mt-4 rounded-tile bg-primary-soft p-4 text-sm font-semibold text-ink">{t("applyType.flow")}</p>
           {applicationBounty ? (
             <BountyApplyGuideCta bountyHref={`/bounties/${applicationBounty.slug}`} />
           ) : hasOpenBounty ? (
