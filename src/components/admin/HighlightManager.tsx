@@ -7,7 +7,7 @@ import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
-import { useAdminList } from "@/components/admin/useAdminList";
+import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlight } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { DISPLAY_ORDER_MAX, highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminErrorDescription } from "@/lib/admin-helpers";
 import { HIGHLIGHT_TYPE_CODES, isHighlightTypeCode } from "@/lib/api/codecs";
@@ -69,9 +69,6 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   const [published, setPublished] = useState(true);
   const [errors, setErrors] = useState<HighlightFieldErrors>({});
   const [saving, setSaving] = useState(false);
-  // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
-  const savingRef = useRef(false);
-  const deletingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminHighlight | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -88,7 +85,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   // `reload` re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
   // (never "save failed": a retry of an already-created highlight would create a duplicate).
   const fetchHighlights = useCallback(() => api.getAdminHighlights().then(sortHighlights), [api]);
-  const toastLoadFailed = useCallback(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }), [t]);
+  const toastLoadFailed = useLoadFailedToast(t("toast.loadFailedTitle"), t("toast.loadFailedDescription"));
   const { records, setRecords, loadState, reload, retry } = useAdminList(fetchHighlights, sortHighlights(highlights), toastLoadFailed);
 
   const isEditing = mode !== "create";
@@ -143,9 +140,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     clearError("image");
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (savingRef.current) return;
+  const saveHighlight = useSingleFlight(async () => {
     // A freshly picked file replaces the stored image, so only the kept URL is checked.
     const stored = isEditing ? records.find((item) => item.id === mode) : undefined;
     const nextErrors = validateHighlightForm({ title, description, image: imageFile ? null : image, link, order }, stored && { image: stored.image, link: stored.link });
@@ -154,7 +149,6 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
       return;
     }
-    savingRef.current = true;
     setSaving(true);
     try {
       const uploadedImage = imageFile ? (await api.uploadAdminMedia(imageFile)).url : image;
@@ -181,30 +175,27 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
-      savingRef.current = false;
       setSaving(false);
     }
+  });
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void saveHighlight();
   }
 
-  async function handleDelete(highlight: AdminHighlight) {
-    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
-    if (deletingRef.current) return;
-    deletingRef.current = true;
-    setPendingDelete(null);
-    try {
-      await api.deleteAdminHighlight(highlight.id);
-      setRecords((current) => current.filter((item) => item.id !== highlight.id));
-      // The form may be editing the record that just went away: a later save would PATCH a missing row.
-      if (mode === highlight.id) resetForm();
-      pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: highlight.title });
-    } catch (error) {
-      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
-      // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
-      void reload();
-    } finally {
-      deletingRef.current = false;
-    }
-  }
+  const handleDelete = useAdminRecordDelete<AdminHighlight>({
+    call: (highlight) => api.deleteAdminHighlight(highlight.id),
+    keyOf: (highlight) => highlight.id,
+    setRecords,
+    closeDialog: () => setPendingDelete(null),
+    // The form may be editing the record that just went away: a later save would PATCH a missing row.
+    onRemoved: (highlight) => { if (mode === highlight.id) resetForm(); },
+    describeError: (error) => adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")),
+    successToast: (highlight) => ({ title: t("toast.deletedTitle"), description: highlight.title }),
+    failedTitle: tCommon("deleteFailed"),
+    reload,
+  });
 
   return (
     <>
