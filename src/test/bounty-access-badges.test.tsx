@@ -4,7 +4,7 @@ import { renderToString } from "react-dom/server";
 import { hydrateRoot } from "react-dom/client";
 import { waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { FoundationProvider } from "@/components/auth/FoundationProvider";
+import { FoundationProvider, resetTabFoundationForTests } from "@/components/auth/FoundationProvider";
 import { BountyAccessBadges } from "@/components/bounties/BountyAccessBadges";
 import { SESSION_PREVIEW_STORAGE_KEY } from "@/lib/foundation/auth-adapter";
 import { previewUser } from "@/lib/mocks/fixtures";
@@ -29,7 +29,10 @@ async function hydrate(): Promise<{ container: HTMLElement; recoverable: unknown
   return { container, recoverable };
 }
 
-afterEach(() => sessionStorage.clear());
+afterEach(() => {
+  sessionStorage.clear();
+  resetTabFoundationForTests();
+});
 
 describe("BountyAccessBadges", () => {
   it("server-renders the signed-out copy", () => {
