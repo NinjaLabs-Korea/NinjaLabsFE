@@ -21,7 +21,7 @@ vi.mock("next-intl/server", () => ({
 // Client islands read the auth/account context; the page test only cares which of them it mounts.
 vi.mock("@/components/agents/BountyAgentPanel", () => ({ BountyAgentPanel: () => <aside data-testid="agent-panel" /> }));
 vi.mock("@/components/bounties/BountyActionPanel", () => ({ BountyActionPanel: () => <section data-testid="action-panel" /> }));
-vi.mock("@/components/bounties/BountyAccessBadges", () => ({ BountyAccessBadges: () => <div /> }));
+vi.mock("@/components/bounties/BountyAccessBadges", () => ({ BountyAccessBadges: () => <div data-testid="access-badges" /> }));
 
 const data = vi.hoisted(() => ({ bounty: undefined as Bounty | undefined }));
 vi.mock("@/lib/detail-id", () => ({ validateDetailId: async () => true }));
@@ -48,5 +48,20 @@ describe("bounty detail agent panel", () => {
     data.bounty = bounty("agent");
     renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
     expect(screen.getByTestId("agent-panel")).toBeTruthy();
+  });
+
+  it("uses plain reward and completion copy, one footnote and no auth/visibility chips", async () => {
+    for (const mode of ["direct", "agent"] as const) {
+      data.bounty = bounty(mode);
+      const { container, unmount } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
+      const text = container.textContent ?? "";
+      expect(text).not.toMatch(/release|child/i);
+      expect(text).toContain("A completion NFT is minted.");
+      expect(text.match(/swap/gi)).toHaveLength(1);
+      expect(text.match(/Anyone can view\./g)).toHaveLength(1);
+      expect(screen.queryByTestId("access-badges")).toBeNull();
+      expect(text).not.toMatch(/Public view|Actions require login/);
+      unmount();
+    }
   });
 });

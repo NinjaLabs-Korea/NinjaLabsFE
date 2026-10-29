@@ -39,7 +39,7 @@
     "heading": "Bounties",
     "howApplying": "How applying works →",
     "resultsLabel": "Bounty filters and results",
-    "payoutNote": "Sponsors post in any token such as INJ or USDC. Rewards are sent as-is, so builders swap on their own; Ninja Labs does not run a platform-side swap.",
+    "payoutNote": "Rewards are paid in the sponsor's token (INJ, USDC, ...). Swap it yourself if you need to.",
     "unavailable": "Bounties are temporarily unavailable."
   },
   "filters": {
@@ -56,7 +56,7 @@
   },
   "apply": {
     "eyebrow": "Bounty workflow",
-    "heading": "Bounty types, submit-type vs apply-type",
+    "heading": "Submission vs application bounties: what is the difference?",
     "intro": "Some bounties accept direct submissions; others require sponsor approval before work starts.",
     "auth": {
       "checking": "Checking session",
@@ -90,7 +90,7 @@
       "body": "New sponsor opportunities will appear in the bounty marketplace.",
       "browse": "Browse all bounties"
     },
-    "statusHeading": "Bounty status flow",
+    "statusHeading": "Application bounty steps",
     "statuses": {
       "open": "Open",
       "underReview": "Under review",
@@ -98,9 +98,7 @@
       "submitted": "Submitted",
       "completed": "Completed"
     },
-    "statusNote": "Apply-type adds one approval step before submission; the sponsor reviews the application first.",
-    "unavailable": "Open bounties are temporarily unavailable.",
-    "statusEyebrow": "Apply-type status flow"
+    "unavailable": "Open bounties are temporarily unavailable."
   },
   "detail": {
     "back": "← Back to bounties",
@@ -116,7 +114,6 @@
     "review": "Review",
     "defaultReview": "Sponsor review",
     "submissionGuide": "Submission guide",
-    "applyFootnote": "Viewing is public; applying and submitting require login. Submission unlocks only after sponsor approval.",
     "sponsorPays": "Sponsor pays: {reward}",
     "afterApproval": "After approval",
     "deliverableSeeGuide": "See the submission guide below",
@@ -126,28 +123,26 @@
     "descriptionHeadingApply": "Requirements, application guide, evaluation criteria",
     "rewardInfo": "Reward info",
     "rewardNotes": {
-      "flow": "Flow: lock → review → release → transfer.",
-      "token": "Sent in the original token; the builder swaps if needed.",
-      "noSwap": "No platform-side swap. Contracts and wallets use Injective addresses."
+      "flow": "Deposit, review, then payout.",
+      "token": "Sent in the original token; the builder swaps if needed."
     },
     "rewardNotesApply": {
-      "flow": "Flow: lock → application review → approval → submit → release.",
-      "token": "Reward is sent in {currency}; the builder swaps if needed.",
-      "noSwap": "No platform-side swap. Contracts and wallets use Injective addresses."
+      "flow": "Deposit, application review, approval, submission, then payout.",
+      "token": "Reward is sent in {currency}; the builder swaps if needed."
     },
-    "completionHeading": "On completion + approval",
+    "completionHeading": "When approved",
     "completionSteps": {
-      "transfer": "Reward transferred to the user wallet.",
-      "mint": "Bounty NFT minted as a child proof item.",
-      "attach": "Child NFT attaches to the user's Ninja NFT and appears in the profile portfolio."
+      "transfer": "Your reward is sent to your wallet.",
+      "mint": "A completion NFT is minted.",
+      "attach": "It is added to your Ninja NFT portfolio."
     },
     "afterApprovalSteps": {
       "approve": "Sponsor approves the application.",
       "unlock": "Submit field unlocks for completed work.",
-      "reward": "Reward transfer and child Bounty NFT mint happen after final approval."
+      "reward": "After final approval, the reward is sent and a completion NFT is minted."
     },
-    "statusFlowEyebrow": "Apply-type status",
-    "footnote": "Viewing is public; submitting or applying requires login. Child NFTs are the portfolio proof for every completed bounty."
+    "statusFlowEyebrow": "Application bounty steps",
+    "footnote": "Anyone can view. Sign in to apply or submit."
   },
   "action": {
     "agentHeading": "Agent submission",
