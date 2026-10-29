@@ -21,7 +21,7 @@ import type {
   WalletApi,
 } from "@/lib/contracts/api";
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
-import { registerTabFoundationReset } from "./tab-foundation-reset";
+import { registerTabFoundationReset } from "@/lib/tab-foundation-reset";
 import { createApiApiClient } from "@/lib/api/api-client";
 import { createApiAuthAdapter } from "@/lib/api/auth-adapter";
 

@@ -1,6 +1,6 @@
 import { cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
-import { runTabFoundationReset } from "@/components/auth/tab-foundation-reset";
+import { runTabFoundationReset } from "@/lib/tab-foundation-reset";
 
 afterEach(() => {
   cleanup();
