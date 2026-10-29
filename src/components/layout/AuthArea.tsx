@@ -20,14 +20,14 @@ export function AuthArea({ variant }: AuthAreaProps) {
     return (
       <>
         <Link
-          className="hidden whitespace-nowrap rounded-control px-[21px] py-3 text-sm leading-[21px] font-semibold text-ink-secondary lg:inline-block"
+          className="hidden whitespace-nowrap rounded-control px-[21px] py-3 text-sm leading-[21px] font-semibold text-ink-secondary xl:inline-block"
           href="/bounties"
           prefetch={true}
         >
           {t("browse")}
         </Link>
         {user ? (
-          <div className="hidden lg:block">
+          <div className="hidden xl:block">
             <UserMenu />
           </div>
         ) : snapshot.status === "loading" || (snapshot.status === "signed-out" && snapshot.reason === "unavailable") ? (

@@ -40,13 +40,13 @@ describe("responsive layout contract", () => {
     expect(css).toMatch(/body\s*\{[^}]*overflow-wrap:\s*break-word/);
   });
 
-  // The header (3 nav links + locale + Browse + user menu) does not fit 768px in English: it switches at lg, and the
+  // The header (6 nav links + locale + Browse + user menu) does not fit 768px in English: it switches at xl, and the
   // mobile menu, the desktop nav, the user menu and the footer columns must all agree on that breakpoint.
   it("switches the header between the mobile menu and the desktop nav at the same breakpoint", () => {
     const read = (path: string) => readFileSync(join(srcDir, path), "utf8");
-    expect(read("components/layout/Header.tsx")).toContain("hidden gap-7 lg:flex");
-    expect(read("components/layout/MobileMenu.tsx")).toContain("relative lg:hidden");
-    expect(read("components/layout/AuthArea.tsx")).toContain("lg:inline-block");
-    expect(read("components/layout/AuthArea.tsx")).toContain("hidden lg:block");
+    expect(read("components/layout/Header.tsx")).toContain("hidden gap-7 xl:flex");
+    expect(read("components/layout/MobileMenu.tsx")).toContain("relative xl:hidden");
+    expect(read("components/layout/AuthArea.tsx")).toContain("xl:inline-block");
+    expect(read("components/layout/AuthArea.tsx")).toContain("hidden xl:block");
   });
 });
