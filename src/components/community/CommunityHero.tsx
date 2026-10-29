@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 
 import { StartLink } from "@/components/auth/StartLink";
 import { HeroSecondaryCta } from "@/components/community/HeroSecondaryCta";
+import { HOME_PATH } from "@/lib/auth-route";
 import { Badge } from "@/components/ui/Badge";
 import { HeroSurface } from "@/components/ui/HeroSurface";
 import { HeroTitle } from "@/components/ui/HeroTitle";
@@ -11,14 +12,13 @@ import { HeroTitle } from "@/components/ui/HeroTitle";
 const roles = ["developer", "marketer", "researcher", "creator"] as const;
 
 /**
- * The Intro (`/`) hero: Ninja Labs as a community. Eyebrow, headline and the intro paragraph, "Get started" (follows the auth
- * state, `lib/auth-route.ts`) and "Apply to join {cohort}" (only while a cohort accepts applications; otherwise a link to the
- * past activities). The visual is the four roles the community is for, not a mock-up. Needs the `recruit` client namespace.
+ * The hub (`/`) hero: Ninja Labs as a community. Eyebrow, headline and the intro paragraph, the primary CTA (follows the auth
+ * state, `lib/auth-route.ts`: "Get started" / "Continue sign-up" / "My activity" -> `/home`) and "Apply to join {cohort}" (only
+ * while a cohort accepts applications, "View my application" once applied; otherwise a link to the past activities). The visual is the four roles the community is for, not a mock-up. Needs the `recruit` client namespace.
  */
 export async function CommunityHero() {
   const t = await getTranslations("landing.hero");
   const tAbout = await getTranslations("community.about");
-  const tUser = await getTranslations("common.userMenu");
   return (
     <HeroSurface
       aside={
@@ -46,7 +46,8 @@ export async function CommunityHero() {
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <StartLink
           className="rounded-control bg-primary px-[29px] py-[15px] text-center text-base font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          memberLabel={tUser("myProfile")}
+          memberHref={HOME_PATH}
+          memberLabel={t("myActivity")}
           resumeLabel={t("continueSignup")}
           signUpLabel={t("getStarted")}
         />

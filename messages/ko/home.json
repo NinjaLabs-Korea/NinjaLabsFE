@@ -1,14 +1,14 @@
 {
   "metadata": {
-    "title": "홈 | Ninja Labs",
-    "description": "내 프로필, 지원 현황, 열린 바운티, 소식, 멤버 모집을 한눈에 보는 홈입니다."
+    "title": "내 활동 | Ninja Labs",
+    "description": "내 프로필, 지원 현황, 열린 바운티, 소식, 멤버 모집을 한눈에 보는 개인 대시보드입니다."
   },
   "gate": {
     "checking": "로그인 상태를 확인하는 중…",
     "redirecting": "알맞은 화면으로 이동하는 중…"
   },
   "greeting": {
-    "eyebrow": "홈",
+    "eyebrow": "내 활동",
     "title": "{name}님, 안녕하세요"
   },
   "profile": {

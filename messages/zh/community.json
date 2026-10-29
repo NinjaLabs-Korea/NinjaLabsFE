@@ -26,6 +26,11 @@
       }
     }
   },
+  "upcoming": {
+    "eyebrow": "进行中与即将举行",
+    "heading": "进行中·即将举行的活动",
+    "viewAll": "查看全部活动 →"
+  },
   "activities": {
     "eyebrow": "往期活动",
     "heading": "我们一起做过的事",

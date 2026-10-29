@@ -19,7 +19,7 @@ describe("no em dash (U+2014) in the shipped copy or the community/recruitment c
   // Older files predate the rule and still carry some; everything this feature owns must be clean, and so must all UI copy.
   const owned = [
     "messages", "src/components/community", "src/components/recruit", "src/components/home", "src/lib/cohorts.ts", "src/lib/cohort-errors.ts",
-    "src/lib/community.ts", "src/lib/return-path.ts", "src/lib/home-hint.ts", "src/lib/api/cohorts.ts", "src/lib/mocks/cohorts.ts",
+    "src/lib/community.ts", "src/lib/return-path.ts", "src/lib/api/cohorts.ts", "src/lib/mocks/cohorts.ts",
     "src/app/[locale]/about", "src/app/[locale]/home", "src/app/[locale]/recruit", "src/app/[locale]/admin/recruitment",
     "src/components/admin/RecruitmentManager.tsx", "src/components/admin/CohortApplicationsPanel.tsx", "src/components/admin/CohortReviewDialog.tsx",
   ];

@@ -13,9 +13,8 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/about">)
 }
 
 /**
- * The community overview for everyone, signed in or not: the same sections as the Intro (`CommunitySections`), with "About Ninja Labs" in front of them instead of the hero.
- * It is where "Learn more about Ninja Labs" (signup step 4), the home and the footer lead, because a user who finished
- * onboarding is redirected away from the Intro itself.
+ * The community overview for everyone, signed in or not: the same sections as the hub (`CommunitySections`), with "About Ninja Labs" in front of them instead of the hero.
+ * It is where the footer and the dashboard's quick links lead.
  */
 export default async function AboutPage({ params }: PageProps<"/[locale]/about">) {
   const { locale } = await params;

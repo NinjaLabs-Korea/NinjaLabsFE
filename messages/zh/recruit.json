@@ -211,6 +211,7 @@
     "empty": "你还没有申请过任何期别。"
   },
   "heroCta": {
-    "apply": "申请加入 {name}"
+    "apply": "申请加入 {name}",
+    "viewStatus": "查看申请状态"
   }
 }

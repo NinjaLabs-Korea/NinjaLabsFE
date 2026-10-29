@@ -211,6 +211,7 @@
     "empty": "아직 지원한 기수가 없어요."
   },
   "heroCta": {
-    "apply": "{name} 멤버 지원하기"
+    "apply": "{name} 멤버 지원하기",
+    "viewStatus": "지원 현황 보기"
   }
 }

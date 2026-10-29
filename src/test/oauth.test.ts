@@ -194,7 +194,7 @@ describe("API auth adapter login handoff", () => {
     // No exchange was attempted: the planted code is ignored and the existing cookie session is restored once.
     expect(urls(request)).toEqual([REFRESH, `${API}/auth/me`]);
     // The callback page only shows a spinner for a signed-in user, so the restored session must leave it.
-    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith("/en/home"));
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith("/en"));
     expect(adapter.getSnapshot().user?.handle).toBe("ninja");
     expect(getAccessToken()).toBe("current-access");
   });

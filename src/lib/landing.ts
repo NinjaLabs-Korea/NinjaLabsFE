@@ -50,7 +50,7 @@ export async function getRuntimeLanding(locale: string): Promise<RuntimeLanding>
   };
 }
 
-/** Open bounties for the Intro preview: at most four `active` ones; `[]` when there are none or the API failed (the section then does not render). */
+/** Open bounties for the hub preview: at most four `active` ones; `[]` when there are none or the API failed (the section then shows its single call to action instead). */
 export async function getRuntimeOpenBounties(locale: string): Promise<Bounty[]> {
   const { bounties } = await loadRuntimeBounties(locale);
   return bounties.filter((bounty) => bounty.status === 'active').slice(0, 4);

@@ -11,11 +11,16 @@
     "getStarted": "시작하기",
     "continueSignup": "가입 이어서 하기",
     "exploreActivities": "지난 활동 보기",
-    "rolesTitle": "누구나 함께할 수 있어요"
+    "rolesTitle": "누구나 함께할 수 있어요",
+    "myActivity": "내 활동"
   },
   "bounties": {
     "eyebrow": "마켓플레이스",
-    "heading": "진행 중인 바운티",
-    "viewAll": "전체 보기 →"
+    "heading": "바운티",
+    "viewAll": "전체 보기 →",
+    "description": "Injective 생태계의 과제를 맡아 작업을 제출하고, 온체인 이력을 쌓아 보세요.",
+    "emptyTitle": "지금 열린 바운티는 없어요",
+    "emptyBody": "새 바운티는 바운티 페이지에서 가장 먼저 확인할 수 있어요.",
+    "cta": "바운티 둘러보기"
   }
 }
