@@ -77,7 +77,7 @@ describe("AuthArea", () => {
     expect(screen.getByRole("link", { name: "My profile" }).getAttribute("href")).toBe(
       "/members/demo-user",
     );
-    expect(screen.getByRole("link", { name: "My applications" }).getAttribute("href")).toBe(
+    expect(screen.getByRole("link", { name: "Applications" }).getAttribute("href")).toBe(
       "/applications",
     );
     expect(screen.getByRole("link", { name: "My agents" }).getAttribute("href")).toBe("/agents");

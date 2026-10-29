@@ -1,12 +1,12 @@
 {
   "metadata": {
     "title": "닌자랩스 멤버 모집 | Ninja Labs",
-    "description": "닌자랩스 다음 기수 멤버를 모집합니다. 커뮤니티를 확인하고 지원서를 보내 주세요."
+    "description": "닌자랩스 다음 기수 멤버를 모집해요. 커뮤니티를 확인하고 지원서를 보내 주세요."
   },
   "hero": {
     "eyebrow": "멤버 모집",
     "heading": "닌자랩스와 함께 만들어요",
-    "description": "커뮤니티가 어떤 곳인지 확인한 뒤, 모집 중인 기수에 지원해 주세요. 가입(온보딩)을 마친 닌자랩스 계정이 필요해요."
+    "description": "커뮤니티를 둘러본 뒤, 모집 중인 기수에 지원해 주세요. 가입을 마친 계정이 필요해요."
   },
   "banner": {
     "label": "멤버 모집 안내",
@@ -34,7 +34,7 @@
     "retry": "다시 시도",
     "failed": {
       "title": "지금은 불러오지 못했어요.",
-      "body": "서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요."
+      "body": "서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요."
     },
     "noCohort": {
       "title": "지금 모집 중인 기수가 없어요.",
@@ -57,7 +57,7 @@
     },
     "onboarding": {
       "title": "먼저 가입을 마쳐 주세요",
-      "body": "지원하려면 가입(온보딩)을 마쳐야 해요. 남은 단계를 끝내면 이 페이지로 돌아올 수 있어요.",
+      "body": "지원하려면 가입을 먼저 마쳐야 해요. 남은 단계를 끝내면 이 페이지로 돌아와요.",
       "cta": "가입 이어서 하기"
     }
   },
@@ -68,7 +68,7 @@
     "intro": {
       "label": "자기소개 및 지원 동기*",
       "placeholder": "어떤 사람인지, 어떤 일을 해 왔는지, 왜 닌자랩스에 지원하는지 적어 주세요.",
-      "hint": "{min}~{max}자 추천 (최대 {limit}자)",
+      "hint": "{min}자 이상 적어 주세요 (최대 {limit}자)",
       "counter": "{count}/{limit}"
     },
     "reapplyIntro": "이전 지원서를 철회했어요. 모집 중이라면 다시 지원할 수 있어요.",
@@ -89,7 +89,7 @@
       "hint": "영문, 숫자, _ 5~32자예요. t.me 링크를 넣어도 돼요."
     },
     "twitter": {
-      "label": "Twitter 아이디*",
+      "label": "X(트위터) 아이디*",
       "placeholder": "@your_x_id",
       "hint": "영문, 숫자, _ 1~15자예요. x.com 링크를 넣어도 돼요."
     },
@@ -157,8 +157,8 @@
       "COHORT_APPLICATION_NOT_SUBMITTED": "이미 심사되었거나 철회된 지원서라 수정할 수 없어요.",
       "COHORT_OTHER_DETAIL_REQUIRED": "‘기타’를 골랐다면 내용을 적어 주세요.",
       "INVALID_CHARACTER": "저장할 수 없는 문자가 들어 있어요. 지우고 다시 시도해 주세요.",
-      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
-      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
+      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없어요. 잠시 후 다시 시도해 주세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요."
     }
   },
   "status": {
@@ -197,8 +197,8 @@
     "withdrawErrors": {
       "COHORT_APPLICATION_NOT_FOUND": "지원서를 찾을 수 없어요.",
       "COHORT_APPLICATION_NOT_SUBMITTED": "이미 심사되었거나 철회된 지원서예요.",
-      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
-      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없어요. 잠시 후 다시 시도해 주세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.",
       "generic": "지원서를 철회하지 못했어요. 잠시 후 다시 시도해 주세요."
     }
   },

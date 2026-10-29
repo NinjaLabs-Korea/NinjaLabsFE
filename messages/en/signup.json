@@ -25,17 +25,16 @@
       "descriptionMock": "Preview an Injective wallet connection."
     },
     "title": "Connect your wallet",
-    "introApi": "Connect your Injective EVM wallet, then sign a gas-free message to prove ownership.",
+    "introApi": "Connect your wallet and confirm it is yours with one signature. It costs no fees.",
     "introMock": "Connect an Injective EVM wallet in this local session preview.",
     "unavailableButton": "Wallet unavailable",
     "unavailableNote": "Wallet connection is unavailable until a supported Injective EVM chain is configured.",
     "badgeApi": "Gas-free verification",
     "badgeMock": "Connection-only preview",
-    "noteApi": "The signature does not submit a transaction. A verified wallet is linked to your account and queues your Ninja NFT mint.",
+    "noteApi": "Your Ninja NFT is issued once it is confirmed.",
     "noteMock": "Mock mode does not sign, link an account, or call the backend.",
     "connectLater": "Connect later",
     "optionalNote": "Wallet verification is optional. You can continue now and connect one later.",
-    "whatHappens": "What happens",
     "steps": {
       "connection": {
         "term": "Connection",
@@ -43,7 +42,7 @@
       },
       "signing": {
         "term": "Signing",
-        "detail": "EIP-191 personal_sign ownership proof"
+        "detail": "Prove ownership with a wallet signature"
       },
       "gas": {
         "term": "Gas",
@@ -55,11 +54,11 @@
       },
       "nft": {
         "term": "NFT",
-        "detail": "Parent Ninja NFT mint is queued"
+        "detail": "Your Ninja NFT mint is queued"
       }
     },
     "eyebrow": "Wallet",
-    "whatHappensEyebrow": "NFT minting"
+    "moreDetails": "Show details"
   },
   "profile": {
     "metadata": {
@@ -131,7 +130,7 @@
       "title": "Get started | Ninja Labs",
       "description": "All skippable. You can return to these options any time from the main navigation."
     },
-    "eyebrow": "ONBOARDING COMPLETE",
+    "eyebrow": "You are all set",
     "title": "What would you like to do?",
     "subtitle": "All skippable. You can return to these options any time from the main navigation.",
     "actions": {
@@ -148,7 +147,7 @@
         "description": "Meet the community hub: events, members and achievements."
       }
     },
-    "skip": "Skip and go to main",
+    "skip": "Skip and go home",
     "savedNote": "Your onboarding progress is saved. You can update your wallet and profile later.",
     "completeError": {
       "message": "We couldn't finish saving your onboarding. Please try again.",

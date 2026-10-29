@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from "node:fs";
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -106,6 +107,11 @@ describe("HomeActivity", () => {
 });
 
 describe("HomeRecruitment", () => {
+  it("reads the invitation copy from recruit.banner, not a second copy under home", async () => {
+    const ko = JSON.parse(readFileSync("messages/ko/home.json", "utf8")) as { recruit: Record<string, string> };
+    expect(Object.keys(ko.recruit)).toEqual(["details"]);
+  });
+
   const values = { displayName: "Me", telegram: "@me_builds", twitter: "@me_x", web3Experience: "GT_3Y" as const, activityType: "DEVELOPER" as const, activityTypeOther: null, interestAreas: ["DEVELOPER" as const], interestOther: null, intro: "hi" };
 
   it("invites a member who has not applied while a cohort accepts applications", async () => {

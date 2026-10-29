@@ -239,7 +239,7 @@ describe("StepIndicator", () => {
   it("lists the four onboarding steps in order and marks only the current one", () => {
     renderWithIntl(<StepIndicator current={3} />);
     const items = screen.getAllByRole("listitem");
-    expect(items.map((item) => item.textContent)).toEqual(["1. Login", "2. Wallet + NFT", "3. Profile", "4. Get Started"]);
+    expect(items.map((item) => item.textContent)).toEqual(["1. Login", "2. Wallet (optional)", "3. Profile", "4. Get Started"]);
     expect(items.map((item) => item.getAttribute("aria-current"))).toEqual([null, null, "step", null]);
   });
 });

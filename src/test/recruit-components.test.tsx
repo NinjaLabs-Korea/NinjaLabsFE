@@ -49,7 +49,7 @@ const check = (name: string) => fireEvent.click(screen.getByRole("checkbox", { n
 function fillForm() {
   type(/^Name/, "  Mina Park ");
   type(/^Telegram ID/, "https://t.me/mina_builds");
-  type(/^Twitter \(X\) ID/, "mina_builds");
+  type(/^X \(Twitter\) handle/, "mina_builds");
   choose("1-3 years");
   choose("Developer");
   check("Researcher");
@@ -60,13 +60,13 @@ function fillForm() {
 describe("CohortApplicationForm", () => {
   it("asks exactly the Tally questions with the Tally options", () => {
     renderWithIntl(<CohortApplicationForm cohortId="cohort-2" onSaved={vi.fn()} />);
-    for (const label of [/^Name/, /^Telegram ID/, /^Twitter \(X\) ID/, /^Introduction and motivation/]) expect(screen.getByLabelText(label)).toBeTruthy();
+    for (const label of [/^Name/, /^Telegram ID/, /^X \(Twitter\) handle/, /^Introduction and motivation/]) expect(screen.getByLabelText(label)).toBeTruthy();
     expect(screen.getAllByRole("radio", { name: /year/ }).map((radio) => radio.getAttribute("value"))).toEqual(["LT_1Y", "Y1_3", "GT_3Y"]);
     const activity = within(screen.getByRole("group", { name: /current activity/ })).getAllByRole("radio");
     expect(activity.map((radio) => radio.getAttribute("value"))).toEqual(["DEVELOPER", "CONTENT_CREATOR", "KOL", "COMMUNITY_MARKETING", "RESEARCHER", "BIZDEV", "STUDENT", "OTHER"]);
     const interests = within(screen.getByRole("group", { name: /Areas you want to join/ })).getAllByRole("checkbox");
     expect(interests.map((box) => box.getAttribute("value"))).toEqual(["DEVELOPER", "CONTENT_CREATOR", "KOL", "COMMUNITY_MARKETING", "RESEARCHER", "BIZDEV", "OTHER"]);
-    expect(screen.getByText(/100-300 characters recommended \(up to 1000\)/)).toBeTruthy();
+    expect(screen.getByText(/Write at least 100 characters \(up to 1000\)/)).toBeTruthy();
     expect((screen.getByLabelText(/^Introduction and motivation/) as HTMLTextAreaElement).maxLength).toBe(1000);
   });
 
