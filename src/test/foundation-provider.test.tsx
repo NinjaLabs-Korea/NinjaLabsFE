@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { useEffect, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { FoundationProvider, useAccountApi, useAuthSnapshot } from "@/components/auth/FoundationProvider";
+import { FoundationProvider, useAccountApi, useAuthActions, useAuthSnapshot } from "@/components/auth/FoundationProvider";
 import { pickMessages } from "@/i18n/messages";
+import { getSessionHint } from "@/lib/foundation/session-hint";
 import { renderWithIntl } from "@/test/intl";
 import { FakeBroadcastChannel } from "@/test/fake-broadcast-channel";
 
@@ -29,6 +30,38 @@ describe("FoundationProvider (mock mode)", () => {
     );
     expect(screen.getByRole("status").textContent).toBe("loading/pending");
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe("signed-out/available"));
+  });
+});
+
+describe("FoundationProvider session hint", () => {
+  afterEach(() => window.sessionStorage.clear());
+
+  it("sets the tab's session hint on sign-in and clears it on sign-out", async () => {
+        function Capture() {
+      const { signIn, signOut } = useAuthActions();
+      return (
+        <>
+          <output>{useAuthSnapshot().status}</output>
+          <button onClick={() => void signIn()} type="button">in</button>
+          <button onClick={() => void signOut()} type="button">out</button>
+        </>
+      );
+    }
+    renderWithIntl(
+      <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
+        <Capture />
+      </FoundationProvider>,
+    );
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("signed-out"));
+    expect(getSessionHint()).toBe(false);
+
+    fireEvent.click(screen.getByRole("button", { name: "in" }));
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("signed-in"));
+    expect(getSessionHint()).toBe(true);
+
+    fireEvent.click(screen.getByRole("button", { name: "out" }));
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("signed-out"));
+    expect(getSessionHint()).toBe(false);
   });
 });
 

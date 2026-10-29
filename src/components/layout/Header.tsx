@@ -5,13 +5,14 @@ import { BrandLink } from "@/components/layout/BrandLink";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { NavLinks } from "@/components/layout/NavLinks";
-import { Link } from "@/i18n/navigation";
 
 const navigation = [
-  { href: "/bounties", key: "bounties" },
-  { href: "/hall-of-fame", key: "hallOfFame" },
+  { href: "/about", key: "about" },
   { href: "/members", key: "members" },
+  { href: "/hall-of-fame", key: "hallOfFame" },
   { href: "/notices", key: "notices" },
+  { href: "/bounties", key: "bounties" },
+  { href: "/recruit", key: "recruit" },
 ] as const;
 
 export function Header() {
@@ -32,7 +33,7 @@ export function Header() {
           <span className="hidden whitespace-nowrap font-display text-xl font-bold text-ink sm:inline">Ninja Labs</span>
         </BrandLink>
 
-        <nav className="col-start-2 hidden gap-7 lg:flex" aria-label={t("mainNavigation")}>
+        <nav className="col-start-2 hidden gap-7 xl:flex" aria-label={t("mainNavigation")}>
           <NavLinks links={links} variant="desktop" />
         </nav>
 
@@ -46,13 +47,6 @@ export function Header() {
               aria-label={t("mobileNavigation")}
             >
               <NavLinks links={links} variant="mobile" />
-              <Link
-                className="rounded-control px-3 py-2 text-sm font-semibold text-primary-strong"
-                href="/bounties"
-                prefetch={true}
-              >
-                {t("browse")}
-              </Link>
               <AuthArea variant="mobile" />
             </nav>
           </MobileMenu>
