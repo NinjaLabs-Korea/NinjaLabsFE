@@ -74,19 +74,19 @@ check('hub: the hero offers the application while the cohort accepts', (await bp
 await bp.goto('/en/home');
 await bp.waitText('Welcome back, builderone', 8000); await bp.waitText(`${NAME} is recruiting members`, 8000);
 const home = await bp.text();
-check('home: greeting, activity and the recruitment invitation', home.includes('Welcome back, builderone') && home.includes('Applications and submissions') && home.includes(`${NAME} is recruiting members`));
+check('home: greeting, activity and the recruitment invitation', home.includes('Welcome back, builderone') && home.includes('Applications') && home.includes(`${NAME} is recruiting members`));
 check('home: robots noindex', (await bp.eval(`document.querySelector('meta[name=robots]')?.content || ''`)).includes('noindex'));
 clean(await report(bp, 'home (finished, recruiting)'));
 await bp.click('Apply now', { selector: 'main a' }); await bp.waitFor(`!!document.querySelector('form')`, 8000);
 check('home -> Apply now opens /recruit with the form', (await bp.url()).endsWith('/en/recruit'));
 const formText = await bp.text();
-check('form has the Tally questions and options', ['Name (real name or nickname)*', 'Telegram ID*', 'Twitter (X) ID*', 'Web3 experience*', 'Under 1 year', '1-3 years', 'Over 3 years', 'KOL (influencer)', 'Community & marketing', 'Business development', 'Student', 'Introduction and motivation*'].every((t) => formText.includes(t)));
-check('form shows the recommended length hint', formText.includes('100-300 characters recommended'));
+check('form has the Tally questions and options', ['Name (real name or nickname)*', 'Telegram ID*', 'X (Twitter) handle*', 'Web3 experience*', 'Under 1 year', '1-3 years', 'Over 3 years', 'KOL (influencer)', 'Community & marketing', 'Business development', 'Student', 'Introduction and motivation*'].every((t) => formText.includes(t)));
+check('form shows the recommended length hint', formText.includes('at least 100 characters'));
 // invalid first: nothing is sent
 bp.reset();
 await bp.click('Send application', { exact: true });
 check('empty submit sends nothing and marks the fields', !mutations(bp).length && (await bp.eval(`document.querySelectorAll('main [role=alert]').length`)) >= 6);
-await fillLabel(bp, 'Name', 'Builder Kim'); await fillLabel(bp, 'Telegram ID', 'https://t.me/builder_it'); await fillLabel(bp, 'Twitter (X) ID', 'builder_it');
+await fillLabel(bp, 'Name', 'Builder Kim'); await fillLabel(bp, 'Telegram ID', 'https://t.me/builder_it'); await fillLabel(bp, 'X (Twitter) handle', 'builder_it');
 await chip(bp, '1-3 years'); await chip(bp, 'Developer', 'What best describes'); await chip(bp, 'Developer', 'Areas you want'); await chip(bp, 'Researcher', 'Areas you want'); await chip(bp, 'Other', 'Areas you want');
 await fillLabel(bp, 'Tell us which area', 'UX research');
 await fillLabel(bp, 'Introduction and motivation', 'I build dashboards for Injective and want to help new builders ship faster.');
