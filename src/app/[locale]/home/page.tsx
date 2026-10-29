@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/home">):
   const t = await getTranslations({ locale, namespace: "home.metadata" });
   return {
     alternates: localeAlternates(locale, "/home"),
-    // Signed-in only: nothing to index (a signed-out visitor is sent to the Intro).
+    // Signed-in only: nothing to index (a signed-out visitor is sent to the hub).
     robots: { index: false, follow: false },
     title: t("title"),
     description: t("description"),

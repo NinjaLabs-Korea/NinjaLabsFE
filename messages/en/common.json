@@ -48,7 +48,8 @@
     "accountSettings": "Account settings",
     "signOut": "Sign out",
     "sessionPreview": "Session preview",
-    "walletAddress": "Wallet address: {wallet}"
+    "walletAddress": "Wallet address: {wallet}",
+    "myActivity": "My activity"
   },
   "googleLogin": {
     "continue": "Continue with Google",

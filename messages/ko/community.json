@@ -26,6 +26,11 @@
       }
     }
   },
+  "upcoming": {
+    "eyebrow": "진행 중·예정",
+    "heading": "진행 중·예정 행사",
+    "viewAll": "행사 소식 전체 보기 →"
+  },
   "activities": {
     "eyebrow": "지난 활동",
     "heading": "함께 해 온 활동",

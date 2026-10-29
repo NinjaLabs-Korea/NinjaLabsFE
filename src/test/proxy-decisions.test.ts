@@ -119,23 +119,18 @@ describe("proxy: locale cookie on the 404 rewrite", () => {
   });
 });
 
-describe("proxy: finished users skip the Intro (hint cookie)", () => {
-  it.each([
-    ["/en", "/en/home"],
-    ["/ko/", "/ko/home"],
-    ["/zh", "/zh/home"],
-  ])("redirects %s to %s when the hint cookie is set, privately", async (pathname, target) => {
-    const result = await run(pathname, { cookie: "ninja_home=1" });
-    expect(result.status).toBe(307);
-    expect(result.location).toBe(target);
-    expect(result.response.headers.get("cache-control")).toBe("private, no-store");
+describe("proxy: the hub is never skipped", () => {
+  it.each(["/en", "/ko/", "/zh"])("serves %s to everyone, even with a stale ninja_home cookie from an older release", async (pathname) => {
+    for (const cookie of [undefined, "ninja_home=1", "ninja_home=0"]) {
+      const result = await run(pathname, cookie ? { cookie } : {});
+      expect(result.status, `${pathname} ${cookie}`).toBe(200);
+      expect(result.location, `${pathname} ${cookie}`).toBeNull();
+    }
   });
 
-  it("leaves everything else alone: no cookie, another value, the about page, the home itself and deeper pages", async () => {
-    for (const [pathname, cookie] of [["/en", undefined], ["/en", "ninja_home=0"], ["/en", "ninja_home="], ["/en/about", "ninja_home=1"], ["/en/home", "ninja_home=1"], ["/ko/bounties", "ninja_home=1"], ["/xx", "ninja_home=1"]] as const) {
-      const result = await run(pathname, cookie ? { cookie } : {});
-      expect(result.location === null || !result.location.endsWith("/home"), `${pathname} ${cookie}`).toBe(true);
-    }
+  it("does not set or read any ninja_home cookie", async () => {
+    const result = await run("/en", { cookie: "ninja_home=1" });
+    expect(result.response.headers.getSetCookie().join(";")).not.toContain("ninja_home");
   });
 
   it("serves the new public pages in api mode too", async () => {

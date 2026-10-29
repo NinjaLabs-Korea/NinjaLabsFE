@@ -11,11 +11,16 @@
     "getStarted": "Get Started",
     "continueSignup": "Continue sign-up",
     "exploreActivities": "See past activities",
-    "rolesTitle": "Everyone is welcome"
+    "rolesTitle": "Everyone is welcome",
+    "myActivity": "My activity"
   },
   "bounties": {
     "eyebrow": "Marketplace",
-    "heading": "Active bounties",
-    "viewAll": "View all →"
+    "heading": "Bounties",
+    "viewAll": "View all →",
+    "description": "Take on tasks from the Injective ecosystem, submit your work and build an on-chain track record.",
+    "emptyTitle": "No open bounties right now",
+    "emptyBody": "New bounties show up on the bounties page first.",
+    "cta": "Browse bounties"
   }
 }

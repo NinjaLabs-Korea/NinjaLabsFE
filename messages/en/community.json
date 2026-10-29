@@ -26,6 +26,11 @@
       }
     }
   },
+  "upcoming": {
+    "eyebrow": "Happening now and next",
+    "heading": "Ongoing and upcoming events",
+    "viewAll": "See all events →"
+  },
   "activities": {
     "eyebrow": "Past activities",
     "heading": "What we have done together",

@@ -211,6 +211,7 @@
     "empty": "You have not applied to a cohort yet."
   },
   "heroCta": {
-    "apply": "Apply to join {name}"
+    "apply": "Apply to join {name}",
+    "viewStatus": "View my application"
   }
 }

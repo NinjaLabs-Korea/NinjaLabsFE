@@ -42,14 +42,29 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   const p = await b.newPage(await b.newContext());
   await signIn(p, ids.BUILDER);
   await p.goto('/en'); await sleep(800);
-  // A finished user never sees the Intro: `/en` goes to their home, whose profile card links to the public profile.
-  await p.waitFor(`location.pathname.endsWith('/en/home')`, 8000);
-  check('complete user: /en lands on the home, not the Intro hero', (await p.url()).endsWith('/en/home'), await p.url());
-  const own = await links(p, 'main a');
-  check('complete user: the home links to their profile', own.some((l) => l === 'View my profile -> /en/members/builderone'), own);
-  check('complete user: no Get Started anywhere on the home', !own.some((l) => l.startsWith('Get Started')), own);
-  check('complete user: header has no Get Started', !(await headerGetStarted(p)));
+  // The hub is for everyone: a finished user stays on `/en` (no redirect to the home) and the hero CTA becomes "My activity".
+  await p.waitFor(`[...document.querySelectorAll('main section:first-of-type a')].some(a=>a.innerText.trim()==='My activity')`, 8000);
+  check('complete user: /en stays on the hub, no redirect to the home', (await p.url()).endsWith('/en'), await p.url());
+  check('complete user: the hub hero shows its community headline', /Learn, build, and move together/.test((await p.eval(`document.querySelector('main h1')?.innerText`)) ?? ''));
+  const hub = await heroCta(p);
+  check('complete user: hero CTA is My activity -> /home', hub.some((l) => l === 'My activity -> /en/home'), hub);
+  check('complete user: no Get Started on the hub', !hub.some((l) => l.startsWith('Get Started')) && !(await headerGetStarted(p)), hub);
+  const logoHref = await p.eval(`document.querySelector('header a[aria-label="Ninja Labs home"]').getAttribute('href')`);
+  check('complete user: the logo still points at the hub', logoHref === '/en', logoHref);
+  check('complete user: the hub has no ninja_home cookie', !(await p.eval(`document.cookie`)).includes('ninja_home'));
   clean(await report(p, 'complete landing', {}));
+  // The dashboard is opt-in: reachable from the hero CTA and from the user menu.
+  await p.click('My activity', { exact: true, selector: 'main a' }); await p.waitFor(`location.pathname.endsWith('/en/home')`, 8000);
+  const own = await links(p, 'main a');
+  check('complete user: My activity opens the dashboard, which links to their profile', own.some((l) => l === 'View my profile -> /en/members/builderone'), own);
+  check('complete user: no Get Started anywhere on the dashboard', !own.some((l) => l.startsWith('Get Started')), own);
+  check('complete user: header has no Get Started', !(await headerGetStarted(p)));
+  clean(await report(p, 'complete dashboard', {}));
+  await p.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
+  await p.goto('/en/bounties'); await sleep(900);
+  await p.eval(`[...document.querySelectorAll('header button[aria-haspopup=menu]')].find(b=>b.getClientRects().length && b.innerText.includes('builderone'))?.click(); true`); await sleep(300);
+  const menuItems = await p.eval(`[...document.querySelectorAll('[role=menuitem]')].map(e=>e.innerText.trim()+' -> '+(e.getAttribute('href')||''))`);
+  check('complete user: the user menu lists My activity -> /home first', menuItems[0] === 'My activity -> /en/home', menuItems);
   // hard load / direct URL entry
   await p.goto('/en/signup'); await p.waitFor(`!location.pathname.endsWith('/signup')`, 8000);
   const landed = await p.url();
@@ -93,8 +108,8 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   check('step-2 user: stepper shows Login done and Wallet current', stepper[0] === '1. Login(done)' && stepper[1] === '2. Wallet + NFT(current)', stepper);
   check('step-2 user: the Login step is not a link', await p.eval(`!document.querySelector('main ol li a, main ol li button')`));
   clean(await report(p, 'step-2 signup', {}));
-  // client-side navigation to the landing page (a hard load would redirect): the CTA continues the owed step
-  await p.click('css:header a[href="/en"]'); await sleep(800);
+  // the hub is open to an unfinished sign-up too: its CTA continues the owed step
+  await p.goto('/en'); await sleep(800);
   const hero = await heroCta(p);
   check('step-2 user: hero CTA continues sign-up at the wallet step', hero.some((l) => l === 'Continue sign-up -> /en/signup/wallet'), hero);
   check('step-2 user: no Get Started anywhere', !hero.some((l) => l.startsWith('Get Started')) && !(await headerGetStarted(p)), hero);

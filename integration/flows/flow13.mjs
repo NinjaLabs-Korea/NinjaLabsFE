@@ -105,6 +105,7 @@ async function screen(p, name, who, url, { waitText, prepare, label = name } = {
 {
   const p = await b.newPage(await b.newContext());
   await signIn(p, ids.BUILDER);
+  await screen(p, 'intro', 'finished', '/ko', { waitText: '내 활동' });
   await screen(p, 'home', 'finished', '/ko/home', { waitText: '님, 안녕하세요' });
   await screen(p, 'about', 'finished', '/ko/about', { waitText: '함께 해 온 활동' });
   await screen(p, 'bounties', 'finished', '/ko/bounties', { waitText: '바운티를 완료하고' });

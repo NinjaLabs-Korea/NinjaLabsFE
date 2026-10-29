@@ -16,7 +16,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import type { ClientUser } from "@/lib/contracts/auth";
 import { stashFlash } from "@/lib/flash";
-import { leaveForIntro } from "@/lib/home-hint";
+import { hardNavigate } from "@/lib/hard-navigate";
 import { normalizeNickname } from "@/lib/nickname";
 import type { WalletConfig } from "@/lib/runtime/config";
 
@@ -101,7 +101,7 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
       // Written after signOut and without the live event: the next step is a full page load, and the mounted
       // FlashToast would take (and lose) an event-delivered flash before the reload.
       stashFlash("accountDeleted");
-      leaveForIntro(locale);
+      hardNavigate(`/${locale}`);
     }
   };
 

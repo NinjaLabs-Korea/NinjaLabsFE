@@ -146,7 +146,6 @@ describe("API onboarding routing", () => {
 
   it("recovers incomplete sessions outside signup without trapping later signup steps", () => {
     const incomplete = { ...previewUser, onboardingStep: 1 };
-    expect(shouldRedirectToOnboarding(incomplete, "/")).toBe("/signup/wallet");
     expect(shouldRedirectToOnboarding(incomplete, "/members/demo-user")).toBe(
       "/signup/wallet",
     );

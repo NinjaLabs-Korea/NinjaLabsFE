@@ -6,24 +6,16 @@ import type { AuthSnapshot, ClientUser } from "@/lib/contracts/auth";
  *
  * - signed out: `/signup` (step 1)
  * - signed in, onboarding unfinished: the step they owe (wallet, profile, complete)
- * - signed in, onboarding finished: nothing to start; they belong on the site (their home / where they came from)
+ * - signed in, onboarding finished: nothing to start; they belong on the site (the hub, or where they came from)
  *
- * The same module owns the other half of "where should this user be?" for the community pages: the Intro (`/`) is for
- * visitors and unfinished sign-ups, a finished user lands on their home (`/home`), and the Intro content stays reachable at
- * `/about` for everyone.
+ * Product decision: the community hub (`/`) is the PRIMARY service and is reachable by everyone, signed in or not, in
+ * every session state. Nothing redirects away from it. `/home` is an opt-in personal dashboard ("My activity"): linked from
+ * the user menu and the hub CTA, never forced. `/about` shares the hub's sections.
  */
 
-/** Signed-in home for users who finished onboarding (`app/[locale]/home`), the public community overview (`/about`). */
+/** The opt-in personal dashboard for users who finished onboarding (`app/[locale]/home`), the public community overview (`/about`). */
 export const HOME_PATH = "/home";
 export const ABOUT_PATH = "/about";
-
-/**
- * Non-secret "a finished user is signed in here" hint on the FE origin, written by `components/layout/HomeHint` and read by
- * `proxy.ts` to send `/` to `/home` before anything renders (so the Intro never flashes). It is never used for
- * authorization: `/home` re-checks the real session and clears the hint when there is none.
- */
-export const HOME_HINT_COOKIE = "ninja_home";
-
 
 /** The onboarding step a signed-in user still owes, or null when onboarding is finished (or there is no user). */
 export function getOnboardingPath(user: ClientUser | null): string | null {
@@ -40,7 +32,7 @@ export type StartTarget =
   | { kind: "sign-up"; href: "/signup" }
   /** Signed in with an unfinished onboarding: `href` is the step they owe. */
   | { kind: "resume"; href: string }
-  /** Signed in and onboarding finished: there is nothing to "start". */
+  /** Signed in and onboarding finished: there is nothing to "start"; `href` is their profile (the hub CTA uses `HOME_PATH`, "My activity"). */
   | { kind: "member"; href: string };
 
 export function resolveStartTarget(snapshot: AuthSnapshot): StartTarget {
@@ -58,26 +50,11 @@ export function isFinishedUser(snapshot: AuthSnapshot): boolean {
   return snapshot.status === "signed-in" && snapshot.user.onboardingCompleted === true;
 }
 
-/** The logo target: the home for a finished user, the Intro for everyone else (including while the session is restored). */
-export function resolveBrandHref(snapshot: AuthSnapshot): "/" | typeof HOME_PATH {
-  return isFinishedUser(snapshot) ? HOME_PATH : "/";
-}
-
-export type IntroAccess =
-  /** Visitors, unfinished sign-ups and a session still being restored: the Intro renders. */
-  | { kind: "show" }
-  /** A finished user visiting `/`: leave for the home (the Intro content is at `/about`). */
-  | { kind: "home"; href: typeof HOME_PATH };
-
-export function resolveIntroAccess(snapshot: AuthSnapshot): IntroAccess {
-  return isFinishedUser(snapshot) ? { kind: "home", href: HOME_PATH } : { kind: "show" };
-}
-
 export type HomeAccess =
   /** Session still being restored: a neutral checking state, neither the home nor a redirect. */
   | { kind: "wait" }
   | { kind: "show" }
-  /** Signed out: the home has nothing to show; back to the Intro. */
+  /** Signed out: the dashboard has nothing to show; back to the hub. */
   | { kind: "intro"; href: "/" }
   /** Signed in with an unfinished onboarding: the step they owe. */
   | { kind: "resume"; href: string };
@@ -98,7 +75,7 @@ const NOT_A_DESTINATION = /^\/(?:signup(?:\/|$)|auth\/)/;
 
 /**
  * Where a signed-in, finished user who landed on signup step 1 goes: the same-site page they came from when there is
- * one, otherwise the home page. Returns a locale-less path (`/bounties/x?y=1`) for the locale-aware router.
+ * one, otherwise the hub (`/`). Returns a locale-less path (`/bounties/x?y=1`) for the locale-aware router.
  */
 export function returnPathFromReferrer(referrer: string, origin: string, stripLocale: (path: string) => string): string {
   if (!referrer) return "/";
@@ -125,7 +102,7 @@ export type SignupAccess =
   | { kind: "sign-in-first"; href: "/signup" }
   /** Signed in with an unfinished onboarding on step 1: straight to the step they owe. */
   | { kind: "resume"; href: string }
-  /** Signed in and finished: no signup page applies any more; leave for home or the page they came from. */
+  /** Signed in and finished: no signup page applies any more; leave for the hub or the page they came from. */
   | { kind: "leave" };
 
 /**
