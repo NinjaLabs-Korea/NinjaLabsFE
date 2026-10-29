@@ -29,7 +29,7 @@
     "pageTitle": "{title} | Ninja Labs",
     "back": "← Back to list",
     "readMoreHeading": "Read more",
-    "readMoreLink": "Read more →",
+    "readMoreLink": "Read the original →",
     "related": "Related"
   },
   "eventDate": "Event date {date}"
