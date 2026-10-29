@@ -8,7 +8,7 @@ const pages = [
   [`/en/bounties/${seed.B2}`, 200, [title('bounty', seed.B2), 'Reward TBD']],
   [`/ko/bounties/${seed.B3}`, 200, [title('bounty', seed.B3)]],
   ['/en/members', 200, ['coreninja']], ['/en/members/coreninja', 200, ['coreninja']],
-  ['/en/members/builderone', 200, ['builderone', 'No Ninja NFT has been minted for this member yet']],
+  ['/en/members/builderone', 200, ['builderone', 'No completed bounties yet']],
   ['/en/notices', 200, [title('notice', seed.N1), title('notice', seed.N2)]],
   [`/en/notices/${seed.N1}`, 200, [title('notice', seed.N1)]], [`/en/notices/${seed.N2}`, 200, [title('notice', seed.N2)]],
   ['/en/hall-of-fame', 200, [sql(`select title from platform_highlight limit 1`)]], ['/zh/hall-of-fame', 200],
