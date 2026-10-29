@@ -145,3 +145,21 @@ describe("session unavailable rendering (#4)", () => {
     expect(screen.getByText("Actions require login")).toBeTruthy();
   });
 });
+
+describe("shared in-flight account reads (#5)", () => {
+  it("getApplications and getSubmissions in parallel send one /submissions/me", async () => {
+    const { http, calls } = fakeHttp({ "/applications/me": [], "/submissions/me": [] });
+    const client = createApiApiClient(http);
+    await Promise.all([client.getApplications(signedIn), client.getSubmissions(signedIn)]);
+    expect(calls.filter((path) => path === "/submissions/me")).toHaveLength(1);
+    expect(calls.filter((path) => path === "/applications/me")).toHaveLength(1);
+  });
+
+  it("a read after the first settled goes to the network again (refresh after a mutation)", async () => {
+    const { http, calls } = fakeHttp({ "/applications/me": [], "/submissions/me": [] });
+    const client = createApiApiClient(http);
+    await client.getSubmissions(signedIn);
+    await client.getSubmissions(signedIn);
+    expect(calls).toEqual(["/submissions/me", "/submissions/me"]);
+  });
+});

@@ -176,6 +176,18 @@ const unavailable = <T>(error: unknown): ApiResult<T> => ({ status: "unavailable
 
 /** api 모드 실제 클라이언트: BE 계약(docs/api-contract.md)에 연결 */
 export function createApiApiClient(http: ApiHttp): ApiClient {
+  // The bounty detail asks for /applications/me (joined with /submissions/me) and /submissions/me side by side. Reads that are
+  // already in flight are shared; the entry is dropped once the request settles, so a refresh after a mutation hits the network.
+  const inFlight = new Map<string, Promise<unknown>>();
+  const sharedGet = <T,>(path: string): Promise<T> => {
+    const pending = inFlight.get(path);
+    if (pending) return pending as Promise<T>;
+    const request = http.fetchJson<T>(path).finally(() => {
+      if (inFlight.get(path) === request) inFlight.delete(path);
+    });
+    inFlight.set(path, request);
+    return request;
+  };
   return {
     getAccount: async (auth) => {
       if (auth.status !== "signed-in") return { status: "available", data: null };
@@ -191,8 +203,8 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
       if (auth.status !== "signed-in") return { status: "available", data: [] };
       try {
         const [rows, submissions] = await Promise.all([
-          http.fetchJson<ApplicationRow[]>("/applications/me"),
-          http.fetchJson<SubmissionRow[]>("/submissions/me"),
+          sharedGet<ApplicationRow[]>("/applications/me"),
+          sharedGet<SubmissionRow[]>("/submissions/me"),
         ]);
         // Owner and agent rows can coexist on one bounty: match each application to its own submission.
         const submissionKey = (bountyId: string, agent: AgentRef | undefined) => `${bountyId}:${agent?.id ?? "self"}`;
@@ -235,7 +247,7 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
     getSubmissions: async (auth) => {
       if (auth.status !== "signed-in") return { status: "available", data: [] };
       try {
-        const rows = await http.fetchJson<SubmissionRow[]>("/submissions/me");
+        const rows = await sharedGet<SubmissionRow[]>("/submissions/me");
         return { status: "available", data: rows.map(toSubmission) };
       } catch (error) {
         return unavailable<readonly AccountSubmission[]>(error);
