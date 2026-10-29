@@ -64,10 +64,10 @@ export function Footer() {
             {t("legal")}
           </p>
           <p className="flex flex-wrap items-center gap-x-3 text-xs leading-4 text-on-inverse-muted">
-            <Link className="motion-control inline-flex min-h-6 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/privacy">
+            <Link className="motion-control inline-flex min-h-6 max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/privacy">
               {t("privacy")}
             </Link>
-            <Link className="motion-control inline-flex min-h-6 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/terms">
+            <Link className="motion-control inline-flex min-h-6 max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/terms">
               {t("terms")}
             </Link>
             <span className="inline-flex min-h-6 items-center gap-1">

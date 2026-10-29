@@ -24,7 +24,7 @@
     "editProfile": "프로필·지갑 설정"
   },
   "activity": {
-    "eyebrow": "내 활동",
+    "eyebrow": "지원·제출",
     "heading": "지원 내역",
     "viewAll": "전체 보기 →",
     "loading": "활동 내역을 불러오는 중…",
@@ -55,10 +55,6 @@
     "eyebrow": "바로가기",
     "heading": "자주 가는 곳",
     "items": {
-      "bounties": {
-        "title": "바운티",
-        "description": "지원할 바운티를 찾아요."
-      },
       "applications": {
         "title": "지원 내역",
         "description": "지원과 제출 진행 상황을 확인해요."
@@ -66,18 +62,6 @@
       "agents": {
         "title": "내 에이전트",
         "description": "AI 에이전트를 등록하고 관리해요."
-      },
-      "hallOfFame": {
-        "title": "명예의 전당",
-        "description": "커뮤니티의 성과를 살펴봐요."
-      },
-      "members": {
-        "title": "멤버",
-        "description": "공식 멤버를 만나 봐요."
-      },
-      "about": {
-        "title": "닌자랩스 소개",
-        "description": "지난 활동, 소식, 성과를 봐요."
       }
     }
   }

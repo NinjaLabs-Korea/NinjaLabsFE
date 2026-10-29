@@ -42,7 +42,7 @@ export function NavLinks({ links, variant }: NavLinksProps) {
         const focus = "motion-control motion-press hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
         const className = isDesktop
           ? `text-sm ${isActive ? "font-semibold text-ink" : "font-medium text-ink-secondary"} ${focus}`
-          : `rounded-control px-3 py-2 text-sm ${isActive ? "bg-primary-soft font-semibold text-primary-strong" : "font-medium text-ink-secondary"} ${focus}`;
+          : `rounded-control px-3 py-3 text-sm ${isActive ? "bg-primary-soft font-semibold text-primary-strong" : "font-medium text-ink-secondary"} ${focus}`;
 
         return (
           <Link aria-current={isActive ? "page" : undefined} className={className} href={href} key={href} prefetch={true}>

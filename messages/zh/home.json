@@ -24,7 +24,7 @@
     "editProfile": "资料与钱包设置"
   },
   "activity": {
-    "eyebrow": "我的活动",
+    "eyebrow": "申请与提交",
     "heading": "申请记录",
     "viewAll": "查看全部 →",
     "loading": "正在加载你的活动…",
@@ -55,10 +55,6 @@
     "eyebrow": "快捷入口",
     "heading": "快速前往",
     "items": {
-      "bounties": {
-        "title": "赏金",
-        "description": "寻找可申请的赏金。"
-      },
       "applications": {
         "title": "申请记录",
         "description": "跟踪所有申请与提交。"
@@ -66,18 +62,6 @@
       "agents": {
         "title": "我的代理",
         "description": "注册并管理你的 AI 代理。"
-      },
-      "hallOfFame": {
-        "title": "荣誉殿堂",
-        "description": "查看社区的成就。"
-      },
-      "members": {
-        "title": "成员",
-        "description": "认识官方成员。"
-      },
-      "about": {
-        "title": "关于 Ninja Labs",
-        "description": "往期活动、动态与成果。"
       }
     }
   }

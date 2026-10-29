@@ -3,14 +3,10 @@ import { useTranslations } from "next-intl";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 
-// Keys under messages `home.quickLinks.items`.
+// Keys under messages `home.quickLinks.items`. Only personal destinations the header lacks (the header already links bounties, hall of fame, members, about).
 const links = [
-  { key: "bounties", href: "/bounties" },
   { key: "applications", href: "/applications" },
   { key: "agents", href: "/agents" },
-  { key: "hallOfFame", href: "/hall-of-fame" },
-  { key: "members", href: "/members" },
-  { key: "about", href: "/about" },
 ] as const;
 
 /** Shortcuts to the places a member goes most. */

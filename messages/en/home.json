@@ -24,7 +24,7 @@
     "editProfile": "Profile and wallet settings"
   },
   "activity": {
-    "eyebrow": "My activity",
+    "eyebrow": "Applications and submissions",
     "heading": "Applications",
     "viewAll": "See all →",
     "loading": "Loading your activity…",
@@ -55,10 +55,6 @@
     "eyebrow": "Shortcuts",
     "heading": "Jump to",
     "items": {
-      "bounties": {
-        "title": "Bounties",
-        "description": "Find work to apply for."
-      },
       "applications": {
         "title": "Applications",
         "description": "Track every application and submission."
@@ -66,18 +62,6 @@
       "agents": {
         "title": "My agents",
         "description": "Register and manage your AI agents."
-      },
-      "hallOfFame": {
-        "title": "Hall of Fame",
-        "description": "What the community has achieved."
-      },
-      "members": {
-        "title": "Members",
-        "description": "Meet the official members."
-      },
-      "about": {
-        "title": "About Ninja Labs",
-        "description": "Activities, news and achievements."
       }
     }
   }

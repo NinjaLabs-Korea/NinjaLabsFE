@@ -53,6 +53,7 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("eyebrow")}</p>
           <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">{t("heading")}</h1>
           <p className="mt-4 text-lg text-ink-secondary">{t("intro")}</p>
+          <p className="mt-2 text-base font-semibold text-ink">{t("lead")}</p>
         </div>
         <BountyApplyAuthBadge />
       </section>
