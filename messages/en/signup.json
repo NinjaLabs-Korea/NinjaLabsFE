@@ -8,10 +8,10 @@
     },
     "api": {
       "title": "Get started with Ninja Labs",
-      "description": "Start with Google, no wallet install needed.",
-      "disclosure": "Signing in creates or restores your Ninja Labs account. We only receive your Google email. No password is shared."
+      "description": "All you need is a Google account. No wallet required.",
+      "disclosure": "New here? We create your account. Already a member? You pick up where you left off. We only receive your Google email, never your password."
     },
-    "eyebrow": "Create account"
+    "eyebrow": "Sign in"
   },
   "wallet": {
     "linked": {
@@ -128,11 +128,11 @@
   "getStarted": {
     "metadata": {
       "title": "Get started | Ninja Labs",
-      "description": "All skippable. You can return to these options any time from the main navigation."
+      "description": "Sign-up is done. Start with bounties, the Injective docs or the community."
     },
-    "eyebrow": "You are all set",
-    "title": "What would you like to do?",
-    "subtitle": "All skippable. You can return to these options any time from the main navigation.",
+    "eyebrow": "You are in",
+    "title": "Welcome. Where to first?",
+    "subtitle": "Pick one, or skip all of it.",
     "actions": {
       "browseBounties": {
         "title": "Browse active bounties",
@@ -147,8 +147,8 @@
         "description": "Meet the community hub: events, members and achievements."
       }
     },
-    "skip": "Skip and go home",
-    "savedNote": "Your onboarding progress is saved. You can update your wallet and profile later.",
+    "skip": "Skip for now",
+    "savedNote": "Sign-up is done. You can change your wallet and profile any time in account settings.",
     "completeError": {
       "message": "We couldn't finish saving your onboarding. Please try again.",
       "retry": "Retry"
