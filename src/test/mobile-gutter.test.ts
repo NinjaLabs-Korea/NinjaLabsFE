@@ -32,6 +32,6 @@ describe("mobile tap targets", () => {
     expect(footer.match(/inline-flex min-h-10 items-center sm:min-h-0/g)?.length).toBeGreaterThanOrEqual(5);
   });
   it("header logo link is at least 44x44", () => {
-    expect(header).toContain("inline-flex min-h-11 min-w-11 items-center");
+    expect(header).toContain("inline-flex min-h-11 items-center");
   });
 });

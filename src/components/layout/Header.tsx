@@ -22,7 +22,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 h-16 border-b border-border bg-surface/85 backdrop-blur-[6px]">
       <div className="mx-auto grid h-full max-w-content grid-cols-[1fr_auto_1fr] items-center px-6">
-        <BrandLink className="inline-flex min-h-11 min-w-11 items-center gap-2 justify-self-start" label={t("homeLabel")}>
+        <BrandLink className="relative inline-flex min-h-11 items-center gap-2 justify-self-start after:absolute after:inset-y-0 after:-inset-x-[6px] after:content-['']" label={t("homeLabel")}>
           <Image
             src="/brand/ninja-labs-mascot.svg"
             alt=""
