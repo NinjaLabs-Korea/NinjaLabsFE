@@ -40,7 +40,7 @@ describe.each([["en", en], ["ko", ko], ["zh", zh]] as const)("agents.register co
 // site: there is no intro page to skip, and the landing page always renders.
 describe.each([["en", enCommon], ["ko", koCommon], ["zh", zhCommon]] as const)("common.footer.legal (%s)", (_locale, messages) => {
   it("is the copyright line only, not a flow description", () => {
-    expect(messages.footer.legal.split("·")).toHaveLength(2);
+    expect(messages.footer.legal).toBe("© 2026 Ninja Labs");
   });
 });
 

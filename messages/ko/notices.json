@@ -29,7 +29,7 @@
     "pageTitle": "{title} | Ninja Labs",
     "back": "← 목록으로",
     "readMoreHeading": "자세히 보기",
-    "readMoreLink": "자세히 보기 →",
+    "readMoreLink": "원문 보기 →",
     "related": "관련 링크"
   },
   "eventDate": "행사일 {date}"

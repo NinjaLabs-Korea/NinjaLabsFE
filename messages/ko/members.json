@@ -41,7 +41,7 @@
     "notFoundTitle": "페이지를 찾을 수 없습니다 | Ninja Labs",
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "바운티 {count}개 완료",
-    "newBuilder": "신규 빌더",
+    "newBuilder": "새로 합류했어요",
     "categories": {
       "dev": "개발",
       "design": "디자인",
@@ -52,20 +52,12 @@
       "eyebrow": "포트폴리오",
       "headingCompleted": "계속 쌓이는 온체인 증명",
       "headingEmpty": "아직 완료한 바운티가 없습니다",
-      "bodyCompleted": "Ninja NFT는 이미 부모 아이덴티티로 발행되어 있습니다. 승인된 바운티마다 그 아래 자식 NFT가 발행되어, 완료한 작업이 이동 가능한 빌더 포트폴리오가 됩니다.",
-      "bodyEmpty": "Ninja NFT는 부모 아이덴티티입니다. 승인된 바운티가 이 공개 컬렉션에 자식 NFT를 추가합니다.",
-      "bodyEmptyPending": "Ninja NFT 부모 아이덴티티를 발행하는 중입니다. 승인된 바운티가 이 공개 컬렉션에 자식 NFT를 추가합니다.",
-      "bodyEmptyNotMinted": "이 멤버의 Ninja NFT는 아직 발행되지 않았습니다. 발행되면 승인된 바운티가 이 공개 컬렉션에 자식 NFT를 추가합니다.",
+      "bodyCompleted": "완료한 바운티마다 증명이 하나씩 쌓여요.",
+      "bodyEmpty": "바운티를 완료하면 증명이 여기에 쌓여요.",
       "token": "토큰 {id}",
       "tx": "Tx {hash}",
       "untitledNft": "바운티 NFT",
-      "next": "+ 다음",
-      "emptyTitle": "아직 바운티 NFT가 없습니다",
-      "emptyBodyCompleted": "승인된 작업은 보상 지급 후 발행이 시작되면 여기에 표시됩니다.",
-      "emptyBodyNew": "승인된 바운티의 자식 NFT가 온체인 증명으로 여기에 표시됩니다.",
-      "memberSince": "Ninja NFT · {date}부터 멤버",
-      "summaryCompleted": "바운티 {count}개 완료 · 계속 성장하는 온체인 포트폴리오",
-      "summaryEmpty": "완료한 바운티 0개"
+      "memberSince": "Ninja NFT · {date}부터 멤버"
     },
     "nftStatus": {
       "PENDING": "대기 중",
@@ -78,7 +70,6 @@
     "history": {
       "eyebrow": "완료한 작업",
       "heading": "최근 완료한 바운티",
-      "viewFilled": "작성된 프로필 예시 보기",
       "completedOn": "{date} 완료 · {reward}",
       "emptyTitle": "아직 완료한 바운티가 없습니다",
       "emptyBody": "완료한 바운티가 완료일, 보상, 자식 NFT 증명과 함께 여기에 표시됩니다.",
@@ -95,7 +86,6 @@
       "emptyBody": "이 멤버는 등록한 인증 에이전트가 없습니다.",
       "wallet": "등록된 지갑: {wallet}"
     },
-    "shareable": "공유 가능한 URL, 로그인 불필요",
     "payoutPending": "지급 대기",
     "payoutPartial": "일부 지급",
     "payoutPaid": "지급 완료"

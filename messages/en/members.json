@@ -41,7 +41,7 @@
     "notFoundTitle": "Page not found | Ninja Labs",
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "{count, plural, one {# bounty completed} other {# bounties completed}}",
-    "newBuilder": "New builder",
+    "newBuilder": "New here",
     "categories": {
       "dev": "Dev",
       "design": "Design",
@@ -52,20 +52,12 @@
       "eyebrow": "Portfolio",
       "headingCompleted": "On-chain proof that keeps growing",
       "headingEmpty": "No completed bounties yet",
-      "bodyCompleted": "The Ninja NFT is the parent identity. Every approved bounty mints a child NFT beneath it, turning completed work into a portable builder portfolio.",
-      "bodyEmpty": "The Ninja NFT is already minted as the parent identity. Approved bounties add child NFTs to this public collection.",
-      "bodyEmptyPending": "The Ninja NFT parent identity is being minted. Approved bounties will add child NFTs to this public collection.",
-      "bodyEmptyNotMinted": "No Ninja NFT has been minted for this member yet. Approved bounties will add child NFTs to this public collection once it is.",
+      "bodyCompleted": "Each completed bounty adds a proof here.",
+      "bodyEmpty": "Complete a bounty and its proof shows up here.",
       "token": "Token {id}",
       "tx": "Tx {hash}",
       "untitledNft": "Bounty NFT",
-      "next": "+ next",
-      "emptyTitle": "No bounty NFTs yet",
-      "emptyBodyCompleted": "Approved work appears here after payout and minting begins.",
-      "emptyBodyNew": "Child NFTs for approved bounties appear here as on-chain proof.",
-      "memberSince": "Ninja NFT · member since {date}",
-      "summaryCompleted": "{count, plural, one {# bounty completed} other {# bounties completed}} · a growing on-chain portfolio",
-      "summaryEmpty": "0 bounties completed"
+      "memberSince": "Ninja NFT · member since {date}"
     },
     "nftStatus": {
       "PENDING": "PENDING",
@@ -78,7 +70,6 @@
     "history": {
       "eyebrow": "Completed work",
       "heading": "Recent bounty completions",
-      "viewFilled": "View filled profile",
       "completedOn": "Completed {date} · {reward}",
       "emptyTitle": "No completed bounties yet",
       "emptyBody": "Completed bounties appear here with their completion date, reward, and child NFT proof.",
@@ -95,7 +86,6 @@
       "emptyBody": "This member has not registered any verified agents.",
       "wallet": "Registered wallet: {wallet}"
     },
-    "shareable": "Shareable URL, no login needed",
     "payoutPending": "Payout pending",
     "payoutPartial": "Partially paid",
     "payoutPaid": "Paid"
