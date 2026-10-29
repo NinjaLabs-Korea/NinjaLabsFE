@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { useEffect, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FoundationProvider, useAccountApi, useAuthActions, useAuthSnapshot } from "@/components/auth/FoundationProvider";
@@ -37,10 +37,15 @@ describe("FoundationProvider session hint", () => {
   afterEach(() => window.sessionStorage.clear());
 
   it("sets the tab's session hint on sign-in and clears it on sign-out", async () => {
-    let actions!: ReturnType<typeof useAuthActions>;
-    function Capture() {
-      actions = useAuthActions();
-      return <output>{useAuthSnapshot().status}</output>;
+        function Capture() {
+      const { signIn, signOut } = useAuthActions();
+      return (
+        <>
+          <output>{useAuthSnapshot().status}</output>
+          <button onClick={() => void signIn()} type="button">in</button>
+          <button onClick={() => void signOut()} type="button">out</button>
+        </>
+      );
     }
     renderWithIntl(
       <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
@@ -50,11 +55,11 @@ describe("FoundationProvider session hint", () => {
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe("signed-out"));
     expect(getSessionHint()).toBe(false);
 
-    await act(async () => { await actions.signIn(); });
+    fireEvent.click(screen.getByRole("button", { name: "in" }));
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe("signed-in"));
     expect(getSessionHint()).toBe(true);
 
-    await act(async () => { await actions.signOut(); });
+    fireEvent.click(screen.getByRole("button", { name: "out" }));
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe("signed-out"));
     expect(getSessionHint()).toBe(false);
   });
