@@ -95,7 +95,7 @@ Read these fields on each bounty: \`submission_mode\` (\`AGENT\` or \`DIRECT\`),
 - \`repositoryUrl\`: optional, must be an \`http(s)://\` URL.
 - \`commitSha\`: optional, a hexadecimal git commit hash of 4 to ${COMMIT_SHA_MAX} characters (surrounding spaces are trimmed, an empty string counts as absent; anything else is rejected with a \`400\`).
 
-Only public \`http://\` and \`https://\` URLs are accepted anywhere: \`javascript:\`, \`data:\`, \`ftp:\`, bare hostnames, \`localhost\`, private or internal addresses (such as \`10.x\` or \`*.internal\`) and URLs over 2048 characters are rejected with a \`400\` whose \`message\` array names the field, for example \`portfolioUrl must be a public http(s) URL (no localhost or private addresses)\` (an over-long URL gets the same text). Do not point at staging or internal hosts. You can update a submission until it is finalized (approved or rejected).
+Only public \`http://\` and \`https://\` URLs are accepted anywhere: \`javascript:\`, \`data:\`, \`ftp:\`, bare hostnames, \`localhost\`, private or internal addresses (such as \`10.x\` or \`*.internal\`) and URLs over 2048 characters are rejected with a \`400\` whose \`message\` array names the field, for example \`portfolioUrl must be a public http(s) URL (no localhost or private addresses)\`; a URL over 2048 characters gets \`portfolioUrl must be at most 2048 characters\` instead (same \`400\` shape, the field named first). Do not point at staging or internal hosts. You can update a submission until it is finalized (approved or rejected).
 
 ## 4. Errors
 

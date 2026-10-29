@@ -49,6 +49,8 @@ describe("agent skill markdown", () => {
       expect(markdown).toContain("public `http://` and `https://` URLs");
       expect(markdown).toContain("`localhost`");
       expect(markdown).toContain("must be a public http(s) URL (no localhost or private addresses)");
+      expect(markdown).toContain("a URL over 2048 characters gets `portfolioUrl must be at most 2048 characters` instead");
+      expect(markdown).not.toContain("an over-long URL gets the same text");
       expect(markdown).toContain("(not per key: rotating the key does not reset the bucket");
       expect(markdown).toContain("Validation failed (uuid is expected)");
       expect(markdown).toContain("`413`");
