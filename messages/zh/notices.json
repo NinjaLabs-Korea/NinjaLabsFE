@@ -1,29 +1,29 @@
 {
   "metadata": {
     "title": "公告 | Ninja Labs",
-    "description": "一个展示社区活跃、持续交付并迎来新赞助方的动态与新闻信息流。"
+    "description": "Ninja Labs 参与的活动、Injective 生态动态和公告，都可以在这里查看。"
   },
   "list": {
     "eyebrow": "公告 / 动态",
-    "heading": "Ninja Labs 与 Injective 生态的最新动态",
-    "description": "一个展示社区活跃、持续交付并迎来新赞助方的动态与新闻信息流。",
-    "badge": "不只是运营公告，更是社区动态"
+    "heading": "Ninja Labs 动态",
+    "description": "Ninja Labs 参与的活动、Injective 生态动态和公告，都可以在这里查看。",
+    "badge": "活动 · 生态动态 · 公告"
   },
   "filters": {
     "ariaLabel": "公告分类",
     "all": "全部",
     "listAriaLabel": "公告",
-    "emptyTitle": "没有符合筛选条件的公告",
-    "emptyBody": "请尝试其他分类或清除搜索条件。",
-    "feedEmptyTitle": "暂无公告",
-    "feedEmptyBody": "公告发布后将显示在这里。",
+    "emptyTitle": "这个分类下还没有动态",
+    "emptyBody": "试试其他分类。",
+    "feedEmptyTitle": "暂时还没有动态",
+    "feedEmptyBody": "有新动态时会显示在这里。",
     "reset": "重置筛选"
   },
   "categories": {
     "ninjaLabs": "Ninja Labs",
     "injectiveEcosystem": "Injective 生态",
     "events": "活动",
-    "recruitment": "招募",
+    "recruitment": "成员招募",
     "other": "其他"
   },
   "detail": {

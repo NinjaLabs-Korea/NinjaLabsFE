@@ -231,7 +231,7 @@ describe("NoticeFilters", () => {
 
   it("shows the empty state for an empty feed", () => {
     renderWithIntl(<NoticeFilters notices={[]} />);
-    expect(screen.getByText("No notices yet")).toBeTruthy();
+    expect(screen.getByText("No news yet")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Reset filters" })).toBeNull();
     expect(within(screen.getByRole("group", { name: "Notice categories" })).getAllByRole("button")).toHaveLength(1);
   });

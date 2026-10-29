@@ -1,29 +1,29 @@
 {
   "metadata": {
     "title": "공지사항 | Ninja Labs",
-    "description": "커뮤니티가 활발히 활동하고, 결과물을 내고, 새로운 스폰서를 맞이하고 있음을 보여 주는 소식 피드입니다."
+    "description": "Ninja Labs가 함께한 행사, Injective 생태계 소식, 공지를 한곳에서 볼 수 있어요."
   },
   "list": {
     "eyebrow": "공지 / 소식",
-    "heading": "Ninja Labs와 Injective 생태계의 지금",
-    "description": "커뮤니티가 활발히 활동하고, 결과물을 내고, 새로운 스폰서를 맞이하고 있음을 보여 주는 소식 피드입니다.",
-    "badge": "운영 공지만이 아닌 커뮤니티 피드"
+    "heading": "Ninja Labs 소식",
+    "description": "Ninja Labs가 함께한 행사, Injective 생태계 소식, 공지를 한곳에서 볼 수 있어요.",
+    "badge": "행사 · 생태계 소식 · 공지"
   },
   "filters": {
     "ariaLabel": "공지 카테고리",
     "all": "전체",
     "listAriaLabel": "공지사항",
-    "emptyTitle": "필터에 맞는 공지가 없습니다",
-    "emptyBody": "다른 카테고리를 선택하거나 검색을 초기화해 보세요.",
-    "feedEmptyTitle": "아직 공지가 없습니다",
-    "feedEmptyBody": "공지가 게시되면 여기에 표시됩니다.",
+    "emptyTitle": "이 카테고리에는 아직 소식이 없어요",
+    "emptyBody": "다른 카테고리를 골라 보세요.",
+    "feedEmptyTitle": "아직 올라온 소식이 없어요",
+    "feedEmptyBody": "새 소식이 올라오면 여기에서 볼 수 있어요.",
     "reset": "필터 초기화"
   },
   "categories": {
     "ninjaLabs": "Ninja Labs",
     "injectiveEcosystem": "Injective 생태계",
     "events": "이벤트",
-    "recruitment": "채용",
+    "recruitment": "멤버 모집",
     "other": "기타"
   },
   "detail": {
