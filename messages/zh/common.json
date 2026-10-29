@@ -146,6 +146,10 @@
     "profileSaved": {
       "title": "资料已保存",
       "description": "你的修改已更新到账户和公开资料。"
+    },
+    "applicationWithdrawn": {
+      "title": "申请已撤回",
+      "description": "赏金仍在进行时，你可以重新申请。"
     }
   }
 }

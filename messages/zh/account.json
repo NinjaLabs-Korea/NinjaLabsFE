@@ -35,6 +35,9 @@
       "completed": "已完成"
     },
     "approvedStatus": "已批准：可以提交",
+    "approvedClosedStatus": "已批准：提交已截止",
+    "pendingClosedStatus": "已关闭：已过截止时间",
+    "pendingClosedNote": "赞助方审核前已过截止时间，此申请无法再被批准。",
     "agentApprovedStatus": "已批准：你的代理 {name} 通过 Agent API 提交",
     "submitWork": "提交作品",
     "resubmit": "重新提交",
@@ -46,6 +49,8 @@
     "cancelledNote": "赞助方已取消此赏金，你的申请已关闭。",
     "approvedClosedNote": "已获批准，但此赏金已不再接受提交。",
     "viewBounty": "查看赏金",
+    "cancelledSubmissionStatus": "已关闭：赏金已取消",
+    "cancelledSubmissionNote": "赞助方取消了该赏金，您的提交未经审核即已关闭。",
     "notAcceptedStatus": "提交未被采纳",
     "forfeitedStatus": "奖励已被没收",
     "notAcceptedNote": "赞助方审核后未采纳您的提交。此结果为最终结果。",
@@ -59,12 +64,12 @@
     "withdrawDialog": {
       "eyebrow": "撤回申请",
       "title": "撤回对“{title}”的申请？",
-      "description": "赞助方将不再看到这份申请。赏金仍在进行时,你可以稍后重新申请。",
+      "description": "赞助方将不再看到这份申请。赏金仍在进行时，你可以稍后重新申请。",
       "confirm": "撤回申请"
     },
     "withdrawErrors": {
       "APPLICATION_NOT_FOUND_OR_NOT_PENDING": "该申请已被审核或已撤回。",
-      "generic": "无法撤回该申请,请稍后重试。",
+      "generic": "无法撤回该申请，请稍后重试。",
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },
     "payoutPaid": "已支付",
@@ -89,7 +94,7 @@
       "sessions": "你将在所有设备上退出登录，公开主页也会消失。",
       "agents": "你的代理将被吊销，其 API 密钥会立即失效。",
       "history": "待审核的申请和尚在审核中的提交将被撤回。已完成的工作、付款记录和 NFT 会以匿名名称保留。",
-      "rewards": "如果你有已通过审核但奖励尚未发放的作品,在发放完成之前无法删除账户,以确保奖励不会丢失。"
+      "rewards": "如果你有已通过审核但奖励尚未发放的作品，在发放完成之前无法删除账户，以确保奖励不会丢失。"
     },
     "deleteAction": "删除账户",
     "deleteDialog": {
@@ -117,8 +122,8 @@
       "heading": "钱包",
       "connected": "已连接",
       "notConnected": "未连接",
-      "linkedNote": "已连接的钱包与账户绑定,无法在此更换或解绑。如需更换请联系运营团队。",
-      "body": "如果注册时选择了“稍后连接”,可以在这里连接钱包。连接钱包后会发放你的 Ninja NFT。",
+      "linkedNote": "已连接的钱包与账户绑定，无法在此更换或解绑。如需更换请联系运营团队。",
+      "body": "如果注册时选择了“稍后连接”，可以在这里连接钱包。连接钱包后会发放你的 Ninja NFT。",
       "unavailable": "当前环境无法使用钱包连接。"
     }
   }

@@ -228,6 +228,11 @@
     "viewIntakeRules": "접수 규칙 보기",
     "submitDisabled": "승인 전까지 제출 불가",
     "availability": "참여 가능 일정",
+    "sessionUnavailable": {
+      "title": "지금은 로그인 상태를 확인할 수 없습니다.",
+      "body": "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "retry": "다시 시도"
+    },
     "closedHeading": "바운티 마감",
     "closedBody": "이 바운티는 더 이상 지원이나 제출을 받지 않습니다.",
     "cancelledBody": "스폰서가 이 바운티를 취소해 더 이상 심사하거나 받지 않습니다. 대기 중이던 지원과 제출도 함께 종료되었습니다.",
