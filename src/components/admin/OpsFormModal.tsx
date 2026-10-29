@@ -37,7 +37,7 @@ export function OpsFormModal({ open, eyebrow, title, description, callout, submi
         {callout ? (
           <div className={`mt-4 rounded-tile border border-border px-4 py-3 text-sm font-semibold ${callout.tone === "danger" ? "bg-danger-soft text-danger" : "bg-warning-soft text-warning"}`}>{callout.text}</div>
         ) : null}
-        <div className="mt-4 grid gap-4">{children}</div>
+        <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">{children}</div>
         <div className="mt-6 flex justify-end gap-3">
           <button className={opsButton} onClick={onCancel} type="button">{t("cancel")}</button>
           <button className={opsPrimaryButton} disabled={busy} type="submit">{busy ? t("saving") : submitLabel}</button>
