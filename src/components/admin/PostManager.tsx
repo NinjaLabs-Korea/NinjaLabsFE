@@ -134,15 +134,9 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     clearThumbnailFile();
   };
 
-  const savePost = useSingleFlight(async () => {
-    // A freshly picked file replaces the stored thumbnail, so only the kept URL is checked.
+  // Validation runs outside the single-flight guard: a rejected form must not hold it (a fixed retry right after has to go through).
+  const persistPost = useSingleFlight(async () => {
     const stored = mode === "create" ? undefined : records.find((item) => item.slug === mode);
-    const nextErrors = validatePostForm({ ...form, thumbnail: thumbnailFile ? null : form.thumbnail }, stored);
-    if (Object.values(nextErrors).some(Boolean)) {
-      setErrors(nextErrors);
-      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
-      return;
-    }
     setSaving(true);
     try {
       const thumbnail = thumbnailFile ? (await api.uploadAdminMedia(thumbnailFile)).url : form.thumbnail;
@@ -162,6 +156,18 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       setSaving(false);
     }
   });
+
+  const savePost = () => {
+    // A freshly picked file replaces the stored thumbnail, so only the kept URL is checked.
+    const stored = mode === "create" ? undefined : records.find((item) => item.slug === mode);
+    const nextErrors = validatePostForm({ ...form, thumbnail: thumbnailFile ? null : form.thumbnail }, stored);
+    if (Object.values(nextErrors).some(Boolean)) {
+      setErrors(nextErrors);
+      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
+      return;
+    }
+    void persistPost();
+  };
 
   const deletePost = useAdminRecordDelete<AdminPost>({
     call: (post) => api.deleteAdminPost(post.slug),

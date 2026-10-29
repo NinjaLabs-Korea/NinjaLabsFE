@@ -115,13 +115,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     setForm((current) => ({ ...current, tags: [tag] }));
   };
 
-  const saveBounty = useSingleFlight(async () => {
-    const nextErrors = validateBountyForm(form, { originalDeadline, editing });
-    if (Object.values(nextErrors).some(Boolean)) {
-      setErrors(nextErrors);
-      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("form.errors.summary") });
-      return;
-    }
+  // Validation runs outside the single-flight guard: a rejected form must not hold it (a fixed retry right after has to go through).
+  const persistBounty = useSingleFlight(async () => {
     setSaving(true);
     try {
       const coverImage = coverFile ? (await api.uploadAdminMedia(coverFile)).url : form.coverImage;
@@ -139,6 +134,16 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       setSaving(false);
     }
   });
+
+  const saveBounty = () => {
+    const nextErrors = validateBountyForm(form, { originalDeadline, editing });
+    if (Object.values(nextErrors).some(Boolean)) {
+      setErrors(nextErrors);
+      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("form.errors.summary") });
+      return;
+    }
+    void persistBounty();
+  };
 
   const save = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

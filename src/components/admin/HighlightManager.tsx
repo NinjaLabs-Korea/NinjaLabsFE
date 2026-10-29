@@ -140,15 +140,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     clearError("image");
   }
 
-  const saveHighlight = useSingleFlight(async () => {
-    // A freshly picked file replaces the stored image, so only the kept URL is checked.
-    const stored = isEditing ? records.find((item) => item.id === mode) : undefined;
-    const nextErrors = validateHighlightForm({ title, description, image: imageFile ? null : image, link, order }, stored && { image: stored.image, link: stored.link });
-    if (Object.values(nextErrors).some(Boolean)) {
-      setErrors(nextErrors);
-      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
-      return;
-    }
+  // Validation runs outside the single-flight guard: a rejected form must not hold it (a fixed retry right after has to go through).
+  const persistHighlight = useSingleFlight(async () => {
     setSaving(true);
     try {
       const uploadedImage = imageFile ? (await api.uploadAdminMedia(imageFile)).url : image;
@@ -178,6 +171,18 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
       setSaving(false);
     }
   });
+
+  const saveHighlight = () => {
+    // A freshly picked file replaces the stored image, so only the kept URL is checked.
+    const stored = isEditing ? records.find((item) => item.id === mode) : undefined;
+    const nextErrors = validateHighlightForm({ title, description, image: imageFile ? null : image, link, order }, stored && { image: stored.image, link: stored.link });
+    if (Object.values(nextErrors).some(Boolean)) {
+      setErrors(nextErrors);
+      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
+      return;
+    }
+    void persistHighlight();
+  };
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
