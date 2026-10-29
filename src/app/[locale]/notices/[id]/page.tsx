@@ -54,7 +54,6 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
         >
           {t("detail.back")}
         </Link>
-        <Badge variant="success">{t("detail.public")}</Badge>
       </div>
 
       <section className="mt-8 max-w-[896px]">
