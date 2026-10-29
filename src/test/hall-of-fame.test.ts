@@ -29,6 +29,7 @@ describe("hall of fame partner wall", () => {
     const { hallOfFame, unavailable } = await loadRuntimeHallOfFame("en");
     expect(unavailable).toBe(false);
     expect(hallOfFame.partners).toEqual([{ name: "Injective", logo: "/media/injective.png", href: "https://injective.com" }]);
+    expect(hallOfFame.highlights.map((h) => h.title)).toEqual(["No logo yet", "Launch"]);
   });
 
   it("drops unsafe admin-entered link and image URLs instead of rendering them", async () => {
@@ -43,8 +44,8 @@ describe("hall of fame partner wall", () => {
     );
     const { hallOfFame } = await loadRuntimeHallOfFame("en");
     expect(hallOfFame.partners).toEqual([{ name: "Script link", logo: "/media/ok.png", href: null }]);
+    // "Script link" has a safe logo, so it lives on the partner wall only.
     expect(hallOfFame.highlights.map(({ href, image }) => [href, image])).toEqual([
-      ["/notices", "/media/ok.png"],
       ["https://ok.test", null],
       ["/notices", null],
     ]);

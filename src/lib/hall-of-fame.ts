@@ -149,7 +149,8 @@ async function fetchHallOfFame(locale: string): Promise<RuntimeHallOfFame> {
       locale,
     ),
     // Admin-entered link/image URLs are rendered as href/src on the page: unsafe ones fall back to no link / placeholder.
-    highlights: rows.map((row) => ({
+    // A partnership with a logo is shown on the partner wall only, so a long partner list does not flood the cards.
+    highlights: rows.filter((row) => !partnerLogo(row)).map((row) => ({
       category: category(row.type),
       title: row.title,
       body: row.description,
@@ -162,10 +163,14 @@ async function fetchHallOfFame(locale: string): Promise<RuntimeHallOfFame> {
       description: row.description,
     })),
     partners: rows.flatMap((row) => {
-      const logo = row.type === "PARTNERSHIP" ? safeHttpUrl(row.image_url) : null;
+      const logo = partnerLogo(row);
       return logo ? [{ name: row.title, logo, href: safeHttpUrl(row.link_url) }] : [];
     }),
   };
+}
+
+function partnerLogo(row: HighlightRow): string | null {
+  return row.type === "PARTNERSHIP" ? safeHttpUrl(row.image_url) : null;
 }
 
 /** Page-level loader: an unreachable API renders an unavailable state instead of the error boundary. */
