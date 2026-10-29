@@ -755,11 +755,11 @@
     "metaTitle": "成员招募 | Ninja Labs 管理",
     "metaDescription": "创建期别、开放与关闭招募、审核申请。",
     "title": "成员招募管理",
-    "description": "创建期别、开放申请、审核申请人并导出名单。通过不等于成为成员,成员请在“用户”标签页另行指定。",
+    "description": "创建期别、开放申请、审核申请人并导出名单。通过不等于成为成员，成员请在“用户”标签页另行指定。",
     "newCohort": "新建期别",
-    "empty": "还没有期别,请在下方创建。",
+    "empty": "还没有期别，请在下方创建。",
     "selectHint": "点击期别的“申请”按钮查看申请人。",
-    "deleteBlocked": "已有申请的期别无法删除,请改为关闭。",
+    "deleteBlocked": "已有申请的期别无法删除，请改为关闭。",
     "columns": {
       "name": "期别",
       "status": "状态",
@@ -797,7 +797,7 @@
       },
       "close": {
         "title": "关闭 {name}?",
-        "description": "将停止新申请与修改。申请人仍可撤回,之后也可重新开放。",
+        "description": "将停止新申请与修改。申请人仍可撤回，之后也可重新开放。",
         "confirm": "关闭招募"
       }
     },
@@ -812,17 +812,17 @@
       "descriptionPlaceholder": "说明本期招募的内容与对象。",
       "opensAt": "开始时间(可选)",
       "closesAt": "截止时间(可选)",
-      "windowHint": "时间按浏览器时区。留空表示不限,期别开放期间均可申请。",
+      "windowHint": "时间按浏览器时区。留空表示不限，期别开放期间均可申请。",
       "draftNote": "新建期别为草稿。准备好后在列表中点击“开放”。",
       "errors": {
         "required": "此项为必填。",
-        "tooLong": "太长了,最多 {max} 个字符。",
+        "tooLong": "太长了，最多 {max} 个字符。",
         "window": "截止时间必须晚于开始时间。"
       }
     },
     "toast": {
       "loadFailedTitle": "加载失败",
-      "loadFailedDescription": "无法加载期别列表,请重试。",
+      "loadFailedDescription": "无法加载期别列表，请重试。",
       "createdTitle": "期别已创建",
       "updatedTitle": "期别已更新",
       "deletedTitle": "期别已删除",
@@ -880,7 +880,7 @@
       "withdrawnNote": "已撤回",
       "toast": {
         "loadFailedTitle": "加载失败",
-        "loadFailedDescription": "无法加载申请,请重试。",
+        "loadFailedDescription": "无法加载申请，请重试。",
         "exportFailedTitle": "导出失败",
         "reviewedTitle": "审核结果已保存",
         "reviewedDescription": "{name}:{decision}"
@@ -918,20 +918,20 @@
       }
     },
     "errors": {
-      "COHORT_NOT_FOUND": "该期别已不存在,列表已刷新。",
-      "COHORT_ALREADY_OPEN": "已有其他期别处于开放状态。请先关闭它,再开放这一期。",
+      "COHORT_NOT_FOUND": "该期别已不存在，列表已刷新。",
+      "COHORT_ALREADY_OPEN": "已有其他期别处于开放状态。请先关闭它，再开放这一期。",
       "COHORT_HAS_APPLICATIONS": "已有申请的期别无法删除(含已撤回)。请改为关闭。",
       "COHORT_INVALID_WINDOW": "截止时间必须晚于开始时间。",
-      "COHORT_INVALID_TRANSITION": "当前状态下不允许该变更,列表已刷新。",
-      "COHORT_APPLICATION_NOT_FOUND": "该申请已不存在,列表已刷新。",
-      "COHORT_APPLICATION_WITHDRAWN": "申请人已撤回此申请,无法审核。",
+      "COHORT_INVALID_TRANSITION": "当前状态下不允许该变更，列表已刷新。",
+      "COHORT_APPLICATION_NOT_FOUND": "该申请已不存在，列表已刷新。",
+      "COHORT_APPLICATION_WITHDRAWN": "申请人已撤回此申请，无法审核。",
       "INVALID_CHARACTER": "内容包含无法保存的字符(如 NUL),请删除后重试。",
-      "INVALID_DATE": "该日期或时间不存在,请修改后重试。",
-      "DATABASE_UNAVAILABLE": "服务暂时不可用,请稍后再试。",
+      "INVALID_DATE": "该日期或时间不存在，请修改后重试。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后再试。",
       "ADMIN_ONLY": "此账户不再拥有管理员权限。",
-      "UNAUTHORIZED": "登录已过期,请重新登录。",
-      "TOO_MANY_REQUESTS": "请求过多,请稍后再试。",
-      "generic": "请求失败,请重试。"
+      "UNAUTHORIZED": "登录已过期，请重新登录。",
+      "TOO_MANY_REQUESTS": "请求过多，请稍后再试。",
+      "generic": "请求失败，请重试。"
     }
   }
 }

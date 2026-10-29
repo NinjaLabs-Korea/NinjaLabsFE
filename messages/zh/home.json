@@ -9,7 +9,7 @@
   },
   "greeting": {
     "eyebrow": "我的活动",
-    "title": "欢迎回来,{name}"
+    "title": "欢迎回来，{name}"
   },
   "profile": {
     "walletConnected": "钱包 {address}",
@@ -42,14 +42,14 @@
     "heading": "开放中的赏金",
     "viewAll": "查看全部 →",
     "unavailable": "暂时无法加载开放的赏金。",
-    "empty": "目前没有开放的赏金,新的机会会显示在这里。"
+    "empty": "目前没有开放的赏金，新的机会会显示在这里。"
   },
   "news": {
     "eyebrow": "社区动态",
     "heading": "最新动态",
     "viewAll": "查看全部 →",
     "unavailable": "暂时无法加载最新动态。",
-    "empty": "暂无动态,请稍后再来。"
+    "empty": "暂无动态，请稍后再来。"
   },
   "quickLinks": {
     "eyebrow": "快捷入口",
