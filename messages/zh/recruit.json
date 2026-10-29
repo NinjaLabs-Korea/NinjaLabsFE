@@ -6,7 +6,7 @@
   "hero": {
     "eyebrow": "成员招募",
     "heading": "与 Ninja Labs 一起构建",
-    "description": "先了解社区,再申请当前招募的期别。需要已完成注册(引导流程)的 Ninja Labs 账户。"
+    "description": "先了解社区，再申请当前招募的期别。需要已完成注册(引导流程)的 Ninja Labs 账户。"
   },
   "banner": {
     "label": "成员招募",
@@ -34,7 +34,7 @@
     "retry": "重试",
     "failed": {
       "title": "暂时无法加载。",
-      "body": "无法连接到服务器,请稍后再试。"
+      "body": "无法连接到服务器，请稍后再试。"
     },
     "noCohort": {
       "title": "目前没有正在招募的期别。",
@@ -43,7 +43,7 @@
     },
     "signIn": {
       "title": "登录后才能申请",
-      "body": "使用 Google 登录并完成简单注册后,会回到本页继续申请。",
+      "body": "使用 Google 登录并完成简单注册后，会回到本页继续申请。",
       "cta": "登录并申请"
     },
     "sessionExpired": "登录已过期",
@@ -140,40 +140,40 @@
     "errors": {
       "required": "此项为必填。",
       "requiredChoice": "请至少选择一项。",
-      "tooLong": "太长了,最多 {max} 个字符。",
-      "invalid": "服务器拒绝了此内容,请检查后重试。",
+      "tooLong": "太长了，最多 {max} 个字符。",
+      "invalid": "服务器拒绝了此内容，请检查后重试。",
       "telegramInvalid": "请输入以字母开头的 5-32 位字母、数字或 _。",
       "twitterInvalid": "请输入 1-15 位字母、数字或 _。"
     },
     "saveErrors": {
-      "network": "无法提交申请,请检查网络后重试。",
-      "session": "登录已失效,请重新登录。",
+      "network": "无法提交申请，请检查网络后重试。",
+      "session": "登录已失效，请重新登录。",
       "invalid": "请检查所有字段后重试。",
-      "generic": "无法保存申请,请重试。",
+      "generic": "无法保存申请，请重试。",
       "PROFILE_REQUIRED": "申请前请先完成注册(资料步骤)。",
       "COHORT_NOT_FOUND": "找不到该期别。",
       "COHORT_NOT_ACCEPTING": "该期别目前不接受申请。",
-      "COHORT_ALREADY_APPLIED": "你已申请过该期别,页面已刷新。",
+      "COHORT_ALREADY_APPLIED": "你已申请过该期别，页面已刷新。",
       "COHORT_APPLICATION_NOT_FOUND": "找不到该申请。",
-      "COHORT_APPLICATION_NOT_SUBMITTED": "该申请已审核或已撤回,无法修改。",
+      "COHORT_APPLICATION_NOT_SUBMITTED": "该申请已审核或已撤回，无法修改。",
       "COHORT_OTHER_DETAIL_REQUIRED": "选择“其他”时请填写具体内容。",
-      "INVALID_CHARACTER": "内容包含无法保存的字符,请删除后重试。",
-      "DATABASE_UNAVAILABLE": "服务暂时不可用,请稍后再试。",
-      "TOO_MANY_REQUESTS": "请求过多,请稍后再试。"
+      "INVALID_CHARACTER": "内容包含无法保存的字符，请删除后重试。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后再试。",
+      "TOO_MANY_REQUESTS": "请求过多，请稍后再试。"
     }
   },
   "status": {
     "SUBMITTED": {
       "label": "审核中",
-      "description": "我们已收到你的申请,运营团队将进行审核。"
+      "description": "我们已收到你的申请，运营团队将进行审核。"
     },
     "ACCEPTED": {
       "label": "已通过",
-      "description": "恭喜,你的申请已通过。成员加入事宜运营团队会另行联系。"
+      "description": "恭喜，你的申请已通过。成员加入事宜运营团队会另行联系。"
     },
     "REJECTED": {
       "label": "未通过",
-      "description": "本次未能入选。感谢你的申请,欢迎在之后的期别再次申请。"
+      "description": "本次未能入选。感谢你的申请，欢迎在之后的期别再次申请。"
     },
     "WITHDRAWN": {
       "label": "已撤回",
@@ -185,7 +185,7 @@
     "appliedOn": "申请日期 {date}",
     "reviewedOn": "结果日期 {date}",
     "edit": "修改申请",
-    "editClosed": "招募已结束,无法再修改申请,但仍可撤回。",
+    "editClosed": "招募已结束，无法再修改申请，但仍可撤回。",
     "withdraw": "撤回",
     "withdrawing": "撤回中…",
     "withdrawDialog": {
@@ -198,9 +198,9 @@
     "withdrawErrors": {
       "COHORT_APPLICATION_NOT_FOUND": "找不到该申请。",
       "COHORT_APPLICATION_NOT_SUBMITTED": "该申请已审核或已撤回。",
-      "DATABASE_UNAVAILABLE": "服务暂时不可用,请稍后再试。",
-      "TOO_MANY_REQUESTS": "请求过多,请稍后再试。",
-      "generic": "无法撤回申请,请稍后再试。"
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后再试。",
+      "TOO_MANY_REQUESTS": "请求过多，请稍后再试。",
+      "generic": "无法撤回申请，请稍后再试。"
     }
   },
   "past": {
