@@ -48,6 +48,23 @@ export function adminUrlFieldErrors(error: unknown): Partial<Record<(typeof ADMI
 }
 
 /**
+ * A BE 400 `VALIDATION_FAILED` that says a text property has no visible characters or contains bidirectional/control formatting
+ * characters (BE `visible-text.ts`), as inline field errors. `map` is BE property name -> the caller's form field key.
+ * `required` for "must contain visible characters", `bidiChars` for the bidirectional/control messages. Empty for anything else.
+ */
+export function adminTextFieldErrors<Key extends string>(error: unknown, map: Readonly<Record<string, Key>>): Partial<Record<Key, "required" | "bidiChars">> {
+  const fields = validationFieldsFromError(error);
+  const result: Partial<Record<Key, "required" | "bidiChars">> = {};
+  for (const [property, key] of Object.entries(map)) {
+    if (!Object.hasOwn(fields, property)) continue;
+    const message = fields[property];
+    if (message.includes("bidirectional")) result[key] = "bidiChars";
+    else if (message.includes("visible characters")) result[key] = "required";
+  }
+  return result;
+}
+
+/**
  * After a successful admin write, expire the cached public lists so `/notices`, `/bounties` and the hub reflect it on the next visit.
  * Fire and forget: the write already succeeded, so a failure here is only logged and never reaches the success toast.
  */
