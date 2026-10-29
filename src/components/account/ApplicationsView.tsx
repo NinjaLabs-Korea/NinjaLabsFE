@@ -95,6 +95,14 @@ function RevisionNote({ application }: { application: AccountApplication }) {
   );
 }
 
+/** The bounty behind the row no longer takes submissions. False when the BE did not send the bounty fields (older BE). */
+function isClosedForSubmit(application: AccountApplication, now: number): boolean {
+  const { bountyStatus, submissionDeadline } = application;
+  if (!bountyStatus) return false;
+  if (bountyStatus !== "OPEN") return true;
+  return submissionDeadline !== undefined && new Date(submissionDeadline).getTime() <= now;
+}
+
 export function ApplicationsView() {
   const t = useTranslations("account.applications");
   const tAccount = useTranslations("account.common");
@@ -111,6 +119,8 @@ export function ApplicationsView() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
+  // Page-load time: deadlines are compared once per visit (the BE re-checks on submit).
+  const [now] = useState(() => Date.now());
   const pendingRef = useRef(new Set<string>());
   const listRef = useRef<HTMLDivElement>(null);
   // The withdrawn card disappears with its button, so focus moves to the list instead of <body>.
@@ -183,6 +193,9 @@ export function ApplicationsView() {
       <div className="space-y-5" ref={listRef} tabIndex={-1}>
         {applications.map((application) => {
           const actionNeeded = application.status === "revisionRequested";
+          const cancelled = application.bountyStatus === "CANCELLED";
+          // An approved application with no submission yet cannot start work on a closed bounty; resubmission rules stay on the detail page.
+          const approvedClosed = application.status === "approved" && isClosedForSubmit(application, now);
           // A requested revision is still the "Submitted" step; the marker says the next move is the applicant's.
           const steps = application.source === "submission" ? submissionSteps : applicationSteps;
           const currentIndex = steps.indexOf(actionNeeded ? "submitted" : application.status);
@@ -215,7 +228,7 @@ export function ApplicationsView() {
 
               {application.status === "rejected" ? (
                 <>
-                  <p className="mt-4 text-sm text-ink-muted">{t("rejectedNote")}</p>
+                  <p className="mt-4 text-sm text-ink-muted">{t(cancelled ? "cancelledNote" : "rejectedNote")}</p>
                   <ApplicationNote application={application} />
                 </>
               ) : application.status === "notAccepted" ? (
@@ -258,14 +271,17 @@ export function ApplicationsView() {
 
               {application.status === "completed" && application.paymentStatus ? <PayoutLine status={application.paymentStatus} /> : null}
               {application.status === "approved" ? <ApplicationNote application={application} /> : null}
+              {approvedClosed ? <p className="mt-4 text-sm text-ink-muted">{t("approvedClosedNote")}</p> : null}
               {actionNeeded ? <RevisionNote application={application} /> : null}
               {/* An agent's submission is resubmitted through the Agent API, not from this page (see the revision note). */}
               {(application.status === "approved" && !application.agent) || (actionNeeded && !application.agent) ? (
                 <Link
-                  className={`mt-4 inline-block rounded-control bg-primary px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-on-inverse ${focusClass}`}
+                  className={approvedClosed
+                    ? `mt-4 inline-block rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong ${focusClass}`
+                    : `mt-4 inline-block rounded-control bg-primary px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-on-inverse ${focusClass}`}
                   href={`/bounties/${application.bountySlug}`}
                 >
-                  {actionNeeded ? t("resubmit") : t("submitWork")}
+                  {actionNeeded ? t("resubmit") : approvedClosed ? t("viewBounty") : t("submitWork")}
                 </Link>
               ) : null}
               {application.status === "open" ? (

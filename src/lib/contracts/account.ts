@@ -51,7 +51,15 @@ export type AccountApplication = {
   reviewNote: string | null;
   /** Payout status of the joined APPROVED submission (meaningful for `completed` rows; NONE otherwise). Same rule as `AccountSubmission.paymentStatus`. */
   paymentStatus: PayoutStatus;
+  /** BE `bounty_status` of the bounty behind the row. Absent when the BE predates the field (the card then renders from the application status alone). */
+  bountyStatus?: BountyStatusCode;
+  /** BE `submission_deadline` (ISO); absent with the field above. */
+  submissionDeadline?: string;
+  /** BE `application_deadline` (ISO); null when the bounty has none, absent with the field above. */
+  applicationDeadline?: string | null;
 };
+
+export type BountyStatusCode = "OPEN" | "SUBMISSION_CLOSED" | "IN_REVIEW" | "COMPLETED" | "CANCELLED";
 
 export type AgentStatus = "PENDING_VERIFICATION" | "ACTIVE" | "SUSPENDED" | "REVOKED";
 export type AgentKeyStatus = "ACTIVE" | "REVOKED" | "EXPIRED";
