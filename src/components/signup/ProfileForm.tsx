@@ -79,18 +79,15 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   // The draft belongs to one user (`profile-draft.ts`): it is read only once the signed-in user is known, and another
   // account's draft is discarded. `draftChecked` flips when the first read happened (at mount, or when the user first appears).
   const userId = signedInUser?.id ?? null;
-  const draftChecked = useRef(false);
   // Edit mode: the account this editor was opened for. A different signed-in user (another tab switched accounts) must
   // not receive this form's values.
-  const editedUserId = useRef(userId);
-  const [draft] = useState(() => {
-    if (editing || mode !== "api" || typeof window === "undefined" || !userId) return null;
-    draftChecked.current = true;
-    return readProfileDraft(userId, KNOWN_TAGS);
-  });
+  const [editedUserId] = useState(userId);
+  const usesDraft = !editing && mode === "api";
+  const [draftChecked, setDraftChecked] = useState(() => usesDraft && userId !== null);
+  const [draft] = useState(() => (usesDraft && userId && typeof window !== "undefined" ? readProfileDraft(userId, KNOWN_TAGS) : null));
   // Last known owner: kept while the session is ended so the typed values are still stashed for the re-login.
-  const draftOwner = useRef<string | null>(userId);
-  if (userId) draftOwner.current = userId;
+  const [draftOwner, setDraftOwner] = useState(userId);
+  if (userId && draftOwner !== userId) setDraftOwner(userId);
   // Edit mode starts from what is saved; onboarding starts empty (mock mode prefills a demo profile).
   const [nickname, setNickname] = useState(editing && signedInUser ? signedInUser.handle : draft ? draft.nickname : mode === "mock" ? signup.profile.nickname : "");
   const [bio, setBio] = useState(editing && signedInUser ? signedInUser.bio ?? "" : draft ? draft.bio : mode === "mock" ? signup.profile.bio : "");
@@ -103,6 +100,17 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   const inFlight = useRef(false);
   const [saveError, setSaveError] = useState<SaveErrorKey>("generic");
   const [nicknameCheck, setNicknameCheck] = useState<NicknameCheck | null>(null);
+
+  // The form mounted before the user was known: restore their draft now, unless they already typed.
+  if (usesDraft && !draftChecked && userId) {
+    setDraftChecked(true);
+    const late = readProfileDraft(userId, KNOWN_TAGS);
+    if (late && !nickname && !bio && tags.length === 0) {
+      setNickname(late.nickname);
+      setBio(late.bio);
+      setTags(late.tags);
+    }
+  }
 
   const trimmedNickname = normalizeNickname(nickname);
   const nicknameRuleError = validateNickname(trimmedNickname);
@@ -129,21 +137,9 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   // `[locale]` route) or a reload remounts the form, and the draft refills it. Cleared on a successful save.
   useEffect(() => {
     if (editing || mode !== "api") return;
-    // The form mounted before the user was known: restore their draft now, unless they already typed.
-    if (!draftChecked.current && userId) {
-      draftChecked.current = true;
-      const late = readProfileDraft(userId, KNOWN_TAGS);
-      if (late && !nickname && !bio && tags.length === 0) {
-        setNickname(late.nickname);
-        setBio(late.bio);
-        setTags(late.tags);
-        return;
-      }
-    }
-    const owner = draftOwner.current;
-    if (!owner || !draftChecked.current) return;
-    writeProfileDraft(owner, nickname || bio || tags.length > 0 ? { nickname, bio, tags } : null);
-  }, [editing, mode, nickname, bio, tags, userId]);
+    if (!draftOwner || !draftChecked) return;
+    writeProfileDraft(draftOwner, nickname || bio || tags.length > 0 ? { nickname, bio, tags } : null);
+  }, [editing, mode, nickname, bio, tags, draftOwner, draftChecked]);
 
   useEffect(() => {
     if (nicknameRuleError || isOwnNickname) return;
@@ -206,7 +202,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
       return;
     }
 
-    if (editing && userId !== null && editedUserId.current !== null && userId !== editedUserId.current) {
+    if (editing && userId !== null && editedUserId !== null && userId !== editedUserId) {
       onboardingLog("profile.save.blocked", { reason: "USER_CHANGED" });
       setSaveError("generic");
       setState("error");
@@ -235,7 +231,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         return;
       }
       onboardingLog("profile.save.succeeded", { targetPath: "/signup/get-started" });
-      if (draftOwner.current) writeProfileDraft(draftOwner.current, null);
+      if (draftOwner) writeProfileDraft(draftOwner, null);
       window.location.assign(withLocaleOf(window.location.pathname, "/signup/get-started"));
     } catch (error) {
       onboardingLog("profile.save.failed", onboardingErrorDetails(error));
