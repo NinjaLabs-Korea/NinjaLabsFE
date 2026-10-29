@@ -186,7 +186,13 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
 
   return (
     <>
-      {cohort ? <CohortInfo cohort={cohort} /> : null}
+      {cohort ? (
+        <CohortInfo cohort={cohort} />
+      ) : current.status === "loading" ? (
+        // Reserve roughly the cohort card's height until the read settles: the card is inserted above the about section and
+        // the application area, so without it the whole page (footer included) jumps down when it arrives (CLS 0.17).
+        <div aria-hidden="true" className="mx-auto max-w-content px-4 sm:px-6"><div className="min-h-[132px]" /></div>
+      ) : null}
       {aboutSlot}
       <section aria-label={t("form.sectionLabel")} className="mx-auto max-w-content px-4 pb-20 sm:px-6">
         <div className="mx-auto max-w-[896px]">
