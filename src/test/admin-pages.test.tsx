@@ -193,8 +193,11 @@ describe("admin pages", () => {
   });
 
   it("marks every admin route noindex through the layout", async () => {
-    const { metadata } = await import("@/app/[locale]/admin/layout");
+    const { generateMetadata } = await import("@/app/[locale]/admin/layout");
+    const metadata = await generateMetadata({ params: Promise.resolve({ locale: "en" }) });
     expect(metadata.robots).toEqual({ index: false, follow: false });
+    // A route without its own title (bare /admin, gate screens) still gets an admin title, in the common format.
+    expect(metadata.title).toBe("Admin · Users | Ninja Labs");
   });
 
   it("wraps admin routes in the gate with the admin messages available to client islands", async () => {
