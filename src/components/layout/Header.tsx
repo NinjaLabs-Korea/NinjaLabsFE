@@ -5,7 +5,6 @@ import { BrandLink } from "@/components/layout/BrandLink";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { NavLinks } from "@/components/layout/NavLinks";
-import { Link } from "@/i18n/navigation";
 
 const navigation = [
   { href: "/bounties", key: "bounties" },
@@ -42,17 +41,10 @@ export function Header() {
 
           <MobileMenu label={t("menu")}>
             <nav
-              className="absolute right-0 top-full z-50 mt-2 flex w-44 flex-col gap-1 rounded-tile border border-border bg-surface p-2 shadow-card"
+              className="absolute right-0 top-full z-50 mt-2 flex max-h-[calc(100dvh-4.5rem)] w-44 flex-col gap-1 overflow-y-auto overscroll-contain rounded-tile border border-border bg-surface p-2 shadow-card"
               aria-label={t("mobileNavigation")}
             >
               <NavLinks links={links} variant="mobile" />
-              <Link
-                className="rounded-control px-3 py-2 text-sm font-semibold text-primary-strong"
-                href="/bounties"
-                prefetch={true}
-              >
-                {t("browse")}
-              </Link>
               <AuthArea variant="mobile" />
             </nav>
           </MobileMenu>
