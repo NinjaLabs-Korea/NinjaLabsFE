@@ -7,6 +7,7 @@ import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
+import { HIGHLIGHT_DESCRIPTION_MAX, HIGHLIGHT_TITLE_MAX } from "@/lib/input-limits";
 import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
 import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlight } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
@@ -247,8 +248,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
                 <AdminSelect formatOption={typeLabel} label={t("form.type")} onChange={setType} options={typeOptions} value={type} />
               </div>
             </div>
-            <label className="text-sm font-semibold text-ink">{t("form.title")}<input {...invalidProps("title")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" maxLength={200} onChange={(event) => { setTitle(event.target.value); clearError("title"); }} placeholder={t("form.titlePlaceholder")} required value={title} />{fieldError("title")}</label>
-            <label className="text-sm font-semibold text-ink md:col-span-2">{t("form.description")}<textarea {...invalidProps("description")} className="mt-2 min-h-24 w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary aria-[invalid]:border-danger" maxLength={2000} onChange={(event) => { setDescription(event.target.value); clearError("description"); }} required value={description} />{fieldError("description")}</label>
+            <label className="text-sm font-semibold text-ink">{t("form.title")}<input {...invalidProps("title")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" maxLength={HIGHLIGHT_TITLE_MAX} onChange={(event) => { setTitle(event.target.value); clearError("title"); }} placeholder={t("form.titlePlaceholder")} required value={title} />{fieldError("title")}</label>
+            <label className="text-sm font-semibold text-ink md:col-span-2">{t("form.description")}<textarea {...invalidProps("description")} className="mt-2 min-h-24 w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary aria-[invalid]:border-danger" maxLength={HIGHLIGHT_DESCRIPTION_MAX} onChange={(event) => { setDescription(event.target.value); clearError("description"); }} required value={description} />{fieldError("description")}</label>
             <div className="text-sm font-semibold text-ink">{t("form.image")}
               <button className="mt-2 flex h-[46px] w-full items-center rounded-control border border-border px-4 text-left text-sm font-normal text-ink-placeholder hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => imageInputRef.current?.click()} type="button">{image ?? t("form.uploadImage")}</button>
               <input accept="image/jpeg,image/png,image/webp" aria-label={t("form.image")} className="sr-only" onChange={handleImageChange} ref={imageInputRef} type="file" />

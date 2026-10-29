@@ -9,6 +9,7 @@ import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
+import { NOTICE_BODY_MAX, NOTICE_TITLE_MAX } from "@/lib/input-limits";
 import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
 import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlight } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
@@ -51,8 +52,6 @@ const emptyForm: PostForm = {
  * 여기서 막으면 그 행은 URL을 지워야만 저장된다.
  */
 type PostFieldErrors = Partial<Record<"title" | "bodyMarkdown" | "thumbnail" | "externalUrl", "required" | "urlInvalid" | "tooLong">>;
-/** BE `CreateNoticeDto.body` @MaxLength (a PATCH allows double; the stricter create limit applies to both). */
-export const NOTICE_BODY_MAX = 50_000;
 export function validatePostForm(
   input: Pick<PostForm, "title" | "bodyMarkdown" | "thumbnail" | "externalUrl">,
   stored?: Pick<AdminPost, "thumbnail" | "externalUrl">,
@@ -222,7 +221,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{isEditing ? t("form.eyebrowEdit") : t("form.eyebrowCreate")}</p>
         <h2 className="mt-2 font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
         <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-          <label className="text-sm font-semibold text-ink">{t("form.title")}<input {...invalidProps("title")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" maxLength={200} onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} value={form.title} />{fieldError("title")}</label>
+          <label className="text-sm font-semibold text-ink">{t("form.title")}<input {...invalidProps("title")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" maxLength={NOTICE_TITLE_MAX} onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} value={form.title} />{fieldError("title")}</label>
           <label className="text-sm font-semibold text-ink">
             {t("form.category")}
             <div className="mt-2"><AdminSelect formatOption={categoryLabel} label={t("form.category")} onChange={(value) => updateForm("category", value as AdminPost["category"])} options={categories} value={form.category} /></div>

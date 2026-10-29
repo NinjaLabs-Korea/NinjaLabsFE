@@ -12,6 +12,7 @@ import { useAdminCohortApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { ERROR_COPY, type ErrorCopyKey } from "@/lib/api/error-copy";
 import { cohortAdminErrorKey } from "@/lib/cohort-errors";
+import { COHORT_APPLICATION_SEARCH_MAX } from "@/lib/input-limits";
 import {
   ACTIVITY_TYPES,
   COHORT_APPLICATION_STATUSES,
@@ -192,7 +193,7 @@ export function CohortApplicationsPanel({ cohort, onReviewed }: { cohort: AdminC
         </div>
         <div className="w-full sm:w-[260px]">
           <label className="block text-sm font-semibold text-ink" htmlFor="cohort-applications-q">{t("filters.search")}</label>
-          <input className={opsInput} id="cohort-applications-q" maxLength={320} onChange={(event) => setQuery(event.target.value)} placeholder={t("filters.searchPlaceholder")} value={query} />
+          <input className={opsInput} id="cohort-applications-q" maxLength={COHORT_APPLICATION_SEARCH_MAX} onChange={(event) => setQuery(event.target.value)} placeholder={t("filters.searchPlaceholder")} value={query} />
         </div>
         <div className="flex items-center gap-2">
           <button className={opsPrimaryButton} type="submit">{t("filters.apply")}</button>
