@@ -1,5 +1,5 @@
 import { newestFirst } from "@/lib/account-order";
-import type { Account, AccountAgent, AccountAgentRef, AccountApplication, AccountSubmission, ApplicationStatus, SubmissionStatus } from "@/lib/contracts/account";
+import type { Account, AccountAgent, AccountAgentRef, AccountApplication, AccountSubmission, ApplicationStatus, BountyStatusCode, SubmissionStatus } from "@/lib/contracts/account";
 import type { ApiClient, ApiResult, ApiUnavailable } from "@/lib/contracts/api";
 import { ApiHttpError, type ApiHttp } from "@/lib/api/http";
 import { fetchMe, toClientUser } from "@/lib/api/me";
@@ -23,6 +23,10 @@ type ApplicationRow = {
   bounty_title: string;
   category: CategoryCode;
   agent?: AgentRef;
+  /** Added by the BE after the first release; older BEs omit all three. */
+  bounty_status?: BountyStatusCode;
+  submission_deadline?: string;
+  application_deadline?: string | null;
 };
 
 /** BE GET /agents/me 행 (one row per agent; no duplicates) */
@@ -121,6 +125,9 @@ function toApplication(row: ApplicationRow): AccountApplication {
     reviewComment: null,
     reviewNote: row.review_note?.trim() || null,
     paymentStatus: "NONE",
+    ...(row.bounty_status ? { bountyStatus: row.bounty_status } : {}),
+    ...(row.submission_deadline ? { submissionDeadline: row.submission_deadline } : {}),
+    ...(row.application_deadline !== undefined ? { applicationDeadline: row.application_deadline } : {}),
   };
 }
 
