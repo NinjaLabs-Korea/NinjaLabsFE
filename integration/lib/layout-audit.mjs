@@ -186,11 +186,20 @@ export function denseProbe() {
     if (s.opacity === '0' || s.pointerEvents === 'none') continue;
     interactive.push({ el, r });
   }
+  // A popup (menu, dropdown: positioned with a z-index) lies over the page on purpose; only compare controls on the same layer.
+  const layerOf = (el) => {
+    for (let n = el; n && n !== document.body; n = n.parentElement) {
+      const s = cs(n);
+      if ((s.position === 'absolute' || s.position === 'fixed') && s.zIndex !== 'auto' && Number(s.zIndex) > 0) return n;
+    }
+    return null;
+  };
   const seenPair = new Set();
   for (let i = 0; i < interactive.length; i += 1) {
     for (let j = i + 1; j < interactive.length; j += 1) {
       const a = interactive[i], b = interactive[j];
       if (a.el.contains(b.el) || b.el.contains(a.el)) continue;
+      if (layerOf(a.el) !== layerOf(b.el)) continue;
       const w = Math.min(a.r.right, b.r.right) - Math.max(a.r.left, b.r.left);
       const h = Math.min(a.r.bottom, b.r.bottom) - Math.max(a.r.top, b.r.top);
       if (w <= 2 || h <= 2) continue;
@@ -208,6 +217,7 @@ export function denseProbe() {
     if (cx < 0 || cx >= vw || cy < 0 || cy >= vh) continue;
     const hit = document.elementFromPoint(cx, cy);
     if (!hit || el.contains(hit) || hit.contains(el)) continue;
+    if (layerOf(hit) && layerOf(hit) !== layerOf(el)) continue; // a popup over the page is on purpose
     if (hit.closest('label') && el.closest('label') === hit.closest('label')) continue;
     if (el.labels && [...el.labels].some((l) => l.contains(hit))) continue;
     add('covered', el, `${sigOf(el)} under ${sigOf(hit)}`, textOf(hit));
