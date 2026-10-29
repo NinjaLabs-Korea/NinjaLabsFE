@@ -8,7 +8,6 @@ const sources = {
 };
 vi.mock("@/lib/bounties", () => ({
   getRuntimeBounties: () => sources.bounties(),
-  loadRuntimeBounties: () => sources.bounties().then((bounties: unknown) => ({ bounties, unavailable: false }), () => ({ bounties: [], unavailable: true })),
 }));
 vi.mock("@/lib/notices", () => ({ getRuntimeNotices: () => sources.notices() }));
 vi.mock("@/lib/hall-of-fame", async (importOriginal) => ({

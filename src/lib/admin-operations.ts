@@ -3,10 +3,11 @@
 // Status values stay the BE codes verbatim (the console shows operators the real state machine); copy lives under
 // `admin.operations.*` / `admin.nftJobs.*`.
 import { ERROR_COPY, listedCode, normalizedCode } from "./api/error-copy";
+import { PAYABLE_REWARD_STATUSES } from "./payout-status";
+import { isBountyFinished, isBountyInProgress, type BountyStatusCode } from "./bounty-status";
 
-/** BE `bounty.status` (NinjaLabsBE/src/bounties/bounty-status.ts). */
-export type BountyStatusCode = "DRAFT" | "FUNDING_PENDING" | "OPEN" | "SUBMISSION_CLOSED" | "IN_REVIEW" | "COMPLETED" | "CANCELLED";
-export const BOUNTY_STATUS_CODES: readonly BountyStatusCode[] = ["DRAFT", "FUNDING_PENDING", "OPEN", "SUBMISSION_CLOSED", "IN_REVIEW", "COMPLETED", "CANCELLED"];
+// The lifecycle predicates live in `bounty-status.ts`; re-exported so the console imports its rules from one place.
+export { isBountyFinished, isBountyInProgress };
 
 /** Mirror of the BE transition table (`bounty-status.ts TRANSITIONS`) - the mock uses it; api mode reads `lifecycle.allowedTransitions`. */
 export const BOUNTY_TRANSITIONS: Readonly<Partial<Record<BountyStatusCode, readonly BountyStatusCode[]>>> = {
@@ -16,10 +17,6 @@ export const BOUNTY_TRANSITIONS: Readonly<Partial<Record<BountyStatusCode, reado
   SUBMISSION_CLOSED: ["IN_REVIEW", "OPEN"],
   IN_REVIEW: ["COMPLETED", "OPEN"],
 };
-
-/** BE `BountyStatusPolicy.isInProgress` - reviews and payout requests are accepted only here. */
-export const isBountyInProgress = (status: string): boolean => status === "OPEN" || status === "SUBMISSION_CLOSED" || status === "IN_REVIEW";
-export const isBountyFinished = (status: string): boolean => status === "COMPLETED" || status === "CANCELLED";
 
 /** BE `LifecycleBlockerCode` (bounty-lifecycle.service.ts) - `admin.operations.blockers.<code>`. */
 export const LIFECYCLE_BLOCKER_CODES = ["DEADLINE_PASSED", "REWARDS_UNFUNDED", "PENDING_APPLICATIONS", "UNSUBMITTED_PARTICIPANTS", "UNRESOLVED_SUBMISSIONS", "UNPAID_WINNERS"] as const;
@@ -132,7 +129,7 @@ export function applicationDecisionsFor(application: Pick<OpsApplication, "statu
 
 export const canApprovePayout = (payout: Pick<OpsPayout, "status">): boolean => payout.status === "REQUESTED" || payout.status === "AWAITING_MULTISIG_APPROVAL";
 export const canMarkPayoutPaid = (payout: Pick<OpsPayout, "status">): boolean => payout.status === "APPROVED" || payout.status === "BROADCASTING";
-export const isRewardFunded = (reward: Pick<OpsReward, "status">): boolean => reward.status === "FUNDED" || reward.status === "PARTIALLY_PAID" || reward.status === "PAID";
+export const isRewardFunded = (reward: Pick<OpsReward, "status">): boolean => PAYABLE_REWARD_STATUSES.includes(reward.status);
 
 /** Two-person rule as the console shows it: blocked (needs another admin), allowed-with-audit, or a normal approval. */
 export function payoutApprovalMode(payout: Pick<OpsPayout, "requestedByMe">, policy: AdminOperations["policy"]): "self-blocked" | "self-allowed" | "normal" {

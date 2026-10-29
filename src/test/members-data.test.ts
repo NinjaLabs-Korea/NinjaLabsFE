@@ -11,7 +11,8 @@ vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode
 
 const { PublicApiError } = await import("@/lib/api/public");
 const { getRuntimeProfile, parentNftState, payoutBadge, profiles, PROFILE_FILLED_EXAMPLE_ID, toCompletionReward } = await import("@/lib/members");
-const { loadRuntimeHallOfFame } = await import("@/lib/hall-of-fame");
+const { emptyHallOfFame, getRuntimeHallOfFame } = await import("@/lib/hall-of-fame");
+const { settle } = await import("@/lib/api/public");
 
 const previousTimeZone = process.env.TZ;
 
@@ -147,7 +148,7 @@ describe("hall of fame milestone dates", () => {
             { id: "m2", type: "MILESTONE", title: "Soon", description: "", image_url: null, link_url: null, published_at: null },
           ],
     );
-    const { hallOfFame } = await loadRuntimeHallOfFame("en");
+    const { value: hallOfFame } = await settle(getRuntimeHallOfFame("en"), emptyHallOfFame);
     expect(hallOfFame.milestones.map((milestone) => milestone.date)).toEqual(["May 31, 2026", ""]);
   });
 });

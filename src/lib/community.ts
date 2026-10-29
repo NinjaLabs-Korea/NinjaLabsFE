@@ -1,6 +1,7 @@
 import { emptyHallOfFame, getRuntimeHallOfFame, type RuntimeHallOfFame } from "@/lib/hall-of-fame";
 import { getRuntimeMembers } from "@/lib/members";
 import { getRuntimeNotices } from "@/lib/notices";
+import { settle } from "@/lib/api/public";
 import type { Member, Notice } from "@/lib/types";
 
 /** How many cards each community section shows. */
@@ -19,8 +20,6 @@ export type CommunityData = {
   /** Sections whose source failed; the section renders an unavailable state instead of throwing. */
   unavailable: { notices: boolean; hall: boolean; members: boolean };
 };
-
-const settled = <T>(result: PromiseSettledResult<T>, fallback: T): T => (result.status === "fulfilled" ? result.value : fallback);
 
 /** Today as the `YYYY-MM-DD` UTC calendar day (the same day basis for both hub event sections). */
 function utcDay(now: Date): string {
@@ -41,13 +40,12 @@ export function isUpcomingEvent(notice: { eventDate?: string | null }, now: Date
  * `sort=eventDate`), the Hall of Fame and the member preview.
  */
 export async function getRuntimeCommunity(locale: string): Promise<CommunityData> {
-  const [noticesResult, hallResult, membersResult] = await Promise.allSettled([
-    getRuntimeNotices({ sort: "eventDate" }),
-    getRuntimeHallOfFame(locale),
-    getRuntimeMembers(),
+  const [noticesResult, hallResult, membersResult] = await Promise.all([
+    settle(getRuntimeNotices({ sort: "eventDate" }), []),
+    settle(getRuntimeHallOfFame(locale), emptyHallOfFame),
+    settle(getRuntimeMembers(), []),
   ]);
-  const notices = settled(noticesResult, []);
-  const events = notices.filter((notice) => notice.category === "Events");
+  const events = noticesResult.value.filter((notice) => notice.category === "Events");
   return {
     events: events.filter((notice) => !isUpcomingEvent(notice)).slice(0, COMMUNITY_EVENT_LIMIT),
     // The BE lists newest event date first; the upcoming ones read soonest first.
@@ -55,12 +53,12 @@ export async function getRuntimeCommunity(locale: string): Promise<CommunityData
       .filter((notice) => isUpcomingEvent(notice))
       .sort((a, b) => (a.eventDate ?? "").localeCompare(b.eventDate ?? ""))
       .slice(0, COMMUNITY_UPCOMING_LIMIT),
-    hall: settled(hallResult, emptyHallOfFame),
-    members: settled(membersResult, []).slice(0, COMMUNITY_MEMBER_LIMIT),
+    hall: hallResult.value,
+    members: membersResult.value.slice(0, COMMUNITY_MEMBER_LIMIT),
     unavailable: {
-      notices: noticesResult.status === "rejected",
-      hall: hallResult.status === "rejected",
-      members: membersResult.status === "rejected",
+      notices: noticesResult.unavailable,
+      hall: hallResult.unavailable,
+      members: membersResult.unavailable,
     },
   };
 }

@@ -5,9 +5,10 @@ import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
 import { MockApiError } from "@/lib/mocks/mock-error";
 import { getBounty } from "@/lib/bounties";
+import { toAdminStatus } from "@/lib/bounty-status";
 import { createMockFixtures, getMockFixtureSnapshot, type MockAccountFixtures } from "@/lib/mocks/fixtures";
 import { getAdminBounties, getAdminHighlights, getAdminPosts, getAdminUsers } from "@/lib/admin";
-import { ADMIN_STATUS_FROM_CODE, createMockOperationsApi } from "@/lib/mocks/admin-operations";
+import { createMockOperationsApi } from "@/lib/mocks/admin-operations";
 import { createMockCohortApis } from "@/lib/mocks/cohorts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -265,7 +266,7 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
       requireOne(bounties, (item) => item.slug === bountyId, "BOUNTY_NOT_FOUND");
       // A bounty opened in the operations console enforces the BE transition table + lifecycle blockers on its mock rows.
       if (openedOperations.has(bountyId)) transitionOperations(bountyId, to);
-      const status = ADMIN_STATUS_FROM_CODE[to] ?? "completed";
+      const status = toAdminStatus(to);
       bounties = bounties.map((item) => (item.slug === bountyId ? { ...item, status } : item));
     },
     deleteAdminBounty: async (bountyId) => {

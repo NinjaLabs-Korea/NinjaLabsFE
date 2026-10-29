@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import type { HighlightTypeLabel } from "@/lib/api/codecs";
-import { formatStatValue, loadRuntimeHallOfFame, visibleStats } from "@/lib/hall-of-fame";
+import { settle } from "@/lib/api/public";
+import { emptyHallOfFame, formatStatValue, getRuntimeHallOfFame, visibleStats } from "@/lib/hall-of-fame";
 import { imageProps } from "@/lib/image";
 import { localeMetadata } from "@/i18n/alternates";
 
@@ -40,7 +41,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("hallOfFame");
-  const { hallOfFame, unavailable } = await loadRuntimeHallOfFame(locale);
+  const { value: hallOfFame, unavailable } = await settle(getRuntimeHallOfFame(locale), emptyHallOfFame);
   // A brand-new platform has all-zero stats: hide the block until one value is above zero.
   const stats = visibleStats(hallOfFame.stats);
   return (

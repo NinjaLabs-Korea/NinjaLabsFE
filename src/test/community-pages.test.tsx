@@ -2,7 +2,7 @@
 import { fireEvent, screen, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { createFormatter, createTranslator } from "next-intl";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RuntimeHallOfFame } from "@/lib/hall-of-fame";
 import type { Member, Notice } from "@/lib/types";
 import { enMessages, renderWithIntl } from "@/test/intl";
@@ -33,14 +33,29 @@ const data = vi.hoisted(() => ({
   },
   members: [] as Member[],
   notices: [] as Notice[],
+  membersDown: false,
+  noticesDown: false,
 }));
 
 vi.mock("@/lib/hall-of-fame", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/hall-of-fame")>()),
-  loadRuntimeHallOfFame: async () => data.hallOfFame,
+  getRuntimeHallOfFame: async () => {
+    if (data.hallOfFame.unavailable) throw new Error("API down");
+    return data.hallOfFame.hallOfFame;
+  },
 }));
-vi.mock("@/lib/members", () => ({ getRuntimeMembers: async () => data.members }));
-vi.mock("@/lib/notices", () => ({ getRuntimeNotices: async () => data.notices }));
+vi.mock("@/lib/members", () => ({
+  getRuntimeMembers: async () => {
+    if (data.membersDown) throw new Error("API down");
+    return data.members;
+  },
+}));
+vi.mock("@/lib/notices", () => ({
+  getRuntimeNotices: async () => {
+    if (data.noticesDown) throw new Error("API down");
+    return data.notices;
+  },
+}));
 
 const { default: HallOfFamePage } = await import("@/app/[locale]/hall-of-fame/page");
 const { default: MembersPage } = await import("@/app/[locale]/members/page");
@@ -127,6 +142,19 @@ describe("Hall of Fame page", () => {
 });
 
 describe("Members page", () => {
+  afterEach(() => {
+    data.membersDown = false;
+  });
+
+  it("renders the inline unavailable state instead of throwing when the API is unreachable", async () => {
+    data.membersDown = true;
+    renderWithIntl(await MembersPage(pageProps));
+    expect(screen.getByRole("heading", { level: 1, name: "Ninja Labs members" })).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toContain("We cannot load this right now. Please try again shortly.");
+    expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Members" })).toBeNull();
+  });
+
   it("renders the team heading, the role filter over the runtime members and no rules block", async () => {
     data.members = [
       { slug: "a", name: "Ana", initials: "AN", role: "Core", title: "", bio: "", isMember: true, links: {} },
@@ -145,6 +173,18 @@ describe("Members page", () => {
 });
 
 describe("Notices page", () => {
+  afterEach(() => {
+    data.noticesDown = false;
+  });
+
+  it("renders the inline unavailable state instead of throwing when the API is unreachable", async () => {
+    data.noticesDown = true;
+    renderWithIntl(await NoticesPage(pageProps));
+    expect(screen.getByRole("heading", { level: 1, name: "Notices" })).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toContain("We cannot load this right now. Please try again shortly.");
+    expect(screen.queryByRole("region", { name: "Notices" })).toBeNull();
+  });
+
   it("renders the feed heading and the runtime notices behind the category filter", async () => {
     data.notices = [
       { slug: "n1", title: "Launch", excerpt: "x", bodyMarkdown: "", category: "Events", publishedAt: "Oct 1, 2026", thumbnail: "" },
