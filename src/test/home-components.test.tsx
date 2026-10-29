@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { readFileSync } from "node:fs";
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
@@ -140,9 +140,15 @@ describe("HomeRecruitment", () => {
 
     api = createMockApiClient();
     await api.transitionAdminCohort("cohort-2", "CLOSED");
+    const currentCohort = vi.spyOn(api, "getCurrentCohort");
+    const myApplications = vi.spyOn(api, "getMyCohortApplications");
     const quiet = renderWithIntl(<HomeRecruitment />);
-    await waitFor(() => expect(api.getCurrentCohort).toBeTruthy());
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    // Both reads must have settled and rendered before "nothing shown" means anything.
+    await waitFor(() => expect(currentCohort).toHaveBeenCalled());
+    await waitFor(() => expect(myApplications).toHaveBeenCalled());
+    await act(async () => {
+      await Promise.all([currentCohort.mock.results[0]?.value, myApplications.mock.results[0]?.value]);
+    });
     expect(quiet.container.textContent).toBe("");
   });
 });
