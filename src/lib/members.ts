@@ -84,7 +84,7 @@ type PublicProfileResponse = {
     completed_at: string;
     /** payouts actually PAID for this submission (older BE: the only reward field) */
     rewards: RewardRow[];
-    /** the bounty's posted rewards — shown while the payout is PENDING (absent on older BE) */
+    /** the bounty's posted rewards - shown while the payout is PENDING (absent on older BE) */
     postedRewards?: RewardRow[];
     /** `PayoutStatus`; typed as string because a newer BE may add values (read as PENDING) */
     payoutStatus?: string;
@@ -114,7 +114,7 @@ const rewardSummary = (rows: readonly RewardRow[] | undefined): { reward: Reward
 
 /**
  * `payoutStatus` + `postedRewards` are newer BE fields: PAID shows the paid payout, PARTIALLY_PAID the paid payout so far
- * (badge), PENDING the posted reward (badge), NONE nothing — unless paid `rewards` exist, which renders as PAID. An unknown value is read as PENDING. An older BE only sends
+ * (badge), PENDING the posted reward (badge), NONE nothing - unless paid `rewards` exist, which renders as PAID. An unknown value is read as PENDING. An older BE only sends
  * `rewards` (paid payouts), so a missing `payoutStatus` is derived from whether anything was paid.
  * A bounty can pay several tokens (one payout row each): the first is shown and `moreRewards` counts the rest, like the
  * `+N` on a bounty card, so a profile never reads as if only one token was paid.

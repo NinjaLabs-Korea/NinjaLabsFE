@@ -4,7 +4,9 @@
     "unavailableBody": "无法连接服务器，请稍后重试。",
     "mockNote": "会话预览：演示数据，刷新后将重置。",
     "loading": "正在加载账户信息…",
-    "sessionExpired": "会话已过期，请重新登录。"
+    "sessionExpired": "会话已过期，请重新登录。",
+    "sessionUnavailableTitle": "暂时无法确认你的登录状态。",
+    "retry": "重试"
   },
   "signedOut": {
     "body": "使用 Google 登录即可查看你的账户。",
@@ -84,7 +86,7 @@
       "sessions": "你将在所有设备上退出登录，公开主页也会消失。",
       "agents": "你的代理将被吊销，其 API 密钥会立即失效。",
       "history": "待审核的申请和尚在审核中的提交将被撤回。已完成的工作、付款记录和 NFT 会以匿名名称保留。",
-      "rewards": "已通过但尚未申请付款的奖励将不再发放。若有付款正在进行，需等其完成后才能删除账户。"
+      "rewards": "如果你有已通过审核但奖励尚未发放的作品,在发放完成之前无法删除账户,以确保奖励不会丢失。"
     },
     "deleteAction": "删除账户",
     "deleteDialog": {

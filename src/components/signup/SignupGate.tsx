@@ -27,7 +27,9 @@ export function SignupGate({ children, step }: { children: ReactNode; step: Sign
   if (access.kind === "show" && !shown) setShown(true);
   // A session that ends while a step is open (revoked, expired, signed out in another tab) must not tear the step down:
   // the form the user is typing into stays, and says why it cannot save (ProfileForm shows the session message).
-  if (shown && (access.kind === "leave" || access.kind === "sign-in-first")) access = { kind: "show" };
+  // A deliberate sign-out (no `session-ended` reason) is not such a session: the step is left like any other gated page.
+  const deliberateSignOut = snapshot.status === "signed-out" && snapshot.reason !== "session-ended";
+  if (shown && !deliberateSignOut && (access.kind === "leave" || access.kind === "sign-in-first")) access = { kind: "show" };
 
   const destination =
     access.kind === "resume" || access.kind === "sign-in-first"
@@ -38,9 +40,10 @@ export function SignupGate({ children, step }: { children: ReactNode; step: Sign
 
   useEffect(() => {
     if (!destination) return;
-    if (access.kind === "sign-in-first") pushFlash("signInRequired");
+    // Not after a sign-out the user just chose: "sign in to continue" would answer a request nobody made.
+    if (access.kind === "sign-in-first" && !shown) pushFlash("signInRequired");
     router.replace(destination);
-  }, [access.kind, destination, router]);
+  }, [access.kind, destination, router, shown]);
 
   if (access.kind === "show") return children;
   return (

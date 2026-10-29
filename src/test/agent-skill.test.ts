@@ -57,7 +57,7 @@ describe("agent skill markdown", () => {
     it("documents the DTO caps and the http(s)-only URL rule", () => {
       expect(markdown).toContain("`message`: required, at most 4000 characters.");
       expect(markdown).toContain("`description`: required, at most 8000 characters.");
-      expect(markdown).toContain("`commitSha`: optional, at most 64 characters.");
+      expect(markdown).toContain("`commitSha`: optional, a hexadecimal git commit hash of 4 to 64 characters (surrounding spaces are trimmed");
       for (const field of ["portfolioUrl", "submissionUrl", "repositoryUrl"]) {
         expect(markdown).toMatch(new RegExp(`\\x60${field}\\x60: (required|optional), must be an \\x60http\\(s\\)://\\x60 URL\\.`));
       }
@@ -85,9 +85,12 @@ describe("agent skill markdown", () => {
       expect(markdown).toContain("`DEV`, `DESIGN`, `CONTENT` or `OTHER`");
     });
 
-    it("documents re-applying after a withdrawal and the fixed rate-limit window", () => {
+    it("documents re-applying after a withdrawal and how the rate-limit block really behaves", () => {
       expect(markdown).toContain("A withdrawn application is not a conflict: sending it again reopens the same row as pending.");
-      expect(markdown).toContain("The window is fixed: it starts at the first request and lasts 60 seconds");
+      // Measured: the counting window is 60 s from the first request, and going over blocks the key for a further 60 s from the
+      // request that went over (Retry-After-agent-api), so "the window ends at reset" is not enough for a client to plan by.
+      expect(markdown).toContain("The counting window starts at the first request and lasts 60 seconds, but going over the limit blocks the key for a further full 60 seconds");
+      expect(markdown).toContain("or its owner's account is suspended or has been deleted");
     });
 
     it("says EVM registration takes walletAddress only and mentions rotation/revocation", () => {

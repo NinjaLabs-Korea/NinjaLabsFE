@@ -14,6 +14,11 @@
     "eyebrow": "Create account"
   },
   "wallet": {
+    "linked": {
+      "badge": "Wallet connected",
+      "note": "This wallet is already linked to your account, so there is nothing to verify again.",
+      "continue": "Continue"
+    },
     "metadata": {
       "title": "Connect wallet | Ninja Labs",
       "descriptionApi": "Connect and verify an Injective wallet.",
@@ -59,15 +64,9 @@
   "profile": {
     "metadata": {
       "title": "Set up profile | Ninja Labs",
-      "description": "Spam control and profile quality"
+      "description": "Choose a nickname, field tags and a short bio for your public Ninja Labs profile."
     },
     "title": "Set up your profile",
-    "whyRequired": "Spam control and profile quality",
-    "requirements": {
-      "spamControl": "Nickname alone cannot filter spam sign-ups, so nickname, field tags, and bio are mandatory.",
-      "oneFlow": "More required fields may increase drop-off, so the team monitors the per-step funnel after launch.",
-      "noSkip": "No draft saving on exit; re-entry starts over from the beginning of onboarding."
-    },
     "form": {
       "nicknameLabel": "Nickname*",
       "nicknamePlaceholder": "Enter your nickname",
@@ -88,12 +87,13 @@
         "tags": "Choose at least one field tag.",
         "bio": "Write a short intro.",
         "nicknameRejected": "The server rejected this nickname. Check the rules above.",
-        "bioRejected": "The server rejected this bio. Keep it under 1000 characters."
+        "bioRejected": "The server rejected this bio. Remove invisible or unusual characters and keep it under 1000 characters."
       },
       "saveErrors": {
         "network": "We couldn't save your profile. Check your connection and try again.",
         "session": "Your session has ended. Sign in again to continue.",
         "NICKNAME_TAKEN": "That nickname is already in use. Choose another one.",
+        "NICKNAME_CHANGE_COOLDOWN": "Nicknames can be changed once every 24 hours. Keep your current nickname for now and try again later.",
         "invalid": "Check every field: the nickname must be 2-50 characters, and a bio and field tag are required.",
         "INVALID_CHARACTER": "Your nickname or bio contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
         "REFERENCE_NOT_FOUND": "Your account record could not be found. Reload the page or sign in again.",
@@ -101,13 +101,15 @@
         "generic": "We couldn't save your profile. Please try again.",
         "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
       },
-      "nicknameHint": "2–50 characters: letters, digits, _ . -; starting and ending with a letter or digit.",
+      "nicknameHint": "2–50 characters: letters (with their accent or vowel marks), digits, _ . -; starting and ending with a letter or digit.",
       "signInAgain": "Sign in again (your entries are kept)",
+      "signInAgainEdit": "Sign in again in a new tab, then save here",
       "nicknameErrors": {
         "tooShort": "Use at least 2 characters.",
         "tooLong": "Use at most 50 characters.",
         "reserved": "This word is reserved. Choose another nickname.",
-        "chars": "Use only letters, digits, and _ . - (no spaces).",
+        "chars": "Use only letters (with their accent or vowel marks), digits, and _ . - (no spaces).",
+        "marks": "Combining marks must follow a letter or digit, at most 3 in a row.",
         "lookalike": "Full-width and math-style letters are not allowed. Use plain letters.",
         "mixedScript": "Don't mix Latin letters with Cyrillic or Greek ones.",
         "edge": "Start and end with a letter or digit.",
@@ -122,8 +124,7 @@
       "saved": "Profile saved."
     },
     "eyebrow": "Profile",
-    "subtitle": "This is what sponsors and other builders see on your public portfolio.",
-    "whyRequiredEyebrow": "Why all required"
+    "subtitle": "This is what sponsors and other builders see on your public portfolio."
   },
   "getStarted": {
     "metadata": {
@@ -173,7 +174,8 @@
     "errors": {
       "TURNSTILE_FAILED": "The bot check did not pass. Go back to the sign-in page, complete the check again and retry.",
       "TURNSTILE_UNAVAILABLE": "The bot check service is temporarily unavailable. Please try signing in again in a moment.",
-      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "TOO_MANY_REQUESTS": "Too many sign-in attempts. Wait a minute, then try again."
     },
     "backToSignIn": "Back to sign in"
   }

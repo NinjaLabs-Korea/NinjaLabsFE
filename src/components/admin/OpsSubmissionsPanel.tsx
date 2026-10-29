@@ -1,5 +1,6 @@
 "use client";
 
+import { hasVisibleText } from "@/lib/visible-text";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
@@ -35,7 +36,7 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
   const submit = async () => {
     if (!target) return;
     const { submission, decision, revisionNo } = target;
-    if (submissionCommentRequired(decision, submission.status) && !comment.trim()) {
+    if (submissionCommentRequired(decision, submission.status) && !hasVisibleText(comment)) {
       setCommentError(true);
       return;
     }
@@ -76,7 +77,7 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
                         <summary className="cursor-pointer font-semibold text-ink-secondary">{t("submissions.history", { count: submission.reviews.length })}</summary>
                         <ul className="mt-1 space-y-1">
                           {submission.reviews.map((review, index) => (
-                            <li key={`${review.createdAt}-${index}`}>{t("submissions.historyItem", { decision: t.has(`submissions.decisions.${review.decision}`) ? t(`submissions.decisions.${review.decision}`) : review.decision, revision: review.revisionNo ?? "–", date: formatDate(review.createdAt) })}{review.comment ? ` — ${review.comment}` : ""}</li>
+                            <li key={`${review.createdAt}-${index}`}>{t("submissions.historyItem", { decision: t.has(`submissions.decisions.${review.decision}`) ? t(`submissions.decisions.${review.decision}`) : review.decision, revision: review.revisionNo ?? "–", date: formatDate(review.createdAt) })}{review.comment ? ` - ${review.comment}` : ""}</li>
                           ))}
                         </ul>
                       </details>
@@ -84,7 +85,12 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
                   </td>
                   <td className={opsCell}><Badge variant={subVariant(submission.status)}>{t(`submissionStatuses.${submission.status}`)}</Badge></td>
                   <td className={`${opsCell} text-xs`} title={submission.recipientWalletAddress ?? undefined}>
-                    {submission.recipientWalletAddress ? <span className="font-mono">{opsShort(submission.recipientWalletAddress)}</span> : <span className="text-danger">{t("submissions.noWallet")}</span>}
+                    {submission.recipientWalletAddress
+                      ? <span className="font-mono">{opsShort(submission.recipientWalletAddress)}</span>
+                      // A missing wallet only blocks a payout: warn on an approved submission of a bounty that pays something, a dash elsewhere.
+                      : submission.status === "APPROVED" && ops.rewards.length > 0
+                        ? <span className="text-danger">{t("submissions.noWallet")}</span>
+                        : <span className="text-ink-muted">–</span>}
                   </td>
                   <td className={opsCell}>
                     <div className="flex flex-wrap gap-2">

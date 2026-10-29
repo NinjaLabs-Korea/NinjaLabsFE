@@ -10,7 +10,7 @@
  * ## 어디를 고치나
  * - **화면에 코드 하나 추가**: 아래 해당 화면의 `codes`에 코드를 넣고 → `messages/{en,ko,zh}/<ns>.json`의 그 객체에 같은 이름의 키를 추가.
  *   `src/test/error-copy.test.ts`가 en 키 존재를, `messages-parity.test.ts`가 ko/zh를 확인한다.
- * - **코드 철자**: `be-error-codes.ts`(BE 스냅샷) 또는 `FE_ERROR_CODES`에 있는 코드만 넣을 수 있다 — 아니면 tsc가 실패한다.
+ * - **코드 철자**: `be-error-codes.ts`(BE 스냅샷) 또는 `FE_ERROR_CODES`에 있는 코드만 넣을 수 있다 - 아니면 tsc가 실패한다.
  *   BE에 새 코드가 생겼으면 먼저 `be-error-codes.ts`를 BE 카탈로그와 맞춘다.
  * - **새 화면**: `ERROR_COPY`에 항목을 추가하면 테스트가 자동으로 그 화면도 검사한다.
  */
@@ -19,8 +19,8 @@ import { ApiHttpError } from "./http";
 
 /**
  * BE가 아니라 FE가 스스로 만드는 코드. 위치:
- * - `VALIDATION_FAILED` / `UNKNOWN_ERROR` / `REFRESH_UNAVAILABLE` — `lib/api/http.ts` (Nest `message[]`, 빈 message, refresh 일시 장애)
- * - `NETWORK_ERROR` / `UNAUTHORIZED` / `TOO_MANY_REQUESTS` / `TRANSITION_BLOCKED` — `lib/admin-operations.ts opsErrorCode` 정규화 결과 (`TOO_MANY_REQUESTS`는 `knownCode`도 429에서 만든다)
+ * - `VALIDATION_FAILED` / `UNKNOWN_ERROR` / `REFRESH_UNAVAILABLE` - `lib/api/http.ts` (Nest `message[]`, 빈 message, refresh 일시 장애)
+ * - `NETWORK_ERROR` / `UNAUTHORIZED` / `TOO_MANY_REQUESTS` / `TRANSITION_BLOCKED` - `lib/admin-operations.ts opsErrorCode` 정규화 결과 (`TOO_MANY_REQUESTS`는 `knownCode`도 429에서 만든다)
  */
 export const FE_ERROR_CODES = [
   "VALIDATION_FAILED",
@@ -48,7 +48,7 @@ export type ErrorCopySurface = {
 
 export const ERROR_COPY = {
   /**
-   * 온보딩 지갑 연결 (challenge → 서명 → verify) — `wallet/WalletConnectButton.tsx`. BE `wallets.service.ts`가 던지는 코드 전부.
+   * 온보딩 지갑 연결 (challenge → 서명 → verify) - `wallet/WalletConnectButton.tsx`. BE `wallets.service.ts`가 던지는 코드 전부.
    * 서명 거절 등 지갑 쪽 실패는 `ApiHttpError`가 아니므로 `generic`이다.
    */
   walletVerify: {
@@ -60,13 +60,15 @@ export const ERROR_COPY = {
       "INVALID_SIGNATURE",
       // 409: 이 주소가 다른 계정에 연결됐거나, 내 계정에 이미 대표 지갑이 있다.
       "WALLET_ALREADY_LINKED",
+      // 400: 이 주소가 내 에이전트의 지갑이다. 개인 지갑은 에이전트 지갑과 달라야 한다.
+      "AGENT_WALLET_IS_OWNER_WALLET",
       "DATABASE_UNAVAILABLE",
       "TOO_MANY_REQUESTS",
     ],
     fallback: "generic",
   },
   /**
-   * 바운티 상세 → 직접 지원/제출 — `bounties/BountyActionPanel.tsx` (키 선택은 `lib/bounty-action-state.ts bountyActionErrorCopy`).
+   * 바운티 상세 → 직접 지원/제출 - `bounties/BountyActionPanel.tsx` (키 선택은 `lib/bounty-action-state.ts bountyActionErrorCopy`).
    * BE bounties/rewards 코드와 FE 전송 코드(REFRESH_UNAVAILABLE / UNKNOWN_ERROR). 목록 밖 BE 코드는 `unknown`(원 코드를 `{code}`로),
    * HTTP 응답이 아닌 실패는 `generic`이다.
    */
@@ -80,13 +82,13 @@ export const ERROR_COPY = {
     ],
     fallback: "generic",
   },
-  /** 내 정보 → 계정 삭제 (`DELETE /users/me`) — `account/AccountSettingsView.tsx` */
+  /** 내 정보 → 계정 삭제 (`DELETE /users/me`) - `account/AccountSettingsView.tsx` */
   accountDelete: {
     messages: "account.settings.deleteErrors",
     codes: [
       "CONFIRM_NICKNAME_MISMATCH",
       "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS",
-      // 409: 승인됐지만 아직 지급 요청 전인 보상 — 탈퇴하면 잃으므로 운영자가 먼저 지급해야 한다.
+      // 409: 승인됐지만 아직 지급 요청 전인 보상 - 탈퇴하면 잃으므로 운영자가 먼저 지급해야 한다.
       "WITHDRAWAL_BLOCKED_PENDING_REWARDS",
       "DATABASE_UNAVAILABLE",
       // 탈퇴는 5회/분 한도다
@@ -94,31 +96,31 @@ export const ERROR_COPY = {
     ],
     fallback: "generic",
   },
-  /** 내 지원 현황 → 지원 철회 — `account/ApplicationsView.tsx` (이 코드면 목록도 새로고침한다) */
+  /** 내 지원 현황 → 지원 철회 - `account/ApplicationsView.tsx` (이 코드면 목록도 새로고침한다) */
   applicationWithdraw: {
     messages: "account.applications.withdrawErrors",
     codes: ["APPLICATION_NOT_FOUND_OR_NOT_PENDING", "TOO_MANY_REQUESTS"],
     fallback: "generic",
   },
-  /** 내 에이전트 → API 키 회전 — `account/AgentsView.tsx` */
+  /** 내 에이전트 → API 키 회전 - `account/AgentsView.tsx` */
   agentRotate: {
     messages: "agents.list.rotateErrors",
-    codes: ["AGENT_NOT_ACTIVE", "TOO_MANY_REQUESTS"],
+    codes: ["AGENT_NOT_ACTIVE", "AGENT_NOT_FOUND", "TOO_MANY_REQUESTS"],
     fallback: "generic",
   },
-  /** 에이전트 등록 (register → 서명 → verify) — `agents/AgentRegisterForm.tsx`. 필드 검증(VALIDATION_FAILED)은 인라인으로 따로 처리한다. */
+  /** 에이전트 등록 (register → 서명 → verify) - `agents/AgentRegisterForm.tsx`. 필드 검증(VALIDATION_FAILED)은 인라인으로 따로 처리한다. */
   agentRegister: {
     messages: "agents.form.registerErrors",
     codes: ["AGENT_KEY_OR_WALLET_ALREADY_REGISTERED", "AGENT_WALLET_IS_OWNER_WALLET", "TOO_MANY_REQUESTS"],
     fallback: "generic",
   },
   /**
-   * 온보딩 프로필 저장 — `signup/ProfileForm.tsx`. 코드 외 상태 규칙(네트워크 → `network`, 401 → `session`,
+   * 온보딩 프로필 저장 - `signup/ProfileForm.tsx`. 코드 외 상태 규칙(네트워크 → `network`, 401 → `session`,
    * 코드 없는 409 → `NICKNAME_TAKEN`, 400/422 → `invalid`)은 `ProfileForm.saveErrorKey`가 소유한다.
    */
   profileSave: {
     messages: "signup.profile.form.saveErrors",
-    codes: ["NICKNAME_TAKEN", "INVALID_CHARACTER", "REFERENCE_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS"],
+    codes: ["NICKNAME_TAKEN", "NICKNAME_CHANGE_COOLDOWN", "INVALID_CHARACTER", "REFERENCE_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS"],
     fallback: "generic",
   },
   /**
@@ -154,37 +156,39 @@ export const ERROR_COPY = {
     fallback: "generic",
   },
   /**
-   * 로그인 콜백의 `#error=<CODE>` — `lib/api/oauth.ts` → `app/[locale]/auth/callback/page.tsx`. BE는 로그인 시작 실패(`GET /auth/google`)의
-   * `TURNSTILE_FAILED`/`TURNSTILE_UNAVAILABLE`과 콜백 중 DB 장애 `DATABASE_UNAVAILABLE`을 `#error=`로 돌려보낸다
+   * 로그인 콜백의 `#error=<CODE>` - `lib/api/oauth.ts` → `app/[locale]/auth/callback/page.tsx`. BE는 로그인 시작 실패(`GET /auth/google`)의
+   * `TURNSTILE_FAILED`/`TURNSTILE_UNAVAILABLE`/`TOO_MANY_REQUESTS`(시작 한도)와 콜백 중 DB 장애 `DATABASE_UNAVAILABLE`을 `#error=`로 돌려보낸다
    * (BE `START_FAILURE_CODES`). 그 밖의 실패는 `AUTH_FAILED` → 일반 문구 `failedBody`.
    */
   loginCallback: {
     messages: "signup.authCallback.errors",
-    codes: ["TURNSTILE_FAILED", "TURNSTILE_UNAVAILABLE", "DATABASE_UNAVAILABLE"],
+    codes: ["TURNSTILE_FAILED", "TURNSTILE_UNAVAILABLE", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS"],
   },
-  /** 운영자 콘솔 CRUD 저장/삭제/전이 토스트 — `lib/admin-helpers.ts adminErrorDescription` (fallback은 액션별 문구) */
+  /** 운영자 콘솔 CRUD 저장/삭제/전이 토스트 - `lib/admin-helpers.ts adminErrorDescription` (fallback은 액션별 문구) */
   adminWrite: {
     messages: "admin.common.errors",
     codes: [
       "INVALID_CHARACTER", "INVALID_DATE", "REFERENCE_NOT_FOUND", "BOUNTY_NOT_FOUND", "BOUNTY_HAS_OPEN_FUNDS",
       // 다른 운영자가 먼저 지운 공지/하이라이트/유저에 대한 수정·삭제·멤버 지정 (404)
       "NOTICE_NOT_FOUND", "HIGHLIGHT_NOT_FOUND", "USER_NOT_FOUND",
-      // 바운티 생성: 서버 env에 USDC 컨트랙트 / EVM 체인 ID가 없다 (운영자가 고칠 설정 문제 — 일반 실패 문구로 숨기지 않는다)
+      // 멤버 지정: 가입(온보딩)을 끝내지 않은 유저 (409) - 운영자가 할 수 있는 일이 없다는 이유를 말해 준다
+      "PROFILE_REQUIRED",
+      // 바운티 생성: 서버 env에 USDC 컨트랙트 / EVM 체인 ID가 없다 (운영자가 고칠 설정 문제 - 일반 실패 문구로 숨기지 않는다)
       "USDC_EVM_CONTRACT_NOT_CONFIGURED", "INJECTIVE_EVM_CHAIN_NOT_CONFIGURED",
-      // 바운티 수정: 마감을 과거로 옮김 (BE bounty-admin.service — 저장된 값 그대로 되보내는 것은 통과)
+      // 바운티 수정: 마감을 과거로 옮김 (BE bounty-admin.service - 저장된 값 그대로 되보내는 것은 통과)
       "DEADLINE_IN_PAST",
       // 바운티 수정: 최대 당선자 수를 이미 승인된 제출 수보다 낮춤 (400)
       "MAX_WINNERS_BELOW_APPROVED",
-      // 커버/썸네일/하이라이트 이미지 업로드 (POST /admin/media — 5 MiB, PNG/JPEG/WebP 시그니처 검사)
+      // 커버/썸네일/하이라이트 이미지 업로드 (POST /admin/media - 5 MiB, PNG/JPEG/WebP 시그니처 검사)
       "MEDIA_FILE_TOO_LARGE", "MEDIA_FILE_TYPE_UNSUPPORTED",
       // 503: BE가 DB에 닿지 못함 (일시 장애)
       "DATABASE_UNAVAILABLE",
-      // 403 (운영자 권한 회수) / 401 · 429는 `adminApiErrorCode`가 상태로 정규화한다 — 429 본문에는 코드가 없다
+      // 403 (운영자 권한 회수) / 401 · 429는 `adminApiErrorCode`가 상태로 정규화한다 - 429 본문에는 코드가 없다
       "ADMIN_ONLY", "UNAUTHORIZED", "TOO_MANY_REQUESTS",
     ],
   },
   /**
-   * 운영자 바운티 운영(지원/제출/보상/지급/NFT) — `lib/admin-operations.ts opsErrorCode`. 해당 엔드포인트가 던지는 BE 코드 전부와
+   * 운영자 바운티 운영(지원/제출/보상/지급/NFT) - `lib/admin-operations.ts opsErrorCode`. 해당 엔드포인트가 던지는 BE 코드 전부와
    * FE 정규화 코드. 목록 밖은 `unknown`(원 코드를 `{code}`로 보여 준다).
    */
   adminOperations: {
@@ -249,7 +253,7 @@ export function knownCode<const C extends string>(error: unknown, codes: readonl
 
 type SurfaceWithFallback = { readonly codes: readonly string[]; readonly fallback: string };
 
-/** 화면 `S`의 문구 키 타입 (코드 | fallback) — 컴포넌트 state 타입으로 쓴다. */
+/** 화면 `S`의 문구 키 타입 (코드 | fallback) - 컴포넌트 state 타입으로 쓴다. */
 export type ErrorCopyKey<S extends SurfaceWithFallback> = S["codes"][number] | S["fallback"];
 
 /** 화면의 문구 키: 목록에 있는 코드면 그 코드, 아니면 화면의 `fallback`. `t(errorCopyKey(...))`로 쓴다. */

@@ -9,10 +9,11 @@ import { createMockApiClient } from "@/lib/mocks/api-client";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { enMessages, renderWithIntl } from "@/test/intl";
 import { signedInAs } from "@/test/support/auth";
+import { hrefString } from "@/test/support/link";
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href, ...props }: ComponentProps<"a">) => (
-    <a href={href} {...props}>
+  Link: ({ children, href, ...props }: Omit<ComponentProps<"a">, "href"> & { href: Parameters<typeof hrefString>[0] }) => (
+    <a href={hrefString(href)} {...props}>
       {children}
     </a>
   ),
@@ -91,7 +92,7 @@ describe("owner-private account pages", () => {
     Object.assign(apiClient, { getApplications: async () => ({ status: "unavailable" as const, reason: "unauthorized" as const }) });
     renderWithIntl(await ApplicationsPage({ params }));
     expect(await screen.findByText("Your session has expired. Sign in again to continue.")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Get Started" }).getAttribute("href")).toBe("/signup");
+    expect(screen.getByRole("link", { name: "Get Started" }).getAttribute("href")).toBe("/signup?returnTo=%2Fapplications");
     expect(screen.queryByText("Applications are temporarily unavailable.")).toBeNull();
 
     apiClient = createMockApiClient();

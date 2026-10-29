@@ -143,3 +143,10 @@ describe("proxy: finished users skip the Intro (hint cookie)", () => {
     for (const pathname of ["/en/about", "/ko/recruit", "/zh/home", "/en/admin/recruitment"]) expect((await run(pathname)).status, pathname).toBe(200);
   });
 });
+
+describe("proxy: hreflang has one source", () => {
+  it.each(["/ko/notices", "/en", "/zh/bounties"])("%s carries no next-intl Link alternate header (the head and the sitemap own hreflang)", async (pathname) => {
+    const { response } = await run(pathname);
+    expect(response.headers.get("link")).toBeNull();
+  });
+});

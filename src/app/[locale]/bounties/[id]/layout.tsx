@@ -9,8 +9,13 @@ import { validateDetailId } from "@/lib/detail-id";
 // the page's own metadata applies.
 export async function generateMetadata({ params }: LayoutProps<"/[locale]/bounties/[id]">): Promise<Metadata> {
   const { locale, id } = await params;
-  if ((await validateDetailId("bounties", id)) && (await getRuntimeBounty(id, locale))) return {};
   const t = await getTranslations({ locale, namespace: "bounties.meta" });
+  try {
+    if ((await validateDetailId("bounties", id)) && (await getRuntimeBounty(id, locale))) return {};
+  } catch {
+    // BE outage: the page below ends in error.tsx (500). Metadata that throws too leaves that page with no <title>.
+    return { alternates: {}, title: t("unavailable") };
+  }
   return { alternates: {}, title: t("notFound") };
 }
 

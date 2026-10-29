@@ -46,20 +46,30 @@ describe("admin bounty form mapping", () => {
     expect(formToBounty({ ...base, amount: "10" }, { slug: "", coverImage: null }).status).toBe("funding");
   });
 
-  it("re-sends the raw requirements string unchanged while the deliverables/guide inputs are untouched", () => {
+  it("re-sends the raw requirements string unchanged while the input is untouched, and loads the raw text (not the parsed list)", () => {
     const raw = "- Repo\n\n  - nested item\n\nClosing note";
-    const bounty = { ...getAdminBounties()[0], deadline: "2026-07-14T23:59:00.000Z", requirements: raw, deliverables: ["- Repo", "- nested item", "Closing note"] };
+    const bounty = { ...getAdminBounties()[0], deadline: "2026-07-14T23:59:00.000Z", requirements: raw, submissionGuide: raw, deliverables: ["- Repo", "- nested item", "Closing note"] };
     const form = bountyToForm(bounty);
-    expect(form.deliverables).toBe("- Repo\n- nested item\nClosing note");
+    // The input shows everything stored, including the prose a bullet-only list would drop.
+    expect(form.deliverables).toBe(raw);
     // Untouched: byte-identical, blank lines and indentation included.
     expect(formToBounty(form, { slug: bounty.slug, coverImage: null }).requirements).toBe(raw);
-    // Edited deliverables replace it with the entered lines.
-    expect(formToBounty({ ...form, deliverables: " Demo \n\n Docs " }, { slug: bounty.slug, coverImage: null }).requirements).toBe("Demo\nDocs");
-    // Only the guide edited: the guide becomes the requirements.
-    expect(formToBounty({ ...form, submissionGuide: "Link the repo" }, { slug: bounty.slug, coverImage: null }).requirements).toBe("Link the repo");
-    // New bounty: deliverables first, guide as the fallback.
+    // Edited: the typed text is saved as typed (trimmed at the ends), line breaks and prose kept.
+    const edited = formToBounty({ ...form, deliverables: " Demo\n\nHow reviewers check it:\n- Docs " }, { slug: bounty.slug, coverImage: null });
+    expect(edited.requirements).toBe("Demo\n\nHow reviewers check it:\n- Docs");
+    expect(edited.submissionGuide).toBe(edited.requirements);
+    expect(edited.deliverables).toEqual(["Demo", "How reviewers check it:", "- Docs"]);
+    // New bounty.
     expect(formToBounty({ ...emptyBountyForm(), deadline: "2026-07-14T23:59", deliverables: "Repo" }, { slug: "", coverImage: null }).requirements).toBe("Repo");
-    expect(formToBounty({ ...emptyBountyForm(), deadline: "2026-07-14T23:59", submissionGuide: "Guide only" }, { slug: "", coverImage: null }).requirements).toBe("Guide only");
+  });
+
+  it("keeps guide prose and bullets together through a create and an edit (no field is dropped or overwritten)", () => {
+    const typed = "Submit the repo link.\n- D1\n- D2";
+    const created = formToBounty({ ...emptyBountyForm(), deadline: "2026-07-14T23:59", deliverables: typed }, { slug: "", coverImage: null });
+    expect(created.requirements).toBe(typed);
+    const reopened = bountyToForm({ ...getAdminBounties()[0], deadline: "2026-07-14T23:59:00.000Z", requirements: created.requirements, submissionGuide: created.requirements, deliverables: created.deliverables });
+    expect(reopened.deliverables).toBe(typed);
+    expect(formToBounty(reopened, { slug: "x", coverImage: null }).requirements).toBe(typed);
   });
 
   it("empties the deadline input for a non-ISO stored value and flags it instead of accepting it silently", () => {
@@ -170,10 +180,6 @@ describe("admin bounty form validation", () => {
       reviewProcess: "required",
       deliverables: "deliverablesRequired",
     });
-  });
-
-  it("accepts a submission guide in place of deliverables", () => {
-    expect(validateBountyForm({ ...valid, deliverables: "", submissionGuide: "Link the repo" }, { now })).toEqual({});
   });
 
   it("rejects a past deadline on create but keeps an unchanged one on edit", () => {

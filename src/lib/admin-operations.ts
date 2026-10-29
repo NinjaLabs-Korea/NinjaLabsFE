@@ -9,7 +9,7 @@ import { ApiHttpError } from "./api/http";
 export type BountyStatusCode = "DRAFT" | "FUNDING_PENDING" | "OPEN" | "SUBMISSION_CLOSED" | "IN_REVIEW" | "COMPLETED" | "CANCELLED";
 export const BOUNTY_STATUS_CODES: readonly BountyStatusCode[] = ["DRAFT", "FUNDING_PENDING", "OPEN", "SUBMISSION_CLOSED", "IN_REVIEW", "COMPLETED", "CANCELLED"];
 
-/** Mirror of the BE transition table (`bounty-status.ts TRANSITIONS`) — the mock uses it; api mode reads `lifecycle.allowedTransitions`. */
+/** Mirror of the BE transition table (`bounty-status.ts TRANSITIONS`) - the mock uses it; api mode reads `lifecycle.allowedTransitions`. */
 export const BOUNTY_TRANSITIONS: Readonly<Partial<Record<BountyStatusCode, readonly BountyStatusCode[]>>> = {
   DRAFT: ["FUNDING_PENDING", "OPEN", "CANCELLED"],
   FUNDING_PENDING: ["OPEN", "CANCELLED"],
@@ -18,11 +18,11 @@ export const BOUNTY_TRANSITIONS: Readonly<Partial<Record<BountyStatusCode, reado
   IN_REVIEW: ["COMPLETED", "OPEN"],
 };
 
-/** BE `BountyStatusPolicy.isInProgress` — reviews and payout requests are accepted only here. */
+/** BE `BountyStatusPolicy.isInProgress` - reviews and payout requests are accepted only here. */
 export const isBountyInProgress = (status: string): boolean => status === "OPEN" || status === "SUBMISSION_CLOSED" || status === "IN_REVIEW";
 export const isBountyFinished = (status: string): boolean => status === "COMPLETED" || status === "CANCELLED";
 
-/** BE `LifecycleBlockerCode` (bounty-lifecycle.service.ts) — `admin.operations.blockers.<code>`. */
+/** BE `LifecycleBlockerCode` (bounty-lifecycle.service.ts) - `admin.operations.blockers.<code>`. */
 export const LIFECYCLE_BLOCKER_CODES = ["DEADLINE_PASSED", "REWARDS_UNFUNDED", "PENDING_APPLICATIONS", "UNSUBMITTED_PARTICIPANTS", "UNRESOLVED_SUBMISSIONS", "UNPAID_WINNERS"] as const;
 export type LifecycleBlockerCode = (typeof LIFECYCLE_BLOCKER_CODES)[number];
 export type LifecycleBlocker = { code: LifecycleBlockerCode | (string & {}); count?: number };
@@ -59,7 +59,7 @@ export type OpsSubmission = OpsActor & {
   /** Owner's active primary wallet; null → a payout request answers APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND. */
   recipientWalletAddress: string | null;
   reviewComment: string | null;
-  /** Newest first — `revisions[0]` is the revision under review. */
+  /** Newest first - `revisions[0]` is the revision under review. */
   revisions: OpsRevision[];
   reviews: OpsReview[];
 };
@@ -74,7 +74,7 @@ export type OpsReward = {
   depositedAt: string | null;
   depositTxHash: string | null;
   custodyAddress: string | null;
-  /** LEAST(amount, deposited) — the payout allocation cap (null before the deposit). */
+  /** LEAST(amount, deposited) - the payout allocation cap (null before the deposit). */
   cap: string | null;
   /** Sum of non-cancelled payouts. */
   allocated: string;
@@ -95,7 +95,7 @@ export type OpsPayout = {
   approvedByNickname: string | null;
   approvedAt: string | null;
   paidAt: string | null;
-  /** The viewing admin requested it — under the two-person rule the BE answers 403 PAYOUT_SELF_APPROVAL. */
+  /** The viewing admin requested it - under the two-person rule the BE answers 403 PAYOUT_SELF_APPROVAL. */
   requestedByMe: boolean;
 };
 
@@ -189,9 +189,9 @@ export type AdminNftJobPage = { items: AdminNftJob[]; page: number; pageSize: nu
 
 // ── errors ──────────────────────────────────────────────
 /**
- * Every BE code the operations/NFT endpoints answer with (plus the FE transport codes) — each has
+ * Every BE code the operations/NFT endpoints answer with (plus the FE transport codes) - each has
  * `admin.operations.errors.<CODE>` in all three locales; anything else renders `errors.unknown` with the raw code.
- * 코드 목록은 `lib/api/error-copy.ts`의 `ERROR_COPY.adminOperations`가 소유한다 — 추가/삭제는 거기서.
+ * 코드 목록은 `lib/api/error-copy.ts`의 `ERROR_COPY.adminOperations`가 소유한다 - 추가/삭제는 거기서.
  */
 export const OPS_ERROR_CODES = ERROR_COPY.adminOperations.codes;
 export type OpsErrorCode = (typeof OPS_ERROR_CODES)[number];
@@ -200,7 +200,7 @@ export type OpsErrorCode = (typeof OPS_ERROR_CODES)[number];
  * Normalizes a failed operations call to a message code. `INVALID_TRANSITION:OPEN->COMPLETED` → `INVALID_TRANSITION`;
  * a transition's 400 with a blocker list (Nest sends `message: string[]`, surfaced as VALIDATION_FAILED) → `TRANSITION_BLOCKED`;
  * 429 → `TOO_MANY_REQUESTS`; 401 → `UNAUTHORIZED`; a non-HTTP failure (fetch TypeError) → `NETWORK_ERROR`.
- * Returns `{ code, known }` — unknown codes keep their raw value for the `errors.unknown` copy.
+ * Returns `{ code, known }` - unknown codes keep their raw value for the `errors.unknown` copy.
  */
 export function opsErrorCode(error: unknown, context: "transition" | "other" = "other"): { code: string; known: boolean } {
   if (!(error instanceof ApiHttpError)) return { code: "NETWORK_ERROR", known: true };

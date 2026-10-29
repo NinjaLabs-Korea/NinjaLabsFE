@@ -19,6 +19,10 @@ export type ClientUser = {
 export type SignedOutAuthSnapshot = {
   status: "loading" | "signed-out";
   user: null;
+  /** Set only when a signed-in session was ended from outside (refresh rejected, another tab signed out); a voluntary sign-out leaves it unset.
+   * `unavailable`: the session could not be checked (refresh or `/auth/me` answered 5xx/429 or never arrived). The cookie is kept, so
+   * this is NOT a sign-out: views say "temporarily unavailable" and offer a retry instead of the sign-in prompt. */
+  reason?: "session-ended" | "unavailable";
 };
 
 export type SignedInAuthSnapshot = {
@@ -28,7 +32,7 @@ export type SignedInAuthSnapshot = {
 
 export type AuthSnapshot = SignedOutAuthSnapshot | SignedInAuthSnapshot;
 
-/** `signIn` options — `turnstileToken` is the Cloudflare Turnstile widget token forwarded to BE `GET /auth/google` (api mode only). */
+/** `signIn` options - `turnstileToken` is the Cloudflare Turnstile widget token forwarded to BE `GET /auth/google` (api mode only). */
 export type SignInOptions = {
   turnstileToken?: string;
 };

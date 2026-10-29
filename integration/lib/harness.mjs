@@ -84,6 +84,20 @@ export async function apiAs(token, method, path, body) {
 
 const results = [];
 /** Records and prints one assertion; the process exit code reflects all of them. */
+/**
+ * Waits for `selector` to exist, reloading the page once when it does not show up (a loaded machine hydrates slowly), and
+ * fills it. Returns false after recording a failed assertion when the field never appears, so a slow page reads as one clear
+ * failed check instead of an uncaught "fill target not found" that hides the rest of the flow.
+ */
+export async function fillWhenReady(page, selector, value, label = selector, waitMs = 20000) {
+  const present = `!!document.querySelector(${JSON.stringify(selector)})`;
+  let ready = await page.waitFor(present, waitMs);
+  if (!ready) { await page.eval('location.reload()'); await sleep(500); ready = await page.waitFor(present, waitMs); }
+  if (!ready) { check(`${label}: form field is on the page`, false, (await page.text()).replace(/\s+/g, ' ').slice(0, 300)); return false; }
+  await page.fill(selector, value);
+  return true;
+}
+
 export function check(label, ok, detail = '') {
   results.push({ label, ok: !!ok });
   console.log(`ASSERT ${ok ? 'PASS' : 'FAIL'} ${label}${detail !== '' ? ' :: ' + (typeof detail === 'string' ? detail : JSON.stringify(detail)) : ''}`);

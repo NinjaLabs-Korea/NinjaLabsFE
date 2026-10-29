@@ -47,7 +47,7 @@
     }
   },
   "profile": {
-    "notFoundTitle": "페이지를 찾을 수 없음 | Ninja Labs",
+    "notFoundTitle": "페이지를 찾을 수 없습니다 | Ninja Labs",
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "바운티 {count}개 완료",
     "newBuilder": "신규 빌더",

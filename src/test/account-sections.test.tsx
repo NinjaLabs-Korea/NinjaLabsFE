@@ -106,6 +106,9 @@ describe("ProfileForm in edit mode (account page)", () => {
     expect(refresh).toHaveBeenCalled();
     expect(assign).not.toHaveBeenCalled();
     expect(screen.getByText("Profile saved.")).toBeTruthy();
+    // The account page unmounts the form on onSaved, so the visible confirmation is the shell-level flash toast.
+    expect(window.sessionStorage.getItem("ninja.flash")).toBe("profileSaved");
+    window.sessionStorage.removeItem("ninja.flash");
     vi.unstubAllGlobals();
   });
 
@@ -135,6 +138,27 @@ describe("AccountSettingsView sections", () => {
     fireEvent.click(screen.getByRole("button", { name: "Edit profile" }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel editing" }));
     expect(screen.queryByLabelText("Nickname*")).toBeNull();
+  });
+
+  it("keeps the open profile editor and its typed bio when the session ends, and says so", () => {
+    state.auth = signedInWith({ id: previewUser.id, handle: "ninja", bio: "Builder", tags: ["DEV"] });
+    const view = renderWithIntl(<AccountSettingsView wallet={{ chainId: 1439 }} />);
+    fireEvent.click(screen.getByRole("button", { name: "Edit profile" }));
+    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "A long new bio" } });
+    state.auth = { status: "signed-out", user: null, reason: "session-ended" };
+    view.rerender(<AccountSettingsView wallet={{ chainId: 1439 }} />);
+    expect((screen.getByLabelText("Bio*") as HTMLTextAreaElement).value).toBe("A long new bio");
+    expect(screen.getByText("Your session has ended. Sign in again to continue.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Sign in again in a new tab, then save here" }).getAttribute("target")).toBe("_blank");
+  });
+
+  it("shows the sign-in prompt when the session ends while no editor is open", () => {
+    state.auth = signedInWith({ id: previewUser.id, handle: "ninja" });
+    const view = renderWithIntl(<AccountSettingsView wallet={{ chainId: 1439 }} />);
+    state.auth = { status: "signed-out", user: null, reason: "session-ended" };
+    view.rerender(<AccountSettingsView wallet={{ chainId: 1439 }} />);
+    expect(screen.getByText("Your session has expired. Sign in again to continue.")).toBeTruthy();
+    expect(screen.queryByLabelText("Bio*")).toBeNull();
   });
 
   it("puts the wallet card and the cohort applications between the profile and the danger zone", () => {

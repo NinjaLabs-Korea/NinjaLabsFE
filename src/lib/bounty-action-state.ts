@@ -8,13 +8,14 @@
  *  2. 에이전트 전용 바운티: 로그인 전 → `agentMode`(진행 중) / `closed`; 로그인 후 내 에이전트의 행이 있으면 `agentRow`
  *     (지원 상태·제출 상태·수정 요청·지급 배지), 없으면 `agentMode`(Agent API 엔드포인트 안내) / `closed`.
  *     행 조회 중이면 `checkingStatus`, 조회 실패면 행 없음으로 본다(안내는 계정 상태 없이도 유효하다).
+ *  2b. 지원 필요 바운티의 지원 마감이 지났고 비로그인 → `closed`+`applications` (지원 CTA 없음)
  *  3. 세션 확인 중 → `checkingSession`, 비로그인 → `signedOut`
  *  4. 내 제출(+지원 필요 바운티면 내 지원) 조회 중 → `checkingStatus`, 조회 실패 → `statusUnavailable`
  *  5. 내 직접 행은 없고 에이전트가 만든 행만 있음 → `agentRow` (직접 지원/제출 폼을 띄우지 않는다)
  *  6. 지원 필요 바운티: 지원 전 → `applyForm`(진행 중이고 지원 마감 전일 때만, 지원 마감만 지났으면 `closed`+`applications`, 그 밖엔 `closed`) / 거절 → `applicationRejected` /
  *     방금 지원했거나 심사 중(`open`) → `applicationUnderReview`(바운티가 완료/취소로 끝났거나 제출이 닫혀 심사 중이면 `closed`) / 승인 등 → 7로 내려간다
  *  7. 제출 승인 → `submissionApproved`, 제출 거절 → `submissionRejected`
- *  8. 진행 중이 아니고 수정 요청도 아님 → 심사 중인 제출이 있으면 `inReviewLocked`, 없으면 `closed`
+ *  8. 진행 중이 아니고 수정 요청도 아님 → 취소된 바운티면 `closed`(cancelled), 심사 중인 제출이 있으면 `inReviewLocked`, 없으면 `closed`
  *  9. 나머지 → `submitForm` (처음 제출 / 심사 중 수정 / 수정 요청 재제출)
  *
  * ## 어디를 고치나
@@ -36,7 +37,7 @@ import type { Bounty, PayoutStatus } from "@/lib/types";
  */
 export type AgentRowState = "applied" | "applicationRejected" | "applicationApproved" | "submitted" | "revisionRequested" | "approved" | "rejected";
 
-/** 심사 대기 중인 제출 상태 — 이 상태의 제출이 있으면 "심사 중" 화면/문구를 쓴다. */
+/** 심사 대기 중인 제출 상태 - 이 상태의 제출이 있으면 "심사 중" 화면/문구를 쓴다. */
 export const PENDING_SUBMISSION_STATUSES: readonly SubmissionStatus[] = ["submitted", "resubmitted", "in_review"];
 
 type ApplicationRow = Pick<AccountApplication, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountApplication, "reviewNote">>;
@@ -54,6 +55,8 @@ export type BountyActionInput = {
   applicationClosed?: boolean;
   /** `Bounty.deadlinePassed`: `status` is `closed` only because the deadline passed; a requested revision is still resubmittable. */
   deadlinePassed?: boolean;
+  /** `Bounty.completed`: closed because the work was finished (BE COMPLETED). A `closed` bounty that is neither completed nor `deadlinePassed` was cancelled. */
+  completed?: boolean;
   auth: AuthStatus;
   applications: AccountRowsQuery<ApplicationRow>;
   submissions: AccountRowsQuery<SubmissionRow>;
@@ -66,9 +69,10 @@ export type BountyActionView =
   /**
    * 새 지원/제출을 받지 않음. `reason`이 제목·본문 문구를 고른다 (`reviewingBody` / `closedBody` / `applicationsClosedBody`).
    * `applications`: 지원 마감만 지났다 (제출 마감 전, 승인된 지원자는 계속 제출할 수 있다): "bounty closed"라고 말하면 거짓이다.
+   * `cancelled`: 바운티가 취소돼(BE가 대기 중인 지원을 자동 거절) 거절된 지원자에게 "스폰서가 선택하지 않았다"고 말하면 거짓이다.
    */
-  | { kind: "closed"; reason: "reviewing" | "closed" | "applications" }
-  /** 에이전트 전용 바운티 — `POST /agent-api/v1/bounties/{id}/{endpoint}` 안내 */
+  | { kind: "closed"; reason: "reviewing" | "closed" | "applications" | "cancelled" }
+  /** 에이전트 전용 바운티 - `POST /agent-api/v1/bounties/{id}/{endpoint}` 안내 */
   | { kind: "agentMode"; endpoint: "applications" | "submissions" }
   | { kind: "checkingSession" }
   /** Figma 15/15v 비로그인 화면 (로그인 필요 배지 + 비활성 폼 미리보기) */
@@ -88,7 +92,7 @@ export type BountyActionView =
   | { kind: "submissionApproved"; payout?: PayoutStatus }
   /** `review`: 심사자 코멘트 (없으면 생략). `forfeited`면 승인됐지만 수상이 몰수된 건이다. */
   | { kind: "submissionRejected"; review?: ReviewNote }
-  /** 마감 후 심사 중 — 폼 없이 안내만 */
+  /** 마감 후 심사 중 - 폼 없이 안내만 */
   | { kind: "inReviewLocked" }
   /**
    * 제출 폼. `revising`(수정 요청 재제출)이 제목/버튼에서 `inReview`(심사 중 수정)보다 우선하고, 둘 다 false면 첫 제출이다.
@@ -146,7 +150,7 @@ function deriveAgentBountyView(input: BountyActionInput, closed: BountyActionVie
 }
 
 export function deriveActionView(input: BountyActionInput): BountyActionView {
-  const { applicationRequired, applicationClosed = false, deadlinePassed = false, status, submissionMode, auth, applications, submissions, applied, submitted } = input;
+  const { applicationRequired, applicationClosed = false, deadlinePassed = false, completed = false, status, submissionMode, auth, applications, submissions, applied, submitted } = input;
   const acceptingNew = status === "active";
   const closed: BountyActionView = { kind: "closed", reason: status === "reviewing" ? "reviewing" : "closed" };
 
@@ -154,6 +158,8 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
   if (!acceptingNew && auth === "signed-out") return closed;
   // 2. 에이전트 전용 바운티의 직접 폼은 없다 (Agent API 안내 패널은 컴포넌트 몫). 로그인했으면 내 에이전트의 진행 상태를 먼저 보여 준다.
   if (submissionMode === "agent") return deriveAgentBountyView(input, closed);
+  // 2b. 지원 마감이 지난 지원 필요 바운티는 비로그인에게도 지원 경로가 없다 ("지원하려고 가입했더니 마감"을 막는다).
+  if (auth === "signed-out" && applicationRequired && applicationClosed) return { kind: "closed", reason: "applications" };
   // 3. 세션
   if (auth === "loading") return { kind: "checkingSession" };
   if (auth !== "signed-in") return { kind: "signedOut" };
@@ -177,6 +183,8 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
       if (!acceptingNew) return closed;
       return applicationClosed ? { kind: "closed", reason: "applications" } : { kind: "applyForm" };
     }
+    // The BE auto-rejects pending applications when the sponsor cancels the bounty: that is not "the sponsor did not select you".
+    if (application?.status === "rejected" && status === "closed" && !completed && !deadlinePassed) return { kind: "closed", reason: "cancelled" };
     if (application?.status === "rejected") return application.reviewNote ? { kind: "applicationRejected", note: application.reviewNote } : { kind: "applicationRejected" };
     // `applied` only bridges the gap until the server row arrives; a row that already moved on (approved...) wins.
     if (application ? application.status === "open" : applied) {
@@ -195,10 +203,13 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
   }
 
   // 8~9. BE는 승인/거절 전까지 재제출을 받는다(마감 후엔 수정 요청일 때만). 단 바운티가 진행 중일 때만(`isInProgress`:
-  // OPEN / SUBMISSION_CLOSED / IN_REVIEW) — `closed`(COMPLETED / CANCELLED)는 BOUNTY_REVIEW_CLOSED이므로 재제출 폼을 주지 않는다.
+  // OPEN / SUBMISSION_CLOSED / IN_REVIEW) - `closed`(COMPLETED / CANCELLED)는 BOUNTY_REVIEW_CLOSED이므로 재제출 폼을 주지 않는다.
   // 단 마감일만 지난 OPEN 바운티도 FE 상태는 `closed`이지만 BE는 수정 요청 재제출을 받는다(`deadlinePassed`).
   const revising = submission?.status === "revision_requested" && (status !== "closed" || deadlinePassed);
   const inReview = submitted || (submission !== undefined && PENDING_SUBMISSION_STATUSES.includes(submission.status));
+  // A cancelled bounty (closed, neither completed nor merely past its deadline) is never reviewed: do not tell the builder that
+  // "the sponsor is reviewing your work".
+  if (!acceptingNew && !revising && submission && status === "closed" && !completed && !deadlinePassed) return { kind: "closed", reason: "cancelled" };
   if (!acceptingNew && !revising) return inReview ? { kind: "inReviewLocked" } : closed;
   const revisionComment = revising ? parseReviewComment(submission?.reviewComment)?.text : undefined;
   return revisionComment ? { kind: "submitForm", revising, inReview, revisionComment } : { kind: "submitForm", revising, inReview };
@@ -211,13 +222,15 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
  * - 네트워크 등 HTTP 응답이 아닌 실패 → `generic` (레지스트리의 `fallback`)
  */
 /** `bounties.action.errors.<key>` for a 400 `VALIDATION_FAILED` whose message names what was wrong (more specific than the generic line). */
-type VALIDATION_DETAIL_KEYS = "VALIDATION_URL" | "VALIDATION_TEXT_REQUIRED" | "VALIDATION_TOO_LONG";
+type VALIDATION_DETAIL_KEYS = "VALIDATION_URL" | "VALIDATION_TEXT_REQUIRED" | "VALIDATION_COMMIT_SHA" | "VALIDATION_TOO_LONG";
 
 function validationDetailKey(error: ApiHttpError): VALIDATION_DETAIL_KEYS | null {
   const details = error.details.join(" | ");
   // BE `IsPublicHttpUrl` answers this one message for a non-http(s) URL, a private/localhost host and an over-long URL alike.
   if (/public http\(s\) URL/i.test(details)) return "VALIDATION_URL";
   if (/should not be empty/i.test(details)) return "VALIDATION_TEXT_REQUIRED";
+  // BE `commitSha must be a hex git commit hash (4 to 64 hex characters)` (and its length variant): name the field.
+  if (/commitSha/i.test(details)) return "VALIDATION_COMMIT_SHA";
   if (/shorter than or equal to|longer than/i.test(details)) return "VALIDATION_TOO_LONG";
   return null;
 }

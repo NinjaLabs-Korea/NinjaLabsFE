@@ -4,6 +4,10 @@ export const routing = defineRouting({
   locales: ["en", "ko", "zh"],
   defaultLocale: "en",
   localePrefix: "always",
+  // No `Link: <...>; rel="alternate"` response header: next-intl would list `zh` (not the `zh-CN` that `i18n/alternates.ts` puts in
+  // the page head and the sitemap) and an `x-default` pointing at an unprefixed URL that only redirects. Two conflicting hreflang
+  // sets are worse than one: the head and the sitemap are the single source.
+  alternateLinks: false,
 });
 
 export type Locale = (typeof routing.locales)[number];

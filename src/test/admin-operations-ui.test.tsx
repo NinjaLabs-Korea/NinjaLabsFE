@@ -122,6 +122,11 @@ describe("BountyOperations", () => {
     fireEvent.submit(form);
     expect(within(dialog()).getByRole("alert").textContent).toBe("Add a comment explaining what needs to change.");
     expect(adminApi.reviewAdminSubmission).not.toHaveBeenCalled();
+    // A comment of only zero-width characters would reach the submitter as a blank revision request.
+    fireEvent.change(within(dialog()).getByRole("textbox"), { target: { value: "\u200b\u200b" } });
+    fireEvent.submit(form);
+    expect(within(dialog()).getByRole("alert").textContent).toBe("Add a comment explaining what needs to change.");
+    expect(adminApi.reviewAdminSubmission).not.toHaveBeenCalled();
     fireEvent.change(within(dialog()).getByRole("textbox"), { target: { value: "Add tests" } });
     fireEvent.submit(form);
     await waitFor(() => expect(adminApi.reviewAdminSubmission).toHaveBeenCalledWith("s1", { decision: "REQUEST_REVISION", revisionNo: 3, comment: "Add tests" }));
@@ -304,6 +309,29 @@ describe("payout request without a recipient wallet", () => {
   });
 });
 
+describe("payout wallet cell in the submissions table", () => {
+  const noWallet = (status: string) => ({ ...operations().submissions[0], id: "sw", status, recipientWalletAddress: null, nickname: "nowallet" });
+  const walletCell = (name: string) => within(screen.getByText(name, { selector: "td *" }).closest("tr") as HTMLElement).getAllByRole("cell")[3];
+
+  it("warns about a missing wallet only on an approved submission of a bounty that pays", async () => {
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [noWallet("APPROVED")] }));
+    await renderOps();
+    expect(walletCell("nowallet").textContent).toContain("No linked wallet");
+  });
+
+  it.each(["SUBMITTED", "REJECTED"])("shows a dash for a %s submission without a wallet", async (status) => {
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [noWallet(status)] }));
+    await renderOps();
+    expect(walletCell("nowallet").textContent).toBe("–");
+  });
+
+  it("shows a dash on a bounty with no reward even when approved", async () => {
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [noWallet("APPROVED")], rewards: [] }));
+    await renderOps();
+    expect(walletCell("nowallet").textContent).toBe("–");
+  });
+});
+
 describe("NftJobsManager", () => {
   it("lists FAILED jobs and retries one, then re-reads the page", async () => {
     adminApi.getAdminNftJobs.mockResolvedValue({ page: 1, pageSize: 30, total: 1, items: [{ id: "j1", nftId: "n1", jobType: "MINT_CHILD", status: "FAILED", retryCount: 5, lastError: "out of gas", scheduledAt: null, updatedAt: "2026-10-01T00:00:00Z", nftType: "BOUNTY_COMPLETION_CHILD", nftStatus: "FAILED", bountyTitle: "Widget", ownerNickname: "juho", ownerWalletAddress: "inj1juho" }] });
@@ -331,6 +359,15 @@ describe("NftJobsManager", () => {
     await waitFor(() => expect(adminApi.getAdminNftJobs).toHaveBeenLastCalledWith("FAILED", 1));
     expect(await screen.findByText("err j0")).toBeTruthy();
     expect(screen.queryByText("No jobs in this status.")).toBeNull();
+  });
+
+  it("shows the NFT status as a label, not the raw enum value, and keeps an unknown status as sent", async () => {
+    const job = (id: string, nftStatus: string) => ({ id, nftId: `${id}-n`, jobType: "MINT_PARENT", status: "FAILED", retryCount: 5, lastError: `err ${id}`, scheduledAt: null, updatedAt: null, nftType: "NINJA_PARENT", nftStatus, bountyTitle: null, ownerNickname: null, ownerWalletAddress: null });
+    adminApi.getAdminNftJobs.mockResolvedValue({ page: 1, pageSize: 30, total: 2, items: [job("a", "FAILED"), job("b", "SOMETHING_NEW")] });
+    renderWithIntl(<><NftJobsManager tabs={null}>{null}</NftJobsManager><AdminToastHost /></>);
+    expect(await screen.findByText("Ninja NFT · NFT Failed")).toBeTruthy();
+    expect(screen.getByText("Ninja NFT · NFT SOMETHING_NEW")).toBeTruthy();
+    expect(screen.queryByText(/NFT FAILED/)).toBeNull();
   });
 
   it("steps back to the page on screen when fetching another page fails", async () => {

@@ -58,6 +58,9 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["session still loading", { auth: "loading" }, { kind: "checkingSession" }],
   ["session loading on a closed bounty (a revision may still be resubmittable)", { auth: "loading", status: "closed" }, { kind: "checkingSession" }],
   ["signed out on an active bounty", { auth: "signed-out", applicationRequired: true }, { kind: "signedOut" }],
+  // 2b. 지원 마감 후엔 비로그인에게도 지원 CTA가 없다
+  ["signed out, application deadline passed", { auth: "signed-out", applicationRequired: true, applicationClosed: true }, { kind: "closed", reason: "applications" }],
+  ["signed out, application deadline passed but no application needed", { auth: "signed-out", applicationRequired: false, applicationClosed: true }, { kind: "signedOut" }],
   // 4. 내 행 조회
   ["submissions loading", { submissions: loading }, { kind: "checkingStatus" }],
   ["applications loading on an apply bounty", { applicationRequired: true, applications: loading }, { kind: "checkingStatus" }],
@@ -94,6 +97,9 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["rows for other bounties do not count", { applicationRequired: true, applications: loaded([app("approved", null, "other")]) }, { kind: "applyForm" }],
   ["application rejected", { applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["application rejected with the operator's note", { applicationRequired: true, applications: loaded([{ ...app("rejected"), reviewNote: "Portfolio too thin" }]) }, { kind: "applicationRejected", note: "Portfolio too thin" }],
+  ["application auto-rejected by a cancelled bounty", { status: "closed", applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "closed", reason: "cancelled" }],
+  ["rejection on a completed bounty stays a rejection", { status: "closed", completed: true, applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
+  ["rejection on a bounty only past its deadline stays a rejection", { status: "closed", deadlinePassed: true, applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["rejection beats the local applied flag", { applicationRequired: true, applied: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["application under review", { applicationRequired: true, applications: loaded([app("open")]) }, { kind: "applicationUnderReview" }],
   ["the local applied flag does not hide an approved server row", { applicationRequired: true, applied: true, applications: loaded([app("approved")]) }, firstSubmit],
@@ -115,10 +121,13 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["submission rejected with a blank comment", { submissions: loaded([sub("rejected", null, BOUNTY, "   ")]) }, { kind: "submissionRejected" }],
   // 8. 진행 중이 아님
   ["reviewing, submission pending", { status: "reviewing", submissions: loaded([sub("in_review")]) }, { kind: "inReviewLocked" }],
-  ["closed, submission resubmitted", { status: "closed", submissions: loaded([sub("resubmitted")]) }, { kind: "inReviewLocked" }],
+  ["closed only by the deadline, submission resubmitted (the sponsor can still review)", { status: "closed", deadlinePassed: true, submissions: loaded([sub("resubmitted")]) }, { kind: "inReviewLocked" }],
+  ["cancelled bounty, submission pending: nobody is reviewing it", { status: "closed", submissions: loaded([sub("submitted")]) }, { kind: "closed", reason: "cancelled" }],
+  ["cancelled bounty, submission in review", { status: "closed", submissions: loaded([sub("in_review")]) }, { kind: "closed", reason: "cancelled" }],
   ["reviewing, just submitted", { status: "reviewing", submitted: true }, { kind: "inReviewLocked" }],
   ["reviewing, nothing submitted", { status: "reviewing" }, { kind: "closed", reason: "reviewing" }],
-  ["closed, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "closed" }],
+  ["cancelled, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "cancelled" }],
+  ["completed, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", completed: true, submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "closed" }],
   ["closed only by the deadline, revision requested (BE still resubmittable)", { status: "closed", deadlinePassed: true, submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: false }],
   ["closed only by the deadline, nothing submitted", { status: "closed", deadlinePassed: true }, { kind: "closed", reason: "closed" }],
   // 9. 제출 폼
@@ -132,7 +141,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["revision requested and just resubmitted", { submitted: true, submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: true }],
 ];
 
-describe("deriveActionView — which bounty action section to show", () => {
+describe("deriveActionView - which bounty action section to show", () => {
   it.each(table)("%s", (_label, overrides, expected) => {
     expect(deriveActionView(input(overrides))).toEqual(expected);
   });
@@ -146,7 +155,7 @@ describe("deriveActionView — which bounty action section to show", () => {
   });
 });
 
-describe("splitRows — the owner's own row and an agent row never stand in for each other", () => {
+describe("splitRows - the owner's own row and an agent row never stand in for each other", () => {
   it("picks the first row of each kind", () => {
     const own = app("open");
     const agent = app("approved", bot);
@@ -156,7 +165,7 @@ describe("splitRows — the owner's own row and an agent row never stand in for 
   });
 });
 
-describe("bountyActionErrorCopy — bounties.action.errors key for a failed apply/submit", () => {
+describe("bountyActionErrorCopy - bounties.action.errors key for a failed apply/submit", () => {
   it.each(ERROR_COPY.bountyAction.codes)("a listed code uses its own key: %s", (code) => {
     expect(bountyActionErrorCopy(new ApiHttpError(400, code))).toEqual({ key: code });
   });
@@ -165,6 +174,8 @@ describe("bountyActionErrorCopy — bounties.action.errors key for a failed appl
     [["submissionUrl must be a public http(s) URL (no localhost or private addresses)"], "VALIDATION_URL"],
     [["message should not be empty"], "VALIDATION_TEXT_REQUIRED"],
     [["description must be shorter than or equal to 5000 characters"], "VALIDATION_TOO_LONG"],
+    [["commitSha must be a hex git commit hash (4 to 64 hex characters)"], "VALIDATION_COMMIT_SHA"],
+    [["commitSha must be shorter than or equal to 64 characters"], "VALIDATION_COMMIT_SHA"],
     [["something else must be odd"], "VALIDATION_FAILED"],
   ])("a 400 VALIDATION_FAILED names the problem: %j -> %s", (details, key) => {
     expect(bountyActionErrorCopy(new ApiHttpError(400, "VALIDATION_FAILED", details))).toEqual({ key });

@@ -6,6 +6,7 @@ import {
   discardLegacyTokens,
   endLocalSession,
   type ApiHttp,
+  type RefreshResult,
 } from "@/lib/api/http";
 import {
   createLoginChallenge,
@@ -14,7 +15,7 @@ import {
   isAuthCallbackPath,
   LoginExchangeError,
 } from "@/lib/api/oauth";
-import { fetchMe, toClientUser } from "@/lib/api/me";
+import { fetchMe, readMe, toClientUser } from "@/lib/api/me";
 import { pushFlash } from "@/lib/flash";
 import { getOnboardingPath, HOME_PATH } from "@/lib/auth-route";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
@@ -26,9 +27,10 @@ export { getOnboardingPath };
 /**
  * Pages an unfinished sign-up may stay on after a session restore: the sign-up steps themselves, and `/account`, the only
  * place to delete the account (`DELETE /users/me` works from onboarding step 2, so someone who only did the Google step
- * must be able to leave without finishing a profile or wallet first).
+ * must be able to leave without finishing a profile or wallet first), and the legal pages (`/privacy`, `/terms`): the
+ * sign-up footer links to them, so a reload or a new tab must not bounce someone who is creating an account away from them.
  */
-const ONBOARDING_EXEMPT = /^\/(?:signup\/|account(?:\/|$))/;
+const ONBOARDING_EXEMPT = /^\/(?:signup\/|account(?:\/|$)|(?:privacy|terms)(?:\/|$))/;
 
 export function shouldRedirectToOnboarding(
   user: AuthSnapshot["user"],
@@ -63,20 +65,27 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
   const endSignedInSession = () => {
     if (snapshot.status !== "signed-in") return;
     onboardingLog("session.ended", { reason: "SESSION_CLEARED" });
-    setSnapshot({ status: "signed-out", user: null });
+    setSnapshot({ status: "signed-out", user: null, reason: "session-ended" });
   };
 
   const events = createAuthEventBus();
   const http = createApiHttp(apiUrl, { onSessionEnded: endSignedInSession, broadcast: events.broadcast });
 
-  async function restoreSession(): Promise<AuthSnapshot> {
+  async function restoreSession(init?: RefreshResult): Promise<AuthSnapshot> {
     onboardingLog("session.restore.started", {
       path: typeof window === "undefined" ? "server" : window.location.pathname,
       hasSession: http.hasSession(),
     });
-    const me = await fetchMe(http);
+    const { me, unavailable } = await readMe(http);
+    // The session could not be checked (refresh/me answered 5xx or 429, or the network failed): the cookie is kept, so say
+    // "unavailable" instead of "signed out" (a reload after the BE recovers restores the session).
+    const couldNotCheck = !me && (unavailable || (init?.ok === false && init.reason === "unavailable"));
     const restored = setSnapshot(
-      me ? { status: "signed-in", user: toClientUser(me) } : { status: "signed-out", user: null },
+      me
+        ? { status: "signed-in", user: toClientUser(me) }
+        : couldNotCheck
+          ? { status: "signed-out", user: null, reason: "unavailable" }
+          : { status: "signed-out", user: null },
     );
     onboardingLog("session.restore.completed", {
       status: restored.status,
@@ -171,26 +180,22 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     // Any page load other than the OAuth callback means the sign-in that stored a PKCE verifier was abandoned.
     if (!isAuthCallbackPath(window.location.pathname)) discardLoginVerifier();
     void (async () => {
+      let init: RefreshResult | undefined;
       if (await exchangeLoginCodeFromLocation()) {
         // A fresh login supersedes any token a pre-cookie build left behind.
         discardLegacyTokens();
         events.broadcast("signed-in");
       } else {
-        await http.initSession();
+        init = await http.initSession();
       }
-      return restoreSession();
+      return restoreSession(init);
     })().then(leaveCallbackOrOnboard).catch((error: unknown) => {
-      // 교환을 실제로 시도했다가 실패한 경우에만 기존 세션을 끝낸다(쿠키도 폐기). `#error=`나 verifier 없는
-      // `#loginCode=`(링크로 심을 수 있는 값)로는 로그인 중이던 세션을 잃지 않고 쿠키로 그대로 복원한다.
-      const attempted = error instanceof LoginExchangeError && error.attempted;
-      onboardingLog("oauth.exchange.failed", { attempted });
-      if (attempted) {
-        const signedOut = http.signOutRemote();
-        const snapshotAfter = setSnapshot({ status: "signed-out", user: null });
-        return signedOut.then(() => snapshotAfter);
-      }
+      // 교환이 실패해도(만료, 이미 사용, 다른 탭이 먼저 소비) 공유 쿠키의 기존 세션은 건드리지 않는다. 같은 링크를 연
+      // 두 탭 중 진 쪽이 이긴 쪽의 세션을 폐기하면 안 된다. 세션이 없으면 아래 복원이 signed-out으로 끝나고 콜백 페이지가
+      // 실패 화면을 보여 준다.
+      onboardingLog("oauth.exchange.failed", { attempted: error instanceof LoginExchangeError && error.attempted });
       return http.initSession()
-        .then(() => restoreSession())
+        .then((init) => restoreSession(init))
         // The restored session still has to leave the callback page (it shows a spinner for a signed-in user).
         .then((restored) => {
           leaveCallbackOrOnboard(restored);
@@ -215,7 +220,7 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       const codeChallenge = await createLoginChallenge();
       const params = new URLSearchParams({ returnTo: window.location.origin, codeChallenge });
       if (traceId) params.set("trace", traceId);
-      // Cloudflare Turnstile 위젯 토큰 (NEXT_PUBLIC_TURNSTILE_SITE_KEY가 있을 때만) — BE가 TURNSTILE_SECRET_KEY로 siteverify한다.
+      // Cloudflare Turnstile 위젯 토큰 (NEXT_PUBLIC_TURNSTILE_SITE_KEY가 있을 때만) - BE가 TURNSTILE_SECRET_KEY로 siteverify한다.
       if (options?.turnstileToken) params.set("turnstileToken", options.turnstileToken);
       onboardingLog("oauth.redirect.started", { returnOrigin: window.location.origin, turnstile: Boolean(options?.turnstileToken) });
       // `new URL` keeps this an absolute cross-origin navigation (BE -> Google), which next/no-location-assign-relative-destination cannot infer from a template literal

@@ -77,7 +77,7 @@ export function visibleStats<T extends { value: string }>(stats: readonly T[]): 
   return stats.every((stat) => isZeroStatValue(stat.value)) ? [] : [...stats];
 }
 
-/** Paid totals show with at most this many fraction digits — a headline stat, not a ledger. */
+/** Paid totals show with at most this many fraction digits - a headline stat, not a ledger. */
 const PAID_TOTAL_FRACTION_DIGITS = 2;
 
 /**

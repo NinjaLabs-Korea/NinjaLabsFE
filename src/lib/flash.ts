@@ -7,7 +7,7 @@
 export const FLASH_STORAGE_KEY = "ninja.flash";
 export const FLASH_EVENT = "ninja:flash";
 
-export const flashKeys = ["accountDeleted", "signInRequired", "signOutFailed"] as const;
+export const flashKeys = ["accountDeleted", "signInRequired", "signOutFailed", "profileSaved"] as const;
 export type FlashKey = (typeof flashKeys)[number];
 
 /** Flashes that report a failure (rendered as a danger toast); the rest are neutral confirmations. */
@@ -23,6 +23,20 @@ export function pushFlash(key: FlashKey): void {
     // storage blocked: the event below still reaches this tab's FlashToast
   }
   window.dispatchEvent(new CustomEvent<FlashKey>(FLASH_EVENT, { detail: key }));
+}
+
+/**
+ * Leaves a flash for the NEXT page load only: writes sessionStorage without notifying the mounted FlashToast (which
+ * would consume it at once). Use right before a full-page navigation (`hardNavigate`), where `pushFlash` would be
+ * taken by the page that is about to be unloaded and the destination would find nothing.
+ */
+export function stashFlash(key: FlashKey): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(FLASH_STORAGE_KEY, key);
+  } catch {
+    // storage blocked: the flash is lost, the navigation still happens
+  }
 }
 
 /** Reads and clears the pending flash (unknown values are dropped). */

@@ -236,15 +236,27 @@ describe("API auth adapter login handoff", () => {
     expect((await adapter.refresh?.())?.user?.onboardingCompleted).toBe(true);
   });
 
-  it("ends (and revokes) the session only after an attempted exchange fails", async () => {
+  it("a failed exchange never revokes the session already in the shared cookie (second tab, duplicate link)", async () => {
     await createLoginChallenge();
     window.history.replaceState(null, "", "/en/auth/callback#loginCode=expired-code");
     const request = stubCurrentSession(() => new Response(null, { status: 401 }));
+    vi.stubGlobal("location", { ...window.location, replace: vi.fn() });
+    const adapter = createApiAuthAdapter(API);
+    adapter.initialize?.();
+    await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
+    expect(urls(request)).not.toContain("/api/auth/logout");
+    expect(getAccessToken()).toBe("current-access");
+  });
+
+  it("a failed exchange without any session ends signed-out and sends no logout", async () => {
+    await createLoginChallenge();
+    window.history.replaceState(null, "", "/en/auth/callback#loginCode=expired-code");
+    const request = vi.fn<(url: string) => Promise<Response>>(async () => new Response(null, { status: 401 }));
+    vi.stubGlobal("fetch", request);
     const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
-    expect(getAccessToken()).toBeNull();
-    await vi.waitFor(() => expect(urls(request)).toEqual([EXCHANGE, "/api/auth/logout"]));
+    expect(request.mock.calls.map(([url]) => url)).not.toContain("/api/auth/logout");
   });
 
   it("a successful exchange drops legacy tokens and tells other tabs a session exists again", async () => {

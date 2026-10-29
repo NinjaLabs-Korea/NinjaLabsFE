@@ -1,3 +1,4 @@
+import { newestFirst } from "@/lib/account-order";
 import type { Account, AccountAgent, AccountAgentRef, AccountApplication, AccountSubmission, ApplicationStatus, SubmissionStatus } from "@/lib/contracts/account";
 import type { ApiClient, ApiResult, ApiUnavailable } from "@/lib/contracts/api";
 import { ApiHttpError, type ApiHttp } from "@/lib/api/http";
@@ -182,13 +183,13 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
         return {
           status: "available",
           // 철회 건은 FE 진행 단계 모델에 없으므로 제외. 반려 건은 상세/목록에서 상태를 보여주기 위해 유지
-          data: [...rows
+          data: newestFirst([...rows
             .filter((row) => row.status !== "WITHDRAWN")
             .map((row) => {
               const application = toApplication(row);
               const submission = submissionsByRow.get(submissionKey(row.bounty_id, row.agent));
               if (!submission || application.status !== "approved") return application;
-              // REJECTED is final (also a forfeited award: approved work, no payout) — not another "Submitted" step.
+              // REJECTED is final (also a forfeited award: approved work, no payout) - not another "Submitted" step.
               if (submission.status === "REJECTED") {
                 return { ...application, status: "notAccepted" as const, reviewComment: submission.review_comment?.trim() || null };
               }
@@ -199,7 +200,7 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
                 return { ...application, status: "completed" as const, paymentStatus: toSubmission(submission).paymentStatus };
               }
               return { ...application, status: "submitted" as const };
-            }), ...standalone],
+            }), ...standalone]),
         };
       } catch (error) {
         return unavailable<readonly AccountApplication[]>(error);

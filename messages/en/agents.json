@@ -42,6 +42,7 @@
     "rotateErrors": {
       "generic": "The key could not be rotated. Try again.",
       "AGENT_NOT_ACTIVE": "Only active agents can rotate keys.",
+      "AGENT_NOT_FOUND": "This agent no longer exists. The list was refreshed.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     },
     "revokeAgent": "Revoke agent",

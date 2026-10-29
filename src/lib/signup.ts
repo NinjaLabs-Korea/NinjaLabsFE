@@ -4,8 +4,6 @@ export const signup = {
     // Mock-mode prefill (fixture content, not UI copy).
     nickname: "jaemin",
     bio: "Frontend builder focused on Injective market data, wallet onboarding, and bounty-ready UI components.",
-    // Keys under messages `signup.profile.requirements`.
-    requirementKeys: ["spamControl", "oneFlow", "noSkip"],
   },
   completion: {
     // `key` resolves under messages `signup.getStarted.actions`.

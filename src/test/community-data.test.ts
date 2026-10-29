@@ -8,7 +8,7 @@ vi.mock("@/lib/hall-of-fame", () => ({
 }));
 vi.mock("@/lib/members", () => ({ getRuntimeMembers: () => sources.members() }));
 
-const { formatEventDate, getRuntimeCommunity } = await import("@/lib/community");
+const { formatEventDate, getRuntimeCommunity, isUpcomingEvent } = await import("@/lib/community");
 const notice = (slug: string, category: string, publishedAt: string, eventDate?: string) => ({ slug, category, publishedAt, ...(eventDate ? { eventDate } : {}) });
 
 describe("getRuntimeCommunity", () => {
@@ -32,6 +32,18 @@ describe("getRuntimeCommunity", () => {
     expect(community.unavailable).toEqual({ notices: false, hall: false, members: false });
   });
 
+  it("leaves events dated in the future out of the past activities, but keeps undated ones", async () => {
+    sources.notices.mockResolvedValue([
+      notice("future", "Events", "2026.05.01", "2999-01-01"),
+      notice("past", "Events", "2026.05.01", "2026-01-01"),
+      notice("undated", "Events", "2026.03.01"),
+    ]);
+    sources.hall.mockResolvedValue({ stats: [], highlights: [], milestones: [], partners: [] });
+    sources.members.mockResolvedValue([]);
+    const community = await getRuntimeCommunity("en");
+    expect(community.events.map((item) => item.slug)).toEqual(["past", "undated"]);
+  });
+
   it("keeps what loaded and flags what did not", async () => {
     sources.notices.mockRejectedValue(new Error("down"));
     sources.hall.mockResolvedValue({ stats: [], highlights: [], milestones: [], partners: [] });
@@ -39,6 +51,16 @@ describe("getRuntimeCommunity", () => {
     const community = await getRuntimeCommunity("en");
     expect(community.events).toEqual([]);
     expect(community.unavailable).toEqual({ notices: true, hall: false, members: true });
+  });
+});
+
+describe("isUpcomingEvent", () => {
+  it("is true only for a valid date after today (UTC), today itself is already a past activity", () => {
+    const now = new Date("2026-10-26T23:00:00Z");
+    expect(isUpcomingEvent({ eventDate: "2026-10-27" }, now)).toBe(true);
+    expect(isUpcomingEvent({ eventDate: "2026-10-26" }, now)).toBe(false);
+    expect(isUpcomingEvent({ eventDate: "2026-01-01" }, now)).toBe(false);
+    for (const eventDate of [undefined, null, "", "soon"]) expect(isUpcomingEvent({ eventDate }, now)).toBe(false);
   });
 });
 

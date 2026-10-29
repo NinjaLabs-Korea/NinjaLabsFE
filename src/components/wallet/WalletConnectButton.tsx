@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import {
+  useAuthActions,
   useWalletApi,
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
@@ -31,12 +32,13 @@ export function WalletConnectButton({
   const tVerifyErrors = useTranslations(ERROR_COPY.walletVerify.messages);
   const router = useRouter();
   const apiClient = useWalletApi();
+  const { refresh } = useAuthActions();
   const mode = useFoundationMode();
   // Same-tick double clicks run before the re-render that disables the button, so the guard is a ref (a second challenge
   // would replace the first and fail its verify with 400).
   const verifyingRef = useRef(false);
   const [verificationState, setVerificationState] = useState<"idle" | "pending">("idle");
-  // 실패 문구 키 (`common.wallet.verifyErrors.<key>`) — BE 코드별 안내, 그 외는 generic. 실패한 주소에 묶는다:
+  // 실패 문구 키 (`common.wallet.verifyErrors.<key>`) - BE 코드별 안내, 그 외는 generic. 실패한 주소에 묶는다:
   // 지갑을 끊고 다른 주소로 다시 연결했을 때 이전 주소의 실패("이미 연결된 지갑" 등)를 새 주소 아래에 보여 주지 않는다.
   const [verifyFailure, setVerifyFailure] = useState<{ address: string; key: ErrorCopyKey<typeof ERROR_COPY.walletVerify> } | null>(null);
   const {
@@ -84,7 +86,12 @@ export function WalletConnectButton({
       onboardingLog("wallet.verify.succeeded", { wallet, targetPath: onVerified ? "(callback)" : "/signup/profile" });
       setVerificationState("idle");
       if (onVerified) onVerified();
-      else router.push("/signup/profile");
+      else {
+        // Re-read the session first: the snapshot still has no wallet, so the browser Back button from step 3 would show
+        // this connect UI (and "Verify wallet" again) instead of the linked wallet. A failed read only costs that.
+        await refresh?.().catch(() => undefined);
+        router.push("/signup/profile");
+      }
     } catch (caught) {
       onboardingLog("wallet.verify.failed", {
         wallet,

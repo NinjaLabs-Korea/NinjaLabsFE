@@ -4,7 +4,7 @@ import { ImageResponse } from "next/og";
 import { hasLocale } from "next-intl";
 import { loadNamespace } from "@/i18n/messages";
 import { routing } from "@/i18n/routing";
-import { loadOgFont } from "@/lib/og-font";
+import { fitOgHeadlineSize, loadOgFont } from "@/lib/og-font";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -38,6 +38,9 @@ export default async function Image({ params }: { params: Promise<ImageParams> }
     hasLocale(routing.locales, locale) ? locale : routing.defaultLocale,
     `Ninja Labs${t.headline}${t.highlight}${t.tagline}`,
   );
+  // 1200 - 2 * 80 padding: Korean breaks between any two syllables, so size the headline to stay on one line (it left an orphan "요.").
+  // Latin copy (en) wraps at spaces on its own and keeps the full size.
+  const headlineSize = locale === "ko" ? fitOgHeadlineSize([t.headline, t.highlight], 1040, 72) : 72;
   const mascot = await readFile(join(process.cwd(), "public/figma/ninja-labs-mascot.png"), "base64");
 
   return new ImageResponse(
@@ -67,9 +70,10 @@ export default async function Image({ params }: { params: Promise<ImageParams> }
         <div
           style={{
             marginTop: "48px",
-            fontSize: 72,
+            fontSize: headlineSize,
             fontWeight: 700,
             lineHeight: 1.15,
+            wordBreak: "keep-all",
             color: "#FFFFFF",
             display: "flex",
             flexDirection: "column",

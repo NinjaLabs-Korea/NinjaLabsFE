@@ -123,6 +123,11 @@ describe("onboarding redirect", () => {
     ["/en/account", null],
     ["/ko/account", null],
     ["/accountant", "/signup/profile"],
+    // The legal pages the sign-up footer links to stay readable on a direct load or reload.
+    ["/en/privacy", null],
+    ["/ko/terms", null],
+    ["/privacy", null],
+    ["/privacyx", "/signup/profile"],
     // `/signup` itself is not a step page: an unfinished user who lands there is sent on to their step.
     ["/en/signup", "/en/signup/profile"],
   ])("from %s an unfinished step-3 user goes to %s", (pathname, expected) => {

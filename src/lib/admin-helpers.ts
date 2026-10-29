@@ -9,7 +9,7 @@ import type { Notice } from "./types";
 
 /**
  * BE codes an admin write can return that deserve their own copy (`admin.common.errors.<code>`).
- * 코드 목록은 `lib/api/error-copy.ts`의 `ERROR_COPY.adminWrite`가 소유한다 — 추가/삭제는 거기서.
+ * 코드 목록은 `lib/api/error-copy.ts`의 `ERROR_COPY.adminWrite`가 소유한다 - 추가/삭제는 거기서.
  */
 export const ADMIN_API_ERROR_CODES = ERROR_COPY.adminWrite.codes;
 export type AdminApiErrorCode = (typeof ADMIN_API_ERROR_CODES)[number];
@@ -56,17 +56,17 @@ export type AdminBounty = {
   coverImage: string | null;
   /** One value per BE status (`DRAFT` ... `CANCELLED`) so the list can tell a finished bounty from a cancelled one and a closed intake from a review in progress. */
   status: "draft" | "funding" | "active" | "submissionClosed" | "reviewing" | "completed" | "cancelled";
-  /** BE `submission_deadline` ISO 원문. mock fixture도 ISO — `bountyToForm`은 ISO가 아닌 값을 조용히 받지 않는다. */
+  /** BE `submission_deadline` ISO 원문. mock fixture도 ISO - `bountyToForm`은 ISO가 아닌 값을 조용히 받지 않는다. */
   deadline: string;
-  /** BE `application_deadline` — 폼에 입력란이 없으므로 수정 시 그대로 되돌려 준다 */
+  /** BE `application_deadline` - 폼에 입력란이 없으므로 수정 시 그대로 되돌려 준다 */
   applicationDeadline: string | null;
-  /** BE `max_winners` — PATCH는 불러온 값을 유지하고, 신규는 1을 보낸다 (폼에 입력란 없음) */
+  /** BE `max_winners` - PATCH는 불러온 값을 유지하고, 신규는 1을 보낸다 (폼에 입력란 없음) */
   maxWinners: number;
   tags: Array<"Dev" | "Design" | "Content" | "Other">;
   description: string;
   submissionGuide: string;
   /**
-   * BE `requirements` 원문(markdown). `deliverables`는 이 값에서 표시용으로만 파생한다 — PATCH는 어드민이 산출물/제출 가이드
+   * BE `requirements` 원문(markdown). `deliverables`는 이 값에서 표시용으로만 파생한다 - PATCH는 어드민이 산출물/제출 가이드
    * 입력란을 고치지 않은 한 이 문자열을 바이트 그대로 되돌려 보낸다 (줄바꿈/들여쓰기를 잃는 join/split 왕복 금지).
    */
   requirements: string;
@@ -93,7 +93,7 @@ export type AdminHighlight = {
 export type AdminPost = {
   slug: string;
   title: string;
-  /** 공지 카테고리와 같은 값 집합 — 정의는 `lib/types.ts Notice["category"]` 하나뿐이다. */
+  /** 공지 카테고리와 같은 값 집합 - 정의는 `lib/types.ts Notice["category"]` 하나뿐이다. */
   category: Notice["category"];
   status: "draft" | "published";
   publishedAt: string | null;
@@ -102,7 +102,27 @@ export type AdminPost = {
   externalUrl: string | null;
   /** BE `event_date` (`YYYY-MM-DD`): when the activity took place; null for a plain announcement. */
   eventDate?: string | null;
+  /**
+   * Notice summary. Loaded rows carry the stored BE `summary` (the form has no summary input). On save it means "the summary to
+   * send": `undefined` on an edit = keep the stored one (omit the key); on create the API derives it from the body.
+   */
+  summary?: string;
 };
+
+/**
+ * Summary to send when a notice is edited, or undefined to leave the stored one alone. The form has no summary input, so the
+ * default is to keep it: a summary written through the API or the seed script must survive an edit or a publish toggle. Only a
+ * summary the UI itself derived from the old body (a re-derivation reproduces it) follows the body when the body changes.
+ */
+export function summaryForPostUpdate(
+  stored: Pick<AdminPost, "bodyMarkdown" | "summary"> | undefined,
+  nextBody: string,
+  derive: (markdown: string) => string,
+): string | undefined {
+  if (!stored || stored.summary === undefined) return undefined;
+  if (stored.bodyMarkdown === nextBody) return undefined;
+  return derive(stored.bodyMarkdown) === stored.summary ? derive(nextBody) : undefined;
+}
 
 /**
  * `publish` option for `saveAdminPost`: always sent on create (derived from the chosen status); on edit only when the

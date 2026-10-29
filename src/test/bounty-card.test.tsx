@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { BountyCard } from "@/components/cards/BountyCard";
@@ -43,5 +43,17 @@ describe("BountyCard status presentation", () => {
     renderWithIntl(<BountyCard bounty={{ ...base, title: "Supercalifragilistic".repeat(8), sponsor: "S".repeat(80) }} />);
     expect(screen.getByText(/S{80}/).className).toContain("[overflow-wrap:anywhere]");
     expect(screen.getByRole("heading").className).toContain("[overflow-wrap:anywhere]");
+  });
+});
+
+describe("BountyCard cover", () => {
+  it("falls back to the no-cover gradient when the image fails to load", () => {
+    const { container } = renderWithIntl(<BountyCard bounty={{ ...base, coverImage: "https://example.invalid/none.png" }} />);
+    const image = container.querySelector('img[src*="none.png"]');
+    expect(image).toBeTruthy();
+    expect(container.querySelector("[data-cover-fallback]")).toBeNull();
+    fireEvent.error(image!);
+    expect(container.querySelector('img[src*="none.png"]')).toBeNull();
+    expect(container.querySelector("[data-cover-fallback]")).toBeTruthy();
   });
 });

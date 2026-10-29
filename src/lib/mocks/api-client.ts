@@ -1,3 +1,4 @@
+import { newestFirst } from "@/lib/account-order";
 import type { AdminApi, ApiClient } from "@/lib/contracts/api";
 import type { AccountAgent, AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
@@ -89,7 +90,7 @@ export function createMockApiClient(seed = "default"): ApiClient {
         return { status: "available", data: [] };
       }
 
-      return { status: "available", data: applications.map((application) => ({ ...application })) };
+      return { status: "available", data: newestFirst(applications.map((application) => ({ ...application }))) };
     },
     getSubmissions: async (auth) => {
       if (!isFixtureOwner(auth, fixtureSnapshot)) {
@@ -207,7 +208,7 @@ export function createMockApiClient(seed = "default"): ApiClient {
   };
 }
 
-/** 운영자 콘솔 mock — fixture로 시작해 이 탭 안의 생성·수정·전이·삭제를 메모리에 반영한다 (새로고침하면 초기화). */
+/** 운영자 콘솔 mock - fixture로 시작해 이 탭 안의 생성·수정·전이·삭제를 메모리에 반영한다 (새로고침하면 초기화). */
 function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
   let users: AdminUser[] = getAdminUsers();
   let bounties: AdminBounty[] = getAdminBounties();
@@ -285,7 +286,7 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
       // `publish` is only sent when the state toggled; a plain edit keeps the stored publishedAt (BE contract).
       const status = options?.publish === undefined ? current.status : options.publish ? "published" : "draft";
       const publishedAt = options?.publish === undefined ? current.publishedAt : options.publish ? today : null;
-      posts = posts.map((item) => (item.slug === post.slug ? { ...post, status, publishedAt } : item));
+      posts = posts.map((item) => (item.slug === post.slug ? { ...post, summary: post.summary ?? item.summary, status, publishedAt } : item));
       return { id: post.slug };
     },
     deleteAdminPost: async (noticeId) => {

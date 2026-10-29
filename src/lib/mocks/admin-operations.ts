@@ -138,7 +138,7 @@ export function lifecycleFor(ops: AdminOperations): AdminOperations["lifecycle"]
   if (unresolved) blockers.COMPLETED.push({ code: "UNRESOLVED_SUBMISSIONS", count: unresolved });
   if (unpaid || unawarded) {
     blockers.COMPLETED.push({ code: "UNPAID_WINNERS" });
-    // Cancelling would refund deposit minus PAID, handing an unpaid winner's share back to the sponsor — same rule, same code.
+    // Cancelling would refund deposit minus PAID, handing an unpaid winner's share back to the sponsor - same rule, same code.
     blockers.CANCELLED.push({ code: "UNPAID_WINNERS" });
   }
   return { blockers, allowedTransitions: [...(BOUNTY_TRANSITIONS[ops.bounty.status as BountyStatusCode] ?? [])] };

@@ -9,6 +9,7 @@
       "description": "部分赏金可直接提交作品，另一些则需要赞助方批准后才能提交。"
     },
     "notFound": "页面未找到 | Ninja Labs",
+    "unavailable": "出了点问题 | Ninja Labs",
     "detailTitle": "{title} | Ninja Labs"
   },
   "hero": {
@@ -182,6 +183,7 @@
       "VALIDATION_FAILED": "请检查 URL 和描述后重试。",
       "VALIDATION_URL": "链接必须是公开的 http(s) 地址（不能是 localhost 或内网地址），且不超过 2048 个字符。",
       "VALIDATION_TEXT_REQUIRED": "请填写必填文本，不能只填空白。",
+      "VALIDATION_COMMIT_SHA": "提交 SHA 必须是 4 到 64 位的十六进制 git 哈希（例如 3f2a9c1）。没有的话请留空。",
       "VALIDATION_TOO_LONG": "输入内容过长，请缩短后重试。",
       "APPLICATION_DEADLINE_PASSED": "申请已截止。",
       "SUBMISSION_TYPE_BOUNTY": "此赏金接受直接提交，无需申请。",
@@ -225,6 +227,7 @@
     "availability": "可投入时间",
     "closedHeading": "赏金已关闭",
     "closedBody": "此赏金不再接受申请或提交。",
+    "cancelledBody": "赞助方已取消此赏金任务，不会再进行审核或接收。仍在等待中的申请和作品也一并关闭。",
     "applicationsClosedHeading": "申请已截止",
     "applicationsClosedBody": "申请截止日期已过，不再接受新的申请。已获批准的申请者仍可在提交截止日期前提交。",
     "reviewingBody": "赞助方审核已收到的作品期间，提交已关闭，不再接受新的申请和提交。",

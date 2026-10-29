@@ -1,4 +1,4 @@
-import { fetchPublicJson } from "@/lib/api/public";
+import { fetchPublicJson, PUBLIC_LIST_REVALIDATE_SECONDS } from "@/lib/api/public";
 
 type PageResponse<T> = { items: T[]; total: number };
 
@@ -10,7 +10,7 @@ export const PUBLIC_MAX_PAGES = 20;
 export async function fetchAllPublicPages<T extends { id: string }>(path: string): Promise<T[]> {
   const separator = path.includes("?") ? "&" : "?";
   const fetchPage = (page: number) =>
-    fetchPublicJson<PageResponse<T>>(`${path}${separator}page=${page}&pageSize=${PUBLIC_PAGE_SIZE}`);
+    fetchPublicJson<PageResponse<T>>(`${path}${separator}page=${page}&pageSize=${PUBLIC_PAGE_SIZE}`, { revalidateSeconds: PUBLIC_LIST_REVALIDATE_SECONDS });
   const first = await fetchPage(1);
   const pageCount = Math.min(Math.ceil(first.total / PUBLIC_PAGE_SIZE), PUBLIC_MAX_PAGES);
   const rest = await Promise.all(Array.from({ length: Math.max(pageCount - 1, 0) }, (_, index) => fetchPage(index + 2)));

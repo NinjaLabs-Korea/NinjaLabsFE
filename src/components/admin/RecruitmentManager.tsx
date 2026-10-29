@@ -72,6 +72,7 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
   const [transitioning, setTransitioning] = useState(false);
   const [transitionError, setTransitionError] = useState<ReturnType<typeof cohortAdminErrorKey> | null>(null);
   const formRef = useRef<HTMLElement>(null);
+  const deletingRef = useRef(false);
 
   const fetchCohorts = useCallback(() => api.getAdminCohorts(), [api]);
   const toastLoadFailed = useCallback(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }), [t]);
@@ -150,6 +151,9 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
   };
 
   const deleteCohort = async (cohort: AdminCohort) => {
+    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
+    if (deletingRef.current) return;
+    deletingRef.current = true;
     setPendingDelete(null);
     try {
       await api.deleteAdminCohort(cohort.id);
@@ -160,6 +164,8 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: tErrors(cohortAdminErrorKey(error)) });
       void reload();
+    } finally {
+      deletingRef.current = false;
     }
   };
 

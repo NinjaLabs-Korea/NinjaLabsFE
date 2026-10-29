@@ -14,6 +14,11 @@
     "eyebrow": "创建账户"
   },
   "wallet": {
+    "linked": {
+      "badge": "钱包已连接",
+      "note": "此钱包已与您的账户绑定，无需再次验证。",
+      "continue": "继续"
+    },
     "metadata": {
       "title": "连接钱包 | Ninja Labs",
       "descriptionApi": "连接并验证 Injective 钱包。",
@@ -59,15 +64,9 @@
   "profile": {
     "metadata": {
       "title": "设置个人资料 | Ninja Labs",
-      "description": "防止垃圾账户，保证资料质量"
+      "description": "为你的公开 Ninja Labs 资料选择昵称、领域标签和简短简介。"
     },
     "title": "设置你的个人资料",
-    "whyRequired": "防止垃圾账户，保证资料质量",
-    "requirements": {
-      "spamControl": "仅靠昵称无法过滤垃圾注册，因此昵称、领域标签和简介均为必填。",
-      "oneFlow": "更多必填项可能增加流失，因此团队会在上线后监控每一步的转化漏斗。",
-      "noSkip": "退出时不保存草稿；重新进入将从引导流程开头重新开始。"
-    },
     "form": {
       "nicknameLabel": "昵称*",
       "nicknamePlaceholder": "请输入昵称",
@@ -88,12 +87,13 @@
         "tags": "请至少选择一个领域标签。",
         "bio": "请填写简短的自我介绍。",
         "nicknameRejected": "服务器拒绝了此昵称，请检查上述规则。",
-        "bioRejected": "服务器拒绝了此简介，请控制在 1000 个字符以内。"
+        "bioRejected": "服务器拒绝了此简介。请删除不可见或特殊字符，并控制在 1000 个字符以内。"
       },
       "saveErrors": {
         "network": "无法保存个人资料，请检查网络连接后重试。",
         "session": "您的会话已过期，请重新登录后继续。",
         "NICKNAME_TAKEN": "该昵称已被使用，请换一个。",
+        "NICKNAME_CHANGE_COOLDOWN": "昵称每 24 小时只能修改一次。请暂时保留当前昵称，稍后再试。",
         "invalid": "请检查所有字段：昵称需为 2-50 个字符，并且必须填写自我介绍和领域标签。",
         "INVALID_CHARACTER": "昵称或简介包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
         "REFERENCE_NOT_FOUND": "找不到您的账户记录。请刷新页面或重新登录。",
@@ -101,13 +101,15 @@
         "generic": "无法保存个人资料，请重试。",
         "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
       },
-      "nicknameHint": "2–50 个字符：字母、数字、_ . -，且开头和结尾必须是字母或数字。",
+      "nicknameHint": "2–50 个字符：字母（含重音或元音符号）、数字、_ . -，且开头和结尾必须是字母或数字。",
       "signInAgain": "重新登录（已填写的内容会保留）",
+      "signInAgainEdit": "在新标签页重新登录，然后回到这里保存",
       "nicknameErrors": {
         "tooShort": "至少 2 个字符。",
         "tooLong": "最多 50 个字符。",
         "reserved": "该词为保留字，请换一个昵称。",
-        "chars": "只能使用字母、数字和 _ . -（不能有空格）。",
+        "chars": "只能使用字母（含重音或元音符号）、数字和 _ . -（不能有空格）。",
+        "marks": "组合符号必须跟在字母或数字之后，且最多连续 3 个。",
         "lookalike": "不能使用全角字符或数学字体字符，请使用普通字符。",
         "mixedScript": "不能在同一昵称中混用拉丁字母与西里尔/希腊字母。",
         "edge": "开头和结尾必须是字母或数字。",
@@ -122,8 +124,7 @@
       "saved": "资料已保存。"
     },
     "eyebrow": "个人资料",
-    "subtitle": "这是赞助方和其他建设者在你的公开作品集中看到的内容。",
-    "whyRequiredEyebrow": "为什么全部必填"
+    "subtitle": "这是赞助方和其他建设者在你的公开作品集中看到的内容。"
   },
   "getStarted": {
     "metadata": {
@@ -173,7 +174,8 @@
     "errors": {
       "TURNSTILE_FAILED": "人机验证未通过。请返回登录页面，重新完成验证后再试。",
       "TURNSTILE_UNAVAILABLE": "人机验证服务暂时不可用，请稍后重新登录。",
-      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
+      "TOO_MANY_REQUESTS": "登录尝试次数过多，请等待一分钟后再试。"
     },
     "backToSignIn": "返回登录"
   }

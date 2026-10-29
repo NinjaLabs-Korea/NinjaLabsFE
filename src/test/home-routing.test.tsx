@@ -13,6 +13,8 @@ import { loading, signedIn, signedInWith, signedOut } from "@/test/support/auth"
 
 const state = vi.hoisted(() => ({ auth: null as unknown, mode: "api" as "api" | "mock" }));
 const replace = vi.hoisted(() => vi.fn());
+const hardNavigate = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/hard-navigate", () => ({ hardNavigate }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => <a href={href} {...props}>{children}</a>,
   useRouter: () => ({ replace, push: vi.fn() }),
@@ -25,6 +27,7 @@ const finished = signedInWith({ onboardingCompleted: true, profileSlug: "pelican
 
 afterEach(() => {
   replace.mockReset();
+  hardNavigate.mockReset();
   state.mode = "api";
   document.cookie = `${HOME_HINT_COOKIE}=; Path=/; Max-Age=0`;
 });
@@ -124,7 +127,9 @@ describe("HomeGate", () => {
     state.auth = signedOut;
     gate();
     expect(screen.queryByText("secret home")).toBeNull();
-    expect(replace).toHaveBeenCalledWith("/");
+    // A full load, not router.replace: a cached soft redirect to /home would keep the visitor on the placeholder.
+    expect(hardNavigate).toHaveBeenCalledWith("/en");
+    expect(replace).not.toHaveBeenCalled();
     expect(hasHomeHint()).toBe(false);
   });
 

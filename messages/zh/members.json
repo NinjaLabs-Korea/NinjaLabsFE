@@ -47,7 +47,7 @@
     }
   },
   "profile": {
-    "notFoundTitle": "未找到 | Ninja Labs",
+    "notFoundTitle": "页面未找到 | Ninja Labs",
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "已完成 {count} 个赏金",
     "newBuilder": "新晋建设者",

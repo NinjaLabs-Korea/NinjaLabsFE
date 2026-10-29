@@ -8,7 +8,8 @@
       "title": "How applying works | Ninja Labs",
       "description": "Some bounties accept work directly. Others require sponsor approval before you can submit."
     },
-    "notFound": "Not found | Ninja Labs",
+    "notFound": "Page not found | Ninja Labs",
+    "unavailable": "Something went wrong | Ninja Labs",
     "detailTitle": "{title} | Ninja Labs"
   },
   "hero": {
@@ -182,6 +183,7 @@
       "VALIDATION_FAILED": "Check the URLs and description, then try again.",
       "VALIDATION_URL": "Links must be public http(s) addresses (no localhost or private addresses) and at most 2048 characters long.",
       "VALIDATION_TEXT_REQUIRED": "Fill in the required text fields. They cannot be blank.",
+      "VALIDATION_COMMIT_SHA": "The commit SHA must be a hexadecimal git hash of 4 to 64 characters (for example 3f2a9c1). Leave it empty if you have none.",
       "VALIDATION_TOO_LONG": "Something you entered is too long. Shorten it and try again.",
       "APPLICATION_DEADLINE_PASSED": "The application deadline has passed.",
       "SUBMISSION_TYPE_BOUNTY": "This bounty accepts direct submissions; no application is needed.",
@@ -225,6 +227,7 @@
     "availability": "Availability",
     "closedHeading": "Bounty closed",
     "closedBody": "This bounty is no longer accepting applications or submissions.",
+    "cancelledBody": "This bounty was cancelled by the sponsor, so nothing more will be reviewed or accepted on it. Applications and work that were still pending were closed with it.",
     "applicationsClosedHeading": "Applications closed",
     "applicationsClosedBody": "The application deadline has passed, so new applications are not accepted. Applicants who were already approved can still submit until the submission deadline.",
     "reviewingBody": "Submissions are closed while the sponsor reviews the received work. New applications and submissions are not accepted.",

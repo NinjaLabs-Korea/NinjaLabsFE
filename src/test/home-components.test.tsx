@@ -80,6 +80,16 @@ describe("HomeActivity", () => {
     expect(screen.getByRole("link", { name: "See all →" }).getAttribute("href")).toBe("/applications");
   });
 
+  it("labels an award-forfeited row like the My applications page does", async () => {
+    api.getApplications = async () => ({ status: "available", data: [{
+      id: "f1", source: "submission", bountySlug: "b1", bountyTitle: "Forfeited lookalike", category: "Dev", appliedAt: "2026-10-26T00:00:00.000Z",
+      note: "", status: "notAccepted", agent: null, reviewComment: "forfeited: wallet never linked", reviewNote: null, paymentStatus: "NONE",
+    }] });
+    renderWithIntl(<HomeActivity />);
+    expect(await screen.findByText("Award forfeited")).toBeTruthy();
+    expect(screen.queryByText("Submission not accepted")).toBeNull();
+  });
+
   it("has an empty state that points at the bounties", async () => {
     api.getApplications = async () => ({ status: "available", data: [] });
     renderWithIntl(<HomeActivity />);

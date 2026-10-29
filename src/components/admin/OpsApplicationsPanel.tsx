@@ -15,7 +15,7 @@ import { safeHttpUrl } from "@/lib/api/codecs";
 const columns = ["applicant", "message", "status", "applied", "action"] as const;
 const appVariant = (status: string) => (status === "APPROVED" ? "success" : status === "REJECTED" ? "danger" : status === "PENDING" ? "warning" : "neutral");
 
-/** Applications: approve / reject with an optional note (BE APPLICATION_APPROVAL_CLOSED once intake has ended — only reject is offered then). */
+/** Applications: approve / reject with an optional note (BE APPLICATION_APPROVAL_CLOSED once intake has ended - only reject is offered then). */
 export function OpsApplicationsPanel({ ops, busy, run, formatDate }: { ops: AdminOperations; busy: ReadonlySet<string>; run: OpsRunner; formatDate: OpsDateFormatter }) {
   const api = useAdminApi();
   const t = useTranslations("admin.operations");

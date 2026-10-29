@@ -74,7 +74,7 @@ describe("user-facing messages", () => {
   const files = import.meta.glob("../../messages/*/*.json", { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
 
   it("contain no em dash in any locale", () => {
-    const offenders = Object.entries(files).filter(([, text]) => text.includes("—")).map(([file]) => file);
+    const offenders = Object.entries(files).filter(([, text]) => text.includes("\u2014")).map(([file]) => file);
     expect(offenders).toEqual([]);
   });
 
@@ -84,5 +84,17 @@ describe("user-facing messages", () => {
         expect(text, file).not.toMatch(/"edgeCases?"|"edgeCaseBadge"|"statusTitle"/);
       }
     }
+  });
+});
+
+// The project rule is "no U+2014 anywhere" (code comments, admin UI strings, docs). Source files leaked it into admin dropdowns
+// and review-history lines before; this keeps it out of everything under src/ and integration/.
+describe("source files", () => {
+  const sources = import.meta.glob(["../**/*.{ts,tsx}", "../../integration/**/*.{mjs,js,ts}"], { eager: true, query: "?raw", import: "default" }) as Record<string, string>;
+
+  it("contain no em dash", () => {
+    expect(Object.keys(sources).length).toBeGreaterThan(100); // the glob really found the tree
+    const offenders = Object.entries(sources).filter(([, text]) => text.includes("\u2014")).map(([file]) => file);
+    expect(offenders).toEqual([]);
   });
 });

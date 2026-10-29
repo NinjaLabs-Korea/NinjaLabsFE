@@ -393,6 +393,8 @@ describe("API auth adapter session restore", () => {
     expect(adapter.getSnapshot().status).toBe("loading");
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
+    // Not a sign-out: the cookie is kept and the UI says the session could not be checked.
+    expect(adapter.getSnapshot()).toEqual({ status: "signed-out", user: null, reason: "unavailable" });
     expect(adapter.http.hasSession()).toBe(false);
     expect(urls(request)).toEqual([REFRESH]);
 
@@ -402,11 +404,28 @@ describe("API auth adapter session restore", () => {
     expect(refreshCalls(request)).toHaveLength(2);
   });
 
-  it("does not crash when the init refresh is unreachable", async () => {
+  it("does not crash when the init refresh is unreachable, and reports it as unavailable rather than signed out", async () => {
     stubRefreshFlow(() => Promise.reject(new TypeError("Failed to fetch")));
     const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-out"));
+    expect((adapter.getSnapshot() as { reason?: string }).reason).toBe("unavailable");
+  });
+
+  it("reports a failing /auth/me (503) as unavailable but a rejected one (401) as plain signed-out", async () => {
+    const meStatus = { value: 503 };
+    vi.stubGlobal("fetch", vi.fn(async (url: string) =>
+      url === REFRESH ? Response.json({ accessToken: "fresh-access" }) : new Response(null, { status: meStatus.value })));
+    const flaky = createApiAuthAdapter(API);
+    flaky.initialize?.();
+    await vi.waitFor(() => expect(flaky.getSnapshot().status).toBe("signed-out"));
+    expect((flaky.getSnapshot() as { reason?: string }).reason).toBe("unavailable");
+
+    meStatus.value = 401;
+    const rejected = createApiAuthAdapter(API);
+    rejected.initialize?.();
+    await vi.waitFor(() => expect(rejected.getSnapshot().status).toBe("signed-out"));
+    expect((rejected.getSnapshot() as { reason?: string }).reason).toBeUndefined();
   });
 
   it("migrates a legacy refresh token during initialize and never leaves tokens in localStorage", async () => {
@@ -492,7 +511,7 @@ describe("API auth adapter cross-tab sign-out", () => {
     tabB.subscribe(listener);
     await tabA.signOut();
     expect(FakeBroadcastChannel.instances.map((channel) => channel.name)).toEqual([AUTH_CHANNEL_NAME, AUTH_CHANNEL_NAME]);
-    expect(tabB.getSnapshot()).toEqual({ status: "signed-out", user: null });
+    expect(tabB.getSnapshot()).toEqual({ status: "signed-out", user: null, reason: "session-ended" });
     expect(listener).toHaveBeenCalled();
     // The receiving tab dropped its access token and does not refresh into the revoked cookie.
     await expect(tabB.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ status: 401 });
@@ -675,7 +694,7 @@ describe("API auth adapter session end without reload", () => {
     });
     await expect(adapter.http.fetchJson("/bounties/mine")).rejects.toMatchObject({ status: 401 });
     expect(getAccessToken()).toBeNull();
-    expect(adapter.getSnapshot()).toEqual({ status: "signed-out", user: null });
+    expect(adapter.getSnapshot()).toEqual({ status: "signed-out", user: null, reason: "session-ended" });
   });
 
   it("stays signed-in when the refresh is only throttled", async () => {

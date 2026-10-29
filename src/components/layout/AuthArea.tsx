@@ -30,8 +30,9 @@ export function AuthArea({ variant }: AuthAreaProps) {
           <div className="hidden lg:block">
             <UserMenu />
           </div>
-        ) : snapshot.status === "loading" ? (
-          // Session still being restored: keep the box, hide the label, so a signed-in visitor never sees "Get started".
+        ) : snapshot.status === "loading" || (snapshot.status === "signed-out" && snapshot.reason === "unavailable") ? (
+          // Session still being restored (or it could not be checked and the cookie is kept): keep the box, hide the
+          // label, so a signed-in visitor never sees "Get started".
           <span aria-hidden="true" className="invisible whitespace-nowrap rounded-control px-4 py-3 text-sm leading-[21px] font-semibold sm:px-[21px]">
             {t("getStarted")}
           </span>

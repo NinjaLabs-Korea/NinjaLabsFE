@@ -161,10 +161,22 @@ describe("signup pages follow the session", () => {
     const step = () => <SignupGate step={3}><input aria-label="typed" /></SignupGate>;
     const view = renderWithIntl(step());
     expect(screen.getByLabelText("typed")).toBeTruthy();
-    state.auth = signedOut;
+    state.auth = { status: "signed-out", user: null, reason: "session-ended" };
     view.rerender(step());
     expect(screen.getByLabelText("typed")).toBeTruthy();
     expect(replace).not.toHaveBeenCalled();
+    expect(flash).not.toHaveBeenCalled();
+  });
+
+  it("leaves the step after a sign-out the user chose, without the sign-in-required message", async () => {
+    reset();
+    state.auth = unfinished(3);
+    const step = () => <SignupGate step={3}><input aria-label="typed" /></SignupGate>;
+    const view = renderWithIntl(step());
+    expect(screen.getByLabelText("typed")).toBeTruthy();
+    state.auth = signedOut;
+    view.rerender(step());
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/signup"));
     expect(flash).not.toHaveBeenCalled();
   });
 

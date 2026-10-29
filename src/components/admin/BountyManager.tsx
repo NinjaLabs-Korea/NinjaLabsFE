@@ -48,6 +48,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const [saving, setSaving] = useState(false);
   // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
   const savingRef = useRef(false);
+  const deletingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminBounty | null>(null);
   // Bounties with a transition in flight: a second click would send the same target again and answer INVALID_TRANSITION right after the success toast.
   const transitioning = useRef(new Set<string>());
@@ -81,9 +82,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   const updateForm = <Key extends keyof BountyFormValues>(key: Key, value: BountyFormValues[Key]) => {
     setForm((current) => ({ ...current, [key]: value }));
-    // 산출물/제출 가이드는 둘 중 하나만 있으면 되므로 한쪽을 고치면 같은 에러를 지운다.
-    const cleared = key === "submissionGuide" ? "deliverables" : key;
-    setErrors((current) => ({ ...current, [cleared]: undefined }));
+    setErrors((current) => ({ ...current, [key]: undefined }));
   };
 
   const fieldError = (key: keyof BountyFormValues) => {
@@ -169,6 +168,9 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   };
 
   const remove = async (bounty: AdminBounty) => {
+    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
+    if (deletingRef.current) return;
+    deletingRef.current = true;
     setPendingDelete(null);
     try {
       await api.deleteAdminBounty(bounty.slug);
@@ -180,6 +182,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
       pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
       // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
       void reload();
+    } finally {
+      deletingRef.current = false;
     }
   };
 
@@ -271,9 +275,6 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("description")} onChange={(event) => updateForm("description", event.target.value)} placeholder={t("form.descriptionPlaceholder")} value={form.description} />
               {fieldError("description")}
             </label>
-            <label className="block text-sm font-semibold text-ink">{t("form.submissionGuide")}
-              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onChange={(event) => updateForm("submissionGuide", event.target.value)} placeholder={t("form.submissionGuidePlaceholder")} value={form.submissionGuide} />
-            </label>
             <label className="block text-sm font-semibold text-ink">{t("form.deliverables")}
               <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("deliverables")} onChange={(event) => updateForm("deliverables", event.target.value)} placeholder={t("form.deliverablesPlaceholder")} value={form.deliverables} />
               <p className="mt-2 text-xs text-ink-muted">{t("form.deliverablesHint")}</p>
@@ -285,7 +286,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
             </label>
           </div>
           <button className="mt-5 h-[45px] rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={saving} type="submit">{saving ? tCommon("saving") : editing ? t("form.save") : t("form.create")}</button>
-          <p className="mt-3 text-xs text-ink-muted">{t("form.rewardNote")} {tCommon("saveNotice")}</p>
+          <p className="mt-3 text-xs text-ink-muted">{t("form.rewardNote")}</p>
         </form>
       </section>
       <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void remove(pendingDelete)} title={pendingDelete?.title ?? null} />

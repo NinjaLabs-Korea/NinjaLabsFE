@@ -1,6 +1,6 @@
 import { loadRuntimeConfig } from "@/lib/runtime/config";
 
-/** 공개 페이지 SSR이 BE를 기다리는 상한 — BE가 멈춰도 Vercel 함수가 매달리지 않게 한다. */
+/** 공개 페이지 SSR이 BE를 기다리는 상한 - BE가 멈춰도 Vercel 함수가 매달리지 않게 한다. */
 export const PUBLIC_FETCH_TIMEOUT_MS = 8000;
 
 /** A non-2xx BE answer. `status` lets a detail loader tell "this id does not exist" (404) apart from an outage. */
@@ -29,7 +29,16 @@ type PublicFetchOptions = {
    * See `PUBLIC_DETAIL_FETCH` for why detail loaders need it.
    */
   replayFailureMs?: number;
+  /**
+   * Let Next's shared Data Cache answer for this many seconds instead of asking the BE on every page view. For LIST
+   * endpoints only (the bounty list alone is `ceil(total / 50)` calls per view, and every SSR page shares one egress IP
+   * and therefore one per-IP BE bucket). Detail loaders stay uncached so an edited or cancelled item is never stale.
+   */
+  revalidateSeconds?: number;
 };
+
+/** How long a public list page may be served from the Data Cache (see `PublicFetchOptions.revalidateSeconds`). */
+export const PUBLIC_LIST_REVALIDATE_SECONDS = 30;
 
 /**
  * Options for the bounty/notice/member detail loaders. When the layout's fetch fails, Next renders an error shell in a
@@ -57,7 +66,7 @@ export async function fetchPublicJson<T>(path: string, options: PublicFetchOptio
     throw new Error("Public API is unavailable in mock mode.");
   }
 
-  const { replayFailureMs } = options;
+  const { replayFailureMs, revalidateSeconds } = options;
   if (replayFailureMs) {
     const recent = recentFailures.get(path);
     if (recent && recent.until > Date.now()) throw recent.error;
@@ -65,7 +74,7 @@ export async function fetchPublicJson<T>(path: string, options: PublicFetchOptio
 
   try {
     const response = await fetch(`${config.apiUrl.replace(/\/$/, "")}${path}`, {
-      cache: "no-store",
+      ...(revalidateSeconds ? { next: { revalidate: revalidateSeconds } } : { cache: "no-store" as const }),
       signal: AbortSignal.timeout(PUBLIC_FETCH_TIMEOUT_MS),
     });
     if (!response.ok) {

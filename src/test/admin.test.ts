@@ -4,6 +4,8 @@ import { createElement } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { PostManager } from "@/components/admin/PostManager";
 import { getAdminBounties, getAdminHighlights, getAdminPosts, highlightPublishOptionFor, highlightTypeLabelKey, highlightTypeLabelKeys, postCategoryLabelKeys, publishOptionFor, type AdminPost } from "@/lib/admin";
+import { summaryForPostUpdate } from "@/lib/admin-helpers";
+import { markdownToPlainSummary } from "@/lib/markdown-summary";
 import { HIGHLIGHT_TYPE_CODES } from "@/lib/api/codecs";
 import { bounties } from "@/lib/bounties";
 import { noticeCategoryKeys } from "@/lib/notice-categories";
@@ -11,6 +13,27 @@ import { renderWithIntl } from "@/test/intl";
 import en from "../../messages/en/admin.json";
 import ko from "../../messages/ko/admin.json";
 import zh from "../../messages/zh/admin.json";
+
+describe("admin post summary on edit (summaryForPostUpdate)", () => {
+  const derive = markdownToPlainSummary;
+  it("keeps a hand-written summary through an unchanged-body edit and a body edit alike", () => {
+    const stored = { bodyMarkdown: "# Hello\nWelcome builders.", summary: "Kickoff" };
+    expect(summaryForPostUpdate(stored, stored.bodyMarkdown, derive)).toBeUndefined();
+    expect(summaryForPostUpdate(stored, "# Hello\nNew text.", derive)).toBeUndefined();
+  });
+
+  it("re-derives a summary the UI itself derived when the body changes, and leaves it when it does not", () => {
+    const body = "# Hello\nWelcome builders.";
+    const stored = { bodyMarkdown: body, summary: derive(body) };
+    expect(summaryForPostUpdate(stored, body, derive)).toBeUndefined();
+    expect(summaryForPostUpdate(stored, "# Hello\nNew text.", derive)).toBe(derive("# Hello\nNew text."));
+  });
+
+  it("sends nothing when the stored summary is unknown", () => {
+    expect(summaryForPostUpdate(undefined, "x", derive)).toBeUndefined();
+    expect(summaryForPostUpdate({ bodyMarkdown: "x" }, "y", derive)).toBeUndefined();
+  });
+});
 
 describe("admin post publish option (PostManager → saveAdminPost)", () => {
   it("always sends `publish` on create, derived from the chosen status", () => {

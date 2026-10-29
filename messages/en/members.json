@@ -47,7 +47,7 @@
     }
   },
   "profile": {
-    "notFoundTitle": "Not found | Ninja Labs",
+    "notFoundTitle": "Page not found | Ninja Labs",
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "{count, plural, one {# bounty completed} other {# bounties completed}}",
     "newBuilder": "New builder",

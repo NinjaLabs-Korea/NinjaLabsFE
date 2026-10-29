@@ -9,7 +9,7 @@ import { opsAmount, opsCell, opsInput, opsPanel, opsPanelEyebrow, opsPanelTitle,
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { isTxHash, type AdminOperations, type OpsReward } from "@/lib/admin-operations";
-import { baseUnitsToHuman, humanToBaseUnits } from "@/lib/api/codecs";
+import { operatorAmountFromBaseUnits, operatorAmountToBaseUnits, tokenDecimalsFor } from "@/lib/api/codecs";
 
 const columns = ["token", "status", "posted", "deposited", "allocated", "depositTx", "action"] as const;
 const rewardVariant = (status: string) => (status === "DEPOSIT_PENDING" ? "warning" : status === "PAID" ? "neutral" : status === "FUNDED" || status === "PARTIALLY_PAID" ? "success" : "danger");
@@ -25,7 +25,7 @@ export function OpsRewardsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
 
   const open = (reward: OpsReward) => {
     setTarget(reward);
-    setForm({ txHash: "", amount: baseUnitsToHuman(reward.amount, reward.symbol) ?? "", errors: {} });
+    setForm({ txHash: "", amount: operatorAmountFromBaseUnits(reward.amount, reward.symbol), errors: {} });
   };
 
   // Close the dialog when a re-read shows the reward is no longer awaiting its deposit (another admin confirmed it first): confirming again only answers an error.
@@ -34,10 +34,10 @@ export function OpsRewardsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
 
   const submit = async () => {
     if (!target || !live) return;
-    const depositedAmount = humanToBaseUnits(form.amount, target.symbol);
+    const depositedAmount = operatorAmountToBaseUnits(form.amount, target.symbol);
     const errors: DepositForm["errors"] = {};
     if (!isTxHash(form.txHash)) errors.txHash = t("form.txHashInvalid");
-    if (!depositedAmount) errors.amount = t("form.amountInvalid", { symbol: target.symbol });
+    if (!depositedAmount) errors.amount = t(tokenDecimalsFor(target.symbol) === null ? "form.amountInvalidBaseUnits" : "form.amountInvalid", { symbol: target.symbol });
     else if (BigInt(depositedAmount) < BigInt(live.amount)) errors.amount = t("rewards.amountBelowPosted", { amount: opsAmount(live.amount, live.symbol) });
     if (errors.txHash || errors.amount) {
       setForm((current) => ({ ...current, errors }));
@@ -94,7 +94,7 @@ export function OpsRewardsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
         </label>
         <label className="block text-sm font-semibold text-ink">{t("rewards.depositedAmount", { symbol: target?.symbol ?? "" })}
           <input aria-describedby={form.errors.amount ? "ops-deposit-amount-error" : "ops-deposit-amount-hint"} aria-invalid={form.errors.amount ? true : undefined} className={opsInput} inputMode="decimal" onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value, errors: { ...current.errors, amount: undefined } }))} type="text" value={form.amount} />
-          {form.errors.amount ? <span className="mt-1 block text-xs font-normal text-danger" id="ops-deposit-amount-error" role="alert">{form.errors.amount}</span> : <span className="mt-1 block text-xs font-normal text-ink-muted" id="ops-deposit-amount-hint">{t("form.amountHint")}</span>}
+          {form.errors.amount ? <span className="mt-1 block text-xs font-normal text-danger" id="ops-deposit-amount-error" role="alert">{form.errors.amount}</span> : <span className="mt-1 block text-xs font-normal text-ink-muted" id="ops-deposit-amount-hint">{t(target && tokenDecimalsFor(target.symbol) === null ? "form.amountHintBaseUnits" : "form.amountHint")}</span>}
         </label>
       </OpsFormModal>
     </section>

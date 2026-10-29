@@ -113,6 +113,18 @@ describe("AgentsView", () => {
     expect(screen.queryByText("Loading your account…")).toBeNull();
   });
 
+  it.each([
+    ["AGENT_NOT_ACTIVE", 409, "Only active agents can rotate keys."],
+    ["AGENT_NOT_FOUND", 404, "This agent no longer exists. The list was refreshed."],
+  ])("re-reads the list when rotating answers %s, so the card does not keep offering a key that cannot rotate", async (code, status, copy) => {
+    const getAgents = vi.fn(apiClient.getAgents);
+    Object.assign(apiClient, { getAgents, rotateAgentKey: vi.fn(async () => { throw new ApiHttpError(status, code); }) });
+    renderWithIntl(<AgentsView />);
+    fireEvent.click((await screen.findAllByRole("button", { name: "Rotate key" }))[0]);
+    expect(await screen.findByText(copy)).toBeTruthy();
+    await waitFor(() => expect(getAgents.mock.calls.length).toBeGreaterThanOrEqual(2));
+  });
+
   it("rotates a key and reveals the new key once in a copyable field, announcing only that it is ready", async () => {
     renderWithIntl(<AgentsView />);
     fireEvent.click((await screen.findAllByRole("button", { name: "Rotate key" }))[0]);
