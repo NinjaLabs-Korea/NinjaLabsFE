@@ -7,6 +7,7 @@ import { AdminSelect } from "@/components/admin/AdminSelect";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
+import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
 import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlight } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
@@ -96,7 +97,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     clearCoverFile();
     setErrors({});
     setOriginalDeadline(undefined);
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   };
 
   const startEdit = (bounty: AdminBounty) => {
@@ -106,7 +107,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     clearCoverFile();
     setErrors({});
     setOriginalDeadline(initial.deadline);
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   };
 
   // The BE stores one `category` (`formToBounty` → `tags[0]`), so the chips are single-select: a multi-toggle let

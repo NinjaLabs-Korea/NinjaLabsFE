@@ -8,6 +8,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { CohortApplicationsPanel } from "@/components/admin/CohortApplicationsPanel";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { opsDateTime } from "@/components/admin/ops-ui";
+import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
 import { useAdminList, useAdminRecordDelete, useLoadFailedToast } from "@/components/admin/useAdminList";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { useAdminCohortApi } from "@/components/auth/FoundationProvider";
@@ -88,7 +89,7 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
     setMode("create");
     setForm(emptyForm);
     setErrors({});
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   };
 
   const editCohort = (cohort: AdminCohort) => {
@@ -100,7 +101,7 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
       closesAt: cohort.closesAt ? toLocalDateTimeInput(cohort.closesAt) : "",
     });
     setErrors({});
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   };
 
   const saveCohort = async () => {

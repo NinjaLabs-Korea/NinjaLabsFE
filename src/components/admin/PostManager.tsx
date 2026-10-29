@@ -9,6 +9,7 @@ import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
+import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
 import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlight } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { markdownToPlainSummary } from "@/lib/markdown-summary";
@@ -109,7 +110,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     setForm(emptyForm);
     clearThumbnailFile();
     setErrors({});
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   };
 
   const editPost = (post: AdminPost) => {
@@ -125,7 +126,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     });
     clearThumbnailFile();
     setErrors({});
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   };
 
   /** Clears the stored URL and any picked file; the save then sends `thumbnailUrl: null` so the BE drops it. */

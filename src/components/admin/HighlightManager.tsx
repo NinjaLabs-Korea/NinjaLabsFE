@@ -7,6 +7,7 @@ import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
+import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
 import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlight } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { DISPLAY_ORDER_MAX, highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminErrorDescription } from "@/lib/admin-helpers";
@@ -111,7 +112,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
 
   function handleAdd() {
     resetForm();
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   }
 
   function handleEdit(highlight: AdminHighlight) {
@@ -125,7 +126,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     setOrder(highlight.order);
     setPublished(highlight.published ?? false);
     setErrors({});
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   }
 
   function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
