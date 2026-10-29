@@ -182,6 +182,8 @@ export const ERROR_COPY = {
       "DEADLINE_IN_PAST",
       // 바운티 수정: 최대 당선자 수를 이미 승인된 제출 수보다 낮춤 (400)
       "MAX_WINNERS_BELOW_APPROVED",
+      // 바운티 생성·수정: 지원 마감이 제출 마감보다 늦음, 보상 심볼과 토큰 불일치 (400)
+      "APPLICATION_DEADLINE_AFTER_SUBMISSION_DEADLINE", "REWARD_SYMBOL_DENOM_MISMATCH",
       // 커버/썸네일/하이라이트 이미지 업로드 (POST /admin/media - 5 MiB, PNG/JPEG/WebP 시그니처 검사)
       "MEDIA_FILE_TOO_LARGE", "MEDIA_FILE_TYPE_UNSUPPORTED",
       // 503: BE가 DB에 닿지 못함 (일시 장애)
