@@ -35,6 +35,8 @@ export type Bounty = {
   /** Figma 15v renders variant-specific masthead/description copy without changing list copy. */
   applicationTitle?: string;
   applicationDescription?: string;
+  /** UTC-formatted BE `application_deadline`; application-required bounties only, absent when null or unparsable. */
+  applicationDeadlineDetail?: string;
   /** Application-required bounty whose `application_deadline` has passed: new applications are refused (BE `APPLICATION_DEADLINE_PASSED`); approved applicants can still submit. */
   applicationClosed?: boolean;
   /** BE status is still `OPEN` but `submission_deadline` has passed, so `status` is `closed`: no new submissions, yet a requested revision can still be resubmitted (BE `canResubmitAfterIntakeClosed`). */
