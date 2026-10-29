@@ -97,7 +97,7 @@
   },
   "stepIndicator": {
     "login": "1. 로그인",
-    "wallet": "2. 지갑 + NFT",
+    "wallet": "2. 지갑 (선택)",
     "profile": "3. 프로필",
     "getStarted": "4. 시작하기"
   },

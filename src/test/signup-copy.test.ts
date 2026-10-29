@@ -14,3 +14,13 @@ describe("sign-up profile copy", () => {
     expect(messages.profile).not.toHaveProperty("whyRequired");
   });
 });
+
+// The wallet step shows two short lines; protocol detail lives in a collapsed disclosure and stays jargon free.
+describe("sign-up wallet step copy", () => {
+  it.each(["en", "ko", "zh"])("keeps protocol jargon out of the visible %s steps", (locale) => {
+    const messages = JSON.parse(readFileSync(`messages/${locale}/signup.json`, "utf8")) as { wallet: Record<string, unknown> };
+    expect(JSON.stringify(messages.wallet.steps)).not.toMatch(/EIP-191|personal_sign|부모|父 |parent/i);
+    expect(messages.wallet).toHaveProperty("moreDetails");
+    expect(messages.wallet).not.toHaveProperty("whatHappens");
+  });
+});

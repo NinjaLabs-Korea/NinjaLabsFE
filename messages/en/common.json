@@ -97,7 +97,7 @@
   },
   "stepIndicator": {
     "login": "1. Login",
-    "wallet": "2. Wallet + NFT",
+    "wallet": "2. Wallet (optional)",
     "profile": "3. Profile",
     "getStarted": "4. Get Started"
   },

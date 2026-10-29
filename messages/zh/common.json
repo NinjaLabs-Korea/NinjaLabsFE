@@ -97,7 +97,7 @@
   },
   "stepIndicator": {
     "login": "1. 登录",
-    "wallet": "2. 钱包 + NFT",
+    "wallet": "2. 钱包（可选）",
     "profile": "3. 个人资料",
     "getStarted": "4. 开始使用"
   },

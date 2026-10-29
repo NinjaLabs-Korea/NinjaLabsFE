@@ -25,17 +25,16 @@
       "descriptionMock": "Injective 지갑 연결을 미리 확인해 보세요."
     },
     "title": "지갑 연결하기",
-    "introApi": "Injective EVM 지갑을 연결한 뒤, 가스비 없는 메시지에 서명해 소유권을 증명하세요.",
+    "introApi": "지갑을 연결하고 서명 한 번으로 내 지갑임을 확인해요. 수수료는 들지 않아요.",
     "introMock": "이 로컬 세션 미리보기에서 Injective EVM 지갑을 연결해 보세요.",
     "unavailableButton": "지갑 사용 불가",
     "unavailableNote": "지원되는 Injective EVM 체인이 설정되기 전까지는 지갑을 연결할 수 없어요.",
     "badgeApi": "가스비 없는 인증",
     "badgeMock": "연결 전용 미리보기",
-    "noteApi": "서명은 트랜잭션을 전송하지 않아요. 인증된 지갑이 계정에 연결되고 Ninja NFT 발행이 대기열에 추가돼요.",
+    "noteApi": "확인이 끝나면 Ninja NFT가 발급돼요.",
     "noteMock": "모의 모드에서는 서명, 계정 연결, 백엔드 호출을 하지 않아요.",
     "connectLater": "나중에 연결하기",
     "optionalNote": "지갑 인증은 선택 사항이에요. 지금 계속 진행하고 나중에 연결할 수 있어요.",
-    "whatHappens": "진행 과정",
     "steps": {
       "connection": {
         "term": "연결",
@@ -43,7 +42,7 @@
       },
       "signing": {
         "term": "서명",
-        "detail": "EIP-191 personal_sign 소유권 증명"
+        "detail": "지갑 서명으로 소유권을 확인해요"
       },
       "gas": {
         "term": "가스비",
@@ -55,11 +54,11 @@
       },
       "nft": {
         "term": "NFT",
-        "detail": "부모 Ninja NFT 발행이 대기열에 추가됨"
+        "detail": "Ninja NFT 발행이 대기열에 추가돼요"
       }
     },
     "eyebrow": "지갑",
-    "whatHappensEyebrow": "NFT 발행"
+    "moreDetails": "자세히 보기"
   },
   "profile": {
     "metadata": {
@@ -131,7 +130,7 @@
       "title": "시작하기 | Ninja Labs",
       "description": "모두 건너뛸 수 있어요. 메인 메뉴에서 언제든 이 옵션으로 돌아올 수 있어요."
     },
-    "eyebrow": "온보딩 완료",
+    "eyebrow": "가입 완료",
     "title": "무엇을 해 볼까요?",
     "subtitle": "모두 건너뛸 수 있어요. 메인 메뉴에서 언제든 이 옵션으로 돌아올 수 있어요.",
     "actions": {
@@ -148,7 +147,7 @@
         "description": "커뮤니티 허브에서 지난 활동, 멤버, 성과를 만나 보세요."
       }
     },
-    "skip": "건너뛰고 메인으로 이동",
+    "skip": "건너뛰고 홈으로 이동",
     "savedNote": "온보딩 진행 상황이 저장됐어요. 지갑과 프로필은 나중에 수정할 수 있어요.",
     "completeError": {
       "message": "온보딩 저장을 마치지 못했어요. 다시 시도해 주세요.",
