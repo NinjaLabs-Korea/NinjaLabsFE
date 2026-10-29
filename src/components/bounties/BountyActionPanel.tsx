@@ -5,6 +5,8 @@ import { FormEvent, useEffect, useId, useRef, useState, type ReactNode, type Ref
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
+import { PageLoading } from "@/components/ui/PageLoading";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Link } from "@/i18n/navigation";
 import { signInHref } from "@/lib/return-path";
 import { APPLICATION_MESSAGE_MAX, COMMIT_SHA_MAX, SUBMISSION_DESCRIPTION_MAX } from "@/lib/input-limits";
@@ -120,15 +122,14 @@ function SignedOutPanel({ applicationRequired, bountyId }: { applicationRequired
 /**
  * Placeholder while the session or the application/submission rows load. It reserves the height of the settled signed-out
  * panel (measured at 375 and 1280 px, apply form vs. direct submit) so the real panel replacing it does not push the page
- * down (the CLS this removes). The status text stays for screen readers; the pulse block is decoration.
+ * down (the CLS this removes). Built from the shared `PageLoading`/`Skeleton` (status label for screen readers, pulse block is decoration).
  */
 function CheckingPanel({ applicationRequired, label }: { applicationRequired: boolean; label: string }) {
   const height = applicationRequired ? "min-h-[26rem] sm:min-h-[22rem]" : "min-h-[15rem] sm:min-h-[12rem]";
   return (
-    <div>
-      <div aria-hidden="true" className={`${height} rounded-card bg-surface-subtle animate-pulse motion-reduce:animate-none`} data-checking-placeholder="" />
-      <p className="sr-only" role="status">{label}</p>
-    </div>
+    <PageLoading label={label} variant="list">
+      <Skeleton className={height} />
+    </PageLoading>
   );
 }
 

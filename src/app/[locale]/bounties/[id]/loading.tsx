@@ -3,7 +3,7 @@ import { PageLoading } from "@/components/ui/PageLoading";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 export default async function Loading() {
-  const t = await getTranslations("admin.common");
+  const t = await getTranslations("common");
   return (
     <PageLoading className="mx-auto max-w-content px-6 py-16 pb-20" label={t("loading")} variant="detail">
       <Skeleton className="h-5 w-32 rounded-control" />

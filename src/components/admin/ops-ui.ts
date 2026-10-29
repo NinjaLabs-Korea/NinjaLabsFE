@@ -3,9 +3,10 @@ import type { useFormatter } from "next-intl";
 import { isIsoDateTime } from "@/lib/admin-bounty-form";
 import { baseUnitsToHuman } from "@/lib/api/codecs";
 
-export const opsButton = "rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60 motion-control motion-press";
-export const opsPrimaryButton = "rounded-control bg-primary px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60 motion-control motion-press";
-export const opsDangerButton = "rounded-control border border-danger px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-danger hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60";
+const opsButtonBase = "rounded-control px-3 py-2 max-sm:py-2.5 text-sm font-semibold hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60 motion-control motion-press";
+export const opsButton = `${opsButtonBase} border border-primary-outline text-primary-strong`;
+export const opsPrimaryButton = `${opsButtonBase} bg-primary text-primary-soft`;
+export const opsDangerButton = `${opsButtonBase} border border-danger text-danger`;
 // One input recipe for every admin form field (text, textarea, datetime): focus ring, placeholder, and the red border while `aria-invalid`.
 const opsField = "mt-2 w-full rounded-control border border-border px-[17px] text-sm font-normal text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
 export const opsInput = `h-[46px] ${opsField}`;

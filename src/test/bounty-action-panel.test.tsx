@@ -68,12 +68,11 @@ describe("BountyActionPanel", () => {
   it("reserves the settled panel height with an aria-hidden placeholder while the session loads, keeping the status text", () => {
     state.auth = loading;
     const { container } = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
-    const placeholder = container.querySelector("[data-checking-placeholder]")!;
+    const placeholder = container.querySelector("[role=status] [aria-hidden=true]")!;
     expect(placeholder.getAttribute("aria-hidden")).toBe("true");
     expect(placeholder.className).toMatch(/min-h-\[/);
     expect(placeholder.className).toContain("motion-reduce:animate-none");
     const status = screen.getByRole("status");
-    expect(status.className).toContain("sr-only");
     expect(status.textContent?.length).toBeGreaterThan(0);
   });
 

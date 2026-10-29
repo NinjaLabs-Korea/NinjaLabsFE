@@ -161,7 +161,6 @@ export function rewardHeadroom(reward: Pick<OpsReward, "cap" | "allocated">): st
 export const TX_HASH_PATTERN = /^(0x)?[0-9a-fA-F]{64}$/;
 export const isTxHash = (value: string): boolean => TX_HASH_PATTERN.test(value.trim());
 
-
 // ── NFT jobs ────────────────────────────────────────────
 export const NFT_JOB_STATUSES = ["FAILED", "PENDING", "PROCESSING"] as const;
 export type NftJobStatus = (typeof NFT_JOB_STATUSES)[number];

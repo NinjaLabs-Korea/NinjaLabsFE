@@ -1,4 +1,3 @@
-
 /** BE `AuditService.list` row/page, mapped for the audit-log viewer (GET /admin/audit-logs). */
 export type AdminAuditLog = {
   id: string;

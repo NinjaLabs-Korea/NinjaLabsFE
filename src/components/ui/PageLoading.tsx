@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 type PageLoadingProps = {
-  /** Announced to screen readers: the caller's existing translated loading string (no new message keys). */
+  /** Announced to screen readers: the caller's translated loading string (public routes use `common.loading`). */
   label: string;
   /** `page`/`detail` reserve most of a screen so the swap to content does not shift the layout; `list` is section-sized. */
   variant?: "page" | "list" | "detail";
