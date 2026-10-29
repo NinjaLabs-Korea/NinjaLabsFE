@@ -13,7 +13,13 @@
     "skipToContent": "Skip to content"
   },
   "localeSwitcher": {
-    "label": "Language"
+    "label": "Language",
+    "unsaved": {
+      "title": "Switch language?",
+      "body": "The page reloads in the new language and the text you typed here will be cleared.",
+      "confirm": "Switch and clear",
+      "cancel": "Keep editing"
+    }
   },
   "nav": {
     "bounties": "Bounties",

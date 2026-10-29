@@ -138,7 +138,7 @@ public/
 - Design data comes from the Figma remote MCP (`https://mcp.figma.com/mcp`): `get_design_context` for
   per-screen code/screenshot, `get_metadata` for structure, `download_assets` for images.
 - Every screen shares the same Header/Footer (rendered once in `src/app/layout.tsx`, not per page).
-- Implemented component inventory (118 files; **`src/test/agents-inventory.test.ts` fails when a `src/components` file is not named here as `dir/Name` or when this count is off** - add the new line in the same change as the component):
+- Implemented component inventory (119 files; **`src/test/agents-inventory.test.ts` fails when a `src/components` file is not named here as `dir/Name` or when this count is off** - add the new line in the same change as the component):
   - `legal/LegalDocument` - async server component that renders `/privacy` and `/terms` from `messages/<locale>/legal.json` (`t.raw` section arrays; `{email}` becomes a mailto link to `lib/contact.ts` `CONTACT_EMAIL`). Operator is Ninja Labs Korea; bump `LEGAL_LAST_UPDATED` with the text
   - `layout/Header`, `layout/Footer` - the shared shell chrome (rendered once in `layout.tsx`); `layout/MobileMenu` - `"use client"` island around the header's `<details>` mobile nav (still progressive-enhancement markup): closes on link click, Escape (focus back to the summary) and outside click
   - `layout/fonts` - the ONLY `next/font/google` call site (`inter`, `spaceGrotesk`), imported by AppShell, root not-found and global-error so one font CSS module exists (duplicate instances caused unused-preload console warnings; `src/test/fonts.test.ts` guards it).
@@ -155,6 +155,7 @@ public/
   - `cards/NoticeRow` - horizontal thumb + content row (Notices list)
   - `cards/MemberCard` - photo/initials fallback + name + role line + bio + links
   - `bounties/BountyFilters`, `notices/NoticeFilters`, `members/MemberFilters` - `"use client"` islands (list filtering + empty states with Reset)
+  - `layout/useUnsavedInputGuard` - remembers form fields typed into under `#main-content` (not search, not `/signup/profile`); `LocaleSwitcher` asks via `ConfirmDialog` before a locale switch would wipe them (the `[locale]` segment owns `<html>`, so a switch remounts the page).
   - `layout/LocaleSwitcher` + `layout/UserMenu` - header dropdowns built on `layout/useMenuButton` (APG menu button: focus moves into the menu on open, arrows/Home/End/Escape/Tab; an outside click closes through a document `pointerdown` listener like `MobileMenu`, never through blur - Safari/Firefox-macOS do not focus a button on mousedown, so the root blurs with `relatedTarget === null` before the click and that blur is ignored; a blur to another element outside the menu still closes it; shared `menuPanelClass` / `menuItemClass`). The locale menu uses `menuitemradio` with the current locale checked; never use a native `<select>` in the header.
   - `layout/NavLinks` - `"use client"` island for active-nav highlight (`aria-current`); `src/app/error.tsx`/`global-error.tsx` are also client (Next error-boundary contract exception; global-error loads its own globals.css + fonts)
   - `admin/AdminTabs` - in-page admin tab strip (`active` prop); `admin/AdminTable` - lavender-header table (`columns`, `minWidthClass`, `<tr>` children); API mode persists admin changes through AdminGuard-protected endpoints.
