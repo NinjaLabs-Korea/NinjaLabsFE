@@ -6,7 +6,7 @@
   "hero": {
     "eyebrow": "成员招募",
     "heading": "与 Ninja Labs 一起构建",
-    "description": "先了解社区,再申请当前招募的期别。需要已完成注册(引导流程)的 Ninja Labs 账户。"
+    "description": "先逛逛社区，再申请当前招募的期别。需要已完成注册的账户。"
   },
   "banner": {
     "label": "成员招募",
@@ -57,7 +57,7 @@
     },
     "onboarding": {
       "title": "请先完成注册",
-      "body": "申请需要先完成注册。完成剩余步骤后即可回到这里。",
+      "body": "申请前需要先完成注册。完成剩余步骤后会回到这个页面。",
       "cta": "继续注册"
     }
   },
@@ -68,7 +68,7 @@
     "intro": {
       "label": "自我介绍与申请动机*",
       "placeholder": "你是谁、做过什么、为什么想加入 Ninja Labs?",
-      "hint": "建议 {min}-{max} 字(最多 {limit} 字)。",
+      "hint": "请至少写 {min} 字（最多 {limit} 字）",
       "counter": "{count}/{limit}"
     },
     "reapplyIntro": "你已撤回之前的申请。招募期间可以重新提交。",
@@ -89,7 +89,7 @@
       "hint": "5-32 位字母、数字或 _。也可以填写 t.me 链接。"
     },
     "twitter": {
-      "label": "Twitter(X)账号*",
+      "label": "X（Twitter）账号*",
       "placeholder": "@your_x_id",
       "hint": "1-15 位字母、数字或 _。也可以填写 x.com 链接。"
     },
