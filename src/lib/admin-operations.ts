@@ -3,6 +3,7 @@
 // Status values stay the BE codes verbatim (the console shows operators the real state machine); copy lives under
 // `admin.operations.*` / `admin.nftJobs.*`.
 import { ERROR_COPY, listedCode, normalizedCode } from "./api/error-copy";
+import { PAYABLE_REWARD_STATUSES } from "./payout-status";
 import { isBountyFinished, isBountyInProgress, type BountyStatusCode } from "./bounty-status";
 
 // The lifecycle predicates live in `bounty-status.ts`; re-exported so the console imports its rules from one place.
@@ -128,7 +129,7 @@ export function applicationDecisionsFor(application: Pick<OpsApplication, "statu
 
 export const canApprovePayout = (payout: Pick<OpsPayout, "status">): boolean => payout.status === "REQUESTED" || payout.status === "AWAITING_MULTISIG_APPROVAL";
 export const canMarkPayoutPaid = (payout: Pick<OpsPayout, "status">): boolean => payout.status === "APPROVED" || payout.status === "BROADCASTING";
-export const isRewardFunded = (reward: Pick<OpsReward, "status">): boolean => reward.status === "FUNDED" || reward.status === "PARTIALLY_PAID" || reward.status === "PAID";
+export const isRewardFunded = (reward: Pick<OpsReward, "status">): boolean => PAYABLE_REWARD_STATUSES.includes(reward.status);
 
 /** Two-person rule as the console shows it: blocked (needs another admin), allowed-with-audit, or a normal approval. */
 export function payoutApprovalMode(payout: Pick<OpsPayout, "requestedByMe">, policy: AdminOperations["policy"]): "self-blocked" | "self-allowed" | "normal" {

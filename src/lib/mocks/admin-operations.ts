@@ -3,6 +3,7 @@ import type { AdminApi } from "@/lib/contracts/api";
 import type { AdminBounty } from "@/lib/admin-helpers";
 import { MockApiError } from "@/lib/mocks/mock-error";
 import { rewardToBaseUnits } from "@/lib/api/codecs";
+import { OPEN_PAYOUT_STATUSES, UNSETTLED_PAYOUT_STATUSES } from "@/lib/payout-status";
 import { fromAdminStatus, toAdminStatus, type BountyStatusCode } from "@/lib/bounty-status";
 import {
   BOUNTY_TRANSITIONS,
@@ -90,7 +91,6 @@ function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string)
   };
 }
 
-const OPEN_PAYOUT_STATUSES: readonly string[] = ["REQUESTED", "AWAITING_MULTISIG_APPROVAL", "APPROVED", "BROADCASTING"];
 
 /**
  * BE `owesUnpaidRewardSql`: among the funded rewards this submission is owed from, one has no PAID payout. A reward is owed when the
@@ -289,7 +289,7 @@ export function createMockOperationsApi(options: {
       Object.assign(row, { status: "PAID", txHash: hash, paidAt: new Date().toISOString() });
       const reward = ops.rewards.find((r) => r.id === row.rewardId);
       if (reward) {
-        const open = ops.payouts.some((p) => p.rewardId === reward.id && p.status !== "PAID" && p.status !== "CANCELLED");
+        const open = ops.payouts.some((p) => p.rewardId === reward.id && UNSETTLED_PAYOUT_STATUSES.includes(p.status));
         const paid = ops.payouts.filter((p) => p.rewardId === reward.id && p.status === "PAID");
         const paidAmount = paid.reduce((sum, p) => sum + BigInt(p.amount), BigInt(0));
         reward.status = !open && (paid.length >= ops.bounty.maxWinners || paidAmount >= BigInt(reward.cap ?? "0")) ? "PAID" : "PARTIALLY_PAID";
