@@ -107,7 +107,7 @@ describe("bounty hero (top of /bounties)", () => {
     renderWithIntl(await BountyHero({ hero: hero(), locale: "en" }));
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Complete bounties. Collect proof. Own your track record.");
     expect(screen.getByText("Pick up tasks posted by sponsors and submit your work. Every completed bounty adds an on-chain record.")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "How applying works →" }).getAttribute("href")).toBe("/bounties/apply");
+    expect(screen.getByRole("link", { name: "How it works →" }).getAttribute("href")).toBe("/bounties/apply");
     expect(screen.queryByRole("link", { name: "Get Started" })).toBeNull();
     expect(screen.queryByText("ninja.inj")).toBeNull();
     expect(screen.queryByText("+ next")).toBeNull();

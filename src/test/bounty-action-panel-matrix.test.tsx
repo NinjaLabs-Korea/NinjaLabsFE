@@ -162,12 +162,12 @@ describe("BountyActionPanel transitional states", () => {
     expect(await screen.findByRole("button", { name: "Submit" })).toBeTruthy();
   });
 
-  it("previews a disabled apply form for signed-out visitors with links to the intake rules and sign-up", async () => {
+  it("previews a disabled apply form for signed-out visitors with links to the how-it-works guide and sign-up", async () => {
     state.auth = auths["signed-out"];
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
     const note = await screen.findByRole("textbox", { name: "Application note" });
     expect((note.closest("fieldset") as HTMLFieldSetElement).disabled).toBe(true);
-    expect(screen.getByRole("link", { name: "View intake rules" }).getAttribute("href")).toBe("/bounties/apply");
+    expect(screen.getByRole("link", { name: "See how it works" }).getAttribute("href")).toBe("/bounties/apply");
     expect(screen.getByRole("link", { name: "Apply" }).getAttribute("href")).toBe("/signup?returnTo=%2Fbounties%2Fbounty-1");
     expect(screen.getByText("Submit disabled until approved")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();

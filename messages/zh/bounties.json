@@ -5,7 +5,7 @@
       "description": "寻找 Injective 生态赞助方发布的有偿任务，交付有价值的成果，并为你的 Ninja 作品集积累链上证明。"
     },
     "apply": {
-      "title": "申请流程说明 | Ninja Labs",
+      "title": "参与方式 | Ninja Labs",
       "description": "部分赏金可直接提交作品，另一些则需要赞助方批准后才能提交。"
     },
     "notFound": "页面未找到 | Ninja Labs",
@@ -32,7 +32,7 @@
   "list": {
     "eyebrow": "市场",
     "heading": "赏金",
-    "howApplying": "了解申请流程 →",
+    "howApplying": "参与方式 →",
     "resultsLabel": "赏金筛选与结果",
     "unavailable": "暂时无法加载赏金。"
   },
@@ -49,8 +49,8 @@
     "ariaLabel": "赏金筛选"
   },
   "apply": {
-    "eyebrow": "赏金流程",
-    "heading": "提交型和申请型有什么不同？",
+    "eyebrow": "赏金",
+    "heading": "如何参与？",
     "intro": "部分赏金接受直接提交；另一些则需要赞助方批准后才能开始工作。",
     "auth": {
       "checking": "正在检查会话",
@@ -63,28 +63,23 @@
       "view": "查看赏金"
     },
     "submitType": {
-      "badge": "直接提交",
-      "heading": "提交型",
-      "body": "任何人都可以直接完成并提交。适合赞助方可以事后根据成果判断的小型交付。",
-      "flow": "直接显示提交按钮，与赏金详情页相同。",
+      "heading": "直接提交",
+      "body": "完成工作后直接提交。",
       "viewDirect": "查看详情示例",
-      "none": "目前没有进行中的提交型赏金。",
-      "flowTitle": "按钮行为"
+      "none": "目前没有可直接提交的赏金。"
     },
     "applyType": {
-      "badge": "需要申请",
-      "heading": "申请型",
-      "body": "仅在赞助方批准后才开放提交。适合赞助方希望先审核建设者的大型工作。",
-      "flow": "申请 → 申请表单 → 赞助方审核 → 批准后启用提交。",
-      "none": "目前没有进行中的申请型赏金。",
-      "flowTitle": "按钮行为"
+      "heading": "先申请后提交",
+      "body": "先提交申请，赞助方批准后再提交成果。",
+      "flow": "申请 → 赞助方批准 → 提交 → 完成",
+      "none": "目前没有可申请的赏金。"
     },
     "empty": {
       "title": "目前没有进行中的赏金",
       "body": "新的赞助机会将显示在赏金市场中。",
       "browse": "浏览全部赏金"
     },
-    "statusHeading": "申请型进行顺序",
+    "statusHeading": "先申请后提交的顺序",
     "statuses": {
       "open": "已开放",
       "underReview": "审核中",
@@ -211,7 +206,7 @@
     "submitSignedOutBody": "登录后粘贴已完成作品的链接。未登录的访客仍可阅读所有赏金详情。",
     "applySignedOutBody": "请先提交一份简短申请。提交按钮仅在赞助方批准后解锁。",
     "signInFirst": "请先登录",
-    "viewIntakeRules": "查看申请规则",
+    "viewIntakeRules": "查看参与方式",
     "submitDisabled": "批准前无法提交",
     "availability": "可投入时间",
     "closedHeading": "赏金已关闭",
