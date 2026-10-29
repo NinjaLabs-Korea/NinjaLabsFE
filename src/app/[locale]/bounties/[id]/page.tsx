@@ -5,7 +5,6 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 
 import { Badge } from "@/components/ui/Badge";
 import { BountyAgentPanel } from "@/components/agents/BountyAgentPanel";
-import { BountyAccessBadges } from "@/components/bounties/BountyAccessBadges";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import { Markdown } from "@/components/ui/Markdown";
 import { formatRewardAmount, isRewardUnset, RewardPill } from "@/components/ui/RewardPill";
@@ -98,7 +97,6 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               : <Badge variant="neutral">{submissionMode === "agent" ? t("detail.agentSubmission") : t("detail.directSubmission")}</Badge>}
           </div>
         </div>
-        <BountyAccessBadges actionsOpen={bounty.status === "active"} />
       </section>
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -160,7 +158,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               {rewards.map((reward) => <SponsorPaysPill key={reward.currency} label={t("detail.sponsorPays", { reward: isRewardUnset(reward) ? tReward("tbd") : `${formatRewardAmount(reward.amount, format.number)} ${reward.currency}` })} reward={reward} />)}
             </div>
             <ol className="mt-4 space-y-3">
-              {(["flow", "token", "noSwap"] as const).map((note, index) => (
+              {(["flow", "token"] as const).map((note, index) => (
                 <li className="flex gap-3 text-sm text-ink-secondary" key={note}>
                   <span className="shrink-0 text-xs font-bold leading-5 text-primary">{index + 1}</span>
                   {applicationRequired ? t(`detail.rewardNotesApply.${note}`, { currency: rewards[0].currency }) : t(`detail.rewardNotes.${note}`)}
@@ -185,7 +183,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
       </div>
 
       <p className="mt-8 text-sm text-ink-muted">
-        {applicationRequired ? t("detail.applyFootnote") : t("detail.footnote")}
+        {t("detail.footnote")}
       </p>
     </div>
   );

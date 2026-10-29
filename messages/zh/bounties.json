@@ -39,7 +39,7 @@
     "heading": "赏金",
     "howApplying": "了解申请流程 →",
     "resultsLabel": "赏金筛选与结果",
-    "payoutNote": "赞助方可使用 INJ、USDC 等任意代币发布赏金。奖励按原样发放，建设者自行兑换；Ninja Labs 不提供平台内兑换。",
+    "payoutNote": "奖励将以发布方的代币（INJ、USDC 等）原样发放，如需兑换请自行操作。",
     "unavailable": "暂时无法加载赏金。"
   },
   "filters": {
@@ -56,7 +56,7 @@
   },
   "apply": {
     "eyebrow": "赏金流程",
-    "heading": "赏金类型，提交型 vs 申请型",
+    "heading": "提交型和申请型有什么不同？",
     "intro": "部分赏金接受直接提交；另一些则需要赞助方批准后才能开始工作。",
     "auth": {
       "checking": "正在检查会话",
@@ -90,7 +90,7 @@
       "body": "新的赞助机会将显示在赏金市场中。",
       "browse": "浏览全部赏金"
     },
-    "statusHeading": "赏金状态流程",
+    "statusHeading": "申请型进行顺序",
     "statuses": {
       "open": "已开放",
       "underReview": "审核中",
@@ -98,9 +98,7 @@
       "submitted": "已提交",
       "completed": "已完成"
     },
-    "statusNote": "申请型在提交前多一个批准步骤，赞助方会先审核申请。",
-    "unavailable": "暂时无法加载进行中的赏金。",
-    "statusEyebrow": "申请型状态流程"
+    "unavailable": "暂时无法加载进行中的赏金。"
   },
   "detail": {
     "back": "← 返回赏金列表",
@@ -116,7 +114,6 @@
     "review": "审核",
     "defaultReview": "赞助方审核",
     "submissionGuide": "提交指南",
-    "applyFootnote": "所有人均可浏览，申请和提交需要登录。提交仅在赞助方批准后开放。",
     "sponsorPays": "赞助方支付：{reward}",
     "afterApproval": "获批之后",
     "deliverableSeeGuide": "请参阅下方的提交指南",
@@ -126,28 +123,26 @@
     "descriptionHeadingApply": "要求、申请指南、评审标准",
     "rewardInfo": "奖励信息",
     "rewardNotes": {
-      "flow": "流程：锁定 → 审核 → 释放 → 转账。",
-      "token": "以原代币发放；如有需要由建设者自行兑换。",
-      "noSwap": "无平台内兑换。合约和钱包使用 Injective 地址。"
+      "flow": "按 托管、审核、发放 的顺序进行。",
+      "token": "以原代币发放；如有需要由建设者自行兑换。"
     },
     "rewardNotesApply": {
-      "flow": "流程：锁定 → 申请审核 → 批准 → 提交 → 释放。",
-      "token": "奖励以 {currency} 发放；如有需要由建设者自行兑换。",
-      "noSwap": "无平台内兑换。合约和钱包使用 Injective 地址。"
+      "flow": "按 托管、申请审核、批准、提交、发放 的顺序进行。",
+      "token": "奖励以 {currency} 发放；如有需要由建设者自行兑换。"
     },
-    "completionHeading": "完成 + 批准后",
+    "completionHeading": "审核通过后",
     "completionSteps": {
-      "transfer": "奖励转入用户钱包。",
-      "mint": "赏金 NFT 作为子证明项铸造。",
-      "attach": "子 NFT 关联到用户的 Ninja NFT，并显示在主页作品集中。"
+      "transfer": "奖励会发送到你的钱包。",
+      "mint": "会铸造一枚完成证明 NFT。",
+      "attach": "它会自动加入你的 Ninja NFT 作品集。"
     },
     "afterApprovalSteps": {
       "approve": "赞助方批准申请。",
       "unlock": "已完成工作的提交字段解锁。",
-      "reward": "最终批准后进行奖励转账和子赏金 NFT 铸造。"
+      "reward": "最终批准后，奖励会发出并铸造完成证明 NFT。"
     },
-    "statusFlowEyebrow": "申请型状态",
-    "footnote": "所有人均可浏览，提交或申请需要登录。子 NFT 是每个已完成赏金的作品集证明。"
+    "statusFlowEyebrow": "申请型进行顺序",
+    "footnote": "任何人都可以查看，登录后即可申请或提交。"
   },
   "action": {
     "agentHeading": "代理提交",

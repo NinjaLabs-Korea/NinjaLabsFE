@@ -109,8 +109,7 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
       ) : null}
 
       <section className="mt-8 rounded-card border border-border bg-surface p-[21px] shadow-card">
-        <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("statusEyebrow")}</p>
-        <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">{t("statusHeading")}</h2>
+        <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{t("statusHeading")}</h2>
         <ol className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-0">
           {statuses.map((status, index) => (
             <li className="flex flex-1 items-center gap-3 sm:gap-0" key={status.key}>
@@ -120,8 +119,6 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
           ))}
         </ol>
       </section>
-
-      <p className="mt-4 text-sm text-ink-muted">{t("statusNote")}</p>
     </div>
   );
 }
