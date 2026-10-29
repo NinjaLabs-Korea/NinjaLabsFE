@@ -1,7 +1,17 @@
-/** Zero-width and Hangul filler characters draw as nothing: text made only of them is blank to the reader (like the nickname rule). */
-const INVISIBLE = /[\u200B-\u200F\u2060\u2062-\u2064\uFEFF\u115F\u1160\u3164\uFFA0]/gu;
+/**
+ * Mirror of NinjaLabsBE `src/common/validation/visible-text.ts` `hasVisibleText` (read at BE origin/main 026cb6d). The character class is copied
+ * verbatim; keep it in step with the BE and with the fixtures in `src/test/be-validator-fixtures.ts`.
+ *
+ * Nothing-drawing characters: Default_Ignorable_Code_Point (zero-width, soft hyphen, variation selectors, Hangul fillers, U+034F ...), format (Cf),
+ * control (Cc), separators (Z), private use (Co), unassigned (Cn), surrogates (Cs), the object replacement character U+FFFC and the braille blank
+ * U+2800 (category So, so \p{Z} misses it).
+ */
+const INVISIBLE = /[\p{Default_Ignorable_Code_Point}\p{Cf}\p{Cc}\p{Z}\p{Co}\p{Cn}\p{Cs}\uFFFC\u2800]/gu;
 
-/** True when `value` has at least one character a reader can see (whitespace and invisible characters do not count). */
+/**
+ * True when `value` has at least one character a reader can see. Text left with only combining marks (\p{M}) does not count either:
+ * without a base letter they draw as nothing.
+ */
 export function hasVisibleText(value: string): boolean {
-  return value.replace(INVISIBLE, "").trim().length > 0;
+  return /[^\p{M}]/u.test(value.replace(INVISIBLE, ""));
 }

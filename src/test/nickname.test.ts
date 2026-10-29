@@ -3,6 +3,7 @@ import { ApiHttpError } from "@/lib/api/http";
 import { validationFieldsFromError, validationFieldsFromMessages } from "@/lib/api/validation";
 import { isReservedNickname, isValidNickname, NICKNAME, nicknameInitials, nicknameLength, normalizeNickname, validateNickname } from "@/lib/nickname";
 import { STATIC_FILE_EXTENSIONS } from "@/lib/static-extensions";
+import { BE_NICKNAME_ACCEPTED, BE_NICKNAME_REJECTED } from "./be-validator-fixtures";
 
 // Probe cases mirror NinjaLabsBE `src/users/users.dto.spec.ts` (CompleteProfileDto) - keep the two files in step.
 describe("nickname rule (mirror of BE users/nickname.ts)", () => {
@@ -127,7 +128,7 @@ describe("nicknameInitials", () => {
 describe("combining marks (BE `\\p{M}` rule: Hindi, Thai, stacked accents)", () => {
   it("is the same regex as the BE NICKNAME (copy of NinjaLabsBE src/users/nickname.ts)", () => {
     expect(NICKNAME.source).toBe(
-      "^(?!.*[\\u115F\\u1160\\u3164\\uFFA0\\p{Variation_Selector}\\uFF00-\\uFFEF\\u{1D400}-\\u{1D7FF}])(?!(?=.*[A-Za-z\\u00C0-\\u024F])(?=.*[\\p{Script=Cyrillic}\\p{Script=Greek}]))(?!.*\\p{M}{4})(?!.*[_.-]\\p{M})[\\p{L}\\p{N}][\\p{L}\\p{N}\\p{M}_.-]*[\\p{L}\\p{N}\\p{M}]$",
+      "^(?!.*[\\p{Default_Ignorable_Code_Point}\\u115F\\u1160\\u3164\\uFFA0\\p{Variation_Selector}\\uFF00-\\uFFEF\\u{1D400}-\\u{1D7FF}])(?!(?=.*[A-Za-z\\u00C0-\\u024F])(?=.*[\\p{Script=Cyrillic}\\p{Script=Greek}]))(?!.*\\p{M}{4})(?!.*[_.-]\\p{M})[\\p{L}\\p{N}][\\p{L}\\p{N}\\p{M}_.-]*[\\p{L}\\p{N}\\p{M}]$",
     );
   });
 
@@ -165,5 +166,18 @@ describe("BE look-alike rules (fullwidth, math alphanumerics, mixed scripts, con
     expect(isReservedNickname("ＡＤＭＩＮ")).toBe(true);
     expect(isReservedNickname("withdrawn_x")).toBe(true);
     expect(isReservedNickname("adminx")).toBe(false);
+  });
+});
+
+describe("BE fixture tables (src/test/be-validator-fixtures.ts)", () => {
+  it.each(BE_NICKNAME_REJECTED)("rejects %j like the BE", (nickname) => {
+    expect(validateNickname(nickname)).not.toBeNull();
+  });
+  it.each(BE_NICKNAME_ACCEPTED)("accepts %j like the BE", (nickname) => {
+    expect(validateNickname(nickname)).toBeNull();
+  });
+  it("reports a leading zero-width space as a character error, not a later BE 400", () => {
+    expect(validateNickname("\u200Bninja")).toBe("chars");
+    expect(validateNickname("coreni\u034Fnja")).toBe("chars");
   });
 });

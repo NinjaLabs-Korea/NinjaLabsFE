@@ -20,7 +20,7 @@ import { ApiHttpError } from "./http";
 /**
  * BE가 아니라 FE가 스스로 만드는 코드. 위치:
  * - `VALIDATION_FAILED` / `UNKNOWN_ERROR` / `REFRESH_UNAVAILABLE` - `lib/api/http.ts` (Nest `message[]`, 빈 message, refresh 일시 장애)
- * - `NETWORK_ERROR` / `UNAUTHORIZED` / `TOO_MANY_REQUESTS` / `TRANSITION_BLOCKED` - `lib/admin-operations.ts opsErrorCode` 정규화 결과 (`TOO_MANY_REQUESTS`는 `knownCode`도 429에서 만든다)
+ * - `NETWORK_ERROR` / `UNAUTHORIZED` / `TOO_MANY_REQUESTS` / `TRANSITION_BLOCKED` - `normalizedCode`(이 파일)가 만드는 정규화 결과 (`TRANSITION_BLOCKED`만 `lib/admin-operations.ts opsErrorCode`)
  */
 export const FE_ERROR_CODES = [
   "VALIDATION_FAILED",
@@ -241,14 +241,26 @@ export function listedCode<const C extends string>(value: unknown, codes: readon
 }
 
 /**
- * 실패한 API 호출의 BE 코드가 `codes`에 있으면 그 코드, 아니면 null (네트워크 오류 등 `ApiHttpError`가 아닌 것도 null).
- * mock 모드의 `MockApiError`도 `ApiHttpError`를 상속하므로 같은 경로를 탄다.
- * 429는 코드를 `TOO_MANY_REQUESTS`로 정규화한다: Nest throttler 본문(`ThrottlerException: Too Many Requests`)에는 카탈로그 코드가 없어
- * 그대로 두면 "알 수 없는 오류 (ThrottlerException…)"처럼 원문이 화면에 샌다. 이 코드를 `codes`에 넣은 화면만 전용 문구를 쓴다.
+ * 실패한 API 호출을 화면이 비교할 코드 한 개로 정규화한다 (운영자 콘솔·모집 화면이 같이 쓰는 **유일한** 상태 -> 코드 규칙):
+ * HTTP 응답이 아닌 실패(fetch TypeError 등) -> `NETWORK_ERROR`, 401 -> `UNAUTHORIZED`, 429 -> `TOO_MANY_REQUESTS`, 그 밖에는 BE 본문의 `error.code`.
+ * 401(거절된 세션)과 429(Nest throttler 본문 `ThrottlerException: Too Many Requests`)에는 카탈로그 코드가 없어서 그대로 두면
+ * "알 수 없는 오류 (ThrottlerException...)"처럼 원문이 화면에 샌다.
+ */
+export function normalizedCode(error: unknown): string {
+  if (!(error instanceof ApiHttpError)) return "NETWORK_ERROR";
+  if (error.status === 401) return "UNAUTHORIZED";
+  if (error.status === 429) return "TOO_MANY_REQUESTS";
+  return error.code;
+}
+
+/**
+ * 실패한 API 호출의 BE 코드(429만 `normalizedCode`로 `TOO_MANY_REQUESTS`)가 `codes`에 있으면 그 코드, 아니면 null (네트워크 오류 등 `ApiHttpError`가 아닌 것도 null).
+ * mock 모드의 `MockApiError`도 `ApiHttpError`를 상속하므로 같은 경로를 탄다. 이 코드를 `codes`에 넣은 화면만 전용 문구를 쓴다.
  */
 export function knownCode<const C extends string>(error: unknown, codes: readonly C[]): C | null {
   if (!(error instanceof ApiHttpError)) return null;
-  return listedCode(error.status === 429 ? "TOO_MANY_REQUESTS" : error.code, codes);
+  // 401 is deliberately not normalized here: user-facing flows get codes under 401 (wallet verify `INVALID_SIGNATURE`) that carry their own copy.
+  return listedCode(error.status === 429 ? normalizedCode(error) : error.code, codes);
 }
 
 type SurfaceWithFallback = { readonly codes: readonly string[]; readonly fallback: string };

@@ -2,8 +2,7 @@
 // Client islands import from here; the BE mapping lives in `lib/api/admin.ts`, the in-memory twin in `lib/mocks/api-client.ts`.
 // Status values stay the BE codes verbatim (the console shows operators the real state machine); copy lives under
 // `admin.operations.*` / `admin.nftJobs.*`.
-import { ERROR_COPY, listedCode } from "./api/error-copy";
-import { ApiHttpError } from "./api/http";
+import { ERROR_COPY, listedCode, normalizedCode } from "./api/error-copy";
 
 /** BE `bounty.status` (NinjaLabsBE/src/bounties/bounty-status.ts). */
 export type BountyStatusCode = "DRAFT" | "FUNDING_PENDING" | "OPEN" | "SUBMISSION_CLOSED" | "IN_REVIEW" | "COMPLETED" | "CANCELLED";
@@ -197,17 +196,14 @@ export const OPS_ERROR_CODES = ERROR_COPY.adminOperations.codes;
 export type OpsErrorCode = (typeof OPS_ERROR_CODES)[number];
 
 /**
- * Normalizes a failed operations call to a message code. `INVALID_TRANSITION:OPEN->COMPLETED` → `INVALID_TRANSITION`;
- * a transition's 400 with a blocker list (Nest sends `message: string[]`, surfaced as VALIDATION_FAILED) → `TRANSITION_BLOCKED`;
- * 429 → `TOO_MANY_REQUESTS`; 401 → `UNAUTHORIZED`; a non-HTTP failure (fetch TypeError) → `NETWORK_ERROR`.
+ * Normalizes a failed operations call to a message code: `normalizedCode` (non-HTTP failure → `NETWORK_ERROR`, 401 → `UNAUTHORIZED`,
+ * 429 → `TOO_MANY_REQUESTS`, else the BE code), then two ops-specific rules: `INVALID_TRANSITION:OPEN->COMPLETED` → `INVALID_TRANSITION`;
+ * a transition's 400 with a blocker list (Nest sends `message: string[]`, surfaced as VALIDATION_FAILED) → `TRANSITION_BLOCKED`.
  * Returns `{ code, known }` - unknown codes keep their raw value for the `errors.unknown` copy.
  */
 export function opsErrorCode(error: unknown, context: "transition" | "other" = "other"): { code: string; known: boolean } {
-  if (!(error instanceof ApiHttpError)) return { code: "NETWORK_ERROR", known: true };
-  let code = error.code;
+  let code = normalizedCode(error);
   if (code.startsWith("INVALID_TRANSITION")) code = "INVALID_TRANSITION";
   else if (code === "VALIDATION_FAILED" && context === "transition") code = "TRANSITION_BLOCKED";
-  else if (error.status === 429) code = "TOO_MANY_REQUESTS";
-  else if (error.status === 401) code = "UNAUTHORIZED";
   return { code, known: listedCode(code, OPS_ERROR_CODES) !== null };
 }
