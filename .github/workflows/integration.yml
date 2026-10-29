@@ -5,7 +5,7 @@ name: Integration (real browser)
 #
 # The flows are split over parallel jobs (a matrix), each with its own full stack (Postgres, BE, FE, Chrome), so one job
 # stays well under its timeout. Flows inside a group run in order; groups must not depend on each other. Dependencies:
-# flows 7 and 8 need 4 and 5 (same group). Everything else seeds what it needs or compares before/after.
+# flows 7, 8 and 10 need what 4 and 5 create (same group; 10 last because it leaves an open payout). Everything else seeds what it needs or compares before/after.
 # The full dense layout sweep (NINJA_IT_SWEEP=full, 30+ minutes) is NOT part of this run: use the `sweep_full` input.
 on:
   workflow_dispatch:
@@ -38,8 +38,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: auth-apply, flows: '1 2 3 4 5 7 8' }
-          - { name: admin-payout, flows: '6 9 10 11' }
+          - { name: apply-payout, flows: '1 2 3 4 5 7 8 10' }
+          - { name: admin-session, flows: '6 9 11' }
           - { name: community, flows: '12 13' }
           - { name: layout, flows: '14 15' }
     steps:
