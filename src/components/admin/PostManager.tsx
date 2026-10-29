@@ -9,7 +9,7 @@ import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
-import { useAdminList } from "@/components/admin/useAdminList";
+import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlight } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { markdownToPlainSummary } from "@/lib/markdown-summary";
 import { postCategoryLabelKeys, publishOptionFor, summaryForPostUpdate, type AdminPost, adminErrorDescription } from "@/lib/admin-helpers";
@@ -76,9 +76,6 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<PostFieldErrors>({});
   const [saving, setSaving] = useState(false);
-  // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
-  const savingRef = useRef(false);
-  const deletingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminPost | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
@@ -93,7 +90,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   // `reload` re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
   // (never "save failed": a retry of an already-created notice would create a duplicate).
   const fetchPosts = useCallback(() => api.getAdminPosts(), [api]);
-  const toastLoadFailed = useCallback(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }), [t]);
+  const toastLoadFailed = useLoadFailedToast(t("toast.loadFailedTitle"), t("toast.loadFailedDescription"));
   const { records, setRecords, loadState, reload, retry } = useAdminList(fetchPosts, posts, toastLoadFailed);
 
   const updateForm = <K extends keyof PostForm>(key: K, value: PostForm[K]) => {
@@ -137,8 +134,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     clearThumbnailFile();
   };
 
-  const savePost = async () => {
-    if (savingRef.current) return;
+  const savePost = useSingleFlight(async () => {
     // A freshly picked file replaces the stored thumbnail, so only the kept URL is checked.
     const stored = mode === "create" ? undefined : records.find((item) => item.slug === mode);
     const nextErrors = validatePostForm({ ...form, thumbnail: thumbnailFile ? null : form.thumbnail }, stored);
@@ -147,7 +143,6 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
       return;
     }
-    savingRef.current = true;
     setSaving(true);
     try {
       const thumbnail = thumbnailFile ? (await api.uploadAdminMedia(thumbnailFile)).url : form.thumbnail;
@@ -164,30 +159,22 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     } catch (error) {
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
     } finally {
-      savingRef.current = false;
       setSaving(false);
     }
-  };
+  });
 
-  const deletePost = async (post: AdminPost) => {
-    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
-    if (deletingRef.current) return;
-    deletingRef.current = true;
-    setPendingDelete(null);
-    try {
-      await api.deleteAdminPost(post.slug);
-      setRecords((current) => current.filter((item) => item.slug !== post.slug));
-      // The form may be editing the record that just went away: a later save would PATCH a missing row.
-      if (mode === post.slug) startNew();
-      pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: post.title });
-    } catch (error) {
-      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
-      // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
-      void reload();
-    } finally {
-      deletingRef.current = false;
-    }
-  };
+  const deletePost = useAdminRecordDelete<AdminPost>({
+    call: (post) => api.deleteAdminPost(post.slug),
+    keyOf: (post) => post.slug,
+    setRecords,
+    closeDialog: () => setPendingDelete(null),
+    // The form may be editing the record that just went away: a later save would PATCH a missing row.
+    onRemoved: (post) => { if (mode === post.slug) startNew(); },
+    describeError: (error) => adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")),
+    successToast: (post) => ({ title: t("toast.deletedTitle"), description: post.title }),
+    failedTitle: tCommon("deleteFailed"),
+    reload,
+  });
 
   const isEditing = mode !== "create";
 
