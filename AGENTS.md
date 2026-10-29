@@ -138,7 +138,7 @@ public/
 - Design data comes from the Figma remote MCP (`https://mcp.figma.com/mcp`): `get_design_context` for
   per-screen code/screenshot, `get_metadata` for structure, `download_assets` for images.
 - Every screen shares the same Header/Footer (rendered once in `src/app/layout.tsx`, not per page).
-- Implemented component inventory (117 files; **`src/test/agents-inventory.test.ts` fails when a `src/components` file is not named here as `dir/Name` or when this count is off** - add the new line in the same change as the component):
+- Implemented component inventory (119 files; **`src/test/agents-inventory.test.ts` fails when a `src/components` file is not named here as `dir/Name` or when this count is off** - add the new line in the same change as the component):
   - `legal/LegalDocument` - async server component that renders `/privacy` and `/terms` from `messages/<locale>/legal.json` (`t.raw` section arrays; `{email}` becomes a mailto link to `lib/contact.ts` `CONTACT_EMAIL`). Operator is Ninja Labs Korea; bump `LEGAL_LAST_UPDATED` with the text
   - `layout/Header`, `layout/Footer` - the shared shell chrome (rendered once in `layout.tsx`); `layout/MobileMenu` - `"use client"` island around the header's `<details>` mobile nav (still progressive-enhancement markup): closes on link click, Escape (focus back to the summary) and outside click
   - `layout/AppShell` - server component that renders the whole document: `<html lang>` (from `localeTags`), fonts, `globals.css`, skip link, the shell `NextIntlClientProvider` (`common` only) and `FoundationProvider` around Header / `<main id="main-content">` / Footer. `app/[locale]/layout.tsx` renders it for every page; the root `app/not-found.tsx` must NOT (its Header/Footer and the server intl provider read the request locale - see "Routing / 404" below). `app/layout.tsx` stays an html-less pass-through on purpose.
@@ -146,6 +146,8 @@ public/
   - `layout/PageMessages` - server component: nested `NextIntlClientProvider messages={pickMessages(...)}` that ships only the namespaces a segment's client islands read (+ `common`); every segment with client islands has a `layout.tsx` that wraps `children` in it (see "i18n" below)
   - `ui/Badge` - pill chip; variants `primary-soft` (default) / `selected` (`bg-primary text-primary-soft`) / `success` / `danger` / `warning` / `neutral` / `inverse` (StepIndicator's white active step is intentional and NOT a Badge)
   - `ui/RewardPill` - `{ amount, currency: 'INJ' | 'USDC' }`; INJ token icon vs `$` glyph. `variant="icon"` renders only the token glyph for composed pills (bounty detail "Sponsor pays: 500 INJ")
+  - `ui/Skeleton` - decorative `aria-hidden` pulse block (`animate-pulse motion-reduce:animate-none`; a `rounded-*` in `className` replaces the default card radius)
+  - `ui/PageLoading` - `{ label, variant?: 'page' | 'list' | 'detail', className?, children? }`: `role="status"` + sr-only `label` (the caller's existing loading string) + skeleton bars with reserved min height; used by every gated view (Home/Signup/Admin gates, account views, recruit, admin list status) and the three `[id]/loading.tsx`
   - `ui/SectionHeader` - eyebrow + heading (`level` 1|2|3, `size` 'lg'|'xl') + optional action link
   - `ui/StepIndicator` - 4-step sign-up progress (`current` 1–4); wraps below 768
   - `cards/CoverImage` - client cover `<img>` for cards: swaps to the no-cover gradient when the image fails to load
