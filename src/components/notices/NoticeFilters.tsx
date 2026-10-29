@@ -28,11 +28,11 @@ export function NoticeFilters({ notices, initialCategory }: NoticeFiltersProps) 
   return (
     <>
       <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")} role="group">
-        <button aria-pressed={category === "All"} className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => setCategory("All")} type="button"><Badge variant={category === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
-        {categories.map((item) => <button aria-pressed={category === item} className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => setCategory(item)} type="button"><Badge variant={category === item ? "selected" : "primary-soft"}>{t(`categories.${noticeCategoryKeys[item]}`)}</Badge></button>)}
+        <button aria-pressed={category === "All"} className="motion-control motion-press max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => setCategory("All")} type="button"><Badge variant={category === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
+        {categories.map((item) => <button aria-pressed={category === item} className="motion-control motion-press max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => setCategory(item)} type="button"><Badge variant={category === item ? "selected" : "primary-soft"}>{t(`categories.${noticeCategoryKeys[item]}`)}</Badge></button>)}
       </div>
       {visibleNotices.length > 0 ? (
-        <section className="mt-8 space-y-4" aria-label={t("filters.listAriaLabel")}>
+        <section className="mt-8 space-y-4 animate-fade-in motion-reduce:animate-none" aria-label={t("filters.listAriaLabel")} key={category}>
           {visibleNotices.map((notice) => <NoticeRow key={notice.slug} notice={notice} />)}
         </section>
       ) : notices.length === 0 ? (

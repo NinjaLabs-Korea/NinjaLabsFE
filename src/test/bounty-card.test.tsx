@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { BountyCard } from "@/components/cards/BountyCard";
@@ -47,6 +47,17 @@ describe("BountyCard status presentation", () => {
 });
 
 describe("BountyCard cover", () => {
+  it("fades the cover in: opacity-0 until the image has loaded", async () => {
+    const { container } = renderWithIntl(<BountyCard bounty={{ ...base, coverImage: "https://example.invalid/fade.png" }} />);
+    const image = container.querySelector('img[src*="fade.png"]')!;
+    expect(image.className).toContain("opacity-0");
+    expect(image.className).toContain("motion-reduce:transition-none");
+    fireEvent.load(image);
+    // next/image reports onLoad after img.decode(), so the flip is asynchronous.
+    await waitFor(() => expect(image.className).toContain("opacity-100"));
+    expect(image.className).not.toContain("opacity-0");
+  });
+
   it("falls back to the no-cover gradient when the image fails to load", () => {
     const { container } = renderWithIntl(<BountyCard bounty={{ ...base, coverImage: "https://example.invalid/none.png" }} />);
     const image = container.querySelector('img[src*="none.png"]');

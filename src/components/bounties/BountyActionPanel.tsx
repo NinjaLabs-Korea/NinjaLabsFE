@@ -15,7 +15,9 @@ import type { AccountApplication } from "@/lib/contracts/account";
 import type { ApiResult } from "@/lib/contracts/api";
 import type { Bounty } from "@/lib/types";
 
-const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card";
+// Panels fade in when they replace the loading placeholder (or another panel), instead of popping in.
+const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card animate-fade-in motion-reduce:animate-none";
+const submitButtonClass = "motion-control motion-press rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60";
 const outlineButtonClass = "inline-flex rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong";
 const outlineLinkClass = `mt-4 ${outlineButtonClass}`;
 const inputClass = "h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
@@ -112,6 +114,21 @@ function SignedOutPanel({ applicationRequired, bountyId }: { applicationRequired
         </fieldset>
       )}
     </section>
+  );
+}
+
+/**
+ * Placeholder while the session or the application/submission rows load. It reserves the height of the settled signed-out
+ * panel (measured at 375 and 1280 px, apply form vs. direct submit) so the real panel replacing it does not push the page
+ * down (the CLS this removes). The status text stays for screen readers; the pulse block is decoration.
+ */
+function CheckingPanel({ applicationRequired, label }: { applicationRequired: boolean; label: string }) {
+  const height = applicationRequired ? "min-h-[26rem] sm:min-h-[22rem]" : "min-h-[15rem] sm:min-h-[12rem]";
+  return (
+    <div>
+      <div aria-hidden="true" className={`${height} rounded-card bg-surface-subtle animate-pulse motion-reduce:animate-none`} data-checking-placeholder="" />
+      <p className="sr-only" role="status">{label}</p>
+    </div>
   );
 }
 
@@ -294,11 +311,11 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
         </section>
       );
     case "checkingSession":
-      return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingSession")}</p></section>;
+      return <CheckingPanel applicationRequired={applicationRequired} label={t("checkingSession")} />;
     case "signedOut":
       return <SignedOutPanel applicationRequired={applicationRequired} bountyId={bountyId} />;
     case "checkingStatus":
-      return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingStatus")}</p></section>;
+      return <CheckingPanel applicationRequired={applicationRequired} label={t("checkingStatus")} />;
     case "statusUnavailable":
       return <section className={panelClass}><p className="text-sm text-danger">{t("statusUnavailable")}</p></section>;
     case "agentRow": {
@@ -337,7 +354,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
             <Field label={t("applyMessage")}>
               <textarea className={`min-h-28 ${textareaClass}`} maxLength={APPLICATION_MESSAGE_MAX} name="message" placeholder={t("applyMessage")} required {...invalidProps} />
             </Field>
-            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy || sessionEnded} type="submit">{busy ? t("applying") : t("apply")}</button>
+            <button aria-busy={busy || undefined} className={submitButtonClass} disabled={busy || sessionEnded} type="submit">{busy ? <><span aria-hidden="true" className="spinner mr-2" />{t("applying")}</> : t("apply")}</button>
           </form>
           {sessionEndedLine}
           {errorLine}
@@ -384,7 +401,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
             <Field label={t("submissionDescription")}>
               <textarea className={`min-h-24 ${textareaClass}`} maxLength={SUBMISSION_DESCRIPTION_MAX} name="description" placeholder={t("submissionDescription")} required {...invalidProps} />
             </Field>
-            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy || sessionEnded} type="submit">{busy ? t("submitting") : actionLabel}</button>
+            <button aria-busy={busy || undefined} className={submitButtonClass} disabled={busy || sessionEnded} type="submit">{busy ? <><span aria-hidden="true" className="spinner mr-2" />{t("submitting")}</> : actionLabel}</button>
           </form>
           {sessionEndedLine}
           {feedback?.kind === "success" ? <p className="mt-3 text-sm text-success">{feedback.text}</p> : errorLine}
