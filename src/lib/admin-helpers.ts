@@ -3,7 +3,10 @@
 // into the shared client chunk. `lib/admin.ts` re-exports everything for server code and tests.
 import { isHighlightTypeCode, type HighlightTypeCode } from "./api/codecs";
 import { ERROR_COPY, knownCode } from "./api/error-copy";
-import { ApiHttpError } from "./api/http";
+import { ApiHttpError, getAccessToken } from "./api/http";
+import type { PublicListResource } from "./api/public";
+import { validationFieldsFromError } from "./api/validation";
+import { refreshPublicLists } from "./admin-revalidate";
 import { noticeCategoryKeys } from "./notice-categories";
 import type { Notice } from "./types";
 
@@ -27,6 +30,31 @@ export function adminApiErrorCode(error: unknown): AdminApiErrorCode | null {
 export function adminErrorDescription(error: unknown, translate: (key: `errors.${AdminApiErrorCode}`) => string, fallback: string): string {
   const code = adminApiErrorCode(error);
   return code ? translate(`errors.${code}`) : fallback;
+}
+
+/**
+ * A BE 400 `VALIDATION_FAILED` that names URL properties (`externalUrl`, `thumbnailUrl`, `imageUrl`, `linkUrl`, `coverImageUrl`) as inline
+ * field errors instead of the generic save-failed toast. `publicUrl` when the BE message says the host must be public, else `urlInvalid`.
+ * Keys are BE property names; callers map them to their own form fields. Empty when the error is something else.
+ */
+export const ADMIN_URL_PROPERTIES = ["externalUrl", "thumbnailUrl", "imageUrl", "linkUrl", "coverImageUrl"] as const;
+export function adminUrlFieldErrors(error: unknown): Partial<Record<(typeof ADMIN_URL_PROPERTIES)[number], "publicUrl" | "urlInvalid">> {
+  const fields = validationFieldsFromError(error);
+  const result: Partial<Record<(typeof ADMIN_URL_PROPERTIES)[number], "publicUrl" | "urlInvalid">> = {};
+  for (const property of ADMIN_URL_PROPERTIES) {
+    if (Object.hasOwn(fields, property)) result[property] = fields[property].includes("public http(s)") ? "publicUrl" : "urlInvalid";
+  }
+  return result;
+}
+
+/**
+ * After a successful admin write, expire the cached public lists so `/notices`, `/bounties` and the hub reflect it on the next visit.
+ * Fire and forget: the write already succeeded, so a failure here is only logged and never reaches the success toast.
+ */
+export function expirePublicLists(resources: readonly PublicListResource[]): void {
+  const token = getAccessToken();
+  if (!token) return;
+  void refreshPublicLists(resources, token).catch((error: unknown) => console.error("expirePublicLists failed", error));
 }
 
 /** Postgres INTEGER ceiling: BE `MaxPgInt` on `displayOrder` (member and highlight ordering). Above it the BE answers 400. */
