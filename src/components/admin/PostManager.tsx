@@ -12,7 +12,7 @@ import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { markdownToPlainSummary } from "@/lib/markdown-summary";
-import { postCategoryLabelKeys, publishOptionFor, summaryForPostUpdate, type AdminPost, adminErrorDescription, adminUrlFieldErrors } from "@/lib/admin-helpers";
+import { postCategoryLabelKeys, publishOptionFor, summaryForPostUpdate, type AdminPost, adminErrorDescription, adminUrlFieldErrors, expirePublicLists } from "@/lib/admin-helpers";
 import { isPublicHttpUrl, isPublicHttpUrlOrMediaPath, isSafeUrl, urlErrorKind } from "@/lib/url-rules";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
@@ -158,6 +158,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       const previousStatus = records.find((item) => item.slug === mode)?.status;
       const options = publishOptionFor(previousStatus, form.status, mode === "create" ? "create" : "edit");
       await api.saveAdminPost(post, mode === "create", options);
+      expirePublicLists(["notices"]);
       pushAdminToast({ variant: "success", title: mode === "create" ? t("toast.createdTitle") : t("toast.updatedTitle"), description: tCommon("savedDescription", { title: form.title }) });
       startNew();
       await reload();
@@ -180,6 +181,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     setPendingDelete(null);
     try {
       await api.deleteAdminPost(post.slug);
+      expirePublicLists(["notices"]);
       setRecords((current) => current.filter((item) => item.slug !== post.slug));
       // The form may be editing the record that just went away: a later save would PATCH a missing row.
       if (mode === post.slug) startNew();

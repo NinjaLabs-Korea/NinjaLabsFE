@@ -10,7 +10,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
-import { type AdminBounty, adminErrorDescription } from "@/lib/admin-helpers";
+import { type AdminBounty, adminErrorDescription, expirePublicLists } from "@/lib/admin-helpers";
 import { BOUNTY_SPONSOR_MAX, BOUNTY_TEXT_MAX, BOUNTY_TITLE_MAX, bountyToForm, emptyBountyForm, formToBounty, isIsoDateTime, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { opsErrorCode } from "@/lib/admin-operations";
@@ -136,6 +136,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
         ? { slug: mode.slug, coverImage, existingStatus: existing?.status ?? "draft" }
         : { slug: "", coverImage });
       await api.saveAdminBounty(bounty, mode.kind === "create");
+      expirePublicLists(["bounties"]);
       pushAdminToast({ variant: "success", title: mode.kind === "edit" ? t("toast.updatedTitle") : t("toast.createdTitle"), description: tCommon("savedDescription", { title: form.title }) });
       startCreate();
       await reload();
@@ -154,6 +155,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     setTransitioningSlugs(new Set(transitioning.current));
     try {
       await api.transitionAdminBounty(bounty.slug, to);
+      expirePublicLists(["bounties"]);
       pushAdminToast({ variant: "success", title: t("toast.statusUpdatedTitle"), description: t("toast.statusUpdatedDescription", { title: bounty.title, to }) });
       await reload();
     } catch (error) {
@@ -174,6 +176,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     setPendingDelete(null);
     try {
       await api.deleteAdminBounty(bounty.slug);
+      expirePublicLists(["bounties"]);
       setRecords((current) => current.filter((item) => item.slug !== bounty.slug));
       // The form may be editing the record that just went away: a later save would PATCH a missing row.
       if (mode.kind === "edit" && mode.slug === bounty.slug) startCreate();

@@ -3,8 +3,10 @@
 // into the shared client chunk. `lib/admin.ts` re-exports everything for server code and tests.
 import { isHighlightTypeCode, type HighlightTypeCode } from "./api/codecs";
 import { ERROR_COPY, knownCode } from "./api/error-copy";
-import { ApiHttpError } from "./api/http";
+import { ApiHttpError, getAccessToken } from "./api/http";
+import type { PublicListResource } from "./api/public";
 import { validationFieldsFromError } from "./api/validation";
+import { refreshPublicLists } from "./admin-revalidate";
 import { noticeCategoryKeys } from "./notice-categories";
 import type { Notice } from "./types";
 
@@ -43,6 +45,16 @@ export function adminUrlFieldErrors(error: unknown): Partial<Record<(typeof ADMI
     if (Object.hasOwn(fields, property)) result[property] = fields[property].includes("public http(s)") ? "publicUrl" : "urlInvalid";
   }
   return result;
+}
+
+/**
+ * After a successful admin write, expire the cached public lists so `/notices`, `/bounties` and the hub reflect it on the next visit.
+ * Fire and forget: the write already succeeded, so a failure here is only logged and never reaches the success toast.
+ */
+export function expirePublicLists(resources: readonly PublicListResource[]): void {
+  const token = getAccessToken();
+  if (!token) return;
+  void refreshPublicLists(resources, token).catch((error: unknown) => console.error("expirePublicLists failed", error));
 }
 
 /** Postgres INTEGER ceiling: BE `MaxPgInt` on `displayOrder` (member and highlight ordering). Above it the BE answers 400. */
