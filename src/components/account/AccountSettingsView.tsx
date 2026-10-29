@@ -47,7 +47,9 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
   const inputId = useId();
   const errorId = useId();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingProfile, setEditingProfile] = useState(false);
+  // The id of the user the profile editor was opened for (null: closed). The editor shows only while it matches the
+  // signed-in user, so another tab switching accounts closes it instead of saving A's form into B.
+  const [editingProfileFor, setEditingProfileFor] = useState<string | null>(null);
   // The last signed-in user: while the profile editor is open and the session ends from outside, the page keeps showing it
   // (with the typed values) instead of swapping in the sign-in prompt.
   const [lastUser, setLastUser] = useState<ClientUser | null>(null);
@@ -60,7 +62,7 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
 
   // Only a session ended from outside (refresh rejected, another tab) says "expired"; the user's own Sign out or this
   // page's account deletion shows the plain "sign in" gate.
-  const heldForEdit = authSnapshot.status === "signed-out" && authSnapshot.reason === "session-ended" && editingProfile && lastUser !== null;
+  const heldForEdit = authSnapshot.status === "signed-out" && authSnapshot.reason === "session-ended" && editingProfileFor !== null && lastUser !== null;
   if (authSnapshot.status === "signed-out" && !heldForEdit) {
     return <SignedOutPanel message={authSnapshot.reason === "session-ended" ? tAccount("sessionExpired") : t("signedOutMessage")} returnTo="/account" />;
   }
@@ -71,6 +73,7 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
 
   const user = authSnapshot.status === "signed-in" ? authSnapshot.user : lastUser;
   if (!user) return null;
+  const editingProfile = editingProfileFor === user.id;
   const nickname = user.handle;
   const matches = confirmationMatches(nickname, typed);
 
@@ -133,11 +136,11 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
         </dl>
         {editingProfile ? (
           <div className="mt-2 border-t border-border pt-4">
-            <ProfileForm mode="edit" onSaved={() => setEditingProfile(false)} />
-            <button className={`mt-3 ${secondaryButtonClass}`} onClick={() => setEditingProfile(false)} type="button">{t("cancelEdit")}</button>
+            <ProfileForm key={user.id} mode="edit" onSaved={() => setEditingProfileFor(null)} />
+            <button className={`mt-3 ${secondaryButtonClass}`} onClick={() => setEditingProfileFor(null)} type="button">{t("cancelEdit")}</button>
           </div>
         ) : (
-          <button className={`mt-5 ${secondaryButtonClass}`} onClick={() => setEditingProfile(true)} type="button">{t("editProfile")}</button>
+          <button className={`mt-5 ${secondaryButtonClass}`} onClick={() => setEditingProfileFor(user.id)} type="button">{t("editProfile")}</button>
         )}
       </section>
 

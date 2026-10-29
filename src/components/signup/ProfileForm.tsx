@@ -80,6 +80,9 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   // account's draft is discarded. `draftChecked` flips when the first read happened (at mount, or when the user first appears).
   const userId = signedInUser?.id ?? null;
   const draftChecked = useRef(false);
+  // Edit mode: the account this editor was opened for. A different signed-in user (another tab switched accounts) must
+  // not receive this form's values.
+  const editedUserId = useRef(userId);
   const [draft] = useState(() => {
     if (editing || mode !== "api" || typeof window === "undefined" || !userId) return null;
     draftChecked.current = true;
@@ -187,6 +190,13 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         tagCount: tags.length,
       });
       setState("idle");
+      return;
+    }
+
+    if (editing && userId !== null && editedUserId.current !== null && userId !== editedUserId.current) {
+      onboardingLog("profile.save.blocked", { reason: "USER_CHANGED" });
+      setSaveError("generic");
+      setState("error");
       return;
     }
 
