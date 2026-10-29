@@ -15,6 +15,9 @@ import { signInHref } from "@/lib/return-path";
 import { signup } from "@/lib/signup";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
 import { withLocaleOf } from "@/i18n/routing";
+import { readProfileDraft, writeProfileDraft } from "@/lib/profile-draft";
+
+const KNOWN_TAGS: readonly string[] = ["DEV", "DESIGN", "CONTENT", "OTHER"];
 
 // `labelKey` resolves under messages `signup.profile.form.tags`; `value` is sent to the API.
 const fieldTags = [
@@ -49,36 +52,6 @@ export function saveErrorKey(error: unknown): SaveErrorKey {
   return ERROR_COPY.profileSave.fallback;
 }
 
-/**
- * Onboarding draft kept across a session that ended mid-form: the sign-in goes through Google and back (same tab), so
- * sessionStorage survives it. Public profile text only, no secrets; cleared on a successful save.
- */
-const DRAFT_KEY = "ninja.profileDraft";
-type Draft = { nickname: string; bio: string; tags: string[] };
-
-function readDraft(): Draft | null {
-  try {
-    const raw = window.sessionStorage.getItem(DRAFT_KEY);
-    if (!raw) return null;
-    const value: unknown = JSON.parse(raw);
-    if (!value || typeof value !== "object") return null;
-    const { nickname, bio, tags } = value as Record<string, unknown>;
-    if (typeof nickname !== "string" || typeof bio !== "string" || !Array.isArray(tags)) return null;
-    return { nickname, bio, tags: tags.filter((tag): tag is string => fieldTags.some((known) => known.value === tag)) };
-  } catch {
-    return null;
-  }
-}
-
-function writeDraft(draft: Draft | null): void {
-  try {
-    if (draft) window.sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-    else window.sessionStorage.removeItem(DRAFT_KEY);
-  } catch {
-    // storage blocked: the form on screen still keeps what was typed
-  }
-}
-
 type ProfileFormProps = {
   /**
    * `onboarding` (default): signup step 3, saves and continues to step 4. `edit`: the account page, prefilled from the signed-in
@@ -103,7 +76,18 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   if (signedInUser && !wasSignedIn) setWasSignedIn(true);
   const sessionEnded = mode === "api" && wasSignedIn && auth.status === "signed-out" && auth.reason === "session-ended";
   // Onboarding only: a draft left by an ended session pre-fills the form once the user is back.
-  const [draft] = useState(() => (!editing && mode === "api" && typeof window !== "undefined" ? readDraft() : null));
+  // The draft belongs to one user (`profile-draft.ts`): it is read only once the signed-in user is known, and another
+  // account's draft is discarded. `draftChecked` flips when the first read happened (at mount, or when the user first appears).
+  const userId = signedInUser?.id ?? null;
+  const draftChecked = useRef(false);
+  const [draft] = useState(() => {
+    if (editing || mode !== "api" || typeof window === "undefined" || !userId) return null;
+    draftChecked.current = true;
+    return readProfileDraft(userId, KNOWN_TAGS);
+  });
+  // Last known owner: kept while the session is ended so the typed values are still stashed for the re-login.
+  const draftOwner = useRef<string | null>(userId);
+  if (userId) draftOwner.current = userId;
   // Edit mode starts from what is saved; onboarding starts empty (mock mode prefills a demo profile).
   const [nickname, setNickname] = useState(editing && signedInUser ? signedInUser.handle : draft ? draft.nickname : mode === "mock" ? signup.profile.nickname : "");
   const [bio, setBio] = useState(editing && signedInUser ? signedInUser.bio ?? "" : draft ? draft.bio : mode === "mock" ? signup.profile.bio : "");
@@ -142,8 +126,21 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   // `[locale]` route) or a reload remounts the form, and the draft refills it. Cleared on a successful save.
   useEffect(() => {
     if (editing || mode !== "api") return;
-    writeDraft(nickname || bio || tags.length > 0 ? { nickname, bio, tags } : null);
-  }, [editing, mode, nickname, bio, tags]);
+    // The form mounted before the user was known: restore their draft now, unless they already typed.
+    if (!draftChecked.current && userId) {
+      draftChecked.current = true;
+      const late = readProfileDraft(userId, KNOWN_TAGS);
+      if (late && !nickname && !bio && tags.length === 0) {
+        setNickname(late.nickname);
+        setBio(late.bio);
+        setTags(late.tags);
+        return;
+      }
+    }
+    const owner = draftOwner.current;
+    if (!owner || !draftChecked.current) return;
+    writeProfileDraft(owner, nickname || bio || tags.length > 0 ? { nickname, bio, tags } : null);
+  }, [editing, mode, nickname, bio, tags, userId]);
 
   useEffect(() => {
     if (nicknameRuleError || isOwnNickname) return;
@@ -215,7 +212,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         return;
       }
       onboardingLog("profile.save.succeeded", { targetPath: "/signup/get-started" });
-      writeDraft(null);
+      if (draftOwner.current) writeProfileDraft(draftOwner.current, null);
       window.location.assign(withLocaleOf(window.location.pathname, "/signup/get-started"));
     } catch (error) {
       onboardingLog("profile.save.failed", onboardingErrorDetails(error));
