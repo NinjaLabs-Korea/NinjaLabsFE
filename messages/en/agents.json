@@ -144,8 +144,10 @@
     "errors": {
       "nameRequired": "Enter an agent name.",
       "nameTooLong": "Use at most {max} characters.",
-      "nameRejected": "The server rejected this name. Shorten or simplify it.",
+      "nameRejected": "The server rejected this name. Check its characters and length.",
+      "nameInvalidChars": "Remove line breaks, tabs, text-direction or zero-width characters from the name.",
       "descriptionTooLong": "Use at most {max} characters.",
+      "descriptionInvalidChars": "Remove unsupported characters (such as NUL) from the description.",
       "descriptionRejected": "The server rejected this description. Shorten it."
     }
   },
