@@ -39,7 +39,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]/home">) 
       <HomeActivity />
       <HomeRecruitment />
 
-      <section className="mx-auto max-w-content px-4 pt-16 sm:px-6">
+      <section className="mx-auto max-w-content px-6 pt-16">
         <SectionHeader eyebrow={t("bounties.eyebrow")} heading={t("bounties.heading")} level={2} size="lg" action={{ label: t("bounties.viewAll"), href: "/bounties" }} />
         {unavailable.bounties ? (
           <p className="mt-7 text-sm text-ink-muted" role="status">{t("bounties.unavailable")}</p>
@@ -54,7 +54,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]/home">) 
         )}
       </section>
 
-      <section className="mx-auto max-w-content px-4 pt-16 sm:px-6">
+      <section className="mx-auto max-w-content px-6 pt-16">
         <SectionHeader eyebrow={t("news.eyebrow")} heading={t("news.heading")} level={2} size="lg" action={{ label: t("news.viewAll"), href: "/notices" }} />
         {unavailable.news ? (
           <p className="mt-7 text-sm text-ink-muted" role="status">{t("news.unavailable")}</p>

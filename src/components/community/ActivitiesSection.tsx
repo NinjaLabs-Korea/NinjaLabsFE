@@ -9,7 +9,7 @@ import type { Notice } from "@/lib/types";
 export function ActivitiesSection({ events, unavailable }: { events: Notice[]; unavailable: boolean }) {
   const t = useTranslations("community.activities");
   return (
-    <section className="mx-auto max-w-content px-4 pb-16 sm:px-6">
+    <section className="mx-auto max-w-content px-6 pb-16">
       <SectionHeader
         eyebrow={t("eyebrow")}
         heading={t("heading")}
