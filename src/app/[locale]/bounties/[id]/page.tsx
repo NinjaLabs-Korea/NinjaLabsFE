@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { BountyAgentPanel } from "@/components/agents/BountyAgentPanel";
 import { BountyAccessBadges } from "@/components/bounties/BountyAccessBadges";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
+import { LocalDateTime } from "@/components/bounties/LocalDateTime";
 import { Markdown } from "@/components/ui/Markdown";
 import { formatRewardAmount, isRewardUnset, RewardPill } from "@/components/ui/RewardPill";
 import { Link } from "@/i18n/navigation";
@@ -126,14 +127,17 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               </MetaCell>
               {applicationRequired ? (
                 <>
-                  <MetaCell label={t("detail.applicationDeadline")}>
-                    {bounty.applicationDeadlineDetail || t(bounty.applicationClosed ? "status.closed" : "status.active")}
-                    {bounty.applicationClosed ? <span className="font-semibold text-danger">{t("detail.applicationsClosed")}</span> : null}
-                  </MetaCell>
-                  <MetaCell label={t("detail.submissionDeadline")}>{bounty.deadlineDetail || t(isClosedDeadline ? "status.closed" : "status.active")}</MetaCell>
+                  {/* No application deadline: nothing to show as a value (a status word like "Active" read as a date), so no cell. */}
+                  {bounty.applicationDeadlineDetail ? (
+                    <MetaCell label={t("detail.applicationDeadline")}>
+                      <LocalDateTime iso={bounty.applicationDeadlineAt} utcText={bounty.applicationDeadlineDetail} />
+                      {bounty.applicationClosed ? <span className="font-semibold text-danger">{t("detail.applicationsClosed")}</span> : null}
+                    </MetaCell>
+                  ) : null}
+                  <MetaCell label={t("detail.submissionDeadline")}>{bounty.deadlineDetail ? <LocalDateTime iso={bounty.deadlineAt} utcText={bounty.deadlineDetail} /> : t(isClosedDeadline ? "status.closed" : "status.active")}</MetaCell>
                 </>
               ) : (
-                <MetaCell label={t("detail.deadline")}>{bounty.deadlineDetail || t(isClosedDeadline ? "status.closed" : "status.active")}</MetaCell>
+                <MetaCell label={t("detail.deadline")}>{bounty.deadlineDetail ? <LocalDateTime iso={bounty.deadlineAt} utcText={bounty.deadlineDetail} /> : t(isClosedDeadline ? "status.closed" : "status.active")}</MetaCell>
               )}
               <MetaCell label={t("detail.review")}>{bounty.reviewProcess ?? t("detail.defaultReview")}</MetaCell>
             </div>

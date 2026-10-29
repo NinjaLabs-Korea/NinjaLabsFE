@@ -134,6 +134,8 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     ...(daysLeft > 0 ? { daysLeft } : {}),
     // UTC-pinned like every other displayed date; "" when the BE value cannot be parsed (the detail page then shows the status label).
     deadlineDetail: formatUtcDate(row.submission_deadline, locale, DEADLINE_DETAIL_FORMAT),
+    ...(row.submission_deadline ? { deadlineAt: row.submission_deadline } : {}),
+    ...(row.application_required && row.application_deadline ? { applicationDeadlineAt: row.application_deadline } : {}),
     coverImage: row.cover_image_url ?? "",
     descriptionMarkdown: detail?.description ?? row.summary,
     submissionGuideMarkdown: detail?.requirements,
