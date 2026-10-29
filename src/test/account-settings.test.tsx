@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { AccountSettingsView, confirmationMatches } from "@/components/account/AccountSettingsView";
 import { FlashToast } from "@/components/layout/FlashToast";
@@ -107,8 +107,16 @@ describe("AccountSettingsView", () => {
     const withdrawAccount = vi.fn(async () => undefined);
     Object.assign(apiClient, { withdrawAccount });
     // FlashToast is mounted like in the real shell: it must not swallow the flash before the full reload.
-    renderWithIntl(<><FlashToast /><AccountSettingsView /></>);
-    await new Promise((resolve) => setTimeout(resolve, 20)); // FlashToast's deferred mount read has run
+    renderWithIntl(<AccountSettingsView />);
+    // FlashToast reads the flash in a deferred (setTimeout 0) mount effect: run exactly that timer, no real sleep.
+    // Only the toast is mounted under fake timers, so the view's own async work keeps running on real ones.
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      renderWithIntl(<FlashToast />);
+      act(() => { vi.advanceTimersByTime(0); });
+    } finally {
+      vi.useRealTimers();
+    }
     fireEvent.change(openDialog(), { target: { value: " jaemin.inj " } });
     fireEvent.click(confirmButton());
     await waitFor(() => expect(hardNavigate).toHaveBeenCalledWith("/en"));
