@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { fireEvent, render } from "@testing-library/react";
 import { useState } from "react";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { Modal } from "@/components/ui/Modal";
 
 function Harness({ open }: { open: boolean }) {
@@ -24,6 +24,40 @@ describe("Modal", () => {
   beforeAll(() => {
     HTMLDialogElement.prototype.showModal = showModal;
     HTMLDialogElement.prototype.close = close;
+  });
+
+  afterEach(() => {
+    showModal.mockClear();
+    close.mockClear();
+  });
+
+  it("animates in with the open dialog and keeps the exit instant", () => {
+    const { getByRole } = render(<Harness open />);
+    const cls = getByRole("dialog", { hidden: true }).className;
+    expect(cls).toContain("open:animate-pop-in");
+    expect(cls).toContain("backdrop:animate-fade-in");
+    expect(cls).toContain("motion-reduce:animate-none");
+  });
+
+  it("returns focus to the opener right after close", () => {
+    function Opener() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button onClick={() => setOpen(true)} type="button">opener</button>
+          <Modal labelledBy="t2" onClose={() => setOpen(false)} open={open}>
+            <h2 id="t2">T</h2>
+            <button onClick={() => setOpen(false)} type="button">close</button>
+          </Modal>
+        </>
+      );
+    }
+    const { getByText } = render(<Opener />);
+    const opener = getByText("opener");
+    opener.focus();
+    fireEvent.click(opener);
+    fireEvent.click(getByText("close"));
+    expect(document.activeElement).toBe(opener);
   });
 
   it("does not re-run the open effect when an inline returnFocusTo callback changes identity", () => {
