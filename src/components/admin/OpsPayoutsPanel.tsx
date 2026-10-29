@@ -169,7 +169,7 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
           <>
             <div>
               <p className="text-sm font-semibold text-ink">{t("payouts.submission")}</p>
-              <div className="mt-2 w-fit"><AdminSelect formatOption={(id) => (id === "" ? t("payouts.submission") : ops.submissions.find((item) => item.id === id)?.recipientWalletAddress ? submissionName(id) : `${submissionName(id)} - ${t("submissions.noWallet")}`)} label={t("payouts.submission")} onChange={(submissionId) => setDialog({ ...dialog, submissionId, walletError: undefined })} options={payoutCandidates(ops, dialog.reward.id).map((item) => item.id)} value={dialog.submissionId} /></div>
+              <div className="mt-2 w-full max-w-full min-w-0"><AdminSelect formatOption={(id) => (id === "" ? t("payouts.submission") : ops.submissions.find((item) => item.id === id)?.recipientWalletAddress ? submissionName(id) : `${submissionName(id)} - ${t("submissions.noWallet")}`)} label={t("payouts.submission")} onChange={(submissionId) => setDialog({ ...dialog, submissionId, walletError: undefined })} options={payoutCandidates(ops, dialog.reward.id).map((item) => item.id)} value={dialog.submissionId} /></div>
               {dialog.walletError ? <p className="mt-1 text-xs font-normal text-danger" id="ops-payout-wallet-error" role="alert">{dialog.walletError}</p> : null}
             </div>
             <label className="block text-sm font-semibold text-ink">{t("payouts.amount", { symbol: dialog.reward.symbol })}

@@ -95,6 +95,7 @@ export function AdminSelect({
         role="combobox"
         aria-label={label}
         id={`${listboxId}-trigger`}
+        title={formatOption(value)}
         className="flex h-[46px] w-full items-center justify-between rounded-control border border-border px-[17px] text-sm text-ink-secondary disabled:cursor-not-allowed disabled:opacity-60"
         disabled={disabled}
         onBlur={() => setOpen(false)}
