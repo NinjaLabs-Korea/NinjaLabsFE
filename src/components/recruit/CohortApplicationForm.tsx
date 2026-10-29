@@ -21,6 +21,7 @@ import {
 } from "@/lib/cohorts";
 import {
   COHORT_DISPLAY_NAME_MAX,
+  COHORT_HANDLE_INPUT_MAX,
   COHORT_INTRO_MAX,
   COHORT_INTRO_RECOMMENDED_MAX,
   COHORT_INTRO_RECOMMENDED_MIN,
@@ -150,7 +151,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
             className={inputClass}
             id="cohort-telegram"
           onBlur={() => blurField("telegram")}
-            maxLength={80}
+            maxLength={COHORT_HANDLE_INPUT_MAX}
             onChange={(event) => update("telegram", event.target.value)}
             placeholder={t("telegram.placeholder")}
             required
@@ -169,7 +170,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
             className={inputClass}
             id="cohort-twitter"
           onBlur={() => blurField("twitter")}
-            maxLength={80}
+            maxLength={COHORT_HANDLE_INPUT_MAX}
             onChange={(event) => update("twitter", event.target.value)}
             placeholder={t("twitter.placeholder")}
             required

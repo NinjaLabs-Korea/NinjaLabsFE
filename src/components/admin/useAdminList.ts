@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { pushAdminToast } from "@/components/admin/AdminToastHost";
 
 export type AdminListLoadState = "loading" | "ready" | "failed";
 
@@ -45,4 +46,60 @@ export function useAdminList<T>(fetchList: () => Promise<T[]>, initial: T[], onL
   }, [reload]);
 
   return { records, setRecords, loadState, reload, retry };
+}
+
+/**
+ * Wraps an async handler so a second call is ignored while one is in flight. A ref (not state) because several events can land in one
+ * tick, before React re-renders a `saving` flag. The wrapper is stable; it always runs the latest `fn`.
+ */
+export function useSingleFlight<A extends unknown[]>(fn: (...args: A) => Promise<void>): (...args: A) => Promise<void> {
+  const busy = useRef(false);
+  const latest = useRef(fn);
+  useEffect(() => {
+    latest.current = fn;
+  });
+  return useCallback(async (...args: A) => {
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      await latest.current(...args);
+    } finally {
+      busy.current = false;
+    }
+  }, []);
+}
+
+/** The "could not load the list" toast of a manager (stable, for `useAdminList`'s `onLoadFailed`). */
+export function useLoadFailedToast(title: string, description: string): () => void {
+  return useCallback(() => pushAdminToast({ variant: "danger", title, description }), [title, description]);
+}
+
+/**
+ * The single-flight delete of a manager row. A double click lands before the confirm dialog closes, and every extra DELETE would answer
+ * 404/409 and toast "failed". Closes the dialog, calls the API, drops the row (`keyOf`), runs `onRemoved` (e.g. reset a form that was
+ * editing that row: a later save would PATCH a missing row), toasts; on failure toasts and re-reads (the row may be gone already or changed).
+ */
+export function useAdminRecordDelete<T>({ call, keyOf, setRecords, closeDialog, onRemoved, describeError, successToast, failedTitle, reload }: {
+  call: (record: T) => Promise<unknown>;
+  keyOf: (record: T) => string;
+  setRecords: Dispatch<SetStateAction<T[]>>;
+  closeDialog: () => void;
+  onRemoved?: (record: T) => void;
+  describeError: (error: unknown) => string;
+  successToast: (record: T) => { title: string; description: string };
+  failedTitle: string;
+  reload: () => Promise<void>;
+}): (record: T) => Promise<void> {
+  return useSingleFlight(async (record: T) => {
+    closeDialog();
+    try {
+      await call(record);
+      setRecords((current) => current.filter((item) => keyOf(item) !== keyOf(record)));
+      onRemoved?.(record);
+      pushAdminToast({ variant: "success", ...successToast(record) });
+    } catch (error) {
+      pushAdminToast({ variant: "danger", title: failedTitle, description: describeError(error) });
+      void reload();
+    }
+  });
 }
