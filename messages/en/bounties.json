@@ -16,12 +16,7 @@
     "eyebrow": "Built on Injective",
     "title": "Complete bounties. Collect proof.",
     "titleHighlight": "Own your track record.",
-    "description": "A builder community and bounty marketplace for the Injective ecosystem. Every task you finish mints an on-chain NFT, and together they become a portfolio you truly own.",
-    "getStarted": "Get Started",
-    "continueSignup": "Continue sign-up",
-    "portfolioMeta": "Ninja NFT · member since {year}",
-    "next": "+ next",
-    "portfolioSummary": "{count, plural, one {# bounty completed} other {# bounties completed}} · a growing on-chain portfolio"
+    "description": "Pick up tasks posted by sponsors and submit your work. Every completed bounty adds an on-chain record."
   },
   "categories": {
     "Dev": "Dev",
@@ -39,7 +34,6 @@
     "heading": "Bounties",
     "howApplying": "How applying works →",
     "resultsLabel": "Bounty filters and results",
-    "payoutNote": "Rewards are paid in the sponsor's token (INJ, USDC, ...). Swap it yourself if you need to.",
     "unavailable": "Bounties are temporarily unavailable."
   },
   "filters": {

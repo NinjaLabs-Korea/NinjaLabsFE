@@ -43,10 +43,6 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
             <BountyFilters bounties={bounties} />
           )}
         </section>
-
-        <p className="mt-8 text-sm text-ink-muted">
-          {t("payoutNote")}
-        </p>
       </div>
     </>
   );
