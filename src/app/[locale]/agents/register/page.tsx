@@ -42,7 +42,7 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <Link
-        className="inline-block text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="inline-flex min-h-11 items-center text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         href="/agents"
       >
         {t("back")}
@@ -66,7 +66,7 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
             {step === "doc" ? (
               // 로케일 경로가 아닌 정적 다운로드라서 i18n Link 대신 <a>를 쓴다.
               <a
-                className="mt-3 inline-block text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 download
                 href={AGENT_SKILL_PATH}
               >
