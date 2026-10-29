@@ -190,7 +190,7 @@ describe("Header", () => {
 
     const mobile = screen.getByRole("navigation", { name: "Mobile navigation", hidden: true });
     expect(within(mobile).getAllByRole("link", { hidden: true }).map((link) => link.textContent)).toEqual([
-      "Bounties", "Hall of Fame", "Members", "Notices", "Browse",
+      "Bounties", "Hall of Fame", "Members", "Notices",
     ]);
   });
 

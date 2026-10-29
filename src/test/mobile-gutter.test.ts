@@ -35,3 +35,20 @@ describe("mobile tap targets", () => {
     expect(header).toContain("inline-flex min-h-11 items-center");
   });
 });
+
+describe("mobile menu panel and 44px text links", () => {
+  const read = (f: string) => readFileSync(join(process.cwd(), f), "utf8");
+  it("mobile nav panel scrolls inside a short viewport", () => {
+    const header = read("src/components/layout/Header.tsx");
+    expect(header).toMatch(/max-h-\[calc\(100dvh-4\.5rem\)\]/);
+    expect(header).toContain("overflow-y-auto");
+  });
+  it.each([
+    "src/app/[locale]/notices/[id]/page.tsx",
+    "src/app/[locale]/agents/register/page.tsx",
+    "src/components/cards/MemberCard.tsx",
+    "src/components/home/HomeProfileCard.tsx",
+  ])("%s text links reserve a 44px hit area", (file) => {
+    expect(read(file)).toContain("inline-flex min-h-11 items-center");
+  });
+});

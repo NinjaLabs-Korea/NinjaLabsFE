@@ -37,7 +37,7 @@ export function HomeProfileCard() {
               {user.walletAddress ? (
                 <Badge variant="success">{t("profile.walletConnected", { address: shortAddress(user.walletAddress) })}</Badge>
               ) : (
-                <Link className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/account#wallet">
+                <Link className="inline-flex min-h-11 items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/account#wallet">
                   <Badge variant="warning">{t("profile.walletMissing")}</Badge>
                 </Link>
               )}

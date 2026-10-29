@@ -13,7 +13,13 @@
     "skipToContent": "跳到主要内容"
   },
   "localeSwitcher": {
-    "label": "语言"
+    "label": "语言",
+    "unsaved": {
+      "title": "要切换语言吗？",
+      "body": "页面将以新语言重新加载，您在此处输入的内容会被清除。",
+      "confirm": "切换并清除",
+      "cancel": "继续编辑"
+    }
   },
   "nav": {
     "bounties": "赏金",
