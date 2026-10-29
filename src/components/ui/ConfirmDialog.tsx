@@ -21,6 +21,8 @@ type ConfirmDialogProps = {
   children?: ReactNode;
   /** Disables the confirm action (typed confirmation not matched yet, request in flight). */
   confirmDisabled?: boolean;
+  /** Request in flight: shows a spinner before the label and marks the confirm button aria-busy. */
+  pending?: boolean;
 };
 
 export function ConfirmDialog({
@@ -36,6 +38,7 @@ export function ConfirmDialog({
   returnFocusTo,
   children,
   confirmDisabled = false,
+  pending = false,
 }: ConfirmDialogProps) {
   const t = useTranslations("common.confirmDialog");
   const titleId = useId();
@@ -80,12 +83,14 @@ export function ConfirmDialog({
         </button>
         <button
           type="button"
-          className={`rounded-control px-5 py-3 text-sm font-semibold leading-[21px] text-on-inverse focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${
+          className={`rounded-control px-5 py-3 text-sm font-semibold leading-[21px] text-on-inverse motion-control motion-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${
             destructive ? "bg-danger" : "bg-primary"
           }`}
+          aria-busy={pending || undefined}
           disabled={confirmDisabled}
           onClick={onConfirm}
         >
+          {pending ? <span aria-hidden="true" className="spinner mr-2" /> : null}
           {confirmLabel}
         </button>
       </div>
