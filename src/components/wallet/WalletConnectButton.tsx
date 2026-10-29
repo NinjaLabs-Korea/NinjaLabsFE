@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   useAuthActions,
   useWalletApi,
@@ -9,6 +9,7 @@ import {
 } from "@/components/auth/FoundationProvider";
 import { useRouter } from "@/i18n/navigation";
 import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
+import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { ERROR_COPY, errorCopyKey, type ErrorCopyKey } from "@/lib/api/error-copy";
 import {
   maskWalletAddress,
@@ -34,10 +35,9 @@ export function WalletConnectButton({
   const apiClient = useWalletApi();
   const { refresh } = useAuthActions();
   const mode = useFoundationMode();
-  // Same-tick double clicks run before the re-render that disables the button, so the guard is a ref (a second challenge
-  // would replace the first and fail its verify with 400).
-  const verifyingRef = useRef(false);
-  const [verificationState, setVerificationState] = useState<"idle" | "pending">("idle");
+  // Same-tick double clicks run before the re-render that disables the button, so the guard is a single-flight ref (a second
+  // challenge would replace the first and fail its verify with 400).
+  const { busy: verifying, run: runVerify } = useSingleFlight();
   // 실패 문구 키 (`common.wallet.verifyErrors.<key>`) - BE 코드별 안내, 그 외는 generic. 실패한 주소에 묶는다:
   // 지갑을 끊고 다른 주소로 다시 연결했을 때 이전 주소의 실패("이미 연결된 지갑" 등)를 새 주소 아래에 보여 주지 않는다.
   const [verifyFailure, setVerifyFailure] = useState<{ address: string; key: ErrorCopyKey<typeof ERROR_COPY.walletVerify> } | null>(null);
@@ -67,41 +67,34 @@ export function WalletConnectButton({
       onboardingLog("wallet.verify.skipped", { reason: "NO_CONNECTED_ADDRESS" });
       return;
     }
-    if (verifyingRef.current) {
-      return;
-    }
-    verifyingRef.current = true;
-    setVerifyFailure(null);
-    setVerificationState("pending");
-    const wallet = maskWalletAddress(address);
-    onboardingLog("wallet.challenge.started", { wallet, chainId: connectedChainId });
-    try {
-      const challenge = await apiClient.createWalletChallenge(address);
-      onboardingLog("wallet.challenge.succeeded", { wallet });
-      onboardingLog("wallet.signature.requested", { wallet, signatureType: "EIP191" });
-      const signature = await signMessageAsync({ message: challenge.message });
-      onboardingLog("wallet.signature.received", { wallet });
-      onboardingLog("wallet.verify.started", { wallet });
-      await apiClient.verifyWallet(address, signature);
-      onboardingLog("wallet.verify.succeeded", { wallet, targetPath: onVerified ? "(callback)" : "/signup/profile" });
-      setVerificationState("idle");
-      if (onVerified) onVerified();
-      else {
-        // Re-read the session first: the snapshot still has no wallet, so the browser Back button from step 3 would show
-        // this connect UI (and "Verify wallet" again) instead of the linked wallet. A failed read only costs that.
-        await refresh?.().catch(() => undefined);
-        router.push("/signup/profile");
+    await runVerify(async () => {
+      setVerifyFailure(null);
+      const wallet = maskWalletAddress(address);
+      onboardingLog("wallet.challenge.started", { wallet, chainId: connectedChainId });
+      try {
+        const challenge = await apiClient.createWalletChallenge(address);
+        onboardingLog("wallet.challenge.succeeded", { wallet });
+        onboardingLog("wallet.signature.requested", { wallet, signatureType: "EIP191" });
+        const signature = await signMessageAsync({ message: challenge.message });
+        onboardingLog("wallet.signature.received", { wallet });
+        onboardingLog("wallet.verify.started", { wallet });
+        await apiClient.verifyWallet(address, signature);
+        onboardingLog("wallet.verify.succeeded", { wallet, targetPath: onVerified ? "(callback)" : "/signup/profile" });
+        if (onVerified) onVerified();
+        else {
+          // Re-read the session first: the snapshot still has no wallet, so the browser Back button from step 3 would show
+          // this connect UI (and "Verify wallet" again) instead of the linked wallet. A failed read only costs that.
+          await refresh?.().catch(() => undefined);
+          router.push("/signup/profile");
+        }
+      } catch (caught) {
+        onboardingLog("wallet.verify.failed", {
+          wallet,
+          ...onboardingErrorDetails(caught),
+        });
+        setVerifyFailure({ address, key: errorCopyKey(caught, ERROR_COPY.walletVerify) });
       }
-    } catch (caught) {
-      onboardingLog("wallet.verify.failed", {
-        wallet,
-        ...onboardingErrorDetails(caught),
-      });
-      setVerifyFailure({ address, key: errorCopyKey(caught, ERROR_COPY.walletVerify) });
-      setVerificationState("idle");
-    } finally {
-      verifyingRef.current = false;
-    }
+    });
   };
 
   if (isWrongNetwork) {
@@ -141,15 +134,15 @@ export function WalletConnectButton({
           <button
             type="button"
             className={`${buttonClassName} border-primary bg-primary text-on-inverse hover:bg-primary-strong`}
-            disabled={disabled || verificationState === "pending"}
+            disabled={disabled || verifying}
             onClick={() => void verifyConnectedWallet()}
           >
-            {verificationState === "pending" ? t("awaitingSignature") : t("verify")}
+            {verifying ? t("awaitingSignature") : t("verify")}
           </button>
           <button
             type="button"
             className="text-xs font-semibold text-ink-muted hover:text-ink"
-            disabled={verificationState === "pending"}
+            disabled={verifying}
             onClick={() => {
               onboardingLog("wallet.disconnect.clicked", {
                 wallet: maskWalletAddress(address),

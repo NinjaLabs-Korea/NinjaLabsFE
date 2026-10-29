@@ -1,10 +1,11 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useId, useRef, useState } from "react";
+import { useId, useState } from "react";
 import { useCohortApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { ERROR_COPY, errorCopyKey, type ErrorCopyKey } from "@/lib/api/error-copy";
 import type { CohortApplicationStatus, MyCohortApplication } from "@/lib/cohorts";
 
@@ -41,9 +42,8 @@ export function CohortApplicationCard({ application, variant = "full", onEdit, o
   const api = useCohortApi();
   const headingId = useId();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const { busy, run } = useSingleFlight();
   const [error, setError] = useState<ErrorCopyKey<typeof ERROR_COPY.cohortWithdraw> | null>(null);
-  const pending = useRef(false);
 
   const date = (value: string) => format.dateTime(new Date(value), { dateStyle: "medium" });
   const interestAreas = application.interestAreas
@@ -54,24 +54,19 @@ export function CohortApplicationCard({ application, variant = "full", onEdit, o
       ? `${t("form.activityType.options.OTHER")}: ${application.activityTypeOther}`
       : t(`form.activityType.options.${application.activityType}`);
 
-  const withdraw = async () => {
-    if (pending.current) return;
-    pending.current = true;
-    setBusy(true);
-    setError(null);
-    try {
-      await api.withdrawCohortApplication(application.id);
-      setDialogOpen(false);
-      onChanged?.();
-    } catch (caught) {
-      const key = errorCopyKey(caught, ERROR_COPY.cohortWithdraw);
-      setError(key);
-      if (key === "COHORT_APPLICATION_NOT_FOUND" || key === "COHORT_APPLICATION_NOT_SUBMITTED") onChanged?.();
-    } finally {
-      pending.current = false;
-      setBusy(false);
-    }
-  };
+  const withdraw = () =>
+    run(async () => {
+      setError(null);
+      try {
+        await api.withdrawCohortApplication(application.id);
+        setDialogOpen(false);
+        onChanged?.();
+      } catch (caught) {
+        const key = errorCopyKey(caught, ERROR_COPY.cohortWithdraw);
+        setError(key);
+        if (key === "COHORT_APPLICATION_NOT_FOUND" || key === "COHORT_APPLICATION_NOT_SUBMITTED") onChanged?.();
+      }
+    });
 
   return (
     <article aria-labelledby={headingId} className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">
@@ -127,7 +122,7 @@ export function CohortApplicationCard({ application, variant = "full", onEdit, o
         destructive
         eyebrow={t("mine.withdrawDialog.eyebrow")}
         onCancel={() => {
-          if (pending.current) return;
+          if (busy) return;
           setDialogOpen(false);
           setError(null);
         }}
