@@ -29,6 +29,7 @@ import { ApiHttpError } from "@/lib/api/http";
 import type { AccountAgentRef, AccountApplication, AccountSubmission, SubmissionStatus } from "@/lib/contracts/account";
 import type { AuthStatus } from "@/lib/contracts/auth";
 import { parseReviewComment, type ReviewNote } from "@/lib/review-comment";
+import type { ClosedReason } from "@/lib/bounty-status";
 import type { Bounty, PayoutStatus } from "@/lib/types";
 
 /**
@@ -53,9 +54,11 @@ export type BountyActionInput = {
   submissionMode: "direct" | "agent";
   /** `Bounty.applicationClosed`: the application deadline passed, so a first application is refused. */
   applicationClosed?: boolean;
+  /** `Bounty.closedReason`: why a `closed` bounty is closed. When omitted it is read from the legacy `completed` / `deadlinePassed` flags below (`closedReasonOf`). */
+  closedReason?: ClosedReason;
   /** `Bounty.deadlinePassed`: `status` is `closed` only because the deadline passed; a requested revision is still resubmittable. */
   deadlinePassed?: boolean;
-  /** `Bounty.completed`: closed because the work was finished (BE COMPLETED). A `closed` bounty that is neither completed nor `deadlinePassed` was cancelled. */
+  /** `Bounty.completed`: closed because the work was finished (BE COMPLETED). A `closed` bounty that is neither completed nor `deadlinePassed` was cancelled. Prefer `closedReason`. */
   completed?: boolean;
   auth: AuthStatus;
   applications: AccountRowsQuery<ApplicationRow>;
@@ -133,6 +136,18 @@ function agentRowView(application: ApplicationRow | undefined, submission: Submi
   };
 }
 
+/** The one place a `closed` bounty's reason is decided: the explicit `closedReason`, else the legacy flags (neither completed nor deadline-only means cancelled). */
+function closedReasonOf({ closedReason, status, completed, deadlinePassed }: BountyActionInput): ClosedReason | undefined {
+  if (closedReason) return closedReason;
+  if (status !== "closed") return undefined;
+  return completed ? "completed" : deadlinePassed ? "deadline" : "cancelled";
+}
+
+/** Rows of one bounty out of the account-wide row list. */
+function rowsForBounty<T extends { bountySlug: string }>(rows: readonly T[] | null, bountyId: string): T[] | undefined {
+  return rows?.filter((row) => row.bountySlug === bountyId);
+}
+
 /** Rule 2 for agent-only bounties: guide until the owner's agent has a row, then that row's progress. */
 function deriveAgentBountyView(input: BountyActionInput, closed: BountyActionView): BountyActionView {
   const { applicationRequired, auth, applications, submissions, status } = input;
@@ -141,8 +156,7 @@ function deriveAgentBountyView(input: BountyActionInput, closed: BountyActionVie
   if (submissions.loading || (applicationRequired && applications.loading)) return { kind: "checkingStatus" };
   // The guide does not depend on account state: a failed read just means no progress to show.
   if (submissions.unavailable || (applicationRequired && applications.unavailable)) return guide;
-  const forBounty = <T extends { bountySlug: string }>(rows: readonly T[] | null) => rows?.filter((row) => row.bountySlug === input.bountyId);
-  const view = agentRowView(splitRows(forBounty(applications.data)).agent, splitRows(forBounty(submissions.data)).agent);
+  const view = agentRowView(splitRows(rowsForBounty(applications.data, input.bountyId)).agent, splitRows(rowsForBounty(submissions.data, input.bountyId)).agent);
   if (!view) return guide;
   // An approved application with no submission yet: the next step is the submission endpoint, not another application.
   if (view.kind === "agentRow" && view.state === "applicationApproved" && status === "active") return { kind: "agentMode", endpoint: "submissions" };
@@ -150,8 +164,10 @@ function deriveAgentBountyView(input: BountyActionInput, closed: BountyActionVie
 }
 
 export function deriveActionView(input: BountyActionInput): BountyActionView {
-  const { applicationRequired, applicationClosed = false, deadlinePassed = false, completed = false, status, submissionMode, auth, applications, submissions, applied, submitted } = input;
+  const { applicationRequired, applicationClosed = false, status, submissionMode, auth, applications, submissions, applied, submitted } = input;
   const acceptingNew = status === "active";
+  const closedReason = closedReasonOf(input);
+  const deadlineOnly = closedReason === "deadline";
   const closed: BountyActionView = { kind: "closed", reason: status === "reviewing" ? "reviewing" : "closed" };
 
   // 1. 마감된 바운티는 비로그인에게 계정 상태가 필요 없다. 로그인 사용자는 재제출·에이전트 행 때문에 계속 진행.
@@ -167,9 +183,8 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
   if (submissions.loading || (applicationRequired && applications.loading)) return { kind: "checkingStatus" };
   if (submissions.unavailable || (applicationRequired && applications.unavailable)) return { kind: "statusUnavailable" };
 
-  const forBounty = <T extends { bountySlug: string }>(rows: readonly T[] | null) => rows?.filter((row) => row.bountySlug === input.bountyId);
-  const { own: application, agent: agentApplication } = splitRows(forBounty(applications.data));
-  const { own: submission, agent: agentSubmission } = splitRows(forBounty(submissions.data));
+  const { own: application, agent: agentApplication } = splitRows(rowsForBounty(applications.data, input.bountyId));
+  const { own: submission, agent: agentSubmission } = splitRows(rowsForBounty(submissions.data, input.bountyId));
 
   // 5. 에이전트만 참여했으면 직접 지원/제출은 별개의 두 번째 참여가 되므로 폼을 숨긴다 (에이전트 행은 Agent API로 관리).
   if (!application && !submission && !applied && !submitted) {
@@ -184,14 +199,14 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
       return applicationClosed ? { kind: "closed", reason: "applications" } : { kind: "applyForm" };
     }
     // The BE auto-rejects pending applications when the sponsor cancels the bounty: that is not "the sponsor did not select you".
-    if (application?.status === "rejected" && status === "closed" && !completed && !deadlinePassed) return { kind: "closed", reason: "cancelled" };
+    if (application?.status === "rejected" && closedReason === "cancelled") return { kind: "closed", reason: "cancelled" };
     if (application?.status === "rejected") return application.reviewNote ? { kind: "applicationRejected", note: application.reviewNote } : { kind: "applicationRejected" };
     // `applied` only bridges the gap until the server row arrives; a row that already moved on (approved...) wins.
     if (application ? application.status === "open" : applied) {
       // A pending application on a bounty that ended (COMPLETED / CANCELLED; not merely past its deadline, where the sponsor can still decide)
       // can never be reviewed: say the bounty is closed instead of promising "submission unlocks after approval".
       // Same for a bounty that moved on to SUBMISSION_CLOSED / IN_REVIEW (`reviewing`): approval could no longer unlock a submission.
-      return application && (status === "reviewing" || (status === "closed" && !deadlinePassed)) ? closed : { kind: "applicationUnderReview" };
+      return application && (status === "reviewing" || (status === "closed" && !deadlineOnly)) ? closed : { kind: "applicationUnderReview" };
     }
   }
 
@@ -205,26 +220,20 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
   // 8~9. BE는 승인/거절 전까지 재제출을 받는다(마감 후엔 수정 요청일 때만). 단 바운티가 진행 중일 때만(`isInProgress`:
   // OPEN / SUBMISSION_CLOSED / IN_REVIEW) - `closed`(COMPLETED / CANCELLED)는 BOUNTY_REVIEW_CLOSED이므로 재제출 폼을 주지 않는다.
   // 단 마감일만 지난 OPEN 바운티도 FE 상태는 `closed`이지만 BE는 수정 요청 재제출을 받는다(`deadlinePassed`).
-  const revising = submission?.status === "revision_requested" && (status !== "closed" || deadlinePassed);
+  const revising = submission?.status === "revision_requested" && (status !== "closed" || deadlineOnly);
   const inReview = submitted || (submission !== undefined && PENDING_SUBMISSION_STATUSES.includes(submission.status));
   // A cancelled bounty (closed, neither completed nor merely past its deadline) is never reviewed: do not tell the builder that
   // "the sponsor is reviewing your work".
-  if (!acceptingNew && !revising && submission && status === "closed" && !completed && !deadlinePassed) return { kind: "closed", reason: "cancelled" };
+  if (!acceptingNew && !revising && submission && closedReason === "cancelled") return { kind: "closed", reason: "cancelled" };
   if (!acceptingNew && !revising) return inReview ? { kind: "inReviewLocked" } : closed;
   const revisionComment = revising ? parseReviewComment(submission?.reviewComment)?.text : undefined;
   return revisionComment ? { kind: "submitForm", revising, inReview, revisionComment } : { kind: "submitForm", revising, inReview };
 }
 
-/**
- * 지원/제출 실패의 문구 키 (`bounties.action.errors.<key>`):
- * - `ERROR_COPY.bountyAction.codes`에 있는 코드 → 그 코드 키
- * - 목록 밖 BE 코드 → `unknown` + 원 코드(`{code}`로 표시)
- * - 네트워크 등 HTTP 응답이 아닌 실패 → `generic` (레지스트리의 `fallback`)
- */
 /** `bounties.action.errors.<key>` for a 400 `VALIDATION_FAILED` whose message names what was wrong (more specific than the generic line). */
-type VALIDATION_DETAIL_KEYS = "VALIDATION_URL" | "VALIDATION_TEXT_REQUIRED" | "VALIDATION_COMMIT_SHA" | "VALIDATION_TOO_LONG";
+type ValidationDetailKey = "VALIDATION_URL" | "VALIDATION_TEXT_REQUIRED" | "VALIDATION_COMMIT_SHA" | "VALIDATION_TOO_LONG";
 
-function validationDetailKey(error: ApiHttpError): VALIDATION_DETAIL_KEYS | null {
+function validationDetailKey(error: ApiHttpError): ValidationDetailKey | null {
   const details = error.details.join(" | ");
   // BE `IsPublicHttpUrl` answers this one message for a non-http(s) URL, a private/localhost host and an over-long URL alike.
   if (/public http\(s\) URL/i.test(details)) return "VALIDATION_URL";
@@ -237,7 +246,7 @@ function validationDetailKey(error: ApiHttpError): VALIDATION_DETAIL_KEYS | null
 
 export type BountyActionErrorCopy =
   | { key: (typeof ERROR_COPY.bountyAction.codes)[number] }
-  | { key: VALIDATION_DETAIL_KEYS }
+  | { key: ValidationDetailKey }
   | { key: "unknown"; code: string }
   | { key: typeof ERROR_COPY.bountyAction.fallback };
 
@@ -250,6 +259,12 @@ export function isStaleRowsError(error: unknown): boolean {
   return key === "ALREADY_APPLIED" || key === "APPLICATION_NOT_APPROVED" || key === "SUBMISSION_FINALIZED";
 }
 
+/**
+ * 지원/제출 실패의 문구 키 (`bounties.action.errors.<key>`):
+ * - `ERROR_COPY.bountyAction.codes`에 있는 코드 → 그 코드 키
+ * - 목록 밖 BE 코드 → `unknown` + 원 코드(`{code}`로 표시)
+ * - 네트워크 등 HTTP 응답이 아닌 실패 → `generic` (레지스트리의 `fallback`)
+ */
 export function bountyActionErrorCopy(error: unknown): BountyActionErrorCopy {
   const code = knownCode(error, ERROR_COPY.bountyAction.codes);
   if (code === "VALIDATION_FAILED" && error instanceof ApiHttpError) {

@@ -3,6 +3,7 @@ import type { AdminApi } from "@/lib/contracts/api";
 import type { AdminBounty } from "@/lib/admin-helpers";
 import { MockApiError } from "@/lib/mocks/mock-error";
 import { rewardToBaseUnits } from "@/lib/api/codecs";
+import { fromAdminStatus, toAdminStatus, type BountyStatusCode } from "@/lib/bounty-status";
 import {
   BOUNTY_TRANSITIONS,
   applicationDecisionsFor,
@@ -16,7 +17,6 @@ import {
   submissionDecisionsFor,
   type AdminNftJob,
   type AdminOperations,
-  type BountyStatusCode,
   type LifecycleBlocker,
   type OpsPayout,
 } from "@/lib/admin-operations";
@@ -36,16 +36,9 @@ const fail = (status: number, code: string): never => {
   throw new MockApiError(status, code);
 };
 
-const STATUS_FROM_ADMIN: Record<AdminBounty["status"], BountyStatusCode> = {
-  draft: "DRAFT", funding: "FUNDING_PENDING", active: "OPEN", submissionClosed: "SUBMISSION_CLOSED", reviewing: "IN_REVIEW", completed: "COMPLETED", cancelled: "CANCELLED",
-};
-export const ADMIN_STATUS_FROM_CODE: Record<string, AdminBounty["status"]> = {
-  DRAFT: "draft", FUNDING_PENDING: "funding", OPEN: "active", SUBMISSION_CLOSED: "submissionClosed", IN_REVIEW: "reviewing", COMPLETED: "completed", CANCELLED: "cancelled",
-};
-
 /** Deterministic per-bounty operations seed: one pending + one approved application, a resubmitted entry, an approved agent entry with a payout requested by another admin. */
 function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string): AdminOperations {
-  const status = STATUS_FROM_ADMIN[bounty.status];
+  const status = fromAdminStatus(bounty.status);
   const symbol = bounty.reward.currency;
   const amount = bounty.reward.amount > 0 ? rewardToBaseUnits(bounty.reward) : null;
   const funded = status !== "DRAFT" && status !== "FUNDING_PENDING";

@@ -1,5 +1,6 @@
 import { formatUtcDate, toCategoryLabel, toRewards, type RewardRow } from "./api/codecs";
 import type { Bounty } from "./types";
+import { toClosedReason, toLifecycleStatus, toPublicStatus } from "./bounty-status";
 import { fetchAllPublicPages } from "./api/paging";
 import { cache } from "react";
 import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH } from "./api/public";
@@ -39,7 +40,6 @@ export const bounties: Bounty[] = [
 
 export function getBounties(): Bounty[] { return bounties; }
 export function getBounty(slug: string): Bounty | undefined { return bounties.find((bounty) => bounty.slug === slug); }
-export function getActiveBounties(): Bounty[] { return bounties.filter((bounty) => bounty.status === "active"); }
 
 type BountyRewardRow = RewardRow & { tokenType: string };
 type BountyListRow = {
@@ -74,23 +74,8 @@ function isPast(deadline: string | null, now = Date.now()): boolean {
   return deadline !== null && new Date(deadline).getTime() <= now;
 }
 
-/** BE lifecycle → public status. DRAFT/FUNDING_PENDING never reach the public list, so anything else that is not open or under review is closed. */
-export function toBountyStatus(status: string): Bounty["status"] {
-  if (status === "OPEN") return "active";
-  if (status === "SUBMISSION_CLOSED" || status === "IN_REVIEW") return "reviewing";
-  return "closed";
-}
-
-/**
- * Public status including the deadline: a BE `OPEN` bounty whose `submission_deadline` has passed (or cannot be parsed)
- * no longer accepts applications or submissions (BE answers DEADLINE_PASSED), so it presents as `closed` - status badge,
- * list chip and action panel alike - instead of "Active" with no countdown.
- */
-export function toPublicBountyStatus(status: string, submissionDeadline: string, now = Date.now()): Bounty["status"] {
-  if (status !== "OPEN") return toBountyStatus(status);
-  const deadline = new Date(submissionDeadline).getTime();
-  return Number.isNaN(deadline) || deadline <= now ? "closed" : "active";
-}
+// The BE status folds (public status, closed reason) live in `bounty-status.ts`; these names stay for existing callers and tests.
+export { toLifecycleStatus as toBountyStatus, toPublicStatus as toPublicBountyStatus };
 
 const DEADLINE_DETAIL_FORMAT: Intl.DateTimeFormatOptions = {
   year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short",
@@ -117,7 +102,8 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
   const rewards = toRewards(row.rewards);
   const detail = "description" in row ? row : null;
   const submissionMode = row.submission_mode === "AGENT" ? "agent" : "direct";
-  const status = toPublicBountyStatus(row.status, row.submission_deadline);
+  const status = toPublicStatus(row.status, row.submission_deadline);
+  const closedReason = toClosedReason(row.status, status);
   const daysLeft = status === "active" ? daysUntil(row.submission_deadline) : 0;
   return {
     slug: row.id,
@@ -125,7 +111,8 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     summary: row.summary,
     category: toCategoryLabel(row.category) ?? "Other",
     status,
-    ...(row.status === "COMPLETED" ? { completed: true } : {}),
+    ...(closedReason ? { closedReason } : {}),
+    ...(closedReason === "completed" ? { completed: true } : {}),
     reward: rewards[0] ?? { amount: 0, currency: "INJ" },
     ...(rewards.length > 1 ? { rewards } : {}),
     sponsor: row.sponsor_name,
@@ -143,7 +130,7 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     applicationRequired: row.application_required,
     applicationTitle: row.application_required ? row.title : undefined,
     applicationDescription: row.application_required ? row.summary : undefined,
-    ...(row.status === "OPEN" && status === "closed" ? { deadlinePassed: true } : {}),
+    ...(closedReason === "deadline" ? { deadlinePassed: true } : {}),
     ...(row.application_required && isPast(row.application_deadline) ? { applicationClosed: true } : {}),
   };
 }
