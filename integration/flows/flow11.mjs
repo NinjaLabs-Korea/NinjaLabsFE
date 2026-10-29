@@ -60,7 +60,8 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   check('complete user: no Get Started anywhere on the dashboard', !own.some((l) => l.startsWith('Get Started')), own);
   check('complete user: header has no Get Started', !(await headerGetStarted(p)));
   clean(await report(p, 'complete dashboard', {}));
-  await p.goto('/en/bounties'); await sleep(600);
+  await p.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
+  await p.goto('/en/bounties'); await sleep(900);
   await p.eval(`[...document.querySelectorAll('header button[aria-haspopup=menu]')].find(b=>b.getClientRects().length && b.innerText.includes('builderone'))?.click(); true`); await sleep(300);
   const menuItems = await p.eval(`[...document.querySelectorAll('[role=menuitem]')].map(e=>e.innerText.trim()+' -> '+(e.getAttribute('href')||''))`);
   check('complete user: the user menu lists My activity -> /home first', menuItems[0] === 'My activity -> /en/home', menuItems);
