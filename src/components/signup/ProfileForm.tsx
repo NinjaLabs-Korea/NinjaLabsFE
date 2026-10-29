@@ -164,6 +164,19 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
     };
   }, [apiClient, isOwnNickname, nicknameRuleError, trimmedNickname]);
 
+  // Back from /signup/get-started restores this page from the bfcache in its "Saving profile..." state (the save already
+  // succeeded and the auth snapshot is stale): start over, and in onboarding reload so the gate re-reads the session.
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      inFlight.current = false;
+      setState("idle");
+      if (!editing) window.location.reload();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [editing]);
+
   const toggleTag = (value: string) => {
     setSaved(false);
     setTags((current) =>
