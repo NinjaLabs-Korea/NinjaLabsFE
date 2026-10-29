@@ -188,12 +188,6 @@ export function parentNftState(nfts: readonly Pick<ProfileNft, "type" | "status"
   return "none";
 }
 
-/** `members.profile.portfolio.*` key for the portfolio intro paragraph. */
-export function portfolioBodyKey(completed: boolean, parent: ParentNftState) {
-  if (completed) return "bodyCompleted" as const;
-  return parent === "minted" ? ("bodyEmpty" as const) : parent === "pending" ? ("bodyEmptyPending" as const) : ("bodyEmptyNotMinted" as const);
-}
-
 /**
  * `locale` formats API dates for display and comes from the server page; see `getRuntimeBounties` for why it is a parameter.
  * `undefined` only on a BE 404, otherwise rethrows; `cache()` shares one BE request per render (see `getRuntimeBounty`).
