@@ -251,6 +251,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const derivedView = deriveActionView({
     bountyId, applicationRequired, applicationClosed, deadlinePassed, completed, status, submissionMode,
     auth: auth.status,
+    ...(auth.status === "signed-out" && auth.reason ? { authReason: auth.reason } : {}),
     applications: applicationsQuery,
     submissions: submissionsQuery,
     applied, submitted,
@@ -262,10 +263,10 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const [heldForm, setHeldForm] = useState<{ signature: string; view: typeof derivedView } | null>(null);
   if (formSignature) {
     if (heldForm?.signature !== formSignature) setHeldForm({ signature: formSignature, view: derivedView });
-  } else if (heldForm && derivedView.kind !== "signedOut" && derivedView.kind !== "checkingSession") {
+  } else if (heldForm && derivedView.kind !== "signedOut" && derivedView.kind !== "sessionUnavailable" && derivedView.kind !== "checkingSession") {
     setHeldForm(null);
   }
-  const view = sessionEnded && derivedView.kind === "signedOut" && heldForm ? heldForm.view : derivedView;
+  const view = sessionEnded && (derivedView.kind === "signedOut" || derivedView.kind === "sessionUnavailable") && heldForm ? heldForm.view : derivedView;
   const sessionEndedLine = sessionEnded ? (
     <p className="mt-3 text-sm text-danger" role="alert">
       {t("sessionEnded")}{" "}
@@ -295,6 +296,14 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       );
     case "checkingSession":
       return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingSession")}</p></section>;
+    case "sessionUnavailable":
+      return (
+        <section className={panelClass} role="status">
+          <h2 className={headingClass}>{t("sessionUnavailable.title")}</h2>
+          <p className="mt-2 text-sm text-ink-muted">{t("sessionUnavailable.body")}</p>
+          <button className="mt-4 rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => window.location.reload()} type="button">{t("sessionUnavailable.retry")}</button>
+        </section>
+      );
     case "signedOut":
       return <SignedOutPanel applicationRequired={applicationRequired} bountyId={bountyId} />;
     case "checkingStatus":

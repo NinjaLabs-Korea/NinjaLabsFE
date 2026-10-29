@@ -9,7 +9,7 @@
  *     (지원 상태·제출 상태·수정 요청·지급 배지), 없으면 `agentMode`(Agent API 엔드포인트 안내) / `closed`.
  *     행 조회 중이면 `checkingStatus`, 조회 실패면 행 없음으로 본다(안내는 계정 상태 없이도 유효하다).
  *  2b. 지원 필요 바운티의 지원 마감이 지났고 비로그인 → `closed`+`applications` (지원 CTA 없음)
- *  3. 세션 확인 중 → `checkingSession`, 비로그인 → `signedOut`
+ *  3. 세션 확인 중 → `checkingSession`, 세션 확인 실패(`authReason: unavailable`) → `sessionUnavailable`, 비로그인 → `signedOut`
  *  4. 내 제출(+지원 필요 바운티면 내 지원) 조회 중 → `checkingStatus`, 조회 실패 → `statusUnavailable`
  *  5. 내 직접 행은 없고 에이전트가 만든 행만 있음 → `agentRow` (직접 지원/제출 폼을 띄우지 않는다)
  *  6. 지원 필요 바운티: 지원 전 → `applyForm`(진행 중이고 지원 마감 전일 때만, 지원 마감만 지났으면 `closed`+`applications`, 그 밖엔 `closed`) / 거절 → `applicationRejected` /
@@ -58,6 +58,8 @@ export type BountyActionInput = {
   /** `Bounty.completed`: closed because the work was finished (BE COMPLETED). A `closed` bounty that is neither completed nor `deadlinePassed` was cancelled. */
   completed?: boolean;
   auth: AuthStatus;
+  /** `AuthSnapshot.reason` when signed out: `unavailable` = the session could not be checked (not a sign-out). */
+  authReason?: "session-ended" | "unavailable";
   applications: AccountRowsQuery<ApplicationRow>;
   submissions: AccountRowsQuery<SubmissionRow>;
   /** 이 화면에서 방금 지원/제출에 성공함 (서버 재조회가 끝나기 전에도 결과 화면을 보여 주는 로컬 플래그) */
@@ -75,6 +77,8 @@ export type BountyActionView =
   /** 에이전트 전용 바운티 - `POST /agent-api/v1/bounties/{id}/{endpoint}` 안내 */
   | { kind: "agentMode"; endpoint: "applications" | "submissions" }
   | { kind: "checkingSession" }
+  /** The session check failed (BE 5xx/429/unreachable) while the cookie is kept: the visitor may well be signed in, so do not say "sign in". */
+  | { kind: "sessionUnavailable" }
   /** Figma 15/15v 비로그인 화면 (로그인 필요 배지 + 비활성 폼 미리보기) */
   | { kind: "signedOut" }
   | { kind: "checkingStatus" }
@@ -162,7 +166,7 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
   if (auth === "signed-out" && applicationRequired && applicationClosed) return { kind: "closed", reason: "applications" };
   // 3. 세션
   if (auth === "loading") return { kind: "checkingSession" };
-  if (auth !== "signed-in") return { kind: "signedOut" };
+  if (auth !== "signed-in") return input.authReason === "unavailable" ? { kind: "sessionUnavailable" } : { kind: "signedOut" };
   // 4. 내 행 조회. 지원이 필요 없는 바운티는 지원 목록을 기다리지도, 실패로 보지도 않는다.
   if (submissions.loading || (applicationRequired && applications.loading)) return { kind: "checkingStatus" };
   if (submissions.unavailable || (applicationRequired && applications.unavailable)) return { kind: "statusUnavailable" };

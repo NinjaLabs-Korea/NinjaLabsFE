@@ -1,5 +1,27 @@
+// @vitest-environment jsdom
 // QA round 2, package FE-3: what a builder sees for cancelled / closed / unreachable bounty states.
-import { describe, expect, it } from "vitest";
+import { screen } from "@testing-library/react";
+import type { ComponentProps } from "react";
+import { describe, expect, it, vi } from "vitest";
+import { BountyAccessBadges } from "@/components/bounties/BountyAccessBadges";
+import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
+import type { ApiClient } from "@/lib/contracts/api";
+import type { AuthSnapshot } from "@/lib/contracts/auth";
+import { renderWithIntl } from "@/test/intl";
+import { signedOut } from "@/test/support/auth";
+
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ children, href, ...props }: ComponentProps<"a">) => <a href={href} {...props}>{children}</a>,
+}));
+
+const auth: { current: AuthSnapshot } = { current: signedOut };
+const none = async () => ({ status: "available" as const, data: [] });
+const apiClient = { getApplications: none, getSubmissions: none } as unknown as ApiClient;
+vi.mock("@/components/auth/FoundationProvider", () => ({
+  useAuthSnapshot: () => auth.current,
+  useAccountApi: () => apiClient,
+  useBountyApi: () => apiClient,
+}));
 import { createApiApiClient } from "@/lib/api/api-client";
 import { deriveActionView, type BountyActionInput } from "@/lib/bounty-action-state";
 import { applicationStatusLabel } from "@/components/account/ApplicationsView";
@@ -86,5 +108,40 @@ describe("pending application that can no longer be approved (#33)", () => {
   });
   it("on an open bounty it is still under review", () => {
     expect(deriveActionView(input(base))).toEqual({ kind: "applicationUnderReview" });
+  });
+});
+
+describe("session unavailable on detail (#4)", () => {
+  it("a failed session check is not 'signed out'", () => {
+    expect(deriveActionView(input({ auth: "signed-out", authReason: "unavailable" }))).toEqual({ kind: "sessionUnavailable" });
+  });
+  it("a plain or ended session still shows the sign-in panel", () => {
+    expect(deriveActionView(input({ auth: "signed-out" }))).toEqual({ kind: "signedOut" });
+    expect(deriveActionView(input({ auth: "signed-out", authReason: "session-ended" }))).toEqual({ kind: "signedOut" });
+  });
+});
+
+describe("session unavailable rendering (#4)", () => {
+  const unavailableSession: AuthSnapshot = { status: "signed-out", user: null, reason: "unavailable" };
+
+  it("the panel says the sign-in cannot be checked and offers a retry, not a sign-in prompt", () => {
+    auth.current = unavailableSession;
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="b-1" status="active" submissionMode="direct" />);
+    expect(screen.getByText("We can't check your sign-in right now.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
+    expect(screen.queryByText("Sign in first")).toBeNull();
+  });
+
+  it("the masthead shows no login chips while the session is unavailable", () => {
+    auth.current = unavailableSession;
+    renderWithIntl(<BountyAccessBadges />);
+    expect(screen.queryByText("Public view")).toBeNull();
+    expect(screen.queryByText("Actions require login")).toBeNull();
+  });
+
+  it("a plain signed-out visitor still sees the login chips", () => {
+    auth.current = signedOut;
+    renderWithIntl(<BountyAccessBadges />);
+    expect(screen.getByText("Actions require login")).toBeTruthy();
   });
 });
