@@ -16,9 +16,8 @@ import type { AgentVerification } from "@/lib/contracts/api";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
 import { formatUtcDateTime } from "@/lib/format";
 import { validationFieldsFromError } from "@/lib/api/validation";
+import { AGENT_DESCRIPTION_MAX, AGENT_NAME_MAX } from "@/lib/input-limits";
 import {
-  AGENT_DESCRIPTION_MAX,
-  AGENT_NAME_MAX,
   agentErrorsFromValidationFields,
   hasVisibleText,
   validateAgentRegisterForm,

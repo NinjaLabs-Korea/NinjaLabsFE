@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
 import * as limits from "@/lib/input-limits";
-import { AUDIT_ENTITY_TYPE_MAX } from "@/lib/admin-audit";
-import { BOUNTY_TEXT_MAX } from "@/lib/admin-bounty-form";
-import { AGENT_NAME_MAX } from "@/lib/agent-register-form";
-import { NICKNAME_MAX } from "@/lib/nickname";
 
 /**
  * Pins the FE mirrors of the BE DTO limits (NinjaLabsBE, checked 2026-10-30). Change a number here only together with the DTO:
@@ -22,14 +18,8 @@ describe("input limits mirror the BE DTOs", () => {
     expect(limits.BOUNTY_TEXT_MAX).toEqual({ description: 50_000, deliverables: 20_000, reviewProcess: 20_000 });
     expect([limits.AGENT_NAME_MAX, limits.AGENT_DESCRIPTION_MAX]).toEqual([100, 1000]);
     expect(limits.AUDIT_ENTITY_TYPE_MAX).toBe(64);
+    expect(limits.OPS_NOTE_MAX).toBe(2000);
     expect(limits.COHORT_APPLICATION_SEARCH_MAX).toBe(320);
     expect(limits.COHORT_HANDLE_INPUT_MAX).toBe(80);
-  });
-
-  it("keeps one source: the old homes re-export the same values", () => {
-    expect(AUDIT_ENTITY_TYPE_MAX).toBe(limits.AUDIT_ENTITY_TYPE_MAX);
-    expect(BOUNTY_TEXT_MAX).toBe(limits.BOUNTY_TEXT_MAX);
-    expect(AGENT_NAME_MAX).toBe(limits.AGENT_NAME_MAX);
-    expect(limits.NICKNAME_MAX).toBe(NICKNAME_MAX);
   });
 });

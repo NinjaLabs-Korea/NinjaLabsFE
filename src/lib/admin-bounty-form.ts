@@ -171,7 +171,6 @@ export type BountyFormError =
   | "maxWinnersInvalid"
   | "tooLong";
 
-export { BOUNTY_SPONSOR_MAX, BOUNTY_TEXT_MAX, BOUNTY_TITLE_MAX, MAX_WINNERS_MAX };
 export type BountyFormErrors = Partial<Record<keyof BountyFormValues, BountyFormError>>;
 
 /**

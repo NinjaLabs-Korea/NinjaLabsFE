@@ -1,4 +1,3 @@
-import { AUDIT_ENTITY_TYPE_MAX } from "@/lib/input-limits";
 
 /** BE `AuditService.list` row/page, mapped for the audit-log viewer (GET /admin/audit-logs). */
 export type AdminAuditLog = {
@@ -20,7 +19,6 @@ export type AdminAuditLogFilter = { entityType?: string; entityId?: string };
 /** Mirror of the BE `AuditLogsQueryDto.entityId` `@IsUUID()`. */
 export const AUDIT_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const isAuditUuid = (value: string): boolean => AUDIT_UUID.test(value.trim());
-export { AUDIT_ENTITY_TYPE_MAX };
 
 /**
  * Actions written by ops scripts / manual SQL (BE `docs/api-contract.md`): these rows have no actor on purpose.

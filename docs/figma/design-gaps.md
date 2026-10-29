@@ -122,7 +122,6 @@ Figma only draws 1440px frames. Every route was checked at 390px and 768px (no h
 | Item | Decision |
 |---|---|
 | Profile portfolio intro (Figma 05-Empty) | Figma 05-Empty always says the Ninja NFT "is already minted". The FE now prints that copy only when the profile's NFT list holds a parent that is MINTED (or ATTACHING/ATTACHED); a PENDING/MINTING parent reads "is being minted", and no parent (or FAILED) reads "is not minted yet" (`members.profile.portfolio.bodyEmptyPending` / `bodyEmptyNotMinted`). Same typography and slot; the mock `sora` profile carries a MINTED parent so the demo still matches the frame. |
-| Bounty detail masthead badges (Figma 15 `19:1739` / 15v `19:1911`) | Figma draws only the signed-out pair "Public view" / "Actions require login". Those badges were shown to signed-in users too. `bounties/BountyAccessBadges` now reads the auth snapshot: signed-in visitors see "Signed in" (success) / "Actions available" (primary-soft); server render, hydration and the loading state keep the Figma signed-out pair, so the HTML matches on hydration. No Figma frame for the signed-in variant; existing Badge variants only. |
 
 
 ### Forfeited awards and reviewer comments (2026-10-25, `r5/fe-forfeit-ux`)

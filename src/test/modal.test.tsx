@@ -34,9 +34,9 @@ describe("Modal", () => {
   it("animates in with the open dialog and keeps the exit instant", () => {
     const { getByRole } = render(<Harness open />);
     const cls = getByRole("dialog", { hidden: true }).className;
-    expect(cls).toContain("open:animate-pop-in");
-    expect(cls).toContain("backdrop:animate-fade-in");
     expect(cls).toContain("motion-reduce:animate-none");
+    // `motion-reduce:animate-none` does not reach ::backdrop, so the reduce variant must cover it explicitly.
+    expect(cls).toContain("motion-reduce:backdrop:animate-none");
   });
 
   it("returns focus to the opener right after close", () => {

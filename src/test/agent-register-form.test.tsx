@@ -8,7 +8,8 @@ import type { AccountAgent } from "@/lib/contracts/account";
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { ApiHttpError } from "@/lib/api/http";
-import { AGENT_DESCRIPTION_MAX, AGENT_NAME_MAX, validateAgentRegisterForm } from "@/lib/agent-register-form";
+import { validateAgentRegisterForm } from "@/lib/agent-register-form";
+import { AGENT_DESCRIPTION_MAX, AGENT_NAME_MAX } from "@/lib/input-limits";
 import { renderWithIntl } from "@/test/intl";
 import { signedInWith } from "@/test/support/auth";
 

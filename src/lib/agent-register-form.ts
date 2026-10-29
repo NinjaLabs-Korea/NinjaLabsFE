@@ -8,7 +8,6 @@ export { hasVisibleText };
 
 import { AGENT_DESCRIPTION_MAX, AGENT_NAME_MAX } from "@/lib/input-limits";
 
-export { AGENT_DESCRIPTION_MAX, AGENT_NAME_MAX };
 
 /** 화면 문구는 messages `agents.form.errors.<field><Reason>` */
 export type AgentFieldError = "required" | "tooLong" | "rejected";

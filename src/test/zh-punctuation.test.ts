@@ -1,23 +1,8 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 // Chinese copy uses full-width punctuation after a Chinese character: ， ； ： (not ASCII , ; :).
-// landing.json and community.json are left out for now because FE-U1 fixes them in parallel;
-// the next round removes this exclusion so every zh file is covered.
-const ZH_FILES = [
-  "account",
-  "admin",
-  "agents",
-  "bounties",
-  "common",
-  "hallOfFame",
-  "home",
-  "legal",
-  "members",
-  "notices",
-  "recruit",
-  "signup",
-];
+const ZH_FILES = readdirSync("messages/zh").filter((file) => file.endsWith(".json")).map((file) => file.replace(/\.json$/, ""));
 const ASCII_AFTER_CJK = /[一-鿿][,;:]/;
 
 function* values(node: unknown, path = ""): Generator<[string, string]> {

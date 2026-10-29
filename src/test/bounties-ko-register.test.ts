@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const ko = JSON.parse(readFileSync("messages/ko/bounties.json", "utf8")) as Record<string, unknown>;
+const load = (file: string) => JSON.parse(readFileSync(`messages/ko/${file}.json`, "utf8")) as Record<string, unknown>;
+const ko = load("bounties");
 
 function strings(node: unknown, path: string, out: Array<[string, string]> = []): Array<[string, string]> {
   if (typeof node === "string") out.push([path, node]);
@@ -24,5 +25,20 @@ describe("ko bounties copy register", () => {
 
   it("avoids jargon: no 릴리스 or 자식 NFT in member-facing copy", () => {
     expect(strings(ko, "").filter(([, text]) => /릴리스|자식|부모/.test(text))).toEqual([]);
+  });
+});
+
+// community.json shares the "unavailable" boxes (title + body + retry button), so it must stay haeyo-che too.
+describe("ko community copy register", () => {
+  const community = load("community");
+
+  it("is haeyo-che: no formal -sumnida endings", () => {
+    expect(strings(community, "").filter(([, text]) => /(습니다|합니다|입니다|됩니다)/.test(text))).toEqual([]);
+  });
+
+  it("leaves the retry instruction to the button: unavailable bodies do not repeat '다시 시도해 주세요'", () => {
+    const bodies = strings(community, "").filter(([path]) => path.endsWith("unavailableBody"));
+    expect(bodies.length).toBeGreaterThan(0);
+    expect(bodies.filter(([, text]) => text.includes("다시 시도"))).toEqual([]);
   });
 });

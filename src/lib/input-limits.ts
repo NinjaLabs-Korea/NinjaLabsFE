@@ -48,6 +48,9 @@ export const AGENT_DESCRIPTION_MAX = 1000;
 /** 감사 로그 조회: `AuditLogsQueryDto.entityType` @MaxLength(64). */
 export const AUDIT_ENTITY_TYPE_MAX = 64;
 
+/** 운영자 입금·제출·지원 심사 메모/코멘트: BE `@MaxLength(2000)`. */
+export const OPS_NOTE_MAX = 2000;
+
 /** 지원서 목록 검색어: `cohort-admin.controller.ts`의 검색 쿼리 `q` @MaxChars(320). */
 export const COHORT_APPLICATION_SEARCH_MAX = 320;
 
@@ -59,6 +62,5 @@ export const COHORT_HANDLE_INPUT_MAX = 80;
 
 /**
  * 닉네임 길이는 `nickname.ts`가 정의한다(검증 규칙과 한 파일). 입력칸이 이 모듈에서 한도를 모두 찾도록 다시 내보낸다.
- * `OPS_NOTE_MAX`(`admin-operations.ts:166`)도 같은 종류지만 FE-Q2 소유라 다음 라운드에 옮긴다.
  */
 export { NICKNAME_MAX, NICKNAME_MIN } from "@/lib/nickname";
