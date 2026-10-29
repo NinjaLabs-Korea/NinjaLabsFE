@@ -24,3 +24,14 @@ describe("mobile gutter", () => {
     expect(bad).toEqual([]);
   });
 });
+
+describe("mobile tap targets", () => {
+  const footer = readFileSync(join(process.cwd(), "src/components/layout/Footer.tsx"), "utf8");
+  const header = readFileSync(join(process.cwd(), "src/components/layout/Header.tsx"), "utf8");
+  it("footer links reserve a 40px mobile hit area", () => {
+    expect(footer.match(/inline-flex min-h-10 items-center sm:min-h-0/g)?.length).toBeGreaterThanOrEqual(5);
+  });
+  it("header logo link is at least 44x44", () => {
+    expect(header).toContain("inline-flex min-h-11 min-w-11 items-center");
+  });
+});
