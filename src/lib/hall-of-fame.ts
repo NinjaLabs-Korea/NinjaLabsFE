@@ -172,12 +172,3 @@ async function fetchHallOfFame(locale: string): Promise<RuntimeHallOfFame> {
 function partnerLogo(row: HighlightRow): string | null {
   return row.type === "PARTNERSHIP" ? safeHttpUrl(row.image_url) : null;
 }
-
-/** Page-level loader: an unreachable API renders an unavailable state instead of the error boundary. */
-export async function loadRuntimeHallOfFame(locale: string): Promise<{ hallOfFame: RuntimeHallOfFame; unavailable: boolean }> {
-  try {
-    return { hallOfFame: await getRuntimeHallOfFame(locale), unavailable: false };
-  } catch {
-    return { hallOfFame: emptyHallOfFame, unavailable: true };
-  }
-}

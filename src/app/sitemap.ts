@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { settle } from "@/lib/api/public";
 import { getRuntimeBounties } from "@/lib/bounties";
 import { getRuntimeMembers } from "@/lib/members";
 import { getRuntimeNotices } from "@/lib/notices";
@@ -9,9 +10,8 @@ import { loadRuntimeConfig } from "@/lib/runtime/config";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { origin } = loadRuntimeConfig();
   // A failing API source drops only its detail URLs; static routes are always listed.
-  const orEmpty = <T>(promise: Promise<T[]>) => promise.catch((): T[] => []);
-  const [bounties, members, notices] = await Promise.all([
-    orEmpty(getRuntimeBounties(routing.defaultLocale)), orEmpty(getRuntimeMembers()), orEmpty(getRuntimeNotices()),
+  const [{ value: bounties }, { value: members }, { value: notices }] = await Promise.all([
+    settle(getRuntimeBounties(routing.defaultLocale), []), settle(getRuntimeMembers(), []), settle(getRuntimeNotices(), []),
   ]);
   const url = (path: string) => path;
   // Nicknames may hold non-ASCII letters (`한글.inj`); sitemap URLs must be percent-encoded.

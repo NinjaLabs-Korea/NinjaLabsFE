@@ -58,5 +58,6 @@
     "empty": "No members listed yet. Want to join? Check member recruitment.",
     "emptyAction": "See member recruitment →"
   },
+  "pageUnavailable": "We cannot load this right now. Please try again shortly.",
   "retry": "Try again"
 }

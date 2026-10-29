@@ -9,8 +9,8 @@ vi.mock("@/lib/api/public", async (importOriginal) => ({
 }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
-const { PublicApiError } = await import("@/lib/api/public");
-const { pickGuideBounties, deliverablesFromMarkdown, getBounties, getRuntimeBounties, getRuntimeBounty, loadRuntimeBounties, toBountyStatus, toPublicBountyStatus } = await import("@/lib/bounties");
+const { PublicApiError, settle } = await import("@/lib/api/public");
+const { pickGuideBounties, deliverablesFromMarkdown, getBounties, getRuntimeBounties, getRuntimeBounty, toBountyStatus, toPublicBountyStatus } = await import("@/lib/bounties");
 
 const row = (id: string, rewards = [{ symbol: "INJ", amount: "1500000000000000000", tokenType: "NATIVE" }]) => ({
   id, title: id, summary: "", sponsor_name: "S", category: "DEV", status: "OPEN",
@@ -147,7 +147,7 @@ describe("bounty mapping", () => {
 
   it("reports an unavailable API instead of throwing", async () => {
     fetchPublicJson.mockRejectedValue(new Error("down"));
-    await expect(loadRuntimeBounties("en")).resolves.toEqual({ bounties: [], unavailable: true });
+    await expect(settle(getRuntimeBounties("en"), [])).resolves.toEqual({ value: [], unavailable: true });
   });
 });
 

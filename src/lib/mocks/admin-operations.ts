@@ -4,7 +4,7 @@ import type { AdminBounty } from "@/lib/admin-helpers";
 import { MockApiError } from "@/lib/mocks/mock-error";
 import { rewardToBaseUnits } from "@/lib/api/codecs";
 import { OPEN_PAYOUT_STATUSES, UNSETTLED_PAYOUT_STATUSES } from "@/lib/payout-status";
-import { fromAdminStatus, toAdminStatus, type BountyStatusCode } from "@/lib/bounty-status";
+import { fromAdminStatus, type BountyStatusCode } from "@/lib/bounty-status";
 import {
   BOUNTY_TRANSITIONS,
   applicationDecisionsFor,

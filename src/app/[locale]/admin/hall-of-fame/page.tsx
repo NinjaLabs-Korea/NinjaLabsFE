@@ -5,8 +5,8 @@ import { HighlightManager } from "@/components/admin/HighlightManager";
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { Badge } from "@/components/ui/Badge";
 import { getAdminHighlights } from "@/lib/admin";
-import { loadFromRuntime } from "@/lib/api/public";
-import { loadRuntimeHallOfFame } from "@/lib/hall-of-fame";
+import { loadFromRuntime, settle } from "@/lib/api/public";
+import { emptyHallOfFame, getRuntimeHallOfFame } from "@/lib/hall-of-fame";
 import { localeAlternates } from "@/i18n/alternates";
 
 
@@ -29,7 +29,7 @@ export default async function AdminHallOfFamePage({ params }: PageProps<"/[local
   const tHall = await getTranslations("hallOfFame.unavailable");
   const highlights = await loadFromRuntime({ mock: getAdminHighlights, api: async () => [] });
   // Same unavailable wrapper as the public page: a BE outage renders a status panel instead of the error boundary.
-  const { hallOfFame: hall, unavailable } = await loadRuntimeHallOfFame(locale);
+  const { value: hall, unavailable } = await settle(getRuntimeHallOfFame(locale), emptyHallOfFame);
 
   return (
     <section className="mx-auto max-w-content px-6 py-16 pb-20">

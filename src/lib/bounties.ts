@@ -161,15 +161,6 @@ export function pickGuideBounties(list: readonly Bounty[]): { applicationBounty?
   };
 }
 
-/** Page-level loader: an unreachable API renders an unavailable state instead of the error boundary. */
-export async function loadRuntimeBounties(locale: string): Promise<{ bounties: Bounty[]; unavailable: boolean }> {
-  try {
-    return { bounties: await getRuntimeBounties(locale), unavailable: false };
-  } catch {
-    return { bounties: [], unavailable: true };
-  }
-}
-
 /**
  * Detail loader shared by generateMetadata, layout and page. `undefined` means the BE said 404 (→ `notFound()`); any
  * other failure throws so the error boundary renders. `cache()` makes the three call sites share one BE request.

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NoticeFilters } from "@/components/notices/NoticeFilters";
+import { CommunitySectionState } from "@/components/community/CommunitySectionState";
+import { settle } from "@/lib/api/public";
 import { getRuntimeNotices } from "@/lib/notices";
 import { noticeCategoryFromQuery } from "@/lib/notice-categories";
 import { localeMetadata } from "@/i18n/alternates";
@@ -17,7 +19,8 @@ export default async function NoticesPage({ params, searchParams }: PageProps<"/
   const { category } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("notices.list");
-  const notices = await getRuntimeNotices();
+  const tCommunity = await getTranslations("community");
+  const { value: notices, unavailable } = await settle(getRuntimeNotices(), []);
 
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
@@ -31,7 +34,11 @@ export default async function NoticesPage({ params, searchParams }: PageProps<"/
       </section>
 
       <div className="mt-8">
-        <NoticeFilters initialCategory={noticeCategoryFromQuery(category)} notices={notices} />
+        {unavailable ? (
+          <CommunitySectionState body={tCommunity("pageUnavailable")} retryLabel={tCommunity("retry")} />
+        ) : (
+          <NoticeFilters initialCategory={noticeCategoryFromQuery(category)} notices={notices} />
+        )}
       </div>
     </div>
   );

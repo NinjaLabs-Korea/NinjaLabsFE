@@ -7,7 +7,8 @@ import {
 } from "@/components/bounties/BountyApplyGuideCta";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
-import { loadRuntimeBounties, pickGuideBounties } from "@/lib/bounties";
+import { settle } from "@/lib/api/public";
+import { getRuntimeBounties, pickGuideBounties } from "@/lib/bounties";
 import { localeMetadata } from "@/i18n/alternates";
 
 // Keys under bounties.apply.statuses, with the 16 chip tones.
@@ -34,7 +35,7 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
   setRequestLocale(locale);
   const t = await getTranslations("bounties.apply");
   const tBounties = await getTranslations("bounties");
-  const { bounties, unavailable } = await loadRuntimeBounties(locale);
+  const { value: bounties, unavailable } = await settle(getRuntimeBounties(locale), []);
   const { applicationBounty, directBounty } = pickGuideBounties(bounties);
   const hasOpenBounty = Boolean(applicationBounty || directBounty);
 
