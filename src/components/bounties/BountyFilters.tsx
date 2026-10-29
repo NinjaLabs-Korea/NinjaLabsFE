@@ -19,7 +19,7 @@ const statusFilters: Exclude<StatusFilter, "All">[] = ["Active", "Closed"];
 const statusLabelKeys = { Active: "status.active", Closed: "status.closed" } as const;
 /** Delay before filter changes are written to the URL (exported so tests advance by the constant, not a magic sleep). */
 export const BOUNTY_FILTER_URL_DEBOUNCE_MS = 300;
-const chipButtonClass = "max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const chipButtonClass = "motion-control motion-press max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export function BountyFilters({ bounties }: BountyFiltersProps) {
   const t = useTranslations("bounties");
@@ -147,7 +147,8 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
         </label>
       </div>
       {visibleBounties.length > 0 ? (
-        <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+        // Keyed by the chip selection (not the search text) so a chip click fades the new results in instead of swapping them in one frame.
+        <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 animate-fade-in motion-reduce:animate-none" key={`${category}|${status}`}>
           {visibleBounties.map((bounty) => (
             <BountyCard bounty={bounty} key={bounty.slug} showSummary titleAs="h2" />
           ))}

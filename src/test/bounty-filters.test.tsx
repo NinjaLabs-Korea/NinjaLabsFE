@@ -79,6 +79,18 @@ describe("BountyFilters in the URL", () => {
 });
 
 describe("BountyFilters", () => {
+  it("re-mounts the results wrapper (animate-fade-in) on a chip click but not while typing a search", () => {
+    const { container } = renderWithIntl(<BountyFilters bounties={bounties} />);
+    const grid = () => container.querySelector(".grid")!;
+    const first = grid();
+    expect(first.className).toContain("animate-fade-in");
+    expect(first.className).toContain("motion-reduce:animate-none");
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "dev" } });
+    expect(grid()).toBe(first);
+    fireEvent.click(within(screen.getByRole("group", { name: "Category" })).getByRole("button", { name: "Dev" }));
+    expect(grid()).not.toBe(first);
+  });
+
   it("applies category and status as independent filters and resets both with All", () => {
     renderWithIntl(<BountyFilters bounties={bounties} />);
 
