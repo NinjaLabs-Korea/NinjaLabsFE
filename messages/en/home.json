@@ -31,16 +31,10 @@
     "unavailable": "Your activity is temporarily unavailable.",
     "retry": "Try again",
     "emptyTitle": "You have not applied to a bounty yet.",
-    "emptyBody": "Bounties you apply to or submit work for show up here.",
+    "emptyBody": "Find a bounty you like and make your first application.",
     "browse": "Browse bounties"
   },
   "recruit": {
-    "heading": "Member recruitment",
-    "badge": "Recruiting",
-    "title": "{name} is recruiting members",
-    "body": "Applications are open. Tell us who you are and what you want to work on.",
-    "closes": "Apply by {date}.",
-    "cta": "Apply now",
     "details": "Open the application page →"
   },
   "bounties": {

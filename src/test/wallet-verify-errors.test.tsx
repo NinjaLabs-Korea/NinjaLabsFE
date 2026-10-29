@@ -62,7 +62,7 @@ describe("WalletConnectButton verification errors", () => {
   });
 
   it.each([
-    [409, "WALLET_ALREADY_LINKED", "This wallet is already linked to another account, or your account already has a wallet."],
+    [409, "WALLET_ALREADY_LINKED", "This wallet or this account already has another link. To change it, contact the Ninja Labs team."],
     [400, "CHALLENGE_EXPIRED", "The verification request expired or was already used."],
     [400, "CHALLENGE_NOT_FOUND", "The verification request was not found."],
     [401, "INVALID_SIGNATURE", "The signature does not match this wallet."],

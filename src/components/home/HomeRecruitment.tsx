@@ -14,6 +14,7 @@ import { Link } from "@/i18n/navigation";
  */
 export function HomeRecruitment() {
   const t = useTranslations("home.recruit");
+  const banner = useTranslations("recruit.banner");
   const format = useFormatter();
   const api = useCohortApi();
   const current = useCurrentCohort();
@@ -26,21 +27,21 @@ export function HomeRecruitment() {
   const invite = Boolean(cohort?.acceptingApplications) && !forCohort;
   if (!invite && !latest) return null;
   return (
-    <section aria-label={t("heading")} className="mx-auto max-w-content px-4 pt-16 sm:px-6">
+    <section aria-label={banner("label")} className="mx-auto max-w-content px-4 pt-16 sm:px-6">
       {invite && cohort ? (
         <div className="flex flex-col gap-5 rounded-card border border-primary-soft-border bg-primary-soft p-5 shadow-card sm:p-[21px] md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
-            <Badge variant="selected">{t("badge")}</Badge>
-            <h2 className="mt-3 break-words font-display text-2xl text-ink">{t("title", { name: cohort.name })}</h2>
+            <Badge variant="selected">{banner("badge")}</Badge>
+            <h2 className="mt-3 break-words font-display text-2xl text-ink">{banner("title", { name: cohort.name })}</h2>
             <p className="mt-2 text-sm text-ink-muted">
-              {cohort.closesAt ? t("closes", { date: format.dateTime(new Date(cohort.closesAt), { dateStyle: "medium" }) }) : t("body")}
+              {cohort.closesAt ? banner("closes", { date: format.dateTime(new Date(cohort.closesAt), { dateStyle: "medium" }) }) : banner("body")}
             </p>
           </div>
           <Link
             className="shrink-0 rounded-control bg-primary px-[29px] py-[15px] text-center text-base font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             href="/recruit"
           >
-            {t("cta")}
+            {banner("cta")}
           </Link>
         </div>
       ) : latest ? (

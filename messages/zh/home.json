@@ -31,16 +31,10 @@
     "unavailable": "暂时无法加载你的活动。",
     "retry": "重试",
     "emptyTitle": "你还没有申请或提交过赏金。",
-    "emptyBody": "你申请或提交的赏金会显示在这里。",
+    "emptyBody": "找一个喜欢的赏金，提交你的第一次申请吧。",
     "browse": "浏览赏金"
   },
   "recruit": {
-    "heading": "成员招募",
-    "badge": "招募中",
-    "title": "{name} 正在招募成员",
-    "body": "正在接受申请。告诉我们你是谁、想做什么。",
-    "closes": "请在 {date} 前申请。",
-    "cta": "立即申请",
     "details": "打开申请页面 →"
   },
   "bounties": {
