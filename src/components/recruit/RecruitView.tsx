@@ -35,7 +35,7 @@ function CohortInfo({ cohort }: { cohort: PublicCohort }) {
           ? t("cohort.periodFrom", { from: date(cohort.opensAt) })
           : t("cohort.periodOpen");
   return (
-    <section aria-labelledby="cohort-name" className="mx-auto max-w-content px-4 sm:px-6">
+    <section aria-labelledby="cohort-name" className="mx-auto max-w-content px-6">
       <div className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -191,10 +191,10 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
       ) : current.status === "loading" ? (
         // Reserve roughly the cohort card's height until the read settles: the card is inserted above the about section and
         // the application area, so without it the whole page (footer included) jumps down when it arrives (CLS 0.17).
-        <div aria-hidden="true" className="mx-auto max-w-content px-4 sm:px-6"><div className="min-h-[132px]" /></div>
+        <div aria-hidden="true" className="mx-auto max-w-content px-6"><div className="min-h-[132px]" /></div>
       ) : null}
       {aboutSlot}
-      <section aria-label={t("form.sectionLabel")} className="mx-auto max-w-content px-4 pb-20 sm:px-6">
+      <section aria-label={t("form.sectionLabel")} className="mx-auto max-w-content px-6 pb-20">
         <div className="mx-auto max-w-[896px]">
           {saved ? (
             <p className="mb-5 rounded-tile border border-border bg-success-soft p-4 text-sm font-semibold text-success" role="status">{t(`form.saved.${saved}`)}</p>
