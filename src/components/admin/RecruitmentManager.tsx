@@ -8,7 +8,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { CohortApplicationsPanel } from "@/components/admin/CohortApplicationsPanel";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { opsDateTime } from "@/components/admin/ops-ui";
-import { useAdminList } from "@/components/admin/useAdminList";
+import { useAdminList, useAdminRecordDelete, useLoadFailedToast } from "@/components/admin/useAdminList";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { useAdminCohortApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
@@ -72,10 +72,9 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
   const [transitioning, setTransitioning] = useState(false);
   const [transitionError, setTransitionError] = useState<ReturnType<typeof cohortAdminErrorKey> | null>(null);
   const formRef = useRef<HTMLElement>(null);
-  const deletingRef = useRef(false);
 
   const fetchCohorts = useCallback(() => api.getAdminCohorts(), [api]);
-  const toastLoadFailed = useCallback(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }), [t]);
+  const toastLoadFailed = useLoadFailedToast(t("toast.loadFailedTitle"), t("toast.loadFailedDescription"));
   const { records, setRecords, loadState, reload, retry } = useAdminList(fetchCohorts, [], toastLoadFailed);
 
   const selected = records.find((cohort) => cohort.id === selectedId) ?? null;
@@ -150,24 +149,20 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
     }
   };
 
-  const deleteCohort = async (cohort: AdminCohort) => {
-    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
-    if (deletingRef.current) return;
-    deletingRef.current = true;
-    setPendingDelete(null);
-    try {
-      await api.deleteAdminCohort(cohort.id);
-      setRecords((current) => current.filter((item) => item.id !== cohort.id));
+  const deleteCohort = useAdminRecordDelete<AdminCohort>({
+    call: (cohort) => api.deleteAdminCohort(cohort.id),
+    keyOf: (cohort) => cohort.id,
+    setRecords,
+    closeDialog: () => setPendingDelete(null),
+    onRemoved: (cohort) => {
       if (selectedId === cohort.id) setSelectedId(null);
       if (mode === cohort.id) startNew();
-      pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: cohort.name });
-    } catch (error) {
-      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: tErrors(cohortAdminErrorKey(error)) });
-      void reload();
-    } finally {
-      deletingRef.current = false;
-    }
-  };
+    },
+    describeError: (error) => tErrors(cohortAdminErrorKey(error)),
+    successToast: (cohort) => ({ title: t("toast.deletedTitle"), description: cohort.name }),
+    failedTitle: tCommon("deleteFailed"),
+    reload,
+  });
 
   const transitionKey = (cohort: AdminCohort, to: "OPEN" | "CLOSED") => (to === "CLOSED" ? "close" : cohort.status === "CLOSED" ? "reopen" : "open");
   const windowText = (cohort: AdminCohort) =>
