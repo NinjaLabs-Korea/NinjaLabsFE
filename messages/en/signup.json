@@ -8,10 +8,10 @@
     },
     "api": {
       "title": "Get started with Ninja Labs",
-      "description": "Start with Google, no wallet install needed.",
-      "disclosure": "Signing in creates or restores your Ninja Labs account. We only receive your Google email. No password is shared."
+      "description": "All you need is a Google account. No wallet required.",
+      "disclosure": "New here? We create your account. Already a member? You pick up where you left off. We only receive your Google email, never your password."
     },
-    "eyebrow": "Create account"
+    "eyebrow": "Sign in"
   },
   "wallet": {
     "linked": {

@@ -8,10 +8,10 @@
     },
     "api": {
       "title": "Ninja Labs 시작하기",
-      "description": "Google로 시작하세요, 지갑 설치가 필요 없어요.",
-      "disclosure": "로그인하면 Ninja Labs 계정이 생성되거나 복원돼요. Google 이메일만 전달받으며 비밀번호는 공유되지 않아요."
+      "description": "Google 계정만 있으면 돼요. 지갑은 필요 없어요.",
+      "disclosure": "처음이면 계정이 만들어지고, 이미 있으면 그대로 이어져요. Google 이메일만 받고 비밀번호는 받지 않아요."
     },
-    "eyebrow": "계정 만들기"
+    "eyebrow": "로그인"
   },
   "wallet": {
     "linked": {
