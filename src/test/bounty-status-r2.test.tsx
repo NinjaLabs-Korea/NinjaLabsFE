@@ -5,7 +5,7 @@ import type { ComponentProps } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { ApplicationsView } from "@/components/account/ApplicationsView";
 import { FLASH_EVENT } from "@/lib/flash";
-import { signedIn } from "@/test/support/auth";
+import { signedIn as signedInSnapshot } from "@/test/support/auth";
 import { BountyAccessBadges } from "@/components/bounties/BountyAccessBadges";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import type { ApiClient } from "@/lib/contracts/api";
@@ -176,7 +176,7 @@ describe("withdraw result is visible (#8)", () => {
   });
 
   it("pushes the shell flash after a successful withdraw", async () => {
-    auth.current = signedIn;
+    auth.current = signedInSnapshot;
     const open: AccountApplication = {
       id: "app-1", bountySlug: "b-1", bountyTitle: "Open one", category: "Dev", appliedAt: "2026-10-01T00:00:00Z", note: "hi",
       status: "open", agent: null, reviewComment: null, reviewNote: null, paymentStatus: "NONE",
