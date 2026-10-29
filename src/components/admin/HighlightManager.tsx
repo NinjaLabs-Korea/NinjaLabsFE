@@ -9,6 +9,7 @@ import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { HIGHLIGHT_DESCRIPTION_MAX, HIGHLIGHT_TITLE_MAX } from "@/lib/input-limits";
 import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
+import { opsInput, opsTextarea } from "@/components/admin/ops-ui";
 import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlight } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { DISPLAY_ORDER_MAX, highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminErrorDescription } from "@/lib/admin-helpers";
@@ -248,8 +249,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
                 <AdminSelect formatOption={typeLabel} label={t("form.type")} onChange={setType} options={typeOptions} value={type} />
               </div>
             </div>
-            <label className="text-sm font-semibold text-ink">{t("form.title")}<input {...invalidProps("title")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" maxLength={HIGHLIGHT_TITLE_MAX} onChange={(event) => { setTitle(event.target.value); clearError("title"); }} placeholder={t("form.titlePlaceholder")} required value={title} />{fieldError("title")}</label>
-            <label className="text-sm font-semibold text-ink md:col-span-2">{t("form.description")}<textarea {...invalidProps("description")} className="mt-2 min-h-24 w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary aria-[invalid]:border-danger" maxLength={HIGHLIGHT_DESCRIPTION_MAX} onChange={(event) => { setDescription(event.target.value); clearError("description"); }} required value={description} />{fieldError("description")}</label>
+            <label className="text-sm font-semibold text-ink">{t("form.title")}<input {...invalidProps("title")} className={opsInput} maxLength={HIGHLIGHT_TITLE_MAX} onChange={(event) => { setTitle(event.target.value); clearError("title"); }} placeholder={t("form.titlePlaceholder")} required value={title} />{fieldError("title")}</label>
+            <label className="text-sm font-semibold text-ink md:col-span-2">{t("form.description")}<textarea {...invalidProps("description")} className={opsTextarea} maxLength={HIGHLIGHT_DESCRIPTION_MAX} onChange={(event) => { setDescription(event.target.value); clearError("description"); }} required value={description} />{fieldError("description")}</label>
             <div className="text-sm font-semibold text-ink">{t("form.image")}
               <button className="mt-2 flex h-[46px] w-full items-center rounded-control border border-border px-4 text-left text-sm font-normal text-ink-placeholder hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => imageInputRef.current?.click()} type="button">{image ?? t("form.uploadImage")}</button>
               <input accept="image/jpeg,image/png,image/webp" aria-label={t("form.image")} className="sr-only" onChange={handleImageChange} ref={imageInputRef} type="file" />
@@ -257,8 +258,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
               {image || imageFile ? <button className="mt-2 text-xs font-semibold text-danger hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={handleRemoveImage} type="button">{t("form.removeImage")}</button> : null}
               {fieldError("image")}
             </div>
-            <label className="text-sm font-semibold text-ink">{t("form.link")} <span className="font-normal text-ink-muted">{t("form.optional")}</span><input {...invalidProps("link", "highlight-link-hint")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" inputMode="url" onChange={(event) => { setLink(event.target.value); clearError("link"); }} placeholder={t("form.linkPlaceholder")} type="url" value={link} /><span className="mt-1 block text-xs font-normal text-ink-muted" id="highlight-link-hint">{tCommon("urlHint")}</span>{fieldError("link")}</label>
-            <label className="text-sm font-semibold text-ink">{t("form.displayOrder")}<input {...invalidProps("order")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" min={0} onChange={(event) => { setOrder(Number(event.target.value)); clearError("order"); }} placeholder="0" required step={1} type="number" value={order} />{fieldError("order")}</label>
+            <label className="text-sm font-semibold text-ink">{t("form.link")} <span className="font-normal text-ink-muted">{t("form.optional")}</span><input {...invalidProps("link", "highlight-link-hint")} className={opsInput} inputMode="url" onChange={(event) => { setLink(event.target.value); clearError("link"); }} placeholder={t("form.linkPlaceholder")} type="url" value={link} /><span className="mt-1 block text-xs font-normal text-ink-muted" id="highlight-link-hint">{tCommon("urlHint")}</span>{fieldError("link")}</label>
+            <label className="text-sm font-semibold text-ink">{t("form.displayOrder")}<input {...invalidProps("order")} className={opsInput} min={0} onChange={(event) => { setOrder(Number(event.target.value)); clearError("order"); }} placeholder="0" required step={1} type="number" value={order} />{fieldError("order")}</label>
             <div className="text-sm font-semibold text-ink">
               {t("form.published")}
               <div className="mt-2">
