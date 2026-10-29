@@ -301,7 +301,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
           {profileRequired && auth.user ? (
             <>
               {" "}
-              <Link className="font-semibold underline" href={getOnboardingPath(auth.user)}>{tRegisterErrors("profileLink")}</Link>
+              <Link className="font-semibold underline" href={getOnboardingPath(auth.user) ?? "/"}>{tRegisterErrors("profileLink")}</Link>
             </>
           ) : null}
         </p>
