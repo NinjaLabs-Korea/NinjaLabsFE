@@ -67,7 +67,7 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
       const walletError = ops.submissions.find((item) => item.id === dialog.submissionId)?.recipientWalletAddress ? undefined : t("submissions.noWallet");
       const amountError = !amount ? t(tokenDecimalsFor(dialog.reward.symbol) === null ? "form.amountInvalidBaseUnits" : "form.amountInvalid", { symbol: dialog.reward.symbol })
         : headroom !== null && BigInt(amount) > BigInt(headroom) ? t("payouts.amountOverHeadroom", { amount: opsAmount(headroom, dialog.reward.symbol) }) : undefined;
-      if (walletError || amountError) return setDialog({ ...dialog, error: amountError, walletError });
+      if (walletError || amountError || !amount) return setDialog({ ...dialog, error: amountError, walletError });
       const ok = await run(`request:${dialog.reward.id}`, () => api.requestAdminPayout({ rewardId: dialog.reward.id, submissionId: dialog.submissionId, amount }), {
         title: t("toast.payoutRequestedTitle"),
         description: t("toast.payoutRequestedDescription", { amount: opsAmount(amount, dialog.reward.symbol), name: submissionName(dialog.submissionId) }),
