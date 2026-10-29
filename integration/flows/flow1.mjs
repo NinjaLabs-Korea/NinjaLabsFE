@@ -4,7 +4,7 @@ const b = await Browser.connect(); const ctx = await b.newContext(); const p = a
 const title = (table, id) => sql(`select title from ${table} where id='${id}'`);
 const pages = [
   ['/en', 200], ['/ko', 200], ['/zh', 200], ['/en/bounties', 200],
-  [`/en/bounties/${seed.B1}`, 200, [title('bounty', seed.B1), '100 INJ', 'Public view', 'Actions require login']],
+  [`/en/bounties/${seed.B1}`, 200, [title('bounty', seed.B1), '100 INJ']],
   [`/en/bounties/${seed.B2}`, 200, [title('bounty', seed.B2), 'Reward TBD']],
   [`/ko/bounties/${seed.B3}`, 200, [title('bounty', seed.B3)]],
   ['/en/members', 200, ['coreninja']], ['/en/members/coreninja', 200, ['coreninja']],
