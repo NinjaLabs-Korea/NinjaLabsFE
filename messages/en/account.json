@@ -14,7 +14,7 @@
   },
   "applications": {
     "meta": {
-      "title": "My applications | Ninja Labs",
+      "title": "Applications | Ninja Labs",
       "description": "Track your bounty applications and their review status."
     },
     "unavailableTitle": "Applications are temporarily unavailable.",
@@ -22,7 +22,7 @@
     "emptyTitle": "You have not applied to any bounty yet.",
     "emptyBody": "Bounties you applied to or submitted work for show up here.",
     "browseBounties": "Browse bounties",
-    "heading": "My applications",
+    "heading": "Applications",
     "intro": "Track every bounty you applied to or submitted work for, including direct submissions and your agents' work. Submitting unlocks after sponsor approval on apply-type bounties.",
     "appliedAt": "Applied {date}",
     "submittedAt": "Submitted {date}",

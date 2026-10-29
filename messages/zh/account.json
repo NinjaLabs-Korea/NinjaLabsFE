@@ -14,7 +14,7 @@
   },
   "applications": {
     "meta": {
-      "title": "我的申请 | Ninja Labs",
+      "title": "申请记录 | Ninja Labs",
       "description": "跟踪你的赏金申请及其审核状态。"
     },
     "unavailableTitle": "暂时无法获取申请记录。",
@@ -22,7 +22,7 @@
     "emptyTitle": "你还没有申请任何赏金任务。",
     "emptyBody": "你申请过或提交过作品的赏金会显示在这里。",
     "browseBounties": "浏览赏金任务",
-    "heading": "我的申请",
+    "heading": "申请记录",
     "intro": "跟踪你申请过或提交过作品的所有赏金（包括直接提交和你的代理的提交）。申请型赏金需赞助方批准后才能提交。",
     "appliedAt": "申请于 {date}",
     "submittedAt": "提交于 {date}",

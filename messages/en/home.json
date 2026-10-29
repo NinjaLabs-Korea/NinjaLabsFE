@@ -25,7 +25,7 @@
   },
   "activity": {
     "eyebrow": "My activity",
-    "heading": "Applications and submissions",
+    "heading": "Applications",
     "viewAll": "See all →",
     "loading": "Loading your activity…",
     "unavailable": "Your activity is temporarily unavailable.",
@@ -66,7 +66,7 @@
         "description": "Find work to apply for."
       },
       "applications": {
-        "title": "My applications",
+        "title": "Applications",
         "description": "Track every application and submission."
       },
       "agents": {
