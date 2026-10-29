@@ -295,8 +295,8 @@ describe("AgentRegisterForm repeated submit in one tick", () => {
     fireEvent.submit(form);
     fireEvent.submit(form);
     fireEvent.submit(form);
-    await waitFor(() => expect(verifyAgent).toHaveBeenCalled());
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    // The flow's observable end state (verified), after which any duplicate call would already have happened.
+    expect(await screen.findByText("Agent verified")).toBeTruthy();
     expect(registerAgent).toHaveBeenCalledTimes(1);
     expect(signMessageAsync).toHaveBeenCalledTimes(1);
     expect(verifyAgent).toHaveBeenCalledTimes(1);
@@ -320,9 +320,11 @@ describe("AgentRegisterForm session change mid-flight", () => {
     try {
       authState.current = { status: "signed-out", user: null };
       view.rerender(<AgentRegisterForm chainId={1439} />);
-      release({ agentId: "agent-new", status: "ACTIVE", apiKey: "nl_live_late_key", expiresAt: "2027-01-01T00:00:00Z" });
-      await waitFor(() => expect(submit.closest("form")).toBeTruthy());
-      await new Promise((resolve) => setTimeout(resolve, 20));
+      // Resolve the pending verify call and let the form consume the result before asserting that nothing showed.
+      await act(async () => {
+        release({ agentId: "agent-new", status: "ACTIVE", apiKey: "nl_live_late_key", expiresAt: "2027-01-01T00:00:00Z" });
+        await verifyAgent.mock.results[0]?.value;
+      });
       expect(screen.queryByLabelText("New API key")).toBeNull();
       expect(view.container.innerHTML).not.toContain("nl_live_late_key");
     } finally {
