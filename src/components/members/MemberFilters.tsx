@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { MemberCard } from "@/components/cards/MemberCard";
 import { Badge } from "@/components/ui/Badge";
@@ -14,16 +14,36 @@ const roles: Member["role"][] = ["Core", "Dev", "Design", "Ops"];
 export function MemberFilters({ members }: MemberFiltersProps) {
   const t = useTranslations("members");
   const [role, setRole] = useState<RoleFilter>("All");
-  const resetFilters = () => {
-    setRole("All");
-  };
+  // The role chip lives in the URL (`?role=dev`) so Back from a member page keeps the filter. The page stays static: the param is read
+  // on the client after mount. Native replaceState keeps Next's router in sync without adding a history entry.
+  const select = useCallback((next: RoleFilter) => {
+    setRole(next);
+    try {
+      const url = new URL(window.location.href);
+      if (next === "All") url.searchParams.delete("role");
+      else url.searchParams.set("role", next.toLowerCase());
+      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    } catch {
+      // History unavailable: the in-memory filter still works.
+    }
+  }, []);
+  useEffect(() => {
+    const syncFromUrl = () => {
+      const value = new URLSearchParams(window.location.search).get("role")?.toLowerCase();
+      setRole(roles.find((item) => item.toLowerCase() === value) ?? "All");
+    };
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
+    return () => window.removeEventListener("popstate", syncFromUrl);
+  }, []);
+  const resetFilters = () => select("All");
   const visibleMembers = useMemo(() => members.filter((member) => role === "All" || member.role === role), [members, role]);
 
   return (
     <>
       <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")} role="group">
-        <button aria-pressed={role === "All"} className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => setRole("All")} type="button"><Badge variant={role === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
-        {roles.map((item) => <button aria-pressed={role === item} className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => setRole(item)} type="button"><Badge variant={role === item ? "selected" : "primary-soft"}>{t(`roles.${item.toLowerCase()}`)}</Badge></button>)}
+        <button aria-pressed={role === "All"} className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => select("All")} type="button"><Badge variant={role === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
+        {roles.map((item) => <button aria-pressed={role === item} className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => select(item)} type="button"><Badge variant={role === item ? "selected" : "primary-soft"}>{t(`roles.${item.toLowerCase()}`)}</Badge></button>)}
       </div>
       {visibleMembers.length > 0 ? (
         <section className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4" aria-label={t("filters.listAriaLabel")}>

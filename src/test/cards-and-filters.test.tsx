@@ -236,3 +236,42 @@ describe("NoticeFilters", () => {
     expect(within(screen.getByRole("group", { name: "Notice categories" })).getAllByRole("button")).toHaveLength(1);
   });
 });
+
+describe("filters keep their chip in the URL", () => {
+  const notices: Notice[] = [
+    { slug: "a", title: "A", summary: "s", category: "Events", date: "2026-01-01" } as Notice,
+    { slug: "b", title: "B", summary: "s", category: "Other", date: "2026-01-02" } as Notice,
+  ];
+  const members: Member[] = [
+    { slug: "m1", name: "One", role: "Dev", links: {} } as Member,
+    { slug: "m2", name: "Two", role: "Design", links: {} } as Member,
+  ];
+
+  it("writes ?category on a notice chip click and removes it for All", () => {
+    window.history.replaceState(null, "", "/en/notices");
+    renderWithIntl(<NoticeFilters notices={notices} />);
+    fireEvent.click(screen.getByRole("button", { name: "Events" }));
+    expect(window.location.search).toBe("?category=events");
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
+    expect(window.location.search).toBe("");
+  });
+
+  it("re-reads ?category on popstate", () => {
+    window.history.replaceState(null, "", "/en/notices");
+    renderWithIntl(<NoticeFilters notices={notices} />);
+    window.history.replaceState(null, "", "/en/notices?category=events");
+    fireEvent(window, new PopStateEvent("popstate"));
+    expect(screen.getByRole("button", { name: "Events" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("writes and reads ?role for members", () => {
+    window.history.replaceState(null, "", "/en/members?role=design");
+    renderWithIntl(<MemberFilters members={members} />);
+    expect(screen.getByRole("button", { name: "Design" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.queryByText("One")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Dev" }));
+    expect(window.location.search).toBe("?role=dev");
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
+    expect(window.location.search).toBe("");
+  });
+});
