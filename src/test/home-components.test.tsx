@@ -112,7 +112,7 @@ describe("HomeRecruitment", () => {
     expect(Object.keys(ko.recruit)).toEqual(["details"]);
   });
 
-  const values = { displayName: "Me", telegram: "@me_builds", twitter: "@me_x", web3Experience: "GT_3Y" as const, activityType: "DEVELOPER" as const, activityTypeOther: null, interestAreas: ["DEVELOPER" as const], interestOther: null, intro: "hi" };
+  const values = { displayName: "Me", telegram: "@me_builds", twitter: "@me_x", intro: "hi", answers: [{ questionId: "web3_experience", choices: ["GT_3Y"] }, { questionId: "interest_areas", choices: ["DEVELOPER"] }] };
 
   it("invites a member who has not applied while a cohort accepts applications", async () => {
     renderWithIntl(<HomeRecruitment />);

@@ -78,7 +78,7 @@ describe("loading and resolved branches share the min-height wrapper", () => {
 });
 
 describe("useCurrentCohort seeds from the server cohort", () => {
-  const cohort: PublicCohort = { id: "c1", name: "3rd", description: null, opensAt: null, closesAt: null, acceptingApplications: true };
+  const cohort: PublicCohort = { id: "c1", name: "3rd", description: null, opensAt: null, closesAt: null, acceptingApplications: true, questions: [] };
   const wrapperFor = (value: PublicCohort | null | undefined) =>
     function Wrapper({ children }: { children: ReactNode }) {
       return <InitialCohortProvider cohort={value}>{children}</InitialCohortProvider>;

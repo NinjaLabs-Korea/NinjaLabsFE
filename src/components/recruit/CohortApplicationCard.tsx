@@ -1,13 +1,13 @@
 "use client";
 
-import { useFormatter, useTranslations } from "next-intl";
-import { useId, useState } from "react";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
+import { Fragment, useId, useState } from "react";
 import { useCohortApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { ERROR_COPY, errorCopyKey, type ErrorCopyKey } from "@/lib/api/error-copy";
-import type { CohortApplicationStatus, MyCohortApplication } from "@/lib/cohorts";
+import { answerDisplay, localized, type CohortApplicationStatus, type MyCohortApplication } from "@/lib/cohorts";
 
 const statusVariant = {
   SUBMITTED: "warning",
@@ -39,6 +39,7 @@ export function CohortApplicationCard({ application, variant = "full", onEdit, o
   const t = useTranslations("recruit");
   const tErrors = useTranslations(ERROR_COPY.cohortWithdraw.messages);
   const format = useFormatter();
+  const locale = useLocale();
   const api = useCohortApi();
   const headingId = useId();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -46,13 +47,6 @@ export function CohortApplicationCard({ application, variant = "full", onEdit, o
   const [error, setError] = useState<ErrorCopyKey<typeof ERROR_COPY.cohortWithdraw> | null>(null);
 
   const date = (value: string) => format.dateTime(new Date(value), { dateStyle: "medium" });
-  const interestAreas = application.interestAreas
-    .map((area) => (area === "OTHER" && application.interestOther ? `${t("form.interestAreas.options.OTHER")}: ${application.interestOther}` : t(`form.interestAreas.options.${area}`)))
-    .join(", ");
-  const activity =
-    application.activityType === "OTHER" && application.activityTypeOther
-      ? `${t("form.activityType.options.OTHER")}: ${application.activityTypeOther}`
-      : t(`form.activityType.options.${application.activityType}`);
 
   const withdraw = () =>
     run(async () => {
@@ -91,14 +85,14 @@ export function CohortApplicationCard({ application, variant = "full", onEdit, o
           <dd className="min-w-0 break-words font-semibold text-ink">{application.telegram}</dd>
           <dt className="text-ink-muted">{t("form.twitter.label")}</dt>
           <dd className="min-w-0 break-words font-semibold text-ink">{application.twitter}</dd>
-          <dt className="text-ink-muted">{t("form.web3Experience.label")}</dt>
-          <dd className="min-w-0 break-words font-semibold text-ink">{t(`form.web3Experience.options.${application.web3Experience}`)}</dd>
-          <dt className="text-ink-muted">{t("form.activityType.label")}</dt>
-          <dd className="min-w-0 break-words font-semibold text-ink">{activity}</dd>
-          <dt className="text-ink-muted">{t("form.interestAreas.label")}</dt>
-          <dd className="min-w-0 break-words font-semibold text-ink">{interestAreas}</dd>
           <dt className="text-ink-muted">{t("form.intro.label")}</dt>
           <dd className="min-w-0 whitespace-pre-wrap break-words text-ink-secondary">{application.intro}</dd>
+          {application.answers.map((answer) => (
+            <Fragment key={answer.questionId}>
+              <dt className="min-w-0 break-words text-ink-muted">{localized(answer.label, locale)}</dt>
+              <dd className="min-w-0 whitespace-pre-wrap break-words font-semibold text-ink">{answerDisplay(answer, locale)}</dd>
+            </Fragment>
+          ))}
         </dl>
       ) : null}
 

@@ -187,7 +187,7 @@ describe("AccountSettingsView sections", () => {
 });
 
 describe("MyCohortApplications", () => {
-  const values = { displayName: "Me", telegram: "@me_builds", twitter: "@me_x", web3Experience: "GT_3Y" as const, activityType: "DEVELOPER" as const, activityTypeOther: null, interestAreas: ["DEVELOPER" as const], interestOther: null, intro: "hi" };
+  const values = { displayName: "Me", telegram: "@me_builds", twitter: "@me_x", intro: "hi", answers: [{ questionId: "web3_experience", choices: ["GT_3Y"] }, { questionId: "interest_areas", choices: ["DEVELOPER"] }] };
 
   it("is empty before the first application, then lists it with its status and a link to the application page", async () => {
     const view = renderWithIntl(<MyCohortApplications />);
