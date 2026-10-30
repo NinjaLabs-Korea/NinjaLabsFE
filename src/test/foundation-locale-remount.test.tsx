@@ -2,7 +2,7 @@
 import { render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { FoundationProvider, resetTabFoundationForTests, useAuthSnapshot } from "@/components/auth/FoundationProvider";
-import { SESSION_PREVIEW_STORAGE_KEY } from "@/lib/foundation/auth-adapter";
+import { SESSION_PREVIEW_STORAGE_KEY } from "@/lib/mocks/session-preview-auth-adapter";
 import { previewUser } from "@/lib/mocks/fixtures";
 
 const config = { mode: "mock", previewUser, mockSeed: "default" } as const;
