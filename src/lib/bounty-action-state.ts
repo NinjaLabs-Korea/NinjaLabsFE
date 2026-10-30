@@ -257,6 +257,14 @@ export function isStaleRowsError(error: unknown): boolean {
 }
 
 /**
+ * A 401 reaching the panel means the refresh already failed (the http layer retries once after refreshing): the session ended.
+ * The panel shows its session-expired banner and keeps the typed form; it must not add a second alert with the BE auth code.
+ */
+export function isSessionEndedError(error: unknown): boolean {
+  return error instanceof ApiHttpError && error.status === 401;
+}
+
+/**
  * 지원/제출 실패의 문구 키 (`bounties.action.errors.<key>`):
  * - `ERROR_COPY.bountyAction.codes`에 있는 코드 → 그 코드 키
  * - 목록 밖 BE 코드 → `unknown` + 원 코드(`{code}`로 표시)

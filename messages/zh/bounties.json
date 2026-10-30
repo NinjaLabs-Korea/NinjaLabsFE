@@ -184,7 +184,7 @@
       "BOUNTY_NOT_FOUND": "此赏金已不存在。",
       "INVALID_CHARACTER": "您的内容包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
       "REFERENCE_NOT_FOUND": "此请求引用的对象已不存在。请刷新页面后重试。",
-      "unknown": "出了点问题（{code}），请重试。",
+      "unknown": "出了点问题，请重试。",
       "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },

@@ -591,8 +591,25 @@ describe("BountyActionPanel", () => {
     fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "Done" } });
     fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
 
-    expect((await screen.findByRole("alert")).textContent).toBe("Something went wrong (TEAPOT_BUSY). Please try again.");
+    expect((await screen.findByRole("alert")).textContent).toBe("Something went wrong. Please try again.");
     expect(screen.queryByText("teapot busy")).toBeNull();
+  });
+
+  it("a 401 that survives the refresh shows only the session-expired banner, never a raw auth code", async () => {
+    state.applications = [application("approved")];
+    const submitBounty = vi.fn(async () => { throw new ApiHttpError(401, "INVALID_ACCESS_TOKEN"); });
+    Object.assign(apiClient, { submitBounty });
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByLabelText("Completed work link"), { target: { value: "https://example.test/work" } });
+    fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "Done" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
+
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain("Your session has expired");
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+    expect(document.body.textContent).not.toContain("INVALID_ACCESS_TOKEN");
+    expect(document.body.textContent).not.toContain("Something went wrong");
+    expect((screen.getByLabelText("Describe what you completed") as HTMLTextAreaElement).value).toBe("Done");
   });
 
   it("moves focus to the status heading and announces the success copy after applying", async () => {

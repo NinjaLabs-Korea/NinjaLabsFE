@@ -6,6 +6,7 @@ import { ERROR_COPY } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
 import {
   bountyActionErrorCopy,
+  isSessionEndedError,
   deriveActionView,
   splitRows,
   type BountyActionInput,
@@ -184,6 +185,13 @@ describe("bountyActionErrorCopy - bounties.action.errors key for a failed apply/
 
   it("mock-mode errors take the same path", () => {
     expect(bountyActionErrorCopy(new MockApiError(409, "ALREADY_APPLIED"))).toEqual({ key: "ALREADY_APPLIED" });
+  });
+
+  it("any 401 means the session ended (no error copy of its own)", () => {
+    expect(isSessionEndedError(new ApiHttpError(401, "INVALID_ACCESS_TOKEN"))).toBe(true);
+    expect(isSessionEndedError(new ApiHttpError(401, "UNAUTHORIZED"))).toBe(true);
+    expect(isSessionEndedError(new ApiHttpError(409, "ALREADY_APPLIED"))).toBe(false);
+    expect(isSessionEndedError(new Error("x"))).toBe(false);
   });
 
   it("an unlisted BE code shows `unknown` with the raw code", () => {

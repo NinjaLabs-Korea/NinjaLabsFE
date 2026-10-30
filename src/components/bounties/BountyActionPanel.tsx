@@ -14,7 +14,7 @@ import { payoutBadge } from "@/lib/payout";
 import { isHttpUrl } from "@/lib/url-rules";
 import { hasVisibleText } from "@/lib/visible-text";
 import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
-import { bountyActionErrorCopy, deriveActionView, isStaleRowsError, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
+import { bountyActionErrorCopy, deriveActionView, isSessionEndedError, isStaleRowsError, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
 import type { AccountApplication } from "@/lib/contracts/account";
 import type { ApiResult } from "@/lib/contracts/api";
 import type { ClosedReason } from "@/lib/bounty-status";
@@ -223,6 +223,8 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   // Synchronous in-flight guard: several submit events can land in one tick (automation, assistive tools) before React re-renders `busy`.
   const inFlight = useRef(false);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
+  // A 401 that survived the refresh: the session is gone even before the auth snapshot says so. The banner says it; no second alert.
+  const [sessionLost, setSessionLost] = useState(false);
   const [applied, setApplied] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const errorId = useId();
@@ -280,6 +282,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
     const form = new FormData(formElement);
     setBusy(true);
     setFeedback(null);
+    setSessionLost(false);
     try {
       await bountyApi.submitBounty(bountyId, {
         submissionUrl: String(form.get("submissionUrl") ?? ""),
@@ -295,7 +298,8 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       submissionsQuery.refresh();
       if (applicationRequired) applicationsQuery.refresh();
     } catch (error) {
-      setFeedback({ kind: "error", text: errorText(error, tError) });
+      if (isSessionEndedError(error)) setSessionLost(true);
+      else setFeedback({ kind: "error", text: errorText(error, tError) });
       if (isStaleRowsError(error)) refreshRows();
     } finally {
       inFlight.current = false;
@@ -312,6 +316,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
     const form = new FormData(formElement);
     setBusy(true);
     setFeedback(null);
+    setSessionLost(false);
     try {
       await bountyApi.applyToBounty(bountyId, {
         message: String(form.get("message") ?? ""),
@@ -322,7 +327,8 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       // Re-read /applications/me so the panel reflects the server row (status, agent) rather than only the local flag.
       applicationsQuery.refresh();
     } catch (error) {
-      setFeedback({ kind: "error", text: errorText(error, tError) });
+      if (isSessionEndedError(error)) setSessionLost(true);
+      else setFeedback({ kind: "error", text: errorText(error, tError) });
       if (isStaleRowsError(error)) refreshRows();
     } finally {
       inFlight.current = false;
@@ -350,7 +356,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
     setHeldForm(null);
   }
   const view = sessionEnded && (derivedView.kind === "signedOut" || derivedView.kind === "sessionUnavailable") && heldForm ? heldForm.view : derivedView;
-  const sessionEndedLine = sessionEnded ? (
+  const sessionEndedLine = sessionEnded || sessionLost ? (
     <p className="mt-3 text-sm text-danger" role="alert">
       {t("sessionEnded")}{" "}
       <Link className="font-semibold underline" href={signInHref(`/bounties/${bountyId}`)} rel="noopener" target="_blank">{t("signInAgain")}</Link>
