@@ -575,7 +575,8 @@
       "amountHintBaseUnits": "This token is not known here, so enter the amount in base units (a whole number, e.g. 25000000).",
       "noteOptional": "Note (optional)",
       "commentOptional": "Comment (optional)",
-      "commentRequired": "Comment (required)"
+      "commentRequired": "Comment (required)",
+      "amountTooLarge": "Use at most {digits} digits before the decimal point."
     },
     "toast": {
       "loadFailedTitle": "Operations unavailable",
@@ -633,7 +634,9 @@
       "REFRESH_UNAVAILABLE": "Your session could not be refreshed. Sign in again.",
       "NETWORK_ERROR": "The server could not be reached. Check your connection and try again.",
       "unknown": "Something went wrong ({code}).",
-      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "NOTE_BIDI_CHARS": "The note contains hidden direction or control characters. Remove them and try again.",
+      "NOTE_RESERVED_PREFIX": "A note cannot start with \"forfeited:\" (reserved for the system)."
     }
   },
   "nftJobs": {

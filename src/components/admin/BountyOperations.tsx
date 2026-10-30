@@ -13,6 +13,7 @@ import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { useKeyedSingleFlight } from "@/components/ui/useSingleFlight";
+import { ApiHttpError } from "@/lib/api/http";
 import { opsErrorCode, type AdminOperations } from "@/lib/admin-operations";
 
 /** Runs one operations write: ignores a second click while the same key is in flight, toasts the outcome, re-reads the bounty. */
@@ -37,6 +38,12 @@ export function BountyOperations({ bountyId, onStatusChange }: { bountyId: strin
 
   const describe = useCallback((error: unknown, context: "transition" | "other" = "other"): string => {
     const { code, known } = opsErrorCode(error, context);
+    // A BE 400 on a free-text note names what was wrong: say it instead of the generic "check the fields".
+    if (code === "VALIDATION_FAILED" && error instanceof ApiHttpError) {
+      const messages = error.details.join(" ");
+      if (/bidirectional/i.test(messages)) return t("errors.NOTE_BIDI_CHARS");
+      if (/forfeited/i.test(messages)) return t("errors.NOTE_RESERVED_PREFIX");
+    }
     return known ? t(`errors.${code}`) : t("errors.unknown", { code });
   }, [t]);
 

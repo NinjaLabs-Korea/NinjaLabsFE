@@ -8,6 +8,7 @@ import { OpsFormModal } from "@/components/admin/OpsFormModal";
 import { opsAmount, opsCell, opsInput, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPrimaryButton, opsShort } from "@/components/admin/ops-ui";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
+import { rewardIntegerDigitsMax } from "@/lib/admin-bounty-form";
 import { PENDING_MULTISIG_SETUP } from "@/lib/admin-helpers";
 import { isTxHash, type AdminOperations, type OpsReward } from "@/lib/admin-operations";
 import { operatorAmountFromBaseUnits, operatorAmountToBaseUnits, tokenDecimalsFor } from "@/lib/api/codecs";
@@ -41,6 +42,7 @@ export function OpsRewardsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
     const errors: DepositForm["errors"] = {};
     if (!isTxHash(form.txHash)) errors.txHash = t("form.txHashInvalid");
     if (!depositedAmount) errors.amount = t(tokenDecimalsFor(target.symbol) === null ? "form.amountInvalidBaseUnits" : "form.amountInvalid", { symbol: target.symbol });
+    else if (depositedAmount.length > 30) errors.amount = t("form.amountTooLarge", { digits: rewardIntegerDigitsMax(tokenDecimalsFor(target.symbol) ?? 0) });
     else if (BigInt(depositedAmount) < BigInt(live.amount)) errors.amount = t("rewards.amountBelowPosted", { amount: opsAmount(live.amount, live.symbol) });
     if (errors.txHash || errors.amount) {
       setForm((current) => ({ ...current, errors }));

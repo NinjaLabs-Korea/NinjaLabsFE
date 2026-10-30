@@ -575,7 +575,8 @@
       "amountHintBaseUnits": "此处无法识别该代币，请按最小单位输入（整数，例如 25000000）。",
       "noteOptional": "备注（可选）",
       "commentOptional": "评语（可选）",
-      "commentRequired": "评语（必填）"
+      "commentRequired": "评语（必填）",
+      "amountTooLarge": "小数点前最多 {digits} 位。"
     },
     "toast": {
       "loadFailedTitle": "运营数据不可用",
@@ -633,7 +634,9 @@
       "REFRESH_UNAVAILABLE": "无法刷新会话。请重新登录。",
       "NETWORK_ERROR": "无法连接服务器。请检查网络后重试。",
       "unknown": "出现问题（{code}）。",
-      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
+      "NOTE_BIDI_CHARS": "备注中含有不可见的方向或控制字符，请删除后重试。",
+      "NOTE_RESERVED_PREFIX": "备注不能以 \"forfeited:\" 开头（系统保留）。"
     }
   },
   "nftJobs": {

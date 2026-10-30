@@ -73,3 +73,29 @@ describe("unset multisig", () => {
     expect((screen.getByRole("button", { name: "Confirm deposit" }) as HTMLButtonElement).disabled).toBe(false);
   });
 });
+
+describe("BE note rejections", () => {
+  it("names hidden characters and the reserved forfeited prefix instead of the generic hint", async () => {
+    adminApi.confirmAdminDeposit.mockRejectedValueOnce(new ApiHttpError(400, "VALIDATION_FAILED", ["note must not contain bidirectional override characters"]));
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm deposit" }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByPlaceholderText("0x…"), { target: { value: "0x" + "ab".repeat(32) } });
+    fireEvent.submit(within(dialog).getByRole("button", { name: "Confirm deposit" }).closest("form")!);
+    expect(await screen.findByText("The note contains hidden direction or control characters. Remove them and try again.")).toBeTruthy();
+    adminApi.confirmAdminDeposit.mockRejectedValueOnce(new ApiHttpError(400, "VALIDATION_FAILED", ['note must not start with the reserved prefix "forfeited:"']));
+    fireEvent.submit(within(screen.getByRole("dialog")).getByRole("button", { name: "Confirm deposit" }).closest("form")!);
+    expect(await screen.findByText('A note cannot start with "forfeited:" (reserved for the system).')).toBeTruthy();
+  });
+
+  it("flags a deposit amount over the 30-digit base-unit limit before sending", async () => {
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm deposit" }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(within(dialog).getByPlaceholderText("0x…"), { target: { value: "0x" + "ab".repeat(32) } });
+    fireEvent.change(within(dialog).getByRole("textbox", { name: /Deposited amount/ }), { target: { value: "1" + "0".repeat(12) } });
+    fireEvent.submit(within(dialog).getByRole("button", { name: "Confirm deposit" }).closest("form")!);
+    expect(within(dialog).getByRole("alert").textContent).toBe("Use at most 12 digits before the decimal point.");
+    expect(adminApi.confirmAdminDeposit).not.toHaveBeenCalled();
+  });
+});
