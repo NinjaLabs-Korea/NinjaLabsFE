@@ -35,6 +35,7 @@ describe("normalizeHandle (mirror of the BE)", () => {
     ["https://t.me/name", "@name"],
     ["t.me/name?start=x", "@name"],
     ["http://www.telegram.me/name/", "@name"],
+    ["t.me/alice", "@alice"],
     ["", ""],
     ["   ", ""],
   ])("telegram %j -> %j", (raw, expected) => {
@@ -48,6 +49,29 @@ describe("normalizeHandle (mirror of the BE)", () => {
     ["name", "@name"],
   ])("twitter %j -> %j", (raw, expected) => {
     expect(normalizeHandle(raw, "twitter")).toBe(expected);
+  });
+});
+
+describe("normalizeHandle keeps non-profile links raw (mirror of the BE)", () => {
+  it.each([
+    ["t.me/joinchat/AAA", "telegram"],
+    ["https://t.me/joinchat/BBB", "telegram"],
+    ["https://t.me/JoinChat/BBB", "telegram"],
+    ["t.me/name/12", "telegram"],
+    ["t.me/share/url?url=x", "telegram"],
+    ["x.com/intent/tweet", "twitter"],
+    ["https://x.com/someone/status/1", "twitter"],
+    ["https://x.com/i/flow/login", "twitter"],
+  ] as const)("%s stays raw and fails validation", (raw, kind) => {
+    expect(normalizeHandle(raw, kind)).toBe(raw);
+    const errors = validateCohortDraft({ ...valid, [kind]: raw });
+    expect(errors[kind]).toBe("invalid");
+  });
+
+  it("still normalizes profile links and bare handles", () => {
+    expect(normalizeHandle("https://x.com/bob?s=20", "twitter")).toBe("@bob");
+    expect(normalizeHandle("@carol", "twitter")).toBe("@carol");
+    expect(normalizeHandle("https://t.me/alice/", "telegram")).toBe("@alice");
   });
 });
 

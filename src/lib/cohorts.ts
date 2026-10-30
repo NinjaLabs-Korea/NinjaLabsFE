@@ -142,11 +142,28 @@ const TWITTER_URL = /^(?:https?:\/\/)?(?:www\.|mobile\.)?(?:twitter\.com|x\.com)
 const TELEGRAM_HANDLE = /^@[A-Za-z][A-Za-z0-9_]{4,31}$/;
 const TWITTER_HANDLE = /^@[A-Za-z0-9_]{1,15}$/;
 
-/** Mirror of BE `normalizeHandle`: `name`, `@name`, `https://t.me/name`, `https://x.com/name?s=20` all become `@name`; blank stays blank. */
+/**
+ * Service paths that are not profiles (first segment, compared lowercased). Must match the BE
+ * `RESERVED_PATHS` in `NinjaLabsBE/src/cohorts/cohort-fields.ts`; change both together.
+ */
+const RESERVED_PATHS: Record<"telegram" | "twitter", ReadonlySet<string>> = {
+  telegram: new Set(["joinchat", "share", "addstickers", "addemoji", "addtheme", "addlist", "proxy", "socks", "c", "s", "iv", "login", "setlanguage", "confirmphone", "invoice", "boost", "m", "msg", "msg_url"]),
+  twitter: new Set(["i", "intent", "home", "share", "search", "hashtag"]),
+};
+
+/**
+ * Mirror of BE `normalizeHandle`: `name`, `@name`, `https://t.me/name`, `https://x.com/name?s=20` all become `@name`; blank stays blank.
+ * A URL that is not a profile link (invite/share/post: more than one path segment, or a reserved first segment) is returned unchanged,
+ * so the handle check fails on it instead of turning `t.me/joinchat/..` into `@joinchat`.
+ */
 export function normalizeHandle(raw: string, kind: "telegram" | "twitter"): string {
   let value = raw.trim();
   const url = (kind === "telegram" ? TELEGRAM_URL : TWITTER_URL).exec(value);
-  if (url) value = url[1].split(/[/?#]/)[0];
+  if (url) {
+    const segments = url[1].split(/[?#]/)[0].split("/").filter((segment) => segment !== "");
+    if (segments.length > 1 || (segments.length === 1 && RESERVED_PATHS[kind].has(segments[0].toLowerCase()))) return value;
+    value = segments[0] ?? "";
+  }
   value = value.replace(/^@+/, "");
   return value === "" ? "" : `@${value}`;
 }
