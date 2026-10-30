@@ -16,7 +16,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
     useAuthSnapshot: () => ({ status: "signed-in", user: { id: "u1", handle: "user_ab12cd", walletAddress: null } }),
   }));
 
-const nicknameInput = () => screen.getByLabelText("Nickname*") as HTMLInputElement;
+const nicknameInput = () => screen.getByLabelText("Nickname") as HTMLInputElement;
 const typeNickname = (value: string) => fireEvent.change(nicknameInput(), { target: { value } });
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -90,7 +90,7 @@ describe("ProfileForm nickname rule + availability check", () => {
     typeNickname("ninja_dev");
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe("That nickname is already taken."), { timeout: 1500 });
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder" } });
     fireEvent.submit(nicknameInput().closest("form")!);
     // Said once, by the status line under the field: no second field alert and no form-level alert.
     await waitFor(() => expect(nicknameInput().getAttribute("aria-invalid")).toBe("true"));
@@ -105,7 +105,7 @@ describe("ProfileForm nickname rule + availability check", () => {
     typeNickname("ninja_dev");
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Nickname is available."), { timeout: 1500 });
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder" } });
     fireEvent.submit(nicknameInput().closest("form")!);
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe("That nickname is already taken."));
     expect(screen.queryByRole("alert")).toBeNull();
@@ -114,7 +114,7 @@ describe("ProfileForm nickname rule + availability check", () => {
 
   it("caps the bio input at the BE limit", () => {
     renderWithIntl(<ProfileForm />);
-    expect((screen.getByLabelText("Bio*") as HTMLTextAreaElement).maxLength).toBe(1000);
+    expect((screen.getByLabelText("Bio") as HTMLTextAreaElement).maxLength).toBe(1000);
   });
 
   it("maps a BE VALIDATION_FAILED message[] to field hints by property name", async () => {
@@ -125,7 +125,7 @@ describe("ProfileForm nickname rule + availability check", () => {
     renderWithIntl(<ProfileForm />);
     typeNickname("ninja_dev");
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder" } });
     fireEvent.submit(nicknameInput().closest("form")!);
     await waitFor(() => expect(completeProfile).toHaveBeenCalledTimes(1));
     expect(await screen.findByText("The server rejected this nickname. Check the rules above.")).toBeTruthy();
@@ -138,7 +138,7 @@ describe("ProfileForm nickname rule + availability check", () => {
     renderWithIntl(<ProfileForm />);
     typeNickname("ninja_dev");
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "\u200b\u200b\u200b" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "\u200b\u200b\u200b" } });
     fireEvent.submit(nicknameInput().closest("form")!);
     await screen.findByText(/Remove invisible or unusual characters/);
     expect(screen.getAllByRole("alert")).toHaveLength(1);
@@ -151,7 +151,7 @@ describe("ProfileForm nickname rule + availability check", () => {
     typeNickname("ninja_dev");
     await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Nickname is available."), { timeout: 1500 });
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder" } });
     fireEvent.submit(nicknameInput().closest("form")!);
     expect((await screen.findByRole("alert")).textContent).toMatch(/once every 24 hours/);
     expect(screen.getByRole("status").textContent).toBe("Nickname is available.");
@@ -161,12 +161,12 @@ describe("ProfileForm nickname rule + availability check", () => {
   it("keeps what was typed when the form remounts (language switch, reload)", () => {
     const first = renderWithIntl(<ProfileForm />);
     typeNickname("ninja_dev");
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder" } });
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));
     first.unmount();
     renderWithIntl(<ProfileForm />);
     expect(nicknameInput().value).toBe("ninja_dev");
-    expect((screen.getByLabelText("Bio*") as HTMLTextAreaElement).value).toBe("Builder");
+    expect((screen.getByLabelText("Bio") as HTMLTextAreaElement).value).toBe("Builder");
     expect(screen.getByRole("button", { name: "Dev" }).getAttribute("aria-pressed")).toBe("true");
   });
   it.each([
@@ -178,7 +178,7 @@ describe("ProfileForm nickname rule + availability check", () => {
     renderWithIntl(<ProfileForm />);
     typeNickname("ninja_dev");
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder" } });
     fireEvent.submit(nicknameInput().closest("form")!);
     await waitFor(() => expect(completeProfile).toHaveBeenCalledTimes(1));
     expect(await screen.findByText(copy)).toBeTruthy();
@@ -189,7 +189,7 @@ describe("ProfileForm nickname rule + availability check", () => {
     renderWithIntl(<ProfileForm />);
     typeNickname("ninja_dev");
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder" } });
     const form = nicknameInput().closest("form")!;
     fireEvent.submit(form);
     fireEvent.submit(form);

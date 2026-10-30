@@ -67,16 +67,16 @@
     },
     "title": "Set up your profile",
     "form": {
-      "nicknameLabel": "Nickname*",
+      "nicknameLabel": "Nickname",
       "nicknamePlaceholder": "Enter your nickname",
-      "fieldTags": "Field tags*",
+      "fieldTags": "Field tags",
       "tags": {
         "dev": "Dev",
         "design": "Design",
         "content": "Content",
         "other": "Other"
       },
-      "bioLabel": "Bio*",
+      "bioLabel": "Bio",
       "bioPlaceholder": "Tell the community about yourself",
       "bioHint": "Short intro required.",
       "submit": "Next",

@@ -66,7 +66,7 @@
     "eyebrow": "Application",
     "title": "Tell us about yourself",
     "intro": {
-      "label": "Introduction and motivation*",
+      "label": "Introduction and motivation",
       "placeholder": "Who are you, what have you built or written, and why Ninja Labs?",
       "hint": "Write at least {min} characters (up to {limit}).",
       "counter": "{count}/{limit}"
@@ -80,22 +80,22 @@
       "updated": "Your application was updated."
     },
     "displayName": {
-      "label": "Name (real name or nickname)*",
+      "label": "Name (real name or nickname)",
       "placeholder": "Your name",
       "hint": "Up to 60 characters."
     },
     "telegram": {
-      "label": "Telegram ID*",
+      "label": "Telegram ID",
       "placeholder": "@your_telegram",
       "hint": "5-32 letters, digits or _. A t.me link works too."
     },
     "twitter": {
-      "label": "X (Twitter) handle*",
+      "label": "X (Twitter) handle",
       "placeholder": "@your_x_id",
       "hint": "1-15 letters, digits or _. An x.com link works too."
     },
     "web3Experience": {
-      "label": "Web3 experience*",
+      "label": "Web3 experience",
       "options": {
         "LT_1Y": "Under 1 year",
         "Y1_3": "1-3 years",
@@ -103,7 +103,7 @@
       }
     },
     "activityType": {
-      "label": "What best describes your current activity?*",
+      "label": "What best describes your current activity?",
       "options": {
         "DEVELOPER": "Developer",
         "CONTENT_CREATOR": "Content creator",
@@ -114,11 +114,11 @@
         "STUDENT": "Student",
         "OTHER": "Other"
       },
-      "otherLabel": "Tell us what you do*",
+      "otherLabel": "Tell us what you do",
       "otherPlaceholder": "For example: designer"
     },
     "interestAreas": {
-      "label": "Areas you want to join*",
+      "label": "Areas you want to join",
       "hint": "Choose all that apply.",
       "options": {
         "DEVELOPER": "Developer",
@@ -129,7 +129,7 @@
         "BIZDEV": "Business development",
         "OTHER": "Other"
       },
-      "otherLabel": "Tell us which area*",
+      "otherLabel": "Tell us which area",
       "otherPlaceholder": "For example: UX research"
     },
     "submit": "Send application",
