@@ -4,6 +4,7 @@ import { AuthArea } from "@/components/layout/AuthArea";
 import { BrandLink } from "@/components/layout/BrandLink";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { MobileMenu } from "@/components/layout/MobileMenu";
+import { NAV_DESKTOP_ONLY_FLEX } from "@/components/layout/nav-breakpoint";
 import { NavLinks } from "@/components/layout/NavLinks";
 
 const navigation = [
@@ -33,7 +34,7 @@ export function Header() {
           <span className="hidden whitespace-nowrap font-display text-xl font-bold text-ink sm:inline">Ninja Labs</span>
         </BrandLink>
 
-        <nav className="col-start-2 hidden gap-7 xl:flex" aria-label={t("mainNavigation")}>
+        <nav className={`col-start-2 gap-7 ${NAV_DESKTOP_ONLY_FLEX}`} aria-label={t("mainNavigation")}>
           <NavLinks links={links} variant="desktop" />
         </nav>
 

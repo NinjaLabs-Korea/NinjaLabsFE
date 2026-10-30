@@ -518,7 +518,7 @@ describe("BountyActionPanel", () => {
 
     it("lets the bounty detail grid column shrink below its content width (min-w-0)", () => {
       const page = readFileSync("src/app/[locale]/bounties/[id]/page.tsx", "utf8");
-      expect(page).toContain('<div className="min-w-0 space-y-6 lg:col-span-2">');
+      expect(page).toMatch(/className="[^"]*\bmin-w-0\b[^"]*\blg:col-span-2\b[^"]*"/);
     });
   });
 
