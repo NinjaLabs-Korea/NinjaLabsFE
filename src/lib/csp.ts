@@ -93,7 +93,9 @@ const LOCALE_ALTERNATION = routing.locales.join("|");
  */
 export const NONCE_ROUTE_HEADER_SOURCE = `/:path((?!(?:${LOCALE_ALTERNATION})/(?:${NONCE_ROUTE_ALTERNATION})(?:/|$)).*)`;
 
-const NONCE_ROUTE_REGEX = new RegExp(`^/(?:${LOCALE_ALTERNATION})/(?:${NONCE_ROUTE_ALTERNATION})(?:/|$)`);
+// Case-insensitive on purpose: Next matches the header source below case-insensitively, so /en/Account is excluded from the
+// shared CSP and must reach the proxy's nonce branch (its 404 rewrite then carries the public policy) instead of getting none.
+const NONCE_ROUTE_REGEX = new RegExp(`^/(?:${LOCALE_ALTERNATION})/(?:${NONCE_ROUTE_ALTERNATION})(?:/|$)`, "i");
 
 /** True when `pathname` (with locale prefix, as the proxy sees it) is a nonce-CSP page. */
 export function isNonceRoute(pathname: string): boolean {
