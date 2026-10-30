@@ -110,7 +110,7 @@ function withPaidTotal(stats: RuntimeHallOfFame["stats"], rows: readonly PaidTot
 export type RuntimeHallOfFame = {
   stats: Array<{ value: string; labelKey: HallStatKey }>;
   /** `category` is the display label of a BE highlight type (`codecs.ts HIGHLIGHT_TYPE_LABELS`); an unknown code shows as "Other". */
-  highlights: Array<{ category: HighlightTypeLabel; title: string; body: string; href: string; image: string | null }>;
+  highlights: Array<{ category: HighlightTypeLabel; title: string; body: string; href: string | null; image: string | null }>;
   milestones: Array<{ title: string; date: string; description: string }>;
   /** Partner wall: published Partnership highlights that carry a logo image. Empty → the wall is hidden. */
   partners: Array<{ name: string; logo: string; href: string | null }>;
@@ -148,13 +148,13 @@ async function fetchHallOfFame(locale: string): Promise<RuntimeHallOfFame> {
       stats.paidTotals,
       locale,
     ),
-    // Admin-entered link/image URLs are rendered as href/src on the page: unsafe ones fall back to no link / placeholder.
+    // Admin-entered link/image URLs are rendered as href/src on the page: unsafe ones fall back to no link (a non-interactive card) / placeholder.
     // A partnership with a logo is shown on the partner wall only, so a long partner list does not flood the cards.
     highlights: rows.filter((row) => !partnerLogo(row)).map((row) => ({
       category: category(row.type),
       title: row.title,
       body: row.description,
-      href: safeHttpUrl(row.link_url) ?? "/notices",
+      href: safeHttpUrl(row.link_url),
       image: safeHttpUrl(row.image_url),
     })),
     milestones: rows.filter((row) => row.type === "MILESTONE").map((row) => ({

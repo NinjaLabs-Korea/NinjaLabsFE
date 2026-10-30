@@ -31,6 +31,14 @@ const highlightLabelKeys = {
   Other: "other",
 } as const satisfies Record<HighlightTypeLabel, string>;
 
+const highlightCardClass = "min-w-0 overflow-hidden rounded-card border border-border bg-surface shadow-card";
+
+/** A highlight with a usable link is a link card; one without is a plain article (no hover/press affordance, no navigation). */
+function HighlightCard({ href, children }: { href: string | null; children: React.ReactNode }) {
+  if (!href) return <article className={highlightCardClass}>{children}</article>;
+  return <Link href={href} className={`${highlightCardClass} hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`}>{children}</Link>;
+}
+
 export async function generateMetadata({ params }: PageProps<"/[locale]/hall-of-fame">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "hallOfFame.metadata" });
@@ -90,7 +98,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
           <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-3">
             {hallOfFame.highlights.map((highlight, index) => (
               // Admin-entered titles are not unique: the index keeps React keys distinct.
-              <Link href={highlight.href} key={`${index}:${highlight.title}`} className="min-w-0 overflow-hidden rounded-card border border-border bg-surface shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+              <HighlightCard href={highlight.href} key={`${index}:${highlight.title}`}>
                 <div className="relative aspect-[16/9] bg-gradient-to-br from-primary-soft-border to-surface-subtle">
                   {highlight.image ? <Image {...imageProps(highlight.image)} alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 370px" /> : null}
                 </div>
@@ -99,7 +107,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
                   <h3 className="mt-3 font-display text-lg font-bold text-ink">{highlight.title}</h3>
                   <p className="mt-2 text-sm text-ink-muted">{highlight.body}</p>
                 </div>
-              </Link>
+              </HighlightCard>
             ))}
           </div>
         </section>
