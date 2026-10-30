@@ -12,7 +12,7 @@ export function MembersPreviewSection({ members, unavailable }: { members: Membe
   const tRetry = useTranslations("community");
   return (
     <section className="mx-auto max-w-content px-4 pb-16 sm:px-6">
-      <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={2} size="lg" action={{ label: t("viewAll"), href: "/members" }} />
+      <SectionHeader heading={t("heading")} level={2} size="lg" action={{ label: t("viewAll"), href: "/members" }} />
       {unavailable ? (
         <CommunitySectionState title={t("unavailable")} body={t("unavailableBody")} retryLabel={tRetry("retry")} />
       ) : members.length === 0 ? (
