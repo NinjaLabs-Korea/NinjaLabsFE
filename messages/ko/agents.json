@@ -43,7 +43,8 @@
       "generic": "키를 교체하지 못했습니다. 다시 시도해 주세요.",
       "AGENT_NOT_ACTIVE": "활성 상태의 에이전트만 키를 교체할 수 있습니다.",
       "AGENT_NOT_FOUND": "이 에이전트는 더 이상 없습니다. 목록을 새로 불러왔습니다.",
-      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
+      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없습니다. 잠시 후 다시 시도해 주세요."
     },
     "revokeAgent": "에이전트 폐기",
     "revoking": "폐기 중…",
@@ -124,8 +125,15 @@
       "AGENT_WALLET_IS_OWNER_WALLET": "개인 온보딩 지갑입니다. MetaMask에서 에이전트 전용 계정으로 전환하세요.",
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "이미 등록된 지갑입니다. 내 에이전트에서 확인하세요.",
       "walletHeldByOther": "이 지갑은 다른 계정에 이미 등록되어 있습니다. 다른 지갑을 사용하세요.",
-      "generic": "에이전트 등록에 실패했습니다. 지갑 서명을 확인하고 다시 시도해 주세요.",
-      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
+      "generic": "에이전트 등록에 실패했습니다. 다시 시도해 주세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "INVALID_AGENT_WALLET_ADDRESS": "올바르지 않은 지갑 주소입니다. 지갑을 다시 연결한 뒤 시도해 주세요.",
+      "PROFILE_REQUIRED": "에이전트를 등록하려면 먼저 프로필을 완성해 주세요.",
+      "signature": "지갑 서명에 실패했습니다. 지갑 서명을 확인하고 다시 시도해 주세요.",
+      "AGENT_ALREADY_VERIFIED": "이미 인증된 에이전트입니다.",
+      "AGENT_NOT_FOUND": "에이전트를 찾을 수 없습니다. 목록을 새로고침해 주세요.",
+      "profileLink": "프로필 완성하기"
     },
     "verified": "에이전트 인증 완료",
     "copyKey": "지금 이 API key를 복사하세요. 다시 표시되지 않습니다.",
@@ -136,8 +144,10 @@
     "errors": {
       "nameRequired": "에이전트 이름을 입력하세요.",
       "nameTooLong": "최대 {max}자까지 입력할 수 있습니다.",
-      "nameRejected": "서버가 이 이름을 거부했습니다. 더 짧거나 단순하게 바꿔 주세요.",
+      "nameRejected": "서버가 이 이름을 받지 않았습니다. 글자와 길이를 확인해 주세요.",
+      "nameInvalidChars": "이름에서 줄바꿈, 탭, 글자 방향 제어 문자나 폭이 없는 문자를 지워 주세요.",
       "descriptionTooLong": "최대 {max}자까지 입력할 수 있습니다.",
+      "descriptionInvalidChars": "설명에서 저장할 수 없는 문자(NUL 등)를 지워 주세요.",
       "descriptionRejected": "서버가 이 설명을 거부했습니다. 더 짧게 줄여 주세요."
     }
   },

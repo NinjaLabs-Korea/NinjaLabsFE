@@ -10,6 +10,8 @@ export type TurnstileRenderOptions = {
   action?: string;
   language?: string;
   theme?: "auto" | "light" | "dark";
+  /** `normal` is a fixed 300x65 box; `compact` is 150x140. */
+  size?: "normal" | "compact" | "flexible";
   callback?: (token: string) => void;
   "expired-callback"?: () => void;
   "error-callback"?: (errorCode?: string) => boolean | void;

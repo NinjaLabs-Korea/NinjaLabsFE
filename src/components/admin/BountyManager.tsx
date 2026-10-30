@@ -10,7 +10,7 @@ import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
-import { type AdminBounty, adminErrorDescription } from "@/lib/admin-helpers";
+import { type AdminBounty, adminErrorDescription, expirePublicLists } from "@/lib/admin-helpers";
 import { BOUNTY_SPONSOR_MAX, BOUNTY_TEXT_MAX, BOUNTY_TITLE_MAX, bountyToForm, emptyBountyForm, formToBounty, isIsoDateTime, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { opsErrorCode } from "@/lib/admin-operations";
@@ -136,6 +136,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
         ? { slug: mode.slug, coverImage, existingStatus: existing?.status ?? "draft" }
         : { slug: "", coverImage });
       await api.saveAdminBounty(bounty, mode.kind === "create");
+      expirePublicLists(["bounties"]);
       pushAdminToast({ variant: "success", title: mode.kind === "edit" ? t("toast.updatedTitle") : t("toast.createdTitle"), description: tCommon("savedDescription", { title: form.title }) });
       startCreate();
       await reload();
@@ -154,6 +155,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     setTransitioningSlugs(new Set(transitioning.current));
     try {
       await api.transitionAdminBounty(bounty.slug, to);
+      expirePublicLists(["bounties"]);
       pushAdminToast({ variant: "success", title: t("toast.statusUpdatedTitle"), description: t("toast.statusUpdatedDescription", { title: bounty.title, to }) });
       await reload();
     } catch (error) {
@@ -174,6 +176,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     setPendingDelete(null);
     try {
       await api.deleteAdminBounty(bounty.slug);
+      expirePublicLists(["bounties"]);
       setRecords((current) => current.filter((item) => item.slug !== bounty.slug));
       // The form may be editing the record that just went away: a later save would PATCH a missing row.
       if (mode.kind === "edit" && mode.slug === bounty.slug) startCreate();
@@ -223,28 +226,34 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
         <form noValidate onSubmit={save}>
           <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
             <label className="block text-sm font-semibold text-ink">{t("form.title")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("title")} maxLength={BOUNTY_TITLE_MAX} onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} type="text" value={form.title} />
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("title")} maxLength={BOUNTY_TITLE_MAX} onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} type="text" value={form.title} />
               {fieldError("title")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.sponsor")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("sponsor")} maxLength={BOUNTY_SPONSOR_MAX} onChange={(event) => updateForm("sponsor", event.target.value)} placeholder={t("form.sponsorPlaceholder")} type="text" value={form.sponsor} />
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("sponsor")} maxLength={BOUNTY_SPONSOR_MAX} onChange={(event) => updateForm("sponsor", event.target.value)} placeholder={t("form.sponsorPlaceholder")} type="text" value={form.sponsor} />
               {fieldError("sponsor")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.deadline")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("deadline")} onChange={(event) => updateForm("deadline", event.target.value)} required type="datetime-local" value={form.deadline} />
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("deadline")} onChange={(event) => updateForm("deadline", event.target.value)} required type="datetime-local" value={form.deadline} />
               {fieldError("deadline")}
             </label>
+            {form.intake === "ON" || form.applicationDeadline ? (
+              <label className="block text-sm font-semibold text-ink">{t("form.applicationDeadline")}
+                <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("applicationDeadline")} onChange={(event) => updateForm("applicationDeadline", event.target.value)} type="datetime-local" value={form.applicationDeadline} />
+                {fieldError("applicationDeadline")}
+              </label>
+            ) : null}
             <div>
               <p className="text-sm font-semibold text-ink">{t("form.reward")}</p>
               <div className="mt-2 flex gap-3">
                 <div className="w-fit"><AdminSelect disabled={editing} label={t("form.rewardCurrency")} onChange={(value) => updateForm("currency", value as BountyFormValues["currency"])} options={["INJ", "USDC"]} value={form.currency} /></div>
-                <input aria-label={t("form.rewardAmount")} className="h-[46px] min-w-0 flex-1 rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("amount")} disabled={editing} inputMode="decimal" onChange={(event) => updateForm("amount", event.target.value)} placeholder={t("form.amountPlaceholder")} type="text" value={form.amount} />
+                <input aria-label={t("form.rewardAmount")} className="h-[46px] min-w-0 flex-1 rounded-control border border-border px-[17px] text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("amount")} disabled={editing} inputMode="decimal" onChange={(event) => updateForm("amount", event.target.value)} placeholder={t("form.amountPlaceholder")} type="text" value={form.amount} />
               </div>
               {fieldError("amount")}
               {editing ? <p className="mt-2 text-xs text-ink-muted">{t("form.rewardLockedHint")}</p> : null}
             </div>
             <label className="block text-sm font-semibold text-ink">{t("form.maxWinners")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("maxWinners")} inputMode="numeric" onChange={(event) => updateForm("maxWinners", event.target.value)} type="text" value={form.maxWinners} />
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("maxWinners")} inputMode="numeric" onChange={(event) => updateForm("maxWinners", event.target.value)} type="text" value={form.maxWinners} />
               {fieldError("maxWinners")}
               <span className="mt-2 block text-xs font-normal text-ink-muted">{t("form.maxWinnersHint")}</span>
             </label>
@@ -272,16 +281,16 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               </div>
             </div>
             <label className="block text-sm font-semibold text-ink">{t("form.description")}
-              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("description")} onChange={(event) => updateForm("description", event.target.value)} placeholder={t("form.descriptionPlaceholder")} value={form.description} />
+              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("description")} onChange={(event) => updateForm("description", event.target.value)} placeholder={t("form.descriptionPlaceholder")} value={form.description} />
               {fieldError("description")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.deliverables")}
-              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("deliverables")} onChange={(event) => updateForm("deliverables", event.target.value)} placeholder={t("form.deliverablesPlaceholder")} value={form.deliverables} />
+              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("deliverables")} onChange={(event) => updateForm("deliverables", event.target.value)} placeholder={t("form.deliverablesPlaceholder")} value={form.deliverables} />
               <p className="mt-2 text-xs text-ink-muted">{t("form.deliverablesHint")}</p>
               {fieldError("deliverables")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.reviewProcess")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("reviewProcess")} onChange={(event) => updateForm("reviewProcess", event.target.value)} placeholder={t("form.reviewProcessPlaceholder")} type="text" value={form.reviewProcess} />
+              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("reviewProcess")} onChange={(event) => updateForm("reviewProcess", event.target.value)} placeholder={t("form.reviewProcessPlaceholder")} type="text" value={form.reviewProcess} />
               {fieldError("reviewProcess")}
             </label>
           </div>

@@ -43,7 +43,8 @@
       "generic": "无法轮换密钥，请重试。",
       "AGENT_NOT_ACTIVE": "只有处于活动状态的代理才能轮换密钥。",
       "AGENT_NOT_FOUND": "该代理已不存在。列表已刷新。",
-      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
+      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后再试。"
     },
     "revokeAgent": "撤销代理",
     "revoking": "正在撤销…",
@@ -124,8 +125,15 @@
       "AGENT_WALLET_IS_OWNER_WALLET": "这是你的个人注册钱包。请在 MetaMask 中切换到专用的代理账户。",
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "此钱包已注册，请在“我的代理”中查看。",
       "walletHeldByOther": "此钱包已被其他账户注册。请使用其他钱包。",
-      "generic": "代理注册失败，请检查钱包签名后重试。",
-      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
+      "generic": "代理注册失败，请重试。",
+      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后再试。",
+      "INVALID_AGENT_WALLET_ADDRESS": "钱包地址无效，请重新连接钱包后再试。",
+      "PROFILE_REQUIRED": "注册代理前请先完善个人资料。",
+      "signature": "钱包签名失败。请检查钱包签名后重试。",
+      "AGENT_ALREADY_VERIFIED": "该代理已验证。",
+      "AGENT_NOT_FOUND": "找不到该代理，请刷新列表。",
+      "profileLink": "完善个人资料"
     },
     "verified": "代理已验证",
     "copyKey": "请立即复制此 API key，它不会再次显示。",
@@ -136,8 +144,10 @@
     "errors": {
       "nameRequired": "请输入代理名称。",
       "nameTooLong": "最多 {max} 个字符。",
-      "nameRejected": "服务器拒绝了此名称，请缩短或简化。",
+      "nameRejected": "服务器拒绝了此名称，请检查字符和长度。",
+      "nameInvalidChars": "请从名称中删除换行符、制表符、文字方向控制字符或零宽字符。",
       "descriptionTooLong": "最多 {max} 个字符。",
+      "descriptionInvalidChars": "请从描述中删除无法保存的字符（例如 NUL）。",
       "descriptionRejected": "服务器拒绝了此描述，请缩短。"
     }
   },

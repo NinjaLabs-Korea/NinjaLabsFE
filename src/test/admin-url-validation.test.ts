@@ -2,6 +2,8 @@
 import { describe, expect, it } from "vitest";
 import { validateHighlightForm } from "@/components/admin/HighlightManager";
 import { validatePostForm } from "@/components/admin/PostManager";
+import { adminUrlFieldErrors } from "@/lib/admin-helpers";
+import { ApiHttpError } from "@/lib/api/http";
 import { isSafeUrl } from "@/lib/url-rules";
 
 const mediaPath = "/media/11111111-1111-4111-8111-111111111111";
@@ -91,5 +93,23 @@ describe("isSafeUrl (mirror of the BE relaxed PATCH rule)", () => {
 
   it("rejects other schemes, protocol-relative URLs, userinfo, whitespace and control characters", () => {
     for (const value of ["javascript:alert(1)", "data:text/html,x", "//evil.com/x", "/\\evil.com", "https://u:p@host.com", "https://evil.com\\.example.com", "https://a.com/x y", "/a\u0000b", "not a url", "localhost:3000", ""]) expect(isSafeUrl(value)).toBe(false);
+  });
+});
+
+describe("public URL errors and BE 400 mapping", () => {
+  const valid = { title: "T", description: "D", image: null, link: "", order: 0 };
+  it.each(["http://10.0.0.1/x", "http://127.0.0.1:8080/", "https://localhost/", "http://192.168.1.5/"])("highlight link %s gets publicUrl", (link) => {
+    expect(validateHighlightForm({ ...valid, link }).link).toBe("publicUrl");
+  });
+  it("notice externalUrl and thumbnail get publicUrl for private hosts", () => {
+    const post = { title: "T", bodyMarkdown: "B", thumbnail: "http://localhost/x.png", externalUrl: "https://localhost/" };
+    expect(validatePostForm(post)).toEqual({ thumbnail: "publicUrl", externalUrl: "publicUrl" });
+    expect(validatePostForm({ ...post, externalUrl: "javascript:1", thumbnail: null }).externalUrl).toBe("urlInvalid");
+  });
+  it("maps a BE VALIDATION_FAILED url message to the field", () => {
+    const error = new ApiHttpError(400, "VALIDATION_FAILED", ["externalUrl must be a public http(s) URL (no localhost or private addresses)", "title should not be empty"]);
+    expect(adminUrlFieldErrors(error)).toEqual({ externalUrl: "publicUrl" });
+    expect(adminUrlFieldErrors(new ApiHttpError(400, "VALIDATION_FAILED", ["linkUrl must be a valid thing"]))).toEqual({ linkUrl: "urlInvalid" });
+    expect(adminUrlFieldErrors(new ApiHttpError(500, "INTERNAL"))).toEqual({});
   });
 });

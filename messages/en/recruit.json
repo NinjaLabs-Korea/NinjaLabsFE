@@ -71,6 +71,7 @@
       "hint": "{min}-{max} characters recommended (up to {limit}).",
       "counter": "{count}/{limit}"
     },
+    "lead": "Tell us a bit about yourself and what you want to do with NinjaLabs. You can edit or withdraw your application while the cohort is recruiting.",
     "reapplyIntro": "You withdrew your earlier application. Send a new one while the cohort is recruiting.",
     "eyebrowEdit": "Edit application",
     "titleEdit": "Update your application",
@@ -201,6 +202,9 @@
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
       "generic": "We couldn’t withdraw this application. Please try again shortly."
     }
+  },
+  "past": {
+    "heading": "Your earlier applications"
   },
   "account": {
     "heading": "Cohort applications",

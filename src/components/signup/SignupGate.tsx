@@ -29,7 +29,9 @@ export function SignupGate({ children, step }: { children: ReactNode; step: Sign
   // the form the user is typing into stays, and says why it cannot save (ProfileForm shows the session message).
   // A deliberate sign-out (no `session-ended` reason) is not such a session: the step is left like any other gated page.
   const deliberateSignOut = snapshot.status === "signed-out" && snapshot.reason !== "session-ended";
-  if (shown && !deliberateSignOut && (access.kind === "leave" || access.kind === "sign-in-first")) access = { kind: "show" };
+  // Only steps 2-4 are kept: the step-1 sign-in card was rendered for a signed-out visitor, so once another tab signs
+  // in it follows the normal signed-in rule (owed step, else where they came from, else the hub).
+  if (shown && step > 1 && !deliberateSignOut && (access.kind === "leave" || access.kind === "sign-in-first")) access = { kind: "show" };
 
   const destination =
     access.kind === "resume" || access.kind === "sign-in-first"

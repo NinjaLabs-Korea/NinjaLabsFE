@@ -8,21 +8,39 @@ import { Link } from "@/i18n/navigation";
 import { isFinishedUser } from "@/lib/auth-route";
 import type { PublicCohort } from "@/lib/cohorts";
 
+const WRAP_CLASS = "max-w-full min-w-0 [overflow-wrap:anywhere]";
+
 /**
  * The hub hero's second call to action: "{cohort} 멤버 지원하기" -> `/recruit` while the open cohort accepts applications
  * ("지원 현황 보기" once I applied), otherwise the fallback link (past activities). The cohort is read in the browser so the hub
- * stays static; until the read settles (or if it fails) the fallback shows.
+ * stays static. No label is ever shown and then replaced: while the cohort read is in flight, or the session / my applications
+ * are still loading and decide the label, the button keeps its box with an invisible label. The fallback link shows only once
+ * the read settled with no accepting cohort, or failed.
  */
-export function HeroSecondaryCta({ className, fallbackHref, fallbackLabel }: { className: string; fallbackHref: string; fallbackLabel: string }) {
+export function HeroSecondaryCta({ className: base, fallbackHref, fallbackLabel }: { className: string; fallbackHref: string; fallbackLabel: string }) {
+  // A long cohort name has no break opportunity: let the label wrap inside the hero instead of pushing the button past it.
+  const className = `${base} ${WRAP_CLASS}`;
   const { status, cohort } = useCurrentCohort();
-  const finished = isFinishedUser(useAuthSnapshot());
+  const auth = useAuthSnapshot();
+  if (status === "loading") return <Placeholder className={className} />;
   if (status === "ready" && cohort?.acceptingApplications) {
-    return finished ? <AppliedAwareLink className={className} cohort={cohort} /> : <ApplyLink className={className} cohort={cohort} />;
+    if (auth.status === "loading") return <Placeholder className={className} cohort={cohort} />;
+    return isFinishedUser(auth) ? <AppliedAwareLink className={className} cohort={cohort} /> : <ApplyLink className={className} cohort={cohort} />;
   }
   return (
     <Link className={className} href={fallbackHref}>
       {fallbackLabel}
     </Link>
+  );
+}
+
+/** Keeps the button's box (the apply label is the sizer) without showing or announcing anything. */
+function Placeholder({ className, cohort }: { className: string; cohort?: PublicCohort }) {
+  const t = useTranslations("recruit.heroCta");
+  return (
+    <span aria-hidden="true" className={`${className} invisible`}>
+      {t("apply", { name: cohort?.name ?? "" })}
+    </span>
   );
 }
 
@@ -41,14 +59,8 @@ function ApplyLink({ className, cohort }: { className: string; cohort: PublicCoh
  */
 function AppliedAwareLink({ className, cohort }: { className: string; cohort: PublicCohort }) {
   const t = useTranslations("recruit.heroCta");
-  const mine = useAccountQuery(useCohortApi().getMyCohortApplications);
-  if (mine.loading) {
-    return (
-      <span aria-hidden="true" className={`${className} invisible`}>
-        {t("apply", { name: cohort.name })}
-      </span>
-    );
-  }
+  const mine = useAccountQuery(useCohortApi().getMyCohortApplications, { reuseLast: true });
+  if (mine.loading) return <Placeholder className={className} cohort={cohort} />;
   const applied = (mine.data ?? []).some((item) => item.cohortId === cohort.id && item.status !== "WITHDRAWN");
   return (
     <Link className={className} href="/recruit">

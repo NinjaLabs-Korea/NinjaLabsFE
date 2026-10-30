@@ -129,6 +129,8 @@ export function createAdminApi(http: ApiHttp): AdminApi {
         submissionMode: bounty.submissionMode === "agent" ? "AGENT" : "DIRECT",
         coverImageUrl: bounty.coverImage,
         submissionDeadline: bounty.deadline,
+        // Create sends it only when set; PATCH always sends it so clearing the field (null) clears the column. An unchanged value is the stored ISO, which the BE treats as "not changed".
+        ...(create && !bounty.applicationDeadline ? {} : { applicationDeadline: bounty.applicationDeadline }),
         ...(create && bounty.reward.amount > 0 ? { reward: {
           tokenType: bounty.reward.currency === "USDC" ? "ERC20" : "NATIVE",
           ...(bounty.reward.currency === "INJ" ? { tokenDenom: "inj" } : {}),

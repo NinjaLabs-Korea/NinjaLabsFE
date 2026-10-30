@@ -110,7 +110,7 @@ describe("public list paging", () => {
     const request = stubPages(120);
     await fetchAllPublicPages("/bounties");
     for (const [, init] of request.mock.calls as unknown as Array<[string, RequestInit & { next?: { revalidate: number } }]>) {
-      expect(init.next).toEqual({ revalidate: 30 });
+      expect(init.next).toEqual({ revalidate: 30, tags: ["public:bounties"] }); // tagged so an admin write can expire it at once
       expect(init.cache).toBeUndefined();
     }
   });

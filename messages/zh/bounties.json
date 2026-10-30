@@ -113,6 +113,9 @@
     "description": "描述",
     "deliverable": "交付物",
     "deadline": "截止时间",
+    "applicationDeadline": "申请截止",
+    "submissionDeadline": "提交截止",
+    "applicationsClosed": "申请已截止",
     "review": "审核",
     "defaultReview": "赞助方审核",
     "submissionGuide": "提交指南",
@@ -225,6 +228,11 @@
     "viewIntakeRules": "查看申请规则",
     "submitDisabled": "批准前无法提交",
     "availability": "可投入时间",
+    "sessionUnavailable": {
+      "title": "暂时无法确认你的登录状态。",
+      "body": "无法连接服务器，请稍后重试。",
+      "retry": "重试"
+    },
     "closedHeading": "赏金已关闭",
     "closedBody": "此赏金不再接受申请或提交。",
     "cancelledBody": "赞助方已取消此赏金任务，不会再进行审核或接收。仍在等待中的申请和作品也一并关闭。",

@@ -62,10 +62,10 @@ describe("hub primary CTA (StartLink with the dashboard as the finished target)"
 describe("hub secondary CTA (HeroSecondaryCta)", () => {
   const view = () => renderWithIntl(<HeroSecondaryCta className="x" fallbackHref="/notices?category=events" fallbackLabel="See past activities" />);
 
-  it("shows the past activities until the cohort read settles, then the apply link while a cohort accepts", async () => {
+  it("shows no label until the cohort read settles, then the apply link while a cohort accepts", async () => {
     state.auth = signedOut;
     view();
-    expect(screen.getByRole("link", { name: "See past activities" })).toBeTruthy();
+    expect(screen.queryByRole("link")).toBeNull();
     const apply = await screen.findByRole("link", { name: "Apply to join 2nd cohort" });
     expect(apply.getAttribute("href")).toBe("/recruit");
   });

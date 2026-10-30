@@ -125,13 +125,13 @@ describe("nicknameInitials", () => {
 });
 
 describe("combining marks (BE `\\p{M}` rule: Hindi, Thai, stacked accents)", () => {
-  it("is the same regex as the BE NICKNAME (copy of NinjaLabsBE src/users/nickname.ts)", () => {
+  it("is the same regex as the BE NICKNAME (copy of NinjaLabsBE src/users/nickname.ts, with the BE-3 homoglyph rule)", () => {
     expect(NICKNAME.source).toBe(
-      "^(?!.*[\\u115F\\u1160\\u3164\\uFFA0\\p{Variation_Selector}\\uFF00-\\uFFEF\\u{1D400}-\\u{1D7FF}])(?!(?=.*[A-Za-z\\u00C0-\\u024F])(?=.*[\\p{Script=Cyrillic}\\p{Script=Greek}]))(?!.*\\p{M}{4})(?!.*[_.-]\\p{M})[\\p{L}\\p{N}][\\p{L}\\p{N}\\p{M}_.-]*[\\p{L}\\p{N}\\p{M}]$",
+      "^(?!.*[\\u115F\\u1160\\u3164\\uFFA0\\p{Variation_Selector}\\uFF00-\\uFFEF\\u{1D400}-\\u{1D7FF}])(?!.*[\\u0131\\u0237\\u0250-\\u02FF\\u1D00-\\u1DBF\\u2100-\\u218F\\uA730-\\uA7FF\\uAB30-\\uAB6F])(?!(?=.*\\p{Script=Latin})(?=.*[^\\p{Script=Latin}\\p{Script=Hangul}\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}\\P{L}\\u30FC]))(?!.*\\p{M}{4})(?!.*[_.-]\\p{M})[\\p{L}\\p{N}][\\p{L}\\p{N}\\p{M}_.-]*[\\p{L}\\p{N}\\p{M}]$",
     );
   });
 
-  it.each(["हिन्दी", "ไทยแลนด์", "a\u0301\u0301\u0301b", "ninja.हिन्दी"])("accepts %p", (nickname) => {
+  it.each(["हिन्दी", "ไทยแลนด์", "a\u0301\u0301\u0301b", "हिन्दी.हिन्दी"])("accepts %p", (nickname) => {
     expect(validateNickname(nickname)).toBeNull();
   });
 
@@ -151,7 +151,7 @@ describe("BE look-alike rules (fullwidth, math alphanumerics, mixed scripts, con
     expect(NICKNAME.test(nickname)).toBe(false);
   });
 
-  it.each(["аdmin", "buіlderone", "αbc12"])("rejects %p as a Latin + Cyrillic/Greek mix", (nickname) => {
+  it.each(["аdmin", "buіlderone", "αbc12", "coreոinja", "ninja.हिन्दी"])("rejects %p as a Latin + Cyrillic/Greek mix", (nickname) => {
     expect(validateNickname(nickname)).toBe("mixedScript");
     expect(NICKNAME.test(nickname)).toBe(false);
   });

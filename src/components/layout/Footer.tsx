@@ -63,16 +63,16 @@ export function Footer() {
           <p className="text-xs leading-4 text-on-inverse-muted">
             {t("legal")}
           </p>
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs leading-4 text-on-inverse-muted">
-            <Link className="text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/privacy">
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-0 text-xs sm:gap-x-3 sm:gap-y-1 leading-4 text-on-inverse-muted">
+            <Link className="inline-flex min-h-10 items-center sm:min-h-0 text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/privacy">
               {t("privacy")}
             </Link>
-            <Link className="text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/terms">
+            <Link className="inline-flex min-h-10 items-center sm:min-h-0 text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/terms">
               {t("terms")}
             </Link>
-            <span>
+            <span className="inline-flex min-h-10 flex-wrap items-center gap-x-1 sm:min-h-0">
               {t("contact")}{" "}
-              <a className="text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`mailto:${CONTACT_EMAIL}`}>
+              <a className="inline-flex min-h-10 items-center sm:min-h-0 text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`mailto:${CONTACT_EMAIL}`}>
                 {CONTACT_EMAIL}
               </a>
             </span>
@@ -95,12 +95,12 @@ function FooterLinkColumn({
   return (
     <div>
       <h2 className="text-sm font-semibold text-on-inverse/90">{heading}</h2>
-      <ul className="mt-2 space-y-2 text-sm leading-5">
+      <ul className="mt-1 text-sm leading-5 sm:mt-2 sm:space-y-2">
         {links.map(({ href, label }) => (
           <li key={label}>
             {external ? (
               <a
-                className="text-sm text-on-inverse-secondary"
+                className="inline-flex min-h-10 items-center sm:min-h-0 text-sm text-on-inverse-secondary"
                 href={href}
                 target="_blank"
                 rel="noreferrer"
@@ -108,7 +108,7 @@ function FooterLinkColumn({
                 {label}
               </a>
             ) : (
-              <Link className="text-sm text-on-inverse-secondary" href={href}>
+              <Link className="inline-flex min-h-10 items-center sm:min-h-0 text-sm text-on-inverse-secondary" href={href}>
                 {label}
               </Link>
             )}

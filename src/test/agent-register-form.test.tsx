@@ -343,7 +343,7 @@ describe("AgentRegisterForm field limits (mirror of BE RegisterAgentDto)", () =>
     expect(validateAgentRegisterForm({ name: "   ", description: "" })).toEqual({ name: "required" });
     // Zero-width space / word joiner / Hangul filler only: blank to the reader, so blank to the rule.
     expect(validateAgentRegisterForm({ name: "\u200B\u2060 \u3164", description: "" })).toEqual({ name: "required" });
-    expect(validateAgentRegisterForm({ name: "Bot\u200B", description: "" })).toEqual({});
+    expect(validateAgentRegisterForm({ name: "Bot\u200B", description: "" })).toEqual({ name: "invalidChars" });
   });
 
   it("caps the inputs with maxLength and shows a live description counter", async () => {
@@ -386,8 +386,18 @@ describe("AgentRegisterForm field limits (mirror of BE RegisterAgentDto)", () =>
     fireEvent.change(screen.getByLabelText("Agent name"), { target: { value: "weird" } });
     await waitFor(() => expect(submit.disabled).toBe(false));
     fireEvent.submit(submit.closest("form") as HTMLFormElement);
-    expect(await screen.findByText("The server rejected this name. Shorten or simplify it.")).toBeTruthy();
+    expect(await screen.findByText("The server rejected this name. Check its characters and length.")).toBeTruthy();
     expect(screen.getByText("Fix the highlighted fields before registering.")).toBeTruthy();
+  });
+
+  it.each(["Evil\u202Ename", "a\tb"])("shows the invalid-characters message for name %j and sends nothing", async (name) => {
+    renderWithIntl(<AgentRegisterForm chainId={1439} />);
+    const submit = (await screen.findByRole("button", { name: "Sign & Register" })) as HTMLButtonElement;
+    fireEvent.change(screen.getByLabelText("Agent name"), { target: { value: name } });
+    await waitFor(() => expect(submit.disabled).toBe(false));
+    fireEvent.submit(submit.closest("form") as HTMLFormElement);
+    expect(await screen.findByText("Remove line breaks, tabs, text-direction or zero-width characters from the name.")).toBeTruthy();
+    expect(registerAgent).not.toHaveBeenCalled();
   });
 });
 

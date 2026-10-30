@@ -185,7 +185,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
         <input
           id="user-search"
           maxLength={SEARCH_TERM_MAX}
-          className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder sm:w-[384px]"
+          className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:w-[384px]"
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t("searchPlaceholder")}
           type="search"

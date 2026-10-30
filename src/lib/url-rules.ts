@@ -5,6 +5,8 @@
  *   isHttpUrl               외부 링크 (externalUrl, portfolioUrl, submissionUrl, repositoryUrl) - BE `IsHttpUrl`
  *   isHttpUrlOrMediaPath    이미지 - `POST /admin/media`가 돌려주는 `/media/<uuid>`도 허용 (thumbnailUrl, imageUrl, coverImageUrl)
  *   isHttpUrlOrSitePath     사이트 내부 라우트 `/bounties/<slug>`도 허용 (highlight linkUrl). `//host`는 거부
+ *   isPublicHttpUrl         공개 페이지가 여는 링크: isHttpUrl + localhost/사설/루프백/링크로컬 IP/점 없는 내부 호스트 거부 (공지 externalUrl) - BE `IsPublicHttpUrl`
+ *   isPublicHttpUrlOrMediaPath / isPublicHttpUrlOrSitePath   이미지·하이라이트 링크에 BE가 실제로 쓰는 규칙 (BE `IsHttpUrlOrMediaPath`/`IsHttpUrlOrSitePath`는 호스트 규칙이 공개 URL이다)
  *   isSafeUrl               수정(PATCH) DTO의 완화 규칙 `IsSafeUrl` - 이미 저장된 레거시 값이 수정을 막는지 판정할 때만 쓴다 (입력 검증에는 위 엄격 규칙)
  *
  * BE의 isHttpUrl은 `new URL` 검사 뒤에 validator.js `isURL({ protocols: http/https, require_protocol, require_tld: false,
@@ -99,6 +101,49 @@ export function isSitePath(value: unknown): boolean {
   if (CONTROL_CHARS.test(value) || ENCODED_SLASH.test(value)) return false;
   const path = value.split(/[?#]/, 1)[0];
   return path.split("/").slice(1).every((segment) => !isDotSegment(segment));
+}
+
+const PRIVATE_HOST_SUFFIXES = [".localhost", ".local", ".internal", ".localdomain", ".lan", ".home", ".corp", ".intranet"];
+
+function isPrivateIpv4([a, b, c]: number[]): boolean {
+  return a === 0 || a === 10 || a === 127 || a >= 224
+    || (a === 100 && b >= 64 && b <= 127)
+    || (a === 169 && b === 254)
+    || (a === 172 && b >= 16 && b <= 31)
+    || (a === 192 && b === 168)
+    || (a === 192 && b === 0 && c === 0)
+    || (a === 198 && (b === 18 || b === 19));
+}
+
+/** BE `isPublicHostname`: `new URL().hostname`을 본다 (WHATWG가 `2130706433`, `0x7f.1`을 점-십진수로 정규화). IPv6는 2000::/3만 허용. */
+export function isPublicHostname(rawHostname: string): boolean {
+  const host = rawHostname.toLowerCase().replace(/\.$/, "");
+  if (!host) return false;
+  if (host.startsWith("[")) return /^\[[23]/.test(host);
+  const octets = host.split(".");
+  if (octets.length === 4 && octets.every((part) => /^\d{1,3}$/.test(part))) {
+    const parts = octets.map(Number);
+    return parts.every((part) => part <= 255) && !isPrivateIpv4(parts);
+  }
+  if (host === "localhost" || !host.includes(".")) return false;
+  return !PRIVATE_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix));
+}
+
+export function isPublicHttpUrl(value: unknown): boolean {
+  if (!isHttpUrl(value)) return false;
+  try {
+    return isPublicHostname(new URL(value as string).hostname);
+  } catch {
+    return false;
+  }
+}
+
+export const isPublicHttpUrlOrMediaPath = (value: unknown): boolean => isPublicHttpUrl(value) || isMediaPath(value);
+export const isPublicHttpUrlOrSitePath = (value: unknown): boolean => isPublicHttpUrl(value) || isSitePath(value);
+
+/** 입력란 오류 종류: 형식 자체가 틀리면 `urlInvalid`, 형식은 맞지만 localhost/사설 주소라 BE가 거부할 값이면 `publicUrl` */
+export function urlErrorKind(value: string): "urlInvalid" | "publicUrl" {
+  return isHttpUrl(value) ? "publicUrl" : "urlInvalid";
 }
 
 export const isHttpUrlOrMediaPath = (value: unknown): boolean => isHttpUrl(value) || isMediaPath(value);

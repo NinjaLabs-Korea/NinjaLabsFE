@@ -13,7 +13,13 @@
     "skipToContent": "跳到主要内容"
   },
   "localeSwitcher": {
-    "label": "语言"
+    "label": "语言",
+    "unsaved": {
+      "title": "要切换语言吗？",
+      "body": "页面将以新语言重新加载，您在此处输入的内容会被清除。",
+      "confirm": "切换并清除",
+      "cancel": "继续编辑"
+    }
   },
   "nav": {
     "bounties": "赏金",
@@ -140,6 +146,10 @@
     "profileSaved": {
       "title": "资料已保存",
       "description": "你的修改已更新到账户和公开资料。"
+    },
+    "applicationWithdrawn": {
+      "title": "申请已撤回",
+      "description": "赏金仍在进行时，你可以重新申请。"
     }
   }
 }

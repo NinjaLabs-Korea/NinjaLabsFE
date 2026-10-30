@@ -13,7 +13,13 @@
     "skipToContent": "본문으로 건너뛰기"
   },
   "localeSwitcher": {
-    "label": "언어"
+    "label": "언어",
+    "unsaved": {
+      "title": "언어를 바꿀까요?",
+      "body": "새 언어로 페이지를 다시 불러오면서 여기에 입력한 내용이 지워집니다.",
+      "confirm": "바꾸고 지우기",
+      "cancel": "계속 작성"
+    }
   },
   "nav": {
     "bounties": "바운티",
@@ -140,6 +146,10 @@
     "profileSaved": {
       "title": "프로필을 저장했습니다",
       "description": "변경 내용이 계정과 공개 프로필에 반영되었습니다."
+    },
+    "applicationWithdrawn": {
+      "title": "지원을 철회했습니다",
+      "description": "바운티가 열려 있는 동안 다시 지원할 수 있습니다."
     }
   }
 }

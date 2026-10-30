@@ -113,6 +113,9 @@
     "description": "Description",
     "deliverable": "Deliverable",
     "deadline": "Deadline",
+    "applicationDeadline": "Application deadline",
+    "submissionDeadline": "Submission deadline",
+    "applicationsClosed": "Applications closed",
     "review": "Review",
     "defaultReview": "Sponsor review",
     "submissionGuide": "Submission guide",
@@ -225,6 +228,11 @@
     "viewIntakeRules": "View intake rules",
     "submitDisabled": "Submit disabled until approved",
     "availability": "Availability",
+    "sessionUnavailable": {
+      "title": "We can't check your sign-in right now.",
+      "body": "We couldn’t reach the server. Please try again shortly.",
+      "retry": "Try again"
+    },
     "closedHeading": "Bounty closed",
     "closedBody": "This bounty is no longer accepting applications or submissions.",
     "cancelledBody": "This bounty was cancelled by the sponsor, so nothing more will be reviewed or accepted on it. Applications and work that were still pending were closed with it.",

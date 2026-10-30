@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isHttpUrl, isHttpUrlOrMediaPath, isHttpUrlOrSitePath, isMediaPath, isSitePath } from "@/lib/url-rules";
+import { isHttpUrl, isHttpUrlOrMediaPath, isHttpUrlOrSitePath, isMediaPath, isPublicHttpUrl, isPublicHttpUrlOrMediaPath, isPublicHttpUrlOrSitePath, isSitePath, urlErrorKind } from "@/lib/url-rules";
 
 // Same probe cases as NinjaLabsBE `src/common/validation/url.spec.ts` - keep the two files in step.
 describe("URL field validators (mirror of BE url.ts)", () => {
@@ -130,5 +130,33 @@ describe("URL field validators (mirror of BE url.ts)", () => {
     expect(isHttpUrlOrSitePath("/bounties/x")).toBe(true);
     expect(isHttpUrlOrSitePath("//evil.com")).toBe(false);
     expect(isHttpUrlOrSitePath("https://ninjalabs.xyz")).toBe(true);
+  });
+});
+
+// Same probe cases as NinjaLabsBE `url.spec.ts` isPublicHttpUrl: links the public pages open must not point at private hosts.
+describe("isPublicHttpUrl (mirror of BE isPublicHttpUrl)", () => {
+  it.each(["https://ninjalabs.xyz/x", "http://8.8.8.8/", "https://[2606:4700::1111]/", "https://sub.example.co.kr:8443/a?b=c"])("accepts %p", (value) => {
+    expect(isPublicHttpUrl(value)).toBe(true);
+  });
+
+  it.each([
+    "http://10.0.0.1/x", "http://127.0.0.1:8080/", "https://localhost/", "http://192.168.1.5/", "http://172.16.0.1/", "http://169.254.169.254/",
+    "http://0.0.0.0/", "http://100.64.0.1/", "http://2130706433/", "https://foo.localhost/", "https://printer.local/", "https://intranet/",
+    "https://[::1]/", "https://[fe80::1]/", "https://[fd00::1]/", "ftp://example.com", "javascript:alert(1)", `https://x.example/${"a".repeat(2048)}`, "", 5,
+  ])("rejects %p", (value) => {
+    expect(isPublicHttpUrl(value)).toBe(false);
+  });
+
+  it("image and highlight-link rules use the public host rule too", () => {
+    const media = "/media/11111111-1111-4111-8111-111111111111";
+    expect(isPublicHttpUrlOrMediaPath("http://localhost:3000/x.png")).toBe(false);
+    expect(isPublicHttpUrlOrMediaPath(media)).toBe(true);
+    expect(isPublicHttpUrlOrSitePath("http://10.0.0.1/x")).toBe(false);
+    expect(isPublicHttpUrlOrSitePath("/bounties/x")).toBe(true);
+  });
+
+  it("urlErrorKind separates a malformed URL from a well-formed private one", () => {
+    expect(urlErrorKind("http://10.0.0.1/x")).toBe("publicUrl");
+    expect(urlErrorKind("javascript:alert(1)")).toBe("urlInvalid");
   });
 });

@@ -12,8 +12,9 @@ import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { useAdminList } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { markdownToPlainSummary } from "@/lib/markdown-summary";
-import { postCategoryLabelKeys, publishOptionFor, summaryForPostUpdate, type AdminPost, adminErrorDescription } from "@/lib/admin-helpers";
-import { isHttpUrl, isHttpUrlOrMediaPath, isSafeUrl } from "@/lib/url-rules";
+import { hasVisibleText } from "@/lib/visible-text";
+import { postCategoryLabelKeys, publishOptionFor, summaryForPostUpdate, type AdminPost, adminApiErrorCode, adminErrorDescription, adminTextFieldErrors, adminUrlFieldErrors, expirePublicLists } from "@/lib/admin-helpers";
+import { isPublicHttpUrl, isPublicHttpUrlOrMediaPath, isSafeUrl, urlErrorKind } from "@/lib/url-rules";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const postColumns = [
@@ -44,25 +45,33 @@ const emptyForm: PostForm = {
 };
 
 /**
- * 저장 전 검증 - BE `CreateNoticeDto`의 거울 (title/body @IsNotEmpty, thumbnailUrl IsHttpUrlOrMediaPath, externalUrl IsHttpUrl).
+ * 저장 전 검증 - BE `CreateNoticeDto`의 거울 (title/body @IsNotEmpty, thumbnailUrl IsHttpUrlOrMediaPath, externalUrl IsPublicHttpUrl: localhost/사설 주소는 BE가 400으로 거부하므로 `publicUrl` 오류로 먼저 알린다).
  * `stored`(수정할 행의 저장된 URL)와 같고 BE 완화 규칙(`isSafeUrl`)을 통과하는 값은 URL 검사를 건너뛴다:
  * 수정 DTO는 레거시 행을 위해 완화 규칙(`IsSafeUrl`)이라 엄격 규칙 이전에 저장된 값을 그대로 받는데,
  * 여기서 막으면 그 행은 URL을 지워야만 저장된다.
  */
-type PostFieldErrors = Partial<Record<"title" | "bodyMarkdown" | "thumbnail" | "externalUrl", "required" | "urlInvalid" | "tooLong">>;
+type PostFieldErrors = Partial<Record<"title" | "bodyMarkdown" | "thumbnail" | "externalUrl" | "eventDate", "required" | "urlInvalid" | "publicUrl" | "tooLong" | "dateRange" | "bidiChars">>;
+/** Event date bounds (BE accepts a calendar date; the range keeps typos like 0202 or 20260 out of the public timeline). */
+export const EVENT_DATE_MIN = "2000-01-01";
+export const EVENT_DATE_MAX = "2100-12-31";
+export function isEventDateInRange(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= EVENT_DATE_MIN && value <= EVENT_DATE_MAX;
+}
 /** BE `CreateNoticeDto.body` @MaxLength (a PATCH allows double; the stricter create limit applies to both). */
 export const NOTICE_BODY_MAX = 50_000;
 export function validatePostForm(
-  input: Pick<PostForm, "title" | "bodyMarkdown" | "thumbnail" | "externalUrl">,
+  input: Pick<PostForm, "title" | "bodyMarkdown" | "thumbnail" | "externalUrl"> & { eventDate?: string },
   stored?: Pick<AdminPost, "thumbnail" | "externalUrl">,
 ): PostFieldErrors {
   const errors: PostFieldErrors = {};
-  if (!input.title.trim()) errors.title = "required";
-  if (!input.bodyMarkdown.trim()) errors.bodyMarkdown = "required";
+  // Zero-width / filler-only text is blank to the reader and the BE refuses it (`visible characters`): say so on the field.
+  if (!hasVisibleText(input.title)) errors.title = "required";
+  if (!hasVisibleText(input.bodyMarkdown)) errors.bodyMarkdown = "required";
   else if (input.bodyMarkdown.trim().length > NOTICE_BODY_MAX) errors.bodyMarkdown = "tooLong";
-  if (input.thumbnail && !isHttpUrlOrMediaPath(input.thumbnail) && !(input.thumbnail === stored?.thumbnail && isSafeUrl(input.thumbnail))) errors.thumbnail = "urlInvalid";
+  if (input.eventDate && !isEventDateInRange(input.eventDate)) errors.eventDate = "dateRange";
+  if (input.thumbnail && !isPublicHttpUrlOrMediaPath(input.thumbnail) && !(input.thumbnail === stored?.thumbnail && isSafeUrl(input.thumbnail))) errors.thumbnail = urlErrorKind(input.thumbnail);
   const externalUrl = input.externalUrl?.trim();
-  if (externalUrl && !isHttpUrl(externalUrl) && !(externalUrl === stored?.externalUrl && isSafeUrl(externalUrl))) errors.externalUrl = "urlInvalid";
+  if (externalUrl && !isPublicHttpUrl(externalUrl) && !(externalUrl === stored?.externalUrl && isSafeUrl(externalUrl))) errors.externalUrl = urlErrorKind(externalUrl);
   return errors;
 }
 
@@ -141,7 +150,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     if (savingRef.current) return;
     // A freshly picked file replaces the stored thumbnail, so only the kept URL is checked.
     const stored = mode === "create" ? undefined : records.find((item) => item.slug === mode);
-    const nextErrors = validatePostForm({ ...form, thumbnail: thumbnailFile ? null : form.thumbnail }, stored);
+    const nextErrors = validatePostForm({ ...form, thumbnail: thumbnailFile ? null : form.thumbnail, eventDate: form.category === "Events" ? form.eventDate : "" }, stored);
     if (Object.values(nextErrors).some(Boolean)) {
       setErrors(nextErrors);
       pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
@@ -158,11 +167,22 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       const previousStatus = records.find((item) => item.slug === mode)?.status;
       const options = publishOptionFor(previousStatus, form.status, mode === "create" ? "create" : "edit");
       await api.saveAdminPost(post, mode === "create", options);
+      expirePublicLists(["notices"]);
       pushAdminToast({ variant: "success", title: mode === "create" ? t("toast.createdTitle") : t("toast.updatedTitle"), description: tCommon("savedDescription", { title: form.title }) });
       startNew();
       await reload();
     } catch (error) {
-      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
+      // The BE rejected a URL the form let through: show it on the field, not only as a generic toast.
+      const urlErrors = adminUrlFieldErrors(error);
+      const textErrors = adminTextFieldErrors(error, { title: "title", body: "bodyMarkdown" } as const);
+      const inline: PostFieldErrors = { ...(urlErrors.externalUrl ? { externalUrl: urlErrors.externalUrl } : {}), ...(urlErrors.thumbnailUrl ? { thumbnail: urlErrors.thumbnailUrl } : {}), ...textErrors };
+      if (Object.keys(inline).length) setErrors((current) => ({ ...current, ...inline }));
+      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: Object.keys(inline).length ? tCommon("fixFields") : adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
+      // The notice was deleted elsewhere: its copy says "the list was refreshed", so do refresh it and leave edit mode (a retry would 404 again).
+      if (adminApiErrorCode(error) === "NOTICE_NOT_FOUND") {
+        startNew();
+        void reload();
+      }
     } finally {
       savingRef.current = false;
       setSaving(false);
@@ -176,6 +196,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
     setPendingDelete(null);
     try {
       await api.deleteAdminPost(post.slug);
+      expirePublicLists(["notices"]);
       setRecords((current) => current.filter((item) => item.slug !== post.slug));
       // The form may be editing the record that just went away: a later save would PATCH a missing row.
       if (mode === post.slug) startNew();
@@ -237,7 +258,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
           <label className="text-sm font-semibold text-ink">{t("form.externalLink")}<input {...invalidProps("externalUrl", "post-externalUrl-hint")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" inputMode="url" onChange={(event) => updateForm("externalUrl", event.target.value || null)} placeholder={t("form.externalLinkPlaceholder")} type="url" value={form.externalUrl ?? ""} /><span className="mt-1 block text-xs font-normal text-ink-muted" id="post-externalUrl-hint">{tCommon("httpUrlHint")}</span>{fieldError("externalUrl")}</label>
           <label className="md:col-span-2 text-sm font-semibold text-ink">{t("form.body")}<textarea {...invalidProps("bodyMarkdown")} className="mt-2 min-h-[144px] w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" onChange={(event) => updateForm("bodyMarkdown", event.target.value)} placeholder={t("form.bodyPlaceholder")} value={form.bodyMarkdown} /><span className="mt-1 block text-xs font-normal text-ink-muted">{t("form.bodyHint")}</span>{fieldError("bodyMarkdown")}</label>
           {form.category === "Events" ? (
-            <label className="text-sm font-semibold text-ink">{t("form.eventDate")}<input aria-describedby="post-eventDate-hint" className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary" onChange={(event) => updateForm("eventDate", event.target.value)} type="date" value={form.eventDate} /><span className="mt-1 block text-xs font-normal text-ink-muted" id="post-eventDate-hint">{t("form.eventDateHint")}</span></label>
+            <label className="text-sm font-semibold text-ink">{t("form.eventDate")}<input {...invalidProps("eventDate", "post-eventDate-hint")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary aria-[invalid]:border-danger" max={EVENT_DATE_MAX} min={EVENT_DATE_MIN} onChange={(event) => updateForm("eventDate", event.target.value)} type="date" value={form.eventDate} />{fieldError("eventDate")}<span className="mt-1 block text-xs font-normal text-ink-muted" id="post-eventDate-hint">{t("form.eventDateHint")}</span></label>
           ) : null}
           <label className="text-sm font-semibold text-ink">
             {t("form.status")}
