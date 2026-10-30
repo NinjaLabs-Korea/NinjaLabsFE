@@ -10,6 +10,7 @@ import type {
   AdminCohortApplicationPage,
   AdminCohortInput,
   CohortApplicationValues,
+  CohortQuestionInput,
   CohortReviewDecision,
   MyCohortApplication,
   PublicCohort,
@@ -120,7 +121,7 @@ export type CohortApi = {
   getCurrentCohort: () => Promise<PublicCohort | null>;
   /** `GET /cohorts/applications/me`, newest first. Signed out: `[]`. */
   getMyCohortApplications: (auth: AuthSnapshot) => Promise<ApiResult<readonly MyCohortApplication[]>>;
-  /** `POST /cohorts/:id/applications`: 409 `PROFILE_REQUIRED` (onboarding unfinished), `COHORT_NOT_FOUND`, `COHORT_NOT_ACCEPTING`, `COHORT_ALREADY_APPLIED`, 400 `COHORT_OTHER_DETAIL_REQUIRED`. A withdrawn application is reopened (same id). */
+  /** `POST /cohorts/:id/applications`: 409 `PROFILE_REQUIRED` (onboarding unfinished), `COHORT_NOT_FOUND`, `COHORT_NOT_ACCEPTING`, `COHORT_ALREADY_APPLIED`, 400 `COHORT_OTHER_DETAIL_REQUIRED` / `COHORT_ANSWERS_INVALID` (the questions changed since the page read them). A withdrawn application is reopened (same id). */
   applyToCohort: (cohortId: string, values: CohortApplicationValues) => Promise<MyCohortApplication>;
   /** `PATCH /cohorts/applications/:id`: SUBMITTED and accepting only (409 `COHORT_APPLICATION_NOT_SUBMITTED` / `COHORT_NOT_ACCEPTING`). */
   updateCohortApplication: (applicationId: string, values: CohortApplicationValues) => Promise<MyCohortApplication>;
@@ -189,9 +190,11 @@ export type AdminCohortApi = {
   saveAdminCohort: (cohortId: string | null, input: AdminCohortInput) => Promise<AdminCohort>;
   /** POST /admin/cohorts/:id/transition `{to}`: 409 `COHORT_ALREADY_OPEN`, 400 `COHORT_INVALID_TRANSITION`. */
   transitionAdminCohort: (cohortId: string, to: "OPEN" | "CLOSED") => Promise<AdminCohort>;
+  /** PUT /admin/cohorts/:id/questions `{questions}`: replaces the whole list (ids kept for existing questions/options, omitted for new ones). 400 `COHORT_QUESTIONS_INVALID`, 404 `COHORT_NOT_FOUND`. Returns the cohort. */
+  saveAdminCohortQuestions: (cohortId: string, questions: CohortQuestionInput[]) => Promise<AdminCohort>;
   /** DELETE /admin/cohorts/:id: 409 `COHORT_HAS_APPLICATIONS` (withdrawn ones count). */
   deleteAdminCohort: (cohortId: string) => Promise<void>;
-  /** GET /admin/cohorts/:id/applications?status=&activityType=&interestArea=&q=&page= (30 per page, newest first). */
+  /** GET /admin/cohorts/:id/applications?status=&questionId=&optionId=&q=&page= (30 per page, newest first). */
   getAdminCohortApplications: (cohortId: string, filter: AdminCohortApplicationFilter, page: number) => Promise<AdminCohortApplicationPage>;
   /** POST /admin/cohort-applications/:id/review: an empty note is omitted; a decided application can be decided again. 409 `COHORT_APPLICATION_WITHDRAWN`. */
   reviewAdminCohortApplication: (applicationId: string, input: { decision: CohortReviewDecision; note?: string }) => Promise<AdminCohortApplication>;
