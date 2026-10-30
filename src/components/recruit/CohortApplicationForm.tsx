@@ -34,6 +34,20 @@ const inputClass =
 const labelClass = "text-sm font-semibold text-ink";
 const hintClass = "mt-1 text-xs text-ink-muted";
 
+/** The form's fields in page order, for finding the first one with a problem. */
+const FIELD_ORDER: (keyof CohortFormErrors)[] = ["displayName", "telegram", "twitter", "web3Experience", "activityType", "activityTypeOther", "interestAreas", "interestOther", "intro"];
+
+/** Moves focus (and the viewport) to the first invalid control after a failed submit; a chip group focuses its first input. */
+function focusFirstInvalid(form: HTMLFormElement, errors: CohortFormErrors): void {
+  const field = FIELD_ORDER.find((name) => errors[name]);
+  if (!field) return;
+  const target = form.querySelector<HTMLElement>(`#cohort-${field}`) ?? form.querySelector<HTMLElement>(`input[name="${field}"]`);
+  if (!target) return;
+  const reduced = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  target.focus({ preventScroll: true });
+  target.scrollIntoView?.({ block: "center", behavior: reduced ? "auto" : "smooth" });
+}
+
 /** Message key under `recruit.form.errors`: the choice groups ask to pick, the two handles say what shape they take. */
 function errorMessageKey(field: keyof CohortFormErrors, kind: CohortFieldError): string {
   if (kind === "required") return field === "web3Experience" || field === "activityType" || field === "interestAreas" ? "requiredChoice" : "required";
@@ -101,6 +115,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
     const values = draftToValues(draft);
     if (Object.keys(nextErrors).length > 0 || !values) {
       setState("idle");
+      focusFirstInvalid(event.currentTarget, nextErrors);
       return;
     }
     inFlight.current = true;

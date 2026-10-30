@@ -13,7 +13,7 @@ import { opsInput, opsTextarea } from "@/components/admin/ops-ui";
 import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlightCallback } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { RewardPill } from "@/components/ui/RewardPill";
-import { type AdminBounty, adminErrorDescription } from "@/lib/admin-helpers";
+import { type AdminBounty, adminErrorDescription, expirePublicLists } from "@/lib/admin-helpers";
 import { bountyToForm, emptyBountyForm, formToBounty, isIsoDateTime, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { opsErrorCode } from "@/lib/admin-operations";
@@ -128,6 +128,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
         ? { slug: mode.slug, coverImage, existingStatus: existing?.status ?? "draft" }
         : { slug: "", coverImage });
       await api.saveAdminBounty(bounty, mode.kind === "create");
+      expirePublicLists(["bounties"]);
       pushAdminToast({ variant: "success", title: mode.kind === "edit" ? t("toast.updatedTitle") : t("toast.createdTitle"), description: tCommon("savedDescription", { title: form.title }) });
       startCreate();
       await reload();
@@ -160,6 +161,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     setTransitioningSlugs(new Set(transitioning.current));
     try {
       await api.transitionAdminBounty(bounty.slug, to);
+      expirePublicLists(["bounties"]);
       pushAdminToast({ variant: "success", title: t("toast.statusUpdatedTitle"), description: t("toast.statusUpdatedDescription", { title: bounty.title, to }) });
       await reload();
     } catch (error) {
@@ -178,8 +180,11 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     keyOf: (bounty) => bounty.slug,
     setRecords,
     closeDialog: () => setPendingDelete(null),
-    // The form may be editing the record that just went away: a later save would PATCH a missing row.
-    onRemoved: (bounty) => { if (mode.kind === "edit" && mode.slug === bounty.slug) startCreate(); },
+    onRemoved: (bounty) => {
+      expirePublicLists(["bounties"]);
+      // The form may be editing the record that just went away: a later save would PATCH a missing row.
+      if (mode.kind === "edit" && mode.slug === bounty.slug) startCreate();
+    },
     describeError: (error) => adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")),
     successToast: (bounty) => ({ title: t("toast.deletedTitle"), description: bounty.title }),
     failedTitle: tCommon("deleteFailed"),
@@ -233,6 +238,12 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <input className={opsInput} {...invalidProps("deadline")} onChange={(event) => updateForm("deadline", event.target.value)} required type="datetime-local" value={form.deadline} />
               {fieldError("deadline")}
             </label>
+            {form.intake === "ON" || form.applicationDeadline ? (
+              <label className="block text-sm font-semibold text-ink">{t("form.applicationDeadline")}
+                <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("applicationDeadline")} onChange={(event) => updateForm("applicationDeadline", event.target.value)} type="datetime-local" value={form.applicationDeadline} />
+                {fieldError("applicationDeadline")}
+              </label>
+            ) : null}
             <div>
               <p className="text-sm font-semibold text-ink">{t("form.reward")}</p>
               <div className="mt-2 flex gap-3">

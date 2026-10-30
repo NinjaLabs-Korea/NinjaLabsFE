@@ -83,7 +83,7 @@ describe("Intro (/) hero", () => {
     expect(screen.queryByText("ninja.inj")).toBeNull();
     for (const role of ["Developers", "Marketers", "Researchers", "Creators"]) expect(screen.getByText(role)).toBeTruthy();
     expect(screen.getByRole("link", { name: "Get Started" }).getAttribute("href")).toBe("/signup");
-    expect(screen.getByRole("link", { name: "See past activities" }).getAttribute("href")).toBe("/notices?category=events");
+    expect((await screen.findByRole("link", { name: "See past activities" })).getAttribute("href")).toBe("/notices?category=events");
   });
 
   it("swaps the second call to action for the cohort application while a cohort accepts applications", async () => {

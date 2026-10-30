@@ -6,7 +6,7 @@ import { useAuthActions, useFoundationMode } from "@/components/auth/FoundationP
 import { TurnstileWidget, type TurnstileHandle, type TurnstileStatus } from "@/components/auth/TurnstileWidget";
 import { useRouter } from "@/i18n/navigation";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
-import { rememberReturnPath } from "@/lib/return-path";
+import { clearReturnPath, rememberReturnPath } from "@/lib/return-path";
 
 type LoginState = "idle" | "pending" | "error";
 
@@ -51,7 +51,9 @@ export function GoogleLoginButton({ turnstileSiteKey }: GoogleLoginButtonProps =
     setLoginState("pending");
     // `/signup?returnTo=/recruit`: come back to the page that asked for the sign-in once it (and onboarding) is done.
     const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+    // A plain sign-in must not inherit a path left by an earlier abandoned attempt (e.g. `/recruit`).
     if (returnTo) rememberReturnPath(returnTo);
+    else clearReturnPath();
 
     try {
       if (simulateFailure) {

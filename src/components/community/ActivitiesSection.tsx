@@ -10,7 +10,7 @@ export function ActivitiesSection({ events, unavailable }: { events: Notice[]; u
   const t = useTranslations("community.activities");
   const tRetry = useTranslations("community");
   return (
-    <section className="mx-auto max-w-content px-4 pb-16 sm:px-6">
+    <section className="mx-auto max-w-content px-6 pb-16">
       <SectionHeader
         eyebrow={t("eyebrow")}
         heading={t("heading")}

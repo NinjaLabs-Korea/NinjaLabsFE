@@ -35,7 +35,7 @@ export function AchievementsSection({ hall, locale, unavailable }: { hall: Runti
   const stats = visibleStats(hall.stats);
   const highlights = hall.highlights.slice(0, COMMUNITY_HIGHLIGHT_LIMIT);
   return (
-    <section className="mx-auto max-w-content px-4 pb-16 sm:px-6">
+    <section className="mx-auto max-w-content px-6 pb-16">
       <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={2} size="lg" action={{ label: t("viewAll"), href: "/hall-of-fame" }} />
       {unavailable ? (
         <CommunitySectionState title={t("unavailable")} body={t("unavailableBody")} retryLabel={tRetry("retry")} />

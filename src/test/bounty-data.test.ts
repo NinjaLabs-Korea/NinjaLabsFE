@@ -145,6 +145,15 @@ describe("bounty mapping", () => {
     expect(broken?.status).toBe("closed");
   });
 
+  it("exposes the UTC application deadline only for application-required bounties", async () => {
+    fetchPublicJson.mockResolvedValueOnce({ ...row("apply"), application_required: true, application_deadline: "2026-07-01T23:59:00.000Z", description: "D", requirements: "", evaluation_criteria: "E" });
+    expect((await getRuntimeBounty("apply", "en"))?.applicationDeadlineDetail).toBe("July 1, 2026 at 11:59 PM UTC");
+    fetchPublicJson.mockResolvedValueOnce({ ...row("apply-null"), application_required: true, application_deadline: null, description: "D", requirements: "", evaluation_criteria: "E" });
+    expect((await getRuntimeBounty("apply-null", "en"))?.applicationDeadlineDetail).toBeUndefined();
+    fetchPublicJson.mockResolvedValueOnce({ ...row("direct"), application_deadline: "2026-07-01T23:59:00.000Z", description: "D", requirements: "", evaluation_criteria: "E" });
+    expect((await getRuntimeBounty("direct", "en"))?.applicationDeadlineDetail).toBeUndefined();
+  });
+
   it("reports an unavailable API instead of throwing", async () => {
     fetchPublicJson.mockRejectedValue(new Error("down"));
     await expect(settle(getRuntimeBounties("en"), [])).resolves.toEqual({ value: [], unavailable: true });

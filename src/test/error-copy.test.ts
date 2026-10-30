@@ -138,3 +138,22 @@ describe("normalizedCode (the one status -> code rule)", () => {
     expect(normalizedCode(error)).toBe(expected);
   });
 });
+
+describe("agent register / rotate copy", () => {
+  const register = messagesAt(ERROR_COPY.agentRegister.messages) as Record<string, string>;
+  const rotate = messagesAt(ERROR_COPY.agentRotate.messages) as Record<string, string>;
+
+  it("has specific copy for outage, bad address, profile and verify-step codes", () => {
+    for (const code of ["DATABASE_UNAVAILABLE", "INVALID_AGENT_WALLET_ADDRESS", "PROFILE_REQUIRED", "AGENT_ALREADY_VERIFIED", "AGENT_NOT_FOUND"] as const) {
+      expect(ERROR_COPY.agentRegister.codes).toContain(code);
+      expect(typeof register[code]).toBe("string");
+    }
+    expect(ERROR_COPY.agentRotate.codes).toContain("DATABASE_UNAVAILABLE");
+    expect(typeof rotate.DATABASE_UNAVAILABLE).toBe("string");
+  });
+
+  it("keeps the wallet-signature hint out of the generic fallback", () => {
+    expect(register.generic).not.toMatch(/signature/i);
+    expect(register.signature).toMatch(/signature/i);
+  });
+});

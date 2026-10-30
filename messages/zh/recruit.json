@@ -71,6 +71,7 @@
       "hint": "请至少写 {min} 字（最多 {limit} 字）",
       "counter": "{count}/{limit}"
     },
+    "lead": "请简单介绍一下你自己，以及你想在 NinjaLabs 做什么。招募期间可以修改或撤回申请。",
     "reapplyIntro": "你已撤回之前的申请。招募期间可以重新提交。",
     "eyebrowEdit": "修改申请",
     "titleEdit": "更新你的申请",
@@ -201,6 +202,9 @@
       "TOO_MANY_REQUESTS": "请求过多，请稍后再试。",
       "generic": "无法撤回申请，请稍后再试。"
     }
+  },
+  "past": {
+    "heading": "以往的申请"
   },
   "account": {
     "heading": "期别申请",

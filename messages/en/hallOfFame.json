@@ -42,5 +42,10 @@
   "partners": {
     "eyebrow": "Ecosystem",
     "heading": "Partners we work with"
+  },
+  "empty": {
+    "title": "Nothing here yet",
+    "body": "Community achievements, milestones and partners will appear here as they build up.",
+    "cta": "See past activities"
   }
 }

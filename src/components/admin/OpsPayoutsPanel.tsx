@@ -28,7 +28,7 @@ const columns = ["recipient", "amount", "status", "requested", "approved", "tx",
 const payoutVariant = (status: string) => (status === "PAID" ? "success" : status === "FAILED" || status === "CANCELLED" ? "danger" : status === "APPROVED" ? "primary-soft" : "warning");
 
 type Dialog =
-  | { kind: "request"; reward: OpsReward; submissionId: string; amount: string; error?: string }
+  | { kind: "request"; reward: OpsReward; submissionId: string; amount: string; error?: string; walletError?: string }
   | { kind: "approve"; payout: OpsPayout }
   | { kind: "paid"; payout: OpsPayout; txHash: string; error?: string };
 
@@ -50,7 +50,7 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
   const openRequest = (reward: OpsReward) => {
     const candidates = payoutCandidates(ops, reward.id);
     const headroom = rewardHeadroom(reward);
-    setDialog({ kind: "request", reward, submissionId: candidates[0]?.id ?? "", amount: headroom && headroom !== "0" ? operatorAmountFromBaseUnits(headroom, reward.symbol) : "" });
+    setDialog({ kind: "request", reward, submissionId: (candidates.find((item) => item.recipientWalletAddress) ?? { id: "" }).id, amount: headroom && headroom !== "0" ? operatorAmountFromBaseUnits(headroom, reward.symbol) : "" });
   };
 
   const liveReward = dialog?.kind === "request" ? ops.rewards.find((item) => item.id === dialog.reward.id) : undefined;
@@ -62,10 +62,12 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
       const reward = liveReward ?? dialog.reward;
       const amount = operatorAmountToBaseUnits(dialog.amount, reward.symbol);
       const headroom = rewardHeadroom(reward);
-      // BE answers 404 APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND without an active primary wallet - say so before the round trip.
-      if (!ops.submissions.find((item) => item.id === dialog.submissionId)?.recipientWalletAddress) return setDialog({ ...dialog, error: t("submissions.noWallet") });
-      if (!amount) return setDialog({ ...dialog, error: t(tokenDecimalsFor(dialog.reward.symbol) === null ? "form.amountInvalidBaseUnits" : "form.amountInvalid", { symbol: dialog.reward.symbol }) });
-      if (headroom !== null && BigInt(amount) > BigInt(headroom)) return setDialog({ ...dialog, error: t("payouts.amountOverHeadroom", { amount: opsAmount(headroom, dialog.reward.symbol) }) });
+      // Validate the amount and the recipient wallet independently so both errors show at once (the BE answers 404
+      // APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND without an active primary wallet - say so before the round trip).
+      const walletError = ops.submissions.find((item) => item.id === dialog.submissionId)?.recipientWalletAddress ? undefined : t("submissions.noWallet");
+      const amountError = !amount ? t(tokenDecimalsFor(dialog.reward.symbol) === null ? "form.amountInvalidBaseUnits" : "form.amountInvalid", { symbol: dialog.reward.symbol })
+        : headroom !== null && BigInt(amount) > BigInt(headroom) ? t("payouts.amountOverHeadroom", { amount: opsAmount(headroom, dialog.reward.symbol) }) : undefined;
+      if (walletError || amountError || !amount) return setDialog({ ...dialog, error: amountError, walletError });
       const ok = await run(`request:${dialog.reward.id}`, () => api.requestAdminPayout({ rewardId: dialog.reward.id, submissionId: dialog.submissionId, amount }), {
         title: t("toast.payoutRequestedTitle"),
         description: t("toast.payoutRequestedDescription", { amount: opsAmount(amount, dialog.reward.symbol), name: submissionName(dialog.submissionId) }),
@@ -87,7 +89,7 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
   const dialogPayout = dialog && dialog.kind !== "request" ? ops.payouts.find((item) => item.id === dialog.payout.id) : undefined;
   // A request dialog is stale once its reward stopped being requestable (bounty finished, reward not funded) or its submission got a payout meanwhile.
   const dialogCurrent = dialog === null ? false
-    : dialog.kind === "request" ? requestable.some((item) => item.id === dialog.reward.id) && payoutCandidates(ops, dialog.reward.id).some((item) => item.id === dialog.submissionId)
+    : dialog.kind === "request" ? requestable.some((item) => item.id === dialog.reward.id) && (dialog.submissionId === "" ? payoutCandidates(ops, dialog.reward.id).length > 0 : payoutCandidates(ops, dialog.reward.id).some((item) => item.id === dialog.submissionId))
       : dialogPayout !== undefined && (dialog.kind === "approve" ? canApprovePayout(dialogPayout) : canMarkPayoutPaid(dialogPayout));
 
   const busyKey = !dialog ? "" : dialog.kind === "request" ? `request:${dialog.reward.id}` : `payout:${dialog.payout.id}`;
@@ -167,7 +169,8 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
           <>
             <div>
               <p className="text-sm font-semibold text-ink">{t("payouts.submission")}</p>
-              <div className="mt-2 w-fit"><AdminSelect formatOption={(id) => (ops.submissions.find((item) => item.id === id)?.recipientWalletAddress ? submissionName(id) : `${submissionName(id)} - ${t("submissions.noWallet")}`)} label={t("payouts.submission")} onChange={(submissionId) => setDialog({ ...dialog, submissionId })} options={payoutCandidates(ops, dialog.reward.id).map((item) => item.id)} value={dialog.submissionId} /></div>
+              <div className="mt-2 w-full max-w-full min-w-0"><AdminSelect formatOption={(id) => (id === "" ? t("payouts.submission") : ops.submissions.find((item) => item.id === id)?.recipientWalletAddress ? submissionName(id) : `${submissionName(id)} - ${t("submissions.noWallet")}`)} label={t("payouts.submission")} onChange={(submissionId) => setDialog({ ...dialog, submissionId, walletError: undefined })} options={payoutCandidates(ops, dialog.reward.id).map((item) => item.id)} value={dialog.submissionId} /></div>
+              {dialog.walletError ? <p className="mt-1 text-xs font-normal text-danger" id="ops-payout-wallet-error" role="alert">{dialog.walletError}</p> : null}
             </div>
             <label className="block text-sm font-semibold text-ink">{t("payouts.amount", { symbol: dialog.reward.symbol })}
               <input aria-describedby={dialog.error ? "ops-payout-error" : "ops-payout-hint"} aria-invalid={dialog.error ? true : undefined} className={opsInput} inputMode="decimal" onChange={(event) => setDialog({ ...dialog, amount: event.target.value, error: undefined })} type="text" value={dialog.amount} />

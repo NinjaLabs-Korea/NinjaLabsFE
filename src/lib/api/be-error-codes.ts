@@ -2,7 +2,7 @@
  * BE가 응답 `message`로 던지는 에러 코드 목록 - **BE 카탈로그의 그대로 복사본(snapshot)**이다. 손으로 코드를 지어내지 말 것.
  *
  * 원본: NinjaLabsBE `src/common/http/error-codes.ts` (`ERROR_CODES`의 키, 같은 순서·같은 묶음).
- * 스냅샷 기준: BE `feat/cohort-recruitment` (PR #35) @ `1ef311c` (카탈로그 마지막 변경 `69d15c7`, 기수 모집 11개 + `AGENT_WALLET_IS_OWNER_WALLET`) · 98개.
+ * 스냅샷 기준: BE `feat/cohort-recruitment` (PR #35) @ `1ef311c` (카탈로그 마지막 변경 `69d15c7`, 기수 모집 11개 + `AGENT_WALLET_IS_OWNER_WALLET`) · 98개 (이후 BE qa-loop-2 카탈로그의 APPLICATION_DEADLINE_AFTER_SUBMISSION_DEADLINE, REWARD_SYMBOL_DENOM_MISMATCH 추가).
  * 줄 끝 주석은 "HTTP 상태 - BE 카탈로그의 한 줄 의미"이고 사용자 문구가 아니다 (사용자 문구는 `messages/<locale>/*.json`).
  *
  * ## 어디를 고치나
@@ -68,6 +68,8 @@ export const BE_ERROR_CODES = [
   "BOUNTY_HAS_OPEN_FUNDS", // 409 - 미정산 보상·지급이 남아 있어 삭제할 수 없다
   "DEADLINE_IN_PAST", // 400 - 마감일을 과거로 바꿀 수 없다
   "MAX_WINNERS_BELOW_APPROVED", // 400 - 이미 승인된 수보다 적게 최대 당선자 수를 줄일 수 없다
+  "APPLICATION_DEADLINE_AFTER_SUBMISSION_DEADLINE", // 400 - 지원 마감이 제출 마감보다 늦다 (생성·수정 모두, 같은 시각과 1분 미만 차이는 허용)
+  "REWARD_SYMBOL_DENOM_MISMATCH", // 400 - 보상 표시 심볼이 토큰과 맞지 않거나 지원하지 않는 네이티브 토큰이다 (NATIVE는 denom inj + 심볼 INJ만)
   "INVALID_TRANSITION", // 400 - 허용되지 않는 상태 전이다 (실제 메시지는 INVALID_TRANSITION:<from>-><to>)
   "REWARD_TOKEN_DENOM_REQUIRED", // 400 - 보상 토큰 denom이 필요하다
   "REWARD_TOKEN_CONTRACT_REQUIRED", // 400 - 보상 토큰 컨트랙트 주소가 필요하다

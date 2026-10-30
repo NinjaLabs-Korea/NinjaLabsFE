@@ -19,7 +19,8 @@ import { fetchMe, readMe, toClientUser } from "@/lib/api/me";
 import { pushFlash } from "@/lib/flash";
 import { getOnboardingPath } from "@/lib/auth-route";
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
-import { takeReturnPath } from "@/lib/return-path";
+import { clearReturnPath, takeReturnPath } from "@/lib/return-path";
+import { clearProfileDraft } from "@/lib/profile-draft";
 import { stripLocale, withLocaleOf } from "@/i18n/routing";
 
 export { getOnboardingPath };
@@ -37,7 +38,7 @@ function hubOrReturnPath(currentPathname: string, returnPath: string | null): st
  * The community hub (`/`) and `/about` are exempt too: the hub is the primary service and reachable by everyone, so an unfinished
  * sign-up who opens the site sees it (its hero offers "Continue sign-up") instead of being pushed into a step.
  */
-const ONBOARDING_EXEMPT = /^\/(?:$|about(?:\/|$)|signup\/|account(?:\/|$)|(?:privacy|terms)(?:\/|$))/;
+const ONBOARDING_EXEMPT = /^\/(?:$|about(?:\/|$)|signup\/|recruit(?:\/|$)|account(?:\/|$)|(?:privacy|terms)(?:\/|$))/;
 
 export function shouldRedirectToOnboarding(
   user: AuthSnapshot["user"],
@@ -245,6 +246,9 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
         pushFlash("signOutFailed");
         return snapshot;
       }
+      // Per-user leftovers must not outlive the session (the next sign-in on this tab may be someone else).
+      clearReturnPath();
+      clearProfileDraft();
       const signedOut = setSnapshot({ status: "signed-out", user: null });
       onboardingLog("session.signout.completed");
       return signedOut;

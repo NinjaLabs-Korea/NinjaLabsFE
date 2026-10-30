@@ -25,8 +25,8 @@ const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card
 const submitButtonClass = "motion-control motion-press rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60";
 const outlineButtonClass = "inline-flex rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong";
 const outlineLinkClass = `mt-4 ${outlineButtonClass}`;
-const inputClass = "h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
-const textareaClass = "w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
+const inputClass = "h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
+const textareaClass = "w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
 const labelTextClass = "mb-1.5 block text-sm font-semibold text-ink";
 // Headings that receive focus after a successful apply/submit (tabIndex={-1}); the ring matches the focus recipe.
 const headingClass = "font-display text-2xl -tracking-[0.24px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -140,7 +140,7 @@ function SignedOutPanel({ applicationRequired, bountyId }: { applicationRequired
             <input aria-label={t("portfolioUrl")} className={inputClass} placeholder="https://" type="url" />
             <input aria-label={t("availability")} className={inputClass} placeholder={t("availability")} type="text" />
           </div>
-          <textarea aria-label={t("applyMessage")} className="min-h-28 w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder" placeholder={t("applyMessage")} />
+          <textarea aria-label={t("applyMessage")} className="min-h-28 w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" placeholder={t("applyMessage")} />
           <div className="flex flex-wrap gap-3">
             <Link className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href={signIn}>{t("apply")}</Link>
             <span className="rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong opacity-60">{t("submitDisabled")}</span>
@@ -334,6 +334,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const derivedView = deriveActionView({
     bountyId, applicationRequired, applicationClosed, closedReason, status, submissionMode,
     auth: auth.status,
+    ...(auth.status === "signed-out" && auth.reason ? { authReason: auth.reason } : {}),
     applications: applicationsQuery,
     submissions: submissionsQuery,
     applied, submitted,
@@ -345,10 +346,10 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const [heldForm, setHeldForm] = useState<{ signature: string; view: typeof derivedView } | null>(null);
   if (formSignature) {
     if (heldForm?.signature !== formSignature) setHeldForm({ signature: formSignature, view: derivedView });
-  } else if (heldForm && derivedView.kind !== "signedOut" && derivedView.kind !== "checkingSession") {
+  } else if (heldForm && derivedView.kind !== "signedOut" && derivedView.kind !== "sessionUnavailable" && derivedView.kind !== "checkingSession") {
     setHeldForm(null);
   }
-  const view = sessionEnded && derivedView.kind === "signedOut" && heldForm ? heldForm.view : derivedView;
+  const view = sessionEnded && (derivedView.kind === "signedOut" || derivedView.kind === "sessionUnavailable") && heldForm ? heldForm.view : derivedView;
   const sessionEndedLine = sessionEnded ? (
     <p className="mt-3 text-sm text-danger" role="alert">
       {t("sessionEnded")}{" "}
@@ -378,6 +379,14 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       );
     case "checkingSession":
       return <CheckingPanel applicationRequired={applicationRequired} label={t("checkingSession")} />;
+    case "sessionUnavailable":
+      return (
+        <section className={panelClass} role="status">
+          <h2 className={headingClass}>{t("sessionUnavailable.title")}</h2>
+          <p className="mt-2 text-sm text-ink-muted">{t("sessionUnavailable.body")}</p>
+          <button className="mt-4 rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => window.location.reload()} type="button">{t("sessionUnavailable.retry")}</button>
+        </section>
+      );
     case "signedOut":
       return <SignedOutPanel applicationRequired={applicationRequired} bountyId={bountyId} />;
     case "checkingStatus":

@@ -22,6 +22,9 @@ export type Bounty = {
   daysLeft?: number;
   // Figma 14 (list card) shows the D-7 label; Figma 15 (detail meta cell) shows the full UTC deadline
   deadlineDetail?: string;
+  /** ISO instants behind the two detail strings, so the detail page can show the viewer's local time. */
+  deadlineAt?: string;
+  applicationDeadlineAt?: string;
   coverImage: string;
   /** Markdown (rendered by ui/Markdown): supported subset is p/a/strong/em/ul/ol/li/h2/h3/code/pre/blockquote/br/del. Tables, images, and task lists are unsupported by design. */
   descriptionMarkdown?: string;
@@ -35,6 +38,8 @@ export type Bounty = {
   /** Figma 15v renders variant-specific masthead/description copy without changing list copy. */
   applicationTitle?: string;
   applicationDescription?: string;
+  /** UTC-formatted BE `application_deadline`; application-required bounties only, absent when null or unparsable. */
+  applicationDeadlineDetail?: string;
   /** Application-required bounty whose `application_deadline` has passed: new applications are refused (BE `APPLICATION_DEADLINE_PASSED`); approved applicants can still submit. */
   applicationClosed?: boolean;
 };

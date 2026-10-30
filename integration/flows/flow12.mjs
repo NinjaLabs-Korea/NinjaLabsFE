@@ -168,13 +168,13 @@ clean(await report(bp, 'applicant sees result'));
 await bp.goto('/en/home'); await bp.waitText('Accepted', 8000);
 check('home: shows the accepted status', (await mainText(bp)).includes('Accepted'));
 
-// ---- an unfinished sign-up is sent to the step it owes from every page except the hub (/recruit included); the API says PROFILE_REQUIRED
+// ---- an unfinished sign-up is sent to the step it owes from every page except the hub and /recruit (exempt since QA 2 FE-2: the page itself can open); the API says PROFILE_REQUIRED
 {
   const p = await b.newPage(await b.newContext());
   await signIn(p, INCOMPLETE);
   await p.waitFor(`location.pathname.endsWith('/signup/profile')`, 8000);
-  await p.goto('/en/recruit'); await p.waitFor(`location.pathname.endsWith('/signup/profile')`, 10000);
-  check('unfinished user: /recruit sends them to the onboarding step they owe, no form', (await p.url()).endsWith('/en/signup/profile') && !(await p.eval(`!!document.querySelector('#cohort-intro')`)), await p.url());
+  await p.goto('/en/recruit'); await new Promise((r) => setTimeout(r, 3000));
+  check('unfinished user: /recruit stays open (no forced redirect to the owed onboarding step)', new URL(await p.url()).pathname === '/en/recruit', await p.url());
   const [st, body] = await apiAs(tokenFor(INCOMPLETE), 'POST', `/cohorts/${cohortId}/applications`, { displayName: 'x', telegram: '@abcde', twitter: '@abc', web3Experience: 'LT_1Y', activityType: 'STUDENT', interestAreas: ['DEVELOPER'], intro: 'hi' });
   check('unfinished user: BE answers 409 PROFILE_REQUIRED', st === 409 && body.includes('PROFILE_REQUIRED'), [st, body]);
   clean(await report(p, 'unfinished /recruit'));

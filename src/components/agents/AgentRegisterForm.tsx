@@ -13,6 +13,8 @@ import { isSameWalletAddress } from "@/lib/injective-address";
 import { Link } from "@/i18n/navigation";
 import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
 import type { AgentVerification } from "@/lib/contracts/api";
+import { getOnboardingPath } from "@/lib/api/auth-adapter";
+import { ApiHttpError } from "@/lib/api/http";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
 import { formatUtcDateTime } from "@/lib/format";
 import { validationFieldsFromError } from "@/lib/api/validation";
@@ -48,6 +50,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // 필드 검증 에러 (BE RegisterAgentDto 한도의 거울, `lib/agent-register-form.ts`). 요청 실패 문구(errorMessage)와는 따로 표시한다.
   const [fieldErrors, setFieldErrors] = useState<AgentRegisterErrors>({});
+  const [profileRequired, setProfileRequired] = useState(false);
   const [verification, setVerification] = useState<AgentVerification | null>(null);
   // The one-time key belongs to the session that received it: signing out (or switching account) on this page must drop
   // it from state and the DOM, not leave it on screen for the next person at the machine.
@@ -115,8 +118,10 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
     const agentAddress = address;
     const requestingUserId = sessionUserId;
     setErrorMessage(null);
+    setProfileRequired(false);
     setFieldErrors({});
     setVerification(null);
+    let signingStage = false;
     try {
       setSubmissionState("registering");
       onboardingLog("agent.registration.started", {
@@ -129,6 +134,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       });
 
       setSubmissionState("signing");
+      signingStage = true;
       onboardingLog("agent.signature.requested", {
         wallet: maskWalletAddress(agentAddress),
         signatureType: "EIP191",
@@ -139,6 +145,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         message: registration.verificationMessage,
       });
 
+      signingStage = false;
       setSubmissionState("verifying");
       const verified = await agentApi.verifyAgent(registration.agentId, signature);
       if (sessionUserIdRef.current !== requestingUserId) return;
@@ -160,7 +167,9 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
         setFieldErrors(rejected);
         setErrorMessage(t("errorInvalid"));
       } else {
-        const key = errorCopyKey(caught, ERROR_COPY.agentRegister);
+        // Only a failure of the wallet signing step (rejected / failed in the wallet) gets the signature hint.
+        const key = signingStage && !(caught instanceof ApiHttpError) ? "signature" : errorCopyKey(caught, ERROR_COPY.agentRegister);
+        setProfileRequired(key === "PROFILE_REQUIRED");
         // The BE answers one code for "your own agent holds this wallet" and "another account's pending agent holds it".
         // "View it in My agents" only helps in the first case: tell the user when /agents/me (already loaded) has no such agent.
         const heldByOthers = key === "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED" && Boolean(agents) && !agents?.some((agent) => agent.walletAddress.toLowerCase() === agentAddress.toLowerCase());
@@ -285,7 +294,17 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
           {t("pending")}
         </p>
       ) : null}
-      {errorMessage ? <p className="mt-3 text-sm text-danger" role="alert">{errorMessage}</p> : null}
+      {errorMessage ? (
+        <p className="mt-3 text-sm text-danger" role="alert">
+          {errorMessage}
+          {profileRequired && auth.user ? (
+            <>
+              {" "}
+              <Link className="font-semibold underline" href={getOnboardingPath(auth.user) ?? "/"}>{tRegisterErrors("profileLink")}</Link>
+            </>
+          ) : null}
+        </p>
+      ) : null}
       {isWrongNetwork && switchError ? (
         <p className="mt-3 text-sm text-danger" role="alert">
           {tWallet(switchError === "rejected" ? "switchRejected" : "switchFailed")}

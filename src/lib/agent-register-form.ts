@@ -3,20 +3,22 @@
  * 한도 숫자는 `src/lib/input-limits.ts`가 단일 출처다(BE가 바뀌면 거기서 고친다).
  */
 import { AGENT_DESCRIPTION_MAX, AGENT_NAME_MAX } from "@/lib/input-limits";
-import { hasVisibleText } from "@/lib/visible-text";
+import { hasStorableBodyText, hasVisibleText, isPlainDisplayText } from "@/lib/visible-text";
 
 export { hasVisibleText };
 
 /** 화면 문구는 messages `agents.form.errors.<field><Reason>` */
-export type AgentFieldError = "required" | "tooLong" | "rejected";
+export type AgentFieldError = "required" | "tooLong" | "rejected" | "invalidChars";
 export type AgentRegisterErrors = Partial<Record<"name" | "description", AgentFieldError>>;
 
 export function validateAgentRegisterForm(input: { name: string; description: string }): AgentRegisterErrors {
   const errors: AgentRegisterErrors = {};
   const name = input.name.trim();
   if (name.length === 0 || !hasVisibleText(name)) errors.name = "required";
+  else if (!isPlainDisplayText(name)) errors.name = "invalidChars";
   else if (name.length > AGENT_NAME_MAX) errors.name = "tooLong";
   if (input.description.trim().length > AGENT_DESCRIPTION_MAX) errors.description = "tooLong";
+  else if (!hasStorableBodyText(input.description)) errors.description = "invalidChars";
   return errors;
 }
 

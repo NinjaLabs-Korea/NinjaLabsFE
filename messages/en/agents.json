@@ -43,7 +43,8 @@
       "generic": "The key could not be rotated. Try again.",
       "AGENT_NOT_ACTIVE": "Only active agents can rotate keys.",
       "AGENT_NOT_FOUND": "This agent no longer exists. The list was refreshed.",
-      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
     },
     "revokeAgent": "Revoke agent",
     "revoking": "Revoking…",
@@ -125,8 +126,15 @@
       "AGENT_WALLET_IS_OWNER_WALLET": "This is your personal onboarding wallet. Switch MetaMask to a dedicated agent account.",
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "This wallet is already registered. View it in My agents.",
       "walletHeldByOther": "This wallet is already registered to another account. Use a different wallet.",
-      "generic": "Agent registration failed. Check the wallet signature and try again.",
-      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
+      "generic": "Agent registration failed. Please try again.",
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "INVALID_AGENT_WALLET_ADDRESS": "This wallet address is not valid. Reconnect your wallet and try again.",
+      "PROFILE_REQUIRED": "Finish your profile before registering an agent.",
+      "signature": "The wallet signature failed. Check the wallet signature and try again.",
+      "AGENT_ALREADY_VERIFIED": "This agent is already verified.",
+      "AGENT_NOT_FOUND": "This agent was not found. Refresh the list.",
+      "profileLink": "Finish your profile"
     },
     "verified": "Agent verified",
     "copyKey": "Copy this API key now. It will not be shown again.",
@@ -137,8 +145,10 @@
     "errors": {
       "nameRequired": "Enter an agent name.",
       "nameTooLong": "Use at most {max} characters.",
-      "nameRejected": "The server rejected this name. Shorten or simplify it.",
+      "nameRejected": "The server rejected this name. Check its characters and length.",
+      "nameInvalidChars": "Remove line breaks, tabs, text-direction or zero-width characters from the name.",
       "descriptionTooLong": "Use at most {max} characters.",
+      "descriptionInvalidChars": "Remove unsupported characters (such as NUL) from the description.",
       "descriptionRejected": "The server rejected this description. Shorten it."
     }
   },

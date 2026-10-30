@@ -44,6 +44,8 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
   const { value: hallOfFame, unavailable } = await settle(getRuntimeHallOfFame(locale), emptyHallOfFame);
   // A brand-new platform has all-zero stats: hide the block until one value is above zero.
   const stats = visibleStats(hallOfFame.stats);
+  // Nothing to show at all (and the API is reachable): say so instead of leaving a header over blank space.
+  const isEmpty = !unavailable && stats.length === 0 && hallOfFame.highlights.length === 0 && hallOfFame.milestones.length === 0 && hallOfFame.partners.length === 0;
   return (
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -57,6 +59,14 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
         <div className="mt-10 rounded-card border border-dashed border-border bg-surface-subtle p-6 text-center" role="status">
           <p className="font-display text-lg font-bold text-ink">{t("unavailable.title")}</p>
           <p className="mt-1 text-sm text-ink-muted">{t("unavailable.body")}</p>
+        </div>
+      ) : null}
+
+      {isEmpty ? (
+        <div className="mt-10 rounded-card border border-dashed border-border bg-surface-subtle p-8 text-center [overflow-wrap:anywhere]" data-testid="hall-of-fame-empty">
+          <p className="font-display text-lg font-bold text-ink">{t("empty.title")}</p>
+          <p className="mx-auto mt-1 max-w-md text-sm text-ink-muted">{t("empty.body")}</p>
+          <Link href="/notices" className="mt-4 inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">{t("empty.cta")}</Link>
         </div>
       ) : null}
 

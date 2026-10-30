@@ -1,7 +1,9 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useUnsavedInputGuard } from "@/components/layout/useUnsavedInputGuard";
 import { menuItemBaseClass, menuItemClass, menuPanelClass, useMenuButton } from "@/components/layout/useMenuButton";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { localeLabels, routing, type Locale } from "@/i18n/routing";
@@ -14,13 +16,25 @@ export function LocaleSwitcher() {
   const [pending, startTransition] = useTransition();
   const menu = useMenuButton(routing.locales.length);
 
-  const switchTo = (next: Locale) => {
-    menu.closeMenu(true);
-    if (next === locale) return;
+  const { hasUnsavedInput } = useUnsavedInputGuard();
+  const [pendingLocale, setPendingLocale] = useState<Locale | null>(null);
+
+  const navigateTo = (next: Locale) => {
     startTransition(() => {
       // Keep query and hash: /auth/callback#loginCode must survive a locale switch.
       router.replace(`${pathname}${window.location.search}${window.location.hash}`, { locale: next });
     });
+  };
+
+  const switchTo = (next: Locale) => {
+    menu.closeMenu(true);
+    if (next === locale) return;
+    // A locale switch remounts the page, so typed form text would be lost silently: ask first.
+    if (hasUnsavedInput()) {
+      setPendingLocale(next);
+      return;
+    }
+    navigateTo(next);
   };
 
   return (
@@ -55,6 +69,21 @@ export function LocaleSwitcher() {
           ))}
         </div>
       ) : null}
+
+      <ConfirmDialog
+        cancelLabel={t("unsaved.cancel")}
+        confirmLabel={t("unsaved.confirm")}
+        description={t("unsaved.body")}
+        eyebrow={t("label")}
+        onCancel={() => setPendingLocale(null)}
+        onConfirm={() => {
+          const next = pendingLocale;
+          setPendingLocale(null);
+          if (next) navigateTo(next);
+        }}
+        open={pendingLocale !== null}
+        title={t("unsaved.title")}
+      />
     </div>
   );
 }

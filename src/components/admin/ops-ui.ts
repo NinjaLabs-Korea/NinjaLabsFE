@@ -8,7 +8,7 @@ export const opsButton = `${opsButtonBase} border border-primary-outline text-pr
 export const opsPrimaryButton = `${opsButtonBase} bg-primary text-primary-soft`;
 export const opsDangerButton = `${opsButtonBase} border border-danger text-danger`;
 // One input recipe for every admin form field (text, textarea, datetime): focus ring, placeholder, and the red border while `aria-invalid`.
-const opsField = "mt-2 w-full rounded-control border border-border px-[17px] text-sm font-normal text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
+const opsField = "mt-2 w-full rounded-control border border-border px-[17px] text-sm font-normal text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
 export const opsInput = `h-[46px] ${opsField}`;
 export const opsTextarea = `min-h-[96px] py-3 ${opsField}`;
 /** The long-form body field (notice markdown). */

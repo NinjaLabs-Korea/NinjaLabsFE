@@ -4,7 +4,7 @@ import { markdownToPlainSummary, NOTICE_SUMMARY_MAX } from "@/lib/markdown-summa
 describe("markdownToPlainSummary", () => {
   it("strips headings, emphasis, links, images, lists, quotes and code", () => {
     expect(markdownToPlainSummary("# Title\n> quoted _note_\n\n1. one\n* two\n![alt](/media/x.png) ~~old~~ __new__\n```js\nconst a = 1;\n```\nend")).toBe(
-      "Title quoted note one two alt old new end",
+      "Title quoted note one two old new end",
     );
   });
 

@@ -8,6 +8,8 @@ export type BountyFormValues = {
   title: string;
   sponsor: string;
   deadline: string;
+  /** 지원 마감(선택, datetime-local 문자열). 빈 문자열 = 지원 마감 없음. 지원형 바운티에서만 입력란이 보인다. */
+  applicationDeadline: string;
   amount: string;
   currency: "INJ" | "USDC";
   intake: "OFF" | "ON";
@@ -29,7 +31,7 @@ export type BountyFormValues = {
    * - 로컬 ↔ UTC 변환을 다시 거치면 초/밀리초가 잘리고, 같은 시각을 "변경"으로 재전송하게 된다.
    */
   originalSubmissionDeadline?: string;
-  /** 폼에 입력란이 없는 지원 마감. 수정 시 손대지 않고 그대로 되돌려 준다. */
+  /** BE가 돌려준 원본 지원 마감 ISO. `applicationDeadline` 입력이 이 값의 로컬 표시와 같으면 원본을 그대로 보낸다. */
   originalApplicationDeadline?: string | null;
   /**
    * BE `requirements` 원문. `deliverables` 입력란이 불러온 값과 같으면 저장 시 이 문자열을 바이트 그대로 보낸다
@@ -80,6 +82,7 @@ export const emptyBountyForm = (): BountyFormValues => ({
   title: "",
   sponsor: "",
   deadline: "",
+  applicationDeadline: "",
   amount: "",
   currency: "INJ",
   intake: "OFF",
@@ -101,6 +104,7 @@ export function bountyToForm(bounty: AdminBounty): BountyFormValues {
     title: bounty.title,
     sponsor: bounty.sponsor,
     deadline: toLocalDateTimeInput(bounty.deadline),
+    applicationDeadline: bounty.applicationDeadline ? toLocalDateTimeInput(bounty.applicationDeadline) : "",
     // A bounty without a reward row maps to `{ amount: 0 }`; prefilling "0" would trip `amountInvalid` and block every edit of it.
     amount: bounty.reward.amount > 0 ? String(bounty.reward.amount) : "",
     currency: bounty.reward.currency,
@@ -146,7 +150,7 @@ export function formToBounty(
     submissionMode: form.submissionMode === "Agent" ? "agent" : "direct",
     coverImage: target.coverImage,
     deadline: resolveDeadlineIso(form.deadline, form.originalSubmissionDeadline),
-    applicationDeadline: form.originalApplicationDeadline ?? null,
+    applicationDeadline: form.applicationDeadline.trim() ? resolveDeadlineIso(form.applicationDeadline, form.originalApplicationDeadline ?? undefined) : null,
     maxWinners: Number(form.maxWinners.trim()),
     tags: form.tags,
     description: form.description.trim(),
@@ -166,11 +170,15 @@ export type BountyFormError =
   | "sponsorTooLong"
   | "deadlineInvalid"
   | "deadlinePast"
+  | "applicationDeadlineInvalid"
+  | "applicationDeadlineAfterDeadline"
   | "amountInvalid"
   | "deliverablesRequired"
   | "maxWinnersInvalid"
   | "tooLong";
 
+/** BE `DEADLINE_UNCHANGED_TOLERANCE_MS`: an application deadline less than this after the submission deadline counts as "not later" (the datetime-local input drops seconds). */
+export const APPLICATION_DEADLINE_TOLERANCE_MS = 60_000;
 export type BountyFormErrors = Partial<Record<keyof BountyFormValues, BountyFormError>>;
 
 /**
@@ -235,6 +243,18 @@ export function validateBountyForm(
     const changed = form.deadline !== original;
     if (Number.isNaN(deadline.getTime())) errors.deadline = "deadlineInvalid";
     else if (changed && deadline.getTime() <= (options.now ?? new Date()).getTime()) errors.deadline = "deadlinePast";
+  }
+
+  const applicationLocal = form.applicationDeadline.trim();
+  if (applicationLocal) {
+    const application = new Date(applicationLocal);
+    if (Number.isNaN(application.getTime())) errors.applicationDeadline = "applicationDeadlineInvalid";
+    else if (!errors.deadline && !blank(form.deadline)) {
+      // Compare like the BE (`assertApplicationDeadlineNotAfterSubmission`) on the ISO values that will actually be sent.
+      const submissionIso = resolveDeadlineIso(form.deadline, form.originalSubmissionDeadline);
+      const applicationIso = resolveDeadlineIso(applicationLocal, form.originalApplicationDeadline ?? undefined);
+      if (new Date(applicationIso).getTime() - new Date(submissionIso).getTime() >= APPLICATION_DEADLINE_TOLERANCE_MS) errors.applicationDeadline = "applicationDeadlineAfterDeadline";
+    }
   }
 
   const winners = form.maxWinners.trim();

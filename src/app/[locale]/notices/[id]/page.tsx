@@ -49,7 +49,7 @@ export default async function NoticeDetailPage({ params }: NoticeDetailPageProps
     <div className="mx-auto max-w-content px-6 py-16 pb-20">
       <div className="flex items-center justify-between gap-4">
         <Link
-          className="text-sm font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           href="/notices"
         >
           {t("detail.back")}

@@ -23,7 +23,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 h-16 border-b border-border bg-surface/85 backdrop-blur-[6px]">
       <div className="mx-auto grid h-full max-w-content grid-cols-[1fr_auto_1fr] items-center px-6">
-        <BrandLink className="flex items-center gap-2 justify-self-start" label={t("homeLabel")}>
+        <BrandLink className="relative inline-flex min-h-11 items-center gap-2 justify-self-start after:absolute after:inset-y-0 after:-inset-x-[6px] after:content-['']" label={t("homeLabel")}>
           <Image
             src="/brand/ninja-labs-mascot.svg"
             alt=""
@@ -43,7 +43,7 @@ export function Header() {
 
           <MobileMenu label={t("menu")}>
             <nav
-              className="absolute right-0 top-full z-50 mt-2 flex w-44 flex-col gap-1 rounded-tile border border-border bg-surface p-2 shadow-card"
+              className="absolute right-0 top-full z-50 mt-2 flex max-h-[calc(100dvh-4.5rem)] w-44 flex-col gap-1 overflow-y-auto overscroll-contain rounded-tile border border-border bg-surface p-2 shadow-card"
               aria-label={t("mobileNavigation")}
             >
               <NavLinks links={links} variant="mobile" />

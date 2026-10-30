@@ -38,8 +38,8 @@ export const HIGHLIGHT_DESCRIPTION_MAX = 2000;
 export const BOUNTY_TITLE_MAX = 200;
 export const BOUNTY_SPONSOR_MAX = 100;
 export const BOUNTY_TEXT_MAX = { description: 50_000, deliverables: 20_000, reviewProcess: 20_000 } as const;
-/** Postgres INTEGER 상한: BE `MaxPgInt` (`maxWinners`). */
-export const MAX_WINNERS_MAX = 2_147_483_647;
+/** BE `CreateBountyDto`/`UpdateBountyDto` `@Max(1000)` (`maxWinners`). */
+export const MAX_WINNERS_MAX = 1000;
 
 /** 에이전트 등록: `RegisterAgentDto` name @MaxChars(100), description @MaxLength(1000). */
 export const AGENT_NAME_MAX = 100;

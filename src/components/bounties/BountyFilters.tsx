@@ -138,7 +138,7 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
         <label className="block sm:w-80">
           <span className="sr-only">{t("filters.search")}</span>
           <input
-            className="h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("filters.search")}
             type="search"

@@ -11,7 +11,7 @@ export function MembersPreviewSection({ members, unavailable }: { members: Membe
   const tMembers = useTranslations("members");
   const tRetry = useTranslations("community");
   return (
-    <section className="mx-auto max-w-content px-4 pb-16 sm:px-6">
+    <section className="mx-auto max-w-content px-6 pb-16">
       <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={2} size="lg" action={{ label: t("viewAll"), href: "/members" }} />
       {unavailable ? (
         <CommunitySectionState title={t("unavailable")} body={t("unavailableBody")} retryLabel={tRetry("retry")} />

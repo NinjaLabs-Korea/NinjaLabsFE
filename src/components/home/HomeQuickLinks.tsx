@@ -13,7 +13,7 @@ const links = [
 export function HomeQuickLinks() {
   const t = useTranslations("home.quickLinks");
   return (
-    <section className="mx-auto max-w-content px-4 py-16 sm:px-6">
+    <section className="mx-auto max-w-content px-6 py-16">
       <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={2} size="lg" />
       <ul className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {links.map((link) => (

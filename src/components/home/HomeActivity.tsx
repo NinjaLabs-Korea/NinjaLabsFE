@@ -33,7 +33,7 @@ export function HomeActivity() {
   const query = useAccountQuery(api.getApplications);
   const rows = [...(query.data ?? [])].sort((a, b) => b.appliedAt.localeCompare(a.appliedAt)).slice(0, HOME_ACTIVITY_LIMIT);
   return (
-    <section className="mx-auto max-w-content px-4 pt-16 sm:px-6">
+    <section className="mx-auto max-w-content px-6 pt-16">
       <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={2} size="lg" action={{ label: t("viewAll"), href: "/applications" }} />
       {query.loading ? (
         <PageLoading className="mt-7" label={t("loading")} variant="list" />

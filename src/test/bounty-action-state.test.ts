@@ -109,7 +109,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["application approved, bounty reviewing, nothing submitted", { applicationRequired: true, status: "reviewing", applications: loaded([app("approved")]) }, { kind: "closed", reason: "reviewing" }],
   ["pending application on an ended bounty (completed/cancelled) is shown as closed", { applicationRequired: true, status: "closed", applications: loaded([app("open")]) }, { kind: "closed", reason: "closed" }],
   ["pending application on a bounty that moved to SUBMISSION_CLOSED / IN_REVIEW can no longer unlock a submission", { applicationRequired: true, status: "reviewing", applications: loaded([app("open")]) }, { kind: "closed", reason: "reviewing" }],
-  ["pending application on a bounty closed only by its deadline is still under review", { applicationRequired: true, status: "closed", closedReason: "deadline", applications: loaded([app("open")]) }, { kind: "applicationUnderReview" }],
+  ["pending application past the deadline can no longer be approved", { applicationRequired: true, status: "closed", closedReason: "deadline", applications: loaded([app("open")]) }, { kind: "closed", reason: "applications" }],
   // 7. 확정된 제출
   ["submission approved", { submissions: loaded([sub("approved")]) }, { kind: "submissionApproved" }],
   ["submission approved carries its payout status", { submissions: loaded([{ ...sub("approved"), paymentStatus: "PARTIALLY_PAID" as const }]) }, { kind: "submissionApproved", payout: "PARTIALLY_PAID" }],

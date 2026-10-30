@@ -6,6 +6,7 @@ import {
   COHORT_INTRO_MAX,
   COHORT_OTHER_DETAIL_MAX,
 } from "./input-limits";
+import { hasVisibleText } from "./visible-text";
 
 export const COHORT_STATUSES = ["DRAFT", "OPEN", "CLOSED"] as const;
 export type CohortStatus = (typeof COHORT_STATUSES)[number];
@@ -181,7 +182,7 @@ export const emptyCohortDraft: CohortFormDraft = {
 export function validateCohortDraft(draft: CohortFormDraft): CohortFormErrors {
   const errors: CohortFormErrors = {};
   const name = draft.displayName.trim();
-  if (!name) errors.displayName = "required";
+  if (!name || !hasVisibleText(name)) errors.displayName = "required";
   else if (length(name) > COHORT_DISPLAY_NAME_MAX) errors.displayName = "tooLong";
 
   const telegram = normalizeHandle(draft.telegram, "telegram");
@@ -206,7 +207,7 @@ export function validateCohortDraft(draft: CohortFormDraft): CohortFormErrors {
     else if (length(other) > COHORT_OTHER_DETAIL_MAX) errors.interestOther = "tooLong";
   }
   const intro = draft.intro.trim();
-  if (!intro) errors.intro = "required";
+  if (!intro || !hasVisibleText(intro)) errors.intro = "required";
   else if (length(intro) > COHORT_INTRO_MAX) errors.intro = "tooLong";
   return errors;
 }

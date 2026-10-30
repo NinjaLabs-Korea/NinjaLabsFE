@@ -1,6 +1,5 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
-import { Inter, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
 import { FoundationProvider } from "@/components/auth/FoundationProvider";
 import { FlashToast } from "@/components/layout/FlashToast";
@@ -12,16 +11,7 @@ import { type Locale, localeTags } from "@/i18n/routing";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { composeFoundationRuntime } from "@/lib/runtime/config";
 import "../../app/globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
-});
+import { inter, spaceGrotesk } from "./fonts";
 
 const { foundationConfig } = composeFoundationRuntime(previewUser);
 

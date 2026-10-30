@@ -63,16 +63,16 @@ export function Footer() {
           <p className="text-xs leading-4 text-on-inverse-muted">
             {t("legal")}
           </p>
-          <p className="flex flex-wrap items-center gap-x-3 text-xs leading-4 text-on-inverse-muted">
-            <Link className="motion-control inline-flex min-h-6 max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/privacy">
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-0 text-xs sm:gap-x-3 sm:gap-y-1 leading-4 text-on-inverse-muted">
+            <Link className="motion-control inline-flex max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/privacy">
               {t("privacy")}
             </Link>
-            <Link className="motion-control inline-flex min-h-6 max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/terms">
+            <Link className="motion-control inline-flex max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/terms">
               {t("terms")}
             </Link>
-            <span className="inline-flex min-h-6 items-center gap-1">
+            <span className="inline-flex max-sm:min-h-11 flex-wrap items-center gap-x-1">
               {t("contact")}{" "}
-              <a className="motion-control text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`mailto:${CONTACT_EMAIL}`}>
+              <a className="motion-control inline-flex max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`mailto:${CONTACT_EMAIL}`}>
                 {CONTACT_EMAIL}
               </a>
             </span>
@@ -95,12 +95,12 @@ function FooterLinkColumn({
   return (
     <div>
       <h2 className="text-sm font-semibold text-on-inverse/90">{heading}</h2>
-      <ul className="mt-1 text-sm leading-5">
+      <ul className="mt-1 text-sm leading-5 sm:mt-2 sm:space-y-2">
         {links.map(({ href, label }) => (
           <li key={label}>
             {external ? (
               <a
-                className="motion-control inline-flex min-h-9 items-center text-sm text-on-inverse-secondary"
+                className="motion-control inline-flex min-h-10 items-center sm:min-h-0 text-sm text-on-inverse-secondary"
                 href={href}
                 target="_blank"
                 rel="noreferrer"
@@ -108,7 +108,7 @@ function FooterLinkColumn({
                 {label}
               </a>
             ) : (
-              <Link className="motion-control inline-flex min-h-9 items-center text-sm text-on-inverse-secondary" href={href} prefetch={true}>
+              <Link className="motion-control inline-flex min-h-10 items-center sm:min-h-0 text-sm text-on-inverse-secondary" href={href} prefetch={true}>
                 {label}
               </Link>
             )}
