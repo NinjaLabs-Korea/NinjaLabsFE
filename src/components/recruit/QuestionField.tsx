@@ -84,6 +84,7 @@ export function QuestionField({ question, value, error, onChange, onBlur }: Ques
   const detailId = `${id}-other`;
   return (
     <fieldset
+      className="min-w-0"
       aria-invalid={groupError ? true : undefined}
       aria-describedby={describedBy(groupError !== undefined, help ? hintId : undefined)}
       aria-required={single && question.required ? true : undefined}
