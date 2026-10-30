@@ -42,6 +42,7 @@
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "바운티 {count}개 완료",
     "newBuilder": "새로 합류했어요",
+    "teamBadge": "팀 · {role}",
     "categories": {
       "dev": "개발",
       "design": "디자인",

@@ -42,6 +42,7 @@
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "已完成 {count} 个赏金",
     "newBuilder": "新加入",
+    "teamBadge": "团队 · {role}",
     "categories": {
       "dev": "开发",
       "design": "设计",
