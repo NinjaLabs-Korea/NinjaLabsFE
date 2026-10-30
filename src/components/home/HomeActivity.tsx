@@ -15,7 +15,7 @@ const HOME_ACTIVITY_LIMIT = 4;
 
 // `account.applications` keys of each status label (the same words as the My applications page, except that the compact
 // home card keeps the short step names for approved rows). Rejected and not-accepted rows go through the shared label so a
-// forfeited award reads the same here and on /applications.
+// reward-not-paid case reads the same here and on /applications.
 const statusLabelKeys: Partial<Record<ApplicationStatus, string>> = {
   open: "steps.open",
   approved: "steps.approved",

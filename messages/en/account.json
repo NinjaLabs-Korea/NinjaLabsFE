@@ -52,9 +52,9 @@
     "cancelledSubmissionStatus": "Closed: bounty cancelled",
     "cancelledSubmissionNote": "The sponsor cancelled this bounty, so your submission was closed without a review.",
     "notAcceptedStatus": "Submission not accepted",
-    "forfeitedStatus": "Award forfeited",
+    "forfeitedStatus": "Reward not paid",
     "notAcceptedNote": "The sponsor reviewed your submission and did not accept it. This result is final.",
-    "forfeitedNote": "Your work was approved, but the award was forfeited: {reason}. Contact the admins if this is a mistake.",
+    "forfeitedNote": "Your work was selected, but the reward was not paid. Reason: {reason}. Contact the admins if this is a mistake.",
     "reviewerComment": "Reviewer comment: {comment}",
     "sponsorNote": "Note from the reviewer: {note}",
     "viaAgent": "via {name}",
@@ -109,7 +109,7 @@
     "deleteErrors": {
       "CONFIRM_NICKNAME_MISMATCH": "The nickname does not match. Type it exactly as shown.",
       "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS": "A payout to you is still in progress. You can delete your account once it is paid or cancelled.",
-      "WITHDRAWAL_BLOCKED_PENDING_REWARDS": "You have approved rewards that have not been paid out yet, so your account can’t be deleted right now (it would forfeit them). Please contact the Ninja Labs admins to complete the payout, then try again.",
+      "WITHDRAWAL_BLOCKED_PENDING_REWARDS": "You have approved rewards that have not been paid out yet, so your account can’t be deleted right now (they would go unpaid). Please contact the Ninja Labs admins to complete the payout, then try again.",
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
       "generic": "We couldn’t delete your account. Please try again shortly.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."

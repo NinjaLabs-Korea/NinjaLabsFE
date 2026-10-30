@@ -87,7 +87,7 @@ describe("HomeActivity", () => {
       note: "", status: "notAccepted", agent: null, reviewComment: "forfeited: wallet never linked", reviewNote: null, paymentStatus: "NONE",
     }] });
     renderWithIntl(<HomeActivity />);
-    expect(await screen.findByText("Award forfeited")).toBeTruthy();
+    expect(await screen.findByText("Reward not paid")).toBeTruthy();
     expect(screen.queryByText("Submission not accepted")).toBeNull();
   });
 
