@@ -86,7 +86,7 @@ export default async function SignupWalletPage({ params }: PageProps<"/[locale]/
                     </p>
                   </div>
                   <Link
-                    className="mt-5 block w-full rounded-control border border-primary-outline px-5 py-3 text-center text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    className="mt-5 flex min-h-11 w-full items-center justify-center rounded-control border border-border px-4 py-3 text-center text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     href="/signup/profile"
                   >
                     {t("wallet.connectLater")}
