@@ -474,7 +474,8 @@
       "modalTitle": "보상 입금 확인",
       "modalDescription": "{address}(으)로 {amount} 이상 입금된 온체인 거래를 기록합니다. 먼저 익스플로러에서 거래를 확인하세요.",
       "depositedAmount": "입금액 ({symbol})",
-      "amountBelowPosted": "입금액은 게시된 보상({amount}) 이상이어야 합니다."
+      "amountBelowPosted": "입금액은 게시된 보상({amount}) 이상이어야 합니다.",
+      "multisigNotConfigured": "멀티시그 주소가 설정되지 않았어요. 입금을 확인하기 전에 REWARD_MULTISIG_ADDRESS를 설정하세요(runbook §1)."
     },
     "applications": {
       "eyebrow": "지원",

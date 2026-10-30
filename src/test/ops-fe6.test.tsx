@@ -58,3 +58,18 @@ describe("lifecycle reopen label", () => {
     expect(screen.getByRole("button", { name: "Open bounty" })).toBeTruthy();
   });
 });
+
+describe("unset multisig", () => {
+  it("shows the not-configured warning instead of the sentinel address and disables Confirm deposit", async () => {
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ rewards: [{ ...operations().rewards[0], custodyAddress: "PENDING_MULTISIG_SETUP" }] }));
+    await renderOps();
+    expect(screen.queryByText(/PENDING_MULTISIG_SETUP/)).toBeNull();
+    expect(screen.getByText(/Multisig address not configured/)).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Confirm deposit" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("keeps Confirm deposit enabled with a real address", async () => {
+    await renderOps();
+    expect((screen.getByRole("button", { name: "Confirm deposit" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+});

@@ -474,7 +474,8 @@
       "modalTitle": "Confirm reward deposit",
       "modalDescription": "Record the on-chain deposit of at least {amount} to {address}. Check the transaction on the explorer first.",
       "depositedAmount": "Deposited amount ({symbol})",
-      "amountBelowPosted": "The deposit must cover the posted reward ({amount})."
+      "amountBelowPosted": "The deposit must cover the posted reward ({amount}).",
+      "multisigNotConfigured": "Multisig address not configured. Set REWARD_MULTISIG_ADDRESS (runbook §1) before confirming deposits."
     },
     "applications": {
       "eyebrow": "Applications",

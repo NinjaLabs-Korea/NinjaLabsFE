@@ -474,7 +474,8 @@
       "modalTitle": "确认奖励存款",
       "modalDescription": "记录向 {address} 存入至少 {amount} 的链上交易。请先在浏览器中核对交易。",
       "depositedAmount": "存款金额（{symbol}）",
-      "amountBelowPosted": "存款必须覆盖公布的奖励（{amount}）。"
+      "amountBelowPosted": "存款必须覆盖公布的奖励（{amount}）。",
+      "multisigNotConfigured": "尚未配置多签地址。确认存入前请先设置 REWARD_MULTISIG_ADDRESS（runbook §1）。"
     },
     "applications": {
       "eyebrow": "申请",
