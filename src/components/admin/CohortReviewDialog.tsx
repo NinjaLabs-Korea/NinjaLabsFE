@@ -1,20 +1,21 @@
 "use client";
 
-import { useFormatter, useTranslations } from "next-intl";
-import { useId, useState } from "react";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
+import { Fragment, useId, useState } from "react";
 import { opsDateTime, opsTextarea } from "@/components/admin/ops-ui";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
-import { ERROR_COPY, type ErrorCopyKey } from "@/lib/api/error-copy";
-import { COHORT_REVIEW_DECISIONS, type AdminCohortApplication, type CohortReviewDecision } from "@/lib/cohorts";
+import type { CohortAdminErrorKey } from "@/lib/cohort-errors";
+import { ERROR_COPY } from "@/lib/api/error-copy";
+import { COHORT_REVIEW_DECISIONS, answerDisplay, localized, type AdminCohortApplication, type CohortReviewDecision } from "@/lib/cohorts";
 import { COHORT_REVIEW_NOTE_MAX } from "@/lib/input-limits";
 
 type CohortReviewDialogProps = {
   /** The application under review; `null` keeps the dialog closed. Each application starts from its own saved decision and note. */
   application: AdminCohortApplication | null;
   busy: boolean;
-  error: ErrorCopyKey<typeof ERROR_COPY.adminCohort> | null;
+  error: CohortAdminErrorKey | null;
   onCancel: () => void;
   onConfirm: (input: { decision: CohortReviewDecision; note: string }) => void;
 };
@@ -28,6 +29,7 @@ export function CohortReviewDialog({ application, busy, error, onCancel, onConfi
   const tForm = useTranslations("recruit.form");
   const tErrors = useTranslations(ERROR_COPY.adminCohort.messages);
   const format = useFormatter();
+  const locale = useLocale();
   const timeZone = useBrowserTimeZone();
   const noteId = useId();
   const savedDecision = (row: AdminCohortApplication | null): CohortReviewDecision | null => (row && (row.status === "ACCEPTED" || row.status === "REJECTED") ? row.status : null);
@@ -41,17 +43,6 @@ export function CohortReviewDialog({ application, busy, error, onCancel, onConfi
     setDecision(savedDecision(application));
     setNote(application.reviewNote ?? "");
   }
-
-  const activity = application
-    ? application.activityType === "OTHER" && application.activityTypeOther
-      ? `${tForm("activityType.options.OTHER")}: ${application.activityTypeOther}`
-      : tForm(`activityType.options.${application.activityType}`)
-    : "";
-  const interests = application
-    ? application.interestAreas
-        .map((area) => (area === "OTHER" && application.interestOther ? `${tForm("interestAreas.options.OTHER")}: ${application.interestOther}` : tForm(`interestAreas.options.${area}`)))
-        .join(", ")
-    : "";
 
   return (
     <ConfirmDialog
@@ -82,14 +73,14 @@ export function CohortReviewDialog({ application, busy, error, onCancel, onConfi
             <dd className="min-w-0 break-words text-ink">{application.telegram}</dd>
             <dt className="text-ink-muted">{tForm("twitter.label")}</dt>
             <dd className="min-w-0 break-words text-ink">{application.twitter}</dd>
-            <dt className="text-ink-muted">{tForm("web3Experience.label")}</dt>
-            <dd className="min-w-0 break-words text-ink">{tForm(`web3Experience.options.${application.web3Experience}`)}</dd>
-            <dt className="text-ink-muted">{tForm("activityType.label")}</dt>
-            <dd className="min-w-0 break-words text-ink">{activity}</dd>
-            <dt className="text-ink-muted">{tForm("interestAreas.label")}</dt>
-            <dd className="min-w-0 break-words text-ink">{interests}</dd>
             <dt className="text-ink-muted">{tForm("intro.label")}</dt>
             <dd className="min-w-0 whitespace-pre-wrap break-words text-ink-secondary">{application.intro}</dd>
+            {application.answers.map((answer) => (
+              <Fragment key={answer.questionId}>
+                <dt className="min-w-0 break-words text-ink-muted">{localized(answer.label, locale)}</dt>
+                <dd className="min-w-0 whitespace-pre-wrap break-words text-ink">{answerDisplay(answer, locale)}</dd>
+              </Fragment>
+            ))}
             <dt className="text-ink-muted">{t("fields.status")}</dt>
             <dd className="text-ink">{t(`statuses.${application.status}`)}{application.reviewedAt ? ` · ${opsDateTime(format, application.reviewedAt, timeZone)}` : ""}</dd>
           </dl>

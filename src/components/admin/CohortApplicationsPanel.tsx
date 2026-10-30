@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
@@ -10,26 +10,24 @@ import { opsButton, opsCell, opsDateTime, opsInput, opsPrimaryButton } from "@/c
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { useAdminCohortApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
-import { ERROR_COPY, type ErrorCopyKey } from "@/lib/api/error-copy";
-import { cohortAdminErrorKey } from "@/lib/cohort-errors";
+import { ERROR_COPY } from "@/lib/api/error-copy";
+import { cohortAdminErrorKey, type CohortAdminErrorKey } from "@/lib/cohort-errors";
 import { COHORT_APPLICATION_SEARCH_MAX } from "@/lib/input-limits";
 import {
-  ACTIVITY_TYPES,
   COHORT_APPLICATION_STATUSES,
-  INTEREST_AREAS,
+  isChoiceType,
   isCohortApplicationStatus,
-  type ActivityType,
+  localized,
   type AdminCohort,
   type AdminCohortApplication,
   type AdminCohortApplicationFilter,
   type AdminCohortApplicationPage,
   type CohortApplicationStatus,
   type CohortReviewDecision,
-  type InterestArea,
 } from "@/lib/cohorts";
 
 const ALL = "ALL";
-const columns = ["applicant", "contact", "experience", "activity", "interests", "status", "applied", "action"] as const;
+const columns = ["applicant", "contact", "intro", "status", "applied", "action"] as const;
 const statusVariant = { SUBMITTED: "warning", ACCEPTED: "success", REJECTED: "danger", WITHDRAWN: "neutral" } as const satisfies Record<CohortApplicationStatus, string>;
 
 /** `cohort-2nd-applications-2026-10-27.csv`: a name a spreadsheet user can tell apart; the cohort name is slugged to ASCII-safe characters. */
@@ -51,19 +49,19 @@ function downloadText(fileName: string, text: string): void {
 }
 
 /**
- * The applications of one cohort: filters (status, activity type, interest area, search), 30 per page, a review dialog per row
+ * The applications of one cohort: filters (status, one choice question + option, search), 30 per page, a review dialog per row
  * and a CSV export of the same filter. The table keeps the shared admin table rules (horizontal scroll on phones, nowrap actions).
  */
 export function CohortApplicationsPanel({ cohort, onReviewed }: { cohort: AdminCohort; onReviewed: () => void }) {
   const api = useAdminCohortApi();
   const t = useTranslations("admin.recruitment.applications");
-  const tForm = useTranslations("recruit.form");
+  const locale = useLocale();
   const tErrors = useTranslations(ERROR_COPY.adminCohort.messages);
   const format = useFormatter();
   const timeZone = useBrowserTimeZone();
   const [status, setStatus] = useState<string>(ALL);
-  const [activityType, setActivityType] = useState<string>(ALL);
-  const [interestArea, setInterestArea] = useState<string>(ALL);
+  const [questionId, setQuestionId] = useState<string>(ALL);
+  const [optionId, setOptionId] = useState<string>(ALL);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<AdminCohortApplicationFilter>({});
   const [page, setPage] = useState(1);
@@ -71,7 +69,7 @@ export function CohortApplicationsPanel({ cohort, onReviewed }: { cohort: AdminC
   const [failed, setFailed] = useState(false);
   const [reviewing, setReviewing] = useState<AdminCohortApplication | null>(null);
   const [reviewBusy, setReviewBusy] = useState(false);
-  const [reviewError, setReviewError] = useState<ErrorCopyKey<typeof ERROR_COPY.adminCohort> | null>(null);
+  const [reviewError, setReviewError] = useState<CohortAdminErrorKey | null>(null);
   const [exporting, setExporting] = useState(false);
   // Only the newest request may write state (a slow page must not overwrite the filter the operator just applied).
   const latestRequest = useRef(0);
@@ -110,16 +108,15 @@ export function CohortApplicationsPanel({ cohort, onReviewed }: { cohort: AdminC
     setPage(1);
     setFilter({
       ...(nextStatus && isCohortApplicationStatus(nextStatus) ? { status: nextStatus } : {}),
-      ...(choice(activityType) ? { activityType: activityType as ActivityType } : {}),
-      ...(choice(interestArea) ? { interestArea: interestArea as InterestArea } : {}),
+      ...(choice(questionId) && choice(optionId) ? { questionId, optionId } : {}),
       ...(query.trim() ? { q: query.trim() } : {}),
     });
   };
 
   const reset = () => {
     setStatus(ALL);
-    setActivityType(ALL);
-    setInterestArea(ALL);
+    setQuestionId(ALL);
+    setOptionId(ALL);
     setQuery("");
     setData(null);
     setFailed(false);
@@ -159,6 +156,9 @@ export function CohortApplicationsPanel({ cohort, onReviewed }: { cohort: AdminC
     }
   };
 
+  // Only choice questions can be filtered on: the option list follows the chosen question (a changed question clears the option).
+  const choiceQuestions = cohort.questions.filter((question) => isChoiceType(question.type));
+  const chosenQuestion = choiceQuestions.find((question) => question.id === questionId);
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
   const filtered = Object.keys(filter).length > 0;
 
@@ -180,15 +180,30 @@ export function CohortApplicationsPanel({ cohort, onReviewed }: { cohort: AdminC
           </div>
         </div>
         <div className="w-full sm:w-[220px]">
-          <span className="block text-sm font-semibold text-ink">{t("filters.activityType")}</span>
+          <span className="block text-sm font-semibold text-ink">{t("filters.question")}</span>
           <div className="mt-2">
-            <AdminSelect formatOption={(option) => (option === ALL ? t("filters.all") : tForm(`activityType.options.${option}`))} label={t("filters.activityType")} onChange={setActivityType} options={[ALL, ...ACTIVITY_TYPES]} value={activityType} />
+            <AdminSelect
+              disabled={choiceQuestions.length === 0}
+              formatOption={(option) => (option === ALL ? t("filters.all") : localized(choiceQuestions.find((question) => question.id === option)?.label ?? { ko: option, en: null, zh: null }, locale))}
+              label={t("filters.question")}
+              onChange={(next) => { setQuestionId(next); setOptionId(ALL); }}
+              options={[ALL, ...choiceQuestions.map((question) => question.id)]}
+              value={questionId}
+            />
           </div>
         </div>
         <div className="w-full sm:w-[220px]">
-          <span className="block text-sm font-semibold text-ink">{t("filters.interestArea")}</span>
+          <span className="block text-sm font-semibold text-ink">{t("filters.option")}</span>
           <div className="mt-2">
-            <AdminSelect formatOption={(option) => (option === ALL ? t("filters.all") : tForm(`interestAreas.options.${option}`))} label={t("filters.interestArea")} onChange={setInterestArea} options={[ALL, ...INTEREST_AREAS]} value={interestArea} />
+            <AdminSelect
+              disabled={!chosenQuestion}
+              formatOption={(option) => (option === ALL ? t("filters.all") : localized(chosenQuestion?.options?.find((item) => item.id === option)?.label ?? { ko: option, en: null, zh: null }, locale))}
+              key={questionId}
+              label={t("filters.option")}
+              onChange={setOptionId}
+              options={[ALL, ...(chosenQuestion?.options ?? []).map((item) => item.id)]}
+              value={optionId}
+            />
           </div>
         </div>
         <div className="w-full sm:w-[260px]">
@@ -207,7 +222,7 @@ export function CohortApplicationsPanel({ cohort, onReviewed }: { cohort: AdminC
         ) : data.items.length === 0 ? (
           <p className="rounded-card border border-border bg-surface p-[21px] text-sm text-ink-muted shadow-card">{filtered ? t("emptyFiltered") : t("empty")}</p>
         ) : (
-          <AdminTable columns={columns.map((id) => ({ id, label: t(`columns.${id}`) }))} minWidthClass="min-w-[1180px]">
+          <AdminTable columns={columns.map((id) => ({ id, label: t(`columns.${id}`) }))} minWidthClass="min-w-[980px]">
             {data.items.map((row) => (
               <tr className="border-t border-border" key={row.id}>
                 <td className={`${opsCell} ${adminLongTextCell}`}>
@@ -219,9 +234,7 @@ export function CohortApplicationsPanel({ cohort, onReviewed }: { cohort: AdminC
                   <p>{row.telegram}</p>
                   <p className="mt-1">{row.twitter}</p>
                 </td>
-                <td className={opsCell}>{tForm(`web3Experience.options.${row.web3Experience}`)}</td>
-                <td className={`${opsCell} ${adminLongTextCell}`}>{row.activityType === "OTHER" && row.activityTypeOther ? `${tForm("activityType.options.OTHER")}: ${row.activityTypeOther}` : tForm(`activityType.options.${row.activityType}`)}</td>
-                <td className={`${opsCell} ${adminLongTextCell}`}>{row.interestAreas.map((area) => (area === "OTHER" && row.interestOther ? `${tForm("interestAreas.options.OTHER")}: ${row.interestOther}` : tForm(`interestAreas.options.${area}`))).join(", ")}</td>
+                <td className={`${opsCell} ${adminLongTextCell}`}><p className="line-clamp-3 whitespace-pre-wrap">{row.intro}</p></td>
                 <td className={opsCell}><Badge variant={statusVariant[row.status]}>{t(`statuses.${row.status}`)}</Badge></td>
                 <td className={`${opsCell} whitespace-nowrap`}>{opsDateTime(format, row.createdAt, timeZone)}</td>
                 <td className={opsCell}>

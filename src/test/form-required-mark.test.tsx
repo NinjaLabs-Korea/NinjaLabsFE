@@ -41,8 +41,9 @@ describe("required marks", () => {
     expect(screen.getByLabelText("Bio")).toBeTruthy();
   });
 
-  it("CohortApplicationForm: same", () => {
-    const { container } = renderWithIntl(<CohortApplicationForm cohortId="c1" onSaved={() => undefined} />);
+  it("CohortApplicationForm: same", async () => {
+    const { container } = renderWithIntl(<CohortApplicationForm cohortId="cohort-2" onSaved={() => undefined} />);
+    await screen.findByRole("radiogroup", { name: /Web3 experience/ });
     expectNoLiteralStar(container);
     expect(container.querySelectorAll('span[aria-hidden="true"]').length).toBeGreaterThanOrEqual(5);
     expect(screen.getByText("Fields marked * are required.")).toBeTruthy();

@@ -21,6 +21,17 @@ const primaryLinkClass =
 const secondaryLinkClass =
   "rounded-control border border-primary-outline px-[21px] py-3 text-sm leading-[21px] font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
+/** The two ways out of a page with no form: what the community announces, and what it has done so far. */
+function PastActivityActions() {
+  const t = useTranslations("recruit.states.actions");
+  return (
+    <>
+      <Link className={primaryLinkClass} href="/notices">{t("notices")}</Link>
+      <Link className={secondaryLinkClass} href="/notices?category=events">{t("past")}</Link>
+    </>
+  );
+}
+
 const phaseVariant = { open: "success", upcoming: "warning", closed: "neutral" } as const;
 
 function CohortInfo({ cohort }: { cohort: PublicCohort }) {
@@ -37,7 +48,7 @@ function CohortInfo({ cohort }: { cohort: PublicCohort }) {
           ? t("cohort.periodFrom", { from: date(cohort.opensAt) })
           : t("cohort.periodOpen");
   return (
-    <section aria-labelledby="cohort-name" className="mx-auto max-w-content px-6">
+    <section aria-labelledby="cohort-name" className="mx-auto max-w-content px-gutter">
       <div className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -96,7 +107,7 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
   } else if (!cohort) {
     body = (
       <RecruitNotice body={t("states.noCohort.body")} title={t("states.noCohort.title")}>
-        <Link className={secondaryLinkClass} href="/notices">{t("states.noCohort.cta")}</Link>
+        <PastActivityActions />
       </RecruitNotice>
     );
   } else if (auth.status === "loading") {
@@ -107,7 +118,9 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
         <Link className={primaryLinkClass} href={{ pathname: "/signup", query: { returnTo: "/recruit" } }}>{t("states.signIn.cta")}</Link>
       </RecruitNotice>
     ) : (
-      <RecruitNotice body={t("states.notAccepting.body")} title={t(`states.notAccepting.title.${cohortPhase(cohort)}`)} />
+      <RecruitNotice body={t("states.notAccepting.body")} title={t(`states.notAccepting.title.${cohortPhase(cohort)}`)}>
+        <PastActivityActions />
+      </RecruitNotice>
     );
   } else if (!finished) {
     body = (
@@ -148,7 +161,11 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
         </div>
       );
     } else if (view.kind === "not-accepting") {
-      body = <RecruitNotice body={t("states.notAccepting.body")} title={t(`states.notAccepting.title.${cohortPhase(cohort)}`)} />;
+      body = (
+        <RecruitNotice body={t("states.notAccepting.body")} title={t(`states.notAccepting.title.${cohortPhase(cohort)}`)}>
+          <PastActivityActions />
+        </RecruitNotice>
+      );
     } else if (view.kind === "submitted" && editing) {
       body = (
         <div className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">
@@ -193,10 +210,10 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
       ) : current.status === "loading" ? (
         // Reserve roughly the cohort card's height until the read settles: the card is inserted above the about section and
         // the application area, so without it the whole page (footer included) jumps down when it arrives (CLS 0.17).
-        <div aria-hidden="true" className="mx-auto max-w-content px-6"><div className="min-h-[132px]" /></div>
+        <div aria-hidden="true" className="mx-auto max-w-content px-gutter"><div className="min-h-[132px]" /></div>
       ) : null}
       {aboutSlot}
-      <section aria-label={t("form.sectionLabel")} className="mx-auto max-w-content px-6 pb-20">
+      <section aria-label={t("form.sectionLabel")} className="mx-auto max-w-content px-gutter pb-20">
         <div className="mx-auto max-w-[896px]">
           {saved ? (
             <p className="mb-5 rounded-tile border border-border bg-success-soft p-4 text-sm font-semibold text-success" role="status">{t(`form.saved.${saved}`)}</p>

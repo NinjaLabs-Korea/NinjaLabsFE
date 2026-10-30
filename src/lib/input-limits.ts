@@ -22,6 +22,15 @@ export const COHORT_INTRO_RECOMMENDED_MAX = 300;
 export const COHORT_NAME_MAX = 60;
 export const COHORT_DESCRIPTION_MAX = 10_000;
 export const COHORT_REVIEW_NOTE_MAX = 2000;
+/** 기수 질문 설정/답변: BE `cohorts/cohort-questions.ts` 거울 (질문 0..30, 라벨 200, 도움말 500, 선택지 2..20개 + 라벨 60, 짧은 답 200, 긴 답 2000). */
+export const COHORT_QUESTIONS_MAX = 30;
+export const COHORT_QUESTION_LABEL_MAX = 200;
+export const COHORT_HELP_MAX = 500;
+export const COHORT_OPTIONS_MIN = 2;
+export const COHORT_OPTIONS_MAX = 20;
+export const COHORT_OPTION_LABEL_MAX = 60;
+export const COHORT_SHORT_TEXT_MAX = 200;
+export const COHORT_LONG_TEXT_MAX = 2000;
 
 /** 운영자 공지: `CreateNoticeDto` title @MaxChars(200), body @MaxLength(50 000). PATCH(`UpdateNoticeDto`)는 본문 100 000이지만 더 엄격한 생성 한도를 둘 다에 쓴다. */
 export const NOTICE_TITLE_MAX = 200;
