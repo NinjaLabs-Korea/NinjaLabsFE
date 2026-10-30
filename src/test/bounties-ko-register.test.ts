@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const load = (file: string) => JSON.parse(readFileSync(`messages/ko/${file}.json`, "utf8")) as Record<string, unknown>;
@@ -40,5 +40,19 @@ describe("ko community copy register", () => {
     const bodies = strings(community, "").filter(([path]) => path.endsWith("unavailableBody"));
     expect(bodies.length).toBeGreaterThan(0);
     expect(bodies.filter(([, text]) => text.includes("다시 시도"))).toEqual([]);
+  });
+});
+
+// One sentence per shared error code across the member-facing ko files. admin.json is operator-only copy in formal
+// register and is owned by the admin pages; signup keeps its own login-specific rate-limit line.
+describe("ko shared error copy", () => {
+  const files = readdirSync("messages/ko").filter((name) => name.endsWith(".json") && name !== "admin.json").map((name) => name.replace(/\.json$/, ""));
+  const valuesFor = (code: string) =>
+    files.flatMap((file) => strings(load(file), file).filter(([path]) => path.endsWith(`.${code}`) && !path.startsWith("signup.authCallback")).map(([path, text]) => [path, text] as const));
+
+  it.each(["TOO_MANY_REQUESTS", "DATABASE_UNAVAILABLE"])("%s reads the same everywhere", (code) => {
+    const values = valuesFor(code);
+    expect(values.length).toBeGreaterThan(5);
+    expect(new Set(values.map(([, text]) => text)).size).toBe(1);
   });
 });

@@ -9,6 +9,7 @@
   },
   "filters": {
     "ariaLabel": "公告分类",
+    "resultCount": "共 {count} 条动态",
     "all": "全部",
     "listAriaLabel": "公告",
     "emptyTitle": "这个分类下还没有动态",

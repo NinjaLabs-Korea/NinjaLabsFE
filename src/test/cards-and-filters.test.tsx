@@ -107,10 +107,11 @@ describe("MemberCard", () => {
     expect(screen.getByRole("link", { name: "Posts of Kim" }).getAttribute("href")).toBe("/notices?author=kim");
   });
 
-  it("falls back to the default title and bio when the member has not written one", () => {
-    renderWithIntl(<MemberCard member={member({ title: "", bio: "", role: "Core" })} />);
+  it("falls back to the default title but invents no bio when the member has not written one", () => {
+    const { container } = renderWithIntl(<MemberCard member={member({ title: "", bio: "", role: "Core" })} />);
     expect(screen.getByText("Core · Ninja Labs member")).toBeTruthy();
-    expect(screen.getByText("Building in the Injective ecosystem.")).toBeTruthy();
+    expect(screen.queryByText("Building in the Injective ecosystem.")).toBeNull();
+    expect(container.querySelectorAll("p")).toHaveLength(1);
   });
 
   it("shows the initials avatar for every member, not a hard-coded slug", () => {
@@ -193,6 +194,16 @@ describe("MemberFilters", () => {
     expect(names()).toEqual(["Ana", "Ben", "Cho"]);
   });
 
+  it("announces the filtered count in a status line and shows only the empty state at zero", () => {
+    renderWithIntl(<MemberFilters members={members} />);
+    expect(screen.getByRole("status").textContent).toBe("3 members");
+    fireEvent.click(screen.getByRole("button", { name: "Dev" }));
+    expect(screen.getByRole("status").textContent).toBe("2 members");
+    fireEvent.click(screen.getByRole("button", { name: "Design" }));
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByText("No members match your filters")).toBeTruthy();
+  });
+
   it("says there are no members yet (no dead Reset button) when the feed is empty", () => {
     renderWithIntl(<MemberFilters members={[]} />);
     expect(screen.getByText("No members yet")).toBeTruthy();
@@ -249,6 +260,17 @@ describe("NoticeFilters", () => {
     fireEvent.click(within(group).getByRole("button", { name: "Events" }));
     expect(within(group).getByRole("button", { name: "Events" }).getAttribute("aria-pressed")).toBe("true");
     expect(titles()).toEqual(["Meetup", "Hackathon"]);
+  });
+
+  it("announces the filtered count in a status line and shows none for an empty feed", () => {
+    const { unmount } = renderWithIntl(<NoticeFilters notices={notices} />);
+    expect(screen.getByRole("status").textContent).toBe("3 posts");
+    fireEvent.click(screen.getByRole("button", { name: "Ninja Labs" }));
+    expect(screen.getByRole("status").textContent).toBe("1 post");
+    unmount();
+    renderWithIntl(<NoticeFilters notices={[]} />);
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    expect(screen.queryByText(/^\d+ posts?$/)).toBeNull();
   });
 
   it("shows the empty state for an empty feed", () => {

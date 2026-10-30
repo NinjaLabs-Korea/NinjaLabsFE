@@ -10,6 +10,7 @@
   },
   "filters": {
     "ariaLabel": "成员角色",
+    "resultCount": "共 {count} 位成员",
     "all": "全部",
     "listAriaLabel": "成员",
     "emptyTitle": "没有符合筛选条件的成员",
@@ -29,7 +30,6 @@
     "profileLabel": "{name} 的主页",
     "linkLabel": "{name} 的{link}",
     "defaultTitle": "Ninja Labs 成员",
-    "defaultBio": "正在 Injective 生态中构建。",
     "links": {
       "posts": "帖子",
       "agents": "代理",
