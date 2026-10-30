@@ -19,7 +19,7 @@ type ApiKeyRevealProps = {
 /**
  * One-time secret reveal shared by `AgentRegisterForm` (first issuance) and `AgentsView` (rotation).
  * The live region only announces that a key is ready (and copy feedback) - never the secret itself,
- * which sits in a read-only, selectable input next to a Copy button.
+ * which sits in a read-only, selectable text area next to a Copy button.
  */
 export function ApiKeyReveal({ title, copy, apiKey, expiresLabel, className = "" }: ApiKeyRevealProps) {
   const t = useTranslations("agents.keyReveal");
@@ -43,18 +43,18 @@ export function ApiKeyReveal({ title, copy, apiKey, expiresLabel, className = ""
       <p className="text-sm font-semibold text-success">{title}</p>
       <p className="mt-2 text-xs text-ink-secondary">{copy}</p>
       <label className="sr-only" htmlFor={inputId}>{t("keyLabel")}</label>
-      <div className="mt-2 flex flex-wrap gap-2">
-        <input
-          className={`min-w-0 flex-1 rounded-control border border-border bg-surface p-3 font-mono text-xs text-ink ${focusClass}`}
+      <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-start">
+        <textarea
+          className={`field-sizing-content min-w-0 w-full resize-none break-all rounded-control border border-border bg-surface p-3 font-mono text-xs text-ink sm:flex-1 ${focusClass}`}
           id={inputId}
           onFocus={(event) => event.currentTarget.select()}
           readOnly
+          rows={2}
           spellCheck={false}
-          type="text"
           value={apiKey}
         />
         <button
-          className={`rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong hover:opacity-90 ${focusClass}`}
+          className={`w-full rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 sm:w-auto sm:shrink-0 text-sm font-semibold text-primary-strong hover:opacity-90 ${focusClass}`}
           onClick={() => void copyKey()}
           type="button"
         >
