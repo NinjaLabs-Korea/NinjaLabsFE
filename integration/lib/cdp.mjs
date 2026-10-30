@@ -96,6 +96,35 @@ export class Page {
     return false;
   }
   async waitText(t, ms = 10000) { return this.waitFor(`document.body.innerText.includes(${JSON.stringify(t)})`, ms); }
+  /** Like waitText but throws (naming the text) on timeout, so a missing screen fails where it happens. */
+  async waitForText(text, { timeout = 10000 } = {}) {
+    if (!(await this.waitFor(`document.body.innerText.includes(${JSON.stringify(text)})`, timeout))) throw new Error(`waitForText timed out after ${timeout}ms: ${JSON.stringify(text)}`);
+  }
+  /** Waits for a CSS selector (visible = has a layout box); throws naming the selector on timeout. */
+  async waitForSelector(selector, { timeout = 10000, visible = true } = {}) {
+    const expr = `(() => { const el = document.querySelector(${JSON.stringify(selector)}); return !!el && (${!visible} || el.getClientRects().length > 0); })()`;
+    if (!(await this.waitFor(expr, timeout))) throw new Error(`waitForSelector timed out after ${timeout}ms: ${selector}${visible ? ' (visible)' : ''}`);
+  }
+  /** Waits until a non-GET request issued at or after requests[since] has a response (a click that saves something). Throws on timeout. */
+  async waitForMutation({ since = 0, timeout = 10000 } = {}) {
+    const s = Date.now();
+    while (Date.now() - s < timeout) {
+      if (this.requests.slice(since).some((r) => r.method !== 'GET' && r.status !== undefined)) return;
+      await sleep(100);
+    }
+    throw new Error(`waitForMutation timed out after ${timeout}ms (no non-GET response among ${this.requests.length - since} new requests)`);
+  }
+  /** Waits until a request whose URL matches `urlRe`, issued at or after requests[since], has a response. Throws on timeout. */
+  async waitForRequest(urlRe, { since = 0, timeout = 10000 } = {}) {
+    const s = Date.now();
+    while (Date.now() - s < timeout) {
+      if (this.requests.slice(since).some((r) => urlRe.test(r.url) && r.status !== undefined)) return;
+      await sleep(100);
+    }
+    throw new Error(`waitForRequest timed out after ${timeout}ms: ${urlRe}`);
+  }
+  /** The page's <main> has rendered some text (client-rendered gated screens show nothing until the session resolves). */
+  mainReady(timeout = 10000) { return this.waitFor(`(document.querySelector('main')?.innerText.trim().length ?? 0) > 0`, timeout); }
   // click the smallest visible element whose text matches
   async click(textOrSelector, { exact = false, selector = 'button, a, [role=button], [role=tab], label, summary' } = {}) {
     const ok = await this.eval(`(() => {

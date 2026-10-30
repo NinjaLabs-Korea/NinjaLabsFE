@@ -1,5 +1,5 @@
 // Flow 4: signed-in bounty detail (no access chips, no #418) -> apply -> /applications -> admin approves -> submit (DB rows).
-import { Browser, report } from '../lib/cdp.mjs'; import { sql, ids, seed, check, clean, done, sleep, signIn, apiAs, mutations, tokenFor } from '../lib/harness.mjs';
+import { Browser, report } from '../lib/cdp.mjs'; import { sql, ids, seed, check, clean, done, signIn, apiAs, mutations, tokenFor } from '../lib/harness.mjs';
 const b = await Browser.connect(); const ctx = await b.newContext(); const p = await b.newPage(ctx);
 const B1 = `/en/bounties/${seed.B1}`;
 await signIn(p, ids.BUILDER);
@@ -10,13 +10,13 @@ check('signed-in detail: access chips removed (R1 FE-U2)', !detail.includes('Act
 await p.fill('form input[name=portfolioUrl]', 'https://github.com/builderone');
 await p.eval(`(()=>{const f=document.querySelector('form'); for (const el of f.querySelectorAll('textarea')) { Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(el, 'I will build a great dashboard with charts.'); el.dispatchEvent(new Event('input',{bubbles:true})); } return true})()`);
 p.reset();
-await p.click('css:form button[type=submit]'); await sleep(2000); await p.idle();
+await p.click('css:form button[type=submit]'); await p.waitForMutation(); await p.idle();
 const muts1 = mutations(p);
 clean(await report(p, 'apply', { muts1 }));
 check('apply POST 201', muts1.some((m) => /^POST \/bounties\/.+\/applications 201$/.test(m)), muts1);
 const app = sql(`select id||' '||status||' '||portfolio_url from bounty_application where bounty_id='${seed.B1}' and applicant_user_id='${ids.BUILDER}'`);
 check('DB: application PENDING with portfolio URL', / PENDING https:\/\/github.com\/builderone$/.test(app), app);
-await p.goto('/en/applications'); await sleep(800);
+await p.goto('/en/applications'); await p.waitText('Build an Injective dashboard', 8000);
 const apps = await p.text(); clean(await report(p, '/applications'));
 check('/applications lists the bounty', apps.includes('Build an Injective dashboard'));
 const [st] = await apiAs(tokenFor(ids.ADMIN, true), 'POST', `/admin/applications/${app.split(' ')[0]}/review`, { decision: 'APPROVED' });
@@ -26,7 +26,7 @@ await p.fill('form input[name=submissionUrl]', 'https://github.com/builderone/da
 await p.fill('form textarea[name=description]', 'Dashboard shipped with charts and docs.');
 if (await p.eval(`!!document.querySelector('form input[name=repositoryUrl]')`)) await p.fill('form input[name=repositoryUrl]', 'https://github.com/builderone/dashboard');
 p.reset();
-await p.click('css:form button[type=submit]'); await sleep(2000); await p.idle();
+await p.click('css:form button[type=submit]'); await p.waitForMutation(); await p.idle();
 const muts2 = mutations(p); const after = await p.text();
 clean(await report(p, 'submit', { muts2 }));
 check('submit POST 201', muts2.some((m) => /^POST \/bounties\/.+\/submissions 201$/.test(m)), muts2);
