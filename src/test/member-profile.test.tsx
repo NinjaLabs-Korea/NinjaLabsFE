@@ -3,7 +3,6 @@ import { screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { createFormatter, createTranslator } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
-import type { BountyHero as BountyHeroData } from "@/lib/landing";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import type { Profile } from "@/lib/types";
 import { enMessages, renderWithIntl } from "@/test/intl";
