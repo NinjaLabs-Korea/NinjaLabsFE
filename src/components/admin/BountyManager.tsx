@@ -12,6 +12,7 @@ import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
 import { opsInput, opsTextarea } from "@/components/admin/ops-ui";
 import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlightCallback } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
+import { useKeyedSingleFlight } from "@/components/ui/useSingleFlight";
 import { RewardPill } from "@/components/ui/RewardPill";
 import { type AdminBounty, adminErrorDescription, adminTextFieldErrors, expirePublicLists } from "@/lib/admin-helpers";
 import { bountyToForm, emptyBountyForm, formToBounty, isIsoDateTime, rewardIntegerDigitsMax, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
@@ -55,8 +56,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<AdminBounty | null>(null);
   // Bounties with a transition in flight: a second click would send the same target again and answer INVALID_TRANSITION right after the success toast.
-  const transitioning = useRef(new Set<string>());
-  const [transitioningSlugs, setTransitioningSlugs] = useState<ReadonlySet<string>>(new Set());
+  const transitionFlight = useKeyedSingleFlight();
   const formRef = useRef<HTMLElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const editing = mode.kind === "edit";
@@ -166,24 +166,19 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   };
 
   const transition = async (bounty: AdminBounty) => {
-    if (transitioning.current.has(bounty.slug)) return;
     const to = bounty.status === "active" ? "SUBMISSION_CLOSED" : "OPEN";
-    transitioning.current.add(bounty.slug);
-    setTransitioningSlugs(new Set(transitioning.current));
-    try {
-      await api.transitionAdminBounty(bounty.slug, to);
-      expirePublicLists(["bounties"]);
-      pushAdminToast({ variant: "success", title: t("toast.statusUpdatedTitle"), description: t("toast.statusUpdatedDescription", { title: bounty.title, to }) });
-      await reload();
-    } catch (error) {
-      // A blocked transition (BE 400 with a blocker list, e.g. REWARDS_UNFUNDED) is the common failure here; the blockers themselves live in Operations.
-      const blocked = opsErrorCode(error, "transition").code === "TRANSITION_BLOCKED";
-      pushAdminToast({ variant: "danger", title: t("toast.transitionFailedTitle"), description: blocked ? t("toast.transitionBlockedDescription") : adminErrorDescription(error, tCommon, t("toast.transitionFailedDescription")) });
-    }
-    finally {
-      transitioning.current.delete(bounty.slug);
-      setTransitioningSlugs(new Set(transitioning.current));
-    }
+    await transitionFlight.run(bounty.slug, async () => {
+      try {
+        await api.transitionAdminBounty(bounty.slug, to);
+        expirePublicLists(["bounties"]);
+        pushAdminToast({ variant: "success", title: t("toast.statusUpdatedTitle"), description: t("toast.statusUpdatedDescription", { title: bounty.title, to }) });
+        await reload();
+      } catch (error) {
+        // A blocked transition (BE 400 with a blocker list, e.g. REWARDS_UNFUNDED) is the common failure here; the blockers themselves live in Operations.
+        const blocked = opsErrorCode(error, "transition").code === "TRANSITION_BLOCKED";
+        pushAdminToast({ variant: "danger", title: t("toast.transitionFailedTitle"), description: blocked ? t("toast.transitionBlockedDescription") : adminErrorDescription(error, tCommon, t("toast.transitionFailedDescription")) });
+      }
+    });
   };
 
   const remove = useAdminRecordDelete<AdminBounty>({
@@ -225,7 +220,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <td className="px-5 py-4 text-sm text-ink-secondary">{t(`intake.${bounty.intakeEnabled ? "ON" : "OFF"}`)}<p className="mt-1 text-xs text-ink-muted">{t(`submissionModes.${bounty.submissionMode === "agent" ? "Agent" : "Direct"}`)}</p></td>
               <td className="px-5 py-4">{bounty.status === "active" && isPastDeadline(bounty.deadline) ? <Badge variant="warning">{t("statuses.pastDeadline")}</Badge> : <Badge variant={statusVariants[bounty.status]}>{t(`statuses.${bounty.status}`)}</Badge>}</td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{deadlineCell(bounty.deadline)}</td>
-              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong disabled:cursor-not-allowed disabled:opacity-60" disabled={transitioningSlugs.has(bounty.slug)} onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<Link className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={{ pathname: "/admin/operations", query: { bounty: bounty.slug } }}>{t("operations")}</Link><button className="rounded-control border border-danger px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
+              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong disabled:cursor-not-allowed disabled:opacity-60" disabled={transitionFlight.isBusy(bounty.slug)} onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<Link className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={{ pathname: "/admin/operations", query: { bounty: bounty.slug } }}>{t("operations")}</Link><button className="rounded-control border border-danger px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
             </tr>
           ))}
         </AdminTable>

@@ -1,7 +1,8 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useId, useRef, useState } from "react";
+import { useId, useState } from "react";
+import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { SignedOutPanel } from "@/components/account/SignedOutPanel";
 import {
   useAccountSettingsApi,
@@ -59,10 +60,8 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
   const [lastUser, setLastUser] = useState<ClientUser | null>(null);
   if (authSnapshot.status === "signed-in" && lastUser !== authSnapshot.user) setLastUser(authSnapshot.user);
   const [typed, setTyped] = useState("");
-  const [busy, setBusy] = useState(false);
+  const { busy, run: runDelete } = useSingleFlight();
   const [error, setError] = useState<KnownError | "generic" | null>(null);
-  // Synchronous guard: a second click lands before the `busy` state update.
-  const pendingRef = useRef(false);
 
   // Only a session ended from outside (refresh rejected, another tab) says "expired"; the user's own Sign out or this
   // page's account deletion shows the plain "sign in" gate.
@@ -88,34 +87,32 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
   const matches = confirmationMatches(nickname, typed);
 
   const closeDialog = () => {
-    if (pendingRef.current) return;
+    if (busy) return;
     setDialogOpen(false);
     setTyped("");
     setError(null);
   };
 
-  const deleteAccount = async () => {
-    if (pendingRef.current || !matches) return;
-    pendingRef.current = true;
-    setBusy(true);
-    setError(null);
-    try {
-      await settingsApi.withdrawAccount(typed.trim());
-    } catch (caught) {
-      setError(knownCode(caught, deleteErrors.codes) ?? deleteErrors.fallback);
-      pendingRef.current = false;
-      setBusy(false);
-      return;
-    }
-    // The BE already revoked every session; signOut clears the cookie (POST /api/auth/logout) and the local state.
-    try {
-      await signOut();
-    } finally {
-      // Written after signOut and without the live event: the next step is a full page load, and the mounted
-      // FlashToast would take (and lose) an event-delivered flash before the reload.
-      stashFlash("accountDeleted");
-      hardNavigate(`/${locale}`);
-    }
+  const deleteAccount = () => {
+    if (!matches) return Promise.resolve();
+    return runDelete(async () => {
+      setError(null);
+      try {
+        await settingsApi.withdrawAccount(typed.trim());
+      } catch (caught) {
+        setError(knownCode(caught, deleteErrors.codes) ?? deleteErrors.fallback);
+        return;
+      }
+      // The BE already revoked every session; signOut clears the cookie (POST /api/auth/logout) and the local state.
+      try {
+        await signOut();
+      } finally {
+        // Written after signOut and without the live event: the next step is a full page load, and the mounted
+        // FlashToast would take (and lose) an event-delivered flash before the reload.
+        stashFlash("accountDeleted");
+        hardNavigate(`/${locale}`);
+      }
+    });
   };
 
   return (
