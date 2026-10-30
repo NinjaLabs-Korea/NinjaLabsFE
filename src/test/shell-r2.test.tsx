@@ -71,7 +71,7 @@ describe("useUnsavedInputGuard", () => {
 
 describe("LocaleSwitcher with typed text", () => {
   const pickKo = () => {
-    fireEvent.click(screen.getByRole("button", { name: "Language" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Language/ }));
     act(() => fireEvent.click(screen.getAllByRole("menuitemradio")[1]));
   };
   const setup = () => {

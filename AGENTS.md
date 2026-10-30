@@ -138,7 +138,7 @@ public/
 - Design data comes from the Figma remote MCP (`https://mcp.figma.com/mcp`): `get_design_context` for
   per-screen code/screenshot, `get_metadata` for structure, `download_assets` for images.
 - Every screen shares the same Header/Footer (rendered once in `src/app/layout.tsx`, not per page).
-- Implemented component inventory (123 files; **`src/test/agents-inventory.test.ts` fails when a `src/components` file is not named here as `dir/Name` or when this count is off** - add the new line in the same change as the component):
+- Implemented component inventory (125 files; **`src/test/agents-inventory.test.ts` fails when a `src/components` file is not named here as `dir/Name` or when this count is off** - add the new line in the same change as the component):
   - `legal/LegalDocument` - async server component that renders `/privacy` and `/terms` from `messages/<locale>/legal.json` (`t.raw` section arrays; `{email}` becomes a mailto link to `lib/contact.ts` `CONTACT_EMAIL`). Operator is Ninja Labs Korea; bump `LEGAL_LAST_UPDATED` with the text
   - `layout/Header`, `layout/Footer` - the shared shell chrome (rendered once in `layout.tsx`); `layout/MobileMenu` - `"use client"` island around the header's `<details>` mobile nav (still progressive-enhancement markup): closes on link click, Escape (focus back to the summary) and outside click
   - `layout/fonts` - the ONLY `next/font/google` call site (`inter`, `spaceGrotesk`), imported by AppShell, root not-found and global-error so one font CSS module exists (duplicate instances caused unused-preload console warnings; `src/test/fonts.test.ts` guards it).

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { CohortApplicationForm } from "@/components/recruit/CohortApplicationForm";
@@ -74,8 +74,7 @@ describe("CohortApplicationForm focus and visible text", () => {
     Element.prototype.scrollIntoView = scroll;
     renderWithIntl(<CohortApplicationForm cohortId="c" onSaved={() => undefined} />);
     fireEvent.submit(screen.getByRole("button", { name: "Send application" }).closest("form")!);
-    await act(async () => undefined);
-    expect(document.activeElement?.id).toBe("cohort-displayName");
+    await waitFor(() => expect(document.activeElement?.id).toBe("cohort-displayName"));
     expect(scroll).toHaveBeenCalled();
   });
 

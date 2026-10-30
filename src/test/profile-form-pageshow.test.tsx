@@ -32,7 +32,7 @@ describe("ProfileForm restored from the bfcache", () => {
     const reload = vi.fn();
     vi.spyOn(window, "location", "get").mockReturnValue({ ...window.location, reload } as unknown as Location);
     renderWithIntl(<ProfileForm />);
-    fireEvent.change(screen.getByLabelText("Nickname*"), { target: { value: "ninja_dev" } });
+    fireEvent.change(screen.getByLabelText("Nickname"), { target: { value: "ninja_dev" } });
     fireEvent.change(screen.getByLabelText(/^Bio/), { target: { value: "bio" } });
     fireEvent.click(document.querySelector("button[aria-pressed]")!);
     await waitFor(() => expect(document.getElementById("nickname-status")!.textContent).toMatch(/available/i));

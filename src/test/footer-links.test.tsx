@@ -6,8 +6,8 @@ import { Footer } from "@/components/layout/Footer";
 import { renderWithIntl } from "@/test/intl";
 
 vi.mock("@/i18n/navigation", () => ({
-  Link: ({ children, href, ...props }: Omit<ComponentProps<"a">, "href"> & { href: string; prefetch?: boolean }) => (
-    <a href={href} {...props} prefetch={undefined}>{children}</a>
+  Link: ({ children, href, prefetch, ...props }: Omit<ComponentProps<"a">, "href"> & { href: string; prefetch?: boolean }) => (
+    <a data-prefetch={prefetch ? "" : undefined} href={href} {...props}>{children}</a>
   ),
 }));
 

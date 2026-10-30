@@ -21,7 +21,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
   }));
 
 const DRAFT_KEY = "ninja.profileDraft";
-const nick = () => (screen.getByLabelText("Nickname*") as HTMLInputElement).value;
+const nick = () => (screen.getByLabelText("Nickname") as HTMLInputElement).value;
 
 describe("profile draft is tied to its user", () => {
   beforeEach(() => sessionStorage.clear());
@@ -51,7 +51,7 @@ describe("profile draft is tied to its user", () => {
   it("stores the draft with the signed-in user id", () => {
     state.auth = signedInWith({ id: "user-a", onboardingCompleted: false, onboardingStep: 3 });
     renderWithIntl(<ProfileForm />);
-    fireEvent.change(screen.getByLabelText("Nickname*"), { target: { value: "typed" } });
+    fireEvent.change(screen.getByLabelText("Nickname"), { target: { value: "typed" } });
     expect(JSON.parse(sessionStorage.getItem(DRAFT_KEY)!)).toMatchObject({ userId: "user-a", nickname: "typed" });
   });
 
