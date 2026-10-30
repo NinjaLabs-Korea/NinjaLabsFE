@@ -153,9 +153,14 @@ describe("ProfileForm nickname rule + availability check", () => {
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));
     fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder" } });
     fireEvent.submit(nicknameInput().closest("form")!);
-    expect((await screen.findByRole("alert")).textContent).toMatch(/once every 24 hours/);
-    expect(screen.getByRole("status").textContent).toBe("Nickname is available.");
-    expect(nicknameInput().getAttribute("aria-invalid")).toBeNull();
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toMatch(/once every 24 hours/);
+    // The error sits at the nickname field, and the status line no longer claims the name is available next to it.
+    expect(alert.id).toBe("nickname-error");
+    expect(nicknameInput().getAttribute("aria-describedby")).toContain("nickname-error");
+    expect(screen.getByRole("status").textContent).toBe("");
+    expect(screen.queryByText("Nickname is available.")).toBeNull();
+    expect(screen.queryByText(/is already taken/i)).toBeNull();
   });
 
   it("keeps what was typed when the form remounts (language switch, reload)", () => {

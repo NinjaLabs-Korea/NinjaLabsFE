@@ -36,6 +36,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
   const id = decodeDetailId(rawId);
   setRequestLocale(locale);
   const t = await getTranslations("members.profile");
+  const tRoles = await getTranslations("members.roles");
   const format = await getFormatter();
   // Shape check before the fetch (api: nickname, mock: slug); the layout already did it, this keeps the page self-contained.
   if (!(await validateDetailId("members", id))) notFound();
@@ -52,10 +53,11 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               {profile.skills.map((skill) => <Badge key={skill}>{t(`categories.${skill.toLowerCase()}`)}</Badge>)}
-              <Badge variant={completed ? "success" : "neutral"}>{completed ? t("bountiesCompleted", { count: profile.completions.length }) : t("newBuilder")}</Badge>
+              {profile.teamRole ? <Badge variant="selected">{t("teamBadge", { role: tRoles(profile.teamRole.toLowerCase()) })}</Badge> : null}
+              {completed || !profile.teamRole ? <Badge variant={completed ? "success" : "neutral"}>{completed ? t("bountiesCompleted", { count: profile.completions.length }) : t("newBuilder")}</Badge> : null}
             </div>
             <h1 className="mt-3 break-words font-display text-4xl -tracking-[0.36px] text-ink sm:text-5xl sm:-tracking-[0.48px]">{profile.handle}</h1>
-            <p className="mt-3 max-w-[768px] break-words text-base text-ink-muted">{profile.bio}</p>
+            <p className="mt-3 max-w-[768px] whitespace-pre-line break-words text-base text-ink-muted">{profile.bio}</p>
           </div>
         </div>
       </section>
