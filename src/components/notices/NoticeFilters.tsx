@@ -34,6 +34,9 @@ export function NoticeFilters({ notices, initialCategory }: NoticeFiltersProps) 
       const fromUrl = noticeCategoryFromQuery(new URLSearchParams(window.location.search).get("category") ?? undefined);
       setCategory(fromUrl && notices.some((notice) => notice.category === fromUrl) ? fromUrl : "All");
     };
+    // Back from a notice restores this component from the router cache with the cached (category-less) props,
+    // so the URL is the source of truth: read it once on mount, then again on every popstate.
+    syncFromUrl();
     window.addEventListener("popstate", syncFromUrl);
     return () => window.removeEventListener("popstate", syncFromUrl);
   }, [notices]);

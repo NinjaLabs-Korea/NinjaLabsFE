@@ -6,6 +6,7 @@ import { ERROR_COPY } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
 import {
   bountyActionErrorCopy,
+  isSessionEndedError,
   deriveActionView,
   splitRows,
   type BountyActionInput,
@@ -109,7 +110,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["application approved, bounty reviewing, nothing submitted", { applicationRequired: true, status: "reviewing", applications: loaded([app("approved")]) }, { kind: "closed", reason: "reviewing" }],
   ["pending application on an ended bounty (completed/cancelled) is shown as closed", { applicationRequired: true, status: "closed", applications: loaded([app("open")]) }, { kind: "closed", reason: "closed" }],
   ["pending application on a bounty that moved to SUBMISSION_CLOSED / IN_REVIEW can no longer unlock a submission", { applicationRequired: true, status: "reviewing", applications: loaded([app("open")]) }, { kind: "closed", reason: "reviewing" }],
-  ["pending application past the deadline can no longer be approved", { applicationRequired: true, status: "closed", closedReason: "deadline", applications: loaded([app("open")]) }, { kind: "closed", reason: "applications" }],
+  ["pending application past the submission deadline: nothing left to do, plain closed (not the applications-closed promise)", { applicationRequired: true, status: "closed", closedReason: "deadline", applications: loaded([app("open")]) }, { kind: "closed", reason: "closed" }],
   // 7. 확정된 제출
   ["submission approved", { submissions: loaded([sub("approved")]) }, { kind: "submissionApproved" }],
   ["submission approved carries its payout status", { submissions: loaded([{ ...sub("approved"), paymentStatus: "PARTIALLY_PAID" as const }]) }, { kind: "submissionApproved", payout: "PARTIALLY_PAID" }],
@@ -184,6 +185,13 @@ describe("bountyActionErrorCopy - bounties.action.errors key for a failed apply/
 
   it("mock-mode errors take the same path", () => {
     expect(bountyActionErrorCopy(new MockApiError(409, "ALREADY_APPLIED"))).toEqual({ key: "ALREADY_APPLIED" });
+  });
+
+  it("any 401 means the session ended (no error copy of its own)", () => {
+    expect(isSessionEndedError(new ApiHttpError(401, "INVALID_ACCESS_TOKEN"))).toBe(true);
+    expect(isSessionEndedError(new ApiHttpError(401, "UNAUTHORIZED"))).toBe(true);
+    expect(isSessionEndedError(new ApiHttpError(409, "ALREADY_APPLIED"))).toBe(false);
+    expect(isSessionEndedError(new Error("x"))).toBe(false);
   });
 
   it("an unlisted BE code shows `unknown` with the raw code", () => {

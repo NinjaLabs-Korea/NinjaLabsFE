@@ -184,7 +184,7 @@
       "BOUNTY_NOT_FOUND": "This bounty no longer exists.",
       "INVALID_CHARACTER": "Your text contains characters that cannot be saved (for example a NUL byte). Remove them and try again.",
       "REFERENCE_NOT_FOUND": "Something this request refers to no longer exists. Reload the page and try again.",
-      "unknown": "Something went wrong ({code}). Please try again.",
+      "unknown": "Something went wrong. Please try again.",
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     },
@@ -201,6 +201,7 @@
     "reviewerComment": "Reviewer comment: {comment}",
     "resubmitHeading": "Resubmit your work",
     "inReviewHeading": "Submission under review",
+    "resubmitPrefilledNote": "Your current submission is filled in below. Sending replaces it.",
     "revisionNote": "The sponsor requested a revision. Update your work and submit again.",
     "inReviewNote": "The sponsor is reviewing your work. You can still update it before the deadline; the latest version replaces the previous one.",
     "resubmit": "Resubmit",

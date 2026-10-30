@@ -38,7 +38,7 @@ describe("notice list loading", () => {
 
   it("keeps the list when one row has no parseable published_at", async () => {
     fetchPublicJson.mockResolvedValue({
-      items: [row("n1", "2026-06-20T23:30:00Z"), { ...row("n2"), published_at: null }, row("n3", "garbage")],
+      items: [row("n1", "2026-06-20T14:30:00Z"), { ...row("n2"), published_at: null }, row("n3", "garbage")],
       page: 1, pageSize: 50, total: 3,
     });
     const notices = await getRuntimeNotices();
@@ -46,7 +46,7 @@ describe("notice list loading", () => {
   });
 
   it("keeps the stable YYYY.MM.DD label that sitemap.ts parses back", async () => {
-    fetchPublicJson.mockResolvedValue({ items: [row("n1", "2026-06-20T23:30:00Z")], page: 1, pageSize: 50, total: 1 });
+    fetchPublicJson.mockResolvedValue({ items: [row("n1", "2026-06-20T14:30:00Z")], page: 1, pageSize: 50, total: 1 });
     const [notice] = await getRuntimeNotices();
     expect(notice.publishedAt).toBe("2026.06.20");
     expect(new Date(notice.publishedAt.replaceAll(".", "-")).toISOString()).toBe("2026-06-20T00:00:00.000Z");

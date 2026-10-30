@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { fireEvent, screen, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BountyCard } from "@/components/cards/BountyCard";
 import { MemberCard } from "@/components/cards/MemberCard";
 import { NewsCard } from "@/components/cards/NewsCard";
@@ -244,6 +244,8 @@ describe("filter results fade in", () => {
 });
 
 describe("NoticeFilters", () => {
+  // The chip lives in the URL, so a previous test's ?category must not leak into the next one.
+  beforeEach(() => window.history.replaceState(null, "", "/en/notices"));
   const notices = [
     notice({ slug: "e", title: "Meetup", category: "Events" }),
     notice({ slug: "n", title: "Release", category: "Ninja Labs" }),
@@ -298,6 +300,14 @@ describe("filters keep their chip in the URL", () => {
     expect(window.location.search).toBe("?category=events");
     fireEvent.click(screen.getByRole("button", { name: "All" }));
     expect(window.location.search).toBe("");
+  });
+
+  it("selects the chip from ?category on mount even without initialCategory (Back from a notice)", () => {
+    window.history.replaceState(null, "", "/en/notices?category=events");
+    renderWithIntl(<NoticeFilters notices={notices} />);
+    expect(screen.getByRole("button", { name: "Events" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "All" }).getAttribute("aria-pressed")).toBe("false");
+    window.history.replaceState(null, "", "/en/notices");
   });
 
   it("re-reads ?category on popstate", () => {

@@ -591,8 +591,49 @@ describe("BountyActionPanel", () => {
     fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "Done" } });
     fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
 
-    expect((await screen.findByRole("alert")).textContent).toBe("Something went wrong (TEAPOT_BUSY). Please try again.");
+    expect((await screen.findByRole("alert")).textContent).toBe("Something went wrong. Please try again.");
     expect(screen.queryByText("teapot busy")).toBeNull();
+  });
+
+  it("a 401 that survives the refresh shows only the session-expired banner, never a raw auth code", async () => {
+    state.applications = [application("approved")];
+    const submitBounty = vi.fn(async () => { throw new ApiHttpError(401, "INVALID_ACCESS_TOKEN"); });
+    Object.assign(apiClient, { submitBounty });
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByLabelText("Completed work link"), { target: { value: "https://example.test/work" } });
+    fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "Done" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
+
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain("Your session has expired");
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+    expect(document.body.textContent).not.toContain("INVALID_ACCESS_TOKEN");
+    expect(document.body.textContent).not.toContain("Something went wrong");
+    expect((screen.getByLabelText("Describe what you completed") as HTMLTextAreaElement).value).toBe("Done");
+  });
+
+  it("pre-fills the update form from the current submission and keeps what is typed", async () => {
+    state.submissions = [{ ...submission("submitted"), submissionUrl: "https://example.test/work", repositoryUrl: "https://github.com/o/r", commitSha: "3f2a9c1", description: "First pass" }];
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const url = (await screen.findByLabelText("Completed work link")) as HTMLInputElement;
+    expect(url.value).toBe("https://example.test/work");
+    expect((screen.getByLabelText("Code repository (optional)") as HTMLInputElement).value).toBe("https://github.com/o/r");
+    expect((screen.getByLabelText("Commit hash (optional, code work only)") as HTMLInputElement).value).toBe("3f2a9c1");
+    const description = screen.getByLabelText("Describe what you completed") as HTMLTextAreaElement;
+    expect(description.value).toBe("First pass");
+    expect(screen.getByText("Your current submission is filled in below. Sending replaces it.")).toBeTruthy();
+    fireEvent.change(description, { target: { value: "Edited" } });
+    expect(description.value).toBe("Edited");
+  });
+
+  it("shows no pre-fill note for a first submission or a BE without the content fields", async () => {
+    cleanup();
+    state.submissions = [submission("submitted")];
+    // A new read function: the account query remembers the previous test's answer per function for 60 s.
+    Object.assign(apiClient, { getSubmissions: async () => ({ status: "available" as const, data: state.submissions }) });
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    expect(((await screen.findByLabelText("Completed work link")) as HTMLInputElement).value).toBe("");
+    expect(screen.queryByText(/is filled in below/)).toBeNull();
   });
 
   it("moves focus to the status heading and announces the success copy after applying", async () => {

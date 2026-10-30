@@ -51,7 +51,7 @@ export function WalletSettings({ wallet }: { wallet: WalletConfig | null }) {
           <div className="mt-4 [&_button]:w-full sm:[&_button]:w-auto">
             {wallet ? (
               panelOpen ? (
-                <WalletConnectPanel onVerified={() => void refresh?.().catch(() => undefined)} wallet={wallet} />
+                <WalletConnectPanel autoStart onVerified={() => void refresh?.().catch(() => undefined)} wallet={wallet} />
               ) : (
                 <button
                   className={connectClass}

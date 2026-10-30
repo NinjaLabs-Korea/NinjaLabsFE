@@ -101,6 +101,6 @@ describe("LocaleSwitcher with typed text", () => {
     expect(replace).not.toHaveBeenCalled();
     pickKo();
     act(() => fireEvent.click(screen.getByRole("button", { name: "Switch and clear", hidden: true })));
-    expect(replace).toHaveBeenCalledWith("/recruit", { locale: "ko" });
+    expect(replace).toHaveBeenCalledWith("/recruit", { locale: "ko", scroll: false });
   });
 });

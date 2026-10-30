@@ -184,7 +184,7 @@
       "BOUNTY_NOT_FOUND": "此赏金已不存在。",
       "INVALID_CHARACTER": "您的内容包含无法保存的字符（例如 NUL 字符）。请删除后重试。",
       "REFERENCE_NOT_FOUND": "此请求引用的对象已不存在。请刷新页面后重试。",
-      "unknown": "出了点问题（{code}），请重试。",
+      "unknown": "出了点问题，请重试。",
       "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },
@@ -201,6 +201,7 @@
     "reviewerComment": "审核意见：{comment}",
     "resubmitHeading": "重新提交作品",
     "inReviewHeading": "提交审核中",
+    "resubmitPrefilledNote": "下面已填入你当前提交的内容。发送后将替换为新内容。",
     "revisionNote": "赞助方要求修改。请更新作品后重新提交。",
     "inReviewNote": "赞助方正在审核您的作品。截止前仍可更新，最新版本将替换之前的提交。",
     "resubmit": "重新提交",

@@ -26,6 +26,9 @@ const focusClass =
 const secondaryButtonClass = `rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong ${focusClass}`;
 const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
 
+/** Shared by the loading and signed-out branches so the footer stays put between them. */
+const PAGE_MIN_HEIGHT = "min-h-dvh";
+
 /** Same rule as the BE (`DELETE /users/me`): trimmed, NFC-normalized, case-insensitive. */
 export function confirmationMatches(nickname: string, typed: string): boolean {
   const normalized = normalizeNickname(typed);
@@ -65,12 +68,17 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
   // page's account deletion shows the plain "sign in" gate.
   const heldForEdit = authSnapshot.status === "signed-out" && authSnapshot.reason === "session-ended" && editingProfileFor !== null && lastUser !== null;
   if (authSnapshot.status === "signed-out" && !heldForEdit) {
-    return <SignedOutPanel message={authSnapshot.reason === "session-ended" ? tAccount("sessionExpired") : t("signedOutMessage")} returnTo="/account" />;
+    // Same min-h-dvh wrapper as the loading placeholder below: loading -> signed-out must not shorten the page under the footer.
+    return (
+      <div className={PAGE_MIN_HEIGHT}>
+        <SignedOutPanel message={authSnapshot.reason === "session-ended" ? tAccount("sessionExpired") : t("signedOutMessage")} returnTo="/account" />
+      </div>
+    );
   }
 
   if (authSnapshot.status === "loading") {
     // min-h-dvh: the signed-in settings are several screens tall, so a short placeholder would let the footer jump.
-    return <div className="min-h-dvh"><PageLoading label={tAccount("loading")} /></div>;
+    return <div className={PAGE_MIN_HEIGHT}><PageLoading label={tAccount("loading")} /></div>;
   }
 
   const user = authSnapshot.status === "signed-in" ? authSnapshot.user : lastUser;

@@ -279,6 +279,18 @@ describe("PostManager", () => {
     pending.resolve();
     await waitFor(() => expect(save.disabled).toBe(false));
   });
+
+  it("wraps the editor in a real form so Enter in a text input saves once and the locale guard can see it", async () => {
+    adminApi.saveAdminPost.mockResolvedValue(undefined);
+    renderWithIntl(<PostManager posts={[post]} tabs={null}>{null}</PostManager>);
+    await waitFor(() => expect(adminApi.getAdminPosts).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+    const editor = screen.getByRole("button", { name: "Save" }).closest("form");
+    expect(editor).not.toBeNull();
+    expect(editor?.hasAttribute("novalidate")).toBe(true);
+    fireEvent.submit(editor!);
+    await waitFor(() => expect(adminApi.saveAdminPost).toHaveBeenCalledTimes(1));
+  });
 });
 
 describe("admin form accessibility and previews", () => {

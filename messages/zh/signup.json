@@ -2,12 +2,12 @@
   "login": {
     "pageTitle": "{title} | Ninja Labs",
     "mock": {
-      "title": "预览 Ninja Labs 登录流程",
+      "title": "预览登录流程",
       "description": "通过本地会话预览体验此步骤。不会连接 Google，也不会创建账户。",
       "disclosure": "模拟模式仅用于本地测试。此预览不会连接 Google，也不会创建账户。"
     },
     "api": {
-      "title": "开始使用 Ninja Labs",
+      "title": "开始使用",
       "description": "只需一个 Google 账号，无需钱包。",
       "disclosure": "首次登录会自动创建账号，已有账号则直接继续。我们只会获取你的 Google 邮箱，不会获取密码。"
     },

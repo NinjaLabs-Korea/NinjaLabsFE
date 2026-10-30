@@ -206,7 +206,7 @@ export function AgentsView() {
                     <Badge variant={key.kind === "active" ? (key.expiringSoon ? "warning" : "success") : key.kind === "none" ? "neutral" : "danger"}>
                       {keyStatusLabel}
                     </Badge>
-                    {agent.keyExpiresAt && key.kind !== "revoked" ? <span>{t("keyExpires", { date: formatDate(agent.keyExpiresAt) })}</span> : null}
+                    {agent.keyExpiresAt && key.kind !== "revoked" ? <span>{t(key.kind === "expired" ? "keyExpiredOn" : "keyExpires", { date: formatDate(agent.keyExpiresAt) })}</span> : null}
                   </dd>
                 </div>
                 <div className="flex gap-2">

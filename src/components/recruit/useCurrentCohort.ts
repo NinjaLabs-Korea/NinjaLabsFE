@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { createContext, createElement, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useCohortApi } from "@/components/auth/FoundationProvider";
 import type { PublicCohort } from "@/lib/cohorts";
 
@@ -61,6 +61,17 @@ function readCurrentCohort(api: CohortApiLike): CohortRead {
   return started;
 }
 
+/**
+ * The current cohort as the server read it while rendering the (static) page: `undefined` when the server read failed or did
+ * not happen, `null` when no cohort is open. Seeds `useCurrentCohort` so the first paint already has its final shape; the
+ * browser read still runs on every mount and replaces it.
+ */
+const InitialCohortContext = createContext<PublicCohort | null | undefined>(undefined);
+
+export function InitialCohortProvider({ cohort, children }: { cohort: PublicCohort | null | undefined; children: ReactNode }) {
+  return createElement(InitialCohortContext.Provider, { value: cohort }, children);
+}
+
 export type CurrentCohortState =
   | { status: "loading"; cohort: null }
   | { status: "failed"; cohort: null }
@@ -77,10 +88,12 @@ export function useCurrentCohort(): CurrentCohortState & {
   retry: () => void;
 } {
   const api = useCohortApi();
+  const initial = useContext(InitialCohortContext);
   const [version, setVersion] = useState(0);
   const [state, setState] = useState<CurrentCohortState>(() => {
     const last = lastCurrentCohort(api);
-    return last === undefined ? { status: "loading", cohort: null } : { status: "ready", cohort: last };
+    const seed = last === undefined ? initial : last;
+    return seed === undefined ? { status: "loading", cohort: null } : { status: "ready", cohort: seed };
   });
   const reload = useCallback(() => setVersion((current) => current + 1), []);
   const retry = useCallback(() => {

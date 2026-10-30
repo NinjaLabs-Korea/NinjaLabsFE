@@ -62,7 +62,8 @@
     "operations": "Operations",
     "nftJobs": "NFT Jobs",
     "audit": "Audit log",
-    "recruitment": "Recruitment"
+    "recruitment": "Recruitment",
+    "ariaLabel": "Admin sections"
   },
   "gate": {
     "checking": "Checking admin access…",
@@ -163,7 +164,8 @@
       "submissionClosed": "Submissions closed",
       "reviewing": "In review",
       "completed": "Completed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "pastDeadline": "Past deadline"
     },
     "tags": {
       "Dev": "Dev",
@@ -217,7 +219,9 @@
         "deliverablesRequired": "Add the deliverables or a submission guide.",
         "maxWinnersInvalid": "Enter a whole number from 1 to 1,000.",
         "titleTooLong": "Use at most 200 characters.",
-        "sponsorTooLong": "Use at most 100 characters."
+        "sponsorTooLong": "Use at most 100 characters.",
+        "bidiChars": "Remove hidden direction or control characters (for example U+202E, or a tab).",
+        "amountTooLarge": "Use at most {digits} digits before the decimal point."
       },
       "rewardLockedHint": "Reward is fixed once the bounty exists; it cannot be changed here.",
       "rewardNote": "After you create it, the sponsor sends the reward to the multisig wallet and an admin confirms the deposit in Operations. Only then can the bounty open. The reward cannot be changed once the bounty exists."
@@ -227,7 +231,7 @@
       "loadFailedDescription": "Could not load admin bounties.",
       "createdTitle": "Bounty created",
       "updatedTitle": "Bounty updated",
-      "saveFailedDescription": "The bounty was not saved. Check the fields and your admin permissions.",
+      "saveFailedDescription": "The bounty was not saved. Check the highlighted fields and try again.",
       "statusUpdatedTitle": "Status updated",
       "statusUpdatedDescription": "{title} is now {to, select, OPEN {open} other {submission closed}}.",
       "transitionFailedTitle": "Transition failed",
@@ -447,7 +451,11 @@
       },
       "cancelTitle": "Cancel this bounty?",
       "cancelDescription": "\"{title}\" stops accepting work and no further reviews or payout requests are possible.",
-      "cancelCallout": "Cancelling cannot be undone from the console."
+      "cancelCallout": "Cancelling cannot be undone from the console.",
+      "reopen": {
+        "label": "Reopen bounty",
+        "description": "Accepts submissions again. The submission deadline must still be in the future."
+      }
     },
     "rewards": {
       "eyebrow": "Rewards",
@@ -469,7 +477,8 @@
       "modalTitle": "Confirm reward deposit",
       "modalDescription": "Record the on-chain deposit of at least {amount} to {address}. Check the transaction on the explorer first.",
       "depositedAmount": "Deposited amount ({symbol})",
-      "amountBelowPosted": "The deposit must cover the posted reward ({amount})."
+      "amountBelowPosted": "The deposit must cover the posted reward ({amount}).",
+      "multisigNotConfigured": "Multisig address not configured. Set REWARD_MULTISIG_ADDRESS (runbook §1) before confirming deposits."
     },
     "applications": {
       "eyebrow": "Applications",
@@ -566,7 +575,8 @@
       "amountHintBaseUnits": "This token is not known here, so enter the amount in base units (a whole number, e.g. 25000000).",
       "noteOptional": "Note (optional)",
       "commentOptional": "Comment (optional)",
-      "commentRequired": "Comment (required)"
+      "commentRequired": "Comment (required)",
+      "amountTooLarge": "Use at most {digits} digits before the decimal point."
     },
     "toast": {
       "loadFailedTitle": "Operations unavailable",
@@ -606,7 +616,7 @@
       "REWARD_NOT_FUNDED": "Confirm the reward deposit before requesting payouts.",
       "INVALID_TX_HASH": "That is not a valid transaction hash.",
       "INVALID_TOKEN_AMOUNT": "The amount must be a positive whole number of base units.",
-      "TX_HASH_ALREADY_USED": "This transaction hash is already recorded (as a deposit, or as another bounty's payout).",
+      "TX_HASH_ALREADY_USED": "This transaction hash is already recorded (as a deposit, a payout or a refund).",
       "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND": "The submission is not approved, or its owner has no linked primary wallet.",
       "APPROVED_SUBMISSION_NOT_FOUND": "The paid submission is no longer approved.",
       "PAYOUT_ALREADY_REQUESTED": "A payout for this submission and reward already exists.",
@@ -624,7 +634,9 @@
       "REFRESH_UNAVAILABLE": "Your session could not be refreshed. Sign in again.",
       "NETWORK_ERROR": "The server could not be reached. Check your connection and try again.",
       "unknown": "Something went wrong ({code}).",
-      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "NOTE_BIDI_CHARS": "The note contains hidden direction or control characters. Remove them and try again.",
+      "NOTE_RESERVED_PREFIX": "A note cannot start with \"forfeited:\" (reserved for the system)."
     }
   },
   "nftJobs": {

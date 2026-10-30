@@ -52,6 +52,6 @@ describe("LocaleSwitcher keyboard behavior", () => {
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: "ArrowDown" });
     expect(document.activeElement?.textContent).toBe("English");
     act(() => fireEvent.click(document.activeElement as HTMLElement));
-    expect(replace).toHaveBeenCalledWith("/notices", { locale: "en" });
+    expect(replace).toHaveBeenCalledWith("/notices", { locale: "en", scroll: false });
   });
 });

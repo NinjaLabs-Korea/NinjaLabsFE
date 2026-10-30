@@ -19,7 +19,7 @@ export function AdminTabs({ active }: { active: AdminTab }) {
   const t = useTranslations("admin.tabs");
 
   return (
-    <nav className="flex flex-wrap gap-2 h-auto min-h-[66px] items-center rounded-card border border-border bg-surface p-[21px] shadow-card">
+    <nav aria-label={t("ariaLabel")} className="flex flex-wrap gap-2 h-auto min-h-[66px] items-center rounded-card border border-border bg-surface p-[21px] shadow-card">
       {tabs.map((tab) => (
         <Link
           // The active tab was conveyed by color alone; expose it to assistive tech too.

@@ -51,7 +51,7 @@ describe("mock api client parity", () => {
 
     const first = await client.submitBounty("wallet-onboarding-states", { submissionUrl: "https://x.test", description: "Done" });
     expect(first).toMatchObject({ revisionNo: 1, status: "SUBMITTED" });
-    expect(available(await client.getSubmissions(owner))).toContainEqual({ bountySlug: "wallet-onboarding-states", status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null });
+    expect(available(await client.getSubmissions(owner))).toContainEqual({ bountySlug: "wallet-onboarding-states", status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null, submissionUrl: "https://x.test", description: "Done" });
     // The approved fixture application on that bounty moves to "submitted", like the api client's join.
     expect(available(await client.getApplications(owner)).find((application) => application.bountySlug === "wallet-onboarding-states")?.status).toBe("submitted");
 

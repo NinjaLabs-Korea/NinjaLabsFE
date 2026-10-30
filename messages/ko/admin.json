@@ -62,7 +62,8 @@
     "operations": "운영",
     "nftJobs": "NFT 잡",
     "audit": "감사 로그",
-    "recruitment": "멤버 모집"
+    "recruitment": "멤버 모집",
+    "ariaLabel": "관리자 메뉴"
   },
   "gate": {
     "checking": "관리자 권한을 확인하는 중…",
@@ -163,7 +164,8 @@
       "submissionClosed": "제출 마감",
       "reviewing": "심사 중",
       "completed": "완료",
-      "cancelled": "취소됨"
+      "cancelled": "취소됨",
+      "pastDeadline": "마감 지남"
     },
     "tags": {
       "Dev": "개발",
@@ -217,7 +219,9 @@
         "deliverablesRequired": "결과물이나 제출 가이드를 입력하세요.",
         "maxWinnersInvalid": "1에서 1,000 사이의 정수를 입력하세요.",
         "titleTooLong": "최대 200자까지 입력할 수 있습니다.",
-        "sponsorTooLong": "최대 100자까지 입력할 수 있습니다."
+        "sponsorTooLong": "최대 100자까지 입력할 수 있습니다.",
+        "bidiChars": "보이지 않는 방향·제어 문자(예: U+202E, 탭)를 지워 주세요.",
+        "amountTooLarge": "소수점 앞은 {digits}자리까지 쓸 수 있어요."
       },
       "rewardLockedHint": "보상은 바운티 생성 후에는 바꿀 수 없습니다.",
       "rewardNote": "생성한 뒤 스폰서가 멀티시그 지갑으로 보상을 입금하고, 운영자가 Operations에서 입금을 확인해야 바운티를 열 수 있습니다. 바운티가 생성된 뒤에는 보상을 바꿀 수 없습니다."
@@ -227,7 +231,7 @@
       "loadFailedDescription": "관리자 바운티를 불러오지 못했습니다.",
       "createdTitle": "바운티 생성됨",
       "updatedTitle": "바운티 수정됨",
-      "saveFailedDescription": "바운티가 저장되지 않았습니다. 입력 항목과 관리자 권한을 확인해 주세요.",
+      "saveFailedDescription": "바운티를 저장하지 못했어요. 표시된 칸을 확인하고 다시 시도해 주세요.",
       "statusUpdatedTitle": "상태 변경됨",
       "statusUpdatedDescription": "{title}의 상태가 {to, select, OPEN {모집 중} other {제출 마감}}으로 변경되었습니다.",
       "transitionFailedTitle": "상태 변경 실패",
@@ -356,7 +360,7 @@
     "metaDescription": "보상 입금 확인, 지원/제출 심사, 지급 처리, 바운티 상태 전이를 한곳에서 관리합니다.",
     "title": "바운티 운영",
     "description": "보상 입금 확인, 지원/제출 심사, 지급 처리, 바운티 상태 전이를 한곳에서 관리합니다.",
-    "adminOnlyBadge": "ADMIN ONLY",
+    "adminOnlyBadge": "관리자 전용",
     "pickBounty": "바운티",
     "pickBountyPlaceholder": "바운티 선택",
     "bountyNotFound": "id “{id}”인 바운티를 찾을 수 없습니다(삭제되었을 수 있습니다). 목록에서 선택하세요.",
@@ -447,7 +451,11 @@
       },
       "cancelTitle": "이 바운티를 취소할까요?",
       "cancelDescription": "\"{title}\"은(는) 더 이상 작업을 받지 않으며 심사와 지급 요청도 할 수 없습니다.",
-      "cancelCallout": "콘솔에서는 취소를 되돌릴 수 없습니다."
+      "cancelCallout": "콘솔에서는 취소를 되돌릴 수 없습니다.",
+      "reopen": {
+        "label": "바운티 다시 열기",
+        "description": "제출을 다시 받아요. 제출 마감이 아직 지나지 않아야 해요."
+      }
     },
     "rewards": {
       "eyebrow": "보상",
@@ -469,7 +477,8 @@
       "modalTitle": "보상 입금 확인",
       "modalDescription": "{address}(으)로 {amount} 이상 입금된 온체인 거래를 기록합니다. 먼저 익스플로러에서 거래를 확인하세요.",
       "depositedAmount": "입금액 ({symbol})",
-      "amountBelowPosted": "입금액은 게시된 보상({amount}) 이상이어야 합니다."
+      "amountBelowPosted": "입금액은 게시된 보상({amount}) 이상이어야 합니다.",
+      "multisigNotConfigured": "멀티시그 주소가 설정되지 않았어요. 입금을 확인하기 전에 REWARD_MULTISIG_ADDRESS를 설정하세요(runbook §1)."
     },
     "applications": {
       "eyebrow": "지원",
@@ -566,7 +575,8 @@
       "amountHintBaseUnits": "이 토큰은 여기서 단위를 알 수 없으므로 기본 단위(정수, 예: 25000000)로 입력하세요.",
       "noteOptional": "메모(선택)",
       "commentOptional": "코멘트(선택)",
-      "commentRequired": "코멘트(필수)"
+      "commentRequired": "코멘트(필수)",
+      "amountTooLarge": "소수점 앞은 {digits}자리까지 쓸 수 있어요."
     },
     "toast": {
       "loadFailedTitle": "운영 데이터를 사용할 수 없음",
@@ -606,7 +616,7 @@
       "REWARD_NOT_FUNDED": "지급을 요청하기 전에 보상 입금을 확인하세요.",
       "INVALID_TX_HASH": "올바른 거래 해시가 아닙니다.",
       "INVALID_TOKEN_AMOUNT": "금액은 최소 단위의 양의 정수여야 합니다.",
-      "TX_HASH_ALREADY_USED": "이미 기록된 거래 해시입니다(입금 또는 다른 바운티의 지급).",
+      "TX_HASH_ALREADY_USED": "이미 기록된 트랜잭션 해시예요(입금, 지급 또는 환불).",
       "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND": "승인된 제출물이 아니거나 소유자에게 연결된 기본 지갑이 없습니다.",
       "APPROVED_SUBMISSION_NOT_FOUND": "지급 대상 제출물이 더 이상 승인 상태가 아닙니다.",
       "PAYOUT_ALREADY_REQUESTED": "이 제출물과 보상에 대한 지급이 이미 있습니다.",
@@ -624,7 +634,9 @@
       "REFRESH_UNAVAILABLE": "세션을 갱신하지 못했습니다. 다시 로그인하세요.",
       "NETWORK_ERROR": "서버에 연결할 수 없습니다. 네트워크를 확인하고 다시 시도하세요.",
       "unknown": "문제가 발생했습니다 ({code}).",
-      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요."
+      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "NOTE_BIDI_CHARS": "메모에 보이지 않는 방향·제어 문자가 있어요. 지우고 다시 시도해 주세요.",
+      "NOTE_RESERVED_PREFIX": "메모는 \"forfeited:\"로 시작할 수 없어요(시스템 예약)."
     }
   },
   "nftJobs": {

@@ -62,7 +62,8 @@
     "operations": "运营",
     "nftJobs": "NFT 任务",
     "audit": "审计日志",
-    "recruitment": "成员招募"
+    "recruitment": "成员招募",
+    "ariaLabel": "管理后台菜单"
   },
   "gate": {
     "checking": "正在检查管理员权限…",
@@ -163,7 +164,8 @@
       "submissionClosed": "提交已截止",
       "reviewing": "审核中",
       "completed": "已完成",
-      "cancelled": "已取消"
+      "cancelled": "已取消",
+      "pastDeadline": "已过截止"
     },
     "tags": {
       "Dev": "开发",
@@ -217,7 +219,9 @@
         "deliverablesRequired": "请填写交付物或提交指南。",
         "maxWinnersInvalid": "请输入 1 到 1000 之间的整数。",
         "titleTooLong": "最多 200 个字符。",
-        "sponsorTooLong": "最多 100 个字符。"
+        "sponsorTooLong": "最多 100 个字符。",
+        "bidiChars": "请删除不可见的方向或控制字符（例如 U+202E 或制表符）。",
+        "amountTooLarge": "小数点前最多 {digits} 位。"
       },
       "rewardLockedHint": "奖励在悬赏创建后即固定，无法在此修改。",
       "rewardNote": "创建后，赞助方需将奖励转入多签钱包，管理员在 Operations 中确认存款，赏金任务才能开放。任务创建后无法更改奖励。"
@@ -227,7 +231,7 @@
       "loadFailedDescription": "无法加载管理后台赏金。",
       "createdTitle": "赏金已创建",
       "updatedTitle": "赏金已更新",
-      "saveFailedDescription": "赏金未保存。请检查填写内容和管理员权限。",
+      "saveFailedDescription": "赏金未保存。请检查标出的字段后重试。",
       "statusUpdatedTitle": "状态已更新",
       "statusUpdatedDescription": "{title} 现在{to, select, OPEN {已开放} other {已截止提交}}。",
       "transitionFailedTitle": "状态变更失败",
@@ -356,7 +360,7 @@
     "metaDescription": "确认奖励存款、审核申请与提交、处理付款，并推进赏金生命周期。",
     "title": "赏金运营",
     "description": "确认奖励存款、审核申请与提交、处理付款，并推进赏金生命周期。",
-    "adminOnlyBadge": "ADMIN ONLY",
+    "adminOnlyBadge": "仅限管理员",
     "pickBounty": "赏金",
     "pickBountyPlaceholder": "选择赏金",
     "bountyNotFound": "未找到 id 为“{id}”的赏金（可能已被删除）。请从列表中选择。",
@@ -447,7 +451,11 @@
       },
       "cancelTitle": "取消此赏金？",
       "cancelDescription": "“{title}”将不再接收作品，也无法继续审核或申请付款。",
-      "cancelCallout": "在控制台中无法撤销取消。"
+      "cancelCallout": "在控制台中无法撤销取消。",
+      "reopen": {
+        "label": "重新开放赏金",
+        "description": "重新接受提交。提交截止时间必须尚未过去。"
+      }
     },
     "rewards": {
       "eyebrow": "奖励",
@@ -469,7 +477,8 @@
       "modalTitle": "确认奖励存款",
       "modalDescription": "记录向 {address} 存入至少 {amount} 的链上交易。请先在浏览器中核对交易。",
       "depositedAmount": "存款金额（{symbol}）",
-      "amountBelowPosted": "存款必须覆盖公布的奖励（{amount}）。"
+      "amountBelowPosted": "存款必须覆盖公布的奖励（{amount}）。",
+      "multisigNotConfigured": "尚未配置多签地址。确认存入前请先设置 REWARD_MULTISIG_ADDRESS（runbook §1）。"
     },
     "applications": {
       "eyebrow": "申请",
@@ -566,7 +575,8 @@
       "amountHintBaseUnits": "此处无法识别该代币，请按最小单位输入（整数，例如 25000000）。",
       "noteOptional": "备注（可选）",
       "commentOptional": "评语（可选）",
-      "commentRequired": "评语（必填）"
+      "commentRequired": "评语（必填）",
+      "amountTooLarge": "小数点前最多 {digits} 位。"
     },
     "toast": {
       "loadFailedTitle": "运营数据不可用",
@@ -606,7 +616,7 @@
       "REWARD_NOT_FUNDED": "申请付款前请先确认奖励存款。",
       "INVALID_TX_HASH": "交易哈希无效。",
       "INVALID_TOKEN_AMOUNT": "金额必须是以最小单位表示的正整数。",
-      "TX_HASH_ALREADY_USED": "该交易哈希已被记录（作为存款，或其他赏金的付款）。",
+      "TX_HASH_ALREADY_USED": "该交易哈希已被记录（作为存入、支付或退款）。",
       "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND": "该提交未通过，或其所有者没有绑定的主钱包。",
       "APPROVED_SUBMISSION_NOT_FOUND": "付款对应的提交已不再是通过状态。",
       "PAYOUT_ALREADY_REQUESTED": "该提交和奖励的付款已存在。",
@@ -624,7 +634,9 @@
       "REFRESH_UNAVAILABLE": "无法刷新会话。请重新登录。",
       "NETWORK_ERROR": "无法连接服务器。请检查网络后重试。",
       "unknown": "出现问题（{code}）。",
-      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。"
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
+      "NOTE_BIDI_CHARS": "备注中含有不可见的方向或控制字符，请删除后重试。",
+      "NOTE_RESERVED_PREFIX": "备注不能以 \"forfeited:\" 开头（系统保留）。"
     }
   },
   "nftJobs": {

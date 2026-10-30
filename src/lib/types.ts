@@ -121,6 +121,8 @@ export type Profile = {
   initials: string;
   bio: string;
   skills: BountyCategory[];
+  /** Official team role (public profile `is_member` + `member_role`); absent for ordinary builders. */
+  teamRole?: Member["role"];
   joinedAt: string;
   completions: Completion[];
   nfts: ProfileNft[];

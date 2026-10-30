@@ -8,6 +8,8 @@ import { OpsFormModal } from "@/components/admin/OpsFormModal";
 import { opsAmount, opsCell, opsInput, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPrimaryButton, opsShort } from "@/components/admin/ops-ui";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
+import { rewardIntegerDigitsMax } from "@/lib/admin-bounty-form";
+import { PENDING_MULTISIG_SETUP } from "@/lib/admin-helpers";
 import { isTxHash, type AdminOperations, type OpsReward } from "@/lib/admin-operations";
 import { operatorAmountFromBaseUnits, operatorAmountToBaseUnits, tokenDecimalsFor } from "@/lib/api/codecs";
 
@@ -32,12 +34,15 @@ export function OpsRewardsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
   const live = target ? ops.rewards.find((item) => item.id === target.id) : undefined;
   const targetCurrent = live?.status === "DEPOSIT_PENDING";
 
+  const multisigMissing = target?.custodyAddress === PENDING_MULTISIG_SETUP;
+
   const submit = async () => {
-    if (!target || !live) return;
+    if (!target || !live || multisigMissing) return;
     const depositedAmount = operatorAmountToBaseUnits(form.amount, target.symbol);
     const errors: DepositForm["errors"] = {};
     if (!isTxHash(form.txHash)) errors.txHash = t("form.txHashInvalid");
     if (!depositedAmount) errors.amount = t(tokenDecimalsFor(target.symbol) === null ? "form.amountInvalidBaseUnits" : "form.amountInvalid", { symbol: target.symbol });
+    else if (depositedAmount.length > 30) errors.amount = t("form.amountTooLarge", { digits: rewardIntegerDigitsMax(tokenDecimalsFor(target.symbol) ?? 0) });
     else if (BigInt(depositedAmount) < BigInt(live.amount)) errors.amount = t("rewards.amountBelowPosted", { amount: opsAmount(live.amount, live.symbol) });
     if (errors.txHash || errors.amount) {
       setForm((current) => ({ ...current, errors }));
@@ -62,7 +67,7 @@ export function OpsRewardsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
           <AdminTable columns={columns.map((id) => ({ id, label: t(`rewards.columns.${id}`) }))} minWidthClass="min-w-[880px]">
             {ops.rewards.map((reward) => (
               <tr className="border-t border-border" key={reward.id}>
-                <td className={`${opsCell} font-semibold text-ink`}>{reward.symbol}<p className="mt-1 text-xs font-normal text-ink-muted" title={reward.custodyAddress ?? undefined}>{t("rewards.custody", { address: opsShort(reward.custodyAddress) })}</p></td>
+                <td className={`${opsCell} font-semibold text-ink`}>{reward.symbol}<p className="mt-1 text-xs font-normal text-ink-muted" title={reward.custodyAddress === PENDING_MULTISIG_SETUP ? undefined : (reward.custodyAddress ?? undefined)}>{reward.custodyAddress === PENDING_MULTISIG_SETUP ? <span className="font-semibold text-warning">{t("rewards.multisigNotConfigured")}</span> : t("rewards.custody", { address: opsShort(reward.custodyAddress) })}</p></td>
                 <td className={opsCell}><Badge variant={rewardVariant(reward.status)}>{t(`rewardStatuses.${reward.status}`)}</Badge></td>
                 <td className={opsCell}>{opsAmount(reward.amount, reward.symbol)}</td>
                 <td className={opsCell}>{opsAmount(reward.depositedAmount, reward.symbol)}<p className="mt-1 text-xs text-ink-muted">{formatDate(reward.depositedAt)}</p></td>
@@ -70,7 +75,7 @@ export function OpsRewardsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
                 <td className={`${opsCell} font-mono text-xs`} title={reward.depositTxHash ?? undefined}>{opsShort(reward.depositTxHash)}</td>
                 <td className={opsCell}>
                   {reward.status === "DEPOSIT_PENDING" ? (
-                    <button className={opsPrimaryButton} disabled={busy.has(`deposit:${reward.id}`)} onClick={() => open(reward)} type="button">{t("rewards.confirm")}</button>
+                    <button className={opsPrimaryButton} disabled={busy.has(`deposit:${reward.id}`) || reward.custodyAddress === PENDING_MULTISIG_SETUP} onClick={() => open(reward)} type="button">{t("rewards.confirm")}</button>
                   ) : null}
                 </td>
               </tr>
@@ -80,7 +85,9 @@ export function OpsRewardsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
       )}
       <OpsFormModal
         busy={target ? busy.has(`deposit:${target.id}`) : false}
-        description={target ? t("rewards.modalDescription", { amount: opsAmount(target.amount, target.symbol), address: target.custodyAddress ?? "–" }) : undefined}
+        callout={multisigMissing ? { tone: "warning", text: t("rewards.multisigNotConfigured") } : undefined}
+        submitDisabled={multisigMissing}
+        description={target && !multisigMissing ? t("rewards.modalDescription", { amount: opsAmount(target.amount, target.symbol), address: target.custodyAddress ?? "–" }) : undefined}
         eyebrow={t("rewards.eyebrow")}
         onCancel={() => setTarget(null)}
         onSubmit={() => void submit()}

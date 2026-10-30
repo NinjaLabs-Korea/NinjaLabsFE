@@ -106,6 +106,8 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   const inFlight = useRef(false);
   const [saveError, setSaveError] = useState<SaveErrorKey>("generic");
   const [nicknameCheck, setNicknameCheck] = useState<NicknameCheck | null>(null);
+  // The name a save was refused for by the 24-hour change cooldown: the name itself is fine, so no "available" line next to that error.
+  const [cooldownNickname, setCooldownNickname] = useState<string | null>(null);
 
   // The form mounted before the user was known: restore their draft now, unless they already typed.
   if (usesDraft && !draftChecked && userId) {
@@ -133,7 +135,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   // the field would look fine); an empty field is only reported on save.
   const nicknameStatus: "idle" | "invalid" | "checking" | "available" | "taken" = nicknameRuleError && trimmedNickname !== ""
     ? "invalid"
-    : nicknameRuleError || isOwnNickname || sessionEnded
+    : nicknameRuleError || isOwnNickname || sessionEnded || cooldownNickname === trimmedNickname
     ? "idle"
     : nicknameCheck?.nickname !== trimmedNickname
       ? "checking"
@@ -255,12 +257,15 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         ...("nickname" in rejected ? { nickname: nicknameRuleError ? `nicknameErrors.${nicknameRuleError}` : "errors.nicknameRejected" } : {}),
         ...("bio" in rejected ? { bio: bio.trim() ? "errors.bioRejected" : "errors.bio" } : {}),
         ...("tags" in rejected ? { tags: "errors.tags" } : {}),
+        // Said at the nickname field (aria-describedby), not only in the form alert far below it.
+        ...(key === "NICKNAME_CHANGE_COOLDOWN" ? { nickname: "saveErrors.NICKNAME_CHANGE_COOLDOWN" } : {}),
       });
+      setCooldownNickname(key === "NICKNAME_CHANGE_COOLDOWN" ? trimmedNickname : null);
       if (key === "NICKNAME_TAKEN") setNicknameCheck({ nickname: trimmedNickname, available: false });
       setSaveError(key);
       // NICKNAME_TAKEN is already said by the status line under the field, and a 400 whose fields are named is said by
       // those inline hints; a form-level alert would repeat it in other words (two alerts for one rejected bio).
-      setState(key === "NICKNAME_TAKEN" || (key === "invalid" && Object.keys(rejected).length > 0) ? "idle" : "error");
+      setState(key === "NICKNAME_TAKEN" || key === "NICKNAME_CHANGE_COOLDOWN" || (key === "invalid" && Object.keys(rejected).length > 0) ? "idle" : "error");
       inFlight.current = false;
     }
   };

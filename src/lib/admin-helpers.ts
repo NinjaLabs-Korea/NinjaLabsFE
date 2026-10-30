@@ -70,6 +70,9 @@ export function expirePublicLists(resources: readonly PublicListResource[]): voi
   void refreshPublicLists(resources, token).catch((error: unknown) => console.error("expirePublicLists failed", error));
 }
 
+/** Custody address the BE stores while REWARD_MULTISIG_ADDRESS is unset (reward-token.resolver.ts). Must equal BE PENDING_MULTISIG_SETUP. */
+export const PENDING_MULTISIG_SETUP = "PENDING_MULTISIG_SETUP";
+
 /** Postgres INTEGER ceiling: BE `MaxPgInt` on `displayOrder` (member and highlight ordering). Above it the BE answers 400. */
 export const DISPLAY_ORDER_MAX = 2_147_483_647;
 
