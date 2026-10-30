@@ -13,6 +13,7 @@ import path from 'node:path';
 import { Browser } from '../lib/cdp.mjs';
 import { state } from '../lib/state.mjs';
 import { denseProbe } from '../lib/layout-audit.mjs';
+import { findMockCopy } from '../lib/no-mock-copy.mjs';
 import { ids, seed, check, done, sleep, signIn, apiAs, tokenFor } from '../lib/harness.mjs';
 
 const SHOTS = path.join(state.logDir, 'shots');
@@ -22,6 +23,9 @@ const STEP = Number(process.env.NINJA_IT_SWEEP_STEP ?? 20);
 const ROUTE_FILTER = process.env.NINJA_IT_SWEEP_ROUTES ? new RegExp(process.env.NINJA_IT_SWEEP_ROUTES) : null;
 const WIDTHS = []; for (let w = 320; w <= 1440; w += STEP) WIDTHS.push(w);
 const LOCALES = ['ko', 'en', 'zh'];
+// the harness always starts the FE with NINJA_RUNTIME_MODE=api; the mock-copy scan only makes sense there
+const API_MODE = (process.env.NINJA_RUNTIME_MODE ?? 'api') === 'api';
+const mockCopy = new Map(); // `${locale}:${st}:${url}` -> hits
 const b = await Browser.connect();
 const adminToken = tokenFor(ids.ADMIN, true);
 
@@ -115,7 +119,8 @@ async function sweepPage(p, locale, st, route, menu) {
   const url = `/${locale}${route === '/' ? '' : route}`;
   await p.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
   await p.goto(url);
-  await sleep(500);
+  await p.waitFor(`document.querySelector('main, body > div') !== null && document.body.innerText.trim().length > 0`, 5000);
+  if (API_MODE && !menu) { const hits = findMockCopy(await p.text()); if (hits.length) mockCopy.set(`${locale}:${st}:${url}`, hits); } // once per route at 1440px
   if (menu) await p.eval(`[...document.querySelectorAll('header details')].forEach((d, i) => { d.open = i === ${menu - 1}; })`);
   const stName = menu ? `${st}+menu${menu}` : st;
   for (const width of WIDTHS) {
@@ -169,6 +174,10 @@ const summary = list.map((r) => ({ kind: r.kind, sig: r.sig, text: r.text, detai
 fs.writeFileSync(path.join(state.logDir, 'dense-sweep.json'), JSON.stringify(summary, null, 2));
 for (const r of summary) check(`dense: no ${r.kind} (${r.sig})`, false, r);
 check(`dense sweep: ${list.length} distinct problems (hits must be 0) over ${jobs.length * LOCALES.length * WIDTHS.length} page-widths`, list.length === 0, list.length);
+if (API_MODE) {
+  for (const [where, hits] of mockCopy) check(`no mock copy in api mode: ${where}`, false, hits);
+  check(`mock-copy scan: ${mockCopy.size} routes with mock/preview copy (must be 0)`, mockCopy.size === 0, mockCopy.size);
+}
 console.log(`SWEEP RESULT distinct=${list.length}`);
 // the hero badge keeps icon and label on one line (the regression this flow was written for)
 {

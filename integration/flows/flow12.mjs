@@ -3,14 +3,14 @@
 // (never the note), the admin closes the cohort. Also: the hub stays open to finished users, return path after sign-in,
 // onboarding gate, withdraw/reapply and the CSV export.
 import { Browser, report } from '../lib/cdp.mjs';
-import { sql, ids, check, clean, done, sleep, signIn, signInWithReturn, apiAs, tokenFor, fillLabel, rowButton, dialogButton, chip, mutations, mainText, API } from '../lib/harness.mjs';
+import { sql, ids, check, clean, done, signIn, signInWithReturn, apiAs, tokenFor, fillLabel, rowButton, dialogButton, chip, mutations, mainText, API } from '../lib/harness.mjs';
 
 const b = await Browser.connect();
 const NAME = 'IT Spring Cohort';
 const adminToken = tokenFor(ids.ADMIN, true);
 // Flow 2 completes the seeded step-3 user, so this flow makes its own unfinished sign-up (profile step still owed).
 const INCOMPLETE = sql(`INSERT INTO "user"(google_id,email,nickname,bio,onboarding_step) VALUES ('g-inc-12','inc12@test.dev','user_inc120001','',3) RETURNING id`).split(String.fromCharCode(10))[0];
-const clickSave = async (page) => { await page.eval(`[...document.querySelectorAll('main button')].filter(b=>b.innerText.trim()==='Save').pop().click()`); await sleep(1800); await page.idle(); };
+const clickSave = async (page) => { const since = page.requests.length; await page.eval(`[...document.querySelectorAll('main button')].filter(b=>b.innerText.trim()==='Save').pop().click()`); await page.waitForMutation({ since }); await page.idle(); };
 
 // ---- admin: create and open a cohort
 const adminCtx = await b.newContext(); const adminPage = await b.newPage(adminCtx);
@@ -29,7 +29,7 @@ check('DB: cohort exists as DRAFT with its description', sql(`select status||'|'
 const cohortId = sql(`select id from cohort where name='${NAME}'`);
 check('draft cohort is invisible to the public API', (await fetch(`${API}/cohorts/current`).then((r) => r.text())) === 'null');
 await rowButton(adminPage, NAME, 'Open'); adminPage.reset();
-await dialogButton(adminPage, 'Open recruitment'); await sleep(800); await adminPage.idle();
+await dialogButton(adminPage, 'Open recruitment'); await adminPage.waitForMutation(); await adminPage.idle();
 check('DB: cohort is OPEN after the confirmed transition', sql(`select status from cohort where id='${cohortId}'`) === 'OPEN');
 check('DB: audit rows for create and open', sql(`select string_agg(action, ',' order by created_at) from audit_log where entity_id='${cohortId}'`) === 'COHORT_CREATED,COHORT_OPENED');
 
@@ -126,12 +126,12 @@ clean(await report(adminPage, 'admin applications'));
 const adminText = await mainText(adminPage);
 check('admin: applications table shows the applicant, contacts and status', adminText.includes('Builder Kim') && adminText.includes('@builder_it') && adminText.includes('builder@test.dev') && adminText.includes('Waiting'));
 // filters: status that does not match, then the search
-await adminPage.eval(`document.querySelector('main [role=combobox][aria-label=Status]').click()`); await sleep(200);
+await adminPage.eval(`document.querySelector('main [role=combobox][aria-label=Status]').click()`); await adminPage.waitForSelector('[role=option]');
 await adminPage.eval(`(()=>{const o=[...document.querySelectorAll('[role=option]')].find(o=>o.innerText.trim()==='Accepted'); o.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true})); o.click()})()`);
-await adminPage.click('Apply', { exact: true, selector: 'main form button' }); await sleep(800);
+await adminPage.click('Apply', { exact: true, selector: 'main form button' }); await adminPage.waitText('No application matches these filters.', 8000);
 check('admin: status filter Accepted hides the waiting applicant', (await mainText(adminPage)).includes('No application matches these filters.'));
 await adminPage.click('Reset', { exact: true, selector: 'main form button' }); await adminPage.waitText('Builder Kim', 8000);
-await fillLabel(adminPage, 'Search', 'builder_it'); await adminPage.click('Apply', { exact: true, selector: 'main form button' }); await sleep(800);
+await fillLabel(adminPage, 'Search', 'builder_it'); await adminPage.click('Apply', { exact: true, selector: 'main form button' }); await adminPage.idle();
 check('admin: search by telegram finds the applicant', (await mainText(adminPage)).includes('Builder Kim'));
 // review with confirm
 await rowButton(adminPage, 'Builder Kim', 'Review'); await adminPage.waitFor(`!!document.querySelector('dialog[open]')`, 5000);
@@ -142,7 +142,7 @@ await adminPage.fill('dialog[open] textarea', 'SECRET INTERNAL NOTE strong portf
 // Flow 6 may already have made BUILDER a member: the rule is that accepting changes nothing, so compare before and after.
 const memberBefore = sql(`select is_member from "user" where id='${ids.BUILDER}'`);
 adminPage.reset();
-await dialogButton(adminPage, 'Accept application'); await sleep(1000); await adminPage.idle();
+await dialogButton(adminPage, 'Accept application'); await adminPage.waitForMutation(); await adminPage.idle();
 check('admin: POST /admin/cohort-applications/:id/review', mutations(adminPage).some((m) => /^POST \/admin\/cohort-applications\/.+\/review 201$/.test(m)), mutations(adminPage));
 check('DB: ACCEPTED with the internal note, reviewer set', sql(`select status||'|'||review_note||'|'||(reviewed_by is not null) from cohort_application where user_id='${ids.BUILDER}' and cohort_id='${cohortId}'`) === 'ACCEPTED|SECRET INTERNAL NOTE strong portfolio|true');
 check('DB: audit row records the decision change', sql(`select after_data->>'status' from audit_log where action='COHORT_APPLICATION_ACCEPTED' order by created_at desc limit 1`) === 'ACCEPTED');
@@ -151,7 +151,7 @@ clean(await report(adminPage, 'admin reviewed'));
 
 // CSV export (UI click + API content check)
 adminPage.reset();
-await adminPage.click('Export CSV', { exact: true }); await sleep(1200); await adminPage.idle();
+await adminPage.click('Export CSV', { exact: true }); await adminPage.waitForRequest(/\/admin\/cohorts\/.+\/applications\.csv/); await adminPage.idle();
 check('admin: Export CSV requests the CSV with the session', adminPage.requests.some((r) => /\/admin\/cohorts\/.+\/applications\.csv/.test(r.url) && r.status === 200), adminPage.requests.map((r) => `${r.status} ${r.url}`).filter((u) => /csv/.test(u)));
 const csv = await fetch(`${API}/admin/cohorts/${cohortId}/applications.csv`, { headers: { authorization: `Bearer ${adminToken}` } });
 const csvBytes = Buffer.from(await csv.arrayBuffer());
@@ -197,7 +197,7 @@ check('home: shows the accepted status', (await mainText(bp)).includes('Accepted
   check('finished user: /en is served as the hub (no redirect, even with an old ninja_home cookie)', new URL(await p.url()).pathname === '/en' && redirects === 0, [await p.url(), redirects]);
   const logo = await p.eval(`document.querySelector('header a[aria-label="Ninja Labs home"]').getAttribute('href')`);
   check('finished user: the logo points at the hub', logo === '/en', logo);
-  await p.goto('/en/about'); await sleep(500);
+  await p.goto('/en/about'); await p.waitFor(`/past activities/i.test(document.body.innerText)`, 8000);
   const about = await p.text();
   check('finished user: /about shows the community sections and stays put', (await p.url()).endsWith('/en/about') && /past activities/i.test(about));
   clean(await report(p, '/about (finished)'));
@@ -212,7 +212,8 @@ check('home: shows the accepted status', (await mainText(bp)).includes('Accepted
   check('admin as applicant: POST 201', st === 201, st);
   await p.goto('/en/account'); if (!(await p.waitText('Under review', 10000))) throw new Error('account page text: ' + (await mainText(p)).slice(0, 400));
   await p.click('Withdraw', { exact: true, selector: 'main button' }); await p.waitFor(`!!document.querySelector('dialog[open]')`, 5000);
-  await dialogButton(p, 'Withdraw application'); await sleep(1000); await p.idle();
+  const sinceWithdraw = p.requests.length;
+  await dialogButton(p, 'Withdraw application'); await p.waitForMutation({ since: sinceWithdraw }); await p.idle();
   check('DB: the admin application is WITHDRAWN', sql(`select status from cohort_application where user_id='${ids.ADMIN}' and cohort_id='${cohortId}'`) === 'WITHDRAWN');
   const [st2, body2] = await apiAs(adminToken, 'POST', `/cohorts/${cohortId}/applications`, { displayName: 'Ops Admin', telegram: '@ops_admin', twitter: '@ops_admin', web3Experience: 'GT_3Y', activityType: 'BIZDEV', interestAreas: ['BIZDEV'], intro: 'ops again' });
   check('reapply reopens the same row (same id, SUBMITTED)', st2 === 201 && sql(`select count(*) from cohort_application where user_id='${ids.ADMIN}' and cohort_id='${cohortId}'`) === '1' && sql(`select status from cohort_application where user_id='${ids.ADMIN}' and cohort_id='${cohortId}'`) === 'SUBMITTED', [st2, body2.slice(0, 80)]);
@@ -221,7 +222,8 @@ check('home: shows the accepted status', (await mainText(bp)).includes('Accepted
   check('admin: a cohort with applications cannot be deleted (button disabled)', del === true);
   const [stDel, bodyDel] = await apiAs(adminToken, 'DELETE', `/admin/cohorts/${cohortId}`);
   check('BE agrees: DELETE is 409 COHORT_HAS_APPLICATIONS', stDel === 409 && bodyDel.includes('COHORT_HAS_APPLICATIONS'), [stDel, bodyDel]);
-  await rowButton(p, NAME, 'Close'); await dialogButton(p, 'Close recruitment'); await sleep(900); await p.idle();
+  await rowButton(p, NAME, 'Close'); const sinceClose = p.requests.length;
+  await dialogButton(p, 'Close recruitment'); await p.waitForMutation({ since: sinceClose }); await p.idle();
   check('DB: cohort CLOSED, audit COHORT_CLOSED', sql(`select status from cohort where id='${cohortId}'`) === 'CLOSED' && sql(`select count(*) from audit_log where entity_id='${cohortId}' and action='COHORT_CLOSED'`) === '1');
   clean(await report(p, 'admin closed cohort'));
   await p.close();
@@ -230,7 +232,7 @@ check('home: shows the accepted status', (await mainText(bp)).includes('Accepted
   const p = await b.newPage(builderCtx);
   await p.goto('/en/recruit'); await p.waitText('No cohort is recruiting right now', 8000);
   check('after closing: /recruit says no cohort is recruiting, no form', !(await p.eval(`!!document.querySelector('form')`)));
-  await p.goto('/en/about'); await sleep(800);
+  await p.goto('/en/about'); await p.waitFor(`/past activities/i.test(document.body.innerText)`, 8000);
   check('after closing: the recruitment banner is gone', !(await p.text()).includes('is recruiting members'));
   clean(await report(p, 'closed /recruit'));
   await p.close();
