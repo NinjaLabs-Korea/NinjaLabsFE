@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { ApiKeyReveal } from "@/components/agents/ApiKeyReveal";
 import {
@@ -38,6 +38,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const t = useTranslations("agents.form");
   const tRegisterErrors = useTranslations(ERROR_COPY.agentRegister.messages);
   const tWallet = useTranslations("common.wallet");
+  const noWalletId = useId();
   // UTC-pinned via src/i18n/request.ts, like AgentsView's key expiry.
   const format = useFormatter();
   const auth = useAuthSnapshot();
@@ -317,14 +318,18 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       ) : null}
 
       {!isConnected ? (
-        <button
-          className="mt-5 h-[46px] w-full rounded-control bg-primary px-5 text-sm font-semibold text-on-inverse disabled:opacity-60"
-          disabled={!hasInjectedWallet || !connector || isConnecting}
-          onClick={connect}
-          type="button"
-        >
-          {isConnecting ? t("connecting") : t("connect")}
-        </button>
+        <>
+          <button
+            aria-describedby={hasInjectedWallet ? undefined : noWalletId}
+            className="mt-5 h-[46px] w-full rounded-control bg-primary px-5 text-sm font-semibold text-on-inverse disabled:opacity-60"
+            disabled={!hasInjectedWallet || !connector || isConnecting}
+            onClick={connect}
+            type="button"
+          >
+            {isConnecting ? t("connecting") : t("connect")}
+          </button>
+          {hasInjectedWallet ? null : <p className="mt-2 text-sm text-warning" id={noWalletId}>{t("noWallet")}</p>}
+        </>
       ) : isWrongNetwork ? (
         <button
           className="mt-5 h-[46px] w-full rounded-control bg-warning-soft px-5 text-sm font-semibold text-warning disabled:opacity-60"
