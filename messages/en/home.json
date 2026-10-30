@@ -17,7 +17,6 @@
     "nft": {
       "minted": "Ninja NFT issued",
       "pending": "Ninja NFT minting",
-      "failed": "Ninja NFT needs attention",
       "none": "No Ninja NFT yet"
     },
     "viewProfile": "View my profile",

@@ -15,7 +15,8 @@ const nftStates = {
   ATTACHED: { key: "minted", variant: "success" },
   PENDING: { key: "pending", variant: "warning" },
   MINTING: { key: "pending", variant: "warning" },
-  FAILED: { key: "failed", variant: "danger" },
+  // FAILED reads as pending here too: operators handle a failed mint in /admin/nft-jobs, the owner is not shown an error.
+  FAILED: { key: "pending", variant: "warning" },
 } as const;
 
 /** Greeting plus the profile summary: nickname, wallet and Ninja NFT status, and the way to the public profile and the settings. */

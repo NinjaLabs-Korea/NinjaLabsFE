@@ -61,12 +61,8 @@
       "memberSince": "Ninja NFT · {date}부터 멤버"
     },
     "nftStatus": {
-      "PENDING": "대기 중",
-      "MINTING": "발행 중",
-      "MINTED": "발행 완료",
-      "ATTACHING": "연결 중",
-      "ATTACHED": "연결 완료",
-      "FAILED": "실패"
+      "minting": "발행 중",
+      "minted": "발행 완료"
     },
     "history": {
       "eyebrow": "완료한 작업",
