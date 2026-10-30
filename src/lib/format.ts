@@ -2,6 +2,15 @@ import type { useFormatter } from "next-intl";
 
 const MAX_FRACTION_DIGITS = 6;
 
+/**
+ * `0x1234…abcd` for long addresses and hashes. A value no longer than `keepWhole` is returned as is (default `head + tail + 2`,
+ * i.e. when the ellipsis would not make it shorter); pass `keepWhole: 0` to always shorten. Pure string work: safe to import
+ * where wagmi/viem must not load.
+ */
+export function shortAddress(value: string, { head = 6, tail = 4, keepWhole = head + tail + 2 }: { head?: number; tail?: number; keepWhole?: number } = {}): string {
+  return value.length > keepWhole ? `${value.slice(0, head)}…${value.slice(-tail)}` : value;
+}
+
 /** Integer part that `Number` can hold exactly (15 digits stays well below 2^53). */
 const SAFE_INTEGER_DIGITS = 15;
 

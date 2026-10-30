@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useAuthActions, useAuthSnapshot, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { menuItemClass, menuPanelClass, useMenuButton } from "@/components/layout/useMenuButton";
 import { Link } from "@/i18n/navigation";
+import { shortAddress } from "@/lib/format";
 import type { ClientUser } from "@/lib/contracts/auth";
 
 // `key` is a message key under `common.userMenu`.
@@ -56,9 +57,7 @@ export function UserMenu() {
               <p className="whitespace-nowrap text-xs text-ink-muted" title={user.walletAddress}>
                 <span className="sr-only">{t("walletAddress", { wallet: user.walletAddress })}</span>
                 <span aria-hidden="true">
-                  {user.walletAddress.length > 12
-                    ? `${user.walletAddress.slice(0, 6)}…${user.walletAddress.slice(-4)}`
-                    : user.walletAddress}
+                  {shortAddress(user.walletAddress)}
                 </span>
               </p>
             ) : null}
