@@ -12,6 +12,16 @@ import enNotices from "../../messages/en/notices.json";
 import koNotices from "../../messages/ko/notices.json";
 import zhNotices from "../../messages/zh/notices.json";
 
+import enCommunity from "../../messages/en/community.json";
+import koCommunity from "../../messages/ko/community.json";
+import zhCommunity from "../../messages/zh/community.json";
+
+const communityLocales = [
+  ["ko", koCommunity],
+  ["en", enCommunity],
+  ["zh", zhCommunity],
+] as const;
+
 const locales = [
   ["ko", koCommon, koMembers, koHall, koNotices],
   ["en", enCommon, enMembers, enHall, enNotices],
@@ -49,5 +59,21 @@ describe.each(locales)("night polish r2 copy (%s)", (locale, common, members, ha
 
   it("never calls the members list a team", () => {
     expect(members.list.heading).not.toMatch(/team|团队|팀/i);
+  });
+});
+
+describe.each(communityLocales)("hub section headers (%s)", (_locale, community) => {
+  it("gives the two event sections different link text", () => {
+    expect(community.upcoming.viewAll).not.toBe(community.activities.viewAll);
+  });
+
+  it("never repeats a heading as its eyebrow", () => {
+    for (const [name, section] of Object.entries(community)) {
+      if (!section || typeof section !== "object") continue;
+      const { eyebrow, heading } = section as { eyebrow?: string; heading?: string };
+      if (typeof eyebrow !== "string" || typeof heading !== "string") continue;
+      const normalize = (text: string) => text.toLowerCase().replace(/\s+/g, "");
+      expect(normalize(heading).startsWith(normalize(eyebrow)), `${name}: eyebrow "${eyebrow}" vs heading "${heading}"`).toBe(false);
+    }
   });
 });

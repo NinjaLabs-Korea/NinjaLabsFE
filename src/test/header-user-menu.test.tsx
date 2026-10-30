@@ -215,6 +215,14 @@ describe("Header", () => {
     renderWithIntl(<Header />);
     expect(screen.queryByRole("link", { name: "Get Started" })).toBeNull();
     expect(screen.getByRole("button", { name: /jaemin\.inj/ }).getAttribute("aria-haspopup")).toBe("menu");
-    expect(screen.getByRole("button", { name: "Language" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Language/ })).toBeTruthy();
+  });
+
+  it("names the locale button so that the accessible name contains the visible language", () => {
+    state.auth = { status: "signed-out", user: null };
+    renderWithIntl(<Header />);
+    const button = screen.getByRole("button", { name: /Language/ });
+    expect(button.textContent).toContain("English");
+    expect(button.getAttribute("aria-label")).toBeNull();
   });
 });

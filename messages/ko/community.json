@@ -27,14 +27,12 @@
     }
   },
   "upcoming": {
-    "eyebrow": "진행 중·예정",
     "heading": "진행 중·예정 행사",
-    "viewAll": "행사 소식 전체 보기 →"
+    "viewAll": "진행 중·예정 행사 더 보기 →"
   },
   "activities": {
-    "eyebrow": "지난 활동",
     "heading": "함께 해 온 활동",
-    "viewAll": "행사 소식 전체 보기 →",
+    "viewAll": "지난 활동 더 보기 →",
     "unavailable": "지난 활동을 일시적으로 불러올 수 없어요.",
     "unavailableBody": "서버에 연결하지 못했어요.",
     "empty": "아직 올라온 소식이 없어요. 새 소식은 공지사항에서 가장 먼저 알려 드릴게요.",
@@ -50,7 +48,6 @@
     "emptyAction": "명예의 전당 보기 →"
   },
   "members": {
-    "eyebrow": "멤버",
     "heading": "멤버 미리보기",
     "viewAll": "전체 멤버 보기 →",
     "unavailable": "멤버를 일시적으로 불러올 수 없어요.",

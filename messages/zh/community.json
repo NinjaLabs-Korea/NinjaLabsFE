@@ -27,14 +27,12 @@
     }
   },
   "upcoming": {
-    "eyebrow": "进行中与即将举行",
     "heading": "进行中·即将举行的活动",
-    "viewAll": "查看全部活动 →"
+    "viewAll": "更多即将举行的活动 →"
   },
   "activities": {
-    "eyebrow": "往期活动",
     "heading": "我们一起做过的事",
-    "viewAll": "查看全部活动 →",
+    "viewAll": "更多往期活动 →",
     "unavailable": "暂时无法加载往期活动。",
     "unavailableBody": "无法连接到服务器，请稍后刷新。",
     "empty": "暂时还没有动态，新动态会最先出现在公告页。",
@@ -50,7 +48,6 @@
     "emptyAction": "查看名人堂 →"
   },
   "members": {
-    "eyebrow": "成员",
     "heading": "认识成员",
     "viewAll": "全部成员 →",
     "unavailable": "暂时无法加载成员。",

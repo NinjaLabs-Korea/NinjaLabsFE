@@ -1,7 +1,7 @@
 import { Link } from "@/i18n/navigation";
 
 type SectionHeaderProps = {
-  eyebrow: string;
+  eyebrow?: string;
   heading: string;
   level?: 1 | 2 | 3;
   size?: "lg" | "xl";
@@ -21,7 +21,7 @@ export function SectionHeader({ eyebrow, heading, level = 2, size = "lg", action
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{eyebrow}</p>
+        {eyebrow ? <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{eyebrow}</p> : null}
         <Heading className={sizeClasses[size]}>
           {heading}
         </Heading>
