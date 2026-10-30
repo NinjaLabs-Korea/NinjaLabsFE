@@ -39,9 +39,16 @@ const LATIN_LOOKALIKES = /[\u0131\u0237\u0250-\u02FF\u1D00-\u1DBF\u2100-\u218F\u
 const MIXED_SCRIPT = /(?=.*[A-Za-z\u00C0-\u024F])(?=.*[\p{Script=Cyrillic}\p{Script=Greek}\p{Script=Coptic}\p{Script=Armenian}\p{Script=Cherokee}\p{Script=Lisu}\p{Script=Georgian}\p{Script=Canadian_Aboriginal}\p{Script=Tifinagh}\p{Script=Vai}\p{Script=Glagolitic}\p{Script=Osage}\p{Script=Deseret}\p{Script=Adlam}\p{Script=Runic}\p{Script=Ogham}])/u;
 
 /** 라틴 글자와 모양이 같은 키릴/그리스 소문자 -> 라틴 (BE `CONFUSABLE_TO_LATIN`과 같은 표). */
+/** 체로키 대문자 -> 라틴 (toLowerCase 뒤 골격 키로 쓰려고 소문자 형태를 키로 만든다. BE `cherokeeLookalikes`) */
+function cherokeeLookalikes(cherokee: string, latin: string): Record<string, string> {
+  return Object.fromEntries([...cherokee].map((char, index) => [char.toLowerCase(), latin[index]]));
+}
+
 const CONFUSABLE_TO_LATIN: Readonly<Record<string, string>> = {
   "а": "a", "е": "e", "о": "o", "р": "p", "с": "c", "х": "x", "у": "y", "і": "i", "ј": "j", "ѕ": "s", "ԁ": "d", "ԛ": "q", "ԝ": "w", "һ": "h", "ո": "n",
   "α": "a", "ο": "o", "ρ": "p", "ν": "v", "ι": "i", "κ": "k", "τ": "t", "χ": "x", "υ": "u",
+  "օ": "o", "ս": "u", "ɑ": "a",
+  ...cherokeeLookalikes("ᎪᏴᏟᎠᎬᏀᎻᎵᎫᏦᏞᎷᏢᏒᏚᎢᏙᎳᏃ", "abcdeghijklmprstvwz"),
 };
 
 /** 예약어 비교용 골격 (BE `nicknameSkeleton`). */

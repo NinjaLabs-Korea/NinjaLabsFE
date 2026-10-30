@@ -181,3 +181,17 @@ describe("BE fixture tables (src/test/be-validator-fixtures.ts)", () => {
     expect(validateNickname("coreni\u034Fnja")).toBe("chars");
   });
 });
+
+describe("FE/BE nickname parity (QA2 R3)", () => {
+  it.each(["coreni͏nja", "coreni឴nja"])("rejects the invisible default-ignorable in %j", (nickname) => {
+    expect(validateNickname(nickname)).toBe("chars");
+  });
+  it.each(["abcกิ", "abא"])("accepts %j", (nickname) => {
+    expect(isValidNickname(nickname)).toBe(true);
+  });
+  it("reserves Cherokee and Armenian lookalikes of reserved words like the BE skeleton", () => {
+    expect(isReservedNickname("ᎷᎬ")).toBe(true);
+    expect(isReservedNickname("օյ")).toBe(false);
+    expect(isReservedNickname("ɑdmin")).toBe(true);
+  });
+});
