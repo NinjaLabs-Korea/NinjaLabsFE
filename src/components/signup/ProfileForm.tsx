@@ -7,6 +7,8 @@ import { useAuthActions, useAuthSnapshot, useOnboardingApi, useFoundationMode } 
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
 import { validationFieldsFromError } from "@/lib/api/validation";
+import { RequiredMark } from "@/components/ui/RequiredMark";
+import { focusFirstInvalid } from "@/lib/form-focus";
 import { Badge } from "@/components/ui/Badge";
 import { NICKNAME_MAX, NICKNAME_MIN, normalizeNickname, validateNickname } from "@/lib/nickname";
 import { PROFILE_BIO_MAX } from "@/lib/input-limits";
@@ -91,6 +93,10 @@ type ProfileFormProps = {
 export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileFormProps = {}) {
   const editing = formMode === "edit";
   const t = useTranslations("signup.profile.form");
+  const tForm = useTranslations("common.form");
+  const formRef = useRef<HTMLFormElement>(null);
+  // Set by a failed submit, cleared once no field is flagged: drives the "N fields need attention" line.
+  const [submitFailed, setSubmitFailed] = useState(false);
   const tSaveErrors = useTranslations(ERROR_COPY.profileSave.messages);
   const apiClient = useOnboardingApi();
   const mode = useFoundationMode();
@@ -190,6 +196,8 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         tagCount: tags.length,
       });
       setState("idle");
+      setSubmitFailed(true);
+      focusFirstInvalid(formRef.current);
       return;
     }
 
@@ -236,6 +244,9 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
     }
   };
 
+  const nicknameInvalid = Boolean(fieldErrors.nickname) || nicknameStatus === "taken" || nicknameStatus === "invalid";
+  const invalidCount = Number(nicknameInvalid) + Number(Boolean(fieldErrors.tags)) + Number(Boolean(fieldErrors.bio));
+  if (invalidCount === 0 && submitFailed) setSubmitFailed(false);
   const nicknameDescribedBy = [
     fieldErrors.nickname ? "nickname-error" : null,
     nicknameStatus === "idle" ? null : "nickname-status",
@@ -243,11 +254,13 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   ].filter(Boolean).join(" ");
 
   return (
-    <form className="mt-6 space-y-5" noValidate onSubmit={(event) => void submit(event)}>
+    <form className="mt-6 space-y-5" noValidate onSubmit={(event) => void submit(event)} ref={formRef}>
+      <p className="text-xs text-ink-muted">{tForm("requiredHint")}</p>
       <div>
         <label className="text-sm font-semibold text-ink" htmlFor="nickname">
           {t("nicknameLabel")}
         </label>
+        <RequiredMark />
         <input
           className="mt-2 w-full rounded-control border border-border bg-surface px-4 py-3 text-sm text-ink-secondary placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           id="nickname"
@@ -271,8 +284,8 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         </p>
         <p className="mt-1 text-xs text-ink-muted" id="nickname-hint">{t("nicknameHint")}</p>
       </div>
-      <fieldset>
-        <legend className="text-sm font-semibold text-ink">{t("fieldTags")}</legend>
+      <fieldset aria-invalid={fieldErrors.tags ? true : undefined} tabIndex={-1}>
+        <legend className="text-sm font-semibold text-ink">{t("fieldTags")}<RequiredMark /></legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {fieldTags.map((tag) => {
             const selected = tags.includes(tag.value);
@@ -295,6 +308,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         <label className="text-sm font-semibold text-ink" htmlFor="bio">
           {t("bioLabel")}
         </label>
+        <RequiredMark />
         <textarea
           className="mt-2 min-h-[120px] w-full rounded-control border border-border bg-surface px-4 py-3 text-sm text-ink-secondary placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           id="bio"
@@ -321,6 +335,9 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
       >
         {state === "pending" ? t("saving") : editing ? t("save") : t("submit")}
       </button>
+      {submitFailed && invalidCount > 0 ? (
+        <p className="text-sm text-danger" role="status">{tForm("invalidSummary", { count: invalidCount })}</p>
+      ) : null}
       {saved ? <p className="text-sm font-semibold text-success" role="status">{t("saved")}</p> : null}
       {sessionEnded ? (
         <div className="space-y-2" role="alert">

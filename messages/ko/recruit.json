@@ -66,7 +66,7 @@
     "eyebrow": "지원서",
     "title": "나를 소개해 주세요",
     "intro": {
-      "label": "자기소개 및 지원 동기*",
+      "label": "자기소개 및 지원 동기",
       "placeholder": "어떤 사람인지, 어떤 일을 해 왔는지, 왜 닌자랩스에 지원하는지 적어 주세요.",
       "hint": "{min}자 이상 적어 주세요 (최대 {limit}자)",
       "counter": "{count}/{limit}"
@@ -79,22 +79,22 @@
       "updated": "지원서를 수정했어요."
     },
     "displayName": {
-      "label": "이름 (실명 또는 닉네임)*",
+      "label": "이름 (실명 또는 닉네임)",
       "placeholder": "이름을 입력하세요",
       "hint": "최대 60자까지 입력할 수 있어요."
     },
     "telegram": {
-      "label": "Telegram 아이디*",
+      "label": "Telegram 아이디",
       "placeholder": "@your_telegram",
       "hint": "영문, 숫자, _ 5~32자예요. t.me 링크를 넣어도 돼요."
     },
     "twitter": {
-      "label": "X(트위터) 아이디*",
+      "label": "X(트위터) 아이디",
       "placeholder": "@your_x_id",
       "hint": "영문, 숫자, _ 1~15자예요. x.com 링크를 넣어도 돼요."
     },
     "web3Experience": {
-      "label": "Web3 경력*",
+      "label": "Web3 경력",
       "options": {
         "LT_1Y": "1년 미만",
         "Y1_3": "1~3년",
@@ -102,7 +102,7 @@
       }
     },
     "activityType": {
-      "label": "현재 활동 유형*",
+      "label": "현재 활동 유형",
       "options": {
         "DEVELOPER": "개발자",
         "CONTENT_CREATOR": "콘텐츠 크리에이터",
@@ -113,11 +113,11 @@
         "STUDENT": "학생",
         "OTHER": "기타"
       },
-      "otherLabel": "어떤 활동인지 알려 주세요*",
+      "otherLabel": "어떤 활동인지 알려 주세요",
       "otherPlaceholder": "예: 디자이너"
     },
     "interestAreas": {
-      "label": "참여하고 싶은 분야*",
+      "label": "참여하고 싶은 분야",
       "hint": "해당하는 분야를 모두 골라 주세요.",
       "options": {
         "DEVELOPER": "개발자",
@@ -128,7 +128,7 @@
         "BIZDEV": "사업개발",
         "OTHER": "기타"
       },
-      "otherLabel": "어떤 분야인지 알려 주세요*",
+      "otherLabel": "어떤 분야인지 알려 주세요",
       "otherPlaceholder": "예: UX 리서치"
     },
     "submit": "지원서 보내기",

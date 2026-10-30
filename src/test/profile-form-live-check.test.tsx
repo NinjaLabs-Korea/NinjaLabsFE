@@ -18,7 +18,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
     useAuthSnapshot: () => ({ status: "signed-in", user: { id: "u1", handle: session.handle, walletAddress: null } }),
   }));
 
-const nicknameInput = () => screen.getByLabelText("Nickname*") as HTMLInputElement;
+const nicknameInput = () => screen.getByLabelText("Nickname") as HTMLInputElement;
 const typeNickname = (value: string) => fireEvent.change(nicknameInput(), { target: { value } });
 const status = () => screen.getByRole("status").textContent;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -78,7 +78,7 @@ describe("ProfileForm nickname live check", () => {
     expect(nicknameInput().getAttribute("aria-describedby") ?? "").not.toContain("nickname-status");
 
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder" } });
     fireEvent.submit(nicknameInput().closest("form") as HTMLFormElement);
     await waitFor(() => expect(completeProfile).toHaveBeenCalledWith({ nickname: "ninja_dev", bio: "Builder", tags: ["DEV"] }));
   });
@@ -105,7 +105,7 @@ describe("ProfileForm nickname live check", () => {
     expect(status()).toBe("");
 
     fireEvent.click(screen.getByRole("button", { name: "Dev" }));
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder" } });
     fireEvent.submit(nicknameInput().closest("form") as HTMLFormElement);
     await waitFor(() => expect(completeProfile).toHaveBeenCalledWith({ nickname: "ninja_dev", bio: "Builder", tags: ["DEV"] }));
     session.handle = "user_ab12cd";
@@ -119,7 +119,7 @@ describe("ProfileForm nickname live check", () => {
     fireEvent.submit(nicknameInput().closest("form") as HTMLFormElement);
     const alerts = await screen.findAllByRole("alert");
     expect(alerts.length).toBeGreaterThanOrEqual(2);
-    expect((screen.getByLabelText("Bio*") as HTMLTextAreaElement).getAttribute("aria-invalid")).toBe("true");
+    expect((screen.getByLabelText("Bio") as HTMLTextAreaElement).getAttribute("aria-invalid")).toBe("true");
     expect(completeProfile).not.toHaveBeenCalled();
   });
 });

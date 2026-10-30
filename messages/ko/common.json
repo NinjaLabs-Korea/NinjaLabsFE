@@ -39,7 +39,9 @@
     "legal": "© 2026 Ninja Labs",
     "contact": "문의",
     "privacy": "개인정보처리방침",
-    "terms": "이용약관"
+    "terms": "이용약관",
+    "homeLabel": "Ninja Labs 홈",
+    "newTab": " (새 탭에서 열림)"
   },
   "userMenu": {
     "accountNavigation": "계정 메뉴",
@@ -142,5 +144,9 @@
       "title": "프로필을 저장했어요",
       "description": "변경 내용이 계정과 공개 프로필에 반영됐어요."
     }
+  },
+  "form": {
+    "requiredHint": "* 표시는 꼭 입력해야 해요.",
+    "invalidSummary": "확인이 필요한 항목이 {count}개 있어요."
   }
 }

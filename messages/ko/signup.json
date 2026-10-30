@@ -67,16 +67,16 @@
     },
     "title": "프로필을 설정하세요",
     "form": {
-      "nicknameLabel": "닉네임*",
+      "nicknameLabel": "닉네임",
       "nicknamePlaceholder": "닉네임을 입력하세요",
-      "fieldTags": "분야 태그*",
+      "fieldTags": "분야 태그",
       "tags": {
         "dev": "개발",
         "design": "디자인",
         "content": "콘텐츠",
         "other": "기타"
       },
-      "bioLabel": "소개*",
+      "bioLabel": "소개",
       "bioPlaceholder": "커뮤니티에 나를 소개해 주세요",
       "bioHint": "간단한 소개를 입력해 주세요.",
       "submit": "다음",

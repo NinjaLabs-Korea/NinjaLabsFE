@@ -93,12 +93,12 @@ describe("ProfileForm in edit mode (account page)", () => {
     vi.stubGlobal("location", { ...window.location, assign, pathname: "/en/account" });
     const onSaved = vi.fn();
     renderWithIntl(<ProfileForm mode="edit" onSaved={onSaved} />);
-    expect((screen.getByLabelText("Nickname*") as HTMLInputElement).value).toBe("ninja");
-    expect((screen.getByLabelText("Bio*") as HTMLTextAreaElement).value).toBe("Builder");
+    expect((screen.getByLabelText("Nickname") as HTMLInputElement).value).toBe("ninja");
+    expect((screen.getByLabelText("Bio") as HTMLTextAreaElement).value).toBe("Builder");
     expect(screen.getByRole("button", { name: "Dev" }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByRole("button", { name: "Content" }).getAttribute("aria-pressed")).toBe("false");
 
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder and writer" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder and writer" } });
     fireEvent.click(screen.getByRole("button", { name: "Content" }));
     fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
@@ -129,25 +129,25 @@ describe("AccountSettingsView sections", () => {
     renderWithIntl(<AccountSettingsView wallet={{ chainId: 1439 }} />);
     expect(screen.getByText("Builder")).toBeTruthy();
     expect(screen.getByText("Dev")).toBeTruthy();
-    expect(screen.queryByLabelText("Nickname*")).toBeNull();
+    expect(screen.queryByLabelText("Nickname")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Edit profile" }));
-    expect(screen.getByLabelText("Nickname*")).toBeTruthy();
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Changed" } });
+    expect(screen.getByLabelText("Nickname")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Changed" } });
     fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
-    await waitFor(() => expect(screen.queryByLabelText("Nickname*")).toBeNull());
+    await waitFor(() => expect(screen.queryByLabelText("Nickname")).toBeNull());
     fireEvent.click(screen.getByRole("button", { name: "Edit profile" }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel editing" }));
-    expect(screen.queryByLabelText("Nickname*")).toBeNull();
+    expect(screen.queryByLabelText("Nickname")).toBeNull();
   });
 
   it("keeps the open profile editor and its typed bio when the session ends, and says so", () => {
     state.auth = signedInWith({ id: previewUser.id, handle: "ninja", bio: "Builder", tags: ["DEV"] });
     const view = renderWithIntl(<AccountSettingsView wallet={{ chainId: 1439 }} />);
     fireEvent.click(screen.getByRole("button", { name: "Edit profile" }));
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "A long new bio" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "A long new bio" } });
     state.auth = { status: "signed-out", user: null, reason: "session-ended" };
     view.rerender(<AccountSettingsView wallet={{ chainId: 1439 }} />);
-    expect((screen.getByLabelText("Bio*") as HTMLTextAreaElement).value).toBe("A long new bio");
+    expect((screen.getByLabelText("Bio") as HTMLTextAreaElement).value).toBe("A long new bio");
     expect(screen.getByText("Your session has ended. Sign in again to continue.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Sign in again in a new tab, then save here" }).getAttribute("target")).toBe("_blank");
   });
@@ -158,7 +158,7 @@ describe("AccountSettingsView sections", () => {
     state.auth = { status: "signed-out", user: null, reason: "session-ended" };
     view.rerender(<AccountSettingsView wallet={{ chainId: 1439 }} />);
     expect(screen.getByText("Your session has expired. Sign in again to continue.")).toBeTruthy();
-    expect(screen.queryByLabelText("Bio*")).toBeNull();
+    expect(screen.queryByLabelText("Bio")).toBeNull();
   });
 
   it("puts the wallet card and the cohort applications between the profile and the danger zone", () => {
