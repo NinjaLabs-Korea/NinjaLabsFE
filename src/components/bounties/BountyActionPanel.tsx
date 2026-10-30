@@ -1,174 +1,24 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { FocusEvent, FormEvent, useEffect, useId, useRef, useState, type ReactNode, type Ref } from "react";
+import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
-import { Badge } from "@/components/ui/Badge";
-import { PageLoading } from "@/components/ui/PageLoading";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { CheckingPanel, Field, errorText, useFieldErrors, SignedOutPanel, StatusPanel, headingClass, inputClass, outlineLinkClass, panelClass, submitButtonClass } from "@/components/bounties/BountyActionPanels";
+import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { Link } from "@/i18n/navigation";
-import { signInHref } from "@/lib/return-path";
 import { APPLICATION_MESSAGE_MAX, COMMIT_SHA_MAX, SUBMISSION_DESCRIPTION_MAX } from "@/lib/input-limits";
-import { payoutBadge } from "@/lib/payout";
-import { isHttpUrl } from "@/lib/url-rules";
-import { hasVisibleText } from "@/lib/visible-text";
 import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
-import { bountyActionErrorCopy, deriveActionView, isSessionEndedError, isStaleRowsError, splitRows, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
+import { signInHref } from "@/lib/return-path";
+import { payoutBadge } from "@/lib/payout";
+import { APPLY_FIELDS, SUBMIT_FIELDS, ruleFor } from "@/lib/form-field-rules";
+import { deriveActionView, isSessionEndedError, isStaleRowsError, splitRows } from "@/lib/bounty-action-state";
 import type { AccountApplication } from "@/lib/contracts/account";
 import type { ApiResult } from "@/lib/contracts/api";
 import type { ClosedReason } from "@/lib/bounty-status";
 import type { Bounty } from "@/lib/types";
 
-// Panels fade in when they replace the loading placeholder (or another panel), instead of popping in.
-const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card animate-fade-in motion-reduce:animate-none";
-const submitButtonClass = "motion-control motion-press rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60";
-const outlineButtonClass = "inline-flex rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong";
-const outlineLinkClass = `mt-4 ${outlineButtonClass}`;
-const inputClass = "h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
 const textareaClass = "w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
-const labelTextClass = "mb-1.5 block text-sm font-semibold text-ink";
-// Headings that receive focus after a successful apply/submit (tabIndex={-1}); the ring matches the focus recipe.
-const headingClass = "font-display text-2xl -tracking-[0.24px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
-
-// Which section renders is decided by `deriveActionView` (lib/bounty-action-state.ts); this file only draws each `view.kind`.
-// Error copy keys come from `bountyActionErrorCopy` (codes listed in lib/api/error-copy.ts `ERROR_COPY.bountyAction`).
-type ErrorTranslator = (key: BountyActionErrorCopy["key"], values?: { code: string }) => string;
-
-function errorText(error: unknown, t: ErrorTranslator): string {
-  const copy = bountyActionErrorCopy(error);
-  return copy.key === "unknown" ? t("unknown", { code: copy.code }) : t(copy.key);
-}
-
-/** Visible label above a form control (Figma 15/15v draw placeholders only; see docs/figma/design-gaps.md). */
-function Field({ label, children, error }: { label: string; children: ReactNode; error?: ReactNode }) {
-  return (
-    <div>
-      <label className="block">
-        <span className={labelTextClass}>{label}</span>
-        {children}
-      </label>
-      {error}
-    </div>
-  );
-}
-
-/** Per-field problems the form finds itself (before any request): a link that is not http(s), or a required text left empty. */
-type FieldError = "url" | "required";
-type FieldErrors = Partial<Record<string, FieldError>>;
-type FormFieldRule = { name: string; kind: "url" | "text"; required?: boolean };
-
-const APPLY_FIELDS: FormFieldRule[] = [
-  { name: "portfolioUrl", kind: "url" },
-  { name: "message", kind: "text", required: true },
-];
-const SUBMIT_FIELDS: FormFieldRule[] = [
-  { name: "submissionUrl", kind: "url", required: true },
-  { name: "repositoryUrl", kind: "url" },
-  { name: "description", kind: "text", required: true },
-];
-
-/** A rule looked up by field name, so reordering or inserting rules cannot hand an input another field's rule. */
-function ruleFor(rules: FormFieldRule[], name: string): FormFieldRule {
-  const rule = rules.find((candidate) => candidate.name === name);
-  if (!rule) throw new Error(`No form rule for field ${name}`);
-  return rule;
-}
-
-/** The same rule the API applies (`isHttpUrl`, mirror of the BE), so the person sees the locale message instead of the browser's tooltip. */
-function fieldProblem(rule: FormFieldRule, raw: string): FieldError | undefined {
-  // Text is empty when it has no visible character (the BE rule, `lib/visible-text.ts`); only a URL is trimmed.
-  if (rule.kind === "text") return rule.required && !hasVisibleText(raw) ? "required" : undefined;
-  const value = raw.trim();
-  if (!value) return rule.required ? "required" : undefined;
-  return !isHttpUrl(value) ? "url" : undefined;
-}
-
-function StatusPanel({ title, body, note, tone = "muted", feedback, link, headingRef, badge, code }: {
-  title: string;
-  body: string;
-  /** Reviewer comment shown under the body. */
-  note?: string;
-  tone?: "muted" | "danger" | "success";
-  feedback?: string | null;
-  link?: { href: string; label: string };
-  /** Focus target after a successful action (the panel replaces the form, so focus would otherwise fall to <body>). */
-  headingRef?: Ref<HTMLHeadingElement>;
-  /** Small status badge under the body (payout status). */
-  badge?: { variant: "warning" | "success"; label: string } | null;
-  /** Agent API endpoint the next step goes through (agent revision requests). */
-  code?: string;
-}) {
-  const bodyClass = tone === "danger" ? "text-danger" : tone === "success" ? "text-success" : "text-ink-muted";
-  return (
-    <section className={panelClass}>
-      <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{title}</h2>
-      <p className={`mt-2 text-sm ${bodyClass} ${REVIEW_TEXT_CLASS}`}>{body}</p>
-      {note ? <p className={`mt-2 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{note}</p> : null}
-      {badge ? <div className="mt-3"><Badge variant={badge.variant}>{badge.label}</Badge></div> : null}
-      {code ? <div className="mt-4 rounded-tile bg-surface-subtle p-4 text-sm text-ink-secondary"><code className="break-all">{code}</code></div> : null}
-      {link ? <Link className={outlineLinkClass} href={link.href}>{link.label}</Link> : null}
-      {feedback ? <p className="mt-3 text-sm text-success">{feedback}</p> : null}
-    </section>
-  );
-}
-
-/** Figma 15/15v public (signed-out) state: heading + LOGIN REQUIRED badge, "Sign in first", and a disabled preview of the form. */
-function SignedOutPanel({ applicationRequired, bountyId }: { applicationRequired: boolean; bountyId: string }) {
-  const t = useTranslations("bounties.action");
-  // After Google sign-in and onboarding the visitor comes back to this bounty (`lib/return-path.ts`).
-  const signIn = signInHref(`/bounties/${bountyId}`);
-  return (
-    <section className={panelClass}>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-[14rem] flex-1">
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{applicationRequired ? t("applyHeading") : t("submitHeading")}</h2>
-            <Badge variant="danger">{t("loginRequired")}</Badge>
-          </div>
-          <p className="mt-2 text-sm text-ink-muted">{applicationRequired ? t("applySignedOutBody") : t("submitSignedOutBody")}</p>
-        </div>
-        {applicationRequired ? (
-          <Link className={outlineButtonClass} href="/bounties/apply">{t("viewIntakeRules")}</Link>
-        ) : (
-          <Link className={outlineButtonClass} href={signIn}>{t("signInFirst")}</Link>
-        )}
-      </div>
-      {applicationRequired ? (
-        <fieldset className="mt-4 space-y-3" disabled>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <input aria-label={t("portfolioUrl")} className={inputClass} placeholder="https://" type="url" />
-            <input aria-label={t("availability")} className={inputClass} placeholder={t("availability")} type="text" />
-          </div>
-          <textarea aria-label={t("applyMessage")} className="min-h-28 w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" placeholder={t("applyMessage")} />
-          <div className="flex flex-wrap gap-3">
-            <Link className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href={signIn}>{t("apply")}</Link>
-            <span className="rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong opacity-60">{t("submitDisabled")}</span>
-          </div>
-        </fieldset>
-      ) : (
-        <fieldset className="mt-4 flex flex-col gap-3 sm:flex-row" disabled>
-          <input aria-label={t("submissionUrl")} className={inputClass} placeholder="https://" type="url" />
-          <Link className="shrink-0 rounded-control bg-primary px-5 py-3 text-center text-sm font-semibold text-on-inverse" href={signIn}>{t("submit")}</Link>
-        </fieldset>
-      )}
-    </section>
-  );
-}
-
-/**
- * Placeholder while the session or the application/submission rows load. It reserves the height of the settled signed-out
- * panel (measured at 375 and 1280 px, apply form vs. direct submit) so the real panel replacing it does not push the page
- * down (the CLS this removes). Built from the shared `PageLoading`/`Skeleton` (status label for screen readers, pulse block is decoration).
- */
-function CheckingPanel({ applicationRequired, label }: { applicationRequired: boolean; label: string }) {
-  const height = applicationRequired ? "min-h-[26rem] sm:min-h-[22rem]" : "min-h-[15rem] sm:min-h-[12rem]";
-  return (
-    <PageLoading label={label} variant="list">
-      <Skeleton className={height} />
-    </PageLoading>
-  );
-}
 
 // A direct-submission bounty has no applications. `getApplications` also joins /submissions/me, so asking it anyway would
 // cost two extra authenticated requests on every detail view (the BE rate-limits per IP); this stub keeps the hook order.
@@ -219,9 +69,8 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const bountyApi = useBountyApi();
   const applicationsQuery = useAccountQuery(applicationRequired ? accountApi.getApplications : noApplications);
   const submissionsQuery = useAccountQuery(accountApi.getSubmissions);
-  const [busy, setBusy] = useState(false);
   // Synchronous in-flight guard: several submit events can land in one tick (automation, assistive tools) before React re-renders `busy`.
-  const inFlight = useRef(false);
+  const { busy, run } = useSingleFlight();
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   // A 401 that survived the refresh: the session is gone even before the auth snapshot says so. The banner says it; no second alert.
   const [sessionLost, setSessionLost] = useState(false);
@@ -232,33 +81,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const hasError = feedback?.kind === "error";
   // Shared by every input of the active form: the API error is form-level (e.g. VALIDATION_FAILED).
   const invalidProps = { "aria-invalid": hasError || undefined, "aria-describedby": hasError ? errorId : undefined };
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const fieldErrorId = (name: string) => `${errorId}-${name}`;
-  // A field the form flagged points at its own message; otherwise the form-level API error (if any) is the description.
-  const fieldProps = (name: string) => (fieldErrors[name]
-    ? { "aria-invalid": true, "aria-describedby": fieldErrorId(name) }
-    : invalidProps);
-  const fieldErrorLine = (name: string) => {
-    const problem = fieldErrors[name];
-    return problem
-      ? <p className="mt-1 text-sm text-danger" id={fieldErrorId(name)} role="alert">{tError(problem === "url" ? "VALIDATION_URL" : "VALIDATION_TEXT_REQUIRED")}</p>
-      : null;
-  };
-  // URL fields check on blur (an empty optional link is fine); required text is only checked on submit.
-  const checkUrlOnBlur = (rule: FormFieldRule) => (event: FocusEvent<HTMLInputElement>) => {
-    const problem = event.currentTarget.value.trim() ? fieldProblem({ ...rule, required: false }, event.currentTarget.value) : undefined;
-    setFieldErrors((current) => (current[rule.name] === problem ? current : { ...current, [rule.name]: problem }));
-  };
-  /** Checks every field before a request; flags the problems, focuses the first and returns false when any. */
-  const formIsValid = (formElement: HTMLFormElement, rules: FormFieldRule[]) => {
-    const form = new FormData(formElement);
-    const next: FieldErrors = {};
-    for (const rule of rules) next[rule.name] = fieldProblem(rule, String(form.get(rule.name) ?? ""));
-    setFieldErrors(next);
-    const first = rules.find((rule) => next[rule.name]);
-    if (first) (formElement.elements.namedItem(first.name) as HTMLElement | null)?.focus();
-    return !first;
-  };
+  const { setFieldErrors, fieldProps, fieldErrorLine, checkUrlOnBlur, formIsValid } = useFieldErrors(errorId, invalidProps, tError);
   const errorLine = hasError ? <p className="mt-3 text-sm text-danger" id={errorId} role="alert">{feedback.text}</p> : null;
 
   // A stale form (the BE says the row already moved on): re-read both lists so the matching section replaces it.
@@ -275,65 +98,57 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (inFlight.current) return;
-    if (!formIsValid(event.currentTarget, SUBMIT_FIELDS)) return;
-    inFlight.current = true;
     const formElement = event.currentTarget;
-    const form = new FormData(formElement);
-    setBusy(true);
-    setFeedback(null);
-    setSessionLost(false);
-    try {
-      await bountyApi.submitBounty(bountyId, {
-        submissionUrl: String(form.get("submissionUrl") ?? ""),
-        description: String(form.get("description") ?? ""),
-        ...(form.get("repositoryUrl") ? { repositoryUrl: String(form.get("repositoryUrl")) } : {}),
-        ...(form.get("commitSha") ? { commitSha: String(form.get("commitSha")) } : {}),
-      });
-      setSubmitted(true);
-      setFeedback({ kind: "success", text: t("submitSuccess") });
-      formElement.reset();
-      setFieldErrors({});
-      // Re-read /submissions/me (and the application join) so the panel reflects the server rows, not only the local flag.
-      submissionsQuery.refresh();
-      if (applicationRequired) applicationsQuery.refresh();
-    } catch (error) {
-      if (isSessionEndedError(error)) setSessionLost(true);
-      else setFeedback({ kind: "error", text: errorText(error, tError) });
-      if (isStaleRowsError(error)) refreshRows();
-    } finally {
-      inFlight.current = false;
-      setBusy(false);
-    }
+    await run(async () => {
+      if (!formIsValid(formElement, SUBMIT_FIELDS)) return;
+      const form = new FormData(formElement);
+      setFeedback(null);
+      setSessionLost(false);
+      try {
+        await bountyApi.submitBounty(bountyId, {
+          submissionUrl: String(form.get("submissionUrl") ?? ""),
+          description: String(form.get("description") ?? ""),
+          ...(form.get("repositoryUrl") ? { repositoryUrl: String(form.get("repositoryUrl")) } : {}),
+          ...(form.get("commitSha") ? { commitSha: String(form.get("commitSha")) } : {}),
+        });
+        setSubmitted(true);
+        setFeedback({ kind: "success", text: t("submitSuccess") });
+        formElement.reset();
+        setFieldErrors({});
+        // Re-read /submissions/me (and the application join) so the panel reflects the server rows, not only the local flag.
+        submissionsQuery.refresh();
+        if (applicationRequired) applicationsQuery.refresh();
+      } catch (error) {
+        if (isSessionEndedError(error)) setSessionLost(true);
+        else setFeedback({ kind: "error", text: errorText(error, tError) });
+        if (isStaleRowsError(error)) refreshRows();
+      }
+    });
   };
 
   const apply = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (inFlight.current) return;
-    if (!formIsValid(event.currentTarget, APPLY_FIELDS)) return;
-    inFlight.current = true;
     const formElement = event.currentTarget;
-    const form = new FormData(formElement);
-    setBusy(true);
-    setFeedback(null);
-    setSessionLost(false);
-    try {
-      await bountyApi.applyToBounty(bountyId, {
-        message: String(form.get("message") ?? ""),
-        ...(form.get("portfolioUrl") ? { portfolioUrl: String(form.get("portfolioUrl")) } : {}),
-      });
-      setApplied(true);
-      setFeedback({ kind: "success", text: t("applySuccess") });
-      // Re-read /applications/me so the panel reflects the server row (status, agent) rather than only the local flag.
-      applicationsQuery.refresh();
-    } catch (error) {
-      if (isSessionEndedError(error)) setSessionLost(true);
-      else setFeedback({ kind: "error", text: errorText(error, tError) });
-      if (isStaleRowsError(error)) refreshRows();
-    } finally {
-      inFlight.current = false;
-      setBusy(false);
-    }
+    await run(async () => {
+      if (!formIsValid(formElement, APPLY_FIELDS)) return;
+      const form = new FormData(formElement);
+      setFeedback(null);
+      setSessionLost(false);
+      try {
+        await bountyApi.applyToBounty(bountyId, {
+          message: String(form.get("message") ?? ""),
+          ...(form.get("portfolioUrl") ? { portfolioUrl: String(form.get("portfolioUrl")) } : {}),
+        });
+        setApplied(true);
+        setFeedback({ kind: "success", text: t("applySuccess") });
+        // Re-read /applications/me so the panel reflects the server row (status, agent) rather than only the local flag.
+        applicationsQuery.refresh();
+      } catch (error) {
+        if (isSessionEndedError(error)) setSessionLost(true);
+        else setFeedback({ kind: "error", text: errorText(error, tError) });
+        if (isStaleRowsError(error)) refreshRows();
+      }
+    });
   };
 
   // The rule for which section to show lives in lib/bounty-action-state.ts (documented by src/test/bounty-action-state.test.ts).
