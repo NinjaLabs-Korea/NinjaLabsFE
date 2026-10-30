@@ -55,6 +55,17 @@ function renderBounties() {
 }
 
 describe("BountyManager flows", () => {
+  // The fixtures' deadlines (2026-07-14) must read as upcoming: an Active bounty past its deadline shows "Past deadline".
+  beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date("2026-06-01T00:00:00Z")); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it("labels an Active bounty whose deadline has passed as Past deadline", async () => {
+    vi.setSystemTime(new Date("2026-09-01T00:00:00Z"));
+    renderBounties();
+    await waitFor(() => expect(within(row("Build an iAsset price widget")).getByText("Past deadline")).toBeTruthy());
+    expect(within(row("Build an iAsset price widget")).queryByText("Active")).toBeNull();
+  });
+
   it("renders one row per bounty with localized status, intake, mode and reward", async () => {
     const bounties = renderBounties();
     await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(bounties.length + 1));
@@ -261,13 +272,25 @@ describe("BountyManager flows", () => {
     expect(row("Quest copy refresh")).toBeTruthy();
   });
 
+  it("shows a BE-only hidden-character rejection on the field, not as a permissions hint", async () => {
+    vi.spyOn(api, "saveAdminBounty").mockRejectedValue(new ApiHttpError(400, "VALIDATION_FAILED", ["title must not contain control, line-break or bidirectional formatting characters"]));
+    renderBounties();
+    await waitFor(() => expect(within(row("Build an iAsset price widget")).getByRole("button", { name: "Edit" })).toBeTruthy());
+    fireEvent.click(within(row("Build an iAsset price widget")).getByRole("button", { name: "Edit" }));
+    // Edit mode drops the create-only reward note.
+    expect(screen.queryByText(/After you create it, the sponsor sends the reward/)).toBeNull();
+    fireEvent.submit(screen.getByRole("button", { name: "Save" }).closest("form") as HTMLFormElement);
+    expect(await screen.findByText("Remove hidden direction or control characters (for example U+202E, or a tab).")).toBeTruthy();
+    expect(screen.queryByText(/admin permissions/)).toBeNull();
+  });
+
   it("falls back to the generic save copy for an unmapped BE error", async () => {
     vi.spyOn(api, "saveAdminBounty").mockRejectedValue(new ApiHttpError(400, "VALIDATION_FAILED"));
     renderBounties();
     await waitFor(() => expect(within(row("Build an iAsset price widget")).getByRole("button", { name: "Edit" })).toBeTruthy());
     fireEvent.click(within(row("Build an iAsset price widget")).getByRole("button", { name: "Edit" }));
     fireEvent.submit(screen.getByRole("button", { name: "Save" }).closest("form") as HTMLFormElement);
-    expect(await screen.findByText("The bounty was not saved. Check the fields and your admin permissions.")).toBeTruthy();
+    expect(await screen.findByText("The bounty was not saved. Check the highlighted fields and try again.")).toBeTruthy();
     // The form stays in edit mode with the admin's input so they can retry.
     expect(screen.getByRole("heading", { name: "Edit bounty" })).toBeTruthy();
     expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(false);

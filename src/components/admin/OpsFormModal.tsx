@@ -14,19 +14,21 @@ type OpsFormModalProps = {
   callout?: { tone: "warning" | "danger"; text: string };
   submitLabel: string;
   busy: boolean;
+  /** Disables submit without the in-flight label (e.g. the action cannot work until an operator fixes configuration). */
+  submitDisabled?: boolean;
   onCancel: () => void;
   onSubmit: () => void;
   children?: ReactNode;
 };
 
 /** Form dialog for one operations action (ui/Modal: ESC, backdrop, focus return). The submit button shows `saving` while in flight. */
-export function OpsFormModal({ open, eyebrow, title, description, callout, submitLabel, busy, onCancel, onSubmit, children }: OpsFormModalProps) {
+export function OpsFormModal({ open, eyebrow, title, description, callout, submitLabel, busy, submitDisabled, onCancel, onSubmit, children }: OpsFormModalProps) {
   const t = useTranslations("admin.common");
   const titleId = useId();
   const descriptionId = useId();
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!busy) onSubmit();
+    if (!busy && !submitDisabled) onSubmit();
   };
   return (
     <Modal describedBy={description ? descriptionId : undefined} labelledBy={titleId} onClose={onCancel} open={open}>
@@ -40,7 +42,7 @@ export function OpsFormModal({ open, eyebrow, title, description, callout, submi
         <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4">{children}</div>
         <div className="mt-6 flex justify-end gap-3">
           <button className={opsButton} onClick={onCancel} type="button">{t("cancel")}</button>
-          <button className={opsPrimaryButton} disabled={busy} type="submit">{busy ? t("saving") : submitLabel}</button>
+          <button className={opsPrimaryButton} disabled={busy || submitDisabled} type="submit">{busy ? t("saving") : submitLabel}</button>
         </div>
       </form>
     </Modal>
