@@ -6,7 +6,7 @@
   "hero": {
     "eyebrow": "Recruitment",
     "heading": "Build with Ninja Labs",
-    "description": "Read how the community works, then apply for the open cohort. You need a Ninja Labs account with a finished sign-up."
+    "description": "Look around the community, then apply for the open cohort. You need an account with a finished sign-up."
   },
   "banner": {
     "label": "Member recruitment",
@@ -57,7 +57,7 @@
     },
     "onboarding": {
       "title": "Finish signing up first",
-      "body": "Applications need a finished sign-up. Complete the remaining step and we will bring you back here.",
+      "body": "Finish sign-up before you apply. Complete the remaining steps and you will come back to this page.",
       "cta": "Continue sign-up"
     }
   },
@@ -68,7 +68,7 @@
     "intro": {
       "label": "Introduction and motivation*",
       "placeholder": "Who are you, what have you built or written, and why Ninja Labs?",
-      "hint": "{min}-{max} characters recommended (up to {limit}).",
+      "hint": "Write at least {min} characters (up to {limit}).",
       "counter": "{count}/{limit}"
     },
     "lead": "Tell us a bit about yourself and what you want to do with NinjaLabs. You can edit or withdraw your application while the cohort is recruiting.",
@@ -90,7 +90,7 @@
       "hint": "5-32 letters, digits or _. A t.me link works too."
     },
     "twitter": {
-      "label": "Twitter (X) ID*",
+      "label": "X (Twitter) handle*",
       "placeholder": "@your_x_id",
       "hint": "1-15 letters, digits or _. An x.com link works too."
     },
@@ -147,7 +147,7 @@
     },
     "saveErrors": {
       "network": "We couldn’t send your application. Check your connection and try again.",
-      "session": "Your session has ended. Sign in again to continue.",
+      "session": "Your session expired. What you wrote is still here. Sign in again in a new tab, then come back and send it.",
       "invalid": "Check every field and try again.",
       "generic": "We couldn’t save your application. Please try again.",
       "PROFILE_REQUIRED": "Finish your sign-up (profile step) before applying.",

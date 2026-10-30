@@ -9,13 +9,14 @@ import type { Member } from "@/lib/types";
 export function MembersPreviewSection({ members, unavailable }: { members: Member[]; unavailable: boolean }) {
   const t = useTranslations("community.members");
   const tMembers = useTranslations("members");
+  const tRetry = useTranslations("community");
   return (
     <section className="mx-auto max-w-content px-6 pb-16">
       <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={2} size="lg" action={{ label: t("viewAll"), href: "/members" }} />
       {unavailable ? (
-        <CommunitySectionState title={t("unavailable")} body={t("unavailableBody")} />
+        <CommunitySectionState title={t("unavailable")} body={t("unavailableBody")} retryLabel={tRetry("retry")} />
       ) : members.length === 0 ? (
-        <CommunitySectionState body={t("empty")} />
+        <CommunitySectionState body={t("empty")} action={{ label: t("emptyAction"), href: "/recruit" }} />
       ) : (
         <ul className="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {members.map((member) => (

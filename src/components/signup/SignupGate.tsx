@@ -7,6 +7,7 @@ import { useRouter } from "@/i18n/navigation";
 import { stripLocale } from "@/i18n/routing";
 import { pushFlash } from "@/lib/flash";
 import { resolveSignupAccess, returnPathFromReferrer, type SignupAccess, type SignupStep } from "@/lib/auth-route";
+import { PageLoading } from "@/components/ui/PageLoading";
 
 /**
  * Every signup page (`step` 1-4) renders through this gate, which follows `lib/auth-route.ts resolveSignupAccess`:
@@ -49,8 +50,6 @@ export function SignupGate({ children, step }: { children: ReactNode; step: Sign
 
   if (access.kind === "show") return children;
   return (
-    <div className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]" role="status">
-      <p className="text-sm text-ink-muted">{t("checking")}</p>
-    </div>
+    <PageLoading className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]" label={t("checking")} variant="list" />
   );
 }

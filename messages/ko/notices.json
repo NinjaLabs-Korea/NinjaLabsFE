@@ -4,10 +4,8 @@
     "description": "Ninja Labs의 행사와 소식을 모았어요."
   },
   "list": {
-    "eyebrow": "공지 / 소식",
-    "heading": "Ninja Labs 소식",
-    "description": "Ninja Labs의 행사와 소식을 모았어요.",
-    "badge": "행사 · 생태계 소식 · 공지"
+    "heading": "공지사항",
+    "description": "행사와 소식을 한곳에서 확인하세요."
   },
   "filters": {
     "ariaLabel": "공지 카테고리",
@@ -30,9 +28,8 @@
     "notFoundTitle": "페이지를 찾을 수 없습니다 | Ninja Labs",
     "pageTitle": "{title} | Ninja Labs",
     "back": "← 목록으로",
-    "public": "공개",
     "readMoreHeading": "자세히 보기",
-    "readMoreLink": "자세히 보기 →",
+    "readMoreLink": "원문 보기 →",
     "related": "관련 링크"
   },
   "eventDate": "행사일 {date}"

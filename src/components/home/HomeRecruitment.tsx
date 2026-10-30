@@ -18,7 +18,8 @@ const CARD_MIN_HEIGHT = "min-h-[268px] md:min-h-[245px]";
 
 /** The invitation card; `hidden` renders the same box with invisible content, to reserve its height while the reads load. */
 function InviteCard({ name, closes, hidden = false }: { name: string; closes: string | null; hidden?: boolean }) {
-  const t = useTranslations("home.recruit");
+  // The hub banner (`RecruitmentBanner`) shows the same invitation, so both read `recruit.banner`.
+  const t = useTranslations("recruit.banner");
   const format = useFormatter();
   return (
     <div className={`flex flex-col gap-5 rounded-card border border-primary-soft-border bg-primary-soft p-5 shadow-card sm:p-[21px] md:flex-row md:items-center md:justify-between ${CARD_MIN_HEIGHT}${hidden ? " invisible" : ""}`}>
@@ -47,6 +48,7 @@ function InviteCard({ name, closes, hidden = false }: { name: string; closes: st
  */
 export function HomeRecruitment() {
   const t = useTranslations("home.recruit");
+  const banner = useTranslations("recruit.banner");
   const api = useCohortApi();
   const current = useCurrentCohort();
   const mine = useAccountQuery(api.getMyCohortApplications, { reuseLast: true });
@@ -68,7 +70,7 @@ export function HomeRecruitment() {
   const invite = Boolean(cohort?.acceptingApplications) && !forCohort;
   if (!invite && !latest) return null;
   return (
-    <section aria-label={t("heading")} className={SECTION_CLASS}>
+    <section aria-label={banner("label")} className={SECTION_CLASS}>
       {invite && cohort ? (
         <InviteCard closes={cohort.closesAt} name={cohort.name} />
       ) : latest ? (

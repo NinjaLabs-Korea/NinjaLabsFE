@@ -1,5 +1,6 @@
 import type { Bounty, NoticePreview } from './types';
-import { getRuntimeBounties, loadRuntimeBounties } from './bounties';
+import { getRuntimeBounties } from './bounties';
+import { settle } from './api/public';
 import { getRuntimeNotices } from './notices';
 import { emptyHallOfFame, getRuntimeHallOfFame, visibleStats, type HallStatKey } from './hall-of-fame';
 
@@ -30,29 +31,26 @@ export type RuntimeLanding = {
   unavailable: { bounties: boolean; news: boolean; stats: boolean };
 };
 
-const settledValue = <T>(result: PromiseSettledResult<T>, fallback: T): T =>
-  result.status === 'fulfilled' ? result.value : fallback;
-
 export async function getRuntimeLanding(locale: string): Promise<RuntimeLanding> {
-  const [bountiesResult, noticesResult, hallResult] = await Promise.allSettled([
-    getRuntimeBounties(locale),
-    getRuntimeNotices(),
-    getRuntimeHallOfFame(locale),
+  const [bountiesResult, noticesResult, hallResult] = await Promise.all([
+    settle(getRuntimeBounties(locale), []),
+    settle(getRuntimeNotices(), []),
+    settle(getRuntimeHallOfFame(locale), emptyHallOfFame),
   ]);
   return {
-    bounties: settledValue(bountiesResult, []).filter((bounty) => bounty.status === 'active').slice(0, 4),
-    news: settledValue(noticesResult, []).slice(0, 3),
+    bounties: bountiesResult.value.filter((bounty) => bounty.status === 'active').slice(0, 4),
+    news: noticesResult.value.slice(0, 3),
     unavailable: {
-      bounties: bountiesResult.status === 'rejected',
-      news: noticesResult.status === 'rejected',
-      stats: hallResult.status === 'rejected',
+      bounties: bountiesResult.unavailable,
+      news: noticesResult.unavailable,
+      stats: hallResult.unavailable,
     },
   };
 }
 
 /** Open bounties for the hub preview: at most four `active` ones; `[]` when there are none or the API failed (the section then shows its single call to action instead). */
 export async function getRuntimeOpenBounties(locale: string): Promise<Bounty[]> {
-  const { bounties } = await loadRuntimeBounties(locale);
+  const { value: bounties } = await settle(getRuntimeBounties(locale), []);
   return bounties.filter((bounty) => bounty.status === 'active').slice(0, 4);
 }
 
@@ -62,17 +60,14 @@ export async function getRuntimeOpenBounties(locale: string): Promise<Bounty[]> 
  * instead of throwing.
  */
 export async function getBountyHero(locale: string, bounties: Bounty[]): Promise<BountyHero> {
-  const hall = await getRuntimeHallOfFame(locale).then(
-    (value) => ({ value, failed: false }),
-    () => ({ value: emptyHallOfFame, failed: true }),
-  );
+  const hall = await settle(getRuntimeHallOfFame(locale), emptyHallOfFame);
   return {
     stats: visibleStats(hall.value.stats).map(({ value, labelKey }) => ({ value, labelKey })),
     portfolio: {
       ...showcase,
-      completed: bounties.filter((bounty) => bounty.completed).slice(0, 5).map((bounty) => bounty.title),
+      completed: bounties.filter((bounty) => bounty.closedReason === "completed").slice(0, 5).map((bounty) => bounty.title),
       totalCompleted: Number(hall.value.stats[0]?.value ?? 0),
     },
-    statsUnavailable: hall.failed,
+    statsUnavailable: hall.unavailable,
   };
 }

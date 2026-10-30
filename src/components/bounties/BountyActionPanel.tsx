@@ -1,21 +1,28 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { FormEvent, useEffect, useId, useRef, useState, type ReactNode, type Ref } from "react";
+import { FocusEvent, FormEvent, useEffect, useId, useRef, useState, type ReactNode, type Ref } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
+import { PageLoading } from "@/components/ui/PageLoading";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Link } from "@/i18n/navigation";
 import { signInHref } from "@/lib/return-path";
 import { APPLICATION_MESSAGE_MAX, COMMIT_SHA_MAX, SUBMISSION_DESCRIPTION_MAX } from "@/lib/input-limits";
 import { payoutBadge } from "@/lib/payout";
+import { isHttpUrl } from "@/lib/url-rules";
+import { hasVisibleText } from "@/lib/visible-text";
 import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 import { bountyActionErrorCopy, deriveActionView, isStaleRowsError, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
 import type { AccountApplication } from "@/lib/contracts/account";
 import type { ApiResult } from "@/lib/contracts/api";
+import type { ClosedReason } from "@/lib/bounty-status";
 import type { Bounty } from "@/lib/types";
 
-const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card";
+// Panels fade in when they replace the loading placeholder (or another panel), instead of popping in.
+const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card animate-fade-in motion-reduce:animate-none";
+const submitButtonClass = "motion-control motion-press rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60";
 const outlineButtonClass = "inline-flex rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong";
 const outlineLinkClass = `mt-4 ${outlineButtonClass}`;
 const inputClass = "h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
@@ -34,13 +41,47 @@ function errorText(error: unknown, t: ErrorTranslator): string {
 }
 
 /** Visible label above a form control (Figma 15/15v draw placeholders only; see docs/figma/design-gaps.md). */
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, children, error }: { label: string; children: ReactNode; error?: ReactNode }) {
   return (
-    <label className="block">
-      <span className={labelTextClass}>{label}</span>
-      {children}
-    </label>
+    <div>
+      <label className="block">
+        <span className={labelTextClass}>{label}</span>
+        {children}
+      </label>
+      {error}
+    </div>
   );
+}
+
+/** Per-field problems the form finds itself (before any request): a link that is not http(s), or a required text left empty. */
+type FieldError = "url" | "required";
+type FieldErrors = Partial<Record<string, FieldError>>;
+type FormFieldRule = { name: string; kind: "url" | "text"; required?: boolean };
+
+const APPLY_FIELDS: FormFieldRule[] = [
+  { name: "portfolioUrl", kind: "url" },
+  { name: "message", kind: "text", required: true },
+];
+const SUBMIT_FIELDS: FormFieldRule[] = [
+  { name: "submissionUrl", kind: "url", required: true },
+  { name: "repositoryUrl", kind: "url" },
+  { name: "description", kind: "text", required: true },
+];
+
+/** A rule looked up by field name, so reordering or inserting rules cannot hand an input another field's rule. */
+function ruleFor(rules: FormFieldRule[], name: string): FormFieldRule {
+  const rule = rules.find((candidate) => candidate.name === name);
+  if (!rule) throw new Error(`No form rule for field ${name}`);
+  return rule;
+}
+
+/** The same rule the API applies (`isHttpUrl`, mirror of the BE), so the person sees the locale message instead of the browser's tooltip. */
+function fieldProblem(rule: FormFieldRule, raw: string): FieldError | undefined {
+  // Text is empty when it has no visible character (the BE rule, `lib/visible-text.ts`); only a URL is trimmed.
+  if (rule.kind === "text") return rule.required && !hasVisibleText(raw) ? "required" : undefined;
+  const value = raw.trim();
+  if (!value) return rule.required ? "required" : undefined;
+  return !isHttpUrl(value) ? "url" : undefined;
 }
 
 function StatusPanel({ title, body, note, tone = "muted", feedback, link, headingRef, badge, code }: {
@@ -96,7 +137,7 @@ function SignedOutPanel({ applicationRequired, bountyId }: { applicationRequired
       {applicationRequired ? (
         <fieldset className="mt-4 space-y-3" disabled>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <input aria-label={t("portfolioUrl")} className={inputClass} placeholder={t("portfolioUrl")} type="url" />
+            <input aria-label={t("portfolioUrl")} className={inputClass} placeholder="https://" type="url" />
             <input aria-label={t("availability")} className={inputClass} placeholder={t("availability")} type="text" />
           </div>
           <textarea aria-label={t("applyMessage")} className="min-h-28 w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" placeholder={t("applyMessage")} />
@@ -107,11 +148,25 @@ function SignedOutPanel({ applicationRequired, bountyId }: { applicationRequired
         </fieldset>
       ) : (
         <fieldset className="mt-4 flex flex-col gap-3 sm:flex-row" disabled>
-          <input aria-label={t("submissionUrl")} className={inputClass} placeholder={t("submissionUrl")} type="url" />
+          <input aria-label={t("submissionUrl")} className={inputClass} placeholder="https://" type="url" />
           <Link className="shrink-0 rounded-control bg-primary px-5 py-3 text-center text-sm font-semibold text-on-inverse" href={signIn}>{t("submit")}</Link>
         </fieldset>
       )}
     </section>
+  );
+}
+
+/**
+ * Placeholder while the session or the application/submission rows load. It reserves the height of the settled signed-out
+ * panel (measured at 375 and 1280 px, apply form vs. direct submit) so the real panel replacing it does not push the page
+ * down (the CLS this removes). Built from the shared `PageLoading`/`Skeleton` (status label for screen readers, pulse block is decoration).
+ */
+function CheckingPanel({ applicationRequired, label }: { applicationRequired: boolean; label: string }) {
+  const height = applicationRequired ? "min-h-[26rem] sm:min-h-[22rem]" : "min-h-[15rem] sm:min-h-[12rem]";
+  return (
+    <PageLoading label={label} variant="list">
+      <Skeleton className={height} />
+    </PageLoading>
   );
 }
 
@@ -127,10 +182,8 @@ type BountyActionPanelProps = {
   submissionMode: "direct" | "agent";
   /** Application deadline passed (`Bounty.applicationClosed`): no apply form for a first application. */
   applicationClosed?: boolean;
-  /** `Bounty.deadlinePassed`: closed only by the deadline, so a requested revision can still be resubmitted. */
-  deadlinePassed?: boolean;
-  /** `Bounty.completed`: closed because the work was finished (BE COMPLETED); with `deadlinePassed` unset, a `closed` bounty is a cancelled one. */
-  completed?: boolean;
+  /** `Bounty.closedReason`: why a `closed` bounty is closed; `deadline` means closed only by the deadline, so a requested revision can still be resubmitted. */
+  closedReason?: ClosedReason;
 };
 
 export function BountyActionPanel(props: BountyActionPanelProps) {
@@ -154,7 +207,7 @@ export function BountyActionPanel(props: BountyActionPanelProps) {
   );
 }
 
-function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, deadlinePassed, completed, status, submissionMode, announce, sessionEnded }: BountyActionPanelProps & {
+function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, closedReason, status, submissionMode, announce, sessionEnded }: BountyActionPanelProps & {
   announce: (text: string) => void;
   /** The session ended after this page saw a signed-in user: keep an open form (and its text) and say so. */
   sessionEnded: boolean;
@@ -177,6 +230,33 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const hasError = feedback?.kind === "error";
   // Shared by every input of the active form: the API error is form-level (e.g. VALIDATION_FAILED).
   const invalidProps = { "aria-invalid": hasError || undefined, "aria-describedby": hasError ? errorId : undefined };
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const fieldErrorId = (name: string) => `${errorId}-${name}`;
+  // A field the form flagged points at its own message; otherwise the form-level API error (if any) is the description.
+  const fieldProps = (name: string) => (fieldErrors[name]
+    ? { "aria-invalid": true, "aria-describedby": fieldErrorId(name) }
+    : invalidProps);
+  const fieldErrorLine = (name: string) => {
+    const problem = fieldErrors[name];
+    return problem
+      ? <p className="mt-1 text-sm text-danger" id={fieldErrorId(name)} role="alert">{tError(problem === "url" ? "VALIDATION_URL" : "VALIDATION_TEXT_REQUIRED")}</p>
+      : null;
+  };
+  // URL fields check on blur (an empty optional link is fine); required text is only checked on submit.
+  const checkUrlOnBlur = (rule: FormFieldRule) => (event: FocusEvent<HTMLInputElement>) => {
+    const problem = event.currentTarget.value.trim() ? fieldProblem({ ...rule, required: false }, event.currentTarget.value) : undefined;
+    setFieldErrors((current) => (current[rule.name] === problem ? current : { ...current, [rule.name]: problem }));
+  };
+  /** Checks every field before a request; flags the problems, focuses the first and returns false when any. */
+  const formIsValid = (formElement: HTMLFormElement, rules: FormFieldRule[]) => {
+    const form = new FormData(formElement);
+    const next: FieldErrors = {};
+    for (const rule of rules) next[rule.name] = fieldProblem(rule, String(form.get(rule.name) ?? ""));
+    setFieldErrors(next);
+    const first = rules.find((rule) => next[rule.name]);
+    if (first) (formElement.elements.namedItem(first.name) as HTMLElement | null)?.focus();
+    return !first;
+  };
   const errorLine = hasError ? <p className="mt-3 text-sm text-danger" id={errorId} role="alert">{feedback.text}</p> : null;
 
   // A stale form (the BE says the row already moved on): re-read both lists so the matching section replaces it.
@@ -194,6 +274,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (inFlight.current) return;
+    if (!formIsValid(event.currentTarget, SUBMIT_FIELDS)) return;
     inFlight.current = true;
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
@@ -209,6 +290,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       setSubmitted(true);
       setFeedback({ kind: "success", text: t("submitSuccess") });
       formElement.reset();
+      setFieldErrors({});
       // Re-read /submissions/me (and the application join) so the panel reflects the server rows, not only the local flag.
       submissionsQuery.refresh();
       if (applicationRequired) applicationsQuery.refresh();
@@ -224,6 +306,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
   const apply = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (inFlight.current) return;
+    if (!formIsValid(event.currentTarget, APPLY_FIELDS)) return;
     inFlight.current = true;
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
@@ -249,7 +332,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
 
   // The rule for which section to show lives in lib/bounty-action-state.ts (documented by src/test/bounty-action-state.test.ts).
   const derivedView = deriveActionView({
-    bountyId, applicationRequired, applicationClosed, deadlinePassed, completed, status, submissionMode,
+    bountyId, applicationRequired, applicationClosed, closedReason, status, submissionMode,
     auth: auth.status,
     ...(auth.status === "signed-out" && auth.reason ? { authReason: auth.reason } : {}),
     applications: applicationsQuery,
@@ -295,7 +378,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
         </section>
       );
     case "checkingSession":
-      return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingSession")}</p></section>;
+      return <CheckingPanel applicationRequired={applicationRequired} label={t("checkingSession")} />;
     case "sessionUnavailable":
       return (
         <section className={panelClass} role="status">
@@ -307,7 +390,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
     case "signedOut":
       return <SignedOutPanel applicationRequired={applicationRequired} bountyId={bountyId} />;
     case "checkingStatus":
-      return <section className={panelClass}><p className="text-sm text-ink-muted">{t("checkingStatus")}</p></section>;
+      return <CheckingPanel applicationRequired={applicationRequired} label={t("checkingStatus")} />;
     case "statusUnavailable":
       return <section className={panelClass}><p className="text-sm text-danger">{t("statusUnavailable")}</p></section>;
     case "agentRow": {
@@ -339,14 +422,14 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       return (
         <section className={panelClass}>
           <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{t("applyHeading")}</h2>
-          <form className="mt-4 space-y-3" onSubmit={apply}>
-            <Field label={t("portfolioUrl")}>
-              <input className={inputClass} name="portfolioUrl" placeholder={t("portfolioUrl")} type="url" {...invalidProps} />
+          <form className="mt-4 space-y-3" noValidate onSubmit={apply}>
+            <Field label={t("portfolioUrl")} error={fieldErrorLine("portfolioUrl")}>
+              <input className={inputClass} name="portfolioUrl" onBlur={checkUrlOnBlur(ruleFor(APPLY_FIELDS, "portfolioUrl"))} placeholder="https://" type="url" {...fieldProps("portfolioUrl")} />
             </Field>
-            <Field label={t("applyMessage")}>
-              <textarea className={`min-h-28 ${textareaClass}`} maxLength={APPLICATION_MESSAGE_MAX} name="message" placeholder={t("applyMessage")} required {...invalidProps} />
+            <Field label={t("applyMessage")} error={fieldErrorLine("message")}>
+              <textarea className={`min-h-28 ${textareaClass}`} maxLength={APPLICATION_MESSAGE_MAX} name="message" required {...fieldProps("message")} />
             </Field>
-            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy || sessionEnded} type="submit">{busy ? t("applying") : t("apply")}</button>
+            <button aria-busy={busy || undefined} className={submitButtonClass} disabled={busy || sessionEnded} type="submit">{busy ? <><span aria-hidden="true" className="spinner mr-2" />{t("applying")}</> : t("apply")}</button>
           </form>
           {sessionEndedLine}
           {errorLine}
@@ -380,20 +463,20 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
           {revising && revisionComment ? <p className={`mt-2 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: revisionComment })}</p> : null}
           {inReview ? <p className="mt-2 text-sm text-ink-muted">{t("inReviewNote")}</p> : null}
           {inReview && applicationRequired ? <Link className={outlineLinkClass} href="/applications">{t("viewApplications")}</Link> : null}
-          <form className="mt-4 space-y-3" onSubmit={submit}>
-            <Field label={t("submissionUrl")}>
-              <input className={inputClass} name="submissionUrl" placeholder={t("submissionUrl")} required type="url" {...invalidProps} />
+          <form className="mt-4 space-y-3" noValidate onSubmit={submit}>
+            <Field label={t("submissionUrl")} error={fieldErrorLine("submissionUrl")}>
+              <input className={inputClass} name="submissionUrl" onBlur={checkUrlOnBlur(ruleFor(SUBMIT_FIELDS, "submissionUrl"))} placeholder="https://" required type="url" {...fieldProps("submissionUrl")} />
             </Field>
-            <Field label={t("repositoryUrl")}>
-              <input className={inputClass} name="repositoryUrl" placeholder={t("repositoryUrl")} type="url" {...invalidProps} />
+            <Field label={t("repositoryUrl")} error={fieldErrorLine("repositoryUrl")}>
+              <input className={inputClass} name="repositoryUrl" onBlur={checkUrlOnBlur(ruleFor(SUBMIT_FIELDS, "repositoryUrl"))} placeholder="https://" type="url" {...fieldProps("repositoryUrl")} />
             </Field>
             <Field label={t("commitSha")}>
-              <input className={inputClass} maxLength={COMMIT_SHA_MAX} name="commitSha" placeholder={t("commitSha")} type="text" {...invalidProps} />
+              <input className={inputClass} maxLength={COMMIT_SHA_MAX} name="commitSha" placeholder="3f2a9c1" type="text" {...invalidProps} />
             </Field>
-            <Field label={t("submissionDescription")}>
-              <textarea className={`min-h-24 ${textareaClass}`} maxLength={SUBMISSION_DESCRIPTION_MAX} name="description" placeholder={t("submissionDescription")} required {...invalidProps} />
+            <Field label={t("submissionDescription")} error={fieldErrorLine("description")}>
+              <textarea className={`min-h-24 ${textareaClass}`} maxLength={SUBMISSION_DESCRIPTION_MAX} name="description" required {...fieldProps("description")} />
             </Field>
-            <button className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60" disabled={busy || sessionEnded} type="submit">{busy ? t("submitting") : actionLabel}</button>
+            <button aria-busy={busy || undefined} className={submitButtonClass} disabled={busy || sessionEnded} type="submit">{busy ? <><span aria-hidden="true" className="spinner mr-2" />{t("submitting")}</> : actionLabel}</button>
           </form>
           {sessionEndedLine}
           {feedback?.kind === "success" ? <p className="mt-3 text-sm text-success">{feedback.text}</p> : errorLine}

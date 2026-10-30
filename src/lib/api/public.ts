@@ -115,3 +115,16 @@ type RuntimeSources<T> = {
 export async function loadFromRuntime<T>(sources: RuntimeSources<T>): Promise<T> {
   return loadRuntimeConfig().runtimeMode === "mock" ? sources.mock() : sources.api();
 }
+
+/**
+ * The one way a public page degrades when the API is down: a rejected read becomes `fallback` plus `unavailable: true`, so the
+ * page renders an inline unavailable state instead of the error boundary. Pass a promise that is already started so several
+ * sources load in parallel (`Promise.all([settle(a, []), settle(b, [])])`).
+ */
+export async function settle<T>(promise: Promise<T>, fallback: T): Promise<{ value: T; unavailable: boolean }> {
+  try {
+    return { value: await promise, unavailable: false };
+  } catch {
+    return { value: fallback, unavailable: true };
+  }
+}

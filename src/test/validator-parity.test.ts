@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { safeHttpUrl } from "@/lib/api/codecs";
 import { isReservedNickname, isValidNickname, NICKNAME, validateNickname } from "@/lib/nickname";
+import { BE_NICKNAME_ACCEPTED, BE_NICKNAME_REJECTED } from "./be-validator-fixtures";
 import { isHttpUrl, isMediaPath, isSitePath } from "@/lib/url-rules";
 
 /**
@@ -195,6 +196,15 @@ describe("BE users.dto.spec.ts tables against FE nickname rule", () => {
   });
 
   it.each(["ninja.inj", "ninja.jsx", "ninjajs"])("accepts nickname %p (not a static-file extension)", (nickname) => {
+    expect(validateNickname(nickname)).toBeNull();
+  });
+});
+
+describe("BE nickname fixtures (shared table) against NICKNAME and validateNickname", () => {
+  it.each(BE_NICKNAME_REJECTED)("validateNickname rejects %j", (nickname) => {
+    expect(validateNickname(nickname)).not.toBeNull();
+  });
+  it.each(BE_NICKNAME_ACCEPTED)("validateNickname accepts %j", (nickname) => {
     expect(validateNickname(nickname)).toBeNull();
   });
 });

@@ -9,7 +9,7 @@
   },
   "greeting": {
     "eyebrow": "我的活动",
-    "title": "欢迎回来,{name}"
+    "title": "欢迎回来，{name}"
   },
   "profile": {
     "walletConnected": "钱包 {address}",
@@ -24,23 +24,17 @@
     "editProfile": "资料与钱包设置"
   },
   "activity": {
-    "eyebrow": "我的活动",
-    "heading": "申请与提交",
+    "eyebrow": "申请与提交",
+    "heading": "申请记录",
     "viewAll": "查看全部 →",
     "loading": "正在加载你的活动…",
     "unavailable": "暂时无法加载你的活动。",
     "retry": "重试",
     "emptyTitle": "你还没有申请或提交过赏金。",
-    "emptyBody": "你申请或提交的赏金会显示在这里。",
+    "emptyBody": "找一个喜欢的赏金，提交你的第一次申请吧。",
     "browse": "浏览赏金"
   },
   "recruit": {
-    "heading": "成员招募",
-    "badge": "招募中",
-    "title": "{name} 正在招募成员",
-    "body": "正在接受申请。告诉我们你是谁、想做什么。",
-    "closes": "请在 {date} 前申请。",
-    "cta": "立即申请",
     "details": "打开申请页面 →"
   },
   "bounties": {
@@ -48,42 +42,26 @@
     "heading": "开放中的赏金",
     "viewAll": "查看全部 →",
     "unavailable": "暂时无法加载开放的赏金。",
-    "empty": "目前没有开放的赏金,新的机会会显示在这里。"
+    "empty": "目前没有开放的赏金，新的机会会显示在这里。"
   },
   "news": {
     "eyebrow": "社区动态",
     "heading": "最新动态",
     "viewAll": "查看全部 →",
     "unavailable": "暂时无法加载最新动态。",
-    "empty": "暂无动态,请稍后再来。"
+    "empty": "暂无动态，请稍后再来。"
   },
   "quickLinks": {
     "eyebrow": "快捷入口",
     "heading": "快速前往",
     "items": {
-      "bounties": {
-        "title": "赏金",
-        "description": "寻找可申请的赏金。"
-      },
       "applications": {
-        "title": "我的申请",
+        "title": "申请记录",
         "description": "跟踪所有申请与提交。"
       },
       "agents": {
         "title": "我的代理",
         "description": "注册并管理你的 AI 代理。"
-      },
-      "hallOfFame": {
-        "title": "荣誉殿堂",
-        "description": "查看社区的成就。"
-      },
-      "members": {
-        "title": "成员",
-        "description": "认识官方成员。"
-      },
-      "about": {
-        "title": "关于 Ninja Labs",
-        "description": "往期活动、动态与成果。"
       }
     }
   }

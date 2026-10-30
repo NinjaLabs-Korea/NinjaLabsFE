@@ -7,7 +7,10 @@ import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
-import { useAdminList } from "@/components/admin/useAdminList";
+import { HIGHLIGHT_DESCRIPTION_MAX, HIGHLIGHT_TITLE_MAX } from "@/lib/input-limits";
+import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
+import { opsInput, opsTextarea } from "@/components/admin/ops-ui";
+import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlightCallback } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
 import { DISPLAY_ORDER_MAX, highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminApiErrorCode, adminErrorDescription, adminTextFieldErrors, adminUrlFieldErrors } from "@/lib/admin-helpers";
 import { HIGHLIGHT_TYPE_CODES, isHighlightTypeCode } from "@/lib/api/codecs";
@@ -70,9 +73,6 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   const [published, setPublished] = useState(true);
   const [errors, setErrors] = useState<HighlightFieldErrors>({});
   const [saving, setSaving] = useState(false);
-  // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
-  const savingRef = useRef(false);
-  const deletingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminHighlight | null>(null);
   const formRef = useRef<HTMLElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -89,7 +89,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
   // `reload` re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
   // (never "save failed": a retry of an already-created highlight would create a duplicate).
   const fetchHighlights = useCallback(() => api.getAdminHighlights().then(sortHighlights), [api]);
-  const toastLoadFailed = useCallback(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }), [t]);
+  const toastLoadFailed = useLoadFailedToast(t("toast.loadFailedTitle"), t("toast.loadFailedDescription"));
   const { records, setRecords, loadState, reload, retry } = useAdminList(fetchHighlights, sortHighlights(highlights), toastLoadFailed);
 
   const isEditing = mode !== "create";
@@ -115,7 +115,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
 
   function handleAdd() {
     resetForm();
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   }
 
   function handleEdit(highlight: AdminHighlight) {
@@ -129,7 +129,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     setOrder(highlight.order);
     setPublished(highlight.published ?? false);
     setErrors({});
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   }
 
   function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
@@ -144,18 +144,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     clearError("image");
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (savingRef.current) return;
-    // A freshly picked file replaces the stored image, so only the kept URL is checked.
-    const stored = isEditing ? records.find((item) => item.id === mode) : undefined;
-    const nextErrors = validateHighlightForm({ title, description, image: imageFile ? null : image, link, order }, stored && { image: stored.image, link: stored.link });
-    if (Object.values(nextErrors).some(Boolean)) {
-      setErrors(nextErrors);
-      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
-      return;
-    }
-    savingRef.current = true;
+  // Validation runs outside the single-flight guard: a rejected form must not hold it (a fixed retry right after has to go through).
+  const persistHighlight = useSingleFlightCallback(async () => {
     setSaving(true);
     try {
       const uploadedImage = imageFile ? (await api.uploadAdminMedia(imageFile)).url : image;
@@ -191,30 +181,39 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
         void reload();
       }
     } finally {
-      savingRef.current = false;
       setSaving(false);
     }
+  });
+
+  const saveHighlight = () => {
+    // A freshly picked file replaces the stored image, so only the kept URL is checked.
+    const stored = isEditing ? records.find((item) => item.id === mode) : undefined;
+    const nextErrors = validateHighlightForm({ title, description, image: imageFile ? null : image, link, order }, stored && { image: stored.image, link: stored.link });
+    if (Object.values(nextErrors).some(Boolean)) {
+      setErrors(nextErrors);
+      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: tCommon("fixFields") });
+      return;
+    }
+    void persistHighlight();
+  };
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void saveHighlight();
   }
 
-  async function handleDelete(highlight: AdminHighlight) {
-    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
-    if (deletingRef.current) return;
-    deletingRef.current = true;
-    setPendingDelete(null);
-    try {
-      await api.deleteAdminHighlight(highlight.id);
-      setRecords((current) => current.filter((item) => item.id !== highlight.id));
-      // The form may be editing the record that just went away: a later save would PATCH a missing row.
-      if (mode === highlight.id) resetForm();
-      pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: highlight.title });
-    } catch (error) {
-      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
-      // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
-      void reload();
-    } finally {
-      deletingRef.current = false;
-    }
-  }
+  const handleDelete = useAdminRecordDelete<AdminHighlight>({
+    call: (highlight) => api.deleteAdminHighlight(highlight.id),
+    keyOf: (highlight) => highlight.id,
+    setRecords,
+    closeDialog: () => setPendingDelete(null),
+    // The form may be editing the record that just went away: a later save would PATCH a missing row.
+    onRemoved: (highlight) => { if (mode === highlight.id) resetForm(); },
+    describeError: (error) => adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")),
+    successToast: (highlight) => ({ title: t("toast.deletedTitle"), description: highlight.title }),
+    failedTitle: tCommon("deleteFailed"),
+    reload,
+  });
 
   return (
     <>
@@ -260,8 +259,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
                 <AdminSelect formatOption={typeLabel} label={t("form.type")} onChange={setType} options={typeOptions} value={type} />
               </div>
             </div>
-            <label className="text-sm font-semibold text-ink">{t("form.title")}<input {...invalidProps("title")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" maxLength={200} onChange={(event) => { setTitle(event.target.value); clearError("title"); }} placeholder={t("form.titlePlaceholder")} required value={title} />{fieldError("title")}</label>
-            <label className="text-sm font-semibold text-ink md:col-span-2">{t("form.description")}<textarea {...invalidProps("description")} className="mt-2 min-h-24 w-full rounded-control border border-border px-4 py-3 text-sm font-normal text-ink-secondary aria-[invalid]:border-danger" maxLength={2000} onChange={(event) => { setDescription(event.target.value); clearError("description"); }} required value={description} />{fieldError("description")}</label>
+            <label className="text-sm font-semibold text-ink">{t("form.title")}<input {...invalidProps("title")} className={opsInput} maxLength={HIGHLIGHT_TITLE_MAX} onChange={(event) => { setTitle(event.target.value); clearError("title"); }} placeholder={t("form.titlePlaceholder")} required value={title} />{fieldError("title")}</label>
+            <label className="text-sm font-semibold text-ink md:col-span-2">{t("form.description")}<textarea {...invalidProps("description")} className={opsTextarea} maxLength={HIGHLIGHT_DESCRIPTION_MAX} onChange={(event) => { setDescription(event.target.value); clearError("description"); }} required value={description} />{fieldError("description")}</label>
             <div className="text-sm font-semibold text-ink">{t("form.image")}
               <button className="mt-2 flex h-[46px] w-full items-center rounded-control border border-border px-4 text-left text-sm font-normal text-ink-placeholder hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => imageInputRef.current?.click()} type="button">{image ?? t("form.uploadImage")}</button>
               <input accept="image/jpeg,image/png,image/webp" aria-label={t("form.image")} className="sr-only" onChange={handleImageChange} ref={imageInputRef} type="file" />
@@ -269,8 +268,8 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
               {image || imageFile ? <button className="mt-2 text-xs font-semibold text-danger hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={handleRemoveImage} type="button">{t("form.removeImage")}</button> : null}
               {fieldError("image")}
             </div>
-            <label className="text-sm font-semibold text-ink">{t("form.link")} <span className="font-normal text-ink-muted">{t("form.optional")}</span><input {...invalidProps("link", "highlight-link-hint")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" inputMode="url" onChange={(event) => { setLink(event.target.value); clearError("link"); }} placeholder={t("form.linkPlaceholder")} type="url" value={link} /><span className="mt-1 block text-xs font-normal text-ink-muted" id="highlight-link-hint">{tCommon("urlHint")}</span>{fieldError("link")}</label>
-            <label className="text-sm font-semibold text-ink">{t("form.displayOrder")}<input {...invalidProps("order")} className="mt-2 h-[46px] w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger" min={0} onChange={(event) => { setOrder(Number(event.target.value)); clearError("order"); }} placeholder="0" required step={1} type="number" value={order} />{fieldError("order")}</label>
+            <label className="text-sm font-semibold text-ink">{t("form.link")} <span className="font-normal text-ink-muted">{t("form.optional")}</span><input {...invalidProps("link", "highlight-link-hint")} className={opsInput} inputMode="url" onChange={(event) => { setLink(event.target.value); clearError("link"); }} placeholder={t("form.linkPlaceholder")} type="url" value={link} /><span className="mt-1 block text-xs font-normal text-ink-muted" id="highlight-link-hint">{tCommon("urlHint")}</span>{fieldError("link")}</label>
+            <label className="text-sm font-semibold text-ink">{t("form.displayOrder")}<input {...invalidProps("order")} className={opsInput} min={0} onChange={(event) => { setOrder(Number(event.target.value)); clearError("order"); }} placeholder="0" required step={1} type="number" value={order} />{fieldError("order")}</label>
             <div className="text-sm font-semibold text-ink">
               {t("form.published")}
               <div className="mt-2">

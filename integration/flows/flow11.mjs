@@ -105,7 +105,7 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   check('step-2 user: /en/signup goes to their step, not the login', (await p.url()).endsWith('/en/signup/wallet'), await p.url());
   check('step-2 user: never shown the login', !(await p.text()).includes(LOGIN));
   const stepper = await p.eval(`[...document.querySelectorAll('main ol li')].map(li=>li.innerText.trim()+(li.dataset.done?'(done)':'')+(li.getAttribute('aria-current')?'(current)':''))`);
-  check('step-2 user: stepper shows Login done and Wallet current', stepper[0] === '1. Login(done)' && stepper[1] === '2. Wallet + NFT(current)', stepper);
+  check('step-2 user: stepper shows Login done and Wallet current', stepper[0] === '1. Login(done)' && stepper[1] === '2. Wallet (optional)(current)', stepper);
   check('step-2 user: the Login step is not a link', await p.eval(`!document.querySelector('main ol li a, main ol li button')`));
   clean(await report(p, 'step-2 signup', {}));
   // the hub is open to an unfinished sign-up too: its CTA continues the owed step

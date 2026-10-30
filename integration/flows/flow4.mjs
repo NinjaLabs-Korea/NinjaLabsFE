@@ -1,4 +1,4 @@
-// Flow 4: signed-in bounty detail (access badges, no #418) -> apply -> /applications -> admin approves -> submit (DB rows).
+// Flow 4: signed-in bounty detail (no access chips, no #418) -> apply -> /applications -> admin approves -> submit (DB rows).
 import { Browser, report } from '../lib/cdp.mjs'; import { sql, ids, seed, check, clean, done, sleep, signIn, apiAs, mutations, tokenFor } from '../lib/harness.mjs';
 const b = await Browser.connect(); const ctx = await b.newContext(); const p = await b.newPage(ctx);
 const B1 = `/en/bounties/${seed.B1}`;
@@ -6,8 +6,7 @@ await signIn(p, ids.BUILDER);
 await p.goto(B1); await p.waitFor(`!!document.querySelector('form input[name=portfolioUrl]')`, 8000);
 const detail = await p.text();
 clean(await report(p, 'detail signed-in'));
-check('signed-in badges: "Signed in" + "Actions available"', detail.includes('Signed in') && detail.includes('Actions available'));
-check('signed-in badges: no "Actions require login"', !detail.includes('Actions require login'));
+check('signed-in detail: access chips removed (R1 FE-U2)', !detail.includes('Actions available') && !detail.includes('Actions require login') && !detail.includes('Public view'));
 await p.fill('form input[name=portfolioUrl]', 'https://github.com/builderone');
 await p.eval(`(()=>{const f=document.querySelector('form'); for (const el of f.querySelectorAll('textarea')) { Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(el, 'I will build a great dashboard with charts.'); el.dispatchEvent(new Event('input',{bubbles:true})); } return true})()`);
 p.reset();

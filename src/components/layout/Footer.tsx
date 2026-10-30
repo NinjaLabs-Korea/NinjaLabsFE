@@ -64,15 +64,15 @@ export function Footer() {
             {t("legal")}
           </p>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-0 text-xs sm:gap-x-3 sm:gap-y-1 leading-4 text-on-inverse-muted">
-            <Link className="inline-flex min-h-10 items-center sm:min-h-0 text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/privacy">
+            <Link className="motion-control inline-flex max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/privacy">
               {t("privacy")}
             </Link>
-            <Link className="inline-flex min-h-10 items-center sm:min-h-0 text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/terms">
+            <Link className="motion-control inline-flex max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/terms">
               {t("terms")}
             </Link>
-            <span className="inline-flex min-h-10 flex-wrap items-center gap-x-1 sm:min-h-0">
+            <span className="inline-flex max-sm:min-h-11 flex-wrap items-center gap-x-1">
               {t("contact")}{" "}
-              <a className="inline-flex min-h-10 items-center sm:min-h-0 text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`mailto:${CONTACT_EMAIL}`}>
+              <a className="motion-control inline-flex max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`mailto:${CONTACT_EMAIL}`}>
                 {CONTACT_EMAIL}
               </a>
             </span>
@@ -100,7 +100,7 @@ function FooterLinkColumn({
           <li key={label}>
             {external ? (
               <a
-                className="inline-flex min-h-10 items-center sm:min-h-0 text-sm text-on-inverse-secondary"
+                className="motion-control inline-flex min-h-10 items-center sm:min-h-0 text-sm text-on-inverse-secondary"
                 href={href}
                 target="_blank"
                 rel="noreferrer"
@@ -108,7 +108,7 @@ function FooterLinkColumn({
                 {label}
               </a>
             ) : (
-              <Link className="inline-flex min-h-10 items-center sm:min-h-0 text-sm text-on-inverse-secondary" href={href}>
+              <Link className="motion-control inline-flex min-h-10 items-center sm:min-h-0 text-sm text-on-inverse-secondary" href={href} prefetch={true}>
                 {label}
               </Link>
             )}

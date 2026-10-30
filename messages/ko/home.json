@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "내 활동 | Ninja Labs",
-    "description": "내 프로필, 지원 현황, 열린 바운티, 소식, 멤버 모집을 한눈에 보는 개인 대시보드입니다."
+    "description": "내 프로필, 지원 내역, 열린 바운티, 소식, 멤버 모집을 한눈에 보는 개인 대시보드예요."
   },
   "gate": {
     "checking": "로그인 상태를 확인하는 중…",
@@ -24,23 +24,17 @@
     "editProfile": "프로필·지갑 설정"
   },
   "activity": {
-    "eyebrow": "내 활동",
-    "heading": "지원·제출 현황",
+    "eyebrow": "지원·제출",
+    "heading": "지원 내역",
     "viewAll": "전체 보기 →",
     "loading": "활동 내역을 불러오는 중…",
     "unavailable": "활동 내역을 일시적으로 불러올 수 없어요.",
     "retry": "다시 시도",
     "emptyTitle": "아직 지원하거나 제출한 바운티가 없어요.",
-    "emptyBody": "지원하거나 작업을 제출한 바운티가 여기에 표시돼요.",
+    "emptyBody": "마음에 드는 바운티를 찾아 첫 지원을 해 보세요.",
     "browse": "바운티 둘러보기"
   },
   "recruit": {
-    "heading": "멤버 모집",
-    "badge": "모집 중",
-    "title": "{name} 멤버 모집 중",
-    "body": "지원을 받고 있어요. 어떤 사람인지, 무엇을 하고 싶은지 알려 주세요.",
-    "closes": "{date}까지 지원할 수 있어요.",
-    "cta": "지원하기",
     "details": "지원 페이지 열기 →"
   },
   "bounties": {
@@ -61,29 +55,13 @@
     "eyebrow": "바로가기",
     "heading": "자주 가는 곳",
     "items": {
-      "bounties": {
-        "title": "바운티",
-        "description": "지원할 바운티를 찾아요."
-      },
       "applications": {
-        "title": "내 지원 현황",
+        "title": "지원 내역",
         "description": "지원과 제출 진행 상황을 확인해요."
       },
       "agents": {
         "title": "내 에이전트",
         "description": "AI 에이전트를 등록하고 관리해요."
-      },
-      "hallOfFame": {
-        "title": "명예의 전당",
-        "description": "커뮤니티의 성과를 살펴봐요."
-      },
-      "members": {
-        "title": "멤버",
-        "description": "공식 멤버를 만나 봐요."
-      },
-      "about": {
-        "title": "닌자랩스 소개",
-        "description": "지난 활동, 소식, 성과를 봐요."
       }
     }
   }

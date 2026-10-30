@@ -6,7 +6,6 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { ApplicationsView } from "@/components/account/ApplicationsView";
 import { FLASH_EVENT } from "@/lib/flash";
 import { signedIn as signedInSnapshot } from "@/test/support/auth";
-import { BountyAccessBadges } from "@/components/bounties/BountyAccessBadges";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
@@ -105,11 +104,11 @@ describe("pending application that can no longer be approved (#33)", () => {
   const app = [{ bountySlug: BOUNTY, status: "open" as const, agent: null }];
   const base = { applicationRequired: true, applications: loaded(app) };
   it("past the deadline reads as applications closed", () => {
-    expect(deriveActionView(input({ ...base, status: "closed", deadlinePassed: true }))).toEqual({ kind: "closed", reason: "applications" });
+    expect(deriveActionView(input({ ...base, status: "closed", closedReason: "deadline" }))).toEqual({ kind: "closed", reason: "applications" });
   });
   it("on a reviewing or completed bounty reads as closed", () => {
     expect(deriveActionView(input({ ...base, status: "reviewing" }))).toEqual({ kind: "closed", reason: "reviewing" });
-    expect(deriveActionView(input({ ...base, status: "closed", completed: true }))).toEqual({ kind: "closed", reason: "closed" });
+    expect(deriveActionView(input({ ...base, status: "closed", closedReason: "completed" }))).toEqual({ kind: "closed", reason: "closed" });
   });
   it("on an open bounty it is still under review", () => {
     expect(deriveActionView(input(base))).toEqual({ kind: "applicationUnderReview" });
@@ -135,19 +134,6 @@ describe("session unavailable rendering (#4)", () => {
     expect(screen.getByText("We can't check your sign-in right now.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
     expect(screen.queryByText("Sign in first")).toBeNull();
-  });
-
-  it("the masthead shows no login chips while the session is unavailable", () => {
-    auth.current = unavailableSession;
-    renderWithIntl(<BountyAccessBadges />);
-    expect(screen.queryByText("Public view")).toBeNull();
-    expect(screen.queryByText("Actions require login")).toBeNull();
-  });
-
-  it("a plain signed-out visitor still sees the login chips", () => {
-    auth.current = signedOut;
-    renderWithIntl(<BountyAccessBadges />);
-    expect(screen.getByText("Actions require login")).toBeTruthy();
   });
 });
 

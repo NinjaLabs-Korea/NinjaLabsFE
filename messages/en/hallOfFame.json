@@ -6,8 +6,7 @@
   "header": {
     "eyebrow": "Community milestones",
     "heading": "Hall of Fame",
-    "description": "A record of the builders, bounties, and partnerships moving the community forward.",
-    "public": "Public"
+    "description": "A record of the builders, bounties, and partnerships moving the community forward."
   },
   "stats": {
     "bountiesRun": "Bounties run",
@@ -19,7 +18,7 @@
     "completionNfts": "Completion NFTs"
   },
   "highlights": {
-    "eyebrow": "Curated by admin",
+    "eyebrow": "Highlights",
     "heading": "Featured highlights",
     "readNotices": "Read notices",
     "categories": {
@@ -42,7 +41,7 @@
   },
   "partners": {
     "eyebrow": "Ecosystem",
-    "heading": "Partner logos"
+    "heading": "Partners we work with"
   },
   "empty": {
     "title": "Nothing here yet",

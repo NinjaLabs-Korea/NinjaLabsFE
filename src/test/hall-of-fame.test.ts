@@ -1,13 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const fetchPublicJson = vi.fn();
-vi.mock("@/lib/api/public", () => ({
+vi.mock("@/lib/api/public", async (importOriginal) => ({
+  settle: (await importOriginal<typeof import("@/lib/api/public")>()).settle,
   fetchPublicJson: (path: string) => fetchPublicJson(path),
   loadFromRuntime: (sources: { api: () => unknown }) => sources.api(),
 }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
-const { formatPaidTotals, hallOfFame: hallOfFameFixture, isZeroStatValue, loadRuntimeHallOfFame, visibleStats } = await import("@/lib/hall-of-fame");
+const { settle } = await import("@/lib/api/public");
+const { formatPaidTotals, hallOfFame: hallOfFameFixture, emptyHallOfFame, getRuntimeHallOfFame, isZeroStatValue, visibleStats } = await import("@/lib/hall-of-fame");
 
 const highlight = (type: string, title: string, image_url: string | null, link_url: string | null = null) => ({
   id: title, type, title, description: "", image_url, link_url, published_at: null,
@@ -26,7 +28,7 @@ describe("hall of fame partner wall", () => {
             highlight("MILESTONE", "Launch", "/media/launch.png"),
           ],
     );
-    const { hallOfFame, unavailable } = await loadRuntimeHallOfFame("en");
+    const { value: hallOfFame, unavailable } = await settle(getRuntimeHallOfFame("en"), emptyHallOfFame);
     expect(unavailable).toBe(false);
     expect(hallOfFame.partners).toEqual([{ name: "Injective", logo: "/media/injective.png", href: "https://injective.com" }]);
     expect(hallOfFame.highlights.map((h) => h.title)).toEqual(["No logo yet", "Launch"]);
@@ -42,7 +44,7 @@ describe("hall of fame partner wall", () => {
             highlight("MILESTONE", "Protocol-relative", "//evil.test/x.png", "//evil.test"),
           ],
     );
-    const { hallOfFame } = await loadRuntimeHallOfFame("en");
+    const { value: hallOfFame } = await settle(getRuntimeHallOfFame("en"), emptyHallOfFame);
     expect(hallOfFame.partners).toEqual([{ name: "Script link", logo: "/media/ok.png", href: null }]);
     // "Script link" has a safe logo, so it lives on the partner wall only.
     expect(hallOfFame.highlights.map(({ href, image }) => [href, image])).toEqual([
@@ -53,7 +55,7 @@ describe("hall of fame partner wall", () => {
 
   it("returns an empty, unavailable result when the API fails", async () => {
     fetchPublicJson.mockRejectedValue(new Error("down"));
-    const { hallOfFame, unavailable } = await loadRuntimeHallOfFame("en");
+    const { value: hallOfFame, unavailable } = await settle(getRuntimeHallOfFame("en"), emptyHallOfFame);
     expect(unavailable).toBe(true);
     expect(hallOfFame.partners).toEqual([]);
     expect(hallOfFame.stats).toEqual([]);
@@ -92,7 +94,7 @@ describe("hall of fame rewards paid stat", () => {
 
   it("appends the rewards paid stat after the counts when the API reports paid totals", async () => {
     fetchPublicJson.mockImplementation(async (path: string) => (path.endsWith("/stats") ? { ...counts, paidTotals: [usdc, inj] } : []));
-    const { hallOfFame } = await loadRuntimeHallOfFame("en");
+    const { value: hallOfFame } = await settle(getRuntimeHallOfFame("en"), emptyHallOfFame);
     expect(hallOfFame.stats).toEqual([
       { value: "3", labelKey: "bountiesCompleted" },
       { value: "5", labelKey: "buildersRewarded" },
@@ -104,7 +106,7 @@ describe("hall of fame rewards paid stat", () => {
   it("hides the stat when nothing has been paid or the BE predates the field", async () => {
     for (const stats of [{ ...counts, paidTotals: [] }, counts]) {
       fetchPublicJson.mockImplementation(async (path: string) => (path.endsWith("/stats") ? stats : []));
-      const { hallOfFame } = await loadRuntimeHallOfFame("en");
+      const { value: hallOfFame } = await settle(getRuntimeHallOfFame("en"), emptyHallOfFame);
       expect(hallOfFame.stats.map((stat) => stat.labelKey)).not.toContain("rewardsPaid");
     }
   });

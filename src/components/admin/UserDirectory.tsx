@@ -24,7 +24,7 @@ const USERS_PAGE_SIZE = 30;
 /** BE `SearchUsersQueryDto.q` `@MaxChars(320)` (the longest email): a longer term is a 400 on every pause, so the box stops accepting more. */
 const SEARCH_TERM_MAX = 320;
 /** Pause after the last keystroke before the search term goes to the BE. */
-const SEARCH_DEBOUNCE_MS = 300;
+export const SEARCH_DEBOUNCE_MS = 300;
 
 /** `existing` plus the `incoming` users it does not hold yet (a signup between two requests shifts rows across page boundaries). */
 const withNewUsers = (existing: AdminUser[], incoming: AdminUser[]) => [...existing, ...incoming.filter((user) => !existing.some((known) => known.slug === user.slug))];

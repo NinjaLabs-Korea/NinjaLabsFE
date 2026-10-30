@@ -1,4 +1,5 @@
 import type { AdminBounty } from "./admin";
+import { BOUNTY_SPONSOR_MAX, BOUNTY_TEXT_MAX, BOUNTY_TITLE_MAX, MAX_WINNERS_MAX } from "@/lib/input-limits";
 import { deliverablesFromRequirements } from "./admin-helpers";
 import { humanToBaseUnits, rewardToBaseUnits, tokenDecimalsFor } from "./api/codecs";
 
@@ -176,13 +177,6 @@ export type BountyFormError =
   | "maxWinnersInvalid"
   | "tooLong";
 
-/** BE `CreateBountyDto`/`UpdateBountyDto`의 @MaxLength - 입력의 `maxLength`와 검증이 같은 값을 쓴다 */
-export const BOUNTY_TITLE_MAX = 200;
-export const BOUNTY_SPONSOR_MAX = 100;
-/** BE `CreateBountyDto` @MaxLength on the TEXT fields (description 50 000, requirements and evaluationCriteria 20 000); the PATCH limit is double, the stricter create limit applies to both. */
-export const BOUNTY_TEXT_MAX = { description: 50_000, deliverables: 20_000, reviewProcess: 20_000 } as const;
-/** BE `CreateBountyDto`/`UpdateBountyDto` `@Max(1000)` on `maxWinners`. */
-export const MAX_WINNERS_MAX = 1000;
 /** BE `DEADLINE_UNCHANGED_TOLERANCE_MS`: an application deadline less than this after the submission deadline counts as "not later" (the datetime-local input drops seconds). */
 export const APPLICATION_DEADLINE_TOLERANCE_MS = 60_000;
 export type BountyFormErrors = Partial<Record<keyof BountyFormValues, BountyFormError>>;

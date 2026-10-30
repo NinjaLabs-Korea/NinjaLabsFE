@@ -41,6 +41,14 @@ describe("ConfirmDialog", () => {
     expect(describedBy && document.getElementById(describedBy)?.textContent).toBe("The agent loses access immediately.");
   });
 
+  it("shows an aria-hidden spinner and aria-busy while pending, label unchanged", () => {
+    renderDialog({ pending: true, confirmDisabled: true });
+    const confirm = screen.getByRole("button", { name: "Revoke" });
+    expect(confirm.getAttribute("aria-busy")).toBe("true");
+    expect(confirm.textContent).toBe("Revoke");
+    expect(confirm.querySelector('span.spinner[aria-hidden="true"]')).toBeTruthy();
+  });
+
   it("is an alertdialog with the callout when destructive", () => {
     renderDialog({ destructive: true, calloutText: "This cannot be undone." });
     expect(screen.getByRole("alertdialog", { name: "Revoke agent?" })).toBeTruthy();
@@ -231,7 +239,7 @@ describe("StepIndicator", () => {
   it("lists the four onboarding steps in order and marks only the current one", () => {
     renderWithIntl(<StepIndicator current={3} />);
     const items = screen.getAllByRole("listitem");
-    expect(items.map((item) => item.textContent)).toEqual(["1. Login", "2. Wallet + NFT", "3. Profile", "4. Get Started"]);
+    expect(items.map((item) => item.textContent)).toEqual(["1. Login", "2. Wallet (optional)", "3. Profile", "4. Get Started"]);
     expect(items.map((item) => item.getAttribute("aria-current"))).toEqual([null, null, "step", null]);
   });
 });

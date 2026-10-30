@@ -84,12 +84,12 @@ export function GoogleLoginButton({ turnstileSiteKey }: GoogleLoginButtonProps =
         aria-label={buttonLabel}
         aria-busy={pending}
         aria-describedby="google-login-status"
-        className="flex w-full items-center justify-center gap-2 rounded-control bg-primary px-5 py-3 text-base font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-control bg-primary px-5 py-3 text-base font-semibold text-on-inverse motion-control motion-press hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
         disabled={pending || awaitingTurnstile}
         onClick={() => void handleSignIn()}
         type="button"
       >
-        <span className="text-base font-bold">G</span>
+        {pending ? <span aria-hidden="true" className="spinner" /> : <span className="text-base font-bold">G</span>}
         {buttonLabel}
       </button>
       {turnstileKey ? <TurnstileWidget onChange={handleTurnstile} ref={turnstileRef} siteKey={turnstileKey} /> : null}

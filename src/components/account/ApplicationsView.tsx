@@ -19,6 +19,7 @@ import type { AccountApplication, ApplicationStatus } from "@/lib/contracts/acco
 import type { PayoutStatus } from "@/lib/types";
 import { payoutBadge } from "@/lib/payout";
 import { parseReviewComment, REVIEW_TEXT_CLASS } from "@/lib/review-comment";
+import { PageLoading } from "@/components/ui/PageLoading";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -177,7 +178,7 @@ export function ApplicationsView() {
   }
 
   if (authSnapshot.status === "loading" || !applications) {
-    return <p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p>;
+    return <PageLoading label={tAccount("loading")} variant="list" />;
   }
 
   if (applications.length === 0) {

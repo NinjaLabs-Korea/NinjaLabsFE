@@ -14,6 +14,7 @@ import { Link } from "@/i18n/navigation";
 import { getOnboardingPath } from "@/lib/auth-route";
 import { cohortPhase, resolveCohortApplyView, type PublicCohort } from "@/lib/cohorts";
 import { rememberReturnPath } from "@/lib/return-path";
+import { PageLoading } from "@/components/ui/PageLoading";
 
 const primaryLinkClass =
   "rounded-control bg-primary px-[21px] py-3 text-sm leading-[21px] font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -85,7 +86,7 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
   let body: ReactNode;
   const cohort = current.cohort;
   if (current.status === "loading") {
-    body = <p className="text-sm text-ink-muted" role="status">{t("states.loading")}</p>;
+    body = <PageLoading label={t("states.loading")} variant="list" />;
   } else if (current.status === "failed") {
     body = (
       <RecruitNotice body={t("states.failed.body")} title={t("states.failed.title")}>

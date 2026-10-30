@@ -94,8 +94,11 @@ await clickSave();
 const muts5 = mutations(p); clean(await report(p, 'notice edit', { muts5 }));
 const n2 = sql(`select title||'|'||status||'|'||published_at from notice where id='${n1[0]}'`).split('|');
 check('DB: notice renamed, still PUBLISHED, published_at unchanged', n2[0] === 'Round 10 notice edited' && n2[1] === 'PUBLISHED' && n2[2] === n1[3], { before: n1[3], after: n2 });
-await p.goto('/en/notices'); await sleep(600);
-check('public /notices shows the edited notice', (await mainText(p)).includes('Round 10 notice edited'));
+// The public list is served from the Data Cache for up to 30 s (PUBLIC_LIST_REVALIDATE_SECONDS) and footer links prefetch /notices on
+// every page, so the pre-edit list may still be cached right after the edit: reload until it revalidates.
+let nt = '';
+for (let i = 0; i < 14; i++) { await p.goto('/en/notices'); await sleep(600); nt = await mainText(p); if (nt.includes('Round 10 notice edited')) break; await sleep(3000); }
+check('public /notices shows the edited notice', nt.includes('Round 10 notice edited'), nt.slice(0, 300));
 clean(await report(p, 'public notices'));
 
 // ---- highlights

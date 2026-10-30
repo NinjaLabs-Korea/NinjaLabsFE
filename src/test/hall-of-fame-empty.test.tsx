@@ -29,7 +29,12 @@ vi.mock("next-intl/server", () => ({
 }));
 vi.mock("@/lib/hall-of-fame", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/hall-of-fame")>()),
-  loadRuntimeHallOfFame: async () => state.data,
+  // The page reads through `settle(getRuntimeHallOfFame())`: a rejected read is the "unavailable" state.
+  getRuntimeHallOfFame: async () => {
+    const data = state.data as { hallOfFame: RuntimeHallOfFame; unavailable: boolean };
+    if (data.unavailable) throw new Error("hall of fame read failed");
+    return data.hallOfFame;
+  },
 }));
 
 const { default: HallOfFamePage } = await import("@/app/[locale]/hall-of-fame/page");
@@ -46,7 +51,7 @@ afterEach(cleanup);
 describe("Hall of Fame empty state", () => {
   it.each([
     ["en", "Nothing here yet", "See past activities"],
-    ["ko", "아직 기록이 없습니다", "지난 활동 보기"],
+    ["ko", "아직 기록이 없어요", "지난 활동 보기"],
     ["zh", "暂无记录", "查看过往活动"],
   ] as const)("shows the empty card with a notices link in %s", async (locale, title, cta) => {
     await renderPage(locale, emptyData);

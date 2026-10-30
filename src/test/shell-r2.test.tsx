@@ -21,7 +21,7 @@ describe("shell source contracts", () => {
     expect(read("src/components/layout/Header.tsx")).not.toContain('href="/bounties"');
   });
   it("footer contact container has a gap so label and email do not touch", () => {
-    expect(read("src/components/layout/Footer.tsx")).toMatch(/inline-flex min-h-10 flex-wrap items-center gap-x-1/);
+    expect(read("src/components/layout/Footer.tsx")).toMatch(/inline-flex max-sm:min-h-11 flex-wrap items-center gap-x-1/);
   });
 });
 

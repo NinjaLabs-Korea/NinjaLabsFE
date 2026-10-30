@@ -10,8 +10,9 @@ vi.mock("@/lib/api/public", async (importOriginal) => ({
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
 const { PublicApiError } = await import("@/lib/api/public");
-const { getRuntimeProfile, parentNftState, payoutBadge, portfolioBodyKey, profiles, PROFILE_FILLED_EXAMPLE_ID, toCompletionReward } = await import("@/lib/members");
-const { loadRuntimeHallOfFame } = await import("@/lib/hall-of-fame");
+const { getRuntimeProfile, parentNftState, payoutBadge, profiles, PROFILE_FILLED_EXAMPLE_ID, toCompletionReward } = await import("@/lib/members");
+const { emptyHallOfFame, getRuntimeHallOfFame } = await import("@/lib/hall-of-fame");
+const { settle } = await import("@/lib/api/public");
 
 const previousTimeZone = process.env.TZ;
 
@@ -147,7 +148,7 @@ describe("hall of fame milestone dates", () => {
             { id: "m2", type: "MILESTONE", title: "Soon", description: "", image_url: null, link_url: null, published_at: null },
           ],
     );
-    const { hallOfFame } = await loadRuntimeHallOfFame("en");
+    const { value: hallOfFame } = await settle(getRuntimeHallOfFame("en"), emptyHallOfFame);
     expect(hallOfFame.milestones.map((milestone) => milestone.date)).toEqual(["May 31, 2026", ""]);
   });
 });
@@ -156,26 +157,12 @@ describe("portfolio parent NFT copy", () => {
   const parent = (status: "PENDING" | "MINTING" | "MINTED" | "ATTACHING" | "ATTACHED" | "FAILED") => ({ type: "parent" as const, status });
   const child = { type: "completion" as const, status: "ATTACHED" as const };
 
-  it("says the Ninja NFT is minted only when a MINTED/ATTACHED parent exists", async () => {
-    const en = (await import("../../messages/en/members.json")).default.profile.portfolio;
-    expect(portfolioBodyKey(false, parentNftState([parent("MINTED")]))).toBe("bodyEmpty");
-    expect(portfolioBodyKey(false, parentNftState([parent("ATTACHED")]))).toBe("bodyEmpty");
-    expect(en.bodyEmpty).toMatch(/already minted/);
-  });
-
-  it("never claims a mint for an empty list, a lone child, a failed or an in-flight parent", async () => {
-    const en = (await import("../../messages/en/members.json")).default.profile.portfolio;
+  it("reads a parent state for an empty list, a lone child, a failed or an in-flight parent", async () => {
     expect(parentNftState([])).toBe("none");
     expect(parentNftState([child])).toBe("none");
     expect(parentNftState([parent("FAILED")])).toBe("none");
     expect(parentNftState([parent("PENDING")])).toBe("pending");
     expect(parentNftState([parent("MINTING")])).toBe("pending");
-    expect(portfolioBodyKey(false, "none")).toBe("bodyEmptyNotMinted");
-    expect(portfolioBodyKey(false, "pending")).toBe("bodyEmptyPending");
-    expect(en[portfolioBodyKey(false, "none")]).not.toMatch(/already minted/);
-    expect(en[portfolioBodyKey(false, "pending")]).not.toMatch(/already minted/);
-    // Completed profiles keep the generic parent/child explanation.
-    expect(portfolioBodyKey(true, "none")).toBe("bodyCompleted");
   });
 
   it("maps the API profile's NINJA_PARENT row into a parent the copy can read", async () => {

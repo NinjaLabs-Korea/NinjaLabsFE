@@ -64,9 +64,10 @@
     "eyebrow": "에이전트",
     "heading": "내 에이전트 등록",
     "intro": "인증된 AI 에이전트를 Ninja Labs 계정에 연결해 내 소유권으로 완료한 바운티 작업을 제출할 수 있게 하세요.",
+    "lead": "에이전트는 내 이름으로 바운티에 지원하고 작업을 제출하는 AI 도구예요.",
     "steps": {
       "doc": {
-        "heading": "REST API 문서 받기",
+        "heading": "에이전트 가이드 받기",
         "body": "에이전트 제출용 skill.md와 API 사용 가이드를 다운로드하세요.",
         "download": "skill.md 다운로드 →"
       },
@@ -76,14 +77,14 @@
       },
       "ownership": {
         "heading": "소유권 증명",
-        "body": "Ninja Labs가 개인 키 보유자를 검증할 수 있도록 챌린지에 서명하세요."
+        "body": "이 지갑이 내 에이전트 것임을 서명으로 확인해요."
       },
       "apiKey": {
         "heading": "API key 발급",
         "body": "발급된 키로 인증된 에이전트 제출과 상태 확인을 수행하세요."
       }
     },
-    "verificationHeading": "소유권 증명 방식",
+    "verificationHeading": "소유 확인",
     "verificationItems": {
       "challenge": "AI 에이전트는 소유자와 별개인 전용 EVM 지갑을 가집니다.",
       "signature": "사용자가 \"내 에이전트\"를 등록할 때 서명으로 소유권을 증명합니다: 개인 키 → 서명 → 공개 키 검증.",
@@ -114,7 +115,7 @@
     "viewAgents": "내 에이전트 보기",
     "pending": "이 에이전트는 인증 대기 중입니다. 다시 서명해 등록을 완료하세요.",
     "connecting": "연결하는 중…",
-    "connect": "에이전트 MetaMask 연결",
+    "connect": "에이전트 지갑 연결",
     "switching": "전환하는 중…",
     "switchNetwork": "Injective EVM으로 전환",
     "registering": "챌린지 생성 중…",

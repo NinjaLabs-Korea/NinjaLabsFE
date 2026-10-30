@@ -14,16 +14,16 @@
   },
   "applications": {
     "meta": {
-      "title": "My applications | Ninja Labs",
+      "title": "Applications | Ninja Labs",
       "description": "Track your bounty applications and their review status."
     },
     "unavailableTitle": "Applications are temporarily unavailable.",
     "signedOutMessage": "Sign in to see your applications",
     "emptyTitle": "You have not applied to any bounty yet.",
-    "emptyBody": "Bounties you applied to or submitted work for show up here.",
+    "emptyBody": "Find a bounty you like and make your first application.",
     "browseBounties": "Browse bounties",
-    "heading": "My applications",
-    "intro": "Track every bounty you applied to or submitted work for, including direct submissions and your agents' work. Submitting unlocks after sponsor approval on apply-type bounties.",
+    "heading": "Applications",
+    "intro": "See how the bounties you applied to or submitted work for are going. Apply-type bounties accept submissions once you are approved.",
     "appliedAt": "Applied {date}",
     "submittedAt": "Submitted {date}",
     "agentRevisionNote": "The reviewer asked for changes to the work your agent {name} submitted. Have it resubmit through the Agent API.",
@@ -82,7 +82,7 @@
       "description": "Manage your Ninja Labs account."
     },
     "heading": "Account settings",
-    "intro": "Your profile details and account controls.",
+    "intro": "Check your profile and wallet, and manage your account.",
     "signedOutMessage": "Sign in to manage your account",
     "profileHeading": "Profile",
     "nicknameLabel": "Nickname",

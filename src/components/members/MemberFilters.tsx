@@ -42,11 +42,11 @@ export function MemberFilters({ members }: MemberFiltersProps) {
   return (
     <>
       <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")} role="group">
-        <button aria-pressed={role === "All"} className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => select("All")} type="button"><Badge variant={role === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
-        {roles.map((item) => <button aria-pressed={role === item} className="max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => select(item)} type="button"><Badge variant={role === item ? "selected" : "primary-soft"}>{t(`roles.${item.toLowerCase()}`)}</Badge></button>)}
+        <button aria-pressed={role === "All"} className="motion-control motion-press max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => select("All")} type="button"><Badge variant={role === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
+        {roles.map((item) => <button aria-pressed={role === item} className="motion-control motion-press max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => select(item)} type="button"><Badge variant={role === item ? "selected" : "primary-soft"}>{t(`roles.${item.toLowerCase()}`)}</Badge></button>)}
       </div>
       {visibleMembers.length > 0 ? (
-        <section className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4" aria-label={t("filters.listAriaLabel")}>
+        <section className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 animate-fade-in motion-reduce:animate-none" aria-label={t("filters.listAriaLabel")} key={role}>
           {visibleMembers.map((member) => <MemberCard key={member.slug} member={member} />)}
         </section>
       ) : members.length === 0 ? (

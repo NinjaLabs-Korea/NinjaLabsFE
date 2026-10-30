@@ -46,7 +46,7 @@ export function LocaleSwitcher() {
         disabled={pending}
       >
         {localeLabels[locale]}
-        <span aria-hidden="true" className="text-xs text-ink-muted">{menu.open ? "▴" : "▾"}</span>
+        <span aria-hidden="true" className={`text-xs text-ink-muted motion-control motion-reduce:transition-none${menu.open ? " rotate-180" : ""}`}>▾</span>
       </button>
 
       {menu.open ? (

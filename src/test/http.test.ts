@@ -32,6 +32,17 @@ function stubRefreshFlow(refresh: Handler, extra?: Handler) {
   return request;
 }
 
+/** One turn of the event loop, not a timer: everything already queued (microtasks, resolved I/O) has run afterwards. */
+const nextTurn = () => new Promise<void>((resolve) => setImmediate(resolve));
+
+/** Waits for every response a stubbed fetch handed out, then lets the code that consumed them finish. Use before asserting that nothing happened. */
+async function settled(request: ReturnType<typeof vi.fn>) {
+  for (let pass = 0; pass < 3; pass += 1) {
+    await Promise.all(request.mock.results.map((result) => result.value));
+    await nextTurn();
+  }
+}
+
 const urls = (request: ReturnType<typeof vi.fn>) => request.mock.calls.map(([url]) => url as string);
 const refreshCalls = (request: ReturnType<typeof vi.fn>) => request.mock.calls.filter(([url]) => url === REFRESH);
 
@@ -296,7 +307,7 @@ describe("API refresh across tabs", () => {
     const request = stubRefreshFlow(async () => {
       inFlight += 1;
       maxInFlight = Math.max(maxInFlight, inFlight);
-      await new Promise((resolve) => setTimeout(resolve, 5));
+      await nextTurn(); // a real suspension point: a second, unserialized refresh would start here
       inFlight -= 1;
       return Response.json({ accessToken: "fresh-access" });
     });
@@ -584,12 +595,13 @@ describe("API auth adapter cross-tab sign-out", () => {
     });
 
     it("keeps the snapshot object when the same user signed in", async () => {
-      cookieOwner();
+      const { request } = cookieOwner();
       const tab = await signedInTab();
       const before = tab.getSnapshot();
+      const probes = request.mock.calls.length;
       signedInElsewhere();
-      await vi.waitFor(() => expect(getAccessToken()).toBe("a-access"));
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await vi.waitFor(() => expect(request.mock.calls.length).toBeGreaterThan(probes));
+      await settled(request);
       expect(tab.getSnapshot()).toBe(before);
     });
 
@@ -597,8 +609,10 @@ describe("API auth adapter cross-tab sign-out", () => {
       const { request } = cookieOwner();
       const tab = await signedInTab();
       request.mockImplementation(async () => new Response(null, { status: 503 }));
+      const probes = request.mock.calls.length;
       signedInElsewhere();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await vi.waitFor(() => expect(request.mock.calls.length).toBeGreaterThan(probes));
+      await settled(request);
       expect(tab.getSnapshot().user?.handle).toBe("alice");
     });
   });
@@ -617,7 +631,7 @@ describe("API auth adapter cross-tab sign-out", () => {
       (teardown as () => void)();
       expect(FakeBroadcastChannel.instances.filter((channel) => !channel.closed)).toHaveLength(0);
       signedInElsewhere();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await settled(request);
       expect(request.mock.calls).toHaveLength(calls);
     });
 

@@ -4,18 +4,9 @@
     "description": "认识运营 Ninja Labs、审核赏金提交并帮助 Injective 建设者交付成果的人们。"
   },
   "list": {
-    "eyebrow": "官方成员",
-    "heading": "团队",
-    "description": "认识运营 Ninja Labs、审核赏金提交并帮助 Injective 建设者交付成果的人们。",
-    "public": "公开",
-    "howItWorks": "成员分配规则",
-    "rules": {
-      "registration": "与普通用户走同一注册流程，无需单独的成员注册。",
-      "adminEnables": "注册后，由管理员将用户标记为成员并分配角色。",
-      "memberEdits": "成员通过自己的公开主页撰写和编辑简介。",
-      "unassign": "取消分配后会立即从此页移除，但主页仍然保留。"
-    },
-    "howItWorksEyebrow": "运作方式"
+    "eyebrow": "成员",
+    "heading": "Ninja Labs 成员",
+    "description": "一起打造 Ninja Labs 的人们。"
   },
   "filters": {
     "ariaLabel": "成员角色",
@@ -50,7 +41,7 @@
     "notFoundTitle": "页面未找到 | Ninja Labs",
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "已完成 {count} 个赏金",
-    "newBuilder": "新晋建设者",
+    "newBuilder": "新加入",
     "categories": {
       "dev": "开发",
       "design": "设计",
@@ -61,20 +52,12 @@
       "eyebrow": "作品集",
       "headingCompleted": "持续增长的链上证明",
       "headingEmpty": "暂无已完成的赏金",
-      "bodyCompleted": "Ninja NFT 是父身份。每个通过的赏金都会在其下铸造一个子 NFT，让已完成的工作成为可随身携带的建设者作品集。",
-      "bodyEmpty": "Ninja NFT 已作为父身份铸造完成。通过的赏金会为这个公开收藏添加子 NFT。",
-      "bodyEmptyPending": "Ninja NFT 父身份正在铸造中。通过的赏金会为这个公开收藏添加子 NFT。",
-      "bodyEmptyNotMinted": "该成员的 Ninja NFT 尚未铸造。铸造后，通过的赏金会为这个公开收藏添加子 NFT。",
+      "bodyCompleted": "每完成一个赏金，就会在这里新增一条证明。",
+      "bodyEmpty": "完成赏金后，证明会显示在这里。",
       "token": "代币 {id}",
       "tx": "交易 {hash}",
       "untitledNft": "赏金 NFT",
-      "next": "+ 下一个",
-      "emptyTitle": "暂无赏金 NFT",
-      "emptyBodyCompleted": "已通过的工作会在奖励发放并开始铸造后显示在这里。",
-      "emptyBodyNew": "通过的赏金对应的子 NFT 会作为链上证明显示在这里。",
-      "memberSince": "Ninja NFT · 自 {date} 起加入",
-      "summaryCompleted": "已完成 {count} 个赏金 · 持续增长的链上作品集",
-      "summaryEmpty": "已完成 0 个赏金"
+      "memberSince": "Ninja NFT · 自 {date} 起加入"
     },
     "nftStatus": {
       "PENDING": "待处理",
@@ -87,7 +70,6 @@
     "history": {
       "eyebrow": "已完成的工作",
       "heading": "最近完成的赏金",
-      "viewFilled": "查看完整主页示例",
       "completedOn": "完成于 {date} · {reward}",
       "emptyTitle": "暂无已完成的赏金",
       "emptyBody": "已完成的赏金会连同完成日期、奖励和子 NFT 证明显示在这里。",
@@ -104,7 +86,6 @@
       "emptyBody": "该成员尚未注册已验证的代理。",
       "wallet": "已注册钱包：{wallet}"
     },
-    "shareable": "可分享链接，无需登录",
     "payoutPending": "待支付",
     "payoutPartial": "部分已支付",
     "payoutPaid": "已支付"

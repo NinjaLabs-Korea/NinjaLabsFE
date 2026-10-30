@@ -6,8 +6,7 @@
   "header": {
     "eyebrow": "커뮤니티 마일스톤",
     "heading": "명예의 전당",
-    "description": "커뮤니티를 앞으로 이끄는 빌더, 바운티, 파트너십의 기록입니다.",
-    "public": "공개"
+    "description": "커뮤니티를 앞으로 이끄는 빌더, 바운티, 파트너십의 기록입니다."
   },
   "stats": {
     "bountiesRun": "진행한 바운티",
@@ -19,7 +18,7 @@
     "completionNfts": "완료 NFT"
   },
   "highlights": {
-    "eyebrow": "관리자 큐레이션",
+    "eyebrow": "주요 소식",
     "heading": "주요 하이라이트",
     "readNotices": "공지사항 보기",
     "categories": {
@@ -37,16 +36,16 @@
     "entry": "{date} · {description}"
   },
   "unavailable": {
-    "title": "명예의 전당을 일시적으로 불러올 수 없습니다.",
-    "body": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요."
+    "title": "명예의 전당을 일시적으로 불러올 수 없어요.",
+    "body": "서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요."
   },
   "partners": {
     "eyebrow": "생태계",
-    "heading": "파트너 로고"
+    "heading": "함께하는 파트너"
   },
   "empty": {
-    "title": "아직 기록이 없습니다",
-    "body": "커뮤니티의 성과, 마일스톤, 파트너가 쌓이면 여기에 표시됩니다.",
+    "title": "아직 기록이 없어요",
+    "body": "커뮤니티의 성과, 마일스톤, 파트너가 쌓이면 여기에 보여요.",
     "cta": "지난 활동 보기"
   }
 }

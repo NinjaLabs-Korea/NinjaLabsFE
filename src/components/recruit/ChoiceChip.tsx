@@ -24,7 +24,7 @@ export function ChoiceChip({
   describedBy?: string;
 }) {
   return (
-    <label className="inline-flex cursor-pointer rounded-full has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary max-sm:min-h-10 max-sm:items-center">
+    <label className="inline-flex cursor-pointer rounded-full has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary max-sm:min-h-11 max-sm:items-center">
       <input
         aria-describedby={describedBy}
         checked={checked}

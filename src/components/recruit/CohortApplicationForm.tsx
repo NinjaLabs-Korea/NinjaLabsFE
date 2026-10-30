@@ -1,9 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRef, useState, type FocusEvent, type FormEvent } from "react";
-import { useCohortApi } from "@/components/auth/FoundationProvider";
+import { useEffect, useRef, useState, type FocusEvent, type FormEvent } from "react";
+import { useAuthSnapshot, useCohortApi } from "@/components/auth/FoundationProvider";
 import { ChoiceChip } from "@/components/recruit/ChoiceChip";
+import { clearCohortDraft, readCohortDraft, writeCohortDraft } from "@/lib/cohort-application-draft";
 import { ERROR_COPY } from "@/lib/api/error-copy";
 import { cohortApplyErrorKey, cohortFieldErrorsFromBe, isStaleCohortError, type CohortApplyErrorKey } from "@/lib/cohort-errors";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/lib/cohorts";
 import {
   COHORT_DISPLAY_NAME_MAX,
+  COHORT_HANDLE_INPUT_MAX,
   COHORT_INTRO_MAX,
   COHORT_INTRO_RECOMMENDED_MAX,
   COHORT_INTRO_RECOMMENDED_MIN,
@@ -72,12 +74,24 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
   const tSaveErrors = useTranslations(ERROR_COPY.cohortApply.messages);
   const api = useCohortApi();
   const editing = application !== undefined;
-  const [draft, setDraft] = useState<CohortFormDraft>(() => (application ? valuesToDraft(application) : emptyCohortDraft));
+  const auth = useAuthSnapshot();
+  const userId = auth.status === "signed-in" ? auth.user.id : null;
+  // Only a NEW application keeps a per-tab draft (an edit starts from the saved values). `sent` stops late writes after success.
+  const draftScope = !editing && userId ? userId : null;
+  const [draft, setDraft] = useState<CohortFormDraft>(() =>
+    application ? valuesToDraft(application) : ((draftScope && typeof window !== "undefined" ? readCohortDraft(draftScope, cohortId) : null) ?? emptyCohortDraft));
   const [errors, setErrors] = useState<CohortFormErrors>({});
   const [state, setState] = useState<"idle" | "pending" | "error">("idle");
   const [saveError, setSaveError] = useState<CohortApplyErrorKey>("generic");
   // Synchronous in-flight guard: several submit events can land in one tick before React re-renders the disabled button.
   const inFlight = useRef(false);
+
+  const sent = useRef(false);
+  useEffect(() => {
+    // The untouched initial object is never written, so an empty form cannot overwrite a stored draft.
+    if (!draftScope || sent.current || draft === emptyCohortDraft) return;
+    writeCohortDraft(draftScope, cohortId, draft);
+  }, [draft, draftScope, cohortId]);
 
   const update = <K extends keyof CohortFormDraft>(key: K, value: CohortFormDraft[K]) => {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -108,6 +122,8 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
     setState("pending");
     try {
       const saved = application ? await api.updateCohortApplication(application.id, values) : await api.applyToCohort(cohortId, values);
+      sent.current = true;
+      if (draftScope) clearCohortDraft(draftScope, cohortId);
       onSaved(saved);
     } catch (error) {
       setErrors(cohortFieldErrorsFromBe(error));
@@ -165,7 +181,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
             className={inputClass}
             id="cohort-telegram"
           onBlur={() => blurField("telegram")}
-            maxLength={80}
+            maxLength={COHORT_HANDLE_INPUT_MAX}
             onChange={(event) => update("telegram", event.target.value)}
             placeholder={t("telegram.placeholder")}
             required
@@ -184,7 +200,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
             className={inputClass}
             id="cohort-twitter"
           onBlur={() => blurField("twitter")}
-            maxLength={80}
+            maxLength={COHORT_HANDLE_INPUT_MAX}
             onChange={(event) => update("twitter", event.target.value)}
             placeholder={t("twitter.placeholder")}
             required

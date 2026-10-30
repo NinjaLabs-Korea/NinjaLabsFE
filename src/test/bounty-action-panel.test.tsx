@@ -10,7 +10,7 @@ import type { AccountApplication, AccountSubmission } from "@/lib/contracts/acco
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { renderWithIntl } from "@/test/intl";
-import { signedIn, signedInWith, signedOut } from "@/test/support/auth";
+import { loading, signedIn, signedInWith, signedOut } from "@/test/support/auth";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => (
@@ -65,11 +65,33 @@ describe("BountyActionPanel", () => {
     Object.assign(apiClient, defaultApiClient);
   });
 
+  it("reserves the settled panel height with an aria-hidden placeholder while the session loads, keeping the status text", () => {
+    state.auth = loading;
+    const { container } = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const placeholder = container.querySelector("[role=status] [aria-hidden=true]")!;
+    expect(placeholder.getAttribute("aria-hidden")).toBe("true");
+    expect(placeholder.className).toMatch(/min-h-\[/);
+    expect(placeholder.className).toContain("motion-reduce:animate-none");
+    const status = screen.getByRole("status");
+    expect(status.textContent?.length).toBeGreaterThan(0);
+  });
+
+  it("marks the pending apply button aria-busy with an aria-hidden spinner", async () => {
+    Object.assign(apiClient, { applyToBounty: vi.fn(() => new Promise<never>(() => undefined)) });
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
+    const button = await screen.findByRole("button", { name: /Applying/ });
+    expect(button.getAttribute("aria-busy")).toBe("true");
+    expect(button.querySelector('.spinner[aria-hidden="true"]')).toBeTruthy();
+    expect(button.className).toContain("motion-press");
+  });
+
   it("sends one apply request when several submit events land in the same tick", async () => {
     const applyToBounty = vi.fn(() => new Promise<never>(() => undefined));
     Object.assign(apiClient, { applyToBounty });
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
-    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     const form = screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement;
     fireEvent.submit(form);
     fireEvent.submit(form);
@@ -79,14 +101,14 @@ describe("BountyActionPanel", () => {
 
   it("keeps a half-filled submit form and says so when the session ends under it", async () => {
     const view = renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
-    const url = (await screen.findByPlaceholderText("Completed work link")) as HTMLInputElement;
+    const url = (await screen.findByLabelText("Completed work link")) as HTMLInputElement;
     fireEvent.change(url, { target: { value: "https://example.com/work" } });
-    fireEvent.change(screen.getByPlaceholderText("Describe what you completed"), { target: { value: "A long description" } });
+    fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "A long description" } });
 
     state.auth = signedOut;
     view.rerender(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
     // Same input element (not remounted), same text, an explanation, and no submit while there is no session.
-    expect(screen.getByPlaceholderText("Completed work link")).toBe(url);
+    expect(screen.getByLabelText("Completed work link")).toBe(url);
     expect(url.value).toBe("https://example.com/work");
     expect(screen.getByRole("alert").textContent).toContain("Your session has expired");
     expect((screen.getByRole("button", { name: "Submit" }) as HTMLButtonElement).disabled).toBe(true);
@@ -216,7 +238,7 @@ describe("BountyActionPanel", () => {
     const getApplications = vi.fn(async () => ({ status: "available" as const, data: state.applications }));
     Object.assign(apiClient, { applyToBounty, getApplications });
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
-    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     expect(await screen.findByText("Application under review")).toBeTruthy();
     await waitFor(() => expect(getApplications).toHaveBeenCalledTimes(2));
@@ -226,7 +248,7 @@ describe("BountyActionPanel", () => {
   it("does not carry the 'just applied' state over to a different account on the same page", async () => {
     Object.assign(apiClient, { applyToBounty: vi.fn(async () => ({ id: "a-new", status: "PENDING" })) });
     const view = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
-    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     expect(await screen.findByText("Application under review")).toBeTruthy();
 
@@ -253,7 +275,7 @@ describe("BountyActionPanel", () => {
       ++reads === 1 ? { status: "available" as const, data: [] } : { status: "unavailable" as const, reason: "server-error" as const });
     Object.assign(apiClient, { getApplications });
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
-    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     expect(await screen.findByText("Application under review")).toBeTruthy();
     await waitFor(() => expect(getApplications).toHaveBeenCalledTimes(2));
@@ -269,7 +291,7 @@ describe("BountyActionPanel", () => {
     });
     Object.assign(apiClient, { applyToBounty, getApplications });
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
-    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     expect(await screen.findByText("Application under review")).toBeTruthy();
     expect(getApplications).toHaveBeenCalledTimes(2);
@@ -280,7 +302,7 @@ describe("BountyActionPanel", () => {
     const applyToBounty = vi.fn(async () => { throw new ApiHttpError(400, "VALIDATION_FAILED"); });
     Object.assign(apiClient, { applyToBounty, getApplications });
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
-    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     await screen.findByRole("alert");
     expect(getApplications).toHaveBeenCalledTimes(1);
@@ -292,7 +314,7 @@ describe("BountyActionPanel", () => {
       ++reads === 1 ? { status: "available" as const, data: [] } : { status: "unavailable" as const, reason: "unauthorized" as const });
     Object.assign(apiClient, { getApplications });
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
-    fireEvent.change(await screen.findByPlaceholderText("Application note"), { target: { value: "Hi" } });
+    fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     await waitFor(() => expect(getApplications).toHaveBeenCalledTimes(2));
     expect(await screen.findByText(/unavailable|couldn/i)).toBeTruthy();
@@ -304,7 +326,18 @@ describe("BountyActionPanel", () => {
     unmount();
     renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
     expect((await screen.findByLabelText("Describe what you completed") as HTMLTextAreaElement).maxLength).toBe(8000);
-    expect((screen.getByLabelText("Commit SHA (optional)") as HTMLInputElement).maxLength).toBe(64);
+    expect((screen.getByLabelText("Commit hash (optional, code work only)") as HTMLInputElement).maxLength).toBe(64);
+  });
+
+  it("treats a description made only of zero-width characters as empty, like the BE", async () => {
+    const submitBounty = vi.fn();
+    Object.assign(apiClient, { submitBounty });
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    fireEvent.change(await screen.findByLabelText("Completed work link"), { target: { value: "https://example.test/work" } });
+    fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "\u200B\u200B" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
+    expect((await screen.findByRole("alert")).textContent).toBeTruthy();
+    expect(submitBounty).not.toHaveBeenCalled();
   });
 
   it("refetches submissions after a successful submit", async () => {
@@ -321,6 +354,59 @@ describe("BountyActionPanel", () => {
     expect(await screen.findByRole("heading", { name: "Submission under review" })).toBeTruthy();
     await waitFor(() => expect(getSubmissions).toHaveBeenCalledTimes(2));
     expect(submitBounty).toHaveBeenCalledWith("bounty-1", { submissionUrl: "https://example.test/work", description: "Done" });
+  });
+
+  it("turns off native validation, shows https:// examples and marks the commit hash as optional", async () => {
+    const { container, unmount } = renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    await screen.findByLabelText("Completed work link");
+    expect(container.querySelector("form")?.noValidate).toBe(true);
+    expect((screen.getByLabelText("Completed work link") as HTMLInputElement).placeholder).toBe("https://");
+    expect((screen.getByLabelText("Code repository (optional)") as HTMLInputElement).placeholder).toBe("https://");
+    expect(screen.getByLabelText("Commit hash (optional, code work only)")).toBeTruthy();
+    unmount();
+    const apply = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    await screen.findByLabelText("Application note");
+    expect(apply.container.querySelector("form")?.noValidate).toBe(true);
+    expect((screen.getByLabelText("Relevant work link (optional)") as HTMLInputElement).placeholder).toBe("https://");
+  });
+
+  it("shows the locale link error on blur, wires it to the field and blocks the submit request", async () => {
+    const submitBounty = vi.fn(async () => ({ id: "s", revisionNo: 1, status: "SUBMITTED" }));
+    Object.assign(apiClient, { submitBounty });
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const url = (await screen.findByLabelText("Completed work link")) as HTMLInputElement;
+    fireEvent.change(url, { target: { value: "not a link" } });
+    fireEvent.blur(url);
+    const message = "Links must be public http(s) addresses (no localhost or private addresses) and at most 2048 characters long.";
+    const error = await screen.findByText(message);
+    expect(url.getAttribute("aria-invalid")).toBe("true");
+    expect(url.getAttribute("aria-describedby")).toBe(error.id);
+    fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "Done" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
+    expect(submitBounty).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(url);
+    // A valid link clears the message on the next blur.
+    fireEvent.change(url, { target: { value: "https://example.test/work" } });
+    fireEvent.blur(url);
+    expect(screen.queryByText(message)).toBeNull();
+  });
+
+  it("blocks an apply with an empty note or a bad optional link without calling the API", async () => {
+    const applyToBounty = vi.fn(async () => ({ id: "a", status: "PENDING" }));
+    Object.assign(apiClient, { applyToBounty });
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const portfolio = (await screen.findByLabelText("Relevant work link (optional)")) as HTMLInputElement;
+    fireEvent.change(portfolio, { target: { value: "ftp://x" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
+    expect(applyToBounty).not.toHaveBeenCalled();
+    expect(screen.getAllByRole("alert")).toHaveLength(2);
+  });
+
+  it("has the link error copy in every locale", () => {
+    for (const locale of ["ko", "en", "zh"]) {
+      const messages = JSON.parse(readFileSync(`messages/${locale}/bounties.json`, "utf8"));
+      expect(messages.action.errors.VALIDATION_URL.length).toBeGreaterThan(10);
+    }
   });
 
   it("restores the default apply/submit stubs between tests", async () => {
@@ -499,8 +585,8 @@ describe("BountyActionPanel", () => {
     Object.assign(apiClient, { submitBounty });
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
     const url = await screen.findByLabelText("Completed work link");
-    expect(screen.getByLabelText("Repository URL (optional)")).toBeTruthy();
-    expect(screen.getByLabelText("Commit SHA (optional)")).toBeTruthy();
+    expect(screen.getByLabelText("Code repository (optional)")).toBeTruthy();
+    expect(screen.getByLabelText("Commit hash (optional, code work only)")).toBeTruthy();
     fireEvent.change(url, { target: { value: "https://example.test/work" } });
     fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "Done" } });
     fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);

@@ -4,10 +4,8 @@
     "description": "Ninja Labs 的活动与动态。"
   },
   "list": {
-    "eyebrow": "公告 / 动态",
-    "heading": "Ninja Labs 动态",
-    "description": "Ninja Labs 的活动与动态。",
-    "badge": "活动 · 生态动态 · 公告"
+    "heading": "公告",
+    "description": "活动与动态，一站查看。"
   },
   "filters": {
     "ariaLabel": "公告分类",
@@ -30,9 +28,8 @@
     "notFoundTitle": "页面未找到 | Ninja Labs",
     "pageTitle": "{title} | Ninja Labs",
     "back": "← 返回列表",
-    "public": "公开",
     "readMoreHeading": "了解更多",
-    "readMoreLink": "了解更多 →",
+    "readMoreLink": "查看原文 →",
     "related": "相关内容"
   },
   "eventDate": "活动日期 {date}"

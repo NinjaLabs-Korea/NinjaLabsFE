@@ -3,6 +3,7 @@ import { ApiHttpError } from "@/lib/api/http";
 import { validationFieldsFromError, validationFieldsFromMessages } from "@/lib/api/validation";
 import { isReservedNickname, isValidNickname, NICKNAME, nicknameInitials, nicknameLength, normalizeNickname, validateNickname } from "@/lib/nickname";
 import { STATIC_FILE_EXTENSIONS } from "@/lib/static-extensions";
+import { BE_NICKNAME_ACCEPTED, BE_NICKNAME_REJECTED } from "./be-validator-fixtures";
 
 // Probe cases mirror NinjaLabsBE `src/users/users.dto.spec.ts` (CompleteProfileDto) - keep the two files in step.
 describe("nickname rule (mirror of BE users/nickname.ts)", () => {
@@ -127,7 +128,7 @@ describe("nicknameInitials", () => {
 describe("combining marks (BE `\\p{M}` rule: Hindi, Thai, stacked accents)", () => {
   it("is the same regex as the BE NICKNAME (copy of NinjaLabsBE src/users/nickname.ts, with the BE-3 homoglyph rule)", () => {
     expect(NICKNAME.source).toBe(
-      "^(?!.*[\\u115F\\u1160\\u3164\\uFFA0\\p{Variation_Selector}\\uFF00-\\uFFEF\\u{1D400}-\\u{1D7FF}])(?!.*[\\u0131\\u0237\\u0250-\\u02FF\\u1D00-\\u1DBF\\u2100-\\u218F\\uA730-\\uA7FF\\uAB30-\\uAB6F])(?!(?=.*\\p{Script=Latin})(?=.*[^\\p{Script=Latin}\\p{Script=Hangul}\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}\\P{L}\\u30FC]))(?!.*\\p{M}{4})(?!.*[_.-]\\p{M})[\\p{L}\\p{N}][\\p{L}\\p{N}\\p{M}_.-]*[\\p{L}\\p{N}\\p{M}]$",
+      "^(?!.*[\\p{Default_Ignorable_Code_Point}\\u115F\\u1160\\u3164\\uFFA0\\p{Variation_Selector}\\uFF00-\\uFFEF\\u{1D400}-\\u{1D7FF}])(?!.*[\\u0131\\u0237\\u0250-\\u02FF\\u1D00-\\u1DBF\\u2100-\\u218F\\uA730-\\uA7FF\\uAB30-\\uAB6F])(?!(?=.*[A-Za-z\\u00C0-\\u024F])(?=.*[\\p{Script=Cyrillic}\\p{Script=Greek}\\p{Script=Coptic}\\p{Script=Armenian}\\p{Script=Cherokee}\\p{Script=Lisu}\\p{Script=Georgian}\\p{Script=Canadian_Aboriginal}\\p{Script=Tifinagh}\\p{Script=Vai}\\p{Script=Glagolitic}\\p{Script=Osage}\\p{Script=Deseret}\\p{Script=Adlam}\\p{Script=Runic}\\p{Script=Ogham}]))(?!.*\\p{M}{4})(?!.*[_.-]\\p{M})[\\p{L}\\p{N}][\\p{L}\\p{N}\\p{M}_.-]*[\\p{L}\\p{N}\\p{M}]$",
     );
   });
 
@@ -151,7 +152,7 @@ describe("BE look-alike rules (fullwidth, math alphanumerics, mixed scripts, con
     expect(NICKNAME.test(nickname)).toBe(false);
   });
 
-  it.each(["аdmin", "buіlderone", "αbc12", "coreոinja", "ninja.हिन्दी"])("rejects %p as a Latin + Cyrillic/Greek mix", (nickname) => {
+  it.each(["аdmin", "buіlderone", "αbc12", "coreոinja"])("rejects %p as a Latin + Latin-lookalike script mix", (nickname) => {
     expect(validateNickname(nickname)).toBe("mixedScript");
     expect(NICKNAME.test(nickname)).toBe(false);
   });
@@ -165,5 +166,18 @@ describe("BE look-alike rules (fullwidth, math alphanumerics, mixed scripts, con
     expect(isReservedNickname("ＡＤＭＩＮ")).toBe(true);
     expect(isReservedNickname("withdrawn_x")).toBe(true);
     expect(isReservedNickname("adminx")).toBe(false);
+  });
+});
+
+describe("BE fixture tables (src/test/be-validator-fixtures.ts)", () => {
+  it.each(BE_NICKNAME_REJECTED)("rejects %j like the BE", (nickname) => {
+    expect(validateNickname(nickname)).not.toBeNull();
+  });
+  it.each(BE_NICKNAME_ACCEPTED)("accepts %j like the BE", (nickname) => {
+    expect(validateNickname(nickname)).toBeNull();
+  });
+  it("reports a leading zero-width space as a character error, not a later BE 400", () => {
+    expect(validateNickname("\u200Bninja")).toBe("chars");
+    expect(validateNickname("coreni\u034Fnja")).toBe("chars");
   });
 });

@@ -1,5 +1,6 @@
 import { formatUtcDate, toCategoryLabel, toRewards, type RewardRow } from "./api/codecs";
 import type { Bounty } from "./types";
+import { toClosedReason, toLifecycleStatus, toPublicStatus } from "./bounty-status";
 import { fetchAllPublicPages } from "./api/paging";
 import { cache } from "react";
 import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH } from "./api/public";
@@ -30,16 +31,15 @@ export const bounties: Bounty[] = [
     slug: "agent-skill-benchmark", title: "Agent skill benchmark suite", summary: "Score agent submissions against a reproducible Injective task set.", descriptionMarkdown: "Build a benchmark suite that scores AI agent submissions against a reproducible set of Injective tasks. Submissions are in and the sponsor is reviewing them; a requested revision can still be resubmitted.\n\nDeliver a **runnable benchmark harness** with task definitions, scoring rules, and a results report.", submissionGuideMarkdown: "Submit the harness in a state reviewers can run end to end.\n\n- The benchmark repository with setup instructions\n- Task definitions and scoring rules\n- A results report for the reference agents", category: "Dev", status: "reviewing", reward: { amount: 400, currency: "INJ" }, sponsor: "Ninja Labs", deadline: "Closed", deadlineDetail: "July 10, 2026 at 23:59 UTC", coverImage: "", deliverables: ["Benchmark repository", "Task definitions and scoring rules", "Results report"], reviewProcess: "Ninja Labs scores the harness before sponsor approval.", submissionMode: "direct",
   },
   {
-    slug: "design-system-build", title: "Design system build", summary: "Component inventory and page polish for the first Ninja Labs client demo.", descriptionMarkdown: "Create a consistent design system for an Injective product with reusable foundations and components. The completed work should make future product surfaces easier to build and maintain.\n\nThe finished system paired a **reusable component library** with design foundations and usage guidance so teams could adopt it without guesswork.", category: "Design", status: "closed", completed: true, reward: { amount: 300, currency: "INJ" }, sponsor: "Helix", deadline: "Closed", coverImage: "", deliverables: ["Design foundations", "Component library", "Usage guidance"], reviewProcess: "Ninja Labs reviewed the system and approved the completed delivery.", submissionMode: "direct",
+    slug: "design-system-build", title: "Design system build", summary: "Component inventory and page polish for the first Ninja Labs client demo.", descriptionMarkdown: "Create a consistent design system for an Injective product with reusable foundations and components. The completed work should make future product surfaces easier to build and maintain.\n\nThe finished system paired a **reusable component library** with design foundations and usage guidance so teams could adopt it without guesswork.", category: "Design", status: "closed", closedReason: "completed", reward: { amount: 300, currency: "INJ" }, sponsor: "Helix", deadline: "Closed", coverImage: "", deliverables: ["Design foundations", "Component library", "Usage guidance"], reviewProcess: "Ninja Labs reviewed the system and approved the completed delivery.", submissionMode: "direct",
   },
   {
-    slug: "quest-copy-refresh", title: "Quest copy refresh", summary: "Rewrite onboarding quests to make first testnet actions easier to finish.", descriptionMarkdown: "Refresh onboarding quest copy so builders understand each step and its value. Keep the voice direct, useful, and consistent across the quest experience.\n\nThe refresh delivered **updated quest copy** alongside voice and terminology notes so future edits stay consistent with the builder-facing tone.", category: "Content", status: "closed", completed: true, reward: { amount: 150, currency: "USDC" }, sponsor: "Ninja Labs", deadline: "Closed", coverImage: "", deliverables: ["Updated quest copy", "Voice and terminology notes", "Change summary"], reviewProcess: "Ninja Labs and Injective approved the completed copy refresh.", submissionMode: "direct",
+    slug: "quest-copy-refresh", title: "Quest copy refresh", summary: "Rewrite onboarding quests to make first testnet actions easier to finish.", descriptionMarkdown: "Refresh onboarding quest copy so builders understand each step and its value. Keep the voice direct, useful, and consistent across the quest experience.\n\nThe refresh delivered **updated quest copy** alongside voice and terminology notes so future edits stay consistent with the builder-facing tone.", category: "Content", status: "closed", closedReason: "completed", reward: { amount: 150, currency: "USDC" }, sponsor: "Ninja Labs", deadline: "Closed", coverImage: "", deliverables: ["Updated quest copy", "Voice and terminology notes", "Change summary"], reviewProcess: "Ninja Labs and Injective approved the completed copy refresh.", submissionMode: "direct",
   },
 ];
 
 export function getBounties(): Bounty[] { return bounties; }
 export function getBounty(slug: string): Bounty | undefined { return bounties.find((bounty) => bounty.slug === slug); }
-export function getActiveBounties(): Bounty[] { return bounties.filter((bounty) => bounty.status === "active"); }
 
 type BountyRewardRow = RewardRow & { tokenType: string };
 type BountyListRow = {
@@ -74,23 +74,8 @@ function isPast(deadline: string | null, now = Date.now()): boolean {
   return deadline !== null && new Date(deadline).getTime() <= now;
 }
 
-/** BE lifecycle → public status. DRAFT/FUNDING_PENDING never reach the public list, so anything else that is not open or under review is closed. */
-export function toBountyStatus(status: string): Bounty["status"] {
-  if (status === "OPEN") return "active";
-  if (status === "SUBMISSION_CLOSED" || status === "IN_REVIEW") return "reviewing";
-  return "closed";
-}
-
-/**
- * Public status including the deadline: a BE `OPEN` bounty whose `submission_deadline` has passed (or cannot be parsed)
- * no longer accepts applications or submissions (BE answers DEADLINE_PASSED), so it presents as `closed` - status badge,
- * list chip and action panel alike - instead of "Active" with no countdown.
- */
-export function toPublicBountyStatus(status: string, submissionDeadline: string, now = Date.now()): Bounty["status"] {
-  if (status !== "OPEN") return toBountyStatus(status);
-  const deadline = new Date(submissionDeadline).getTime();
-  return Number.isNaN(deadline) || deadline <= now ? "closed" : "active";
-}
+// The BE status folds (public status, closed reason) live in `bounty-status.ts`; these names stay for existing callers and tests.
+export { toLifecycleStatus as toBountyStatus, toPublicStatus as toPublicBountyStatus };
 
 const DEADLINE_DETAIL_FORMAT: Intl.DateTimeFormatOptions = {
   year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short",
@@ -117,7 +102,8 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
   const rewards = toRewards(row.rewards);
   const detail = "description" in row ? row : null;
   const submissionMode = row.submission_mode === "AGENT" ? "agent" : "direct";
-  const status = toPublicBountyStatus(row.status, row.submission_deadline);
+  const status = toPublicStatus(row.status, row.submission_deadline);
+  const closedReason = toClosedReason(row.status, status);
   const daysLeft = status === "active" ? daysUntil(row.submission_deadline) : 0;
   const applicationDeadlineDetail = formatUtcDate(row.application_deadline, locale, DEADLINE_DETAIL_FORMAT);
   return {
@@ -126,7 +112,7 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     summary: row.summary,
     category: toCategoryLabel(row.category) ?? "Other",
     status,
-    ...(row.status === "COMPLETED" ? { completed: true } : {}),
+    ...(closedReason ? { closedReason } : {}),
     reward: rewards[0] ?? { amount: 0, currency: "INJ" },
     ...(rewards.length > 1 ? { rewards } : {}),
     sponsor: row.sponsor_name,
@@ -147,7 +133,6 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     applicationTitle: row.application_required ? row.title : undefined,
     applicationDescription: row.application_required ? row.summary : undefined,
     ...(row.application_required && applicationDeadlineDetail ? { applicationDeadlineDetail } : {}),
-    ...(row.status === "OPEN" && status === "closed" ? { deadlinePassed: true } : {}),
     ...(row.application_required && isPast(row.application_deadline) ? { applicationClosed: true } : {}),
   };
 }
@@ -176,15 +161,6 @@ export function pickGuideBounties(list: readonly Bounty[]): { applicationBounty?
     applicationBounty: active.find((bounty) => bounty.applicationRequired && !bounty.applicationClosed),
     directBounty: active.find((bounty) => !bounty.applicationRequired),
   };
-}
-
-/** Page-level loader: an unreachable API renders an unavailable state instead of the error boundary. */
-export async function loadRuntimeBounties(locale: string): Promise<{ bounties: Bounty[]; unavailable: boolean }> {
-  try {
-    return { bounties: await getRuntimeBounties(locale), unavailable: false };
-  } catch {
-    return { bounties: [], unavailable: true };
-  }
 }
 
 /**

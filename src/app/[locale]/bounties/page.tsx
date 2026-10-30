@@ -4,7 +4,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { BountyFilters } from "@/components/bounties/BountyFilters";
 import { BountyHero } from "@/components/bounties/BountyHero";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { loadRuntimeBounties } from "@/lib/bounties";
+import { settle } from "@/lib/api/public";
+import { getRuntimeBounties } from "@/lib/bounties";
 import { getBountyHero } from "@/lib/landing";
 import { localeMetadata } from "@/i18n/alternates";
 
@@ -23,7 +24,7 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
   setRequestLocale(locale);
   const t = await getTranslations("bounties.list");
   const tBounties = await getTranslations("bounties");
-  const { bounties, unavailable } = await loadRuntimeBounties(locale);
+  const { value: bounties, unavailable } = await settle(getRuntimeBounties(locale), []);
   const hero = await getBountyHero(locale, bounties);
   return (
     <>
@@ -43,10 +44,6 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
             <BountyFilters bounties={bounties} />
           )}
         </section>
-
-        <p className="mt-8 text-sm text-ink-muted">
-          {t("payoutNote")}
-        </p>
       </div>
     </>
   );

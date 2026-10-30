@@ -1,12 +1,12 @@
 {
   "metadata": {
     "title": "加入 Ninja Labs | Ninja Labs",
-    "description": "Ninja Labs 下一期成员招募:了解社区并提交申请。"
+    "description": "Ninja Labs 下一期成员招募：了解社区并提交申请。"
   },
   "hero": {
     "eyebrow": "成员招募",
     "heading": "与 Ninja Labs 一起构建",
-    "description": "先了解社区，再申请当前招募的期别。需要已完成注册(引导流程)的 Ninja Labs 账户。"
+    "description": "先逛逛社区，再申请当前招募的期别。需要已完成注册的账户。"
   },
   "banner": {
     "label": "成员招募",
@@ -23,7 +23,7 @@
       "upcoming": "即将开放",
       "closed": "已截止"
     },
-    "periodRange": "申请时间:{from} 至 {to}",
+    "periodRange": "申请时间：{from} 至 {to}",
     "periodUntil": "申请截止 {to}",
     "periodFrom": "{from} 起开放申请",
     "periodOpen": "在本期关闭前均可申请。"
@@ -57,7 +57,7 @@
     },
     "onboarding": {
       "title": "请先完成注册",
-      "body": "申请需要先完成注册。完成剩余步骤后即可回到这里。",
+      "body": "申请前需要先完成注册。完成剩余步骤后会回到这个页面。",
       "cta": "继续注册"
     }
   },
@@ -68,7 +68,7 @@
     "intro": {
       "label": "自我介绍与申请动机*",
       "placeholder": "你是谁、做过什么、为什么想加入 Ninja Labs?",
-      "hint": "建议 {min}-{max} 字(最多 {limit} 字)。",
+      "hint": "请至少写 {min} 字（最多 {limit} 字）",
       "counter": "{count}/{limit}"
     },
     "lead": "请简单介绍一下你自己，以及你想在 NinjaLabs 做什么。招募期间可以修改或撤回申请。",
@@ -90,7 +90,7 @@
       "hint": "5-32 位字母、数字或 _。也可以填写 t.me 链接。"
     },
     "twitter": {
-      "label": "Twitter(X)账号*",
+      "label": "X（Twitter）账号*",
       "placeholder": "@your_x_id",
       "hint": "1-15 位字母、数字或 _。也可以填写 x.com 链接。"
     },
@@ -115,7 +115,7 @@
         "OTHER": "其他"
       },
       "otherLabel": "请说明你的活动类型*",
-      "otherPlaceholder": "例如:设计师"
+      "otherPlaceholder": "例如：设计师"
     },
     "interestAreas": {
       "label": "想参与的领域*",
@@ -130,7 +130,7 @@
         "OTHER": "其他"
       },
       "otherLabel": "请说明具体领域*",
-      "otherPlaceholder": "例如:UX 研究"
+      "otherPlaceholder": "例如：UX 研究"
     },
     "submit": "提交申请",
     "submitting": "提交中…",
@@ -147,7 +147,7 @@
     },
     "saveErrors": {
       "network": "无法提交申请，请检查网络后重试。",
-      "session": "登录已失效，请重新登录。",
+      "session": "登录已过期。你填写的内容仍保留在此页。请在新标签页重新登录，然后回来提交。",
       "invalid": "请检查所有字段后重试。",
       "generic": "无法保存申请，请重试。",
       "PROFILE_REQUIRED": "申请前请先完成注册(资料步骤)。",

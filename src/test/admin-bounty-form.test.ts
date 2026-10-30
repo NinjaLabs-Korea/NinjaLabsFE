@@ -1,8 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getAdminBounties } from "@/lib/admin";
+import { BOUNTY_SPONSOR_MAX, BOUNTY_TITLE_MAX } from "@/lib/input-limits";
 import {
-  BOUNTY_SPONSOR_MAX,
-  BOUNTY_TITLE_MAX,
   bountyToForm,
   emptyBountyForm,
   formToBounty,

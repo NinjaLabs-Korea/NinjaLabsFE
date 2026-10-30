@@ -19,6 +19,7 @@ import { stashFlash } from "@/lib/flash";
 import { hardNavigate } from "@/lib/hard-navigate";
 import { normalizeNickname } from "@/lib/nickname";
 import type { WalletConfig } from "@/lib/runtime/config";
+import { PageLoading } from "@/components/ui/PageLoading";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -69,7 +70,7 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
 
   if (authSnapshot.status === "loading") {
     // min-h-dvh: the signed-in settings are several screens tall, so a short placeholder would let the footer jump.
-    return <div className="min-h-dvh"><p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p></div>;
+    return <div className="min-h-dvh"><PageLoading label={tAccount("loading")} /></div>;
   }
 
   const user = authSnapshot.status === "signed-in" ? authSnapshot.user : lastUser;
@@ -167,7 +168,8 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
 
       <ConfirmDialog
         calloutText={t("deleteDialog.callout")}
-        confirmDisabled={!matches || busy}
+        confirmDisabled={!matches}
+        pending={busy}
         confirmLabel={busy ? t("deleteDialog.deleting") : t("deleteDialog.confirm")}
         description={t("deleteDialog.description")}
         destructive

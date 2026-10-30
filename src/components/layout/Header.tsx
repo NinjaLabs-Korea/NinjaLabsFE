@@ -7,10 +7,12 @@ import { MobileMenu } from "@/components/layout/MobileMenu";
 import { NavLinks } from "@/components/layout/NavLinks";
 
 const navigation = [
-  { href: "/bounties", key: "bounties" },
-  { href: "/hall-of-fame", key: "hallOfFame" },
+  { href: "/about", key: "about" },
   { href: "/members", key: "members" },
+  { href: "/hall-of-fame", key: "hallOfFame" },
   { href: "/notices", key: "notices" },
+  { href: "/bounties", key: "bounties" },
+  { href: "/recruit", key: "recruit" },
 ] as const;
 
 export function Header() {
@@ -31,7 +33,7 @@ export function Header() {
           <span className="hidden whitespace-nowrap font-display text-xl font-bold text-ink sm:inline">Ninja Labs</span>
         </BrandLink>
 
-        <nav className="col-start-2 hidden gap-7 lg:flex" aria-label={t("mainNavigation")}>
+        <nav className="col-start-2 hidden gap-7 xl:flex" aria-label={t("mainNavigation")}>
           <NavLinks links={links} variant="desktop" />
         </nav>
 

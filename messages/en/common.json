@@ -9,6 +9,7 @@
       "tagline": "The Contributor Hub for people who learn, build and move on Injective."
     }
   },
+  "loading": "Loading",
   "layout": {
     "skipToContent": "Skip to content"
   },
@@ -38,10 +39,10 @@
     "getStarted": "Get Started"
   },
   "footer": {
-    "tagline": "Build. Complete. Own your track record. On Injective.",
+    "tagline": "Learn, build and move together on Injective.",
     "platform": "Platform",
     "community": "Community",
-    "legal": "© 2026 Ninja Labs · All content viewable without login",
+    "legal": "© 2026 Ninja Labs",
     "contact": "Contact",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
@@ -49,7 +50,7 @@
   "userMenu": {
     "accountNavigation": "Account navigation",
     "myProfile": "My profile",
-    "myApplications": "My applications",
+    "myApplications": "Applications",
     "myAgents": "My agents",
     "accountSettings": "Account settings",
     "signOut": "Sign out",
@@ -85,7 +86,7 @@
       "CHALLENGE_NOT_FOUND": "The verification request was not found. Select Verify wallet again to get a new one.",
       "CHALLENGE_EXPIRED": "The verification request expired or was already used. Select Verify wallet again and sign the new message.",
       "INVALID_SIGNATURE": "The signature does not match this wallet. Sign with the connected address and try again.",
-      "WALLET_ALREADY_LINKED": "This wallet is already linked to another account, or your account already has a wallet. A linked wallet cannot be changed here. If it is the wrong one, or it belongs to another account, contact the Ninja Labs team.",
+      "WALLET_ALREADY_LINKED": "This wallet or this account already has another link. To change it, contact the Ninja Labs team.",
       "AGENT_WALLET_IS_OWNER_WALLET": "This address is already used as the wallet of one of your agents. Connect a different personal wallet for your account.",
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
@@ -103,7 +104,7 @@
   },
   "stepIndicator": {
     "login": "1. Login",
-    "wallet": "2. Wallet + NFT",
+    "wallet": "2. Wallet (optional)",
     "profile": "3. Profile",
     "getStarted": "4. Get Started"
   },
@@ -118,13 +119,13 @@
     "title": "Something went wrong",
     "description": "We could not load this page. Please try again.",
     "retry": "Try again",
-    "home": "Back to home"
+    "home": "Back to start"
   },
   "notFound": {
     "title": "Page not found",
-    "description": "The page you are looking for does not exist or may have moved.",
-    "home": "Back to home",
-    "browseBounties": "Browse bounties",
+    "description": "The page may have moved or does not exist.",
+    "home": "Back to start",
+    "notices": "See notices",
     "metaTitle": "Page not found | Ninja Labs"
   },
   "reward": {

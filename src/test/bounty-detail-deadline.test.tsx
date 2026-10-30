@@ -24,7 +24,6 @@ vi.mock("next-intl/server", () => ({
 }));
 vi.mock("@/components/agents/BountyAgentPanel", () => ({ BountyAgentPanel: () => <aside /> }));
 vi.mock("@/components/bounties/BountyActionPanel", () => ({ BountyActionPanel: () => <section /> }));
-vi.mock("@/components/bounties/BountyAccessBadges", () => ({ BountyAccessBadges: () => <div /> }));
 
 const data = vi.hoisted(() => ({ bounty: undefined as Bounty | undefined }));
 vi.mock("@/lib/detail-id", () => ({ validateDetailId: async () => true }));

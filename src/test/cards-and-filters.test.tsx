@@ -210,6 +210,28 @@ describe("MemberFilters", () => {
   });
 });
 
+describe("filter results fade in", () => {
+  it("re-mounts the member list (new node with animate-fade-in) when a chip changes", () => {
+    renderWithIntl(<MemberFilters members={[member({ slug: "a", name: "Ana", role: "Core" }), member({ slug: "b", name: "Ben", role: "Dev" })]} />);
+    const before = screen.getByRole("region", { name: "Members" });
+    expect(before.className).toContain("animate-fade-in");
+    expect(before.className).toContain("motion-reduce:animate-none");
+    fireEvent.click(within(screen.getByRole("group", { name: "Member roles" })).getByRole("button", { name: "Dev" }));
+    const after = screen.getByRole("region", { name: "Members" });
+    expect(after).not.toBe(before);
+    expect(after.className).toContain("animate-fade-in");
+  });
+
+  it("re-mounts the notice list when a chip changes", () => {
+    renderWithIntl(<NoticeFilters notices={[notice({ slug: "e", title: "Meetup", category: "Events" }), notice({ slug: "n", title: "Release", category: "Ninja Labs" })]} />);
+    const before = screen.getByRole("region", { name: "Notices" });
+    fireEvent.click(within(screen.getByRole("group", { name: "Notice categories" })).getByRole("button", { name: "Events" }));
+    const after = screen.getByRole("region", { name: "Notices" });
+    expect(after).not.toBe(before);
+    expect(after.className).toContain("animate-fade-in");
+  });
+});
+
 describe("NoticeFilters", () => {
   const notices = [
     notice({ slug: "e", title: "Meetup", category: "Events" }),

@@ -10,7 +10,8 @@ import { OpsFormModal } from "@/components/admin/OpsFormModal";
 import { opsButton, opsCell, opsDangerButton, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPrimaryButton, opsShort, opsTextarea } from "@/components/admin/ops-ui";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
-import { OPS_NOTE_MAX, submissionCommentRequired, submissionDecisionsFor, type AdminOperations, type OpsSubmission, type SubmissionDecision } from "@/lib/admin-operations";
+import { submissionCommentRequired, submissionDecisionsFor, type AdminOperations, type OpsSubmission, type SubmissionDecision } from "@/lib/admin-operations";
+import { OPS_NOTE_MAX } from "@/lib/input-limits";
 import { safeHttpUrl } from "@/lib/api/codecs";
 
 const columns = ["submitter", "work", "status", "wallet", "action"] as const;

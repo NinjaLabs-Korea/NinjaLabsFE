@@ -2,8 +2,9 @@
 
 import { useTranslations } from "next-intl";
 import { useAuthActions, useAuthSnapshot } from "@/components/auth/FoundationProvider";
-import { getAccountNavigationItems, UserMenu } from "@/components/layout/UserMenu";
+import { getAccountNavigationItems, userChipAvatarSizeClass, userChipBoxClass, UserMenu } from "@/components/layout/UserMenu";
 import { Link } from "@/i18n/navigation";
+import { useSessionHint } from "@/lib/foundation/session-hint";
 
 type AuthAreaProps = {
   variant: "desktop" | "mobile";
@@ -14,28 +15,36 @@ export function AuthArea({ variant }: AuthAreaProps) {
   const tMenu = useTranslations("common.userMenu");
   const snapshot = useAuthSnapshot();
   const { signOut } = useAuthActions();
+  const hadSession = useSessionHint();
   const user = snapshot.status === "signed-in" ? snapshot.user : null;
 
   if (variant === "desktop") {
     return (
       <>
         <Link
-          className="hidden whitespace-nowrap rounded-control px-[21px] py-3 text-sm leading-[21px] font-semibold text-ink-secondary lg:inline-block"
+          className="hidden whitespace-nowrap rounded-control px-[21px] py-3 text-sm leading-[21px] font-semibold text-ink-secondary xl:inline-block"
           href="/bounties"
           prefetch={true}
         >
           {t("browse")}
         </Link>
         {user ? (
-          <div className="hidden lg:block">
+          <div className="hidden xl:block">
             <UserMenu />
           </div>
         ) : snapshot.status === "loading" || (snapshot.status === "signed-out" && snapshot.reason === "unavailable") ? (
           // Session still being restored (or it could not be checked and the cookie is kept): keep the box, hide the
-          // label, so a signed-in visitor never sees "Get started".
-          <span aria-hidden="true" className="invisible whitespace-nowrap rounded-control px-4 py-3 text-sm leading-[21px] font-semibold sm:px-[21px]">
-            {t("getStarted")}
-          </span>
+          // label, so a signed-in visitor never sees "Get started". This tab already had a signed-in session (locale
+          // switch remount): reserve the user chip's box instead (same box classes as the trigger, 10rem wide) so nothing shifts.
+          hadSession ? (
+            <span aria-hidden="true" className={`invisible hidden w-40 border-transparent xl:flex ${userChipBoxClass}`}>
+              <span className={userChipAvatarSizeClass} />
+            </span>
+          ) : (
+            <span aria-hidden="true" className="invisible whitespace-nowrap rounded-control px-4 py-3 text-sm leading-[21px] font-semibold sm:px-[21px]">
+              {t("getStarted")}
+            </span>
+          )
         ) : (
           <Link
             className="whitespace-nowrap rounded-control bg-primary px-4 py-3 text-sm leading-[21px] font-semibold text-on-inverse sm:px-[21px]"
@@ -63,9 +72,10 @@ export function AuthArea({ variant }: AuthAreaProps) {
       <nav aria-label={tMenu("accountNavigation")} className="space-y-1 px-1 pb-1">
         {getAccountNavigationItems(user).map((item) => (
           <Link
-            className="block rounded-control px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="motion-control motion-press block rounded-control px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             href={item.href}
             key={item.key}
+            prefetch={true}
           >
             {tMenu(item.key)}
           </Link>

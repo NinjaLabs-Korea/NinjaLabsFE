@@ -64,9 +64,10 @@
     "eyebrow": "代理",
     "heading": "注册我的代理",
     "intro": "将已验证的 AI 代理绑定到你的 Ninja Labs 账户，使其能以你的名义提交已完成的赏金工作。",
+    "lead": "代理是替你申请赏金并提交成果的 AI 工具。",
     "steps": {
       "doc": {
-        "heading": "获取 REST API 文档",
+        "heading": "获取代理指南",
         "body": "下载 skill.md 以及用于代理提交的 API 使用指南。",
         "download": "下载 skill.md →"
       },
@@ -76,14 +77,14 @@
       },
       "ownership": {
         "heading": "证明所有权",
-        "body": "签署挑战消息，以便 Ninja Labs 验证私钥持有者。"
+        "body": "签名一次，确认此钱包属于你的代理。"
       },
       "apiKey": {
         "heading": "获取 API key",
         "body": "使用生成的密钥进行已验证的代理提交和状态查询。"
       }
     },
-    "verificationHeading": "如何证明所有权",
+    "verificationHeading": "所有权验证",
     "verificationItems": {
       "challenge": "AI 代理拥有独立于所有者的专用 EVM 钱包。",
       "signature": "用户注册“我的代理”时，通过签名证明所有权：私钥 → 签名 → 公钥验证。",
@@ -114,7 +115,7 @@
     "viewAgents": "查看我的代理",
     "pending": "此代理正在等待验证。请重新签名以完成注册。",
     "connecting": "连接中…",
-    "connect": "连接代理 MetaMask",
+    "connect": "连接代理钱包",
     "switching": "切换中…",
     "switchNetwork": "切换到 Injective EVM",
     "registering": "正在生成挑战消息…",

@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { UserActions } from "@/components/admin/UserActions";
-import { UserDirectory } from "@/components/admin/UserDirectory";
+import { SEARCH_DEBOUNCE_MS, UserDirectory } from "@/components/admin/UserDirectory";
 import { getAdminUsers as fixtureUsers } from "@/lib/admin";
 import { ApiHttpError } from "@/lib/api/http";
 import type { AdminApi } from "@/lib/contracts/api";
@@ -27,6 +27,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -84,15 +85,23 @@ describe("UserDirectory", () => {
     await waitFor(() => expect(search).toHaveBeenCalledTimes(1));
     search.mockImplementation(async (query) => (query === "zed" ? [beyond] : []));
     const box = screen.getByRole("searchbox", { name: "Search users" });
+    vi.useFakeTimers({ shouldAdvanceTime: false, toFake: ["setTimeout", "clearTimeout"] });
     fireEvent.change(box, { target: { value: "ze" } });
     fireEvent.change(box, { target: { value: " zed " } });
+    await act(async () => { vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS - 1); });
+    expect(search).toHaveBeenCalledTimes(1);
+    await act(async () => { vi.advanceTimersByTime(1); });
+    vi.useRealTimers();
     expect(await screen.findByText("zedmund", { selector: "td" })).toBeTruthy();
     // One request for the settled term (trimmed); the keystroke in between never left the browser.
     expect(search.mock.calls.slice(1)).toEqual([["zed"]]);
 
     fireEvent.change(box, { target: { value: "" } });
     expect(screen.getByText("zedmund", { selector: "td" })).toBeTruthy();
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    // An emptied box never goes to the BE: no request is pending after the debounce either.
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    await act(async () => { vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS * 2); });
+    vi.useRealTimers();
     expect(search).toHaveBeenCalledTimes(2);
   });
 

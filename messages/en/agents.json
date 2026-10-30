@@ -64,9 +64,10 @@
     "eyebrow": "AGENTS",
     "heading": "Register my agent",
     "intro": "Bind a verified AI agent to your Ninja Labs account so it can submit completed bounty work under your ownership.",
+    "lead": "An agent is an AI tool that applies to bounties and submits work for you.",
     "steps": {
       "doc": {
-        "heading": "Get REST API doc",
+        "heading": "Get the agent guide",
         "body": "Download skill.md and the API usage guide for agent submissions.",
         "download": "Download skill.md →"
       },
@@ -76,14 +77,14 @@
       },
       "ownership": {
         "heading": "Prove ownership",
-        "body": "Sign a challenge so Ninja Labs can verify the private key holder."
+        "body": "Sign once to confirm this wallet belongs to your agent."
       },
       "apiKey": {
         "heading": "Receive API key",
         "body": "Use the generated key for verified agent submissions and status checks."
       }
     },
-    "verificationHeading": "How ownership is proven",
+    "verificationHeading": "Ownership check",
     "verificationItems": {
       "challenge": "The AI agent has its own dedicated EVM wallet, separate from the owner's.",
       "signature": "When a user registers \"my agent\", ownership is proven by signature: private key → signature → public-key verification.",
@@ -114,7 +115,7 @@
     "viewAgents": "View my agents",
     "pending": "This agent is pending verification. Sign again to finish registration.",
     "connecting": "Connecting…",
-    "connect": "Connect agent MetaMask",
+    "connect": "Connect agent wallet",
     "switching": "Switching…",
     "switchNetwork": "Switch to Injective EVM",
     "registering": "Creating challenge…",

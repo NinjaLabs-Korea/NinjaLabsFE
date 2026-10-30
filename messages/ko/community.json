@@ -6,7 +6,7 @@
   "about": {
     "eyebrow": "닌자랩스 소개",
     "heading": "Injective 위에서 배우고, 만들고, 움직여요",
-    "body": "Ninja Labs는 Injective 위에서 배우고, 만들고, 움직이는 사람들의 Contributor Hub입니다. 개발자, 마케터, 리서처, 크리에이터 누구든 자유롭게 참여할 수 있어요.",
+    "body": "Ninja Labs는 함께 공부하고, 행사를 열고, 바운티로 실제 결과물을 만드는 커뮤니티예요.",
     "roles": {
       "developer": {
         "title": "개발자",
@@ -35,24 +35,29 @@
     "eyebrow": "지난 활동",
     "heading": "함께 해 온 활동",
     "viewAll": "행사 소식 전체 보기 →",
-    "unavailable": "지난 활동을 일시적으로 불러올 수 없습니다.",
-    "unavailableBody": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요.",
-    "empty": "아직 올라온 행사 소식이 없습니다. 곧 다시 확인해 주세요."
+    "unavailable": "지난 활동을 일시적으로 불러올 수 없어요.",
+    "unavailableBody": "서버에 연결하지 못했어요.",
+    "empty": "아직 올라온 소식이 없어요. 새 소식은 공지사항에서 가장 먼저 알려 드릴게요.",
+    "emptyAction": "공지사항 보기 →"
   },
   "achievements": {
     "eyebrow": "최근 성과",
     "heading": "커뮤니티가 만들어 낸 성과",
     "viewAll": "명예의 전당 보기 →",
-    "unavailable": "성과를 일시적으로 불러올 수 없습니다.",
-    "unavailableBody": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요.",
-    "empty": "커뮤니티의 성과가 쌓이면 여기에 표시됩니다."
+    "unavailable": "성과를 일시적으로 불러올 수 없어요.",
+    "unavailableBody": "서버에 연결하지 못했어요.",
+    "empty": "아직 소개할 성과가 없어요. 쌓이는 대로 명예의 전당에 올려 드릴게요.",
+    "emptyAction": "명예의 전당 보기 →"
   },
   "members": {
     "eyebrow": "멤버",
     "heading": "멤버 미리보기",
     "viewAll": "전체 멤버 보기 →",
-    "unavailable": "멤버를 일시적으로 불러올 수 없습니다.",
-    "unavailableBody": "서버에 연결하지 못했습니다. 잠시 후 새로고침해 주세요.",
-    "empty": "공식 멤버가 정해지면 여기에 표시됩니다."
-  }
+    "unavailable": "멤버를 일시적으로 불러올 수 없어요.",
+    "unavailableBody": "서버에 연결하지 못했어요.",
+    "empty": "아직 공개된 멤버가 없어요. 함께하고 싶다면 멤버 모집을 확인해 보세요.",
+    "emptyAction": "멤버 모집 보기 →"
+  },
+  "pageUnavailable": "지금은 불러올 수 없어요. 잠시 후 다시 시도해 주세요.",
+  "retry": "다시 시도해 주세요"
 }

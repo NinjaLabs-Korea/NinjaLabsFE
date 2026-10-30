@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import type { HighlightTypeLabel } from "@/lib/api/codecs";
-import { formatStatValue, loadRuntimeHallOfFame, visibleStats } from "@/lib/hall-of-fame";
+import { settle } from "@/lib/api/public";
+import { emptyHallOfFame, formatStatValue, getRuntimeHallOfFame, visibleStats } from "@/lib/hall-of-fame";
 import { imageProps } from "@/lib/image";
 import { localeMetadata } from "@/i18n/alternates";
 
@@ -40,7 +41,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("hallOfFame");
-  const { hallOfFame, unavailable } = await loadRuntimeHallOfFame(locale);
+  const { value: hallOfFame, unavailable } = await settle(getRuntimeHallOfFame(locale), emptyHallOfFame);
   // A brand-new platform has all-zero stats: hide the block until one value is above zero.
   const stats = visibleStats(hallOfFame.stats);
   // Nothing to show at all (and the API is reachable): say so instead of leaving a header over blank space.
@@ -52,7 +53,6 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
           <SectionHeader eyebrow={t("header.eyebrow")} heading={t("header.heading")} level={1} size="xl" />
           <p className="mt-4 max-w-[768px] text-lg text-ink-muted">{t("header.description")}</p>
         </div>
-        <Badge variant="success">{t("header.public")}</Badge>
       </div>
 
       {unavailable ? (
@@ -125,7 +125,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
           <SectionHeader eyebrow={t("partners.eyebrow")} heading={t("partners.heading")} />
           <ul className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
             {hallOfFame.partners.map((partner, index) => {
-              const logo = <span className="relative block h-12 w-full"><Image {...imageProps(partner.logo)} alt={partner.name} className="object-contain" fill sizes="(max-width: 640px) 50vw, 240px" /></span>;
+              const logo = <span className="relative block h-12 w-full rounded-tile bg-surface-subtle"><Image {...imageProps(partner.logo)} alt={partner.name} className="object-contain" fill sizes="(max-width: 640px) 50vw, 240px" /></span>;
               const tileClass = "flex h-28 items-center justify-center rounded-card border border-border bg-surface p-5 shadow-card";
               return (
                 <li key={`${index}:${partner.name}`}>

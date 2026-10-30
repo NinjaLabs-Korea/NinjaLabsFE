@@ -4,10 +4,8 @@
     "description": "Events and news from Ninja Labs."
   },
   "list": {
-    "eyebrow": "Notices / News",
-    "heading": "News from Ninja Labs",
-    "description": "Events and news from Ninja Labs.",
-    "badge": "Events · Ecosystem news · Announcements"
+    "heading": "Notices",
+    "description": "Events and news, all in one place."
   },
   "filters": {
     "ariaLabel": "Notice categories",
@@ -30,9 +28,8 @@
     "notFoundTitle": "Page not found | Ninja Labs",
     "pageTitle": "{title} | Ninja Labs",
     "back": "← Back to list",
-    "public": "Public",
     "readMoreHeading": "Read more",
-    "readMoreLink": "Read more →",
+    "readMoreLink": "Read the original →",
     "related": "Related"
   },
   "eventDate": "Event date {date}"

@@ -9,8 +9,8 @@ vi.mock("@/lib/api/public", async (importOriginal) => ({
 }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
-const { PublicApiError } = await import("@/lib/api/public");
-const { pickGuideBounties, deliverablesFromMarkdown, getBounties, getRuntimeBounties, getRuntimeBounty, loadRuntimeBounties, toBountyStatus, toPublicBountyStatus } = await import("@/lib/bounties");
+const { PublicApiError, settle } = await import("@/lib/api/public");
+const { pickGuideBounties, deliverablesFromMarkdown, getBounties, getRuntimeBounties, getRuntimeBounty, toBountyStatus, toPublicBountyStatus } = await import("@/lib/bounties");
 
 const row = (id: string, rewards = [{ symbol: "INJ", amount: "1500000000000000000", tokenType: "NATIVE" }]) => ({
   id, title: id, summary: "", sponsor_name: "S", category: "DEV", status: "OPEN",
@@ -66,9 +66,9 @@ describe("bounty mapping", () => {
     const completed = { ...row("done"), status: "COMPLETED", submission_deadline: "2020-01-01T00:00:00Z" };
     fetchPublicJson.mockResolvedValue({ items: [expired, completed, row("open")], page: 1, pageSize: 50, total: 3 });
     const [late, done, open] = await getRuntimeBounties("en");
-    expect([late.status, late.deadlinePassed]).toEqual(["closed", true]);
-    expect([done.status, done.deadlinePassed]).toEqual(["closed", undefined]);
-    expect(open.deadlinePassed).toBeUndefined();
+    expect([late.status, late.closedReason]).toEqual(["closed", "deadline"]);
+    expect([done.status, done.closedReason]).toEqual(["closed", "completed"]);
+    expect(open.closedReason).toBeUndefined();
   });
 
   it("does not offer an application bounty past its application deadline as the apply-guide example", () => {
@@ -112,8 +112,8 @@ describe("bounty mapping", () => {
     expect(bounties.map((bounty) => bounty.daysLeft)).toEqual([expect.any(Number), undefined, undefined]);
     expect(bounties[0].daysLeft).toBeGreaterThan(0);
     // Only a finished (COMPLETED) bounty is `completed`; CANCELLED and expired-OPEN also present as closed.
-    expect(bounties.map((bounty) => bounty.completed)).toEqual([undefined, undefined, true]);
-    expect(getBounties().filter((bounty) => bounty.status === "closed").every((bounty) => bounty.completed)).toBe(true);
+    expect(bounties.map((bounty) => bounty.closedReason)).toEqual([undefined, undefined, "completed"]);
+    expect(getBounties().filter((bounty) => bounty.status === "closed").every((bounty) => bounty.closedReason === "completed")).toBe(true);
     expect(getBounties().every((bounty) => !/^D-\d+$/.test(bounty.deadline))).toBe(true);
     expect(getBounties().some((bounty) => bounty.status === "reviewing")).toBe(true);
   });
@@ -156,7 +156,7 @@ describe("bounty mapping", () => {
 
   it("reports an unavailable API instead of throwing", async () => {
     fetchPublicJson.mockRejectedValue(new Error("down"));
-    await expect(loadRuntimeBounties("en")).resolves.toEqual({ bounties: [], unavailable: true });
+    await expect(settle(getRuntimeBounties("en"), [])).resolves.toEqual({ value: [], unavailable: true });
   });
 });
 

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import type { ApplicationStatus } from "@/lib/contracts/account";
+import { PageLoading } from "@/components/ui/PageLoading";
 
 /** How many of my latest rows the home lists; the rest is on /applications. */
 const HOME_ACTIVITY_LIMIT = 4;
@@ -35,7 +36,7 @@ export function HomeActivity() {
     <section className="mx-auto max-w-content px-6 pt-16">
       <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={2} size="lg" action={{ label: t("viewAll"), href: "/applications" }} />
       {query.loading ? (
-        <p className="mt-7 text-sm text-ink-muted" role="status">{t("loading")}</p>
+        <PageLoading className="mt-7" label={t("loading")} variant="list" />
       ) : query.unavailable ? (
         <div className="mt-7 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
           <p className="text-sm font-semibold text-ink">{t("unavailable")}</p>

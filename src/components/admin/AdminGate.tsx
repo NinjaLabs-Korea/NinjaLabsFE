@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import { useAuthSnapshot, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { Link } from "@/i18n/navigation";
 import { signInHref } from "@/lib/return-path";
+import { PageLoading } from "@/components/ui/PageLoading";
 
 export function AdminGate({ children }: { children: ReactNode }) {
   const auth = useAuthSnapshot();
@@ -35,7 +36,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
 
   if (auth.status !== "signed-in") {
     if (auth.status === "loading") {
-      return <div className="mx-auto min-h-dvh max-w-content px-6 py-20 text-sm text-ink-muted">{t("checking")}</div>;
+      return <div className="mx-auto min-h-dvh max-w-content px-6 py-20"><PageLoading label={t("checking")} /></div>;
     }
     return <div className="mx-auto max-w-content px-6 py-20"><h1 className="font-display text-4xl text-ink">{t("signInRequired")}</h1><Link className="mt-5 inline-flex rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href="/signup">{t("signIn")}</Link></div>;
   }

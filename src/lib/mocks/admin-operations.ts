@@ -3,6 +3,8 @@ import type { AdminApi } from "@/lib/contracts/api";
 import type { AdminBounty } from "@/lib/admin-helpers";
 import { MockApiError } from "@/lib/mocks/mock-error";
 import { rewardToBaseUnits } from "@/lib/api/codecs";
+import { OPEN_PAYOUT_STATUSES, UNSETTLED_PAYOUT_STATUSES } from "@/lib/payout-status";
+import { fromAdminStatus, type BountyStatusCode } from "@/lib/bounty-status";
 import {
   BOUNTY_TRANSITIONS,
   applicationDecisionsFor,
@@ -16,7 +18,6 @@ import {
   submissionDecisionsFor,
   type AdminNftJob,
   type AdminOperations,
-  type BountyStatusCode,
   type LifecycleBlocker,
   type OpsPayout,
 } from "@/lib/admin-operations";
@@ -36,16 +37,9 @@ const fail = (status: number, code: string): never => {
   throw new MockApiError(status, code);
 };
 
-const STATUS_FROM_ADMIN: Record<AdminBounty["status"], BountyStatusCode> = {
-  draft: "DRAFT", funding: "FUNDING_PENDING", active: "OPEN", submissionClosed: "SUBMISSION_CLOSED", reviewing: "IN_REVIEW", completed: "COMPLETED", cancelled: "CANCELLED",
-};
-export const ADMIN_STATUS_FROM_CODE: Record<string, AdminBounty["status"]> = {
-  DRAFT: "draft", FUNDING_PENDING: "funding", OPEN: "active", SUBMISSION_CLOSED: "submissionClosed", IN_REVIEW: "reviewing", COMPLETED: "completed", CANCELLED: "cancelled",
-};
-
 /** Deterministic per-bounty operations seed: one pending + one approved application, a resubmitted entry, an approved agent entry with a payout requested by another admin. */
 function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string): AdminOperations {
-  const status = STATUS_FROM_ADMIN[bounty.status];
+  const status = fromAdminStatus(bounty.status);
   const symbol = bounty.reward.currency;
   const amount = bounty.reward.amount > 0 ? rewardToBaseUnits(bounty.reward) : null;
   const funded = status !== "DRAFT" && status !== "FUNDING_PENDING";
@@ -97,7 +91,6 @@ function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string)
   };
 }
 
-const OPEN_PAYOUT_STATUSES: readonly string[] = ["REQUESTED", "AWAITING_MULTISIG_APPROVAL", "APPROVED", "BROADCASTING"];
 
 /**
  * BE `owesUnpaidRewardSql`: among the funded rewards this submission is owed from, one has no PAID payout. A reward is owed when the
@@ -296,7 +289,7 @@ export function createMockOperationsApi(options: {
       Object.assign(row, { status: "PAID", txHash: hash, paidAt: new Date().toISOString() });
       const reward = ops.rewards.find((r) => r.id === row.rewardId);
       if (reward) {
-        const open = ops.payouts.some((p) => p.rewardId === reward.id && p.status !== "PAID" && p.status !== "CANCELLED");
+        const open = ops.payouts.some((p) => p.rewardId === reward.id && UNSETTLED_PAYOUT_STATUSES.includes(p.status));
         const paid = ops.payouts.filter((p) => p.rewardId === reward.id && p.status === "PAID");
         const paidAmount = paid.reduce((sum, p) => sum + BigInt(p.amount), BigInt(0));
         reward.status = !open && (paid.length >= ops.bounty.maxWinners || paidAmount >= BigInt(reward.cap ?? "0")) ? "PAID" : "PARTIALLY_PAID";

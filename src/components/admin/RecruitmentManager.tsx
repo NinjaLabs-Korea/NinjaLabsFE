@@ -7,8 +7,9 @@ import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { CohortApplicationsPanel } from "@/components/admin/CohortApplicationsPanel";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
-import { opsDateTime } from "@/components/admin/ops-ui";
-import { useAdminList } from "@/components/admin/useAdminList";
+import { opsDateTime, opsInput, opsTextarea } from "@/components/admin/ops-ui";
+import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
+import { useAdminList, useAdminRecordDelete, useLoadFailedToast } from "@/components/admin/useAdminList";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { useAdminCohortApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
@@ -44,8 +45,6 @@ export function validateCohortForm(form: CohortForm): FormErrors {
   return errors;
 }
 
-const inputClass =
-  "mt-2 w-full rounded-control border border-border px-4 text-sm font-normal text-ink-secondary placeholder:text-ink-placeholder aria-[invalid]:border-danger";
 const rowButton =
   "h-11 rounded-control border border-primary-outline bg-surface px-3 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60";
 
@@ -72,10 +71,9 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
   const [transitioning, setTransitioning] = useState(false);
   const [transitionError, setTransitionError] = useState<ReturnType<typeof cohortAdminErrorKey> | null>(null);
   const formRef = useRef<HTMLElement>(null);
-  const deletingRef = useRef(false);
 
   const fetchCohorts = useCallback(() => api.getAdminCohorts(), [api]);
-  const toastLoadFailed = useCallback(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }), [t]);
+  const toastLoadFailed = useLoadFailedToast(t("toast.loadFailedTitle"), t("toast.loadFailedDescription"));
   const { records, setRecords, loadState, reload, retry } = useAdminList(fetchCohorts, [], toastLoadFailed);
 
   const selected = records.find((cohort) => cohort.id === selectedId) ?? null;
@@ -89,7 +87,7 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
     setMode("create");
     setForm(emptyForm);
     setErrors({});
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   };
 
   const editCohort = (cohort: AdminCohort) => {
@@ -101,7 +99,7 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
       closesAt: cohort.closesAt ? toLocalDateTimeInput(cohort.closesAt) : "",
     });
     setErrors({});
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   };
 
   const saveCohort = async () => {
@@ -150,24 +148,20 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
     }
   };
 
-  const deleteCohort = async (cohort: AdminCohort) => {
-    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
-    if (deletingRef.current) return;
-    deletingRef.current = true;
-    setPendingDelete(null);
-    try {
-      await api.deleteAdminCohort(cohort.id);
-      setRecords((current) => current.filter((item) => item.id !== cohort.id));
+  const deleteCohort = useAdminRecordDelete<AdminCohort>({
+    call: (cohort) => api.deleteAdminCohort(cohort.id),
+    keyOf: (cohort) => cohort.id,
+    setRecords,
+    closeDialog: () => setPendingDelete(null),
+    onRemoved: (cohort) => {
       if (selectedId === cohort.id) setSelectedId(null);
       if (mode === cohort.id) startNew();
-      pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: cohort.name });
-    } catch (error) {
-      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: tErrors(cohortAdminErrorKey(error)) });
-      void reload();
-    } finally {
-      deletingRef.current = false;
-    }
-  };
+    },
+    describeError: (error) => tErrors(cohortAdminErrorKey(error)),
+    successToast: (cohort) => ({ title: t("toast.deletedTitle"), description: cohort.name }),
+    failedTitle: tCommon("deleteFailed"),
+    reload,
+  });
 
   const transitionKey = (cohort: AdminCohort, to: "OPEN" | "CLOSED") => (to === "CLOSED" ? "close" : cohort.status === "CLOSED" ? "reopen" : "open");
   const windowText = (cohort: AdminCohort) =>
@@ -234,18 +228,18 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
           <h2 className="mt-2 font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
           <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
             <label className="text-sm font-semibold text-ink md:col-span-2">{t("form.name")}
-              <input {...invalid("name")} className={`${inputClass} h-[46px]`} maxLength={COHORT_NAME_MAX} onChange={(event) => updateForm("name", event.target.value)} placeholder={t("form.namePlaceholder")} value={form.name} />
+              <input {...invalid("name")} className={opsInput} maxLength={COHORT_NAME_MAX} onChange={(event) => updateForm("name", event.target.value)} placeholder={t("form.namePlaceholder")} value={form.name} />
               {formError("name")}
             </label>
             <label className="text-sm font-semibold text-ink md:col-span-2">{t("form.description")}
-              <textarea {...invalid("description")} className={`${inputClass} min-h-[120px] py-3`} onChange={(event) => updateForm("description", event.target.value)} placeholder={t("form.descriptionPlaceholder")} value={form.description} />
+              <textarea {...invalid("description")} className={opsTextarea} onChange={(event) => updateForm("description", event.target.value)} placeholder={t("form.descriptionPlaceholder")} value={form.description} />
               {formError("description")}
             </label>
             <label className="text-sm font-semibold text-ink">{t("form.opensAt")}
-              <input {...invalid("window")} className={`${inputClass} h-[46px]`} onChange={(event) => updateForm("opensAt", event.target.value)} type="datetime-local" value={form.opensAt} />
+              <input {...invalid("window")} className={opsInput} onChange={(event) => updateForm("opensAt", event.target.value)} type="datetime-local" value={form.opensAt} />
             </label>
             <label className="text-sm font-semibold text-ink">{t("form.closesAt")}
-              <input {...invalid("window")} className={`${inputClass} h-[46px]`} onChange={(event) => updateForm("closesAt", event.target.value)} type="datetime-local" value={form.closesAt} />
+              <input {...invalid("window")} className={opsInput} onChange={(event) => updateForm("closesAt", event.target.value)} type="datetime-local" value={form.closesAt} />
               {formError("window")}
             </label>
             <p className="text-xs text-ink-muted md:col-span-2">{t("form.windowHint")}</p>
@@ -257,7 +251,7 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
 
       <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void deleteCohort(pendingDelete)} title={pendingDelete?.name ?? null} />
       <ConfirmDialog
-        confirmDisabled={transitioning}
+        pending={transitioning}
         confirmLabel={transitioning ? tCommon("saving") : t(`transition.${pendingKey}.confirm`)}
         description={t(`transition.${pendingKey}.description`)}
         eyebrow={t("transition.eyebrow")}

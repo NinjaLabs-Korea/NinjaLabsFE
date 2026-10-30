@@ -2,8 +2,8 @@
 // `lib/admin.ts`, whose mock registries (bounties/members/notices/hall-of-fame fixtures) would otherwise be bundled
 // into the shared client chunk. `lib/admin.ts` re-exports everything for server code and tests.
 import { isHighlightTypeCode, type HighlightTypeCode } from "./api/codecs";
-import { ERROR_COPY, knownCode } from "./api/error-copy";
-import { ApiHttpError, getAccessToken } from "./api/http";
+import { ERROR_COPY, listedCode, normalizedCode } from "./api/error-copy";
+import { getAccessToken } from "./api/http";
 import type { PublicListResource } from "./api/public";
 import { validationFieldsFromError } from "./api/validation";
 import { refreshPublicLists } from "./admin-revalidate";
@@ -18,12 +18,8 @@ export const ADMIN_API_ERROR_CODES = ERROR_COPY.adminWrite.codes;
 export type AdminApiErrorCode = (typeof ADMIN_API_ERROR_CODES)[number];
 
 export function adminApiErrorCode(error: unknown): AdminApiErrorCode | null {
-  // Same status normalization as `opsErrorCode`: the throttler's 429 and a refused session carry no catalog code of their own.
-  if (error instanceof ApiHttpError) {
-    if (error.status === 429) return "TOO_MANY_REQUESTS";
-    if (error.status === 401) return "UNAUTHORIZED";
-  }
-  return knownCode(error, ADMIN_API_ERROR_CODES);
+  // `normalizedCode` maps the throttler's 429 and a refused session (401), which carry no catalog code of their own.
+  return listedCode(normalizedCode(error), ADMIN_API_ERROR_CODES);
 }
 
 /** Toast description for a failed admin write: the mapped BE code's copy, else the action's generic `fallback`. */

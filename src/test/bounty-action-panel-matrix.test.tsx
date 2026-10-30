@@ -166,12 +166,12 @@ describe("BountyActionPanel transitional states", () => {
     expect(await screen.findByRole("button", { name: "Submit" })).toBeTruthy();
   });
 
-  it("previews a disabled apply form for signed-out visitors with links to the intake rules and sign-up", async () => {
+  it("previews a disabled apply form for signed-out visitors with links to the how-it-works guide and sign-up", async () => {
     state.auth = auths["signed-out"];
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
     const note = await screen.findByRole("textbox", { name: "Application note" });
     expect((note.closest("fieldset") as HTMLFieldSetElement).disabled).toBe(true);
-    expect(screen.getByRole("link", { name: "View intake rules" }).getAttribute("href")).toBe("/bounties/apply");
+    expect(screen.getByRole("link", { name: "See how it works" }).getAttribute("href")).toBe("/bounties/apply");
     expect(screen.getByRole("link", { name: "Apply" }).getAttribute("href")).toBe("/signup?returnTo=%2Fbounties%2Fbounty-1");
     expect(screen.getByText("Submit disabled until approved")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
@@ -180,8 +180,8 @@ describe("BountyActionPanel transitional states", () => {
   it("sends the optional submission fields only when filled", async () => {
     renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
     fireEvent.change(await screen.findByLabelText("Completed work link"), { target: { value: "https://example.test/w" } });
-    fireEvent.change(screen.getByLabelText("Repository URL (optional)"), { target: { value: "https://github.com/x/y" } });
-    fireEvent.change(screen.getByLabelText("Commit SHA (optional)"), { target: { value: "abc1234" } });
+    fireEvent.change(screen.getByLabelText("Code repository (optional)"), { target: { value: "https://github.com/x/y" } });
+    fireEvent.change(screen.getByLabelText("Commit hash (optional, code work only)"), { target: { value: "abc1234" } });
     fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "Done" } });
     fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
     await waitFor(() => expect(submitBounty).toHaveBeenCalledTimes(1));
