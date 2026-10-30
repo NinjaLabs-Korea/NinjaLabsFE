@@ -8,12 +8,14 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
 import type { CohortAdminErrorKey } from "@/lib/cohort-errors";
 import { ERROR_COPY } from "@/lib/api/error-copy";
-import { COHORT_REVIEW_DECISIONS, answerDisplay, localized, type AdminCohortApplication, type CohortReviewDecision } from "@/lib/cohorts";
+import { COHORT_REVIEW_DECISIONS, answerDisplay, localized, type AdminCohortApplication, type CohortQuestion, type CohortReviewDecision } from "@/lib/cohorts";
 import { COHORT_REVIEW_NOTE_MAX } from "@/lib/input-limits";
 
 type CohortReviewDialogProps = {
   /** The application under review; `null` keeps the dialog closed. Each application starts from its own saved decision and note. */
   application: AdminCohortApplication | null;
+  /** The cohort's current questions: they say which chosen option asked for the "other" detail. */
+  questions: CohortQuestion[];
   busy: boolean;
   error: CohortAdminErrorKey | null;
   onCancel: () => void;
@@ -24,7 +26,7 @@ type CohortReviewDialogProps = {
  * Review one cohort application: every answer, the decision (accept or reject; a decided application can be decided again) and
  * an internal note. The note is the operators' own, the applicant only ever sees the status. Accepting does not make anyone a member.
  */
-export function CohortReviewDialog({ application, busy, error, onCancel, onConfirm }: CohortReviewDialogProps) {
+export function CohortReviewDialog({ application, questions, busy, error, onCancel, onConfirm }: CohortReviewDialogProps) {
   const t = useTranslations("admin.recruitment.review");
   const tForm = useTranslations("recruit.form");
   const tErrors = useTranslations(ERROR_COPY.adminCohort.messages);
@@ -78,7 +80,7 @@ export function CohortReviewDialog({ application, busy, error, onCancel, onConfi
             {application.answers.map((answer) => (
               <Fragment key={answer.questionId}>
                 <dt className="min-w-0 break-words text-ink-muted">{localized(answer.label, locale)}</dt>
-                <dd className="min-w-0 whitespace-pre-wrap break-words text-ink">{answerDisplay(answer, locale)}</dd>
+                <dd className="min-w-0 whitespace-pre-wrap break-words text-ink">{answerDisplay(answer, locale, questions.find((question) => question.id === answer.questionId))}</dd>
               </Fragment>
             ))}
             <dt className="text-ink-muted">{t("fields.status")}</dt>

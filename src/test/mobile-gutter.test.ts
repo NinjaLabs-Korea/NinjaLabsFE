@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 
 // One page gutter: every max-w-content wrapper (and the 768px legal article) uses px-gutter
 // (16px below sm, 24px from sm; @utility in globals.css). Inner card paddings are not checked.
-const FE1_PENDING = new Set(["src/components/recruit/RecruitView.tsx"]); // FE-1 converts it to px-gutter
 
 function tsxFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -38,9 +37,8 @@ describe("page gutter", () => {
     expect(css).toMatch(/@utility px-gutter \{\s*padding-inline: 1rem;\s*@media \(min-width: 40rem\) \{\s*padding-inline: 1\.5rem;/);
   });
 
-  it("every max-w-content wrapper uses px-gutter (RecruitView is converted by FE-1)", () => {
+  it("every max-w-content wrapper uses px-gutter", () => {
     const offenders = files
-      .filter((f) => !FE1_PENDING.has(f))
       .flatMap((f) => badGutters(readFileSync(join(root, f), "utf8")).map((c) => `${f}: ${c}`));
     expect(offenders).toEqual([]);
   });

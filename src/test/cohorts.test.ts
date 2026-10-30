@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   answerDisplay,
+  detailChoiceIndex,
   applicationToDraft,
   cohortApplicationQuery,
   cohortPhase,
@@ -225,6 +226,24 @@ describe("localized / answerDisplay", () => {
     expect(answerDisplay({ ...answer, type: "SHORT_TEXT", text: "plain", choices: null, other: null }, "en")).toBe("plain");
   });
 });
+describe("answerDisplay detail placement", () => {
+  const lt = (ko: string) => ({ ko, en: null, zh: null });
+  const answer = { questionId: "q", type: "MULTI_CHOICE" as const, label: lt("분야"), text: null, other: "UX",
+    choices: [{ id: "o_1a2b3c4d", label: lt("기타") }, { id: "o_5e6f7a8b", label: lt("A") }] };
+  const question = { id: "q", type: "MULTI_CHOICE" as const, label: lt("분야"), help: null, required: false,
+    options: [{ id: "o_1a2b3c4d", label: lt("기타"), withDetail: true }, { id: "o_5e6f7a8b", label: lt("A"), withDetail: false }, { id: "o_9c8d7e6f", label: lt("B"), withDetail: false }] };
+
+  it("attaches the detail to the withDetail option even when it is not last and its id has no 'other'", () => {
+    expect(answerDisplay(answer, "ko", question)).toBe("기타 (UX), A");
+    expect(detailChoiceIndex(answer, question)).toBe(0);
+  });
+
+  it("guesses (id mentions other, else last) only when the question is gone", () => {
+    expect(answerDisplay(answer, "ko")).toBe("기타, A (UX)");
+    expect(detailChoiceIndex({ ...answer, other: null }, question)).toBe(-1);
+  });
+});
+
 
 describe("validateQuestionInputs", () => {
   const input = (overrides: Partial<CohortQuestionInput> = {}): CohortQuestionInput => ({ type: "SHORT_TEXT", label: { ko: "질문" }, help: null, required: false, options: null, ...overrides });

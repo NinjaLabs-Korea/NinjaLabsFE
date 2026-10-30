@@ -372,15 +372,24 @@ export function applicationToDraft(application: CohortApplicationRead): CohortFo
 }
 
 /**
- * One answer for display in the viewer's language: text as typed, choices joined by ", ". The "other" detail follows the choice that asked
- * for it. A snapshot does not say which option that was, so it is the option whose id mentions "other" (the default question's `OTHER`), else the last one.
+ * Index of the chosen option the "other" detail belongs to, or -1 when there is no detail. A snapshot does not say which option asked
+ * for it, so the cohort's current question decides (the chosen option that has `withDetail`). Only an answer whose question is gone
+ * falls back to a guess: the option whose id mentions "other" (the default question's `OTHER`), else the last one.
  */
-export function answerDisplay(answer: ApplicationAnswer, locale: string): string {
-  if (answer.text !== null && answer.text !== undefined) return answer.text;
+export function detailChoiceIndex(answer: ApplicationAnswer, question?: CohortQuestion | null): number {
   const choices = answer.choices ?? [];
+  if (!answer.other || choices.length === 0) return -1;
+  const asked = question?.options ? choices.findIndex((choice) => question.options?.some((option) => option.id === choice.id && option.withDetail)) : -1;
+  if (asked !== -1) return asked;
   const named = choices.findIndex((choice) => /other/i.test(choice.id));
-  const detailAt = answer.other ? (named === -1 ? choices.length - 1 : named) : -1;
-  return choices.map((choice, index) => (index === detailAt ? `${localized(choice.label, locale)} (${answer.other})` : localized(choice.label, locale))).join(", ");
+  return named === -1 ? choices.length - 1 : named;
+}
+
+/** One answer for display in the viewer's language: text as typed, choices joined by ", ", the "other" detail after the option that asked for it (`detailChoiceIndex`). */
+export function answerDisplay(answer: ApplicationAnswer, locale: string, question?: CohortQuestion | null): string {
+  if (answer.text !== null && answer.text !== undefined) return answer.text;
+  const detailAt = detailChoiceIndex(answer, question);
+  return (answer.choices ?? []).map((choice, index) => (index === detailAt ? `${localized(choice.label, locale)} (${answer.other})` : localized(choice.label, locale))).join(", ");
 }
 
 // ── Question editor (admin) ───────────────────────────────────────────

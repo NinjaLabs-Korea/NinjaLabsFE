@@ -5,6 +5,7 @@ import { Fragment, useId, useState } from "react";
 import { useCohortApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useCurrentCohort } from "@/components/recruit/useCurrentCohort";
 import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { ERROR_COPY, errorCopyKey, type ErrorCopyKey } from "@/lib/api/error-copy";
 import { answerDisplay, localized, type CohortApplicationStatus, type MyCohortApplication } from "@/lib/cohorts";
@@ -40,6 +41,8 @@ export function CohortApplicationCard({ application, variant = "full", onEdit, o
   const tErrors = useTranslations(ERROR_COPY.cohortWithdraw.messages);
   const format = useFormatter();
   const locale = useLocale();
+  const current = useCurrentCohort().cohort;
+  const questions = current && current.id === application.cohortId ? current.questions : [];
   const api = useCohortApi();
   const headingId = useId();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -90,7 +93,7 @@ export function CohortApplicationCard({ application, variant = "full", onEdit, o
           {application.answers.map((answer) => (
             <Fragment key={answer.questionId}>
               <dt className="min-w-0 break-words text-ink-muted">{localized(answer.label, locale)}</dt>
-              <dd className="min-w-0 whitespace-pre-wrap break-words font-semibold text-ink">{answerDisplay(answer, locale)}</dd>
+              <dd className="min-w-0 whitespace-pre-wrap break-words font-semibold text-ink">{answerDisplay(answer, locale, questions.find((question) => question.id === answer.questionId))}</dd>
             </Fragment>
           ))}
         </dl>

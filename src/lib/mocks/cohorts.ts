@@ -2,6 +2,7 @@ import type { AdminCohortApi, CohortApi } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { MockApiError } from "@/lib/mocks/mock-error";
 import {
+  detailChoiceIndex,
   isChoiceType,
   validateAnswers,
   validateQuestionInputs,
@@ -294,12 +295,16 @@ export function createMockCohortApis(options: { nextId: (prefix: string) => stri
     exportAdminCohortApplications: async (cohortId, filter) => {
       const questions = requireCohort(cohortId).questions;
       const header = ["id", "applied_at", "status", "display_name", "nickname", "email", "telegram", "twitter", "intro", ...questions.map((question) => question.label.ko), "other_answers", "review_note", "reviewed_at"];
-      const cell = (answer: ApplicationAnswer | undefined) =>
-        answer ? (answer.text ?? (answer.choices ?? []).map((choice) => (answer.other && /other/i.test(choice.id) ? `${choice.label.ko} (${answer.other})` : choice.label.ko)).join(";")) : "";
+      const cell = (answer: ApplicationAnswer | undefined, question: CohortQuestion | null) => {
+        if (!answer) return "";
+        if (answer.text !== null && answer.text !== undefined) return answer.text;
+        const detailAt = detailChoiceIndex(answer, question);
+        return (answer.choices ?? []).map((choice, index) => (index === detailAt ? `${choice.label.ko} (${answer.other})` : choice.label.ko)).join(";");
+      };
       const rows = filtered(cohortId, filter).map((a) => [
         a.id, a.createdAt, a.status, a.displayName, a.user.nickname, a.user.email, a.telegram.replace(/^@/, ""), a.twitter.replace(/^@/, ""), a.intro,
-        ...questions.map((question) => cell(a.answers.find((answer) => answer.questionId === question.id))),
-        a.answers.filter((answer) => !questions.some((question) => question.id === answer.questionId)).map((answer) => `${answer.label.ko}: ${cell(answer)}`).join("\n"),
+        ...questions.map((question) => cell(a.answers.find((answer) => answer.questionId === question.id), question)),
+        a.answers.filter((answer) => !questions.some((question) => question.id === answer.questionId)).map((answer) => `${answer.label.ko}: ${cell(answer, null)}`).join("\n"),
         a.reviewNote ?? "", a.reviewedAt ?? "",
       ]);
       return `\uFEFF${[header, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n")}\r\n`;

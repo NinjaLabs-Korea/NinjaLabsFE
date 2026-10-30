@@ -260,6 +260,7 @@ export function CohortApplicationsPanel({ cohort, onReviewed }: { cohort: AdminC
 
       <CohortReviewDialog
         application={reviewing}
+        questions={cohort.questions}
         busy={reviewBusy}
         error={reviewError}
         onCancel={() => { if (!reviewBusy) setReviewing(null); }}
