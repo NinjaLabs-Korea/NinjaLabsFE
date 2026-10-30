@@ -443,14 +443,14 @@ describe("BountyActionPanel", () => {
     expect(await screen.findByText("Submission not accepted")).toBeTruthy();
     expect(screen.getByText(/did not accept it/)).toBeTruthy();
     expect(screen.getByText("Reviewer comment: Does not meet the brief")).toBeTruthy();
-    expect(screen.queryByText(/forfeited/)).toBeNull();
+    expect(screen.queryByText(/Reward not paid/)).toBeNull();
   });
 
   it("shows the forfeited copy with the reason (prefix stripped) instead of 'did not accept it'", async () => {
     state.submissions = [submission("rejected", null, "forfeited: winner wallet never connected")];
     renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" submissionMode="direct" />);
-    expect(await screen.findByText("Award forfeited")).toBeTruthy();
-    expect(screen.getByText("Your work was approved, but the award was forfeited: winner wallet never connected. Contact the admins if this is a mistake.")).toBeTruthy();
+    expect(await screen.findByText("Reward not paid")).toBeTruthy();
+    expect(screen.getByText("Your work was selected, but the reward was not paid. Reason: winner wallet never connected. Contact the admins if this is a mistake.")).toBeTruthy();
     expect(screen.queryByText(/did not accept it/)).toBeNull();
   });
 
@@ -511,7 +511,7 @@ describe("BountyActionPanel", () => {
     it("applies the wrapping classes to the forfeited body", async () => {
       state.submissions = [submission("rejected", null, `forfeited: ${url}`)];
       renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" submissionMode="direct" />);
-      const body = await screen.findByText(/the award was forfeited:/);
+      const body = await screen.findByText(/the reward was not paid\. Reason:/);
       expect(body.textContent).toContain(url);
       wraps(body);
     });

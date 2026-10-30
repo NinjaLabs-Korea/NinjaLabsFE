@@ -4,7 +4,7 @@ import type { PayoutStatus } from "@/lib/types";
 /**
  * FE steps of an application; `open` = BE PENDING (applied, awaiting the sponsor), `submitted`/`completed` come from the submission join.
  * `revisionRequested` = approved application whose submission needs changes: still the "Submitted" step, with an action-needed marker and a resubmit link.
- * `notAccepted` = approved application whose submission was finally REJECTED (including a forfeited award): a final state, not a step.
+ * `notAccepted` = approved application whose submission was finally REJECTED (including a reward-not-paid case): a final state, not a step.
  */
 export type ApplicationStatus = "open" | "approved" | "submitted" | "completed" | "rejected" | "notAccepted" | "revisionRequested";
 

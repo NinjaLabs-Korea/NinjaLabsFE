@@ -10,7 +10,7 @@ export type NotFoundCopy = { title: string; description: string; home: string; n
  */
 export function NotFoundContent({ copy, locale }: { copy: NotFoundCopy; locale?: Locale }) {
   return (
-    <section className="mx-auto max-w-content px-6 py-24 text-center">
+    <section className="mx-auto max-w-content px-gutter py-24 text-center">
       <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">404</p>
       <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">{copy.title}</h1>
       <p className="mt-4 text-lg text-ink-muted">{copy.description}</p>

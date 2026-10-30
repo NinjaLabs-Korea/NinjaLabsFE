@@ -68,6 +68,12 @@ describe("HomeProfileCard", () => {
     renderWithIntl(<HomeProfileCard />);
     expect(screen.getByText("No Ninja NFT yet")).toBeTruthy();
   });
+
+  it("folds a FAILED mint into the in-progress badge (operators handle it in /admin/nft-jobs)", () => {
+    state.auth = signedInWith({ handle: "ninja", walletAddress: "inj1abcdefghij9k4d", nftStatus: "FAILED", onboardingCompleted: true });
+    renderWithIntl(<HomeProfileCard />);
+    expect(screen.getByText("Ninja NFT minting")).toBeTruthy();
+  });
 });
 
 describe("HomeActivity", () => {
@@ -87,7 +93,7 @@ describe("HomeActivity", () => {
       note: "", status: "notAccepted", agent: null, reviewComment: "forfeited: wallet never linked", reviewNote: null, paymentStatus: "NONE",
     }] });
     renderWithIntl(<HomeActivity />);
-    expect(await screen.findByText("Award forfeited")).toBeTruthy();
+    expect(await screen.findByText("Reward not paid")).toBeTruthy();
     expect(screen.queryByText("Submission not accepted")).toBeNull();
   });
 

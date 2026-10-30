@@ -12,7 +12,7 @@ import type { Bounty } from "@/lib/types";
 export function BountiesEntrySection({ bounties }: { bounties: Bounty[] }) {
   const t = useTranslations("landing.bounties");
   return (
-    <section className="mx-auto max-w-content px-6 pb-16">
+    <section className="mx-auto max-w-content px-gutter pb-16">
       <SectionHeader
         eyebrow={t("eyebrow")}
         heading={t("heading")}

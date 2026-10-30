@@ -25,7 +25,7 @@ export default async function SignupPage({ params }: PageProps<"/[locale]/signup
   // Mock mode never renders the widget (GoogleLoginButton), so only api mode with a site key reserves its height.
   const withTurnstile = config.runtimeMode !== "mock" && Boolean(config.turnstileSiteKey);
   return (
-    <section className="mx-auto max-w-content px-6 py-16 pb-20">
+    <section className="mx-auto max-w-content px-gutter py-16 pb-20">
       <div className="mx-auto max-w-[768px]">
         <div>
           <SignupStepIndicator current={1} />

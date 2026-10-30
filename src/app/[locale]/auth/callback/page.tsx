@@ -12,7 +12,7 @@ export default function AuthCallbackPage() {
   // Set synchronously while the adapter parsed `#error=<CODE>`; only read once the sign-in has failed (never on the server).
   const errorCode = failed ? getLoginCallbackError() : null;
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
+    <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <h1 className="font-display text-2xl text-ink">{failed ? t("failedTitle") : t("signingIn")}</h1>
       <p className="mt-3 text-sm text-ink-muted" role="status">
         {errorCode ? t(`errors.${errorCode}`) : failed ? t("failedBody") : t("restoring")}

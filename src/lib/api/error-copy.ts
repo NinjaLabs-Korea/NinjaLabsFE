@@ -60,6 +60,9 @@ export const ERROR_COPY = {
       "INVALID_SIGNATURE",
       // 409: 이 주소가 다른 계정에 연결됐거나, 내 계정에 이미 대표 지갑이 있다.
       "WALLET_ALREADY_LINKED",
+      // 409: 새 BE가 원인별로 나눠 보낸다 (a: 이 주소가 다른 계정에 있다 / b: 이 계정에 이미 다른 대표 지갑이 있다).
+      "WALLET_LINKED_TO_OTHER_ACCOUNT",
+      "ACCOUNT_ALREADY_HAS_WALLET",
       // 400: 이 주소가 내 에이전트의 지갑이다. 개인 지갑은 에이전트 지갑과 달라야 한다.
       "AGENT_WALLET_IS_OWNER_WALLET",
       "DATABASE_UNAVAILABLE",

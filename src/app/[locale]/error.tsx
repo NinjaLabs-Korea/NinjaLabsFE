@@ -18,7 +18,7 @@ export default function ErrorPage({ reset }: ErrorPageProps) {
   });
 
   return (
-    <section className="mx-auto max-w-content px-6 py-24 text-center">
+    <section className="mx-auto max-w-content px-gutter py-24 text-center">
       <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("eyebrow")}</p>
       <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">{t("title")}</h1>
       <p className="mt-4 text-lg text-ink-muted">{t("description")}</p>

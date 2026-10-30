@@ -32,7 +32,7 @@ export default async function AccountPage({ params }: AccountPageProps) {
   const t = await getTranslations("account.settings");
   const tAccount = await getTranslations("account.common");
   return (
-    <section className="mx-auto min-h-[60dvh] max-w-content px-6 py-16 pb-20">
+    <section className="mx-auto min-h-[60dvh] max-w-content px-gutter py-16 pb-20">
       {/* The masthead renders for every auth state; the view below switches between loading / signed-out / settings. */}
       <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{tAccount("eyebrow")}</p>
       <h1 className="mt-2 font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">{t("heading")}</h1>

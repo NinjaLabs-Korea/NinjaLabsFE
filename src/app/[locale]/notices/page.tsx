@@ -23,7 +23,7 @@ export default async function NoticesPage({ params, searchParams }: PageProps<"/
   const { value: notices, unavailable } = await settle(getRuntimeNotices(), []);
 
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
+    <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <section className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-[768px]">
           <h1 className="font-display text-4xl tracking-[-0.36px] sm:text-5xl sm:tracking-[-0.48px] text-ink">{t("heading")}</h1>

@@ -164,8 +164,8 @@ describe("ApplicationsView", () => {
     renderWithIntl(<ApplicationsView />);
     await screen.findByRole("link", { name: "Bounty notAccepted" });
     const article = card("Bounty notAccepted");
-    expect(within(article).getByText("Award forfeited")).toBeTruthy();
-    expect(within(article).getByText("Your work was approved, but the award was forfeited: winner wallet never connected. Contact the admins if this is a mistake.")).toBeTruthy();
+    expect(within(article).getByText("Reward not paid")).toBeTruthy();
+    expect(within(article).getByText("Your work was selected, but the reward was not paid. Reason: winner wallet never connected. Contact the admins if this is a mistake.")).toBeTruthy();
     expect(within(article).queryByText(/did not accept it/)).toBeNull();
   });
 
@@ -226,7 +226,7 @@ describe("ApplicationsView", () => {
     await screen.findByRole("link", { name: "NA" });
     const lines = [
       within(card("NA")).getByText(`Reviewer comment: No\n${url}`, { normalizer: (text) => text }),
-      within(card("FF")).getByText(/the award was forfeited:/),
+      within(card("FF")).getByText(/the reward was not paid\. Reason:/),
       within(card("RR")).getByText(`Reviewer comment: Fix\n${url}`, { normalizer: (text) => text }),
     ];
     for (const line of lines) {
@@ -249,7 +249,7 @@ describe("ApplicationsView", () => {
     renderWithIntl(<ApplicationsView />);
     await screen.findByRole("link", { name: "Quest copy refresh" });
     const article = card("Quest copy refresh");
-    expect(await within(article).findByText("Award forfeited")).toBeTruthy();
+    expect(await within(article).findByText("Reward not paid")).toBeTruthy();
     expect(within(article).getByText(/winner wallet never connected/)).toBeTruthy();
   });
 

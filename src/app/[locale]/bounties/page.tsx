@@ -29,7 +29,7 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
   return (
     <>
       <BountyHero hero={hero} locale={locale} />
-      <div className="mx-auto max-w-content px-6 py-16 pb-20">
+      <div className="mx-auto max-w-content px-gutter py-16 pb-20">
         <section>
           <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={2} size="lg" />
         </section>

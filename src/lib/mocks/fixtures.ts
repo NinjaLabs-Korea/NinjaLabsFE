@@ -47,7 +47,7 @@ const applications: readonly AccountApplication[] = [
     reviewNote: null,
     paymentStatus: "NONE",
   },
-  // Approved work whose award an admin forfeited (BE scripts/forfeit-award.js): submission REJECTED + comment `forfeited: <reason>`.
+  // Approved work whose reward an admin marked not paid (BE scripts/forfeit-award.js): submission REJECTED + comment `forfeited: <reason>`.
   {
     id: "application-4",
     source: "application",

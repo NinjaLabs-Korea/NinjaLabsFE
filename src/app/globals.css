@@ -108,6 +108,13 @@ html:lang(ko) {
     transform: scale(0.98);
   }
 }
+/* Page gutter: 16px below sm (40rem), 24px from sm. Use on every max-w-content wrapper (src/test/mobile-gutter.test.ts). */
+@utility px-gutter {
+  padding-inline: 1rem;
+  @media (min-width: 40rem) {
+    padding-inline: 1.5rem;
+  }
+}
 /* Pending-button spinner: <span aria-hidden="true" className="spinner" /> inside a button that has aria-busy and a text label. */
 @utility spinner {
   display: inline-block;
