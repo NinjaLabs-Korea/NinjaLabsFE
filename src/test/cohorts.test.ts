@@ -269,6 +269,11 @@ describe("validateQuestionInputs", () => {
     expect(codes([input({ label: { ko: "ok", en: null, zh: "" } })])).toEqual([]);
   });
 
+  it("asks for the Korean help text when only a translation is typed", () => {
+    expect(codes([input({ help: { ko: "  ", en: "Only English" } })])).toEqual(["helpKoRequired"]);
+    expect(codes([input({ help: { ko: "도움", en: "Help" } })])).toEqual([]);
+  });
+
   it("limits help to 500 characters", () => {
     expect(codes([input({ help: { ko: "x".repeat(500) } })])).toEqual([]);
     expect(codes([input({ help: { ko: "x".repeat(501) } })])).toEqual(["helpTooLong"]);

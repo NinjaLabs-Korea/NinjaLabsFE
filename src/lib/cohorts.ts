@@ -398,7 +398,7 @@ export function answerDisplay(answer: ApplicationAnswer, locale: string, questio
 export type QuestionIssueCode =
   | "tooManyQuestions"
   | "labelRequired" | "labelTooLong" | "labelInvalid"
-  | "helpTooLong" | "helpInvalid"
+  | "helpKoRequired" | "helpTooLong" | "helpInvalid"
   | "optionsCount" | "withDetailMax"
   | "optionLabelRequired" | "optionLabelTooLong" | "optionLabelInvalid";
 export type QuestionIssue = { code: QuestionIssueCode; index: number; optionIndex?: number };
@@ -425,6 +425,7 @@ export function validateQuestionInputs(questions: readonly CohortQuestionInput[]
     const label = labelIssue(question.label, COHORT_QUESTION_LABEL_MAX, "labelRequired", "labelTooLong", "labelInvalid");
     if (label) issues.push({ code: label, index });
     if (question.help) {
+      if (!question.help.ko.trim()) issues.push({ code: "helpKoRequired", index });
       for (const value of [question.help.ko, question.help.en ?? "", question.help.zh ?? ""]) {
         if (length(value.trim()) > COHORT_HELP_MAX) issues.push({ code: "helpTooLong", index });
         else if (BIDI_OVERRIDE.test(value)) issues.push({ code: "helpInvalid", index });

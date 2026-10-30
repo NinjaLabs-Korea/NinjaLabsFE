@@ -970,7 +970,7 @@
       "UNAUTHORIZED": "登录已过期，请重新登录。",
       "TOO_MANY_REQUESTS": "请求过多，请稍后再试。",
       "generic": "请求失败，请重试。",
-      "questionsInvalid": "无法保存问题设置。请检查选项数量和文字。"
+      "COHORT_QUESTIONS_INVALID": "无法保存问题设置。请检查选项数量和文字。"
     },
     "questions": {
       "action": "问题设置",
@@ -1033,6 +1033,7 @@
         "labelRequired": "请用韩语填写问题。",
         "labelTooLong": "问题太长，最多 {max} 个字符。",
         "labelInvalid": "问题中不能包含换行或不可见字符。",
+        "helpKoRequired": "请同时填写韩语提示。",
         "helpTooLong": "提示太长，最多 {max} 个字符。",
         "helpInvalid": "提示中包含不允许的字符。",
         "optionsCount": "选择题需要 {min} 至 {max} 个选项。",

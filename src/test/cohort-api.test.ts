@@ -190,11 +190,11 @@ describe("cohort error rules", () => {
 
   it("reads COHORT_ANSWERS_INVALID as 'the questions changed' and COHORT_QUESTIONS_INVALID as the editor's own message", () => {
     const changed = new ApiHttpError(400, "COHORT_ANSWERS_INVALID");
-    expect(cohortApplyErrorKey(changed)).toBe("questionsChanged");
+    expect(cohortApplyErrorKey(changed)).toBe("COHORT_ANSWERS_INVALID");
     expect(isQuestionsChangedError(changed)).toBe(true);
     expect(isQuestionsChangedError(new ApiHttpError(400, "COHORT_OTHER_DETAIL_REQUIRED"))).toBe(false);
     expect(isStaleCohortError(changed)).toBe(false);
-    expect(cohortAdminErrorKey(new ApiHttpError(400, "COHORT_QUESTIONS_INVALID"))).toBe("questionsInvalid");
+    expect(cohortAdminErrorKey(new ApiHttpError(400, "COHORT_QUESTIONS_INVALID"))).toBe("COHORT_QUESTIONS_INVALID");
   });
 
   it("marks the fields the BE named, and treats state errors as stale", () => {

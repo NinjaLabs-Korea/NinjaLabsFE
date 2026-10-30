@@ -122,11 +122,11 @@
       "COHORT_ALREADY_APPLIED": "You already applied to this cohort. We refreshed the page.",
       "COHORT_APPLICATION_NOT_FOUND": "We couldn’t find this application.",
       "COHORT_APPLICATION_NOT_SUBMITTED": "This application was already reviewed or withdrawn, so it can’t be edited.",
-      "COHORT_OTHER_DETAIL_REQUIRED": "Fill in the detail for “Other”.",
+      "COHORT_OTHER_DETAIL_REQUIRED": "Fill in the detail for the option you chose.",
       "INVALID_CHARACTER": "A field contains characters that cannot be saved. Remove them and try again.",
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
-      "questionsChanged": "The application questions changed. Please check the new questions and send again."
+      "COHORT_ANSWERS_INVALID": "The application questions changed. Please check the new questions and send again."
     },
     "question": {
       "counter": "{count}/{limit}",

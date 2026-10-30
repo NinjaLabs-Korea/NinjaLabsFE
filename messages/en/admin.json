@@ -970,7 +970,7 @@
       "UNAUTHORIZED": "Your session has expired. Sign in again.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
       "generic": "The request failed. Please try again.",
-      "questionsInvalid": "Could not save the questions. Check the number of options and the wording."
+      "COHORT_QUESTIONS_INVALID": "Could not save the questions. Check the number of options and the wording."
     },
     "questions": {
       "action": "Questions",
@@ -1033,6 +1033,7 @@
         "labelRequired": "Write the question in Korean.",
         "labelTooLong": "The question is too long. Up to {max} characters.",
         "labelInvalid": "The question cannot contain line breaks or invisible characters.",
+        "helpKoRequired": "Add the Korean help text too.",
         "helpTooLong": "The help text is too long. Up to {max} characters.",
         "helpInvalid": "The help text contains a character that is not allowed.",
         "optionsCount": "A choice question needs {min} to {max} options.",

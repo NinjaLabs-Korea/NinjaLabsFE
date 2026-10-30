@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { RecruitmentManager } from "@/components/admin/RecruitmentManager";
-import { draftsToInputs } from "@/components/admin/CohortQuestionsEditor";
+import { draftsToInputs } from "@/lib/cohort-question-drafts";
 import { ApiHttpError } from "@/lib/api/http";
 import type { ApiClient } from "@/lib/contracts/api";
 import { createMockApiClient } from "@/lib/mocks/api-client";
@@ -40,13 +40,13 @@ async function openEditor(name = "Ninja Labs 2nd cohort") {
 const save = () => fireEvent.click(screen.getByRole("button", { name: "Save questions" }));
 
 describe("draftsToInputs", () => {
-  it("keeps ids of existing questions and options, omits them for new ones and turns blank translations into null", () => {
+  it("keeps ids of existing questions and options, omits them for new ones and turns blank translations into null, and keeps a translated help text so validation can ask for the Korean one", () => {
     expect(draftsToInputs([
       { key: "a", id: "web3_experience", type: "SINGLE_CHOICE", ko: " 경력 ", en: " ", zh: "经验", helpKo: "", helpEn: "ignored", helpZh: "", required: true,
         options: [{ key: "o1", id: "LT_1Y", ko: "짧음", en: "", zh: "", withDetail: false }, { key: "new-1", ko: "새것", en: "New", zh: "", withDetail: true }] },
       { key: "new-2", type: "SHORT_TEXT", ko: "한 줄", en: "", zh: "", helpKo: "도움", helpEn: "", helpZh: "", required: false, options: null },
     ])).toEqual([
-      { id: "web3_experience", type: "SINGLE_CHOICE", label: { ko: "경력", en: null, zh: "经验" }, help: null, required: true,
+      { id: "web3_experience", type: "SINGLE_CHOICE", label: { ko: "경력", en: null, zh: "经验" }, help: { ko: "", en: "ignored", zh: null }, required: true,
         options: [{ id: "LT_1Y", label: { ko: "짧음", en: null, zh: null }, withDetail: false }, { label: { ko: "새것", en: "New", zh: null }, withDetail: true }] },
       { type: "SHORT_TEXT", label: { ko: "한 줄", en: null, zh: null }, help: { ko: "도움", en: null, zh: null }, required: false, options: null },
     ]);
@@ -127,6 +127,24 @@ describe("CohortQuestionsEditor", () => {
     expect(await screen.findAllByText("Write the question in Korean.")).not.toHaveLength(0);
     expect(within(questionItem(3)).getByLabelText(/^Question \(Korean\)/).getAttribute("aria-invalid")).toBe("true");
     expect(put).not.toHaveBeenCalled();
+  });
+
+  it("asks for Korean help text instead of dropping a translated one, and edits help translations in textareas", async () => {
+    const put = vi.spyOn(api, "saveAdminCohortQuestions");
+    await openEditor();
+    const first = within(questionItem(1));
+    const helpEn = first.getByLabelText("Help text (English, optional)");
+    expect(helpEn.tagName).toBe("TEXTAREA");
+    expect(first.getByLabelText("Help text (Chinese, optional)").tagName).toBe("TEXTAREA");
+    fireEvent.change(helpEn, { target: { value: "Pick one" } });
+    save();
+    expect(await screen.findAllByText("Add the Korean help text too.")).not.toHaveLength(0);
+    expect(first.getByLabelText(/^Help text \(Korean/).getAttribute("aria-invalid")).toBe("true");
+    expect(put).not.toHaveBeenCalled();
+    fireEvent.change(first.getByLabelText(/^Help text \(Korean/), { target: { value: "하나를 골라요" } });
+    save();
+    await waitFor(() => expect(put).toHaveBeenCalledTimes(1));
+    expect(put.mock.calls[0][1][0].help).toEqual({ ko: "하나를 골라요", en: "Pick one", zh: null });
   });
 
   it("shows the BE's reason when the list is refused, and keeps the edits", async () => {

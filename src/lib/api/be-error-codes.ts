@@ -128,7 +128,7 @@ export const BE_ERROR_CODES = [
   "COHORT_APPLICATION_NOT_FOUND", // 404: 기수 지원서가 없거나 내 것이 아니다 (남의 지원서도 같은 404)
   "COHORT_APPLICATION_NOT_SUBMITTED", // 409: SUBMITTED가 아니라 수정·철회할 수 없다 (이미 심사됨/철회됨)
   "COHORT_APPLICATION_WITHDRAWN", // 409: 철회된 지원서라 심사할 수 없다
-  "COHORT_OTHER_DETAIL_REQUIRED", // 400: 활동 유형 또는 관심 분야에 OTHER를 골랐는데 상세(activityTypeOther/interestOther)가 비었다
+  "COHORT_OTHER_DETAIL_REQUIRED", // 400: withDetail 선택지를 골랐는데 상세 내용이 비었다
   "COHORT_QUESTIONS_INVALID", // 400: 기수 질문 목록이 규칙에 맞지 않는다 (모르는 id, 중복 id, 선택지 수, withDetail 둘 이상 등; CONTRACT A9)
   "COHORT_ANSWERS_INVALID", // 400: 지원서 답변이 지금 질문과 맞지 않는다 (없는 질문/선택지, 필수 미응답, 형식, 옛/새 본문 혼용; CONTRACT A9)
   "COHORT_INVALID_WINDOW", // 400: 접수 종료(closesAt)가 시작(opensAt)보다 늦지 않다
