@@ -96,6 +96,25 @@ describe("AgentRegisterForm connected-wallet check", () => {
     Reflect.deleteProperty(window.navigator, "clipboard");
   });
 
+  it("explains why Connect is disabled when the browser has no wallet extension", async () => {
+    Object.assign(wallet, { hasInjectedWallet: false, isConnected: false, connector: undefined });
+    renderWithIntl(<AgentRegisterForm chainId={1439} />);
+    const button = (await screen.findByRole("button", { name: "Connect agent wallet" })) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    const noteId = button.getAttribute("aria-describedby");
+    expect(noteId).toBeTruthy();
+    const note = document.getElementById(noteId as string);
+    expect(note?.textContent).toBe("No wallet found in this browser. Install MetaMask, or open this page in your wallet app's browser.");
+  });
+
+  it("shows no wallet note when a wallet is available", async () => {
+    Object.assign(wallet, { isConnected: false });
+    renderWithIntl(<AgentRegisterForm chainId={1439} />);
+    const button = await screen.findByRole("button", { name: "Connect agent wallet" });
+    expect(button.getAttribute("aria-describedby")).toBeNull();
+    expect(screen.queryByText(/No wallet found/)).toBeNull();
+  });
+
   it("disables the switch button and explains when the configured chain has no RPC URL (canSwitch false)", async () => {
     Object.assign(wallet, { isWrongNetwork: true, canSwitch: false });
     renderWithIntl(<AgentRegisterForm chainId={1439} />);

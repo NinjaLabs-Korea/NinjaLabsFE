@@ -86,6 +86,20 @@ describe("AgentsView", () => {
     expect(screen.getByRole("status").textContent).toMatch(/^This key expires in 7 days\./);
   });
 
+  it("says Expired (never Expires) next to the Expired badge for a lapsed key", async () => {
+    const real = await apiClient.getAgents(signedIn);
+    const agents = (real.status === "available" ? real.data : []).map((agent) => ({
+      ...agent,
+      keyStatus: "EXPIRED" as const,
+      keyExpiresAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+    }));
+    Object.assign(apiClient, { getAgents: async () => ({ status: "available", data: agents }) });
+    renderWithIntl(<AgentsView />);
+    await screen.findByText("proof-collector");
+    expect(screen.getAllByText(/^Expired [A-Z][a-z]{2} \d{1,2}, \d{4}/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/^Expires /)).toBeNull();
+  });
+
   it("lets the unbroken wallet address wrap instead of overflowing a narrow card", async () => {
     renderWithIntl(<AgentsView />);
     await screen.findByText("proof-collector");
