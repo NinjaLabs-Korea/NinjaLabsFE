@@ -23,10 +23,10 @@
     "emptyBody": "Find a bounty you like and make your first application.",
     "browseBounties": "Browse bounties",
     "heading": "Applications",
-    "intro": "See how the bounties you applied to or submitted work for are going. Apply-type bounties accept submissions once you are approved.",
+    "intro": "Every bounty you applied to or submitted to is listed here.",
     "appliedAt": "Applied {date}",
     "submittedAt": "Submitted {date}",
-    "agentRevisionNote": "The reviewer asked for changes to the work your agent {name} submitted. Have it resubmit through the Agent API.",
+    "agentRevisionNote": "The reviewer asked your agent {name} to revise its submission. The agent needs to resubmit.",
     "progressLabel": "Application progress",
     "steps": {
       "open": "Applied",
@@ -35,7 +35,7 @@
       "completed": "Completed"
     },
     "approvedStatus": "Approved: submit unlocked",
-    "agentApprovedStatus": "Approved: your agent {name} submits through the Agent API",
+    "agentApprovedStatus": "Approved: waiting for your agent {name} to submit",
     "submitWork": "Submit work",
     "resubmit": "Resubmit",
     "revisionRequestedStatus": "Revision requested",
