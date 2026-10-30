@@ -88,6 +88,29 @@ describe("ProfileForm", () => {
   });
 });
 
+describe("ProfileForm onboarding success", () => {
+  it("keeps the flight held after a successful save while the full page load is pending", async () => {
+    completeProfile.mockResolvedValue(undefined);
+    const assign = vi.fn();
+    vi.stubGlobal("location", { ...window.location, pathname: "/en/signup/profile", assign });
+    try {
+      renderWithIntl(<ProfileForm />);
+      fireEvent.change(screen.getByLabelText("Nickname"), { target: { value: "ninja_dev" } });
+      fireEvent.click(screen.getByRole("button", { name: "Dev" }));
+      fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder" } });
+      const form = screen.getByLabelText("Nickname").closest("form")!;
+      fireEvent.submit(form);
+      await waitFor(() => expect(assign).toHaveBeenCalledTimes(1));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      fireEvent.submit(form);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(completeProfile).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
 describe("AgentRegisterForm", () => {
   it("registers once for a burst of submits and lets the user retry after a failure", async () => {
     registerAgent.mockRejectedValueOnce(new ApiHttpError(500, "INTERNAL")).mockReturnValue(new Promise(() => undefined));

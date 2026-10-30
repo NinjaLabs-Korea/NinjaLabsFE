@@ -8,6 +8,7 @@ import {
   type InterestArea,
   type Web3Experience,
 } from "@/lib/cohorts";
+import { readStorage, removeStorage, writeStorage } from "@/lib/safe-storage";
 
 /**
  * Per tab (sessionStorage) copy of an unsent cohort application, so a reload, back navigation or an expired session does not
@@ -20,7 +21,7 @@ const text = (value: unknown): string | null => (typeof value === "string" ? val
 
 export function readCohortDraft(userId: string, cohortId: string): CohortFormDraft | null {
   try {
-    const raw = window.sessionStorage.getItem(keyFor(userId, cohortId));
+    const raw = readStorage("session", keyFor(userId, cohortId));
     if (!raw) return null;
     const value: unknown = JSON.parse(raw);
     if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -53,17 +54,10 @@ export function readCohortDraft(userId: string, cohortId: string): CohortFormDra
 }
 
 export function writeCohortDraft(userId: string, cohortId: string, draft: CohortFormDraft): void {
-  try {
-    window.sessionStorage.setItem(keyFor(userId, cohortId), JSON.stringify(draft));
-  } catch {
-    // storage blocked: the form on screen still keeps what was typed
-  }
+  // storage blocked: the form on screen still keeps what was typed
+  writeStorage("session", keyFor(userId, cohortId), JSON.stringify(draft));
 }
 
 export function clearCohortDraft(userId: string, cohortId: string): void {
-  try {
-    window.sessionStorage.removeItem(keyFor(userId, cohortId));
-  } catch {
-    // nothing to clear
-  }
+  removeStorage("session", keyFor(userId, cohortId));
 }

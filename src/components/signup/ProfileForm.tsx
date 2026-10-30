@@ -246,6 +246,9 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         onboardingLog("profile.save.succeeded", { targetPath: "/signup/get-started" });
         if (draftOwner) writeProfileDraft(draftOwner, null);
         window.location.assign(withLocaleOf(window.location.pathname, "/signup/get-started"));
+        // assign returns before the page unloads: keep the flight open so a programmatic submit cannot send a second
+        // save while the full page load is pending. A bfcache restore reloads the page (pageshow handler above).
+        await new Promise<never>(() => undefined);
       } catch (error) {
         onboardingLog("profile.save.failed", onboardingErrorDetails(error));
         const key = saveErrorKey(error);
