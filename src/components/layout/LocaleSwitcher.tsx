@@ -22,7 +22,7 @@ export function LocaleSwitcher() {
   const navigateTo = (next: Locale) => {
     startTransition(() => {
       // Keep query and hash: /auth/callback#loginCode must survive a locale switch.
-      router.replace(`${pathname}${window.location.search}${window.location.hash}`, { locale: next });
+      router.replace(`${pathname}${window.location.search}${window.location.hash}`, { locale: next, scroll: false });
     });
   };
 

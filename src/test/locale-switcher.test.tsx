@@ -22,7 +22,7 @@ describe("LocaleSwitcher", () => {
     expect(items[0].getAttribute("aria-checked")).toBe("true");
 
     act(() => fireEvent.click(items[1]));
-    expect(replace).toHaveBeenCalledWith("/bounties", { locale: "ko" });
+    expect(replace).toHaveBeenCalledWith("/bounties", { locale: "ko", scroll: false });
     expect(screen.queryByRole("menu")).toBeNull();
   });
 
@@ -33,7 +33,7 @@ describe("LocaleSwitcher", () => {
       renderWithIntl(<LocaleSwitcher />);
       fireEvent.click(screen.getByRole("button", { name: /^Language/ }));
       act(() => fireEvent.click(screen.getAllByRole("menuitemradio")[2]));
-      expect(replace).toHaveBeenCalledWith("/bounties?next=%2Fbounties#loginCode=abc123", { locale: "zh" });
+      expect(replace).toHaveBeenCalledWith("/bounties?next=%2Fbounties#loginCode=abc123", { locale: "zh", scroll: false });
     } finally {
       window.history.replaceState(null, "", "/");
     }
