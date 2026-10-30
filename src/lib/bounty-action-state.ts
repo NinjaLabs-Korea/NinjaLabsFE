@@ -13,7 +13,7 @@
  *  4. 내 제출(+지원 필요 바운티면 내 지원) 조회 중 → `checkingStatus`, 조회 실패 → `statusUnavailable`
  *  5. 내 직접 행은 없고 에이전트가 만든 행만 있음 → `agentRow` (직접 지원/제출 폼을 띄우지 않는다)
  *  6. 지원 필요 바운티: 지원 전 → `applyForm`(진행 중이고 지원 마감 전일 때만, 지원 마감만 지났으면 `closed`+`applications`, 그 밖엔 `closed`) / 거절 → `applicationRejected` /
- *     방금 지원했거나 심사 중(`open`) → `applicationUnderReview`(진행 중이 아니면 `closed`, 마감만 지났으면 `closed`+`applications`: 승인은 진행 중이고 마감 전일 때만 된다) / 승인 등 → 7로 내려간다
+ *     방금 지원했거나 심사 중(`open`) → `applicationUnderReview`(진행 중이 아니면 `closed`, 제출 마감이 지났어도 `closed`: 승인은 진행 중이고 마감 전일 때만 되고, 제출도 더는 못 한다) / 승인 등 → 7로 내려간다
  *  7. 제출 승인 → `submissionApproved`, 취소로 심사 없이 닫힌 거절 → `closed`(cancelled), 제출 거절 → `submissionRejected`
  *  8. 진행 중이 아니고 수정 요청도 아님 → 취소된 바운티면 `closed`(cancelled), 심사 중인 제출이 있으면 `inReviewLocked`, 없으면 `closed`
  *  9. 나머지 → `submitForm` (처음 제출 / 심사 중 수정 / 수정 요청 재제출)
@@ -69,7 +69,7 @@ export type BountyActionInput = {
 export type BountyActionView =
   /**
    * 새 지원/제출을 받지 않음. `reason`이 제목·본문 문구를 고른다 (`reviewingBody` / `closedBody` / `applicationsClosedBody`).
-   * `applications`: 지원 마감만 지났다 (제출 마감 전, 승인된 지원자는 계속 제출할 수 있다): "bounty closed"라고 말하면 거짓이다.
+   * `applications`: 지원 마감만 지났다 (제출 마감 전, 승인된 지원자는 계속 제출할 수 있다. 제출 마감까지 지났으면 `closed`): "bounty closed"라고 말하면 거짓이다.
    * `cancelled`: 바운티가 취소돼(BE가 대기 중인 지원을 자동 거절) 거절된 지원자에게 "스폰서가 선택하지 않았다"고 말하면 거짓이다.
    */
   | { kind: "closed"; reason: "reviewing" | "closed" | "applications" | "cancelled" }
@@ -200,7 +200,8 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
       // On a bounty that ended (COMPLETED / CANCELLED), moved on (`reviewing`) or whose deadline passed, nobody can approve it any
       // more: say it is closed instead of promising "submission unlocks after approval". Only the deadline passing is
       // "applications closed"; the other endings are "bounty closed".
-      if (application && deadlineOnly) return { kind: "closed", reason: "applications" };
+      // The submission deadline passed: nobody can submit either, so "approved applicants can still submit" would be false.
+      if (application && deadlineOnly) return closed;
       return application && status !== "active" ? closed : { kind: "applicationUnderReview" };
     }
   }
@@ -254,6 +255,14 @@ export type BountyActionErrorCopy =
 export function isStaleRowsError(error: unknown): boolean {
   const { key } = bountyActionErrorCopy(error);
   return key === "ALREADY_APPLIED" || key === "APPLICATION_NOT_APPROVED" || key === "SUBMISSION_FINALIZED";
+}
+
+/**
+ * A 401 reaching the panel means the refresh already failed (the http layer retries once after refreshing): the session ended.
+ * The panel shows its session-expired banner and keeps the typed form; it must not add a second alert with the BE auth code.
+ */
+export function isSessionEndedError(error: unknown): boolean {
+  return error instanceof ApiHttpError && error.status === 401;
 }
 
 /**

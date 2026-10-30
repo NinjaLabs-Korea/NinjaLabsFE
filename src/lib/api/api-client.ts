@@ -50,6 +50,10 @@ type SubmissionRow = {
   category?: string;
   submitted_at?: string;
   description?: string;
+  /** Added with BE-1 (`GET /submissions/me`); older BEs omit all three. */
+  submission_url?: string | null;
+  repository_url?: string | null;
+  commit_sha?: string | null;
   status: "SUBMITTED" | "RESUBMITTED" | "IN_REVIEW" | "REVISION_REQUESTED" | "APPROVED" | "REJECTED";
   bounty_id: string;
   agent?: AgentRef;
@@ -89,6 +93,10 @@ function toSubmission(row: SubmissionRow): AccountSubmission {
     paymentStatus: toPayoutStatus(row.payment_status) ?? "NONE",
     reviewComment: row.review_comment?.trim() || null,
     ...(closedByCancellation(row) ? { closedByCancellation: true } : {}),
+    ...(row.submission_url ? { submissionUrl: row.submission_url } : {}),
+    ...(row.repository_url ? { repositoryUrl: row.repository_url } : {}),
+    ...(row.commit_sha ? { commitSha: row.commit_sha } : {}),
+    ...(row.description ? { description: row.description } : {}),
   };
 }
 
