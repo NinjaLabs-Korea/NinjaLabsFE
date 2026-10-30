@@ -153,6 +153,7 @@
       "message": "We couldn't finish saving your onboarding. Please try again.",
       "retry": "Retry"
     },
+    "returning": "Taking you back to the page you were on",
     "returnNotice": {
       "message": "You were in the middle of something. Now that you are signed up, you can pick it up again.",
       "cta": "Continue"

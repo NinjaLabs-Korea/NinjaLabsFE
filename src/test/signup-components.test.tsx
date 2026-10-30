@@ -7,6 +7,7 @@ import { CompleteOnboarding } from "@/components/signup/CompleteOnboarding";
 import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
 import AuthCallbackPage from "@/app/[locale]/auth/callback/page";
 import { ApiHttpError } from "@/lib/api/http";
+import { peekReturnPath, rememberReturnPath } from "@/lib/return-path";
 import { exchangeLoginCodeFromLocation } from "@/lib/api/oauth";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { renderWithIntl } from "@/test/intl";
@@ -144,6 +145,64 @@ describe("CompleteOnboarding", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe("CompleteOnboarding with a remembered return path", () => {
+  const menu = <p>MENU</p>;
+  const original = window.location;
+  const replace = vi.fn();
+  beforeEach(() => {
+    completeOnboarding.mockReset();
+    replace.mockReset();
+    window.sessionStorage.clear();
+    Object.defineProperty(window, "location", { configurable: true, value: { ...original, pathname: "/en/signup/get-started", replace } });
+  });
+  afterEach(() => {
+    window.sessionStorage.clear();
+    Object.defineProperty(window, "location", { configurable: true, value: original });
+  });
+
+  it("shows a status instead of the menu and returns to the remembered page once onboarding is saved", async () => {
+    rememberReturnPath("/recruit");
+    state.auth = signedInAs(user);
+    completeOnboarding.mockResolvedValue(undefined);
+    renderWithIntl(<CompleteOnboarding>{menu}</CompleteOnboarding>);
+    expect((await screen.findByRole("status")).textContent).toBe("Taking you back to the page you were on");
+    expect(screen.queryByText("MENU")).toBeNull();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/en/recruit"));
+    expect(peekReturnPath()).toBeNull();
+    expect(screen.queryByText("MENU")).toBeNull();
+  });
+
+  it("returns an already-completed user without calling the BE", async () => {
+    rememberReturnPath("/recruit");
+    state.auth = signedInAs({ ...user, onboardingCompleted: true });
+    renderWithIntl(<CompleteOnboarding>{menu}</CompleteOnboarding>);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/en/recruit"));
+    expect(completeOnboarding).not.toHaveBeenCalled();
+  });
+
+  it("shows the menu without a status when nothing is remembered", async () => {
+    state.auth = signedInAs(user);
+    completeOnboarding.mockResolvedValue(undefined);
+    renderWithIntl(<CompleteOnboarding>{menu}</CompleteOnboarding>);
+    await waitFor(() => expect(completeOnboarding).toHaveBeenCalledTimes(1));
+    expect(screen.getByText("MENU")).toBeTruthy();
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("on failure keeps the error with Retry, shows the menu and offers the remembered page as a link", async () => {
+    rememberReturnPath("/recruit");
+    state.auth = signedInAs(user);
+    completeOnboarding.mockRejectedValueOnce(new Error("boom"));
+    renderWithIntl(<CompleteOnboarding>{menu}</CompleteOnboarding>);
+    expect((await screen.findByRole("alert")).textContent).toContain("We couldn't finish saving your onboarding.");
+    expect(screen.getByText("MENU")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Continue" }).getAttribute("href")).toBe("/recruit");
+    expect(replace).not.toHaveBeenCalled();
+    expect(peekReturnPath()).toBe("/recruit");
   });
 });
 
