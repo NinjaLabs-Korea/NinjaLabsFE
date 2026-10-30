@@ -2,12 +2,12 @@
   "login": {
     "pageTitle": "{title} | Ninja Labs",
     "mock": {
-      "title": "Preview the Ninja Labs sign-in flow",
+      "title": "Preview the sign-in flow",
       "description": "Explore this step with a local session preview. It does not contact Google or create an account.",
       "disclosure": "Mock mode is local and test only. This preview does not contact Google or create an account."
     },
     "api": {
-      "title": "Get started with Ninja Labs",
+      "title": "Get started",
       "description": "All you need is a Google account. No wallet required.",
       "disclosure": "New here? We create your account. Already a member? You pick up where you left off. We only receive your Google email, never your password."
     },
