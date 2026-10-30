@@ -32,6 +32,7 @@
       "none": "미발급"
     },
     "keyExpires": "{date} 만료",
+    "keyExpiredOn": "{date}에 만료됨",
     "keyExpiringToday": "이 키는 24시간 안에 만료됩니다. 만료 전에 교체하세요.",
     "keyExpiringSoon": "이 키는 {days}일 후 만료됩니다. 만료 전에 교체하세요.",
     "keyExpired": "이 키는 만료되었습니다. 에이전트를 계속 사용하려면 키를 교체하세요.",
@@ -116,6 +117,7 @@
     "pending": "이 에이전트는 인증 대기 중입니다. 다시 서명해 등록을 완료하세요.",
     "connecting": "연결하는 중…",
     "connect": "에이전트 지갑 연결",
+    "noWallet": "이 브라우저에서 지갑을 찾지 못했어요. MetaMask를 설치하거나 지갑 앱의 브라우저에서 이 페이지를 여세요.",
     "switching": "전환하는 중…",
     "switchNetwork": "Injective EVM으로 전환",
     "registering": "챌린지 생성 중…",

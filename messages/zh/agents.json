@@ -32,6 +32,7 @@
       "none": "未签发"
     },
     "keyExpires": "{date} 过期",
+    "keyExpiredOn": "已于 {date} 过期",
     "keyExpiringToday": "此密钥将在 24 小时内过期，请在过期前轮换。",
     "keyExpiringSoon": "此密钥将在 {days} 天后过期，请在过期前轮换。",
     "keyExpired": "此密钥已过期。请轮换密钥以继续使用该代理。",
@@ -116,6 +117,7 @@
     "pending": "此代理正在等待验证。请重新签名以完成注册。",
     "connecting": "连接中…",
     "connect": "连接代理钱包",
+    "noWallet": "在此浏览器中未找到钱包。请安装 MetaMask，或在钱包应用的浏览器中打开此页面。",
     "switching": "切换中…",
     "switchNetwork": "切换到 Injective EVM",
     "registering": "正在生成挑战消息…",

@@ -32,6 +32,7 @@
       "none": "Not issued"
     },
     "keyExpires": "Expires {date}",
+    "keyExpiredOn": "Expired {date}",
     "keyExpiringToday": "This key expires in less than a day. Rotate it before it expires.",
     "keyExpiringSoon": "This key expires in {days, plural, one {# day} other {# days}}. Rotate it before it expires.",
     "keyExpired": "This key has expired. Rotate it to keep the agent working.",
@@ -116,6 +117,7 @@
     "pending": "This agent is pending verification. Sign again to finish registration.",
     "connecting": "Connecting…",
     "connect": "Connect agent wallet",
+    "noWallet": "No wallet found in this browser. Install MetaMask, or open this page in your wallet app's browser.",
     "switching": "Switching…",
     "switchNetwork": "Switch to Injective EVM",
     "registering": "Creating challenge…",
