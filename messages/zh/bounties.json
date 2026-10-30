@@ -201,6 +201,7 @@
     "reviewerComment": "审核意见：{comment}",
     "resubmitHeading": "重新提交作品",
     "inReviewHeading": "提交审核中",
+    "resubmitPrefilledNote": "下面已填入你当前提交的内容。发送后将替换为新内容。",
     "revisionNote": "赞助方要求修改。请更新作品后重新提交。",
     "inReviewNote": "赞助方正在审核您的作品。截止前仍可更新，最新版本将替换之前的提交。",
     "resubmit": "重新提交",

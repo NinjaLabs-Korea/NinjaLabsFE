@@ -32,6 +32,14 @@ export type AccountSubmission = {
    * (`bounty_status` CANCELLED and `has_review` false). Absent when the BE predates those fields (today's copy applies).
    */
   closedByCancellation?: boolean;
+  /**
+   * The content of the current submission (BE `GET /submissions/me`: `submission_url`, `repository_url`, `commit_sha`, `description`).
+   * Each is absent when the BE predates it or the value is empty; the resubmit form pre-fills from these.
+   */
+  submissionUrl?: string;
+  repositoryUrl?: string;
+  commitSha?: string;
+  description?: string;
 };
 
 export type AccountApplication = {

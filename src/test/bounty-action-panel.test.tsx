@@ -612,6 +612,30 @@ describe("BountyActionPanel", () => {
     expect((screen.getByLabelText("Describe what you completed") as HTMLTextAreaElement).value).toBe("Done");
   });
 
+  it("pre-fills the update form from the current submission and keeps what is typed", async () => {
+    state.submissions = [{ ...submission("submitted"), submissionUrl: "https://example.test/work", repositoryUrl: "https://github.com/o/r", commitSha: "3f2a9c1", description: "First pass" }];
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const url = (await screen.findByLabelText("Completed work link")) as HTMLInputElement;
+    expect(url.value).toBe("https://example.test/work");
+    expect((screen.getByLabelText("Code repository (optional)") as HTMLInputElement).value).toBe("https://github.com/o/r");
+    expect((screen.getByLabelText("Commit hash (optional, code work only)") as HTMLInputElement).value).toBe("3f2a9c1");
+    const description = screen.getByLabelText("Describe what you completed") as HTMLTextAreaElement;
+    expect(description.value).toBe("First pass");
+    expect(screen.getByText("Your current submission is filled in below. Sending replaces it.")).toBeTruthy();
+    fireEvent.change(description, { target: { value: "Edited" } });
+    expect(description.value).toBe("Edited");
+  });
+
+  it("shows no pre-fill note for a first submission or a BE without the content fields", async () => {
+    cleanup();
+    state.submissions = [submission("submitted")];
+    // A new read function: the account query remembers the previous test's answer per function for 60 s.
+    Object.assign(apiClient, { getSubmissions: async () => ({ status: "available" as const, data: state.submissions }) });
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    expect(((await screen.findByLabelText("Completed work link")) as HTMLInputElement).value).toBe("");
+    expect(screen.queryByText(/is filled in below/)).toBeNull();
+  });
+
   it("moves focus to the status heading and announces the success copy after applying", async () => {
     const applyToBounty = vi.fn(async () => ({ id: "a-new", status: "PENDING" }));
     Object.assign(apiClient, { applyToBounty });

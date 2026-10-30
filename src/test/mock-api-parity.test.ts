@@ -43,8 +43,28 @@ describe("mock and api clients implement the same contract", () => {
       const [apiResult, mockResult] = await Promise.all([api[method](auth), mock[method](auth)]);
       if (apiResult.status !== "available" || mockResult.status !== "available") throw new Error(`${method} unavailable`);
       expect(mockResult.data.length, method).toBeGreaterThan(0);
-      for (const row of mockResult.data) expect(keys(row), method).toEqual(keys(apiResult.data[0]));
+      // The submission content fields are optional on both sides (the dedicated test below covers them).
+      const content = new Set(["submissionUrl", "repositoryUrl", "commitSha", "description"]);
+      const base = (row: object) => keys(row).filter((key) => !content.has(key));
+      for (const row of mockResult.data) expect(base(row), method).toEqual(base(apiResult.data[0]));
     }
+  });
+
+  it("mock and api keep the same content fields on a submission, and a resubmission replaces them wholesale", async () => {
+    const api = apiClient({ "/submissions/me": [{ status: "SUBMITTED", bounty_id: "b", agent: null, submission_url: "https://x.y", repository_url: "https://g.y/r", commit_sha: "abc1234", description: "d" }] });
+    const mock = createMockApiClient();
+    await mock.submitBounty("wallet-onboarding-states", { submissionUrl: "https://x.y", repositoryUrl: "https://g.y/r", commitSha: "abc1234", description: "d" });
+    const [a, m] = [await api.getSubmissions(owner()), await mock.getSubmissions(owner())];
+    if (a.status !== "available" || m.status !== "available") throw new Error("unavailable");
+    const row = m.data.find((r) => r.bountySlug === "wallet-onboarding-states")!;
+    expect(keys(row)).toEqual(keys(a.data[0]));
+    expect(row).toMatchObject({ submissionUrl: "https://x.y", repositoryUrl: "https://g.y/r", commitSha: "abc1234", description: "d" });
+    await mock.submitBounty("wallet-onboarding-states", { submissionUrl: "https://x.y", description: "e" });
+    const again = await mock.getSubmissions(owner());
+    if (again.status !== "available") throw new Error("unavailable");
+    const next = again.data.find((r) => r.bountySlug === "wallet-onboarding-states")!;
+    expect(next.description).toBe("e");
+    expect(next.repositoryUrl).toBeUndefined();
   });
 
   it("maps review_comment to reviewComment, and the mock fixtures carry a forfeited submission", async () => {
@@ -132,7 +152,7 @@ describe("mock submission revisions", () => {
     expect(await mock.submitBounty("b1", input)).toMatchObject({ revisionNo: 2, status: "RESUBMITTED" });
     expect(await mock.submitBounty("b2", input)).toMatchObject({ revisionNo: 1, status: "SUBMITTED" });
     const submissions = await mock.getSubmissions(owner());
-    expect(submissions.status === "available" && submissions.data.filter((row) => row.bountySlug === "b1")).toEqual([{ bountySlug: "b1", status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null }]);
+    expect(submissions.status === "available" && submissions.data.filter((row) => row.bountySlug === "b1")).toEqual([{ bountySlug: "b1", status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null, submissionUrl: "https://x.y", description: "d" }]);
   });
 
   it("resubmitting work sent back for revision clears the revision state like the BE (RESUBMITTED → submitted)", async () => {

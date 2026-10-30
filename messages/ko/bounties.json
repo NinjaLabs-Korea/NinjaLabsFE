@@ -201,6 +201,7 @@
     "reviewerComment": "심사자 코멘트: {comment}",
     "resubmitHeading": "작업물 다시 제출",
     "inReviewHeading": "제출물 검토 중",
+    "resubmitPrefilledNote": "지금 제출된 내용을 아래에 채워 두었어요. 보내면 이 내용으로 바뀌어요.",
     "revisionNote": "스폰서가 수정을 요청했어요. 작업물을 고친 뒤 다시 제출하세요.",
     "inReviewNote": "스폰서가 작업물을 검토하고 있어요. 마감 전까지는 수정할 수 있으며, 최신 버전이 이전 제출을 대체해요.",
     "resubmit": "다시 제출",

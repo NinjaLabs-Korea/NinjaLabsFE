@@ -14,7 +14,7 @@ import { payoutBadge } from "@/lib/payout";
 import { isHttpUrl } from "@/lib/url-rules";
 import { hasVisibleText } from "@/lib/visible-text";
 import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
-import { bountyActionErrorCopy, deriveActionView, isSessionEndedError, isStaleRowsError, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
+import { bountyActionErrorCopy, deriveActionView, isSessionEndedError, isStaleRowsError, splitRows, type BountyActionErrorCopy } from "@/lib/bounty-action-state";
 import type { AccountApplication } from "@/lib/contracts/account";
 import type { ApiResult } from "@/lib/contracts/api";
 import type { ClosedReason } from "@/lib/bounty-status";
@@ -462,6 +462,10 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       const { revising, inReview, revisionComment } = view;
       const heading = revising ? t("resubmitHeading") : inReview ? t("inReviewHeading") : t("submitHeading");
       const actionLabel = revising ? t("resubmit") : inReview ? t("updateSubmission") : t("submit");
+      // Update/Resubmit replaces the whole submission on the BE, so the form starts from what is on file (uncontrolled
+      // `defaultValue`: it applies when the form opens and never overwrites what the person typed afterwards).
+      const current = splitRows(submissionsQuery.data?.filter((row) => row.bountySlug === bountyId)).own;
+      const hasCurrent = Boolean(current && (current.submissionUrl || current.repositoryUrl || current.commitSha || current.description));
       return (
         <section className={panelClass}>
           <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{heading}</h2>
@@ -469,18 +473,19 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
           {revising && revisionComment ? <p className={`mt-2 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: revisionComment })}</p> : null}
           {inReview ? <p className="mt-2 text-sm text-ink-muted">{t("inReviewNote")}</p> : null}
           {inReview && applicationRequired ? <Link className={outlineLinkClass} href="/applications">{t("viewApplications")}</Link> : null}
+          {hasCurrent ? <p className="mt-2 text-sm text-ink-muted">{t("resubmitPrefilledNote")}</p> : null}
           <form className="mt-4 space-y-3" noValidate onSubmit={submit}>
             <Field label={t("submissionUrl")} error={fieldErrorLine("submissionUrl")}>
-              <input className={inputClass} name="submissionUrl" onBlur={checkUrlOnBlur(ruleFor(SUBMIT_FIELDS, "submissionUrl"))} placeholder="https://" required type="url" {...fieldProps("submissionUrl")} />
+              <input className={inputClass} defaultValue={current?.submissionUrl} name="submissionUrl" onBlur={checkUrlOnBlur(ruleFor(SUBMIT_FIELDS, "submissionUrl"))} placeholder="https://" required type="url" {...fieldProps("submissionUrl")} />
             </Field>
             <Field label={t("repositoryUrl")} error={fieldErrorLine("repositoryUrl")}>
-              <input className={inputClass} name="repositoryUrl" onBlur={checkUrlOnBlur(ruleFor(SUBMIT_FIELDS, "repositoryUrl"))} placeholder="https://" type="url" {...fieldProps("repositoryUrl")} />
+              <input className={inputClass} defaultValue={current?.repositoryUrl} name="repositoryUrl" onBlur={checkUrlOnBlur(ruleFor(SUBMIT_FIELDS, "repositoryUrl"))} placeholder="https://" type="url" {...fieldProps("repositoryUrl")} />
             </Field>
             <Field label={t("commitSha")}>
-              <input className={inputClass} maxLength={COMMIT_SHA_MAX} name="commitSha" placeholder="3f2a9c1" type="text" {...invalidProps} />
+              <input className={inputClass} defaultValue={current?.commitSha} maxLength={COMMIT_SHA_MAX} name="commitSha" placeholder="3f2a9c1" type="text" {...invalidProps} />
             </Field>
             <Field label={t("submissionDescription")} error={fieldErrorLine("description")}>
-              <textarea className={`min-h-24 ${textareaClass}`} maxLength={SUBMISSION_DESCRIPTION_MAX} name="description" required {...fieldProps("description")} />
+              <textarea className={`min-h-24 ${textareaClass}`} defaultValue={current?.description} maxLength={SUBMISSION_DESCRIPTION_MAX} name="description" required {...fieldProps("description")} />
             </Field>
             <button aria-busy={busy || undefined} className={submitButtonClass} disabled={busy || sessionEnded} type="submit">{busy ? <><span aria-hidden="true" className="spinner mr-2" />{t("submitting")}</> : actionLabel}</button>
           </form>
