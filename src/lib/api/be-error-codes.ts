@@ -2,7 +2,7 @@
  * BE가 응답 `message`로 던지는 에러 코드 목록 - **BE 카탈로그의 그대로 복사본(snapshot)**이다. 손으로 코드를 지어내지 말 것.
  *
  * 원본: NinjaLabsBE `src/common/http/error-codes.ts` (`ERROR_CODES`의 키, 같은 순서·같은 묶음).
- * 스냅샷 기준: BE `feat/cohort-recruitment` (PR #35) @ `1ef311c` (카탈로그 마지막 변경 `69d15c7`, 기수 모집 11개 + `AGENT_WALLET_IS_OWNER_WALLET`) · 98개 (이후 BE qa-loop-2 카탈로그의 APPLICATION_DEADLINE_AFTER_SUBMISSION_DEADLINE, REWARD_SYMBOL_DENOM_MISMATCH 추가).
+ * 스냅샷 기준: BE-1 브랜치(`dec/BE-1`, 지갑 충돌 분리 + 기수 질문 CONTRACT A9/B; 미머지) 위에 BE `feat/cohort-recruitment` (PR #35) @ `1ef311c` (카탈로그 마지막 변경 `69d15c7`, 기수 모집 11개 + `AGENT_WALLET_IS_OWNER_WALLET`) · 98개 (이후 BE qa-loop-2 카탈로그의 APPLICATION_DEADLINE_AFTER_SUBMISSION_DEADLINE, REWARD_SYMBOL_DENOM_MISMATCH 추가).
  * 줄 끝 주석은 "HTTP 상태 - BE 카탈로그의 한 줄 의미"이고 사용자 문구가 아니다 (사용자 문구는 `messages/<locale>/*.json`).
  *
  * ## 어디를 고치나
@@ -45,7 +45,9 @@ export const BE_ERROR_CODES = [
   "CHALLENGE_NOT_FOUND", // 400 - 발급된 지갑 challenge가 없다 (먼저 challenge 요청)
   "CHALLENGE_EXPIRED", // 400 - challenge가 만료됐거나 이미 사용됐다
   "INVALID_SIGNATURE", // 401 - 서명 검증에 실패했다 (지갑 연결·에이전트 등록 공통)
-  "WALLET_ALREADY_LINKED", // 409 - 이 주소가 이미 다른 계정에 연결됐거나, 내 대표 지갑이 이미 있다 (부분 유니크 인덱스 충돌)
+  "WALLET_ALREADY_LINKED", // 409 - 지갑 유니크 충돌(제약 이름 미상). 구 FE 호환용 fallback, 새 코드는 아래 둘 (CONTRACT B)
+  "WALLET_LINKED_TO_OTHER_ACCOUNT", // 409 - 이 주소가 이미 다른 계정에 연결돼 있다 (uq_wallet_chain_address_active; CONTRACT B)
+  "ACCOUNT_ALREADY_HAS_WALLET", // 409 - 이 계정에 이미 다른 대표 지갑이 연결돼 있다 (uq_wallet_primary_per_user; CONTRACT B)
 
   // ── 에이전트 ──
   "INVALID_AGENT_WALLET_ADDRESS", // 400 - 에이전트 지갑 주소 형식이 올바르지 않다
@@ -127,6 +129,8 @@ export const BE_ERROR_CODES = [
   "COHORT_APPLICATION_NOT_SUBMITTED", // 409: SUBMITTED가 아니라 수정·철회할 수 없다 (이미 심사됨/철회됨)
   "COHORT_APPLICATION_WITHDRAWN", // 409: 철회된 지원서라 심사할 수 없다
   "COHORT_OTHER_DETAIL_REQUIRED", // 400: 활동 유형 또는 관심 분야에 OTHER를 골랐는데 상세(activityTypeOther/interestOther)가 비었다
+  "COHORT_QUESTIONS_INVALID", // 400: 기수 질문 목록이 규칙에 맞지 않는다 (모르는 id, 중복 id, 선택지 수, withDetail 둘 이상 등; CONTRACT A9)
+  "COHORT_ANSWERS_INVALID", // 400: 지원서 답변이 지금 질문과 맞지 않는다 (없는 질문/선택지, 필수 미응답, 형식, 옛/새 본문 혼용; CONTRACT A9)
   "COHORT_INVALID_WINDOW", // 400: 접수 종료(closesAt)가 시작(opensAt)보다 늦지 않다
   "COHORT_INVALID_TRANSITION", // 400: 허용되지 않는 기수 상태 전이다 (DRAFT->OPEN->CLOSED, CLOSED->OPEN만)
   "COHORT_ALREADY_OPEN", // 409: 다른 기수가 이미 OPEN이다 (동시에 열린 기수는 하나)
