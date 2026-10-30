@@ -164,7 +164,8 @@
       "submissionClosed": "제출 마감",
       "reviewing": "심사 중",
       "completed": "완료",
-      "cancelled": "취소됨"
+      "cancelled": "취소됨",
+      "pastDeadline": "마감 지남"
     },
     "tags": {
       "Dev": "개발",
@@ -218,7 +219,9 @@
         "deliverablesRequired": "결과물이나 제출 가이드를 입력하세요.",
         "maxWinnersInvalid": "1에서 1,000 사이의 정수를 입력하세요.",
         "titleTooLong": "최대 200자까지 입력할 수 있습니다.",
-        "sponsorTooLong": "최대 100자까지 입력할 수 있습니다."
+        "sponsorTooLong": "최대 100자까지 입력할 수 있습니다.",
+        "bidiChars": "보이지 않는 방향·제어 문자(예: U+202E, 탭)를 지워 주세요.",
+        "amountTooLarge": "소수점 앞은 {digits}자리까지 쓸 수 있어요."
       },
       "rewardLockedHint": "보상은 바운티 생성 후에는 바꿀 수 없습니다.",
       "rewardNote": "생성한 뒤 스폰서가 멀티시그 지갑으로 보상을 입금하고, 운영자가 Operations에서 입금을 확인해야 바운티를 열 수 있습니다. 바운티가 생성된 뒤에는 보상을 바꿀 수 없습니다."
@@ -228,7 +231,7 @@
       "loadFailedDescription": "관리자 바운티를 불러오지 못했습니다.",
       "createdTitle": "바운티 생성됨",
       "updatedTitle": "바운티 수정됨",
-      "saveFailedDescription": "바운티가 저장되지 않았습니다. 입력 항목과 관리자 권한을 확인해 주세요.",
+      "saveFailedDescription": "바운티를 저장하지 못했어요. 표시된 칸을 확인하고 다시 시도해 주세요.",
       "statusUpdatedTitle": "상태 변경됨",
       "statusUpdatedDescription": "{title}의 상태가 {to, select, OPEN {모집 중} other {제출 마감}}으로 변경되었습니다.",
       "transitionFailedTitle": "상태 변경 실패",

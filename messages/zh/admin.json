@@ -164,7 +164,8 @@
       "submissionClosed": "提交已截止",
       "reviewing": "审核中",
       "completed": "已完成",
-      "cancelled": "已取消"
+      "cancelled": "已取消",
+      "pastDeadline": "已过截止"
     },
     "tags": {
       "Dev": "开发",
@@ -218,7 +219,9 @@
         "deliverablesRequired": "请填写交付物或提交指南。",
         "maxWinnersInvalid": "请输入 1 到 1000 之间的整数。",
         "titleTooLong": "最多 200 个字符。",
-        "sponsorTooLong": "最多 100 个字符。"
+        "sponsorTooLong": "最多 100 个字符。",
+        "bidiChars": "请删除不可见的方向或控制字符（例如 U+202E 或制表符）。",
+        "amountTooLarge": "小数点前最多 {digits} 位。"
       },
       "rewardLockedHint": "奖励在悬赏创建后即固定，无法在此修改。",
       "rewardNote": "创建后，赞助方需将奖励转入多签钱包，管理员在 Operations 中确认存款，赏金任务才能开放。任务创建后无法更改奖励。"
@@ -228,7 +231,7 @@
       "loadFailedDescription": "无法加载管理后台赏金。",
       "createdTitle": "赏金已创建",
       "updatedTitle": "赏金已更新",
-      "saveFailedDescription": "赏金未保存。请检查填写内容和管理员权限。",
+      "saveFailedDescription": "赏金未保存。请检查标出的字段后重试。",
       "statusUpdatedTitle": "状态已更新",
       "statusUpdatedDescription": "{title} 现在{to, select, OPEN {已开放} other {已截止提交}}。",
       "transitionFailedTitle": "状态变更失败",

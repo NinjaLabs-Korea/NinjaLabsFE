@@ -164,7 +164,8 @@
       "submissionClosed": "Submissions closed",
       "reviewing": "In review",
       "completed": "Completed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "pastDeadline": "Past deadline"
     },
     "tags": {
       "Dev": "Dev",
@@ -218,7 +219,9 @@
         "deliverablesRequired": "Add the deliverables or a submission guide.",
         "maxWinnersInvalid": "Enter a whole number from 1 to 1,000.",
         "titleTooLong": "Use at most 200 characters.",
-        "sponsorTooLong": "Use at most 100 characters."
+        "sponsorTooLong": "Use at most 100 characters.",
+        "bidiChars": "Remove hidden direction or control characters (for example U+202E, or a tab).",
+        "amountTooLarge": "Use at most {digits} digits before the decimal point."
       },
       "rewardLockedHint": "Reward is fixed once the bounty exists; it cannot be changed here.",
       "rewardNote": "After you create it, the sponsor sends the reward to the multisig wallet and an admin confirms the deposit in Operations. Only then can the bounty open. The reward cannot be changed once the bounty exists."
@@ -228,7 +231,7 @@
       "loadFailedDescription": "Could not load admin bounties.",
       "createdTitle": "Bounty created",
       "updatedTitle": "Bounty updated",
-      "saveFailedDescription": "The bounty was not saved. Check the fields and your admin permissions.",
+      "saveFailedDescription": "The bounty was not saved. Check the highlighted fields and try again.",
       "statusUpdatedTitle": "Status updated",
       "statusUpdatedDescription": "{title} is now {to, select, OPEN {open} other {submission closed}}.",
       "transitionFailedTitle": "Transition failed",
