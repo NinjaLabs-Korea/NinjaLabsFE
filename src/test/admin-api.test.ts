@@ -73,7 +73,7 @@ describe("admin notice save payload", () => {
   it("maps the admin user join date to a stable ISO day", async () => {
     const { http, fetchJson } = createHttp();
     fetchJson.mockResolvedValueOnce([
-      { id: "u1", email: "a@b.c", nickname: "a", is_member: false, member_role: null, member_display_order: null, created_at: "2026-06-20T23:30:00Z", wallet_address: null },
+      { id: "u1", email: "a@b.c", nickname: "a", is_member: false, member_role: null, member_display_order: null, created_at: "2026-06-20T14:30:00Z", wallet_address: null },
     ] as never);
     const [user] = await createAdminApi(http).getAdminUsers();
     expect(user.joinedAt).toBe("2026-06-20");

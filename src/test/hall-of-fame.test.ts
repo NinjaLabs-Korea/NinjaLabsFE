@@ -49,7 +49,7 @@ describe("hall of fame partner wall", () => {
     // "Script link" has a safe logo, so it lives on the partner wall only.
     expect(hallOfFame.highlights.map(({ href, image }) => [href, image])).toEqual([
       ["https://ok.test", null],
-      ["/notices", null],
+      [null, null],
     ]);
   });
 
@@ -133,5 +133,19 @@ describe("visibleStats (zero stats are hidden)", () => {
   it("shows the whole block as soon as one value is above zero, keeping the zero ones", () => {
     const stats = [stat("0"), stat("2"), stat("0")];
     expect(visibleStats(stats)).toEqual(stats);
+  });
+});
+
+describe("hall of fame highlights without a link", () => {
+  afterEach(() => fetchPublicJson.mockReset());
+
+  it("keeps href null for a missing link so the card is not a link to /notices", async () => {
+    fetchPublicJson.mockImplementation(async (path: string) =>
+      path.endsWith("/stats")
+        ? { completedBounties: 0, builders: 0, completionNfts: 0, sponsors: 0 }
+        : [highlight("PROJECT", "No link", null, null), highlight("PROJECT", "Linked", null, "https://ok.test")],
+    );
+    const { value } = await settle(getRuntimeHallOfFame("en"), emptyHallOfFame);
+    expect(value.highlights.map((h) => h.href)).toEqual([null, "https://ok.test"]);
   });
 });
