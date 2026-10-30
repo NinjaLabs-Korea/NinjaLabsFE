@@ -70,7 +70,7 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
   const [pendingTransition, setPendingTransition] = useState<PendingTransition | null>(null);
   const [transitioning, setTransitioning] = useState(false);
   const [transitionError, setTransitionError] = useState<ReturnType<typeof cohortAdminErrorKey> | null>(null);
-  const formRef = useRef<HTMLElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const fetchCohorts = useCallback(() => api.getAdminCohorts(), [api]);
   const toastLoadFailed = useLoadFailedToast(t("toast.loadFailedTitle"), t("toast.loadFailedDescription"));
@@ -223,7 +223,7 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
 
         {selected ? <CohortApplicationsPanel cohort={selected} onReviewed={() => void reload()} /> : loadState === "ready" && records.length > 0 ? <p className="text-sm text-ink-muted">{t("selectHint")}</p> : null}
 
-        <section className="rounded-card border border-border bg-surface p-[21px] shadow-card" ref={formRef}>
+        <form className="rounded-card border border-border bg-surface p-[21px] shadow-card" noValidate onSubmit={(event) => { event.preventDefault(); void saveCohort(); }} ref={formRef}>
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{isEditing ? t("form.eyebrowEdit") : t("form.eyebrowCreate")}</p>
           <h2 className="mt-2 font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
           <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -244,9 +244,9 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
             </label>
             <p className="text-xs text-ink-muted md:col-span-2">{t("form.windowHint")}</p>
           </div>
-          <button className="mt-5 h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={saving} onClick={() => void saveCohort()} type="button">{saving ? tCommon("saving") : tCommon("save")}</button>
+          <button className="mt-5 h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={saving} type="submit">{saving ? tCommon("saving") : tCommon("save")}</button>
           <p className="mt-3 text-xs text-ink-muted">{t("form.draftNote")}</p>
-        </section>
+        </form>
       </div>
 
       <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void deleteCohort(pendingDelete)} title={pendingDelete?.name ?? null} />
