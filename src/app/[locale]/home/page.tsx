@@ -7,9 +7,11 @@ import { HomeActivity } from "@/components/home/HomeActivity";
 import { HomeGate } from "@/components/home/HomeGate";
 import { HomeProfileCard } from "@/components/home/HomeProfileCard";
 import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
+import { InitialCohortProvider } from "@/components/recruit/useCurrentCohort";
 import { HomeRecruitment } from "@/components/home/HomeRecruitment";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { localeAlternates } from "@/i18n/alternates";
+import { getRuntimeCurrentCohort } from "@/lib/cohorts-public";
 import { getRuntimeLanding } from "@/lib/landing";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/home">): Promise<Metadata> {
@@ -32,12 +34,14 @@ export default async function HomePage({ params }: PageProps<"/[locale]/home">) 
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("home");
-  const { bounties, news, unavailable } = await getRuntimeLanding(locale);
+  const [{ bounties, news, unavailable }, cohort] = await Promise.all([getRuntimeLanding(locale), getRuntimeCurrentCohort()]);
   return (
     <HomeGate>
       <HomeProfileCard />
       <HomeActivity />
-      <HomeRecruitment />
+      <InitialCohortProvider cohort={cohort}>
+        <HomeRecruitment />
+      </InitialCohortProvider>
 
       <section className="mx-auto max-w-content px-6 pt-16">
         <SectionHeader eyebrow={t("bounties.eyebrow")} heading={t("bounties.heading")} level={2} size="lg" action={{ label: t("bounties.viewAll"), href: "/bounties" }} />
