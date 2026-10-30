@@ -22,7 +22,7 @@ export default async function AdminAuditPage({ params }: PageProps<"/[locale]/ad
   const tCommon = await getTranslations("admin.common");
 
   return (
-    <section className="mx-auto max-w-content px-6 py-16 pb-20">
+    <section className="mx-auto max-w-content px-gutter py-16 pb-20">
       <AuditLogViewer tabs={<div className="mt-6"><AdminTabs active="audit" /></div>}>
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{tCommon("eyebrow")}</p>

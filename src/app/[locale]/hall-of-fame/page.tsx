@@ -55,7 +55,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
   // Nothing to show at all (and the API is reachable): say so instead of leaving a header over blank space.
   const isEmpty = !unavailable && stats.length === 0 && hallOfFame.highlights.length === 0 && hallOfFame.milestones.length === 0 && hallOfFame.partners.length === 0;
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
+    <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <SectionHeader eyebrow={t("header.eyebrow")} heading={t("header.heading")} level={1} size="xl" />

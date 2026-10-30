@@ -22,7 +22,7 @@ export default async function AdminRecruitmentPage({ params }: PageProps<"/[loca
   const tCommon = await getTranslations("admin.common");
 
   return (
-    <section className="mx-auto max-w-content px-6 py-16 pb-20">
+    <section className="mx-auto max-w-content px-gutter py-16 pb-20">
       <RecruitmentManager tabs={<div className="mt-8"><AdminTabs active="recruitment" /></div>}>
         <div className="max-w-[768px]">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{tCommon("eyebrow")}</p>

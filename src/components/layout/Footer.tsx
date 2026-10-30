@@ -35,7 +35,7 @@ export function Footer() {
 
   return (
     <footer className="bg-inverse-surface text-on-inverse">
-      <div className="mx-auto max-w-content px-6 pt-12">
+      <div className="mx-auto max-w-content px-gutter pt-12">
         <div className="flex flex-col justify-between gap-10 lg:flex-row">
           <div>
             <BrandLink className="inline-block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" label={t("homeLabel")}>

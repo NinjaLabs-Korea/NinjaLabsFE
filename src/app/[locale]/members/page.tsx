@@ -20,7 +20,7 @@ export default async function MembersPage({ params }: PageProps<"/[locale]/membe
   const tCommunity = await getTranslations("community");
   const { value: members, unavailable } = await settle(getRuntimeMembers(), []);
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
+    <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={1} size="xl" />

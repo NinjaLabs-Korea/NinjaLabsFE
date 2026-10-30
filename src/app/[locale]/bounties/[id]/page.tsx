@@ -78,7 +78,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   const stepNamespace = applicationRequired ? "detail.afterApprovalSteps" : "detail.completionSteps";
 
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
+    <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <Link
         className="text-sm font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         href="/bounties"

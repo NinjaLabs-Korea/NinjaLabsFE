@@ -8,7 +8,7 @@ import { cohortAcceptingHint, lastCurrentCohort, useCurrentCohort } from "@/comp
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 
-const SECTION_CLASS = "mx-auto max-w-content px-6 pt-16";
+const SECTION_CLASS = "mx-auto max-w-content px-gutter pt-16";
 /**
  * One height for every state of this section (the invite card, my application's status card, the loading reserve): the status
  * card is taller than the invite, so reserving only the invite's box made a builder with an application push the sections below
