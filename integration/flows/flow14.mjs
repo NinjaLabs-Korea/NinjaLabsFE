@@ -70,10 +70,11 @@ for (const pat of patterns) {
   if (pat in idFor) for (const id of idFor[pat]) { if (id) concrete.push(pat.replace('[id]', id)); }
   else concrete.push(pat);
 }
+if (seed.B1) concrete.push(`/admin/operations?bounty=${seed.B1}`);
 concrete.push('/page-not-found');
 const isAdminRoute = (r) => r.startsWith('/admin');
 const QUICK = new Set(['/', '/bounties', '/bounties/apply', '/home', '/recruit', '/about', '/notices', '/account', '/signup', '/hall-of-fame', '/members', '/admin/recruitment', '/admin/bounties']);
-const QUICK_PREFIX = [`/bounties/${seed.B1}`, `/notices/${longNotice}`];
+const QUICK_PREFIX = [`/bounties/${seed.B1}`, `/notices/${longNotice}`, `/admin/operations?bounty=${seed.B1}`];
 const jobs = [];
 for (const route of concrete) {
   if (ROUTE_FILTER && !ROUTE_FILTER.test(route)) continue;
