@@ -49,7 +49,7 @@ function createApiFoundation(apiUrl: string): FoundationContextValue {
 // 정적으로 import하면 fixture(preview 사용자, 가짜 API 키)가 모든 페이지의 클라이언트 번들에 실린다.
 async function loadMockFoundation(config: MockFoundationConfig): Promise<FoundationContextValue> {
   const [{ createSessionPreviewAuthAdapter }, { createMockApiClient }] = await Promise.all([
-    import("@/lib/foundation/auth-adapter"),
+    import("@/lib/mocks/session-preview-auth-adapter"),
     import("@/lib/mocks/api-client"),
   ]);
   return {

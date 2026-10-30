@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createSessionPreviewAuthAdapter, SESSION_PREVIEW_STORAGE_KEY } from "@/lib/foundation/auth-adapter";
+import { createSessionPreviewAuthAdapter, SESSION_PREVIEW_STORAGE_KEY } from "@/lib/mocks/session-preview-auth-adapter";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import { getMockFixtureSnapshot, mockFixtureSeed } from "@/lib/mocks/fixtures";
 import {

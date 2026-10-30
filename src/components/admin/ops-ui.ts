@@ -2,6 +2,7 @@
 import type { useFormatter } from "next-intl";
 import { isIsoDateTime } from "@/lib/admin-bounty-form";
 import { baseUnitsToHuman } from "@/lib/api/codecs";
+import { shortAddress } from "@/lib/format";
 
 const opsButtonBase = "rounded-control px-3 py-2 max-sm:py-2.5 text-sm font-semibold hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60 motion-control motion-press";
 export const opsButton = `${opsButtonBase} border border-primary-outline text-primary-strong`;
@@ -28,7 +29,7 @@ export function opsAmount(base: string | null | undefined, symbol: string): stri
 /** `0x1234…abcd` for long hashes/addresses (the full value goes in `title`). */
 export function opsShort(value: string | null | undefined): string {
   if (!value) return "–";
-  return value.length > 14 ? `${value.slice(0, 8)}…${value.slice(-4)}` : value;
+  return shortAddress(value, { head: 8 });
 }
 
 /**

@@ -10,6 +10,7 @@ import {
   useSignMessage,
   useSwitchChain,
 } from "wagmi";
+import { shortAddress } from "@/lib/format";
 import { injectiveChainName } from "@/components/wallet/injective-chain";
 
 /** 체인 전환 실패 분류: 사용자가 거절했는지(rejected) 그 외 실패인지(failed) */
@@ -31,7 +32,7 @@ function subscribeToInjectedWallet(onChange: () => void): () => void {
 
 /** 화면 표시용 축약 주소 (0x1234…abcd) */
 export function shortWalletAddress(address: string): string {
-  return `${address.slice(0, 6)}…${address.slice(-4)}`;
+  return shortAddress(address, { keepWhole: 0 });
 }
 
 /**

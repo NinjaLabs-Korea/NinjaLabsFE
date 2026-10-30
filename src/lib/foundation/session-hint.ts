@@ -1,4 +1,8 @@
 import { useSyncExternalStore } from "react";
+import { readStorage, removeStorage, writeStorage } from "@/lib/safe-storage";
+
+// Not the same as `lib/api/http.ts` REFRESH_COOKIE_HINT_KEY: that one is a localStorage hint that a refresh cookie may exist;
+// this one is a sessionStorage hint that THIS tab was signed in (keeps the header chip across a locale remount).
 
 /**
  * Tab-scoped "this tab had a signed-in session" flag. `<html>` lives in `[locale]/layout`, so a locale switch remounts
@@ -9,11 +13,7 @@ const KEY = "ninja.session.hint";
 const listeners = new Set<() => void>();
 
 export function getSessionHint(): boolean {
-  try {
-    return window.sessionStorage.getItem(KEY) === "1";
-  } catch {
-    return false;
-  }
+  return readStorage("session", KEY) === "1";
 }
 
 function notify() {
@@ -22,22 +22,12 @@ function notify() {
 
 export function setSessionHint(): void {
   if (getSessionHint()) return;
-  try {
-    window.sessionStorage.setItem(KEY, "1");
-  } catch {
-    return;
-  }
-  notify();
+  if (writeStorage("session", KEY, "1")) notify();
 }
 
 export function clearSessionHint(): void {
   if (!getSessionHint()) return;
-  try {
-    window.sessionStorage.removeItem(KEY);
-  } catch {
-    return;
-  }
-  notify();
+  if (removeStorage("session", KEY)) notify();
 }
 
 function subscribe(listener: () => void): () => void {

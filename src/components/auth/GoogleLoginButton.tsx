@@ -58,7 +58,7 @@ export function GoogleLoginButton({ turnstileSiteKey }: GoogleLoginButtonProps =
     try {
       if (simulateFailure) {
         // mock 전용 모듈: 이 분기에서만 불러와 세션 미리보기 어댑터가 공용 번들에 실리지 않게 한다.
-        const { simulateMockSignInFailure } = await import("@/lib/foundation/auth-adapter");
+        const { simulateMockSignInFailure } = await import("@/lib/mocks/session-preview-auth-adapter");
         await simulateMockSignInFailure();
       } else {
         // api 모드: 구글 동의 화면으로 전체 페이지 리다이렉트 (Promise는 resolve되지 않음). 위젯 토큰은 BE가 1회 검증한다.

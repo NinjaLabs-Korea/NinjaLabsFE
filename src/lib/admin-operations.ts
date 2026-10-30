@@ -187,7 +187,6 @@ export type AdminNftJobPage = { items: AdminNftJob[]; page: number; pageSize: nu
  * 코드 목록은 `lib/api/error-copy.ts`의 `ERROR_COPY.adminOperations`가 소유한다 - 추가/삭제는 거기서.
  */
 export const OPS_ERROR_CODES = ERROR_COPY.adminOperations.codes;
-export type OpsErrorCode = (typeof OPS_ERROR_CODES)[number];
 
 /**
  * Normalizes a failed operations call to a message code: `normalizedCode` (non-HTTP failure → `NETWORK_ERROR`, 401 → `UNAUTHORIZED`,
