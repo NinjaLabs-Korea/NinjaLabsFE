@@ -753,7 +753,7 @@
       "PAYOUT_CANCELLED_MANUAL": "Payout cancelled by hand",
       "REWARD_DEPOSIT_CONFIRMED": "Reward deposit confirmed",
       "REWARD_REFUNDED": "Reward refund recorded",
-      "SUBMISSION_AWARD_FORFEITED": "Award forfeited",
+      "SUBMISSION_AWARD_FORFEITED": "Reward marked unpaid",
       "USER_MEMBER_GRANTED": "Member role assigned",
       "USER_MEMBER_REVOKED": "Member role removed",
       "USER_NICKNAME_CHANGED": "Nickname changed",
@@ -777,7 +777,8 @@
       "COHORT_APPLICATION_UPDATED": "Cohort application updated",
       "COHORT_APPLICATION_WITHDRAWN": "Cohort application withdrawn",
       "COHORT_APPLICATION_REAPPLIED": "Cohort re-applied after withdrawal",
-      "COHORT_APPLICATION_ACCEPTED": "Cohort application accepted"
+      "COHORT_APPLICATION_ACCEPTED": "Cohort application accepted",
+      "COHORT_QUESTIONS_UPDATED": "Application questions updated"
     },
     "empty": "No audit log entries match.",
     "pagination": "Audit log pages",
@@ -878,13 +879,13 @@
       "filters": {
         "label": "Filter applications",
         "status": "Status",
-        "activityType": "Activity type",
-        "interestArea": "Interest area",
         "search": "Search",
         "searchPlaceholder": "Name, Telegram, X, nickname, email",
         "all": "All",
         "apply": "Apply",
-        "reset": "Reset"
+        "reset": "Reset",
+        "question": "Question",
+        "option": "Option"
       },
       "statuses": {
         "SUBMITTED": "Waiting",
@@ -899,9 +900,7 @@
       "columns": {
         "applicant": "Applicant",
         "contact": "Contact",
-        "experience": "Web3 experience",
-        "activity": "Activity",
-        "interests": "Interests",
+        "intro": "Introduction",
         "status": "Status",
         "applied": "Applied",
         "action": "Actions"
@@ -970,7 +969,79 @@
       "ADMIN_ONLY": "This account no longer has admin access.",
       "UNAUTHORIZED": "Your session has expired. Sign in again.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
-      "generic": "The request failed. Please try again."
+      "generic": "The request failed. Please try again.",
+      "questionsInvalid": "Could not save the questions. Check the number of options and the wording."
+    },
+    "questions": {
+      "action": "Questions",
+      "eyebrow": "Application questions",
+      "heading": "{name} application questions",
+      "intro": "Name, Telegram, X and introduction are always collected. These are the extra questions for this cohort.",
+      "note": "Answers in applications already received do not change.",
+      "empty": "There are no extra questions. Add one below.",
+      "add": "Add question",
+      "addType": "New question type",
+      "close": "Close",
+      "dirty": "You have unsaved changes.",
+      "types": {
+        "SHORT_TEXT": "Short answer",
+        "LONG_TEXT": "Long answer",
+        "SINGLE_CHOICE": "Choose one",
+        "MULTI_CHOICE": "Choose several"
+      },
+      "question": "Question {number}",
+      "moveUp": "Move question {number} up",
+      "moveDown": "Move question {number} down",
+      "remove": "Delete question {number}",
+      "labelKo": "Question (Korean)",
+      "labelEn": "Question (English, optional)",
+      "labelZh": "Question (Chinese, optional)",
+      "translationHint": "Left empty, the Korean text is shown.",
+      "helpKo": "Help text (Korean, optional)",
+      "helpEn": "Help text (English, optional)",
+      "helpZh": "Help text (Chinese, optional)",
+      "required": "Required question",
+      "options": "Options",
+      "optionKo": "Option {number} (Korean)",
+      "optionEn": "Option {number} (English, optional)",
+      "optionZh": "Option {number} (Chinese, optional)",
+      "addOption": "Add option",
+      "removeOption": "Delete option {number}",
+      "moveOptionUp": "Move option {number} up",
+      "moveOptionDown": "Move option {number} down",
+      "withDetail": "Ask for details",
+      "withDetailHint": "When chosen, the applicant adds one more line. Only one option per question.",
+      "limits": "Up to {questions} questions, {min} to {max} options per choice question.",
+      "save": "Save questions",
+      "saving": "Saving…",
+      "savedTitle": "Application questions saved",
+      "savedDescription": "{name}",
+      "removeDialog": {
+        "eyebrow": "Delete question",
+        "title": "Delete this question?",
+        "description": "After you save, new applicants no longer see it. Answers already received stay as they are.",
+        "confirm": "Delete question"
+      },
+      "discardDialog": {
+        "eyebrow": "Questions",
+        "title": "Discard unsaved changes?",
+        "description": "Your unsaved question changes will be lost.",
+        "confirm": "Discard"
+      },
+      "errors": {
+        "tooManyQuestions": "At most {max} questions.",
+        "labelRequired": "Write the question in Korean.",
+        "labelTooLong": "The question is too long. Up to {max} characters.",
+        "labelInvalid": "The question cannot contain line breaks or invisible characters.",
+        "helpTooLong": "The help text is too long. Up to {max} characters.",
+        "helpInvalid": "The help text contains a character that is not allowed.",
+        "optionsCount": "A choice question needs {min} to {max} options.",
+        "withDetailMax": "Only one option per question can ask for details.",
+        "optionLabelRequired": "Write the option in Korean.",
+        "optionLabelTooLong": "The option is too long. Up to {max} characters.",
+        "optionLabelInvalid": "The option cannot contain line breaks or invisible characters."
+      },
+      "fix": "Fix the marked items."
     }
   }
 }

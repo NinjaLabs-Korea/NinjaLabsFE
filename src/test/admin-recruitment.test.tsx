@@ -138,6 +138,52 @@ describe("CohortApplicationsPanel (through the manager)", () => {
     await waitFor(() => expect(screen.getByText("4 applications")).toBeTruthy());
   });
 
+  it("filters by one choice question and one of its options, and sends both ids", async () => {
+    const list = vi.spyOn(api, "getAdminCohortApplications");
+    await openApplications();
+    await screen.findByText("Joon");
+    // Text and unrelated columns are gone; the option list waits for a question.
+    expect((screen.getByRole("combobox", { name: "Option" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("combobox", { name: "Question" }));
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["All", "Web3 experience", "Areas you want to join"]);
+    fireEvent.mouseDown(screen.getByRole("option", { name: "Areas you want to join" }));
+    fireEvent.click(screen.getByRole("combobox", { name: "Option" }));
+    fireEvent.mouseDown(screen.getByRole("option", { name: "KOL (influencer)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    await waitFor(() => expect(screen.getByText("1 applications")).toBeTruthy());
+    expect(list).toHaveBeenLastCalledWith("cohort-2", { questionId: "interest_areas", optionId: "KOL" }, 1);
+    expect(screen.queryByText("Mina")).toBeNull();
+    // The same filter goes to the CSV export.
+    const exportCsv = vi.spyOn(api, "exportAdminCohortApplications");
+    Object.assign(URL, { createObjectURL: () => "blob:x", revokeObjectURL: () => undefined });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+    fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
+    await waitFor(() => expect(exportCsv).toHaveBeenCalledWith("cohort-2", { questionId: "interest_areas", optionId: "KOL" }));
+  });
+
+  it("changing the question clears the option, and a question without an option sends no choice filter", async () => {
+    const list = vi.spyOn(api, "getAdminCohortApplications");
+    await openApplications();
+    await screen.findByText("Joon");
+    fireEvent.click(screen.getByRole("combobox", { name: "Question" }));
+    fireEvent.mouseDown(screen.getByRole("option", { name: "Web3 experience" }));
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    await waitFor(() => expect(screen.getByText("4 applications")).toBeTruthy());
+    expect(list).toHaveBeenLastCalledWith("cohort-2", {}, 1);
+  });
+
+  it("shows the fixed columns in the table and every answer in the review dialog", async () => {
+    await openApplications();
+    await screen.findByText("Mina");
+    expect(within(row("Mina").closest("table")!).getAllByRole("columnheader").map((header) => header.textContent)).toEqual(["Applicant", "Contact", "Introduction", "Status", "Applied", "Actions"]);
+    fireEvent.click(within(row("Mina")).getByRole("button", { name: "Review" }));
+    const dialog = within(openDialog());
+    expect(dialog.getByText("Web3 experience")).toBeTruthy();
+    expect(dialog.getByText("1-3 years")).toBeTruthy();
+    expect(dialog.getByText("Areas you want to join")).toBeTruthy();
+    expect(dialog.getByText("Developer, Researcher")).toBeTruthy();
+  });
+
   it("says so when a filter matches nothing", async () => {
     await openApplications();
     await screen.findByText("Joon");

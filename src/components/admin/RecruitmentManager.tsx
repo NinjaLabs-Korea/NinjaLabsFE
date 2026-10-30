@@ -6,6 +6,7 @@ import { AdminListStatus } from "@/components/admin/AdminListStatus";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { CohortApplicationsPanel } from "@/components/admin/CohortApplicationsPanel";
+import { CohortQuestionsEditor } from "@/components/admin/CohortQuestionsEditor";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { opsDateTime, opsInput, opsTextarea } from "@/components/admin/ops-ui";
 import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
@@ -16,7 +17,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ERROR_COPY } from "@/lib/api/error-copy";
 import { fromLocalDateTimeInput, toLocalDateTimeInput } from "@/lib/admin-bounty-form";
-import { cohortAdminErrorKey } from "@/lib/cohort-errors";
+import { cohortAdminErrorKey, type CohortAdminErrorKey } from "@/lib/cohort-errors";
 import type { AdminCohort, CohortStatus } from "@/lib/cohorts";
 import { COHORT_DESCRIPTION_MAX, COHORT_NAME_MAX } from "@/lib/input-limits";
 
@@ -66,17 +67,31 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // The cohort whose questions are open in the editor, the editor's unsaved state, and a switch/close waiting for the operator's answer.
+  const [questionsId, setQuestionsId] = useState<string | null>(null);
+  const questionsDirty = useRef(false);
+  const [pendingQuestionsTarget, setPendingQuestionsTarget] = useState<{ to: string | null } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AdminCohort | null>(null);
   const [pendingTransition, setPendingTransition] = useState<PendingTransition | null>(null);
   const [transitioning, setTransitioning] = useState(false);
-  const [transitionError, setTransitionError] = useState<ReturnType<typeof cohortAdminErrorKey> | null>(null);
+  const [transitionError, setTransitionError] = useState<CohortAdminErrorKey | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   const fetchCohorts = useCallback(() => api.getAdminCohorts(), [api]);
   const toastLoadFailed = useLoadFailedToast(t("toast.loadFailedTitle"), t("toast.loadFailedDescription"));
   const { records, setRecords, loadState, reload, retry } = useAdminList(fetchCohorts, [], toastLoadFailed);
 
+  const trackQuestionsDirty = useCallback((dirty: boolean) => {
+    questionsDirty.current = dirty;
+  }, []);
+  /** Opens (or closes, with `null`) the questions editor; unsaved edits ask first. */
+  const showQuestions = (to: string | null) => {
+    if (questionsDirty.current && questionsId !== null && to !== questionsId) setPendingQuestionsTarget({ to });
+    else setQuestionsId(to);
+  };
+
   const selected = records.find((cohort) => cohort.id === selectedId) ?? null;
+  const questionsCohort = records.find((cohort) => cohort.id === questionsId) ?? null;
 
   const updateForm = <K extends keyof CohortForm>(key: K, value: CohortForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -155,6 +170,7 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
     closeDialog: () => setPendingDelete(null),
     onRemoved: (cohort) => {
       if (selectedId === cohort.id) setSelectedId(null);
+      if (questionsId === cohort.id) setQuestionsId(null);
       if (mode === cohort.id) startNew();
     },
     describeError: (error) => tErrors(cohortAdminErrorKey(error)),
@@ -208,6 +224,7 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-2">
                       <button aria-pressed={cohort.id === selectedId} className={rowButton} onClick={() => setSelectedId(cohort.id === selectedId ? null : cohort.id)} type="button">{t("actions.applications")}</button>
+                      <button aria-pressed={cohort.id === questionsId} className={rowButton} onClick={() => showQuestions(cohort.id === questionsId ? null : cohort.id)} type="button">{t("questions.action")}</button>
                       <button className={rowButton} onClick={() => editCohort(cohort)} type="button">{tCommon("edit")}</button>
                       {cohort.allowedTransitions.map((to) => (
                         <button className={rowButton} key={to} onClick={() => { setTransitionError(null); setPendingTransition({ cohort, to }); }} type="button">{t(`actions.${transitionKey(cohort, to)}`)}</button>
@@ -219,6 +236,10 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
               ))}
             </AdminTable>
           )
+        ) : null}
+
+        {questionsCohort ? (
+          <CohortQuestionsEditor cohort={questionsCohort} key={questionsCohort.id} onClose={() => showQuestions(null)} onDirtyChange={trackQuestionsDirty} onSaved={() => void reload()} />
         ) : null}
 
         {selected ? <CohortApplicationsPanel cohort={selected} onReviewed={() => void reload()} /> : loadState === "ready" && records.length > 0 ? <p className="text-sm text-ink-muted">{t("selectHint")}</p> : null}
@@ -249,6 +270,20 @@ export function RecruitmentManager({ children, tabs }: { children: ReactNode; ta
         </form>
       </div>
 
+      <ConfirmDialog
+        confirmLabel={t("questions.discardDialog.confirm")}
+        description={t("questions.discardDialog.description")}
+        destructive
+        eyebrow={t("questions.discardDialog.eyebrow")}
+        onCancel={() => setPendingQuestionsTarget(null)}
+        onConfirm={() => {
+          questionsDirty.current = false;
+          setQuestionsId(pendingQuestionsTarget?.to ?? null);
+          setPendingQuestionsTarget(null);
+        }}
+        open={pendingQuestionsTarget !== null}
+        title={t("questions.discardDialog.title")}
+      />
       <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void deleteCohort(pendingDelete)} title={pendingDelete?.name ?? null} />
       <ConfirmDialog
         pending={transitioning}
