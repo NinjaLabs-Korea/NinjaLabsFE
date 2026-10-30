@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/Badge";
 import { NICKNAME_MAX, NICKNAME_MIN, normalizeNickname, validateNickname } from "@/lib/nickname";
 import { PROFILE_BIO_MAX } from "@/lib/input-limits";
 import { pushFlash } from "@/lib/flash";
+import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { signInHref } from "@/lib/return-path";
 import { signup } from "@/lib/signup";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
@@ -103,7 +104,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   // 필드 검증 에러. 저장 실패(state "error", 예: 닉네임 중복)와는 따로 표시한다.
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   // Synchronous in-flight guard: several submit events can land in one tick before React re-renders the disabled button.
-  const inFlight = useRef(false);
+  const { run: runSave } = useSingleFlight();
   const [saveError, setSaveError] = useState<SaveErrorKey>("generic");
   const [nicknameCheck, setNicknameCheck] = useState<NicknameCheck | null>(null);
   // The name a save was refused for by the 24-hour change cooldown: the name itself is fine, so no "available" line next to that error.
@@ -178,7 +179,6 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   useEffect(() => {
     const onPageShow = (event: PageTransitionEvent) => {
       if (!event.persisted) return;
-      inFlight.current = false;
       setState("idle");
       if (!editing) window.location.reload();
     };
@@ -196,7 +196,6 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (inFlight.current) return;
     const nextErrors: FieldErrors = {
       // A non-empty rule violation is already said by the status line under the field (`nickname-status`).
       ...(nicknameRuleError && nicknameStatus !== "invalid" ? { nickname: `nicknameErrors.${nicknameRuleError}` } : {}),
@@ -224,50 +223,49 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
       return;
     }
 
-    inFlight.current = true;
-    setState("pending");
-    onboardingLog("profile.save.started", {
-      nicknameLength: nickname.trim().length,
-      bioLength: bio.trim().length,
-      tagCount: tags.length,
-    });
-    try {
-      await apiClient.completeProfile({ nickname: trimmedNickname, bio: bio.trim(), tags });
-      if (editing) {
-        onboardingLog("profile.save.succeeded", { targetPath: "(account)" });
-        // The session snapshot carries nickname, bio and tags: re-read it so the header, the profile link and this form agree.
-        await refresh?.().catch(() => undefined);
-        setSaved(true);
-        setState("idle");
-        inFlight.current = false;
-        // The account page closes this form on `onSaved`, so an inline status would never be seen: confirm with a toast.
-        pushFlash("profileSaved");
-        onSaved?.();
-        return;
-      }
-      onboardingLog("profile.save.succeeded", { targetPath: "/signup/get-started" });
-      if (draftOwner) writeProfileDraft(draftOwner, null);
-      window.location.assign(withLocaleOf(window.location.pathname, "/signup/get-started"));
-    } catch (error) {
-      onboardingLog("profile.save.failed", onboardingErrorDetails(error));
-      const key = saveErrorKey(error);
-      // BE 400 VALIDATION_FAILED의 message[]가 가리키는 필드를 인라인 힌트로 돌려준다 (원문 영어는 보여 주지 않는다).
-      const rejected = validationFieldsFromError(error);
-      setFieldErrors({
-        ...("nickname" in rejected ? { nickname: nicknameRuleError ? `nicknameErrors.${nicknameRuleError}` : "errors.nicknameRejected" } : {}),
-        ...("bio" in rejected ? { bio: bio.trim() ? "errors.bioRejected" : "errors.bio" } : {}),
-        ...("tags" in rejected ? { tags: "errors.tags" } : {}),
-        // Said at the nickname field (aria-describedby), not only in the form alert far below it.
-        ...(key === "NICKNAME_CHANGE_COOLDOWN" ? { nickname: "saveErrors.NICKNAME_CHANGE_COOLDOWN" } : {}),
+    await runSave(async () => {
+      setState("pending");
+      onboardingLog("profile.save.started", {
+        nicknameLength: nickname.trim().length,
+        bioLength: bio.trim().length,
+        tagCount: tags.length,
       });
-      setCooldownNickname(key === "NICKNAME_CHANGE_COOLDOWN" ? trimmedNickname : null);
-      if (key === "NICKNAME_TAKEN") setNicknameCheck({ nickname: trimmedNickname, available: false });
-      setSaveError(key);
-      // NICKNAME_TAKEN is already said by the status line under the field, and a 400 whose fields are named is said by
-      // those inline hints; a form-level alert would repeat it in other words (two alerts for one rejected bio).
-      setState(key === "NICKNAME_TAKEN" || key === "NICKNAME_CHANGE_COOLDOWN" || (key === "invalid" && Object.keys(rejected).length > 0) ? "idle" : "error");
-      inFlight.current = false;
-    }
+      try {
+        await apiClient.completeProfile({ nickname: trimmedNickname, bio: bio.trim(), tags });
+        if (editing) {
+          onboardingLog("profile.save.succeeded", { targetPath: "(account)" });
+          // The session snapshot carries nickname, bio and tags: re-read it so the header, the profile link and this form agree.
+          await refresh?.().catch(() => undefined);
+          setSaved(true);
+          setState("idle");
+          // The account page closes this form on `onSaved`, so an inline status would never be seen: confirm with a toast.
+          pushFlash("profileSaved");
+          onSaved?.();
+          return;
+        }
+        onboardingLog("profile.save.succeeded", { targetPath: "/signup/get-started" });
+        if (draftOwner) writeProfileDraft(draftOwner, null);
+        window.location.assign(withLocaleOf(window.location.pathname, "/signup/get-started"));
+      } catch (error) {
+        onboardingLog("profile.save.failed", onboardingErrorDetails(error));
+        const key = saveErrorKey(error);
+        // BE 400 VALIDATION_FAILED의 message[]가 가리키는 필드를 인라인 힌트로 돌려준다 (원문 영어는 보여 주지 않는다).
+        const rejected = validationFieldsFromError(error);
+        setFieldErrors({
+          ...("nickname" in rejected ? { nickname: nicknameRuleError ? `nicknameErrors.${nicknameRuleError}` : "errors.nicknameRejected" } : {}),
+          ...("bio" in rejected ? { bio: bio.trim() ? "errors.bioRejected" : "errors.bio" } : {}),
+          ...("tags" in rejected ? { tags: "errors.tags" } : {}),
+          // Said at the nickname field (aria-describedby), not only in the form alert far below it.
+          ...(key === "NICKNAME_CHANGE_COOLDOWN" ? { nickname: "saveErrors.NICKNAME_CHANGE_COOLDOWN" } : {}),
+        });
+        setCooldownNickname(key === "NICKNAME_CHANGE_COOLDOWN" ? trimmedNickname : null);
+        if (key === "NICKNAME_TAKEN") setNicknameCheck({ nickname: trimmedNickname, available: false });
+        setSaveError(key);
+        // NICKNAME_TAKEN is already said by the status line under the field, and a 400 whose fields are named is said by
+        // those inline hints; a form-level alert would repeat it in other words (two alerts for one rejected bio).
+        setState(key === "NICKNAME_TAKEN" || key === "NICKNAME_CHANGE_COOLDOWN" || (key === "invalid" && Object.keys(rejected).length > 0) ? "idle" : "error");
+      }
+    });
   };
 
   const nicknameInvalid = Boolean(fieldErrors.nickname) || nicknameStatus === "taken" || nicknameStatus === "invalid";
