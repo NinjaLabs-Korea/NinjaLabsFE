@@ -72,6 +72,13 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
   const draftScope = !editing && userId ? userId : null;
   const [draft, setDraft] = useState<CohortFormDraft>(() =>
     application ? valuesToDraft(application) : ((draftScope && typeof window !== "undefined" ? readCohortDraft(draftScope, cohortId) : null) ?? emptyCohortDraft));
+  // The session can resolve after the first render (locale remount): restore the stored draft once the scope becomes known, never over typed input.
+  const [restoredScope, setRestoredScope] = useState(draftScope);
+  if (draftScope && draftScope !== restoredScope) {
+    setRestoredScope(draftScope);
+    const stored = typeof window !== "undefined" ? readCohortDraft(draftScope, cohortId) : null;
+    if (stored && draft === emptyCohortDraft) setDraft(stored);
+  }
   const [errors, setErrors] = useState<CohortFormErrors>({});
   const [state, setState] = useState<"idle" | "pending" | "error">("idle");
   const [saveError, setSaveError] = useState<CohortApplyErrorKey>("generic");

@@ -5,7 +5,7 @@ import { usePathname } from "@/i18n/navigation";
 
 type Field = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
 
-const IGNORED_INPUT_TYPES = new Set(["search", "checkbox", "radio", "hidden", "file"]);
+const IGNORED_INPUT_TYPES = new Set(["search", "hidden", "file"]);
 // /signup/profile keeps its own draft across a locale switch, so it never needs the guard.
 const EXEMPT_PATH = /^\/signup\/profile(\/|$)/;
 
@@ -49,7 +49,10 @@ export function useUnsavedInputGuard(): { hasUnsavedInput: () => boolean } {
   const hasUnsavedInput = useCallback(() => {
     if (exempt) return false;
     for (const field of fields.current) {
-      if (field.isConnected && field.value !== "") return true;
+      if (!field.isConnected) continue;
+      // A touched checkbox/radio always carries a value ("on"), so "touched and still mounted" is the signal.
+      if (field instanceof HTMLInputElement && (field.type === "checkbox" || field.type === "radio")) return true;
+      if (field.value !== "") return true;
     }
     return false;
   }, [exempt]);

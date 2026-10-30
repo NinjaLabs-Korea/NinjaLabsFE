@@ -87,7 +87,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
   const [errors, setErrors] = useState<PostFieldErrors>({});
   const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<AdminPost | null>(null);
-  const formRef = useRef<HTMLElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
   const fieldError = (key: keyof PostFieldErrors) =>
@@ -241,7 +241,7 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
       </AdminTable>
       ) : null}
 
-      <section className="rounded-card border border-border bg-surface p-[21px] shadow-card" ref={formRef}>
+      <form className="rounded-card border border-border bg-surface p-[21px] shadow-card" noValidate onSubmit={(event) => { event.preventDefault(); savePost(); }} ref={formRef}>
         <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{isEditing ? t("form.eyebrowEdit") : t("form.eyebrowCreate")}</p>
         <h2 className="mt-2 font-display text-2xl tracking-[-0.24px] text-ink">{isEditing ? t("form.titleEdit") : t("form.titleCreate")}</h2>
         <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -261,9 +261,9 @@ export function PostManager({ posts, children, tabs }: { posts: AdminPost[]; chi
             <div className="mt-2"><AdminSelect formatOption={(option) => t(`statuses.${option}`)} label={t("form.status")} onChange={(value) => updateForm("status", value === "published" ? "published" : "draft")} options={statuses} value={form.status} /></div>
           </label>
         </div>
-        <button className="mt-5 h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={saving} onClick={savePost} type="button">{saving ? tCommon("saving") : tCommon("save")}</button>
+        <button className="mt-5 h-11 rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={saving} type="submit">{saving ? tCommon("saving") : tCommon("save")}</button>
         <p className="mt-3 text-xs text-ink-muted">{tCommon("saveNotice")}</p>
-      </section>
+      </form>
       </div>
       <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void deletePost(pendingDelete)} title={pendingDelete?.title ?? null} />
     </>
