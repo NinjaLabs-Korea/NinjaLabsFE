@@ -3,8 +3,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { CommunityHero } from "@/components/community/CommunityHero";
 import { CommunitySections } from "@/components/community/CommunitySections";
+import { InitialCohortProvider } from "@/components/recruit/useCurrentCohort";
 import { ClientMessages } from "@/components/layout/ClientMessages";
 import { localeMetadata } from "@/i18n/alternates";
+import { getRuntimeCurrentCohort } from "@/lib/cohorts-public";
 import { getRuntimeCommunity } from "@/lib/community";
 import { getRuntimeOpenBounties } from "@/lib/landing";
 
@@ -24,15 +26,17 @@ export async function generateMetadata({ params }: PageProps<"/[locale]">): Prom
 export default async function Home({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const [community, openBounties] = await Promise.all([getRuntimeCommunity(locale), getRuntimeOpenBounties(locale)]);
+  const [community, openBounties, cohort] = await Promise.all([getRuntimeCommunity(locale), getRuntimeOpenBounties(locale), getRuntimeCurrentCohort()]);
 
   return (
     <>
       <ClientMessages namespaces={["recruit"]}>
-        <CommunityHero />
-        <div className="pt-16">
-          <CommunitySections data={community} locale={locale} openBounties={openBounties} />
-        </div>
+        <InitialCohortProvider cohort={cohort}>
+          <CommunityHero />
+          <div className="pt-16">
+            <CommunitySections data={community} locale={locale} openBounties={openBounties} />
+          </div>
+        </InitialCohortProvider>
       </ClientMessages>
     </>
   );
