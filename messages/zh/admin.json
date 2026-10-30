@@ -62,7 +62,8 @@
     "operations": "运营",
     "nftJobs": "NFT 任务",
     "audit": "审计日志",
-    "recruitment": "成员招募"
+    "recruitment": "成员招募",
+    "ariaLabel": "管理后台菜单"
   },
   "gate": {
     "checking": "正在检查管理员权限…",
@@ -356,7 +357,7 @@
     "metaDescription": "确认奖励存款、审核申请与提交、处理付款，并推进赏金生命周期。",
     "title": "赏金运营",
     "description": "确认奖励存款、审核申请与提交、处理付款，并推进赏金生命周期。",
-    "adminOnlyBadge": "ADMIN ONLY",
+    "adminOnlyBadge": "仅限管理员",
     "pickBounty": "赏金",
     "pickBountyPlaceholder": "选择赏金",
     "bountyNotFound": "未找到 id 为“{id}”的赏金（可能已被删除）。请从列表中选择。",

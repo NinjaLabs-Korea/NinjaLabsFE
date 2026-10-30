@@ -62,7 +62,8 @@
     "operations": "운영",
     "nftJobs": "NFT 잡",
     "audit": "감사 로그",
-    "recruitment": "멤버 모집"
+    "recruitment": "멤버 모집",
+    "ariaLabel": "관리자 메뉴"
   },
   "gate": {
     "checking": "관리자 권한을 확인하는 중…",
@@ -356,7 +357,7 @@
     "metaDescription": "보상 입금 확인, 지원/제출 심사, 지급 처리, 바운티 상태 전이를 한곳에서 관리합니다.",
     "title": "바운티 운영",
     "description": "보상 입금 확인, 지원/제출 심사, 지급 처리, 바운티 상태 전이를 한곳에서 관리합니다.",
-    "adminOnlyBadge": "ADMIN ONLY",
+    "adminOnlyBadge": "관리자 전용",
     "pickBounty": "바운티",
     "pickBountyPlaceholder": "바운티 선택",
     "bountyNotFound": "id “{id}”인 바운티를 찾을 수 없습니다(삭제되었을 수 있습니다). 목록에서 선택하세요.",

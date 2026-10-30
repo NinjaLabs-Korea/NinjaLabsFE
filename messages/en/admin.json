@@ -62,7 +62,8 @@
     "operations": "Operations",
     "nftJobs": "NFT Jobs",
     "audit": "Audit log",
-    "recruitment": "Recruitment"
+    "recruitment": "Recruitment",
+    "ariaLabel": "Admin sections"
   },
   "gate": {
     "checking": "Checking admin access…",
