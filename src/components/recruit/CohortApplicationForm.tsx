@@ -36,8 +36,6 @@ const inputClass =
 const labelClass = "text-sm font-semibold text-ink";
 const hintClass = "mt-1 text-xs text-ink-muted";
 
-/** The form's fields in page order, for finding the first one with a problem. */
-
 /** Message key under `recruit.form.errors`: the choice groups ask to pick, the two handles say what shape they take. */
 function errorMessageKey(field: keyof CohortFormErrors, kind: CohortFieldError): string {
   if (kind === "required") return field === "web3Experience" || field === "activityType" || field === "interestAreas" ? "requiredChoice" : "required";
