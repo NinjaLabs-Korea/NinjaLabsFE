@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { AdminTable } from "@/components/admin/AdminTable";
 import type { OpsDateFormatter, OpsRunner } from "@/components/admin/BountyOperations";
@@ -27,6 +27,17 @@ import { operatorAmountFromBaseUnits, operatorAmountToBaseUnits, tokenDecimalsFo
 const columns = ["recipient", "amount", "status", "requested", "approved", "tx", "action"] as const;
 const payoutVariant = (status: string) => (status === "PAID" ? "success" : status === "FAILED" || status === "CANCELLED" ? "danger" : status === "APPROVED" ? "primary-soft" : "warning");
 
+/** Below Tailwind's `md` (768px) the payouts render as cards: the 7-column table needs ~980px and a phone would show only the first column. */
+const NARROW_QUERY = "(max-width: 767.98px)";
+function subscribeNarrow(onChange: () => void) {
+  if (typeof window.matchMedia !== "function") return () => undefined;
+  const list = window.matchMedia(NARROW_QUERY);
+  list.addEventListener("change", onChange);
+  return () => list.removeEventListener("change", onChange);
+}
+const getNarrow = () => (typeof window.matchMedia === "function" ? window.matchMedia(NARROW_QUERY).matches : false);
+const getNarrowServer = () => false;
+
 type Dialog =
   | { kind: "request"; reward: OpsReward; submissionId: string; amount: string; error?: string; walletError?: string }
   | { kind: "approve"; payout: OpsPayout }
@@ -41,6 +52,7 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
   const api = useAdminApi();
   const t = useTranslations("admin.operations");
   const [dialog, setDialog] = useState<Dialog | null>(null);
+  const narrow = useSyncExternalStore(subscribeNarrow, getNarrow, getNarrowServer);
   const submissionName = (id: string) => {
     const submission = ops.submissions.find((item) => item.id === id);
     return submission ? submission.agentName ?? submission.nickname ?? id : id;
@@ -92,6 +104,34 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
     : dialog.kind === "request" ? requestable.some((item) => item.id === dialog.reward.id) && (dialog.submissionId === "" ? payoutCandidates(ops, dialog.reward.id).length > 0 : payoutCandidates(ops, dialog.reward.id).some((item) => item.id === dialog.submissionId))
       : dialogPayout !== undefined && (dialog.kind === "approve" ? canApprovePayout(dialogPayout) : canMarkPayoutPaid(dialogPayout));
 
+  // One action renderer for the table cell and the phone card, so both layouts share the same rules and handlers.
+  const payoutActions = (payout: OpsPayout) => {
+    const mode = payoutApprovalMode(payout, ops.policy);
+    const pending = busy.has(`payout:${payout.id}`);
+    return (
+      <div className="flex flex-wrap gap-2">
+        {canApprovePayout(payout) ? (
+          mode === "self-blocked" ? (
+            <p className="max-w-[220px] text-xs font-semibold text-warning" id={`ops-payout-self-${payout.id}`}>{t("payouts.selfBlocked")}</p>
+          ) : (
+            <button className={opsButton} disabled={pending} onClick={() => setDialog({ kind: "approve", payout })} type="button">{t("payouts.approve")}</button>
+          )
+        ) : null}
+        {canMarkPayoutPaid(payout) ? <button className={opsPrimaryButton} disabled={pending} onClick={() => setDialog({ kind: "paid", payout, txHash: "" })} type="button">{t("payouts.markPaid")}</button> : null}
+      </div>
+    );
+  };
+  const recipientCell = (payout: OpsPayout) => (
+    <>
+      <p className="font-semibold text-ink [overflow-wrap:anywhere]">{submissionName(payout.submissionId)}</p>
+      <p className="mt-1 font-mono text-xs text-ink-muted" title={payout.recipientAddress}>{opsShort(payout.recipientAddress)}</p>
+    </>
+  );
+  const statusBadge = (payout: OpsPayout) => <Badge variant={payoutVariant(payout.status)}>{t(`payoutStatuses.${payout.status}`)}</Badge>;
+  const requestedCell = (payout: OpsPayout) => <>{payout.requestedByMe ? t("payouts.byYou") : payout.requestedByNickname ?? "–"}<p className="mt-1 text-xs text-ink-muted">{formatDate(payout.requestedAt)}</p></>;
+  const approvedCell = (payout: OpsPayout) => <>{payout.approvedByNickname ?? "–"}<p className="mt-1 text-xs text-ink-muted">{payout.approvedAt ? formatDate(payout.approvedAt) : ""}</p></>;
+  const txCell = (payout: OpsPayout) => <>{opsShort(payout.txHash)}{payout.paidAt ? <p className="mt-1 font-sans text-ink-muted">{formatDate(payout.paidAt)}</p> : null}</>;
+
   const busyKey = !dialog ? "" : dialog.kind === "request" ? `request:${dialog.reward.id}` : `payout:${dialog.payout.id}`;
   const approveMode = dialog?.kind === "approve" ? payoutApprovalMode(dialog.payout, ops.policy) : "normal";
 
@@ -117,35 +157,42 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
       ) : null}
       {ops.payouts.length === 0 ? (
         <p className="mt-4 text-sm text-ink-muted">{t("payouts.empty")}</p>
+      ) : narrow ? (
+        <ul className="mt-4 space-y-3">
+          {ops.payouts.map((payout) => (
+            <li className="rounded-tile border border-border p-4 text-sm text-ink-secondary" data-payout-card key={payout.id}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">{recipientCell(payout)}</div>
+                {statusBadge(payout)}
+              </div>
+              <dl className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2">
+                <dt className="font-semibold text-ink-notice">{t("payouts.columns.amount")}</dt>
+                <dd className="[overflow-wrap:anywhere]">{opsAmount(payout.amount, payout.symbol)}</dd>
+                <dt className="font-semibold text-ink-notice">{t("payouts.columns.requested")}</dt>
+                <dd>{requestedCell(payout)}</dd>
+                <dt className="font-semibold text-ink-notice">{t("payouts.columns.approved")}</dt>
+                <dd>{approvedCell(payout)}</dd>
+                <dt className="font-semibold text-ink-notice">{t("payouts.columns.tx")}</dt>
+                <dd className="font-mono text-xs" title={payout.txHash ?? undefined}>{txCell(payout)}</dd>
+              </dl>
+              <div className="mt-3">{payoutActions(payout)}</div>
+            </li>
+          ))}
+        </ul>
       ) : (
         <div className="mt-4">
           <AdminTable columns={columns.map((id) => ({ id, label: t(`payouts.columns.${id}`) }))} minWidthClass="min-w-[980px]">
-            {ops.payouts.map((payout) => {
-              const mode = payoutApprovalMode(payout, ops.policy);
-              const pending = busy.has(`payout:${payout.id}`);
-              return (
-                <tr className="border-t border-border" key={payout.id}>
-                  <td className={opsCell}><p className="font-semibold text-ink">{submissionName(payout.submissionId)}</p><p className="mt-1 font-mono text-xs text-ink-muted" title={payout.recipientAddress}>{opsShort(payout.recipientAddress)}</p></td>
-                  <td className={opsCell}>{opsAmount(payout.amount, payout.symbol)}</td>
-                  <td className={opsCell}><Badge variant={payoutVariant(payout.status)}>{t(`payoutStatuses.${payout.status}`)}</Badge></td>
-                  <td className={opsCell}>{payout.requestedByMe ? t("payouts.byYou") : payout.requestedByNickname ?? "–"}<p className="mt-1 text-xs text-ink-muted">{formatDate(payout.requestedAt)}</p></td>
-                  <td className={opsCell}>{payout.approvedByNickname ?? "–"}<p className="mt-1 text-xs text-ink-muted">{payout.approvedAt ? formatDate(payout.approvedAt) : ""}</p></td>
-                  <td className={`${opsCell} font-mono text-xs`} title={payout.txHash ?? undefined}>{opsShort(payout.txHash)}{payout.paidAt ? <p className="mt-1 font-sans text-ink-muted">{formatDate(payout.paidAt)}</p> : null}</td>
-                  <td className={opsCell}>
-                    <div className="flex flex-wrap gap-2">
-                      {canApprovePayout(payout) ? (
-                        mode === "self-blocked" ? (
-                          <p className="max-w-[220px] text-xs font-semibold text-warning" id={`ops-payout-self-${payout.id}`}>{t("payouts.selfBlocked")}</p>
-                        ) : (
-                          <button className={opsButton} disabled={pending} onClick={() => setDialog({ kind: "approve", payout })} type="button">{t("payouts.approve")}</button>
-                        )
-                      ) : null}
-                      {canMarkPayoutPaid(payout) ? <button className={opsPrimaryButton} disabled={pending} onClick={() => setDialog({ kind: "paid", payout, txHash: "" })} type="button">{t("payouts.markPaid")}</button> : null}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+            {ops.payouts.map((payout) => (
+              <tr className="border-t border-border" key={payout.id}>
+                <td className={opsCell}>{recipientCell(payout)}</td>
+                <td className={opsCell}>{opsAmount(payout.amount, payout.symbol)}</td>
+                <td className={opsCell}>{statusBadge(payout)}</td>
+                <td className={opsCell}>{requestedCell(payout)}</td>
+                <td className={opsCell}>{approvedCell(payout)}</td>
+                <td className={`${opsCell} font-mono text-xs`} title={payout.txHash ?? undefined}>{txCell(payout)}</td>
+                <td className={opsCell}>{payoutActions(payout)}</td>
+              </tr>
+            ))}
           </AdminTable>
         </div>
       )}
