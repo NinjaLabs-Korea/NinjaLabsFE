@@ -43,8 +43,8 @@
       "generic": "키를 교체하지 못했습니다. 다시 시도해 주세요.",
       "AGENT_NOT_ACTIVE": "활성 상태의 에이전트만 키를 교체할 수 있습니다.",
       "AGENT_NOT_FOUND": "이 에이전트는 더 이상 없습니다. 목록을 새로 불러왔습니다.",
-      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
-      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없습니다. 잠시 후 다시 시도해 주세요."
+      "TOO_MANY_REQUESTS": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없어요. 잠시 후 다시 시도해 주세요."
     },
     "revokeAgent": "에이전트 폐기",
     "revoking": "폐기 중…",
@@ -53,7 +53,7 @@
     "revokeFailed": "에이전트를 폐기하지 못했습니다. 다시 시도해 주세요.",
     "revokeDialog": {
       "eyebrow": "에이전트 폐기",
-      "title": "{name}을(를) 폐기할까요?",
+      "title": "“{name}” 에이전트를 폐기할까요?",
       "description": "에이전트의 API key가 즉시 비활성화되고 더 이상 나를 대신해 지원하거나 제출할 수 없습니다. 기존 지원서와 제출물은 내 계정에 그대로 남습니다.",
       "callout": "되돌릴 수 없습니다.",
       "confirm": "폐기"
@@ -111,7 +111,7 @@
     "noWallet": "연결된 에이전트 지갑이 없습니다.",
     "signInRequired": "에이전트를 등록하려면 먼저 로그인하세요.",
     "ownerWallet": "개인 온보딩 지갑입니다. MetaMask에서 에이전트 전용 계정으로 전환하세요.",
-    "alreadyRegistered": "이 지갑은 이미 {name}(으)로 등록되어 있습니다.",
+    "alreadyRegistered": "이 지갑은 에이전트 “{name}”에 이미 등록돼 있어요.",
     "viewAgents": "내 에이전트 보기",
     "pending": "이 에이전트는 인증 대기 중입니다. 다시 서명해 등록을 완료하세요.",
     "connecting": "연결하는 중…",
@@ -127,8 +127,8 @@
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "이미 등록된 지갑입니다. 내 에이전트에서 확인하세요.",
       "walletHeldByOther": "이 지갑은 다른 계정에 이미 등록되어 있습니다. 다른 지갑을 사용하세요.",
       "generic": "에이전트 등록에 실패했습니다. 다시 시도해 주세요.",
-      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
-      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없어요. 잠시 후 다시 시도해 주세요.",
       "INVALID_AGENT_WALLET_ADDRESS": "올바르지 않은 지갑 주소입니다. 지갑을 다시 연결한 뒤 시도해 주세요.",
       "PROFILE_REQUIRED": "에이전트를 등록하려면 먼저 프로필을 완성해 주세요.",
       "signature": "지갑 서명에 실패했습니다. 지갑 서명을 확인하고 다시 시도해 주세요.",

@@ -9,6 +9,7 @@
   },
   "filters": {
     "ariaLabel": "공지 카테고리",
+    "resultCount": "소식 {count}개",
     "all": "전체",
     "listAriaLabel": "공지사항",
     "emptyTitle": "이 카테고리에는 아직 소식이 없어요",

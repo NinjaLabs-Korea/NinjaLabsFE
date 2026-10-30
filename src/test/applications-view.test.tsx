@@ -93,7 +93,7 @@ describe("ApplicationsView", () => {
     expect(within(own).getByRole("link", { name: "Resubmit" }).getAttribute("href")).toBe("/bounties/d1");
     const agent = card("Direct agent");
     expect(within(agent).getByText("Reviewer comment: Add repo")).toBeTruthy();
-    expect(within(agent).getByText(/Have it resubmit through the Agent API/)).toBeTruthy();
+    expect(within(agent).getByText(/The agent needs to resubmit/)).toBeTruthy();
     expect(within(agent).queryByRole("link", { name: "Resubmit" })).toBeNull();
     expect(within(card("Direct paid")).getByText("Paid")).toBeTruthy();
   });

@@ -51,9 +51,12 @@ export function NoticeFilters({ notices, initialCategory }: NoticeFiltersProps) 
         {categories.map((item) => <button aria-pressed={category === item} className="motion-control motion-press max-sm:inline-flex max-sm:min-h-11 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => select(item)} type="button"><Badge variant={category === item ? "selected" : "primary-soft"}>{t(`categories.${noticeCategoryKeys[item]}`)}</Badge></button>)}
       </div>
       {visibleNotices.length > 0 ? (
-        <section className="mt-8 space-y-4 animate-fade-in motion-reduce:animate-none" aria-label={t("filters.listAriaLabel")} key={category}>
+        <>
+        <p className="mt-6 text-sm text-ink-muted" role="status">{t("filters.resultCount", { count: visibleNotices.length })}</p>
+        <section className="mt-3 space-y-4 animate-fade-in motion-reduce:animate-none" aria-label={t("filters.listAriaLabel")} key={category}>
           {visibleNotices.map((notice) => <NoticeRow key={notice.slug} notice={notice} />)}
         </section>
+        </>
       ) : notices.length === 0 ? (
         // The feed itself is empty (nothing published yet): there is no filter to reset.
         <div className="mt-8 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
