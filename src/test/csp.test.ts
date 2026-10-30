@@ -72,6 +72,17 @@ describe("isNonceRoute", () => {
     expect(excluded.test("/")).toBe(true);
     expect(excluded.test("/skill.md")).toBe(true);
   });
+
+  it("agrees with the header source for case variants (Next matches it case-insensitively)", () => {
+    // Exactly one of: shared CSP from next.config, or nonce CSP from the proxy. Never neither (no CSP), never both.
+    const excluded = new RegExp(`^${NONCE_ROUTE_HEADER_SOURCE.replace("/:path", "/")}$`, "i");
+    for (const url of ["/en/account", "/en/Account", "/en/ADMIN", "/ko/Account/x", "/EN/account", "/en/accounts", "/en/Bounties", "/en/nonsense-page"]) {
+      expect(excluded.test(url), url).toBe(!isNonceRoute(url));
+    }
+    expect(isNonceRoute("/en/Account")).toBe(true);
+    expect(isNonceRoute("/en/ADMIN")).toBe(true);
+    expect(isNonceRoute("/en/Bounties")).toBe(false);
+  });
 });
 
 describe("contentSecurityPolicy", () => {
