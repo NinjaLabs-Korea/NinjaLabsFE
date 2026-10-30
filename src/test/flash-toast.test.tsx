@@ -67,4 +67,20 @@ describe("FlashToast", () => {
     });
     expect(toast()).toBeNull();
   });
+
+  it("forgets hover and focus once dismissed, so the next flash still auto-dismisses", () => {
+    const dismiss = screen.getByRole("button", { name: "Dismiss" });
+    fireEvent.pointerEnter(toast()!.closest("div.fixed")!);
+    fireEvent.focusIn(dismiss);
+    fireEvent.click(dismiss);
+    expect(toast()).toBeNull();
+    act(() => pushFlash("profileSaved"));
+    const wrapper = toast()!.closest("div.fixed")!;
+    fireEvent.pointerEnter(wrapper);
+    fireEvent.pointerLeave(wrapper);
+    act(() => {
+      vi.advanceTimersByTime(FLASH_TOAST_MS);
+    });
+    expect(toast()).toBeNull();
+  });
 });

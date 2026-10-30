@@ -289,7 +289,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
           minLength={NICKNAME_MIN}
           name="nickname"
           aria-describedby={nicknameDescribedBy}
-          aria-invalid={fieldErrors.nickname || nicknameStatus === "taken" || nicknameStatus === "invalid" ? true : undefined}
+          aria-invalid={nicknameInvalid || undefined}
           onChange={(event) => {
             setNickname(event.target.value);
             setSaved(false);

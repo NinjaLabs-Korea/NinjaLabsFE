@@ -62,7 +62,7 @@ describe("CohortApplicationForm", () => {
     renderWithIntl(<CohortApplicationForm cohortId="cohort-2" onSaved={vi.fn()} />);
     for (const label of [/^Name/, /^Telegram ID/, /^X \(Twitter\) handle/, /^Introduction and motivation/]) expect(screen.getByLabelText(label)).toBeTruthy();
     expect(screen.getAllByRole("radio", { name: /year/ }).map((radio) => radio.getAttribute("value"))).toEqual(["LT_1Y", "Y1_3", "GT_3Y"]);
-    const activity = within(screen.getByRole("group", { name: /current activity/ })).getAllByRole("radio");
+    const activity = within(screen.getByRole("radiogroup", { name: /current activity/ })).getAllByRole("radio");
     expect(activity.map((radio) => radio.getAttribute("value"))).toEqual(["DEVELOPER", "CONTENT_CREATOR", "KOL", "COMMUNITY_MARKETING", "RESEARCHER", "BIZDEV", "STUDENT", "OTHER"]);
     const interests = within(screen.getByRole("group", { name: /Areas you want to join/ })).getAllByRole("checkbox");
     expect(interests.map((box) => box.getAttribute("value"))).toEqual(["DEVELOPER", "CONTENT_CREATOR", "KOL", "COMMUNITY_MARKETING", "RESEARCHER", "BIZDEV", "OTHER"]);
@@ -89,7 +89,8 @@ describe("CohortApplicationForm", () => {
     expect(screen.queryAllByRole("alert")).toHaveLength(0);
     fireEvent.blur(screen.getByLabelText(/^Telegram ID/));
     expect(screen.getByText(/This field is required/)).toBeTruthy();
-    const group = screen.getByRole("group", { name: /Web3 experience/ });
+    const group = screen.getByRole("radiogroup", { name: /Web3 experience/ });
+    expect(group.getAttribute("aria-required")).toBe("true");
     fireEvent.blur(group);
     expect(screen.getByText("Please choose an option.")).toBeTruthy();
   });
