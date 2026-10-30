@@ -68,7 +68,7 @@ console.log('hall of fame stats', JSON.stringify(stats), 'allZero', statsAllZero
   await apiAs(adminToken, 'GET', '/admin/cohorts');
   await p.goto('/ko'); await sleep(900);
   const koTitle = await p.eval(`document.querySelector('main h1')?.innerText`);
-  check('Intro (ko): community headline', /Injective 위에서 배우고, 만들고,\s*함께 움직이는 사람들\./.test(koTitle ?? ''), koTitle);
+  check('Intro (ko): community headline', /Injective에서 함께 배우고,\s*함께 만들어요\./.test(koTitle ?? ''), koTitle);
 
   // /bounties carries the moved hero
   await p.goto('/en/bounties'); await sleep(900);
