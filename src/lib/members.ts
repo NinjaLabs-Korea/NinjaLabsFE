@@ -1,5 +1,5 @@
 import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toPayoutStatus, toRewards, type RewardRow } from "./api/codecs";
-import type { Completion, Member, PayoutStatus, Profile, ProfileNft, Reward } from "./types";
+import type { Completion, Member, PayoutStatus, Profile, Reward } from "./types";
 import { nicknameInitials } from "./nickname";
 import { onboardingLog } from "./onboarding-log";
 import { cache } from "react";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useAuthActions, useAuthSnapshot, useOnboardingApi } from "@/components/auth/FoundationProvider";
 import { withLocaleOf } from "@/i18n/routing";
 import { ApiHttpError } from "@/lib/api/http";
@@ -10,10 +10,15 @@ import { ReturnPathNotice } from "@/components/signup/ReturnPathNotice";
 import { getOnboardingPath } from "@/lib/api/auth-adapter";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
 
-/** Consumes the remembered return path (if any) and leaves for it. */
-function goBackIfRemembered() {
+const subscribe = () => () => undefined;
+const getServerPath = () => null; // sessionStorage is client-only: server and hydration see no path
+
+/** Consumes the remembered return path (if any) and leaves for it; true when it left. */
+function goBackIfRemembered(): boolean {
   const path = takeReturnPath();
-  if (path) window.location.replace(withLocaleOf(window.location.pathname, path));
+  if (!path) return false;
+  window.location.replace(withLocaleOf(window.location.pathname, path));
+  return true;
 }
 
 /**
@@ -25,11 +30,10 @@ function goBackIfRemembered() {
 export function CompleteOnboarding({ children }: { children?: ReactNode }) {
   const t = useTranslations("signup.getStarted.completeError");
   const tReturn = useTranslations("signup.getStarted");
-  // Read after mount (sessionStorage is client-only). Stays set after the path is consumed, so the status does not flash the menu.
-  const [returning, setReturning] = useState(false);
-  useEffect(() => {
-    setReturning(peekReturnPath() !== null);
-  }, []);
+  const remembered = useSyncExternalStore(subscribe, peekReturnPath, getServerPath) !== null;
+  // Latched when the path is consumed, so the status does not flip back to the menu while the page navigates away.
+  const [leaving, setLeaving] = useState(false);
+  const returning = remembered || leaving;
   const apiClient = useOnboardingApi();
   const auth = useAuthSnapshot();
   const { refresh } = useAuthActions();
@@ -56,7 +60,7 @@ export function CompleteOnboarding({ children }: { children?: ReactNode }) {
       () => {
         onboardingLog("onboarding.complete.succeeded");
         setState("done");
-        goBackIfRemembered();
+        if (goBackIfRemembered()) setLeaving(true);
         // The session snapshot still says "unfinished"; re-read it so the hub CTA ("My activity") and the user menu see a finished user.
         void refresh?.().catch(() => undefined);
       },
@@ -80,6 +84,7 @@ export function CompleteOnboarding({ children }: { children?: ReactNode }) {
       return;
     }
     if (alreadyCompleted) {
+      // No state here (the store snapshot is not reactive, so the status stays until the navigation happens).
       goBackIfRemembered();
       return;
     }
