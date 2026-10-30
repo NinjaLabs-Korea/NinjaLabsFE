@@ -67,7 +67,7 @@ describe("ActivitiesSection", () => {
     expect(within(cards[0]).getByText("Event date 2026.06.18")).toBeTruthy();
     expect(within(cards[0]).getByText("Events")).toBeTruthy();
     expect(within(cards[1]).getByText("2026.06.20")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "See all events →" }).getAttribute("href")).toBe("/notices?category=events");
+    expect(screen.getByRole("link", { name: "More past activities →" }).getAttribute("href")).toBe("/notices?category=events");
   });
 
   it("has an empty and an unavailable state", () => {
@@ -124,7 +124,7 @@ describe("AchievementsSection, MembersPreviewSection, BountiesEntrySection", () 
     renderWithIntl(<UpcomingEventsSection events={[notice({ slug: "u1", title: "Demo day", eventDate: "2999-01-01" })]} />);
     expect(screen.getByRole("heading", { level: 2, name: "Ongoing and upcoming events" })).toBeTruthy();
     expect(screen.getByText("Event date 2999.01.01")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "See all events →" }).getAttribute("href")).toBe("/notices?category=events");
+    expect(screen.getByRole("link", { name: "More upcoming events →" }).getAttribute("href")).toBe("/notices?category=events");
   });
 
   it("shows the hall of fame stats and the first highlights, linking to the hall of fame", () => {
