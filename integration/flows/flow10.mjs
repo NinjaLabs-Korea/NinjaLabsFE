@@ -19,7 +19,20 @@ const body = (t) => { try { return JSON.parse(t); } catch { return t; } };
   // winner needs a primary wallet and an APPROVED submission
   if (sql(`select count(*) from wallet where user_id='${ids.BUILDER}' and disconnected_at is null`) === '0')
     sql(`insert into wallet (user_id, chain, address, is_primary, verified_at) values ('${ids.BUILDER}','INJECTIVE','inj1builderwallet000000000000000000000000000',true,now())`);
-  const SUB = sql(`select id from bounty_submission where bounty_id='${seed.B1}' and submitter_user_id='${ids.BUILDER}'`);
+  const subOf = () => sql(`select id from bounty_submission where bounty_id='${seed.B1}' and submitter_user_id='${ids.BUILDER}'`);
+  let SUB = subOf();
+  // Flow 4 makes this submission from the FE; in CI flow 10 runs in another matrix job without it, so seed it through the API.
+  if (!SUB) {
+    // B1 requires an approved application before a submission (flow 4 applies and the admin approves).
+    const appOf = () => sql(`select id||' '||status from bounty_application where bounty_id='${seed.B1}' and applicant_user_id='${ids.BUILDER}'`);
+    if (!appOf()) await apiAs(BT, 'POST', `/bounties/${seed.B1}/applications`, { message: 'Seeded by flow 10', portfolioUrl: 'https://github.com/builderone' });
+    const [appId, appStatus] = appOf().split(' ');
+    if (appStatus !== 'APPROVED') await apiAs(A1, 'POST', `/admin/applications/${appId}/review`, { decision: 'APPROVED' });
+    check('A: seed the builder application -> APPROVED', appOf().endsWith(' APPROVED'), appOf());
+    const [sc, sb] = await apiAs(BT, 'POST', `/bounties/${seed.B1}/submissions`, { submissionUrl: 'https://github.com/builderone/dashboard', description: 'Seeded by flow 10 (flow 4 did not run in this job)' });
+    check('A: seed the builder submission -> 201', sc === 201, [sc, sb]);
+    SUB = subOf();
+  }
   let [rv, rvb] = await apiAs(A1, 'POST', `/admin/submissions/${SUB}/review`, { decision: 'APPROVE' });
   if (rv >= 400) { await apiAs(A1, 'POST', `/admin/submissions/${SUB}/review`, { decision: 'START_REVIEW' }); [rv, rvb] = await apiAs(A1, 'POST', `/admin/submissions/${SUB}/review`, { decision: 'APPROVE' }); }
   check('A: submission approved', rv < 300 && sql(`select status from bounty_submission where id='${SUB}'`) === 'APPROVED', [rv, rvb]);
