@@ -38,6 +38,9 @@ export function FlashToast() {
   const remaining = useRef(FLASH_TOAST_MS);
   const startedAt = useRef(0);
   const timer = useRef<number | undefined>(undefined);
+  // Pointer and focus both hold the toast; resume only once neither is left on it.
+  const pointerInside = useRef(false);
+  const focusInside = useRef(false);
 
   const resume = useCallback(() => {
     window.clearTimeout(timer.current);
@@ -53,18 +56,21 @@ export function FlashToast() {
   }, []);
 
   useEffect(() => {
-    if (!flash) return;
+    if (!flash) {
+      // The wrapper unmounts without blur/leave events (dismiss button, auto-dismiss): forget where the pointer/focus was.
+      pointerInside.current = false;
+      focusInside.current = false;
+      return;
+    }
     remaining.current = FLASH_TOAST_MS;
-    resume();
+    // A flash that replaces one under the cursor must not start its clock there.
+    if (!pointerInside.current && !focusInside.current) resume();
     return () => {
       window.clearTimeout(timer.current);
       timer.current = undefined;
     };
   }, [flash, resume]);
 
-  // Pointer and focus both hold the toast; resume only once neither is left on it.
-  const pointerInside = useRef(false);
-  const focusInside = useRef(false);
   const settle = () => {
     if (pointerInside.current || focusInside.current) pause();
     else if (timer.current === undefined) resume();

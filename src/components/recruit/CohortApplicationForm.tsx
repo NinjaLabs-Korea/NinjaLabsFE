@@ -210,7 +210,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
         </div>
       </div>
 
-      <fieldset tabIndex={-1} {...described("web3Experience", "cohort-web3Experience-error")} onBlur={blurGroup("web3Experience")}>
+      <fieldset aria-required="true" role="radiogroup" tabIndex={-1} {...described("web3Experience", "cohort-web3Experience-error")} onBlur={blurGroup("web3Experience")}>
         <legend className={labelClass}>{t("web3Experience.label")}<RequiredMark /></legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {WEB3_EXPERIENCES.map((option) => (
@@ -229,7 +229,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
         {fieldError("web3Experience", "cohort-web3Experience-error")}
       </fieldset>
 
-      <fieldset tabIndex={-1} {...described("activityType", "cohort-activityType-error")} onBlur={blurGroup("activityType")}>
+      <fieldset aria-required="true" role="radiogroup" tabIndex={-1} {...described("activityType", "cohort-activityType-error")} onBlur={blurGroup("activityType")}>
         <legend className={labelClass}>{t("activityType.label")}<RequiredMark /></legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {ACTIVITY_TYPES.map((option) => (

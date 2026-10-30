@@ -14,7 +14,7 @@ function* walk(node, inMock = false) {
 }
 
 /** Fixed phrases + every mock-mode message string of every locale (ICU placeholders make a string unsearchable: skipped). */
-export function mockCopyStrings(dir = MESSAGES_DIR) {
+function buildMockCopyStrings(dir) {
   const out = new Set(FIXED);
   for (const locale of fs.readdirSync(dir)) {
     const ld = path.join(dir, locale);
@@ -26,13 +26,10 @@ export function mockCopyStrings(dir = MESSAGES_DIR) {
   return [...out].filter(Boolean);
 }
 
+let cachedDefault; // flow14 calls findMockCopy per route and locale: scan the catalogs once
+export const mockCopyStrings = (dir = MESSAGES_DIR) =>
+  dir === MESSAGES_DIR ? (cachedDefault ??= buildMockCopyStrings(dir)) : buildMockCopyStrings(dir);
+
 export function findMockCopy(text, strings = mockCopyStrings()) {
   return strings.filter((s) => text.includes(s));
-}
-
-/** Fails (one assertion per route) when the visible text of the current page contains mock copy. */
-export async function assertNoMockCopy(page, route, check) {
-  const report = check ?? (await import('./harness.mjs')).check;
-  const hits = findMockCopy(await page.text());
-  return report(`no mock copy in api mode: ${route}`, hits.length === 0, hits);
 }
