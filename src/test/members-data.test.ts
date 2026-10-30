@@ -139,17 +139,17 @@ describe("public profile payout status", () => {
 });
 
 describe("hall of fame milestone dates", () => {
-  it("formats published_at in UTC and keeps an empty date for unpublished rows", async () => {
+  it("formats published_at in the home zone (KST) and keeps an empty date for unpublished rows", async () => {
     fetchPublicJson.mockImplementation(async (path: string) =>
       path.endsWith("/stats")
         ? { completedBounties: 0, builders: 0, completionNfts: 0, sponsors: 0 }
         : [
-            { id: "m1", type: "MILESTONE", title: "Launch", description: "", image_url: null, link_url: null, published_at: "2026-05-31T23:30:00Z" },
+            { id: "m1", type: "MILESTONE", title: "Launch", description: "", image_url: null, link_url: null, published_at: "2026-05-31T15:30:00Z" },
             { id: "m2", type: "MILESTONE", title: "Soon", description: "", image_url: null, link_url: null, published_at: null },
           ],
     );
     const { value: hallOfFame } = await settle(getRuntimeHallOfFame("en"), emptyHallOfFame);
-    expect(hallOfFame.milestones.map((milestone) => milestone.date)).toEqual(["May 31, 2026", ""]);
+    expect(hallOfFame.milestones.map((milestone) => milestone.date)).toEqual(["June 1, 2026", ""]);
   });
 });
 

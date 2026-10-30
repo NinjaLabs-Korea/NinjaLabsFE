@@ -138,9 +138,9 @@ describe("POST/PATCH /admin/bounties body", () => {
 describe("admin users and members", () => {
   it("maps users with member role labels and wallet link state, and encodes the search query", async () => {
     const { http, fetchJson } = createHttp([
-      { id: "u1", email: "a@x", nickname: "alpha", is_member: true, member_role: "CORE", member_display_order: 2, created_at: "2026-07-01T23:59:59.999Z", wallet_address: "0xabc" },
+      { id: "u1", email: "a@x", nickname: "alpha", is_member: true, member_role: "CORE", member_display_order: 2, created_at: "2026-07-01T14:59:59.999Z", wallet_address: "0xabc" },
       { id: "u2", email: "b@x", nickname: "beta", is_member: false, member_role: null, member_display_order: null, created_at: "not a date", wallet_address: null },
-      { id: "u3", email: "c@x", nickname: "gamma", is_member: true, member_role: "INTERN", member_display_order: 1, created_at: "2026-07-02T00:00:00.000Z", wallet_address: null },
+      { id: "u3", email: "c@x", nickname: "gamma", is_member: true, member_role: "INTERN", member_display_order: 1, created_at: "2026-07-01T15:00:00.000Z", wallet_address: null },
     ]);
     const users = await createAdminApi(http).getAdminUsers("a&b c");
     expect(calls(fetchJson)[0][0]).toBe("/admin/users?q=a%26b%20c");

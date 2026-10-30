@@ -1,5 +1,5 @@
 import { formatUnits } from "viem";
-import { formatUtcDate, safeHttpUrl, toHighlightTypeLabel, type HighlightTypeLabel } from "@/lib/api/codecs";
+import { formatHomeZoneDate, safeHttpUrl, toHighlightTypeLabel, type HighlightTypeLabel } from "@/lib/api/codecs";
 import { fetchPublicJson, loadFromRuntime } from "@/lib/api/public";
 import { formatTokenAmount } from "@/lib/format";
 
@@ -159,7 +159,7 @@ async function fetchHallOfFame(locale: string): Promise<RuntimeHallOfFame> {
     })),
     milestones: rows.filter((row) => row.type === "MILESTONE").map((row) => ({
       title: row.title,
-      date: formatUtcDate(row.published_at, locale, { year: "numeric", month: "long", day: "numeric" }),
+      date: formatHomeZoneDate(row.published_at, locale, { year: "numeric", month: "long", day: "numeric" }),
       description: row.description,
     })),
     partners: rows.flatMap((row) => {
