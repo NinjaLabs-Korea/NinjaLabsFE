@@ -57,6 +57,9 @@ describe("responsive layout contract", () => {
     expect(read("components/notices/NoticeFilters.tsx")).not.toContain("max-sm:min-h-10");
     expect(read("components/notices/NoticeFilters.tsx")).toContain("max-sm:min-h-11");
     expect(read("components/recruit/ChoiceChip.tsx")).toContain("max-sm:min-h-11");
+    expect(read("components/layout/useMenuButton.ts")).toContain("min-h-11");
+    const authArea = read("components/layout/AuthArea.tsx");
+    expect(authArea.match(/min-h-11/g)?.length).toBeGreaterThanOrEqual(2);
     const footer = read("components/layout/Footer.tsx");
     for (const href of ["/privacy", "/terms"]) expect(footer).toMatch(new RegExp(`max-sm:min-h-11[^"]*" href="${href}"`));
   });

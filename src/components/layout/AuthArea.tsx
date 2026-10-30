@@ -72,7 +72,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
       <nav aria-label={tMenu("accountNavigation")} className="space-y-1 px-1 pb-1">
         {getAccountNavigationItems(user).map((item) => (
           <Link
-            className="motion-control motion-press block rounded-control px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="motion-control motion-press flex min-h-11 items-center rounded-control px-3 py-2.5 text-sm font-medium text-ink-secondary hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             href={item.href}
             key={item.key}
             prefetch={true}
@@ -82,7 +82,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
         ))}
       </nav>
       <button
-        className="w-full rounded-control px-3 py-2 text-left text-sm font-semibold text-danger hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="flex min-h-11 w-full items-center rounded-control px-3 py-2.5 text-left text-sm font-semibold text-danger hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         onClick={() => void signOut()}
         type="button"
       >
