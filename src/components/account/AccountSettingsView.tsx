@@ -112,6 +112,9 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
         stashFlash("accountDeleted");
         hardNavigate(`/${locale}`);
       }
+      // hardNavigate returns before the page unloads: keep the flight open so the dialog stays disabled and
+      // cannot send a second DELETE /users/me while the full page load is pending.
+      await new Promise<never>(() => undefined);
     });
   };
 

@@ -122,6 +122,21 @@ describe("AccountSettingsView", () => {
     fireEvent.click(confirm());
     expect(withdrawAccount).toHaveBeenCalledTimes(2);
   });
+
+  it("keeps the dialog locked after a successful withdrawal while the full page load is pending", async () => {
+    const withdrawAccount = vi.fn().mockResolvedValue(undefined);
+    Object.assign(state.settings, { withdrawAccount });
+    renderWithIntl(<AccountSettingsView />);
+    fireEvent.click(screen.getByRole("button", { name: "Delete account" }));
+    fireEvent.change(screen.getByLabelText(/Type your nickname/), { target: { value: "jaemin.inj" } });
+    const confirm = () => screen.getAllByRole("button", { name: /Delete account|Deleting/ }).at(-1)! as HTMLButtonElement;
+    fireEvent.click(confirm());
+    await waitFor(() => expect(hardNavigate).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    fireEvent.click(confirm());
+    expect(withdrawAccount).toHaveBeenCalledTimes(1);
+    expect(confirm().disabled).toBe(true);
+  });
 });
 
 describe("BountyManager status button", () => {
