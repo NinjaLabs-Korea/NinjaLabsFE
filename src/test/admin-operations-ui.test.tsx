@@ -70,7 +70,7 @@ describe("BountyOperations", () => {
     expect(complete.disabled).toBe(true);
     expect(screen.getByText("1 submission still needs a final review (including requested revisions).")).toBeTruthy();
     expect(screen.getByText("Every approved winner needs a payout recorded as paid, and no payout may still be open.")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Open bounty" }));
+    fireEvent.click(screen.getByRole("button", { name: "Reopen bounty" }));
     await waitFor(() => expect(adminApi.transitionAdminBounty).toHaveBeenCalledWith("b1", "OPEN"));
   });
 

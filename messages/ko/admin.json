@@ -448,7 +448,11 @@
       },
       "cancelTitle": "이 바운티를 취소할까요?",
       "cancelDescription": "\"{title}\"은(는) 더 이상 작업을 받지 않으며 심사와 지급 요청도 할 수 없습니다.",
-      "cancelCallout": "콘솔에서는 취소를 되돌릴 수 없습니다."
+      "cancelCallout": "콘솔에서는 취소를 되돌릴 수 없습니다.",
+      "reopen": {
+        "label": "바운티 다시 열기",
+        "description": "제출을 다시 받아요. 제출 마감이 아직 지나지 않아야 해요."
+      }
     },
     "rewards": {
       "eyebrow": "보상",
@@ -607,7 +611,7 @@
       "REWARD_NOT_FUNDED": "지급을 요청하기 전에 보상 입금을 확인하세요.",
       "INVALID_TX_HASH": "올바른 거래 해시가 아닙니다.",
       "INVALID_TOKEN_AMOUNT": "금액은 최소 단위의 양의 정수여야 합니다.",
-      "TX_HASH_ALREADY_USED": "이미 기록된 거래 해시입니다(입금 또는 다른 바운티의 지급).",
+      "TX_HASH_ALREADY_USED": "이미 기록된 트랜잭션 해시예요(입금, 지급 또는 환불).",
       "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND": "승인된 제출물이 아니거나 소유자에게 연결된 기본 지갑이 없습니다.",
       "APPROVED_SUBMISSION_NOT_FOUND": "지급 대상 제출물이 더 이상 승인 상태가 아닙니다.",
       "PAYOUT_ALREADY_REQUESTED": "이 제출물과 보상에 대한 지급이 이미 있습니다.",

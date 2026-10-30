@@ -448,7 +448,11 @@
       },
       "cancelTitle": "取消此赏金？",
       "cancelDescription": "“{title}”将不再接收作品，也无法继续审核或申请付款。",
-      "cancelCallout": "在控制台中无法撤销取消。"
+      "cancelCallout": "在控制台中无法撤销取消。",
+      "reopen": {
+        "label": "重新开放赏金",
+        "description": "重新接受提交。提交截止时间必须尚未过去。"
+      }
     },
     "rewards": {
       "eyebrow": "奖励",
@@ -607,7 +611,7 @@
       "REWARD_NOT_FUNDED": "申请付款前请先确认奖励存款。",
       "INVALID_TX_HASH": "交易哈希无效。",
       "INVALID_TOKEN_AMOUNT": "金额必须是以最小单位表示的正整数。",
-      "TX_HASH_ALREADY_USED": "该交易哈希已被记录（作为存款，或其他赏金的付款）。",
+      "TX_HASH_ALREADY_USED": "该交易哈希已被记录（作为存入、支付或退款）。",
       "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND": "该提交未通过，或其所有者没有绑定的主钱包。",
       "APPROVED_SUBMISSION_NOT_FOUND": "付款对应的提交已不再是通过状态。",
       "PAYOUT_ALREADY_REQUESTED": "该提交和奖励的付款已存在。",
