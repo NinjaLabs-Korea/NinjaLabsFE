@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode, type SyntheticEvent } from "react";
+import { NAV_MOBILE_ONLY } from "@/components/layout/nav-breakpoint";
 
 /**
  * Header mobile menu: a progressive-enhancement `<details>` (works without JS) whose client behaviours are added here -
@@ -36,7 +37,7 @@ export function MobileMenu({ label, children }: { label: string; children: React
 
   return (
     <details
-      className="relative xl:hidden"
+      className={`relative ${NAV_MOBILE_ONLY}`}
       onClick={closeOnLinkClick}
       onToggle={(event: SyntheticEvent<HTMLDetailsElement>) => setOpen(event.currentTarget.open)}
       ref={detailsRef}

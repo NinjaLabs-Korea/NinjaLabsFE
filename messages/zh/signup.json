@@ -67,16 +67,16 @@
     },
     "title": "设置你的个人资料",
     "form": {
-      "nicknameLabel": "昵称*",
+      "nicknameLabel": "昵称",
       "nicknamePlaceholder": "请输入昵称",
-      "fieldTags": "领域标签*",
+      "fieldTags": "领域标签",
       "tags": {
         "dev": "开发",
         "design": "设计",
         "content": "内容",
         "other": "其他"
       },
-      "bioLabel": "简介*",
+      "bioLabel": "简介",
       "bioPlaceholder": "向社区介绍一下你自己",
       "bioHint": "请填写简短介绍。",
       "submit": "下一步",

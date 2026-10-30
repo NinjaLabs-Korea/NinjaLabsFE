@@ -68,7 +68,7 @@ describe("BountyFilters in the URL", () => {
     expect(screen.queryByText("Active dev bounty")).toBeNull();
     expect((screen.getByRole("searchbox") as HTMLInputElement).value).toBe("design");
 
-    fireEvent.click(screen.getByRole("button", { name: "Closed" }));
+    fireEvent.click(screen.getByRole("button", { name: "Closed or in review" }));
     // Nothing is written before the debounce elapses, exactly one write at it.
     const before = window.location.search;
     act(() => { vi.advanceTimersByTime(BOUNTY_FILTER_URL_DEBOUNCE_MS - 1); });
@@ -102,7 +102,7 @@ describe("BountyFilters", () => {
     expect(screen.getByText("Closed dev bounty")).toBeTruthy();
     expect(screen.queryByText("Active design bounty")).toBeNull();
 
-    fireEvent.click(within(statusGroup).getByRole("button", { name: "Closed" }));
+    fireEvent.click(within(statusGroup).getByRole("button", { name: "Closed or in review" }));
     expect(screen.queryByText("Active dev bounty")).toBeNull();
     expect(screen.getByText("Closed dev bounty")).toBeTruthy();
 
@@ -110,13 +110,13 @@ describe("BountyFilters", () => {
     fireEvent.click(within(categoryGroup).getByRole("button", { name: "Dev" }));
     expect(screen.getByText("Closed dev bounty")).toBeTruthy();
     expect(screen.queryByText("Active design bounty")).toBeNull();
-    expect(within(statusGroup).getByRole("button", { name: "Closed" }).getAttribute("aria-pressed")).toBe("true");
+    expect(within(statusGroup).getByRole("button", { name: "Closed or in review" }).getAttribute("aria-pressed")).toBe("true");
 
     fireEvent.click(screen.getByRole("button", { name: "All" }));
     expect(screen.getByText("Active dev bounty")).toBeTruthy();
     expect(screen.getByText("Closed dev bounty")).toBeTruthy();
     expect(screen.getByText("Active design bounty")).toBeTruthy();
-    expect(within(statusGroup).getByRole("button", { name: "Closed" }).getAttribute("aria-pressed")).toBe("false");
+    expect(within(statusGroup).getByRole("button", { name: "Closed or in review" }).getAttribute("aria-pressed")).toBe("false");
   });
 
   it("offers only the categories present in the list", () => {
@@ -140,5 +140,18 @@ describe("BountyFilters", () => {
     expect(screen.queryByText("No bounties match your filters")).toBeNull();
     expect(screen.queryByRole("button", { name: "Reset filters" })).toBeNull();
     expect(screen.queryByRole("group", { name: "Bounty filters" })).toBeNull();
+  });
+
+  it("announces the result count in a status line, updates it on chip and search, and hides it at zero", () => {
+    renderWithIntl(<BountyFilters bounties={bounties} />);
+    expect(screen.getByRole("status").textContent).toBe("3 bounties");
+    fireEvent.click(screen.getByRole("button", { name: "Closed or in review" }));
+    expect(screen.getByRole("status").textContent).toBe("1 bounty");
+    fireEvent.click(screen.getByRole("button", { name: "Closed or in review" }));
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "design" } });
+    expect(screen.getByRole("status").textContent).toBe("1 bounty");
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "no such thing" } });
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByText("No bounties match your filters")).toBeTruthy();
   });
 });

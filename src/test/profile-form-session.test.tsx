@@ -30,11 +30,11 @@ describe("ProfileForm when the session ends mid-form", () => {
 
   it("keeps the typed values, says the session ended with a way back, and stashes a draft", () => {
     const view = renderWithIntl(<ProfileForm />);
-    fireEvent.change(screen.getByLabelText("Nickname*"), { target: { value: "ninja_dev" } });
+    fireEvent.change(screen.getByLabelText("Nickname"), { target: { value: "ninja_dev" } });
     fireEvent.change(screen.getByLabelText(/^Bio/), { target: { value: "I build things" } });
     state.auth = { status: "signed-out", user: null, reason: "session-ended" };
     view.rerender(<ProfileForm />);
-    expect((screen.getByLabelText("Nickname*") as HTMLInputElement).value).toBe("ninja_dev");
+    expect((screen.getByLabelText("Nickname") as HTMLInputElement).value).toBe("ninja_dev");
     expect((screen.getByLabelText(/^Bio/) as HTMLTextAreaElement).value).toBe("I build things");
     expect(screen.getByText("Your session has ended. Sign in again to continue.")).toBeTruthy();
     expect(screen.getByRole("link", { name: /Sign in again/ }).getAttribute("href")).toBe("/signup");
@@ -44,7 +44,7 @@ describe("ProfileForm when the session ends mid-form", () => {
   it("pre-fills a fresh onboarding form from the draft left by the ended session", () => {
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ userId: "user-1", nickname: "ninja_dev", bio: "I build things", tags: ["DEV", "bogus"] }));
     renderWithIntl(<ProfileForm />);
-    expect((screen.getByLabelText("Nickname*") as HTMLInputElement).value).toBe("ninja_dev");
+    expect((screen.getByLabelText("Nickname") as HTMLInputElement).value).toBe("ninja_dev");
     expect((screen.getByLabelText(/^Bio/) as HTMLTextAreaElement).value).toBe("I build things");
   });
 

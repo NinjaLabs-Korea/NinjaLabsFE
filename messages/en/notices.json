@@ -9,6 +9,7 @@
   },
   "filters": {
     "ariaLabel": "Notice categories",
+    "resultCount": "{count, plural, one {# post} other {# posts}}",
     "all": "All",
     "listAriaLabel": "Notices",
     "emptyTitle": "Nothing in this category yet",

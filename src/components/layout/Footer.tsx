@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { BrandLink } from "@/components/layout/BrandLink";
 import { Link } from "@/i18n/navigation";
 import { CONTACT_EMAIL } from "@/lib/contact";
 
@@ -24,8 +25,8 @@ const injectiveLinks = [
   { href: "https://injective.com/", label: "Injective.com" },
   { href: "https://x.com/InjectiveKR", label: "X (@InjectiveKR)" },
   { href: "https://t.me/Injective_Korea", label: "Telegram (@Injective_Korea)" },
-  { href: "https://discord.com/invite/injective", label: "Discord" },
-  { href: "https://injhub.com/ecosystem/", label: "Ecosystem" },
+  { href: "https://discord.com/invite/injective", label: "Injective Discord" },
+  { href: "https://injhub.com/ecosystem/", label: "Injective Ecosystem" },
 ];
 
 export function Footer() {
@@ -37,13 +38,15 @@ export function Footer() {
       <div className="mx-auto max-w-content px-6 pt-12">
         <div className="flex flex-col justify-between gap-10 lg:flex-row">
           <div>
-            <Image
-              src="/brand/ninja-labs-kr-logo.png"
-              alt="Ninja Labs KR"
-              width={370}
-              height={86}
-              className="h-[34px] w-auto"
-            />
+            <BrandLink className="inline-block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" label={t("homeLabel")}>
+              <Image
+                src="/brand/ninja-labs-kr-logo.png"
+                alt=""
+                width={370}
+                height={86}
+                className="h-[34px] w-auto"
+              />
+            </BrandLink>
             <p className="mt-3 max-w-[287px] text-sm text-on-inverse-muted">
               {t("tagline")}
             </p>
@@ -92,6 +95,7 @@ function FooterLinkColumn({
   links: { href: string; label: string }[];
   external?: boolean;
 }) {
+  const t = useTranslations("common.footer");
   return (
     <div>
       <h2 className="text-sm font-semibold text-on-inverse/90">{heading}</h2>
@@ -106,6 +110,7 @@ function FooterLinkColumn({
                 rel="noreferrer"
               >
                 {label}
+                <span className="sr-only">{t("newTab")}</span>
               </a>
             ) : (
               <Link className="motion-control inline-flex min-h-10 items-center sm:min-h-0 text-sm text-on-inverse-secondary" href={href} prefetch={true}>

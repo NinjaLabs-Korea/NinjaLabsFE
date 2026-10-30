@@ -24,7 +24,7 @@ describe("LocaleSwitcher keyboard behavior", () => {
 
   it("opens with focus on the active locale and marks only it as checked", () => {
     renderKo();
-    const trigger = screen.getByRole("button", { name: "Language" });
+    const trigger = screen.getByRole("button", { name: /^Language/ });
     expect(trigger.textContent).toContain("한국어");
     fireEvent.keyDown(trigger, { key: "ArrowDown" });
     const items = screen.getAllByRole("menuitemradio");
@@ -36,7 +36,7 @@ describe("LocaleSwitcher keyboard behavior", () => {
 
   it("re-selecting the active locale closes the menu, keeps the route and returns focus to the trigger", () => {
     renderKo();
-    const trigger = screen.getByRole("button", { name: "Language" });
+    const trigger = screen.getByRole("button", { name: /^Language/ });
     fireEvent.keyDown(trigger, { key: "Enter" });
     act(() => fireEvent.click(screen.getAllByRole("menuitemradio")[1]));
     expect(replace).not.toHaveBeenCalled();
@@ -46,7 +46,7 @@ describe("LocaleSwitcher keyboard behavior", () => {
 
   it("moves between locales with the arrow keys and switches on the focused one", () => {
     renderKo();
-    fireEvent.keyDown(screen.getByRole("button", { name: "Language" }), { key: "ArrowDown" });
+    fireEvent.keyDown(screen.getByRole("button", { name: /^Language/ }), { key: "ArrowDown" });
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: "ArrowDown" });
     expect(document.activeElement?.textContent).toBe("中文");
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: "ArrowDown" });

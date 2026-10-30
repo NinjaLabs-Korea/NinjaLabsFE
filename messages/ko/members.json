@@ -10,6 +10,7 @@
   },
   "filters": {
     "ariaLabel": "멤버 역할",
+    "resultCount": "멤버 {count}명",
     "all": "전체",
     "listAriaLabel": "멤버",
     "emptyTitle": "필터에 맞는 멤버가 없어요",
@@ -29,7 +30,6 @@
     "profileLabel": "{name} 프로필",
     "linkLabel": "{name} {link}",
     "defaultTitle": "Ninja Labs 멤버",
-    "defaultBio": "Injective 생태계에서 빌드하고 있습니다.",
     "links": {
       "posts": "게시글",
       "agents": "에이전트",

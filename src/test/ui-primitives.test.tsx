@@ -130,6 +130,14 @@ describe("Toast", () => {
   });
 });
 
+describe("Toast touch targets", () => {
+  it("gives the dismiss button a 40px hit area and the action button vertical padding", () => {
+    renderWithIntl(<Toast actionLabel="Undo" onAction={() => undefined} onDismiss={() => undefined} title="Saved" variant="success" />);
+    expect(screen.getByRole("button", { name: "Dismiss" }).className).toMatch(/\bsize-10\b/);
+    expect(screen.getByRole("button", { name: "Undo" }).className).toMatch(/\bpy-2\b/);
+  });
+});
+
 describe("Markdown allowlist", () => {
   const renderMd = (source: string) => renderWithIntl(<Markdown>{source}</Markdown>);
 

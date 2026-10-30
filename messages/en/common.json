@@ -45,7 +45,9 @@
     "legal": "© 2026 Ninja Labs",
     "contact": "Contact",
     "privacy": "Privacy Policy",
-    "terms": "Terms of Service"
+    "terms": "Terms of Service",
+    "homeLabel": "Ninja Labs home",
+    "newTab": " (opens in a new tab)"
   },
   "userMenu": {
     "accountNavigation": "Account navigation",
@@ -152,5 +154,9 @@
       "title": "Application withdrawn",
       "description": "You can apply again while the bounty is open."
     }
+  },
+  "form": {
+    "requiredHint": "Fields marked * are required.",
+    "invalidSummary": "{count, plural, one {# field needs your attention.} other {# fields need your attention.}}"
   }
 }

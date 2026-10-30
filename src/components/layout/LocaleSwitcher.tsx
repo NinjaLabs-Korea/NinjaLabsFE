@@ -41,10 +41,11 @@ export function LocaleSwitcher() {
     <div className="relative" {...menu.rootProps}>
       <button
         {...menu.buttonProps(routing.locales.indexOf(locale))}
-        aria-label={t("label")}
         className={`flex items-center gap-1.5 whitespace-nowrap rounded-control px-2 py-3 text-sm sm:px-3 leading-[21px] font-semibold hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${menu.open ? "text-ink" : "text-ink-secondary"}`}
         disabled={pending}
       >
+        {/* Accessible name = "Language English": keeps the visible text inside the name (WCAG 2.5.3). */}
+        <span className="sr-only">{t("label")} </span>
         {localeLabels[locale]}
         <span aria-hidden="true" className={`text-xs text-ink-muted motion-control motion-reduce:transition-none${menu.open ? " rotate-180" : ""}`}>▾</span>
       </button>

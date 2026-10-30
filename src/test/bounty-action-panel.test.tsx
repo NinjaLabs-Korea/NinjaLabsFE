@@ -155,8 +155,8 @@ describe("BountyActionPanel", () => {
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
     expect(await screen.findByRole("heading", { name: "Handled by your agent" })).toBeTruthy();
     expect(screen.getByText(status === "open"
-      ? "Your agent market-scout-agent applied to this bounty. Manage that application through the Agent API; this page does not submit on its behalf."
-      : /application\. It can now submit work through the Agent API/)).toBeTruthy();
+      ? "Your agent market-scout-agent applied to this bounty. The agent manages this application; this page does not submit for it."
+      : /The agent can now submit its work/)).toBeTruthy();
     expect(screen.getByRole("link", { name: "Manage my agents" }).getAttribute("href")).toBe("/agents");
     // The agent row never unlocks the owner's direct actions: no apply form, no submit form (even for an approved agent application).
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
@@ -518,7 +518,7 @@ describe("BountyActionPanel", () => {
 
     it("lets the bounty detail grid column shrink below its content width (min-w-0)", () => {
       const page = readFileSync("src/app/[locale]/bounties/[id]/page.tsx", "utf8");
-      expect(page).toContain('<div className="min-w-0 space-y-6 lg:col-span-2">');
+      expect(page).toMatch(/className="[^"]*\bmin-w-0\b[^"]*\blg:col-span-2\b[^"]*"/);
     });
   });
 

@@ -3,6 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FocusEvent, type FormEvent } from "react";
 import { useAuthSnapshot, useCohortApi } from "@/components/auth/FoundationProvider";
+import { RequiredMark } from "@/components/ui/RequiredMark";
+import { focusFirstInvalid } from "@/lib/form-focus";
 import { ChoiceChip } from "@/components/recruit/ChoiceChip";
 import { clearCohortDraft, readCohortDraft, writeCohortDraft } from "@/lib/cohort-application-draft";
 import { ERROR_COPY } from "@/lib/api/error-copy";
@@ -35,18 +37,6 @@ const labelClass = "text-sm font-semibold text-ink";
 const hintClass = "mt-1 text-xs text-ink-muted";
 
 /** The form's fields in page order, for finding the first one with a problem. */
-const FIELD_ORDER: (keyof CohortFormErrors)[] = ["displayName", "telegram", "twitter", "web3Experience", "activityType", "activityTypeOther", "interestAreas", "interestOther", "intro"];
-
-/** Moves focus (and the viewport) to the first invalid control after a failed submit; a chip group focuses its first input. */
-function focusFirstInvalid(form: HTMLFormElement, errors: CohortFormErrors): void {
-  const field = FIELD_ORDER.find((name) => errors[name]);
-  if (!field) return;
-  const target = form.querySelector<HTMLElement>(`#cohort-${field}`) ?? form.querySelector<HTMLElement>(`input[name="${field}"]`);
-  if (!target) return;
-  const reduced = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  target.focus({ preventScroll: true });
-  target.scrollIntoView?.({ block: "center", behavior: reduced ? "auto" : "smooth" });
-}
 
 /** Message key under `recruit.form.errors`: the choice groups ask to pick, the two handles say what shape they take. */
 function errorMessageKey(field: keyof CohortFormErrors, kind: CohortFieldError): string {
@@ -71,6 +61,10 @@ type CohortApplicationFormProps = {
  */
 export function CohortApplicationForm({ cohortId, application, onSaved, onCancel, onStale }: CohortApplicationFormProps) {
   const t = useTranslations("recruit.form");
+  const tForm = useTranslations("common.form");
+  const formRef = useRef<HTMLFormElement>(null);
+  // Set by a failed submit, cleared once no field is flagged: drives the "N fields need attention" line.
+  const [submitFailed, setSubmitFailed] = useState(false);
   const tSaveErrors = useTranslations(ERROR_COPY.cohortApply.messages);
   const api = useCohortApi();
   const editing = application !== undefined;
@@ -115,7 +109,8 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
     const values = draftToValues(draft);
     if (Object.keys(nextErrors).length > 0 || !values) {
       setState("idle");
-      focusFirstInvalid(event.currentTarget, nextErrors);
+      setSubmitFailed(true);
+      focusFirstInvalid(formRef.current);
       return;
     }
     inFlight.current = true;
@@ -149,12 +144,15 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
       "aria-describedby": [errors[field] ? id : null, hintId ?? null].filter(Boolean).join(" ") || undefined,
     }) as const;
 
+  const invalidCount = Object.values(errors).filter(Boolean).length;
+  if (invalidCount === 0 && submitFailed) setSubmitFailed(false);
   const introLength = [...draft.intro.trim()].length;
 
   return (
-    <form className="space-y-6" noValidate onSubmit={(event) => void submit(event)}>
+    <form className="space-y-6" noValidate onSubmit={(event) => void submit(event)} ref={formRef}>
+      <p className="text-xs text-ink-muted">{tForm("requiredHint")}</p>
       <div>
-        <label className={labelClass} htmlFor="cohort-displayName">{t("displayName.label")}</label>
+        <label className={labelClass} htmlFor="cohort-displayName">{t("displayName.label")}</label><RequiredMark />
         <input
           {...described("displayName", "cohort-displayName-error", "cohort-displayName-hint")}
           autoComplete="name"
@@ -173,7 +171,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div>
-          <label className={labelClass} htmlFor="cohort-telegram">{t("telegram.label")}</label>
+          <label className={labelClass} htmlFor="cohort-telegram">{t("telegram.label")}</label><RequiredMark />
           <input
             {...described("telegram", "cohort-telegram-error", "cohort-telegram-hint")}
             autoCapitalize="off"
@@ -192,7 +190,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
           <p className={hintClass} id="cohort-telegram-hint">{t("telegram.hint")}</p>
         </div>
         <div>
-          <label className={labelClass} htmlFor="cohort-twitter">{t("twitter.label")}</label>
+          <label className={labelClass} htmlFor="cohort-twitter">{t("twitter.label")}</label><RequiredMark />
           <input
             {...described("twitter", "cohort-twitter-error", "cohort-twitter-hint")}
             autoCapitalize="off"
@@ -212,8 +210,8 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
         </div>
       </div>
 
-      <fieldset {...described("web3Experience", "cohort-web3Experience-error")} onBlur={blurGroup("web3Experience")}>
-        <legend className={labelClass}>{t("web3Experience.label")}</legend>
+      <fieldset tabIndex={-1} {...described("web3Experience", "cohort-web3Experience-error")} onBlur={blurGroup("web3Experience")}>
+        <legend className={labelClass}>{t("web3Experience.label")}<RequiredMark /></legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {WEB3_EXPERIENCES.map((option) => (
             <ChoiceChip
@@ -231,8 +229,8 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
         {fieldError("web3Experience", "cohort-web3Experience-error")}
       </fieldset>
 
-      <fieldset {...described("activityType", "cohort-activityType-error")} onBlur={blurGroup("activityType")}>
-        <legend className={labelClass}>{t("activityType.label")}</legend>
+      <fieldset tabIndex={-1} {...described("activityType", "cohort-activityType-error")} onBlur={blurGroup("activityType")}>
+        <legend className={labelClass}>{t("activityType.label")}<RequiredMark /></legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {ACTIVITY_TYPES.map((option) => (
             <ChoiceChip
@@ -250,7 +248,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
         {fieldError("activityType", "cohort-activityType-error")}
         {draft.activityType === "OTHER" ? (
           <div className="mt-3">
-            <label className={labelClass} htmlFor="cohort-activityTypeOther">{t("activityType.otherLabel")}</label>
+            <label className={labelClass} htmlFor="cohort-activityTypeOther">{t("activityType.otherLabel")}</label><RequiredMark />
             <input
               {...described("activityTypeOther", "cohort-activityTypeOther-error")}
               className={inputClass}
@@ -267,8 +265,8 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
         ) : null}
       </fieldset>
 
-      <fieldset {...described("interestAreas", "cohort-interestAreas-error")} onBlur={blurGroup("interestAreas")}>
-        <legend className={labelClass}>{t("interestAreas.label")}</legend>
+      <fieldset tabIndex={-1} {...described("interestAreas", "cohort-interestAreas-error")} onBlur={blurGroup("interestAreas")}>
+        <legend className={labelClass}>{t("interestAreas.label")}<RequiredMark /></legend>
         <p className={hintClass}>{t("interestAreas.hint")}</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {INTEREST_AREAS.map((option) => (
@@ -287,7 +285,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
         {fieldError("interestAreas", "cohort-interestAreas-error")}
         {draft.interestAreas.includes("OTHER") ? (
           <div className="mt-3">
-            <label className={labelClass} htmlFor="cohort-interestOther">{t("interestAreas.otherLabel")}</label>
+            <label className={labelClass} htmlFor="cohort-interestOther">{t("interestAreas.otherLabel")}</label><RequiredMark />
             <input
               {...described("interestOther", "cohort-interestOther-error")}
               className={inputClass}
@@ -305,7 +303,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
       </fieldset>
 
       <div>
-        <label className={labelClass} htmlFor="cohort-intro">{t("intro.label")}</label>
+        <label className={labelClass} htmlFor="cohort-intro">{t("intro.label")}</label><RequiredMark />
         <textarea
           {...described("intro", "cohort-intro-error", "cohort-intro-hint")}
           className={`${inputClass} min-h-[160px]`}
@@ -344,6 +342,9 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
           </button>
         ) : null}
       </div>
+      {submitFailed && invalidCount > 0 ? (
+        <p className="text-sm text-danger" role="status">{tForm("invalidSummary", { count: invalidCount })}</p>
+      ) : null}
       {state === "error" ? (
         <p className="text-sm text-danger" role="alert">
           {tSaveErrors(saveError)}

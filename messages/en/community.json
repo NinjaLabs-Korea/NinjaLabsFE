@@ -27,14 +27,12 @@
     }
   },
   "upcoming": {
-    "eyebrow": "Happening now and next",
     "heading": "Ongoing and upcoming events",
-    "viewAll": "See all events →"
+    "viewAll": "More upcoming events →"
   },
   "activities": {
-    "eyebrow": "Past activities",
     "heading": "What we have done together",
-    "viewAll": "See all events →",
+    "viewAll": "More past activities →",
     "unavailable": "Past activities are temporarily unavailable.",
     "unavailableBody": "We couldn’t reach the server. Please reload shortly.",
     "empty": "No news yet. New posts show up in Notices first.",
@@ -50,7 +48,6 @@
     "emptyAction": "See the Hall of Fame →"
   },
   "members": {
-    "eyebrow": "Members",
     "heading": "Meet the members",
     "viewAll": "All members →",
     "unavailable": "Members are temporarily unavailable.",

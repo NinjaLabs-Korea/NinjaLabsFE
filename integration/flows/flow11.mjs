@@ -1,5 +1,5 @@
 // Flow 11: auth-state consistency. Header, hero CTA, signup step 1 and the gated pages agree with the session in every state.
-import { Browser, report } from '../lib/cdp.mjs'; import { ids, check, clean, done, sleep, signIn, mainText } from '../lib/harness.mjs';
+import { Browser, report } from '../lib/cdp.mjs'; import { ids, check, clean, done, signIn, mainText } from '../lib/harness.mjs';
 const b = await Browser.connect();
 const LOGIN = 'Continue with Google';
 const links = (p, sel) => p.eval(`[...document.querySelectorAll(${JSON.stringify(sel)})].filter(e=>e.getClientRects().length).map(e=>e.innerText.trim()+' -> '+new URL(e.href).pathname)`);
@@ -9,7 +9,7 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
 // ---- signed out
 {
   const p = await b.newPage(await b.newContext());
-  await p.goto('/en'); await sleep(600);
+  await p.goto('/en'); await p.waitForSelector('main section:first-of-type a');
   const hero = await heroCta(p);
   check('signed out: hero CTA is Get Started -> signup', hero.some((l) => l === 'Get Started -> /en/signup'), hero);
   check('signed out: header shows Get Started', await headerGetStarted(p));
@@ -21,18 +21,18 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   check('signed out: no em dash on the page', !t.includes('-'));
   clean(await report(p, 'signed-out signup', {}), { signedOut: true });
   for (const path of ['/en/account', '/en/applications', '/en/agents', '/en/admin']) {
-    await p.goto(path); await sleep(500);
+    await p.goto(path); await p.waitFor(`/sign in|get started|log in|session|Continue with Google/i.test(document.querySelector('main')?.innerText ?? '')`, 8000);
     const txt = await mainText(p);
     check(`signed out: ${path} asks to sign in (never shows account content)`, /sign in|get started|log in|session/i.test(txt) || /Continue with Google/.test(txt), txt.slice(0, 160));
     clean(await report(p, `signed-out ${path}`, {}), { signedOut: true });
   }
   for (const step of ['wallet', 'profile', 'get-started']) {
-    await p.goto(`/en/signup/${step}`); await p.waitFor(`location.pathname.endsWith('/en/signup')`, 8000); await sleep(600);
+    await p.goto(`/en/signup/${step}`); await p.waitFor(`location.pathname.endsWith('/en/signup')`, 8000); await p.waitText('Sign in to continue', 8000);
     const txt = await p.text();
     check(`signed out: /signup/${step} goes to step 1 with a clear message`, (await p.url()).endsWith('/en/signup') && txt.includes('Sign in to continue') && txt.includes(LOGIN), txt.slice(0, 200));
     clean(await report(p, `signed-out signup ${step}`, {}), { signedOut: true });
   }
-  await p.goto('/en/agents/register'); await sleep(500);
+  await p.goto('/en/agents/register'); await p.mainReady();
   check('signed out: agent register asks to sign in', /Sign in before registering/i.test(await mainText(p)));
   await p.close();
 }
@@ -41,7 +41,7 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
 {
   const p = await b.newPage(await b.newContext());
   await signIn(p, ids.BUILDER);
-  await p.goto('/en'); await sleep(800);
+  await p.goto('/en');
   // The hub is for everyone: a finished user stays on `/en` (no redirect to the home) and the hero CTA becomes "My activity".
   await p.waitFor(`[...document.querySelectorAll('main section:first-of-type a')].some(a=>a.innerText.trim()==='My activity')`, 8000);
   check('complete user: /en stays on the hub, no redirect to the home', (await p.url()).endsWith('/en'), await p.url());
@@ -61,8 +61,9 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   check('complete user: header has no Get Started', !(await headerGetStarted(p)));
   clean(await report(p, 'complete dashboard', {}));
   await p.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false });
-  await p.goto('/en/bounties'); await sleep(900);
-  await p.eval(`[...document.querySelectorAll('header button[aria-haspopup=menu]')].find(b=>b.getClientRects().length && b.innerText.includes('builderone'))?.click(); true`); await sleep(300);
+  await p.goto('/en/bounties');
+  await p.waitFor(`[...document.querySelectorAll('header button[aria-haspopup=menu]')].some(b=>b.getClientRects().length && b.innerText.includes('builderone'))`, 8000);
+  await p.eval(`[...document.querySelectorAll('header button[aria-haspopup=menu]')].find(b=>b.getClientRects().length && b.innerText.includes('builderone'))?.click(); true`); await p.waitForSelector('[role=menuitem]');
   const menuItems = await p.eval(`[...document.querySelectorAll('[role=menuitem]')].map(e=>e.innerText.trim()+' -> '+(e.getAttribute('href')||''))`);
   check('complete user: the user menu lists My activity -> /home first', menuItems[0] === 'My activity -> /en/home', menuItems);
   // hard load / direct URL entry
@@ -72,9 +73,9 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   check('complete user: never shown the login', !(await p.text()).includes(LOGIN));
   clean(await report(p, 'complete signup direct', {}));
   // arrive from another page: go back where they came from
-  await p.goto('/en/bounties'); await sleep(500);
+  await p.goto('/en/bounties');
   await p.eval(`location.assign('/en/signup'); true`);
-  await p.waitFor(`!location.pathname.endsWith('/signup')`, 8000); await sleep(500);
+  await p.waitFor(`location.pathname.endsWith('/en/bounties')`, 8000);
   const back = await p.url();
   check('complete user: signup sends them back to the page they came from', back.endsWith('/en/bounties'), back);
   clean(await report(p, 'complete signup from bounties', {}));
@@ -84,12 +85,12 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
     check(`complete user: /signup/${step} leaves the signup flow`, !url.includes('/signup'), url);
     clean(await report(p, `complete signup ${step}`, {}));
   }
-  await p.goto('/en/account'); await sleep(800);
+  await p.goto('/en/account'); await p.mainReady();
   const acct = await mainText(p);
   console.log('INFO /account offers wallet/profile editing:', /edit|change|connect/i.test(acct.replace(/Delete account/gi, '')));
-  await p.goto('/en/agents/register'); await sleep(800);
+  await p.goto('/en/agents/register'); await p.mainReady();
   check('complete user: agent register shows no sign-in warning', !/Sign in before registering/i.test(await mainText(p)));
-  await p.goto('/en/admin'); await sleep(800);
+  await p.goto('/en/admin'); await p.waitText('Admin access only', 8000);
   const adminText = await mainText(p);
   check('regular user: /admin says admin only, not sign in', /Admin access only/i.test(adminText) && !/sign-in required/i.test(adminText), adminText.slice(0, 160));
   clean(await report(p, 'regular user admin', {}));
@@ -109,7 +110,7 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   check('step-2 user: the Login step is not a link', await p.eval(`!document.querySelector('main ol li a, main ol li button')`));
   clean(await report(p, 'step-2 signup', {}));
   // the hub is open to an unfinished sign-up too: its CTA continues the owed step
-  await p.goto('/en'); await sleep(800);
+  await p.goto('/en'); await p.waitForSelector('main section:first-of-type a');
   const hero = await heroCta(p);
   check('step-2 user: hero CTA continues sign-up at the wallet step', hero.some((l) => l === 'Continue sign-up -> /en/signup/wallet'), hero);
   check('step-2 user: no Get Started anywhere', !hero.some((l) => l.startsWith('Get Started')) && !(await headerGetStarted(p)), hero);
@@ -121,7 +122,7 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
 {
   const p = await b.newPage(await b.newContext());
   await signIn(p, ids.ADMIN);
-  await p.goto('/en/admin'); await sleep(1000);
+  await p.goto('/en/admin'); await p.mainReady();
   const t = await mainText(p);
   check('admin: console renders, no sign-in or access-denied copy', !/Admin access only|sign-in required|Sign in/i.test(t), t.slice(0, 160));
   await p.goto('/en/signup'); await p.waitFor(`!location.pathname.endsWith('/signup')`, 8000);

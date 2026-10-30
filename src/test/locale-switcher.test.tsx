@@ -13,7 +13,7 @@ vi.mock("@/i18n/navigation", () => ({
 describe("LocaleSwitcher", () => {
   it("opens a menu with the current locale checked and switches locale on select", () => {
     renderWithIntl(<LocaleSwitcher />);
-    const trigger = screen.getByRole("button", { name: "Language" });
+    const trigger = screen.getByRole("button", { name: /^Language/ });
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
 
     fireEvent.click(trigger);
@@ -31,7 +31,7 @@ describe("LocaleSwitcher", () => {
     window.history.replaceState(null, "", "/en/auth/callback?next=%2Fbounties#loginCode=abc123");
     try {
       renderWithIntl(<LocaleSwitcher />);
-      fireEvent.click(screen.getByRole("button", { name: "Language" }));
+      fireEvent.click(screen.getByRole("button", { name: /^Language/ }));
       act(() => fireEvent.click(screen.getAllByRole("menuitemradio")[2]));
       expect(replace).toHaveBeenCalledWith("/bounties?next=%2Fbounties#loginCode=abc123", { locale: "zh" });
     } finally {
@@ -42,7 +42,7 @@ describe("LocaleSwitcher", () => {
   it("closes on Escape without switching", () => {
     replace.mockClear();
     renderWithIntl(<LocaleSwitcher />);
-    fireEvent.click(screen.getByRole("button", { name: "Language" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Language/ }));
     fireEvent.keyDown(screen.getAllByRole("menuitemradio")[0], { key: "Escape" });
     expect(screen.queryByRole("menu")).toBeNull();
     expect(replace).not.toHaveBeenCalled();

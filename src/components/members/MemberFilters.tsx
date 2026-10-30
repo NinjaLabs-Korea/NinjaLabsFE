@@ -46,9 +46,12 @@ export function MemberFilters({ members }: MemberFiltersProps) {
         {roles.map((item) => <button aria-pressed={role === item} className="motion-control motion-press max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => select(item)} type="button"><Badge variant={role === item ? "selected" : "primary-soft"}>{t(`roles.${item.toLowerCase()}`)}</Badge></button>)}
       </div>
       {visibleMembers.length > 0 ? (
-        <section className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 animate-fade-in motion-reduce:animate-none" aria-label={t("filters.listAriaLabel")} key={role}>
+        <>
+        <p className="mt-6 text-sm text-ink-muted" role="status">{t("filters.resultCount", { count: visibleMembers.length })}</p>
+        <section className="mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4 animate-fade-in motion-reduce:animate-none" aria-label={t("filters.listAriaLabel")} key={role}>
           {visibleMembers.map((member) => <MemberCard key={member.slug} member={member} />)}
         </section>
+        </>
       ) : members.length === 0 ? (
         // The feed itself is empty (nothing published yet): there is no filter to reset.
         <div className="mt-8 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">

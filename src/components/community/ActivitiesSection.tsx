@@ -12,7 +12,6 @@ export function ActivitiesSection({ events, unavailable }: { events: Notice[]; u
   return (
     <section className="mx-auto max-w-content px-6 pb-16">
       <SectionHeader
-        eyebrow={t("eyebrow")}
         heading={t("heading")}
         level={2}
         size="lg"

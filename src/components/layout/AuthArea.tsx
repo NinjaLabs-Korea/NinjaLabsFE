@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useAuthActions, useAuthSnapshot } from "@/components/auth/FoundationProvider";
+import { NAV_DESKTOP_ONLY_BLOCK, NAV_DESKTOP_ONLY_FLEX, NAV_DESKTOP_ONLY_INLINE } from "@/components/layout/nav-breakpoint";
 import { getAccountNavigationItems, userChipAvatarSizeClass, userChipBoxClass, UserMenu } from "@/components/layout/UserMenu";
 import { Link } from "@/i18n/navigation";
 import { useSessionHint } from "@/lib/foundation/session-hint";
@@ -22,14 +23,14 @@ export function AuthArea({ variant }: AuthAreaProps) {
     return (
       <>
         <Link
-          className="hidden whitespace-nowrap rounded-control px-[21px] py-3 text-sm leading-[21px] font-semibold text-ink-secondary xl:inline-block"
+          className={`whitespace-nowrap rounded-control px-[21px] py-3 text-sm leading-[21px] font-semibold text-ink-secondary ${NAV_DESKTOP_ONLY_INLINE}`}
           href="/bounties"
           prefetch={true}
         >
           {t("browse")}
         </Link>
         {user ? (
-          <div className="hidden xl:block">
+          <div className={NAV_DESKTOP_ONLY_BLOCK}>
             <UserMenu />
           </div>
         ) : snapshot.status === "loading" || (snapshot.status === "signed-out" && snapshot.reason === "unavailable") ? (
@@ -37,7 +38,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
           // label, so a signed-in visitor never sees "Get started". This tab already had a signed-in session (locale
           // switch remount): reserve the user chip's box instead (same box classes as the trigger, 10rem wide) so nothing shifts.
           hadSession ? (
-            <span aria-hidden="true" className={`invisible hidden w-40 border-transparent xl:flex ${userChipBoxClass}`}>
+            <span aria-hidden="true" className={`invisible w-40 border-transparent ${NAV_DESKTOP_ONLY_FLEX} ${userChipBoxClass}`}>
               <span className={userChipAvatarSizeClass} />
             </span>
           ) : (
@@ -72,7 +73,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
       <nav aria-label={tMenu("accountNavigation")} className="space-y-1 px-1 pb-1">
         {getAccountNavigationItems(user).map((item) => (
           <Link
-            className="motion-control motion-press block rounded-control px-3 py-2 text-sm font-medium text-ink-secondary hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="motion-control motion-press flex min-h-11 items-center rounded-control px-3 py-2.5 text-sm font-medium text-ink-secondary hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             href={item.href}
             key={item.key}
             prefetch={true}
@@ -82,7 +83,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
         ))}
       </nav>
       <button
-        className="w-full rounded-control px-3 py-2 text-left text-sm font-semibold text-danger hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="flex min-h-11 w-full items-center rounded-control px-3 py-2.5 text-left text-sm font-semibold text-danger hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         onClick={() => void signOut()}
         type="button"
       >

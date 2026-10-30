@@ -45,7 +45,9 @@
     "legal": "© 2026 Ninja Labs",
     "contact": "联系我们",
     "privacy": "隐私政策",
-    "terms": "服务条款"
+    "terms": "服务条款",
+    "homeLabel": "Ninja Labs 首页",
+    "newTab": "（在新标签页打开）"
   },
   "userMenu": {
     "accountNavigation": "账户导航",
@@ -152,5 +154,9 @@
       "title": "申请已撤回",
       "description": "赏金仍在进行时，你可以重新申请。"
     }
+  },
+  "form": {
+    "requiredHint": "带 * 的为必填项。",
+    "invalidSummary": "有 {count} 项需要检查。"
   }
 }
