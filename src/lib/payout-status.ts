@@ -1,3 +1,5 @@
+import type { PayoutStatus } from "@/lib/types";
+
 /**
  * payout / 보상 상태 집합 - **BE 상수의 복사본(snapshot)**이다. 손으로 새 집합을 만들지 말 것 (`be-error-codes.ts`와 같은 방식).
  *
@@ -10,6 +12,9 @@
  * - BE가 집합을 바꿨을 때: 원본을 열어 아래 배열을 같은 내용으로 맞추고 위 기준 커밋을 갱신한다.
  *   `src/test/payout-status-mirror.test.ts`의 스냅샷도 같이 고쳐야 통과한다 (집합 변경을 일부러 하게 만드는 장치).
  */
+
+/** FE 표시용 보상 지급 요약 상태(`PayoutStatus`). BE payout 행 상태(아래 집합)와 다른 축이며, 알 수 없는 값은 PENDING으로 읽는다(`toPayoutStatus`). */
+export const PAYOUT_SUMMARY_STATUSES: readonly PayoutStatus[] = ["PAID", "PARTIALLY_PAID", "PENDING", "NONE"];
 
 /** 진행 중(열린) payout: 승인 또는 송금을 기다린다. FAILED / CANCELLED / PAID는 포함하지 않는다. */
 export const OPEN_PAYOUT_STATUSES: readonly string[] = ["REQUESTED", "AWAITING_MULTISIG_APPROVAL", "APPROVED", "BROADCASTING"];
