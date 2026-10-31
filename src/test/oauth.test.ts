@@ -55,7 +55,7 @@ describe("OAuth code handoff", () => {
       return Response.json({ accessToken: "test-access" });
     });
     vi.stubGlobal("fetch", request);
-    expect(await exchangeLoginCodeFromLocation()).toBe(true);
+    expect(await exchangeLoginCodeFromLocation()).toEqual({ ok: true });
     expect(sessionStorage.getItem("ninja.oauthVerifier")).toBeNull();
     expect(getAccessToken()).toBe("test-access");
     // Only the non-secret session hint is written.
@@ -99,7 +99,7 @@ describe("OAuth code handoff", () => {
     await createLoginChallenge();
     window.history.replaceState(null, "", "/ko/auth/callback#loginCode=test-code");
     vi.stubGlobal("fetch", vi.fn(async () => Response.json({ accessToken: "test-access" })));
-    expect(await exchangeLoginCodeFromLocation()).toBe(true);
+    expect(await exchangeLoginCodeFromLocation()).toEqual({ ok: true });
     expect(window.location.hash).toBe("");
     expect(getAccessToken()).toBe("test-access");
   });
@@ -302,7 +302,7 @@ describe("PKCE verifier hygiene", () => {
     vi.setSystemTime(Date.now() + LOGIN_VERIFIER_TTL_MS - 1_000);
     window.history.replaceState(null, "", "/en/auth/callback#loginCode=code");
     vi.stubGlobal("fetch", vi.fn(async () => Response.json({ accessToken: "a" })));
-    expect(await exchangeLoginCodeFromLocation()).toBe(true);
+    expect(await exchangeLoginCodeFromLocation()).toEqual({ ok: true });
   });
 
   it.each(["legacy-plain-string", "{\"verifier\":\"\"}", "{\"verifier\":\"v\"}", "not json {"])(

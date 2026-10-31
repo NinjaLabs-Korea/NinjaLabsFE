@@ -1,5 +1,5 @@
 import { ERROR_COPY, listedCode } from "@/lib/api/error-copy";
-import { AUTH_PROXY_PATH, cookieAuthInit, installSession, isAuthCallbackPath } from "@/lib/api/http";
+import { AUTH_PROXY_PATH, carriedUser, cookieAuthInit, installSession, isAuthCallbackPath, type SessionStarted } from "@/lib/api/http";
 
 export { isAuthCallbackPath };
 
@@ -99,8 +99,10 @@ export async function createLoginChallenge(): Promise<string> {
  * The exchange goes to the same-origin `/api/auth/exchange` (rewritten to the BE `/auth/exchange`) in cookie mode:
  * the BE answers `{ accessToken }` and sets the HttpOnly `ninja_rt` refresh cookie on the FE origin. Only the access
  * token is kept, in memory (`lib/api/http.ts`); a `refreshToken` in the body (older BE) is ignored, never stored.
+ * Resolves `false` when this page load is not a login callback, else the started session with the BE's `user` (the
+ * `/auth/me` payload, validated later by `readMe`) when the answer carried one.
  */
-export async function exchangeLoginCodeFromLocation(): Promise<boolean> {
+export async function exchangeLoginCodeFromLocation(): Promise<false | SessionStarted> {
   if (!isAuthCallbackPath(window.location.pathname)) return false;
   const params = new URLSearchParams(window.location.hash.slice(1));
   if (!params.has("loginCode") && !params.has("error")) return false;
@@ -121,5 +123,5 @@ export async function exchangeLoginCodeFromLocation(): Promise<boolean> {
     throw new LoginExchangeError("Invalid login response.", true);
   }
   installSession(tokens.accessToken);
-  return true;
+  return { ok: true, ...carriedUser(tokens) };
 }
