@@ -6,6 +6,7 @@ import { FlashToast } from "@/components/layout/FlashToast";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { shellNamespaces } from "@/components/layout/PageMessages";
+import { RouteFade } from "@/components/layout/RouteFade";
 import { pickMessages } from "@/i18n/messages";
 import { type Locale, localeTags } from "@/i18n/routing";
 import { previewUser } from "@/lib/mocks/fixtures";
@@ -44,6 +45,7 @@ export async function AppShell({ locale, children }: { locale: Locale; children:
             <main className="flex-1" id="main-content">{children}</main>
             <Footer />
             <FlashToast />
+            <RouteFade />
           </FoundationProvider>
         </NextIntlClientProvider>
       </body>

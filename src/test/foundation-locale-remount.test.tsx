@@ -28,3 +28,20 @@ describe("FoundationProvider across a locale switch", () => {
     expect(second.getByTestId("status").textContent).toBe("signed-in");
   });
 });
+
+describe("FoundationProvider member hint (hub CTA at hydration)", () => {
+  afterEach(() => localStorage.clear());
+
+  it("records a finished member and clears the hint once the session ends signed out", async () => {
+    sessionStorage.setItem(SESSION_PREVIEW_STORAGE_KEY, "signed-in");
+    const member = { ...config, previewUser: { ...previewUser, onboardingCompleted: true } };
+    const first = render(<FoundationProvider config={member}><Status /></FoundationProvider>);
+    await waitFor(() => expect(localStorage.getItem("ninja.session.member")).toBe("1"));
+    first.unmount();
+    sessionStorage.clear();
+    resetTabFoundationForTests();
+
+    render(<FoundationProvider config={config}><Status /></FoundationProvider>);
+    await waitFor(() => expect(localStorage.getItem("ninja.session.member")).toBeNull());
+  });
+});
