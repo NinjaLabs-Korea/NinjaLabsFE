@@ -183,19 +183,6 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
   };
 }
 
-/** Label key under `members.nftStatus` for a public NFT tile; `null` = no label (fully attached). */
-export type PublicNftStatusKey = "minting" | "minted";
-
-/**
- * Visitors only need "in progress" vs "done". PENDING, MINTING, ATTACHING, FAILED and any status the BE adds later all read as
- * "minting"; a FAILED mint is handled by operators in /admin/nft-jobs, not shown to visitors. ATTACHED is the normal tile: no label.
- */
-export function publicNftStatusKey(status: string): PublicNftStatusKey | null {
-  if (status === "ATTACHED") return null;
-  if (status === "MINTED") return "minted";
-  return "minting";
-}
-
 /**
  * `locale` formats API dates for display and comes from the server page; see `getRuntimeBounties` for why it is a parameter.
  * `undefined` only on a BE 404, otherwise rethrows; `cache()` shares one BE request per render (see `getRuntimeBounty`).

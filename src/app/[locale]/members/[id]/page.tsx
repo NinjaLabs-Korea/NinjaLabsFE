@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { decodeDetailId, validateDetailId } from "@/lib/detail-id";
-import { getRuntimeProfile, payoutBadge, publicNftStatusKey } from "@/lib/members";
+import { getRuntimeProfile, payoutBadge } from "@/lib/members";
+import { publicNftStatusKey } from "@/lib/nft-status";
 import { localeMetadata } from "@/i18n/alternates";
 
 type MemberProfilePageProps = PageProps<"/[locale]/members/[id]">;
