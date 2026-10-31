@@ -4,7 +4,6 @@ import { NoticeFilters } from "@/components/notices/NoticeFilters";
 import { CommunitySectionState } from "@/components/community/CommunitySectionState";
 import { settle } from "@/lib/api/public";
 import { getRuntimeNotices } from "@/lib/notices";
-import { noticeCategoryFromQuery } from "@/lib/notice-categories";
 import { localeMetadata } from "@/i18n/alternates";
 
 
@@ -14,9 +13,10 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/notices"
   return localeMetadata(locale, "/notices", { title: t("title"), description: t("description") });
 }
 
-export default async function NoticesPage({ params, searchParams }: PageProps<"/[locale]/notices">) {
+// The page reads no query string: doing so makes the route dynamic (rendered per view in the function region instead of served from
+// the CDN). `NoticeFilters` reads `?category=` from the URL itself, before paint.
+export default async function NoticesPage({ params }: PageProps<"/[locale]/notices">) {
   const { locale } = await params;
-  const { category } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("notices.list");
   const tCommunity = await getTranslations("community");
@@ -37,7 +37,7 @@ export default async function NoticesPage({ params, searchParams }: PageProps<"/
         {unavailable ? (
           <CommunitySectionState body={tCommunity("pageUnavailable")} retryLabel={tCommunity("retry")} />
         ) : (
-          <NoticeFilters initialCategory={noticeCategoryFromQuery(category)} notices={notices} />
+          <NoticeFilters notices={notices} />
         )}
       </div>
     </div>

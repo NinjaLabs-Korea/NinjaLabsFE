@@ -12,7 +12,7 @@ import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
 import { opsInput, opsTextarea } from "@/components/admin/ops-ui";
 import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlightCallback } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
-import { DISPLAY_ORDER_MAX, highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminApiErrorCode, adminErrorDescription, adminTextFieldErrors, adminUrlFieldErrors } from "@/lib/admin-helpers";
+import { DISPLAY_ORDER_MAX, highlightPublishOptionFor, highlightTypeLabelKey, type AdminHighlight, adminApiErrorCode, adminErrorDescription, adminTextFieldErrors, adminUrlFieldErrors, expirePublicLists } from "@/lib/admin-helpers";
 import { HIGHLIGHT_TYPE_CODES, isHighlightTypeCode } from "@/lib/api/codecs";
 import { hasVisibleText } from "@/lib/visible-text";
 import { isPublicHttpUrlOrMediaPath, isPublicHttpUrlOrSitePath, isSafeUrl, urlErrorKind } from "@/lib/url-rules";
@@ -166,6 +166,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
         ...highlightPublishOptionFor(current?.published, published, isEditing ? "edit" : "create"),
         typeChanged: isEditing && type !== current?.type,
       });
+      expirePublicLists(["hall-of-fame"]);
       pushAdminToast({ variant: "success", title: isEditing ? t("toast.updatedTitle") : t("toast.addedTitle"), description: tCommon("savedDescription", { title }) });
       resetForm();
       await reload();
@@ -208,7 +209,7 @@ export function HighlightManager({ highlights }: HighlightManagerProps) {
     setRecords,
     closeDialog: () => setPendingDelete(null),
     // The form may be editing the record that just went away: a later save would PATCH a missing row.
-    onRemoved: (highlight) => { if (mode === highlight.id) resetForm(); },
+    onRemoved: (highlight) => { expirePublicLists(["hall-of-fame"]); if (mode === highlight.id) resetForm(); },
     describeError: (error) => adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")),
     successToast: (highlight) => ({ title: t("toast.deletedTitle"), description: highlight.title }),
     failedTitle: tCommon("deleteFailed"),
