@@ -1,5 +1,5 @@
 // Flow 15: community-first landing. `/` is the hub for everyone (community hero, upcoming events when any -> recruitment banner -> past
-// activities -> members -> achievements -> bounty entry), the bounty marketing hero sits at the top of `/bounties`, a stat block that is all zero is hidden, the
+// activities -> members -> achievements -> bounty entry), `/bounties` opens with a light list masthead (the dark hero is the hub's only), a stat block that is all zero is hidden, the
 // page titles follow the new framing, and none of the changed screens is clipped at the in-between widths (340, 530, 700, 900,
 // 1100) in ko, en and zh, signed out and as a finished user (probe: lib/layout-audit.mjs; flow 14 sweeps every 20 px width).
 import { Browser, report } from '../lib/cdp.mjs';
@@ -70,17 +70,19 @@ console.log('hall of fame stats', JSON.stringify(stats), 'allZero', statsAllZero
   const koTitle = await p.eval(`document.querySelector('main h1')?.innerText`);
   check('Intro (ko): community headline', /Injective에서 함께 배우고,\s*함께 만들어요\./.test(koTitle ?? ''), koTitle);
 
-  // /bounties carries the moved hero
+  // /bounties is a light list masthead, not a second copy of the hub hero
   await p.goto('/en/bounties'); await sleep(900);
   const bTitle = await p.eval(`document.querySelector('main h1')?.innerText`);
-  check('/bounties: the hero headline moved here', /Complete bounties\. Collect proof\.\s*Own your track record\./.test(bTitle ?? ''), bTitle);
+  check('/bounties: the h1 is the list heading', (bTitle ?? '').trim() === 'Bounties', bTitle);
   const bText = await mainText(p);
-  check('/bounties: the mock NFT portfolio card is gone from the hero', !bText.includes('ninja.inj'));
+  check('/bounties: the one-line pitch is under the heading', bText.includes('Pick up tasks posted by sponsors'), bText.slice(0, 200));
+  check('/bounties: no dark gradient hero (reserved for the hub)', !(await p.eval(`!!document.querySelector('main [class*="hero-from"]')`)));
+  check('/bounties: the mock NFT portfolio card is gone', !bText.includes('ninja.inj'));
   check('/bounties: one h1 only', (await p.eval(`document.querySelectorAll('main h1').length`)) === 1);
   const bLinks = await links(p, 'main a');
   check('/bounties: the how-applying link is there, no Get Started button', !bLinks.includes('Get Started -> /en/signup') && bLinks.some((l) => l.endsWith('-> /en/bounties/apply')), bLinks.slice(0, 8));
-  check('/bounties: the list is still below the hero', bLinks.some((l) => l.includes(`/en/bounties/${seed.B1}`)), bLinks.slice(0, 12));
-  check('/bounties: hero stats follow the zero rule', (await p.eval(`!!document.querySelector('main section:first-of-type dl')`)) === !statsAllZero, { statsAllZero });
+  check('/bounties: the list is below the masthead', bLinks.some((l) => l.includes(`/en/bounties/${seed.B1}`)), bLinks.slice(0, 12));
+  check('/bounties: masthead stats follow the zero rule', (await p.eval(`!!document.querySelector('main dl')`)) === !statsAllZero, { statsAllZero });
   clean(await report(p, '/bounties signed out', {}), { signedOut: true });
 
   // titles and share tags
@@ -93,13 +95,13 @@ console.log('hall of fame stats', JSON.stringify(stats), 'allZero', statsAllZero
   await p.close();
 }
 
-// ---- finished user: the hub stays reachable, /bounties hero CTA is My profile
+// ---- finished user: the hub stays reachable, /bounties masthead has no sign-up CTA
 {
   const p = await b.newPage(await b.newContext());
   await signIn(p, ids.BUILDER);
   await p.goto('/en/bounties'); await sleep(1200);
   const bLinks = await links(p, 'main section:first-of-type a');
-  check('finished user: /bounties hero has no Get Started button', !bLinks.some((l) => l.startsWith('Get Started')), bLinks);
+  check('finished user: /bounties masthead has no Get Started button', !bLinks.some((l) => l.startsWith('Get Started')), bLinks);
   await p.goto('/en'); await p.waitText('My activity', 8000);
   check('finished user: / stays on the hub (no redirect to the home)', new URL(await p.url()).pathname === '/en', await p.url());
   const hero = await links(p, 'main section:first-of-type a');
