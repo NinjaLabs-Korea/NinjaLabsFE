@@ -33,7 +33,8 @@ export function StartLink({ className, signUpLabel, resumeLabel, memberLabel, me
 
   const label = target.kind === "sign-up" ? signUpLabel : target.kind === "resume" ? resumeLabel : memberLabel;
   return (
-    <Link className={className} href={target.kind === "member" && memberHref ? memberHref : target.href}>
+    // Fades in when it replaces the hidden placeholder, so the CTA does not pop in once the session is known.
+    <Link className={`${className} animate-fade-in motion-reduce:animate-none`} href={target.kind === "member" && memberHref ? memberHref : target.href}>
       {label}
     </Link>
   );

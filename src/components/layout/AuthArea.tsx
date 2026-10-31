@@ -30,7 +30,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
           {t("browse")}
         </Link>
         {user ? (
-          <div className={NAV_DESKTOP_ONLY_BLOCK}>
+          <div className={`animate-fade-in motion-reduce:animate-none ${NAV_DESKTOP_ONLY_BLOCK}`}>
             <UserMenu />
           </div>
         ) : snapshot.status === "loading" || (snapshot.status === "signed-out" && snapshot.reason === "unavailable") ? (
@@ -48,7 +48,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
           )
         ) : (
           <Link
-            className="whitespace-nowrap rounded-control bg-primary px-4 py-3 text-sm leading-[21px] font-semibold text-on-inverse sm:px-[21px]"
+            className="animate-fade-in whitespace-nowrap rounded-control bg-primary px-4 py-3 text-sm leading-[21px] font-semibold text-on-inverse motion-reduce:animate-none sm:px-[21px]"
             href="/signup"
           >
             {t("getStarted")}
