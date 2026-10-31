@@ -3,6 +3,7 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { useCohortApi } from "@/components/auth/FoundationProvider";
 import type { PublicCohort } from "@/lib/cohorts";
+import { readStorage, writeStorage } from "@/lib/safe-storage";
 
 type CohortApiLike = ReturnType<typeof useCohortApi>;
 type CohortRead = ReturnType<CohortApiLike["getCurrentCohort"]>;
@@ -23,11 +24,8 @@ const lastReads = new WeakMap<CohortApiLike, PublicCohort | null>();
 const HINT_KEY = "ninja.cohortAccepting";
 
 function rememberAccepting(cohort: PublicCohort | null): void {
-  try {
-    window.sessionStorage.setItem(HINT_KEY, cohort?.acceptingApplications ? "1" : "0");
-  } catch {
-    // storage blocked: the hint is only a layout convenience
-  }
+  // storage blocked: the hint is only a layout convenience
+  writeStorage("session", HINT_KEY, cohort?.acceptingApplications ? "1" : "0");
 }
 
 /**
@@ -35,13 +33,8 @@ function rememberAccepting(cohort: PublicCohort | null): void {
  * reserve the space of the recruitment card before the read lands. `null` when unknown (first visit, storage unavailable, server).
  */
 export function cohortAcceptingHint(): boolean | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const value = window.sessionStorage.getItem(HINT_KEY);
-    return value === "1" ? true : value === "0" ? false : null;
-  } catch {
-    return null;
-  }
+  const value = readStorage("session", HINT_KEY);
+  return value === "1" ? true : value === "0" ? false : null;
 }
 
 /** The last answer this tab got from the current-cohort read, or `undefined` before the first one. */

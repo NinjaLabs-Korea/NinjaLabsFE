@@ -1,3 +1,6 @@
+import { shortAddress } from "@/lib/format";
+import { readStorage, writeStorage } from "@/lib/safe-storage";
+
 const TRACE_KEY = "ninja.onboardingTraceId";
 
 type LogDetails = Record<string, boolean | number | string | null | undefined>;
@@ -5,11 +8,10 @@ type LogDetails = Record<string, boolean | number | string | null | undefined>;
 export function getOnboardingTraceId(): string | undefined {
   if (typeof window === "undefined") return undefined;
   try {
-    const existing = window.sessionStorage.getItem(TRACE_KEY);
+    const existing = readStorage("session", TRACE_KEY);
     if (existing) return existing;
     const created = window.crypto.randomUUID();
-    window.sessionStorage.setItem(TRACE_KEY, created);
-    return created;
+    return writeStorage("session", TRACE_KEY, created) ? created : undefined;
   } catch {
     return undefined;
   }
@@ -45,5 +47,5 @@ export function onboardingErrorDetails(error: unknown): LogDetails {
 
 export function maskWalletAddress(address?: string): string | undefined {
   if (!address) return undefined;
-  return address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : "invalid";
+  return address.length > 12 ? shortAddress(address) : "invalid";
 }

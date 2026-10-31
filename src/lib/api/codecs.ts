@@ -6,10 +6,10 @@
  * 새 카테고리·역할·토큰을 추가할 때는 이 파일만 고친다.
  */
 import { formatUnits, parseUnits } from "viem";
+import { PAYOUT_SUMMARY_STATUSES } from "@/lib/payout-status";
 import type { BountyCategory, Member, Notice, PayoutStatus, Reward } from "@/lib/types";
 
 // ── 지급 상태 ─────────────────────────────────────────────
-const PAYOUT_STATUSES: readonly PayoutStatus[] = ["PAID", "PARTIALLY_PAID", "PENDING", "NONE"];
 
 /**
  * BE `payoutStatus` / `payment_status` → FE value. Missing (an older BE) → undefined so the caller can derive it; any value
@@ -17,7 +17,7 @@ const PAYOUT_STATUSES: readonly PayoutStatus[] = ["PAID", "PARTIALLY_PAID", "PEN
  */
 export function toPayoutStatus(value: unknown): PayoutStatus | undefined {
   if (value === undefined || value === null) return undefined;
-  return PAYOUT_STATUSES.find((status) => status === value) ?? "PENDING";
+  return PAYOUT_SUMMARY_STATUSES.find((status) => status === value) ?? "PENDING";
 }
 
 // ── 날짜 ──────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import { stripLocale } from "@/i18n/routing";
+import { readStorage, removeStorage, writeStorage } from "@/lib/safe-storage";
 
 /**
  * "Where to go after sign-in": a same-site path remembered in this tab across the Google round trip.
@@ -27,14 +28,6 @@ export function isReturnPath(value: unknown): value is string {
   );
 }
 
-function storage(): Storage | null {
-  try {
-    return typeof window === "undefined" ? null : window.sessionStorage;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * The locale-less form of a copied URL path: `/en/bounties` -> `/bounties` (the locale-aware router prepends the locale
  * again, which made `/en/en/bounties`). A bare locale (`/en`) is the home (`/`).
@@ -50,29 +43,18 @@ export function rememberReturnPath(path: string): void {
   if (typeof path !== "string") return;
   const local = withoutLocale(path);
   if (!isReturnPath(local)) return;
-  try {
-    storage()?.setItem(RETURN_PATH_STORAGE_KEY, local);
-  } catch {
-    // Blocked storage: the visitor lands on the home instead.
-  }
+  // Blocked storage: the visitor lands on the home instead.
+  writeStorage("session", RETURN_PATH_STORAGE_KEY, local);
 }
 
 /** The remembered path without consuming it. */
 export function peekReturnPath(): string | null {
-  try {
-    const value = storage()?.getItem(RETURN_PATH_STORAGE_KEY);
-    return isReturnPath(value) ? value : null;
-  } catch {
-    return null;
-  }
+  const value = readStorage("session", RETURN_PATH_STORAGE_KEY);
+  return isReturnPath(value) ? value : null;
 }
 
 export function clearReturnPath(): void {
-  try {
-    storage()?.removeItem(RETURN_PATH_STORAGE_KEY);
-  } catch {
-    // ignore
-  }
+  removeStorage("session", RETURN_PATH_STORAGE_KEY);
 }
 
 /** The remembered path, consumed. */
