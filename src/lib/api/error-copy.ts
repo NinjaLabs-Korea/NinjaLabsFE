@@ -30,6 +30,8 @@ export const FE_ERROR_CODES = [
   "UNAUTHORIZED",
   "TOO_MANY_REQUESTS",
   "TRANSITION_BLOCKED",
+  // 옛 BE 호환: BE #57이 카탈로그에서 지웠다(지금은 던지지 않음). 옛 BE 응답이 오면 walletVerify가 계속 문구를 보여 준다.
+  "WALLET_ALREADY_LINKED",
 ] as const;
 export type FeErrorCode = (typeof FE_ERROR_CODES)[number];
 
@@ -116,7 +118,7 @@ export const ERROR_COPY = {
     messages: "agents.form.registerErrors",
     codes: [
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED", "AGENT_WALLET_IS_OWNER_WALLET", "INVALID_AGENT_WALLET_ADDRESS", "PROFILE_REQUIRED",
-      "AGENT_ALREADY_VERIFIED", "AGENT_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS",
+      "AGENT_ALREADY_VERIFIED", "AGENT_NOT_PENDING", "AGENT_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS",
     ],
     fallback: "generic",
   },
