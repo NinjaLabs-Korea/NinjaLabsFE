@@ -6,7 +6,7 @@ import { useAuthSnapshot, useCohortApi } from "@/components/auth/FoundationProvi
 import { useCurrentCohort } from "@/components/recruit/useCurrentCohort";
 import { Link } from "@/i18n/navigation";
 import { isFinishedUser } from "@/lib/auth-route";
-import type { PublicCohort } from "@/lib/cohorts";
+import { activeCohortApplication, type PublicCohort } from "@/lib/cohorts";
 
 const WRAP_CLASS = "max-w-full min-w-0 [overflow-wrap:anywhere]";
 
@@ -61,7 +61,7 @@ function AppliedAwareLink({ className, cohort }: { className: string; cohort: Pu
   const t = useTranslations("recruit.heroCta");
   const mine = useAccountQuery(useCohortApi().getMyCohortApplications, { reuseLast: true });
   if (mine.loading) return <Placeholder className={className} cohort={cohort} />;
-  const applied = (mine.data ?? []).some((item) => item.cohortId === cohort.id && item.status !== "WITHDRAWN");
+  const applied = activeCohortApplication(mine.data, cohort.id) !== undefined;
   return (
     <Link className={className} href="/recruit">
       {applied ? t("viewStatus") : t("apply", { name: cohort.name })}

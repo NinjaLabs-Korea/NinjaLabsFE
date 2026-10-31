@@ -1,3 +1,4 @@
+import type { BountyCategory } from "@/lib/bounty-categories";
 import type { ClientUser } from "@/lib/contracts/auth";
 import type { PayoutStatus } from "@/lib/types";
 
@@ -52,7 +53,7 @@ export type AccountApplication = {
   source?: "application" | "submission";
   bountySlug: string;
   bountyTitle: string;
-  category: "Dev" | "Design" | "Content" | "Other";
+  category: BountyCategory;
   /** ISO timestamp; views format it at render (`useFormatter().dateTime`). */
   appliedAt: string;
   note: string;

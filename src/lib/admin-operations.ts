@@ -4,7 +4,7 @@
 // `admin.operations.*` / `admin.nftJobs.*`.
 import { ERROR_COPY, listedCode, normalizedCode } from "./api/error-copy";
 import { PAYABLE_REWARD_STATUSES } from "./payout-status";
-import { isBountyFinished, isBountyInProgress, type BountyStatusCode } from "./bounty-status";
+import { isBountyFinished, isBountyInProgress, isDeadlinePassed, type BountyStatusCode } from "./bounty-status";
 
 // The lifecycle predicates live in `bounty-status.ts`; re-exported so the console imports its rules from one place.
 export { isBountyFinished, isBountyInProgress };
@@ -123,8 +123,9 @@ export const submissionCommentRequired = (decision: SubmissionDecision, status: 
 /** BE application review: PENDING only; approval also needs OPEN + a future submission deadline (APPLICATION_APPROVAL_CLOSED). */
 export function applicationDecisionsFor(application: Pick<OpsApplication, "status">, bounty: AdminOperations["bounty"], now = Date.now()): Array<"APPROVED" | "REJECTED"> {
   if (application.status !== "PENDING" || isBountyFinished(bounty.status)) return [];
-  const deadline = bounty.submissionDeadline ? new Date(bounty.submissionDeadline).getTime() : Number.NaN;
-  return bounty.status === "OPEN" && deadline > now ? ["APPROVED", "REJECTED"] : ["REJECTED"];
+  // A missing deadline cannot be "in the future", so it closes approval like a passed one.
+  const open = bounty.status === "OPEN" && Boolean(bounty.submissionDeadline) && !isDeadlinePassed(bounty.submissionDeadline, now);
+  return open ? ["APPROVED", "REJECTED"] : ["REJECTED"];
 }
 
 export const canApprovePayout = (payout: Pick<OpsPayout, "status">): boolean => payout.status === "REQUESTED" || payout.status === "AWAITING_MULTISIG_APPROVAL";

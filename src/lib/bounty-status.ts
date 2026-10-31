@@ -15,6 +15,17 @@ export const FINISHED: ReadonlySet<string> = new Set<BountyStatusCode>(["COMPLET
 export const isBountyInProgress = (code: string): boolean => IN_PROGRESS.has(code);
 export const isBountyFinished = (code: string): boolean => FINISHED.has(code);
 
+/**
+ * The BE deadline rule (applications, approvals and submissions are refused once `new Date(deadline) <= now`). Single source for
+ * every "is this deadline over" check on the FE. No deadline (`null`/`undefined`) never passes. A value that does not parse
+ * counts as passed by default (closed is the safe reading); callers that must not invent a closure pass `invalidPassed: false`.
+ */
+export function isDeadlinePassed(deadline: string | null | undefined, now: number = Date.now(), { invalidPassed = true }: { invalidPassed?: boolean } = {}): boolean {
+  if (deadline === null || deadline === undefined) return false;
+  const at = new Date(deadline).getTime();
+  return Number.isNaN(at) ? invalidPassed : at <= now;
+}
+
 /** Why a public `closed` bounty is closed: finished work, a cancellation, or only its deadline having passed. */
 export type ClosedReason = "completed" | "cancelled" | "deadline";
 
@@ -32,8 +43,7 @@ export function toLifecycleStatus(code: string): Bounty["status"] {
  */
 export function toPublicStatus(code: string, submissionDeadline: string, now = Date.now()): Bounty["status"] {
   if (code !== "OPEN") return toLifecycleStatus(code);
-  const deadline = new Date(submissionDeadline).getTime();
-  return Number.isNaN(deadline) || deadline <= now ? "closed" : "active";
+  return isDeadlinePassed(submissionDeadline, now) ? "closed" : "active";
 }
 
 /** The reason behind a public `closed` (`undefined` while the bounty is `active` or `reviewing`). Unknown BE statuses read as cancelled, like every other non-open one. */

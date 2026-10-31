@@ -1,6 +1,6 @@
 import { formatUtcDate, toCategoryLabel, toRewards, type RewardRow } from "./api/codecs";
 import type { Bounty } from "./types";
-import { toClosedReason, toLifecycleStatus, toPublicStatus } from "./bounty-status";
+import { isDeadlinePassed, toClosedReason, toLifecycleStatus, toPublicStatus } from "./bounty-status";
 import { fetchAllPublicPages } from "./api/paging";
 import { cache } from "react";
 import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH } from "./api/public";
@@ -69,11 +69,6 @@ function daysUntil(value: string): number {
   return Number.isNaN(remaining) ? 0 : remaining;
 }
 
-/** A set deadline that is already behind us (the BE refuses applications once `new Date(deadline) <= now`). */
-function isPast(deadline: string | null, now = Date.now()): boolean {
-  return deadline !== null && new Date(deadline).getTime() <= now;
-}
-
 // The BE status folds (public status, closed reason) live in `bounty-status.ts`; these names stay for existing callers and tests.
 export { toLifecycleStatus as toBountyStatus, toPublicStatus as toPublicBountyStatus };
 
@@ -133,7 +128,7 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     applicationTitle: row.application_required ? row.title : undefined,
     applicationDescription: row.application_required ? row.summary : undefined,
     ...(row.application_required && applicationDeadlineDetail ? { applicationDeadlineDetail } : {}),
-    ...(row.application_required && isPast(row.application_deadline) ? { applicationClosed: true } : {}),
+    ...(row.application_required && isDeadlinePassed(row.application_deadline, Date.now(), { invalidPassed: false }) ? { applicationClosed: true } : {}),
   };
 }
 
