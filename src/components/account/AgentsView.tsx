@@ -3,7 +3,7 @@
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { SignedOutPanel } from "@/components/account/SignedOutPanel";
-import { useAccountQuery } from "@/components/account/useAccountQuery";
+import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { ApiKeyReveal } from "@/components/agents/ApiKeyReveal";
 import {
   useAuthSnapshot,

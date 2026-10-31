@@ -2,8 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import type { OpsRunner } from "@/components/admin/BountyOperations";
-import { opsButton, opsDangerButton, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPrimaryButton } from "@/components/admin/ops-ui";
+import { opsButton, opsDangerButton, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPrimaryButton, type OpsRunner } from "@/components/admin/ops-ui";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LIFECYCLE_BLOCKER_CODES, type AdminOperations, type LifecycleBlocker } from "@/lib/admin-operations";

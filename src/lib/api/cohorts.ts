@@ -1,6 +1,6 @@
 import type { AdminCohortApi, ApiResult, CohortApi } from "@/lib/contracts/api";
 import type { ApiHttp } from "@/lib/api/http";
-import { unavailableReason } from "@/lib/api/api-client";
+import { unavailableReason } from "@/lib/api/unavailable";
 import {
   COHORT_APPLICATION_STATUSES,
   COHORT_QUESTION_TYPES,

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { AboutSection } from "@/components/community/AboutSection";
-import { InitialCohortProvider } from "@/components/recruit/useCurrentCohort";
+import { InitialCohortProvider } from "@/components/hooks/useCurrentCohort";
 import { RecruitView } from "@/components/recruit/RecruitView";
 import { getRuntimeCurrentCohort } from "@/lib/cohorts-public";
 import { localeMetadata } from "@/i18n/alternates";

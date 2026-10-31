@@ -1,9 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useAccountQuery } from "@/components/account/useAccountQuery";
+import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { useAuthSnapshot, useCohortApi } from "@/components/auth/FoundationProvider";
-import { useCurrentCohort } from "@/components/recruit/useCurrentCohort";
+import { useCurrentCohort } from "@/components/hooks/useCurrentCohort";
 import { Link } from "@/i18n/navigation";
 import { isFinishedUser } from "@/lib/auth-route";
 import { activeCohortApplication, type PublicCohort } from "@/lib/cohorts";

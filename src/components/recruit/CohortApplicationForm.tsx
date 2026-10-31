@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuthSnapshot, useCohortApi } from "@/components/auth/FoundationProvider";
 import { QuestionField, hintClass, inputClass, labelClass } from "@/components/recruit/QuestionField";
-import { useCurrentCohort } from "@/components/recruit/useCurrentCohort";
+import { useCurrentCohort } from "@/components/hooks/useCurrentCohort";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import { focusFirstInvalid } from "@/lib/form-focus";
 import { clearCohortDraft, readCohortDraft, writeCohortDraft } from "@/lib/cohort-application-draft";

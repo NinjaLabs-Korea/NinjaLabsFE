@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { FormEvent, useEffect, useId, useRef, useState } from "react";
-import { useAccountQuery } from "@/components/account/useAccountQuery";
+import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
 import { CheckingPanel, Field, errorText, useFieldErrors, SignedOutPanel, StatusPanel, headingClass, inputClass, outlineLinkClass, panelClass, submitButtonClass } from "@/components/bounties/BountyActionPanels";
 import { useSingleFlight } from "@/components/ui/useSingleFlight";

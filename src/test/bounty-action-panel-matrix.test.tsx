@@ -2,7 +2,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { resetAccountQueryCache } from "@/components/account/useAccountQuery";
+import { resetAccountQueryCache } from "@/components/hooks/useAccountQuery";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import type { AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { ApiClient, ApiResult } from "@/lib/contracts/api";

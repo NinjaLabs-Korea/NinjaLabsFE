@@ -1,10 +1,10 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useAccountQuery } from "@/components/account/useAccountQuery";
+import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { useCohortApi } from "@/components/auth/FoundationProvider";
 import { CohortApplicationCard } from "@/components/recruit/CohortApplicationCard";
-import { cohortAcceptingHint, lastCurrentCohort, useCurrentCohort } from "@/components/recruit/useCurrentCohort";
+import { cohortAcceptingHint, lastCurrentCohort, useCurrentCohort } from "@/components/hooks/useCurrentCohort";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { activeCohortApplication } from "@/lib/cohorts";
