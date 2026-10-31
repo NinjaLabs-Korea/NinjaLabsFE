@@ -3,7 +3,7 @@
 // (never the note), the admin closes the cohort. Also: the hub stays open to finished users, return path after sign-in,
 // onboarding gate, withdraw/reapply and the CSV export. The admin also edits the cohort's application questions in the UI (add a
 // required short answer, rename the interest question, remove the Web3 experience question); the applicant sees exactly those
-// questions, the review dialog and the CSV show the answers, and an application sent in the legacy shape before the edit stays
+// questions, the review dialog and the CSV show the answers, and a legacy-shape application stored before the edit (inserted directly: the BE rejects the old body since BE #49) stays
 // readable. An unfinished sign-up that started on /recruit comes back to /recruit without the get-started menu.
 import { Browser, report } from '../lib/cdp.mjs';
 import { sql, ids, check, clean, done, sleep, signIn, signInWithReturn, apiAs, tokenFor, fillLabel, rowButton, dialogButton, chip, select, mutations, mainText, API } from '../lib/harness.mjs';
@@ -49,12 +49,16 @@ check('DB: audit rows for create and open', sql(`select string_agg(action, ',' o
 check('DB: the new cohort starts with the two default questions', sql(`select string_agg(q->>'id', ',') from cohort, jsonb_array_elements(questions) q where id='${cohortId}'`) === 'web3_experience,interest_areas');
 check('public API carries the questions', JSON.parse(await fetch(`${API}/cohorts/current`).then((r) => r.text())).questions.map((q) => q.id).join() === 'web3_experience,interest_areas');
 
-// ---- an application sent in the legacy shape (an older FE) before the questions are edited
+// ---- a legacy-shape application (written by an older FE before BE #49) before the questions are edited.
+// The BE no longer accepts the old body (DTO 400), so the old row is inserted directly, like the BE db/e2e specs do.
 {
   const [st, body] = await apiAs(tokenFor(CORE), 'POST', `/cohorts/${cohortId}/applications`, { displayName: 'Core Legacy', telegram: '@core_legacy', twitter: '@core_legacy', web3Experience: 'GT_3Y', activityType: 'STUDENT', interestAreas: ['DEVELOPER'], intro: 'I applied with the old form.' });
-  check('legacy-shape application: POST 201', st === 201, [st, body.slice(0, 120)]);
+  check('legacy-shape body: POST is rejected with 400 and writes nothing', st === 400 && /web3Experience should not exist/.test(body) && sql(`select count(*) from cohort_application where user_id='${CORE}' and cohort_id='${cohortId}'`) === '0', [st, body.slice(0, 160)]);
+  sql(`insert into cohort_application (cohort_id, user_id, display_name, telegram, twitter, intro, web3_experience, activity_type, activity_type_other, interest_areas, interest_other) values ('${cohortId}', '${CORE}', 'Core Legacy', '@core_legacy', '@core_legacy', 'I applied with the old form.', 'GT_3Y', 'STUDENT', null, array['DEVELOPER']::text[], null)`);
   check('DB: stored in the legacy columns with no answers', sql(`select web3_experience||'|'||activity_type||'|'||jsonb_array_length(answers) from cohort_application where user_id='${CORE}' and cohort_id='${cohortId}'`) === 'GT_3Y|STUDENT|0');
-  check('API: the legacy row reads back with synthesized answers', JSON.parse(body).answers.map((a) => a.questionId).join() === 'web3_experience,interest_areas,activity_type', body.slice(0, 200));
+  const [mst, mine] = await apiAs(tokenFor(CORE), 'GET', '/cohorts/applications/me');
+  const legacy = mst === 200 ? JSON.parse(mine).find((a) => a.cohortId === cohortId || a.cohort_id === cohortId) : null;
+  check('API: the legacy row reads back with synthesized answers', legacy?.answers?.map((a) => a.questionId).join() === 'web3_experience,interest_areas,activity_type', [mst, mine.slice(0, 200)]);
 }
 
 // ---- admin edits the application questions in the UI
@@ -248,7 +252,7 @@ check('home: shows the accepted status', (await mainText(bp)).includes('Accepted
   await p.waitFor(`location.pathname.endsWith('/signup/profile')`, 8000);
   await p.goto('/en/recruit'); await new Promise((r) => setTimeout(r, 3000));
   check('unfinished user: /recruit stays open (no forced redirect to the owed onboarding step)', new URL(await p.url()).pathname === '/en/recruit', await p.url());
-  const [st, body] = await apiAs(tokenFor(INCOMPLETE), 'POST', `/cohorts/${cohortId}/applications`, { displayName: 'x', telegram: '@abcde', twitter: '@abc', web3Experience: 'LT_1Y', activityType: 'STUDENT', interestAreas: ['DEVELOPER'], intro: 'hi' });
+  const [st, body] = await apiAs(tokenFor(INCOMPLETE), 'POST', `/cohorts/${cohortId}/applications`, { displayName: 'x', telegram: '@abcde', twitter: '@abc', intro: 'hi', answers: [] });
   check('unfinished user: BE answers 409 PROFILE_REQUIRED', st === 409 && body.includes('PROFILE_REQUIRED'), [st, body]);
   clean(await report(p, 'unfinished /recruit'));
   await p.goto('/en'); await p.waitText('Continue sign-up', 8000);
