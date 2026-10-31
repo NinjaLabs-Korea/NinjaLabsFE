@@ -102,7 +102,7 @@ export function parseQuestions(raw: unknown): CohortQuestion[] {
   return questions;
 }
 
-export function parseAnswers(raw: unknown): ApplicationAnswer[] {
+function parseAnswers(raw: unknown): ApplicationAnswer[] {
   if (!Array.isArray(raw)) return [];
   const answers: ApplicationAnswer[] = [];
   for (const item of raw) {
@@ -176,7 +176,7 @@ export function toAdminCohort(row: AdminCohortRow): AdminCohort {
   };
 }
 
-export function toAdminCohortApplication(row: AdminApplicationRow): AdminCohortApplication {
+function toAdminCohortApplication(row: AdminApplicationRow): AdminCohortApplication {
   return {
     ...toValues(row),
     id: row.id,

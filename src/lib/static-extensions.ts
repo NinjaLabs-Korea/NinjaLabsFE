@@ -11,7 +11,7 @@ export const STATIC_FILE_EXTENSIONS = [
 ] as const;
 
 /** `/\.(ico|png|…)$/i` - true when `value` ends in a static-file extension, any case. */
-export const STATIC_FILE_EXTENSION_SUFFIX = new RegExp(`\\.(${STATIC_FILE_EXTENSIONS.join("|")})$`, "i");
+const STATIC_FILE_EXTENSION_SUFFIX = new RegExp(`\\.(${STATIC_FILE_EXTENSIONS.join("|")})$`, "i");
 
 export function endsWithStaticFileExtension(value: string): boolean {
   return STATIC_FILE_EXTENSION_SUFFIX.test(value);

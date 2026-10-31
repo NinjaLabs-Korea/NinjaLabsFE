@@ -241,8 +241,6 @@ export const ERROR_COPY = {
   },
 } as const satisfies Record<string, ErrorCopySurface>;
 
-export type ErrorCopySurfaceName = keyof typeof ERROR_COPY;
-
 /** `value`가 `codes`에 있으면 그 코드(좁혀진 타입), 아니면 null. 문자열 코드(URL fragment, 정규화 결과)용. */
 export function listedCode<const C extends string>(value: unknown, codes: readonly C[]): C | null {
   return typeof value === "string" && (codes as readonly string[]).includes(value) ? (value as C) : null;

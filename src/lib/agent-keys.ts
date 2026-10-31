@@ -1,7 +1,7 @@
 import type { AccountAgent } from "@/lib/contracts/account";
 
 /** Keys expiring within this window get a warning and the rotate prompt. */
-export const KEY_EXPIRY_WARNING_DAYS = 14;
+const KEY_EXPIRY_WARNING_DAYS = 14;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type AgentKeyState =

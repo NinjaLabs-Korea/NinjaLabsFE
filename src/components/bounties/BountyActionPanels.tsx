@@ -14,9 +14,13 @@ import { signInHref } from "@/lib/return-path";
 // Panels fade in when they replace the loading placeholder (or another panel), instead of popping in.
 export const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card animate-fade-in motion-reduce:animate-none";
 export const submitButtonClass = "motion-control motion-press rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60";
+// The `docs/design.md` "Secondary (outline) action" size (px-5 py-3), matching `submitButtonClass` beside it. `account/AgentsView`
+// keeps its own smaller row-action outline (px-4 py-2); the two are different sizes on purpose, not copies.
 const outlineButtonClass = "inline-flex rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong";
 export const outlineLinkClass = `mt-4 ${outlineButtonClass}`;
-export const inputClass = "h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
+// Bounty apply/submit fields: one-line 46px inputs, the height of the admin fields. Not the cohort form's `questionInputClass`
+// (`recruit/QuestionField`: taller padded fields that also serve as textareas); the two forms look different on purpose.
+export const bountyInputClass = "h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
 // Headings that receive focus after a successful apply/submit (tabIndex={-1}); the ring matches the focus recipe.
 export const headingClass = "font-display text-2xl -tracking-[0.24px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
@@ -50,7 +54,11 @@ export function StatusPanel({ title, body, note, tone = "muted", feedback, link,
 }
 
 /** Figma 15/15v public (signed-out) state: heading + LOGIN REQUIRED badge, "Sign in first", and a disabled preview of the form. */
-export function SignedOutPanel({ applicationRequired, bountyId }: { applicationRequired: boolean; bountyId: string }) {
+/**
+ * The bounty detail's signed-out state: the apply/submit panel shape with a disabled preview of the form and a sign-in link back
+ * to this bounty. Not `account/SignedOutPanel` (the owner pages' dashed "sign in to see this" tile with a session-retry state).
+ */
+export function BountySignedOutPanel({ applicationRequired, bountyId }: { applicationRequired: boolean; bountyId: string }) {
   const t = useTranslations("bounties.action");
   // After Google sign-in and onboarding the visitor comes back to this bounty (`lib/return-path.ts`).
   const signIn = signInHref(`/bounties/${bountyId}`);
@@ -73,8 +81,8 @@ export function SignedOutPanel({ applicationRequired, bountyId }: { applicationR
       {applicationRequired ? (
         <fieldset className="mt-4 space-y-3" disabled>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <input aria-label={t("portfolioUrl")} className={inputClass} placeholder="https://" type="url" />
-            <input aria-label={t("availability")} className={inputClass} placeholder={t("availability")} type="text" />
+            <input aria-label={t("portfolioUrl")} className={bountyInputClass} placeholder="https://" type="url" />
+            <input aria-label={t("availability")} className={bountyInputClass} placeholder={t("availability")} type="text" />
           </div>
           <textarea aria-label={t("applyMessage")} className="min-h-28 w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" placeholder={t("applyMessage")} />
           <div className="flex flex-wrap gap-3">
@@ -84,7 +92,7 @@ export function SignedOutPanel({ applicationRequired, bountyId }: { applicationR
         </fieldset>
       ) : (
         <fieldset className="mt-4 flex flex-col gap-3 sm:flex-row" disabled>
-          <input aria-label={t("submissionUrl")} className={inputClass} placeholder="https://" type="url" />
+          <input aria-label={t("submissionUrl")} className={bountyInputClass} placeholder="https://" type="url" />
           <Link className="shrink-0 rounded-control bg-primary px-5 py-3 text-center text-sm font-semibold text-on-inverse" href={signIn}>{t("submit")}</Link>
         </fieldset>
       )}

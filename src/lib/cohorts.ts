@@ -78,7 +78,6 @@ export type CohortQuestionInput = {
   options: { id?: string; label: LocalizedTextInput; withDetail: boolean }[] | null;
 };
 
-export const isCohortStatus = (value: unknown): value is CohortStatus => COHORT_STATUSES.includes(value as CohortStatus);
 export const isCohortApplicationStatus = (value: unknown): value is CohortApplicationStatus => COHORT_APPLICATION_STATUSES.includes(value as CohortApplicationStatus);
 
 /** `GET /cohorts/current` (a JSON `null` when no cohort is open). */

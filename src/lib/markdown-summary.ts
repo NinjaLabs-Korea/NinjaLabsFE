@@ -5,7 +5,7 @@ export const NOTICE_SUMMARY_MAX = 240;
  * Only the head of the body can reach a 240-char excerpt; anything past this many UTF-16 units is dropped before the
  * regex passes so a pasted 1 MB body costs the same as a short one.
  */
-export const SUMMARY_SOURCE_MAX = 4000;
+const SUMMARY_SOURCE_MAX = 4000;
 
 const LABEL_MAX = 300;
 const URL_MAX = 1000;

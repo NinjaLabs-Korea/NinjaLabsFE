@@ -10,7 +10,8 @@ vi.mock("@/lib/api/public", async (importOriginal) => ({
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
 const { PublicApiError, settle } = await import("@/lib/api/public");
-const { pickGuideBounties, deliverablesFromMarkdown, getBounties, getRuntimeBounties, getRuntimeBounty, toBountyStatus, toPublicBountyStatus } = await import("@/lib/bounties");
+const { pickGuideBounties, deliverablesFromMarkdown, getBounties, getRuntimeBounties, getRuntimeBounty } = await import("@/lib/bounties");
+const { toLifecycleStatus: toBountyStatus, toPublicStatus: toPublicBountyStatus } = await import("@/lib/bounty-status");
 
 const row = (id: string, rewards = [{ symbol: "INJ", amount: "1500000000000000000", tokenType: "NATIVE" }]) => ({
   id, title: id, summary: "", sponsor_name: "S", category: "DEV", status: "OPEN",

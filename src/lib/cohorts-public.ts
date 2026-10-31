@@ -3,7 +3,7 @@ import { fetchPublicJson } from "@/lib/api/public";
 import type { PublicCohort } from "@/lib/cohorts";
 
 /** How long a static page may keep the cohort it was rendered with before the next request refreshes it (the browser read corrects it sooner). */
-export const CURRENT_COHORT_REVALIDATE_SECONDS = 60;
+const CURRENT_COHORT_REVALIDATE_SECONDS = 60;
 
 /**
  * The open cohort (`GET /cohorts/current`, the same public endpoint the browser reads) for server-rendered pages, so the

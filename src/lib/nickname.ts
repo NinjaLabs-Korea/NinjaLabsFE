@@ -65,7 +65,7 @@ const ALLOWED_CHARS = /^(?!.*[\p{Default_Ignorable_Code_Point}\u115F\u1160\u3164
 const BAD_MARKS = /\p{M}{4}|[_.-]\p{M}/u;
 
 /** 탈퇴한 유저의 익명화 닉네임 접두사 (`withdrawn_<id 8hex>`) - 공개 프로필이 없으므로 상세 URL도 될 수 없다 */
-export const WITHDRAWN_NICKNAME_PREFIX = "withdrawn_";
+const WITHDRAWN_NICKNAME_PREFIX = "withdrawn_";
 
 export function isReservedNickname(value: string): boolean {
   const normalized = nicknameSkeleton(value);

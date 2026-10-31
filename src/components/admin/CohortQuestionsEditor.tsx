@@ -2,9 +2,10 @@
 
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import { AdminSelect } from "@/components/admin/AdminSelect";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { QuestionCard, smallButton } from "@/components/admin/QuestionCard";
-import { opsInput, opsPanelEyebrow, opsPrimaryButton } from "@/components/admin/ops-ui";
+import { opsPanelEyebrow, opsPrimaryButton } from "@/components/admin/ops-ui";
 import { useAdminCohortApi } from "@/components/auth/FoundationProvider";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ERROR_COPY } from "@/lib/api/error-copy";
@@ -154,10 +155,11 @@ export function CohortQuestionsEditor({ cohort, onDirtyChange, onSaved, onClose 
       </ol>
 
       <div className="mt-5 flex flex-wrap items-end gap-3">
+        {/* `AdminSelect`, the admin select standard (it was the console's only native <select>). */}
         <label className="text-sm font-semibold text-ink">{t("addType")}
-          <select className={`${opsInput} w-auto min-w-[180px]`} onChange={(event) => setNewType(event.target.value as CohortQuestionType)} value={newType}>
-            {COHORT_QUESTION_TYPES.map((type) => <option key={type} value={type}>{t(`types.${type}`)}</option>)}
-          </select>
+          <div className="mt-2 min-w-[180px]">
+            <AdminSelect formatOption={(type) => t(`types.${type}`)} label={t("addType")} onChange={(type) => setNewType(type as CohortQuestionType)} options={[...COHORT_QUESTION_TYPES]} value={newType} />
+          </div>
         </label>
         <button className={`${smallButton} mb-0`} disabled={drafts.length >= COHORT_QUESTIONS_MAX} onClick={addQuestion} type="button">{t("add")}</button>
       </div>

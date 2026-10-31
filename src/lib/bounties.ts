@@ -1,6 +1,6 @@
 import { formatUtcDate, toCategoryLabel, toRewards, type RewardRow } from "./api/codecs";
 import type { Bounty } from "./types";
-import { isDeadlinePassed, toClosedReason, toLifecycleStatus, toPublicStatus } from "./bounty-status";
+import { isDeadlinePassed, toClosedReason, toPublicStatus } from "./bounty-status";
 import { fetchAllPublicPages } from "./api/paging";
 import { cache } from "react";
 import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH } from "./api/public";
@@ -68,9 +68,6 @@ function daysUntil(value: string): number {
   const remaining = Math.ceil((new Date(value).getTime() - Date.now()) / 86_400_000);
   return Number.isNaN(remaining) ? 0 : remaining;
 }
-
-// The BE status folds (public status, closed reason) live in `bounty-status.ts`; these names stay for existing callers and tests.
-export { toLifecycleStatus as toBountyStatus, toPublicStatus as toPublicBountyStatus };
 
 const DEADLINE_DETAIL_FORMAT: Intl.DateTimeFormatOptions = {
   year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short",

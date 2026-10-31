@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiHttpError } from "@/lib/api/http";
-import { createMockApiClient, MockApiError } from "@/lib/mocks/api-client";
+import { createMockApiClient } from "@/lib/mocks/api-client";
+import { MockApiError } from "@/lib/mocks/mock-error";
 import { getMockFixtureSnapshot } from "@/lib/mocks/fixtures";
 
 const owner = { status: "signed-in" as const, user: getMockFixtureSnapshot().account.user };

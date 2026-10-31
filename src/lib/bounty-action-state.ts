@@ -39,7 +39,7 @@ import type { Bounty, PayoutStatus } from "@/lib/types";
 export type AgentRowState = "applied" | "applicationRejected" | "applicationApproved" | "submitted" | "revisionRequested" | "approved" | "rejected";
 
 /** 심사 대기 중인 제출 상태 - 이 상태의 제출이 있으면 "심사 중" 화면/문구를 쓴다. */
-export const PENDING_SUBMISSION_STATUSES: readonly SubmissionStatus[] = ["submitted", "resubmitted", "in_review"];
+const PENDING_SUBMISSION_STATUSES: readonly SubmissionStatus[] = ["submitted", "resubmitted", "in_review"];
 
 type ApplicationRow = Pick<AccountApplication, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountApplication, "reviewNote">>;
 type SubmissionRow = Pick<AccountSubmission, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountSubmission, "reviewComment" | "paymentStatus" | "closedByCancellation">>;
@@ -102,8 +102,6 @@ export type BountyActionView =
    * 안내 문구는 각각 독립적으로 붙는다 (방금 제출한 직후의 수정 요청 행처럼 둘 다 true일 수 있다).
    */
   | { kind: "submitForm"; revising: boolean; inReview: boolean; revisionComment?: string };
-
-export type BountyActionViewKind = BountyActionView["kind"];
 
 /** 내 직접 행(`agent: null`)과 에이전트가 만든 행을 따로 고른다. 둘은 서로를 대신하지 않는다. */
 export function splitRows<T extends { agent: AccountAgentRef | null }>(rows: readonly T[] | undefined): { own: T | undefined; agent: T | undefined } {

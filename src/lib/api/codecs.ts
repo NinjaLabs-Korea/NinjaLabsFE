@@ -28,7 +28,7 @@ export function toPayoutStatus(value: unknown): PayoutStatus | undefined {
  * lists and details are server rendered, so the viewer's zone is unknown at render time, and a notice published at
  * 2026-10-31 01:30 KST must read the 31st, not the 30th. Bounty deadlines keep their own LocalDateTime handling.
  */
-export const HOME_TIME_ZONE = "Asia/Seoul";
+const HOME_TIME_ZONE = "Asia/Seoul";
 const PLAIN_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const homeZoneIsoFormat = new Intl.DateTimeFormat("en-CA", { timeZone: HOME_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" });
 

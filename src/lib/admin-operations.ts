@@ -156,7 +156,7 @@ export function rewardHeadroom(reward: Pick<OpsReward, "cap" | "allocated">): st
 }
 
 /** Mirror of NinjaLabsBE `common/validation/tx-hash.ts TX_HASH` (32-byte hex, optional lowercase `0x`, surrounding spaces trimmed). */
-export const TX_HASH_PATTERN = /^(0x)?[0-9a-fA-F]{64}$/;
+const TX_HASH_PATTERN = /^(0x)?[0-9a-fA-F]{64}$/;
 export const isTxHash = (value: string): boolean => TX_HASH_PATTERN.test(value.trim());
 
 // ── NFT jobs ────────────────────────────────────────────
