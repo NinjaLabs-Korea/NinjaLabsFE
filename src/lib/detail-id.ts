@@ -8,7 +8,7 @@ import { hasLocale } from "next-intl";
 import { type Locale, routing } from "@/i18n/routing";
 
 /** The three public detail routes: `/[locale]/<kind>/[id]`. */
-export const detailKinds = ["bounties", "members", "notices"] as const;
+const detailKinds = ["bounties", "members", "notices"] as const;
 export type DetailKind = (typeof detailKinds)[number];
 
 export type DetailRoute = { locale: Locale; kind: DetailKind; id: string };
@@ -63,7 +63,7 @@ export function validateDetailId(kind: DetailKind, id: string): Promise<boolean>
 }
 
 /** mock mode: the fixture registries are the source of truth, so the proxy can answer existence without a render. */
-export function hasMockDetail(kind: DetailKind, id: string): boolean {
+function hasMockDetail(kind: DetailKind, id: string): boolean {
   switch (kind) {
     case "bounties":
       return Boolean(getBounty(id));

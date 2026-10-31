@@ -5,7 +5,7 @@ import { readStorage, removeStorage, writeStorage } from "@/lib/safe-storage";
  * tab), so sessionStorage survives it. Public profile text only, no secrets. The draft is tied to the user it was typed
  * for: another account signing in on the same tab never sees it.
  */
-export const PROFILE_DRAFT_KEY = "ninja.profileDraft";
+const PROFILE_DRAFT_KEY = "ninja.profileDraft";
 
 export type ProfileDraft = { nickname: string; bio: string; tags: string[] };
 

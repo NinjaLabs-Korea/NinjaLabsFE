@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
-import { CheckingPanel, Field, errorText, useFieldErrors, SignedOutPanel, StatusPanel, headingClass, inputClass, outlineLinkClass, panelClass, submitButtonClass } from "@/components/bounties/BountyActionPanels";
+import { CheckingPanel, Field, errorText, useFieldErrors, BountySignedOutPanel, StatusPanel, headingClass, bountyInputClass, outlineLinkClass, panelClass, submitButtonClass } from "@/components/bounties/BountyActionPanels";
 import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { Link } from "@/i18n/navigation";
 import { APPLICATION_MESSAGE_MAX, COMMIT_SHA_MAX, SUBMISSION_DESCRIPTION_MAX } from "@/lib/input-limits";
@@ -209,7 +209,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
         </section>
       );
     case "signedOut":
-      return <SignedOutPanel applicationRequired={applicationRequired} bountyId={bountyId} />;
+      return <BountySignedOutPanel applicationRequired={applicationRequired} bountyId={bountyId} />;
     case "checkingStatus":
       return <CheckingPanel applicationRequired={applicationRequired} label={t("checkingStatus")} />;
     case "statusUnavailable":
@@ -245,7 +245,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
           <h2 className={headingClass} ref={headingRef} tabIndex={-1}>{t("applyHeading")}</h2>
           <form className="mt-4 space-y-3" noValidate onSubmit={apply}>
             <Field label={t("portfolioUrl")} error={fieldErrorLine("portfolioUrl")}>
-              <input className={inputClass} name="portfolioUrl" onBlur={checkUrlOnBlur(ruleFor(APPLY_FIELDS, "portfolioUrl"))} placeholder="https://" type="url" {...fieldProps("portfolioUrl")} />
+              <input className={bountyInputClass} name="portfolioUrl" onBlur={checkUrlOnBlur(ruleFor(APPLY_FIELDS, "portfolioUrl"))} placeholder="https://" type="url" {...fieldProps("portfolioUrl")} />
             </Field>
             <Field label={t("applyMessage")} error={fieldErrorLine("message")}>
               <textarea className={`min-h-28 ${textareaClass}`} maxLength={APPLICATION_MESSAGE_MAX} name="message" required {...fieldProps("message")} />
@@ -291,13 +291,13 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
           {hasCurrent ? <p className="mt-2 text-sm text-ink-muted">{t("resubmitPrefilledNote")}</p> : null}
           <form className="mt-4 space-y-3" noValidate onSubmit={submit}>
             <Field label={t("submissionUrl")} error={fieldErrorLine("submissionUrl")}>
-              <input className={inputClass} defaultValue={current?.submissionUrl} name="submissionUrl" onBlur={checkUrlOnBlur(ruleFor(SUBMIT_FIELDS, "submissionUrl"))} placeholder="https://" required type="url" {...fieldProps("submissionUrl")} />
+              <input className={bountyInputClass} defaultValue={current?.submissionUrl} name="submissionUrl" onBlur={checkUrlOnBlur(ruleFor(SUBMIT_FIELDS, "submissionUrl"))} placeholder="https://" required type="url" {...fieldProps("submissionUrl")} />
             </Field>
             <Field label={t("repositoryUrl")} error={fieldErrorLine("repositoryUrl")}>
-              <input className={inputClass} defaultValue={current?.repositoryUrl} name="repositoryUrl" onBlur={checkUrlOnBlur(ruleFor(SUBMIT_FIELDS, "repositoryUrl"))} placeholder="https://" type="url" {...fieldProps("repositoryUrl")} />
+              <input className={bountyInputClass} defaultValue={current?.repositoryUrl} name="repositoryUrl" onBlur={checkUrlOnBlur(ruleFor(SUBMIT_FIELDS, "repositoryUrl"))} placeholder="https://" type="url" {...fieldProps("repositoryUrl")} />
             </Field>
             <Field label={t("commitSha")}>
-              <input className={inputClass} defaultValue={current?.commitSha} maxLength={COMMIT_SHA_MAX} name="commitSha" placeholder="3f2a9c1" type="text" {...invalidProps} />
+              <input className={bountyInputClass} defaultValue={current?.commitSha} maxLength={COMMIT_SHA_MAX} name="commitSha" placeholder="3f2a9c1" type="text" {...invalidProps} />
             </Field>
             <Field label={t("submissionDescription")} error={fieldErrorLine("description")}>
               <textarea className={`min-h-24 ${textareaClass}`} defaultValue={current?.description} maxLength={SUBMISSION_DESCRIPTION_MAX} name="description" required {...fieldProps("description")} />

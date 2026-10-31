@@ -30,7 +30,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const iso = (offsetDays: number) => new Date(Date.now() + offsetDays * DAY_MS).toISOString();
 const TOKEN_AMOUNT = /^[1-9][0-9]{0,77}$/;
 /** The preview admin ("you"); seeded payouts are requested by another operator so the approve path is demonstrable. */
-export const MOCK_ADMIN_ID = "preview-admin";
+const MOCK_ADMIN_ID = "preview-admin";
 const OTHER_ADMIN = { id: "preview-ops-lead", nickname: "ops-lead" };
 
 const fail = (status: number, code: string): never => {

@@ -9,7 +9,7 @@ import { readStorage, removeStorage, writeStorage } from "@/lib/safe-storage";
 export const FLASH_STORAGE_KEY = "ninja.flash";
 export const FLASH_EVENT = "ninja:flash";
 
-export const flashKeys = ["accountDeleted", "signInRequired", "signOutFailed", "profileSaved", "applicationWithdrawn"] as const;
+const flashKeys = ["accountDeleted", "signInRequired", "signOutFailed", "profileSaved", "applicationWithdrawn"] as const;
 export type FlashKey = (typeof flashKeys)[number];
 
 /** Flashes that report a failure (rendered as a danger toast); the rest are neutral confirmations. */

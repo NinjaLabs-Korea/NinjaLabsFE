@@ -55,9 +55,9 @@ const emptyForm: PostForm = {
  */
 type PostFieldErrors = Partial<Record<"title" | "bodyMarkdown" | "thumbnail" | "externalUrl" | "eventDate", "required" | "urlInvalid" | "publicUrl" | "tooLong" | "dateRange" | "bidiChars">>;
 /** Event date bounds (BE accepts a calendar date; the range keeps typos like 0202 or 20260 out of the public timeline). */
-export const EVENT_DATE_MIN = "2000-01-01";
-export const EVENT_DATE_MAX = "2100-12-31";
-export function isEventDateInRange(value: string): boolean {
+const EVENT_DATE_MIN = "2000-01-01";
+const EVENT_DATE_MAX = "2100-12-31";
+function isEventDateInRange(value: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= EVENT_DATE_MIN && value <= EVENT_DATE_MAX;
 }
 export function validatePostForm(

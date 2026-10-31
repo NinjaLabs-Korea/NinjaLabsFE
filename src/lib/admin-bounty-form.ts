@@ -48,7 +48,7 @@ const TOKEN_AMOUNT_MAX_DIGITS = 30;
 export const rewardIntegerDigitsMax = (decimals: number) => TOKEN_AMOUNT_MAX_DIGITS - decimals;
 
 /** Characters in code points, like BE `MaxChars` (a UTF-16 `.length` counts one emoji as 2 and rejected titles the BE accepts). */
-export const codePointLength = (value: string) => [...value].length;
+const codePointLength = (value: string) => [...value].length;
 
 /** BE `DisplayTitle` (title, sponsorName): `isPlainDisplayText`; `DisplayBody` (description, requirements, evaluationCriteria): `hasNoBidiOverride`. */
 const PLAIN_FORBIDDEN = /[\p{Cc}\u2028\u2029\u200B\u200E\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]/u;
@@ -95,7 +95,7 @@ export function fromLocalDateTimeInput(local: string): string {
 /**
  * 저장할 ISO 마감: 입력값이 원본의 로컬 표시와 같으면 원본 ISO를 그대로(바이트 동일) 돌려주고, 바뀐 경우에만 변환한다.
  */
-export function resolveDeadlineIso(local: string, originalIso: string | undefined): string {
+function resolveDeadlineIso(local: string, originalIso: string | undefined): string {
   if (originalIso && toLocalDateTimeInput(originalIso) === local) return originalIso;
   return fromLocalDateTimeInput(local);
 }
@@ -148,7 +148,7 @@ export function bountyToForm(bounty: AdminBounty): BountyFormValues {
 /**
  * 저장할 `requirements`: 입력란이 불러온 값 그대로면 BE 원문을 바이트 동일하게, 고쳤으면 입력한 텍스트(앞뒤 공백만 정리, 줄바꿈·들여쓰기 유지).
  */
-export function resolveRequirements(form: BountyFormValues): string {
+function resolveRequirements(form: BountyFormValues): string {
   if (form.originalRequirements !== undefined && form.deliverables === form.originalRequirements) return form.originalRequirements;
   return form.deliverables.trim();
 }
@@ -202,7 +202,7 @@ export type BountyFormError =
   | "amountTooLarge";
 
 /** BE `DEADLINE_UNCHANGED_TOLERANCE_MS`: an application deadline less than this after the submission deadline counts as "not later" (the datetime-local input drops seconds). */
-export const APPLICATION_DEADLINE_TOLERANCE_MS = 60_000;
+const APPLICATION_DEADLINE_TOLERANCE_MS = 60_000;
 export type BountyFormErrors = Partial<Record<keyof BountyFormValues, BountyFormError>>;
 
 /**

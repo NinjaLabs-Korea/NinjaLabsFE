@@ -7,7 +7,7 @@ import { readStorage, removeStorage, writeStorage } from "@/lib/safe-storage";
  * stores the path before leaving for Google, and the callback goes there once onboarding is finished (an unfinished
  * onboarding keeps the path, and the last signup step offers it). Paths are locale-less, like every `@/i18n/navigation` href.
  */
-export const RETURN_PATH_STORAGE_KEY = "ninja.returnTo";
+const RETURN_PATH_STORAGE_KEY = "ninja.returnTo";
 
 const MAX_LENGTH = 200;
 // Where a return would loop or leave the product surface: the sign-up steps and the OAuth callback.

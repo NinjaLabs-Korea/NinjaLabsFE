@@ -24,7 +24,7 @@ export function cohortApplyErrorKey(error: unknown): CohortApplyErrorKey {
 }
 
 /** Codes that mean the page's picture of the cohort or the application is stale: the caller re-reads both. */
-export const STALE_COHORT_ERROR_CODES = [
+const STALE_COHORT_ERROR_CODES = [
   "COHORT_NOT_FOUND", "COHORT_NOT_ACCEPTING", "COHORT_ALREADY_APPLIED", "COHORT_APPLICATION_NOT_FOUND", "COHORT_APPLICATION_NOT_SUBMITTED",
 ] as const satisfies readonly (typeof ERROR_COPY.cohortApply.codes)[number][];
 

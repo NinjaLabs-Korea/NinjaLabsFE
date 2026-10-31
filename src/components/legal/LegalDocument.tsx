@@ -3,7 +3,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { CONTACT_EMAIL } from "@/lib/contact";
 
 /** Bump together with the messages/<locale>/legal.json text. */
-export const LEGAL_LAST_UPDATED = "2026-10-25";
+const LEGAL_LAST_UPDATED = "2026-10-25";
 
 type LegalSection = { heading: string; paragraphs?: string[]; items?: string[] };
 

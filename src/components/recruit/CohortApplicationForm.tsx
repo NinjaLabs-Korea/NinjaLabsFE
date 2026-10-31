@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuthSnapshot, useCohortApi } from "@/components/auth/FoundationProvider";
-import { QuestionField, hintClass, inputClass, labelClass } from "@/components/recruit/QuestionField";
+import { QuestionField, hintClass, labelClass, questionInputClass } from "@/components/recruit/QuestionField";
 import { useCurrentCohort } from "@/components/hooks/useCurrentCohort";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import { focusFirstInvalid } from "@/lib/form-focus";
@@ -183,7 +183,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
         <input
           {...described("displayName", "cohort-displayName-error", "cohort-displayName-hint")}
           autoComplete="name"
-          className={inputClass}
+          className={questionInputClass}
           id="cohort-displayName"
           onBlur={() => blurField("displayName")}
           maxLength={COHORT_DISPLAY_NAME_MAX}
@@ -203,7 +203,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
             {...described("telegram", "cohort-telegram-error", "cohort-telegram-hint")}
             autoCapitalize="off"
             autoComplete="off"
-            className={inputClass}
+            className={questionInputClass}
             id="cohort-telegram"
             onBlur={() => blurField("telegram")}
             maxLength={COHORT_HANDLE_INPUT_MAX}
@@ -222,7 +222,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
             {...described("twitter", "cohort-twitter-error", "cohort-twitter-hint")}
             autoCapitalize="off"
             autoComplete="off"
-            className={inputClass}
+            className={questionInputClass}
             id="cohort-twitter"
             onBlur={() => blurField("twitter")}
             maxLength={COHORT_HANDLE_INPUT_MAX}
@@ -241,7 +241,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
         <label className={labelClass} htmlFor="cohort-intro">{t("intro.label")}</label><RequiredMark />
         <textarea
           {...described("intro", "cohort-intro-error", "cohort-intro-hint")}
-          className={`${inputClass} min-h-[160px]`}
+          className={`${questionInputClass} min-h-[160px]`}
           id="cohort-intro"
           onBlur={() => blurField("intro")}
           maxLength={COHORT_INTRO_MAX}

@@ -16,7 +16,7 @@ import type { Notice } from "./types";
  * BE codes an admin write can return that deserve their own copy (`admin.common.errors.<code>`).
  * 코드 목록은 `lib/api/error-copy.ts`의 `ERROR_COPY.adminWrite`가 소유한다 - 추가/삭제는 거기서.
  */
-export const ADMIN_API_ERROR_CODES = ERROR_COPY.adminWrite.codes;
+const ADMIN_API_ERROR_CODES = ERROR_COPY.adminWrite.codes;
 export type AdminApiErrorCode = (typeof ADMIN_API_ERROR_CODES)[number];
 
 export function adminApiErrorCode(error: unknown): AdminApiErrorCode | null {
@@ -35,7 +35,7 @@ export function adminErrorDescription(error: unknown, translate: (key: `errors.$
  * field errors instead of the generic save-failed toast. `publicUrl` when the BE message says the host must be public, else `urlInvalid`.
  * Keys are BE property names; callers map them to their own form fields. Empty when the error is something else.
  */
-export const ADMIN_URL_PROPERTIES = ["externalUrl", "thumbnailUrl", "imageUrl", "linkUrl", "coverImageUrl"] as const;
+const ADMIN_URL_PROPERTIES = ["externalUrl", "thumbnailUrl", "imageUrl", "linkUrl", "coverImageUrl"] as const;
 export function adminUrlFieldErrors(error: unknown): Partial<Record<(typeof ADMIN_URL_PROPERTIES)[number], "publicUrl" | "urlInvalid">> {
   const fields = validationFieldsFromError(error);
   const result: Partial<Record<(typeof ADMIN_URL_PROPERTIES)[number], "publicUrl" | "urlInvalid">> = {};
