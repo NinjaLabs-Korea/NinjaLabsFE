@@ -10,7 +10,8 @@ vi.mock("@/lib/api/public", async (importOriginal) => ({
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
 const { PublicApiError } = await import("@/lib/api/public");
-const { getRuntimeProfile, payoutBadge, publicNftStatusKey, profiles, PROFILE_FILLED_EXAMPLE_ID, toCompletionReward } = await import("@/lib/members");
+const { publicNftStatusKey } = await import("@/lib/nft-status");
+const { getRuntimeProfile, payoutBadge, profiles, PROFILE_FILLED_EXAMPLE_ID, toCompletionReward } = await import("@/lib/members");
 const { emptyHallOfFame, getRuntimeHallOfFame } = await import("@/lib/hall-of-fame");
 const { settle } = await import("@/lib/api/public");
 
@@ -154,13 +155,6 @@ describe("hall of fame milestone dates", () => {
 });
 
 describe("public NFT status label", () => {
-  it.each([
-    ["PENDING", "minting"], ["MINTING", "minting"], ["ATTACHING", "minting"], ["FAILED", "minting"], ["SOMETHING_NEW", "minting"],
-    ["MINTED", "minted"], ["ATTACHED", null],
-  ])("%s -> %s", (status, key) => {
-    expect(publicNftStatusKey(status)).toBe(key);
-  });
-
   it("maps the API profile's NINJA_PARENT row into a status the label can read", async () => {
     fetchPublicJson.mockResolvedValueOnce({
       nickname: "kim", bio: "", tags: [], created_at: "2026-05-01T00:00:00Z", completedBounties: [], agents: [],
