@@ -5,7 +5,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AccountSettingsView } from "@/components/account/AccountSettingsView";
 import { AdminGate } from "@/components/admin/AdminGate";
-import { InitialCohortProvider, useCurrentCohort } from "@/components/recruit/useCurrentCohort";
+import { InitialCohortProvider, useCurrentCohort } from "@/components/hooks/useCurrentCohort";
 import { SignupGate, SIGNUP_PLACEHOLDER_HEIGHT } from "@/components/signup/SignupGate";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { PublicCohort } from "@/lib/cohorts";

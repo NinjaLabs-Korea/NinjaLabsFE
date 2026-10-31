@@ -4,9 +4,8 @@ import { useTranslations } from "next-intl";
 import { useState, useSyncExternalStore } from "react";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { AdminTable } from "@/components/admin/AdminTable";
-import type { OpsDateFormatter, OpsRunner } from "@/components/admin/BountyOperations";
 import { OpsFormModal } from "@/components/admin/OpsFormModal";
-import { opsAmount, opsButton, opsCell, opsInput, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPrimaryButton, opsShort } from "@/components/admin/ops-ui";
+import { opsAmount, opsButton, opsCell, opsInput, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPayoutVariant, opsPrimaryButton, opsShort, type OpsDateFormatter, type OpsRunner } from "@/components/admin/ops-ui";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import {
@@ -25,7 +24,6 @@ import {
 import { operatorAmountFromBaseUnits, operatorAmountToBaseUnits, tokenDecimalsFor } from "@/lib/api/codecs";
 
 const columns = ["recipient", "amount", "status", "requested", "approved", "tx", "action"] as const;
-const payoutVariant = (status: string) => (status === "PAID" ? "success" : status === "FAILED" || status === "CANCELLED" ? "danger" : status === "APPROVED" ? "primary-soft" : "warning");
 
 /** Below Tailwind's `md` (768px) the payouts render as cards: the 7-column table needs ~980px and a phone would show only the first column. */
 const NARROW_QUERY = "(max-width: 767.98px)";
@@ -127,7 +125,7 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
       <p className="mt-1 font-mono text-xs text-ink-muted" title={payout.recipientAddress}>{opsShort(payout.recipientAddress)}</p>
     </>
   );
-  const statusBadge = (payout: OpsPayout) => <Badge variant={payoutVariant(payout.status)}>{t(`payoutStatuses.${payout.status}`)}</Badge>;
+  const statusBadge = (payout: OpsPayout) => <Badge variant={opsPayoutVariant(payout.status)}>{t(`payoutStatuses.${payout.status}`)}</Badge>;
   const requestedCell = (payout: OpsPayout) => <>{payout.requestedByMe ? t("payouts.byYou") : payout.requestedByNickname ?? "–"}<p className="mt-1 text-xs text-ink-muted">{formatDate(payout.requestedAt)}</p></>;
   const approvedCell = (payout: OpsPayout) => <>{payout.approvedByNickname ?? "–"}<p className="mt-1 text-xs text-ink-muted">{payout.approvedAt ? formatDate(payout.approvedAt) : ""}</p></>;
   const txCell = (payout: OpsPayout) => <>{opsShort(payout.txHash)}{payout.paidAt ? <p className="mt-1 font-sans text-ink-muted">{formatDate(payout.paidAt)}</p> : null}</>;

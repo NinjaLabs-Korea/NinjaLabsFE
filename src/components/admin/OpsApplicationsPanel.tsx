@@ -3,10 +3,9 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AdminLongText, AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
-import type { OpsDateFormatter, OpsRunner } from "@/components/admin/BountyOperations";
 import { OpsActorCell } from "@/components/admin/OpsActorCell";
 import { OpsFormModal } from "@/components/admin/OpsFormModal";
-import { opsButton, opsCell, opsDangerButton, opsPanel, opsPanelEyebrow, opsPanelTitle, opsTextarea } from "@/components/admin/ops-ui";
+import { opsApplicationVariant, opsButton, opsCell, opsDangerButton, opsPanel, opsPanelEyebrow, opsPanelTitle, opsTextarea, type OpsDateFormatter, type OpsRunner } from "@/components/admin/ops-ui";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { applicationDecisionsFor, type AdminOperations, type OpsApplication } from "@/lib/admin-operations";
@@ -14,7 +13,6 @@ import { OPS_NOTE_MAX } from "@/lib/input-limits";
 import { safeHttpUrl } from "@/lib/api/codecs";
 
 const columns = ["applicant", "message", "status", "applied", "action"] as const;
-const appVariant = (status: string) => (status === "APPROVED" ? "success" : status === "REJECTED" ? "danger" : status === "PENDING" ? "warning" : "neutral");
 
 /** Applications: approve / reject with an optional note (BE APPLICATION_APPROVAL_CLOSED once intake has ended - only reject is offered then). */
 export function OpsApplicationsPanel({ ops, busy, run, formatDate }: { ops: AdminOperations; busy: ReadonlySet<string>; run: OpsRunner; formatDate: OpsDateFormatter }) {
@@ -56,7 +54,7 @@ export function OpsApplicationsPanel({ ops, busy, run, formatDate }: { ops: Admi
                     {portfolio ? <a className="mt-1 block break-all text-xs font-semibold text-primary-strong underline" href={portfolio} rel="noreferrer" target="_blank">{t("applications.portfolio")}</a> : null}
                     {application.reviewNote ? <p className="mt-2 text-xs text-ink-muted">{t("applications.reviewNote", { note: application.reviewNote })}</p> : null}
                   </td>
-                  <td className={opsCell}><Badge variant={appVariant(application.status)}>{t(`applicationStatuses.${application.status}`)}</Badge></td>
+                  <td className={opsCell}><Badge variant={opsApplicationVariant(application.status)}>{t(`applicationStatuses.${application.status}`)}</Badge></td>
                   <td className={`${opsCell} whitespace-nowrap`}>{formatDate(application.appliedAt)}</td>
                   <td className={opsCell}>
                     <div className="flex flex-wrap gap-2">

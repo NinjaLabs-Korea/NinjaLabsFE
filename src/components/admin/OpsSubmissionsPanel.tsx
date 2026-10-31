@@ -4,10 +4,9 @@ import { hasVisibleText } from "@/lib/visible-text";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AdminLongText, AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
-import type { OpsDateFormatter, OpsRunner } from "@/components/admin/BountyOperations";
 import { OpsActorCell } from "@/components/admin/OpsActorCell";
 import { OpsFormModal } from "@/components/admin/OpsFormModal";
-import { opsButton, opsCell, opsDangerButton, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPrimaryButton, opsShort, opsTextarea } from "@/components/admin/ops-ui";
+import { opsButton, opsCell, opsDangerButton, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPrimaryButton, opsShort, opsSubmissionVariant, opsTextarea, type OpsDateFormatter, type OpsRunner } from "@/components/admin/ops-ui";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { submissionCommentRequired, submissionDecisionsFor, type AdminOperations, type OpsSubmission, type SubmissionDecision } from "@/lib/admin-operations";
@@ -15,8 +14,6 @@ import { OPS_NOTE_MAX } from "@/lib/input-limits";
 import { safeHttpUrl } from "@/lib/api/codecs";
 
 const columns = ["submitter", "work", "status", "wallet", "action"] as const;
-const subVariant = (status: string) =>
-  status === "APPROVED" ? "success" : status === "REJECTED" ? "danger" : status === "WITHDRAWN" ? "neutral" : status === "REVISION_REQUESTED" ? "warning" : status === "IN_REVIEW" ? "primary-soft" : "warning";
 const decisionButton: Record<SubmissionDecision, string> = { START_REVIEW: opsButton, REQUEST_REVISION: opsButton, APPROVE: opsPrimaryButton, REJECT: opsDangerButton };
 
 /**
@@ -84,7 +81,7 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
                       </details>
                     ) : null}
                   </td>
-                  <td className={opsCell}><Badge variant={subVariant(submission.status)}>{t(`submissionStatuses.${submission.status}`)}</Badge></td>
+                  <td className={opsCell}><Badge variant={opsSubmissionVariant(submission.status)}>{t(`submissionStatuses.${submission.status}`)}</Badge></td>
                   <td className={`${opsCell} text-xs`} title={submission.recipientWalletAddress ?? undefined}>
                     {submission.recipientWalletAddress
                       ? <span className="font-mono">{opsShort(submission.recipientWalletAddress)}</span>

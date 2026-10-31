@@ -2,9 +2,9 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
-import { useAccountQuery } from "@/components/account/useAccountQuery";
+import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { useAuthSnapshot, useCohortApi } from "@/components/auth/FoundationProvider";
-import { cohortAcceptingHint, lastCurrentCohort, useCurrentCohort } from "@/components/recruit/useCurrentCohort";
+import { cohortAcceptingHint, lastCurrentCohort, useCurrentCohort } from "@/components/hooks/useCurrentCohort";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { isFinishedUser } from "@/lib/auth-route";

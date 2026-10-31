@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { CommunityHero } from "@/components/community/CommunityHero";
 import { CommunitySections } from "@/components/community/CommunitySections";
-import { InitialCohortProvider } from "@/components/recruit/useCurrentCohort";
+import { InitialCohortProvider } from "@/components/hooks/useCurrentCohort";
 import { ClientMessages } from "@/components/layout/ClientMessages";
 import { localeMetadata } from "@/i18n/alternates";
 import { getRuntimeCurrentCohort } from "@/lib/cohorts-public";

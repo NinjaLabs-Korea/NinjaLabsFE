@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, render, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cohortAcceptingHint, useCurrentCohort } from "@/components/recruit/useCurrentCohort";
+import { cohortAcceptingHint, useCurrentCohort } from "@/components/hooks/useCurrentCohort";
 import type { PublicCohort } from "@/lib/cohorts";
 
 const cohort: PublicCohort = { id: "c1", name: "2nd", description: "", opensAt: null, closesAt: null, acceptingApplications: true, questions: [] };

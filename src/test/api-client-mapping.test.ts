@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { createApiApiClient, unavailableReason } from "@/lib/api/api-client";
+import { createApiApiClient } from "@/lib/api/api-client";
+import { unavailableReason } from "@/lib/api/unavailable";
 import { ApiHttpError, type ApiHttp } from "@/lib/api/http";
 import { toClientUser, type MeResponse } from "@/lib/api/me";
 import type { AuthSnapshot } from "@/lib/contracts/auth";

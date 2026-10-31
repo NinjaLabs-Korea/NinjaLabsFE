@@ -1,7 +1,8 @@
 import { newestFirst } from "@/lib/account-order";
 import type { Account, AccountAgent, AccountAgentRef, AccountApplication, AccountSubmission, ApplicationStatus, BountyStatusCode, SubmissionStatus } from "@/lib/contracts/account";
-import type { ApiClient, ApiResult, ApiUnavailable } from "@/lib/contracts/api";
-import { ApiHttpError, type ApiHttp } from "@/lib/api/http";
+import type { ApiClient, ApiResult } from "@/lib/contracts/api";
+import type { ApiHttp } from "@/lib/api/http";
+import { unavailableReason } from "@/lib/api/unavailable";
 import { fetchMe, toClientUser } from "@/lib/api/me";
 import { createAdminApi } from "@/lib/api/admin";
 import { createAdminCohortApi, createCohortApi } from "@/lib/api/cohorts";
@@ -166,18 +167,6 @@ function toAgent(row: AgentRow): AccountAgent {
     keyStatus: row.key_status ?? null,
     registeredAt: row.created_at,
   };
-}
-
-/**
- * Why an account read is unavailable: `unauthorized` when the BE still answers 401/403 after `ApiHttp` tried the
- * refresh (the session is gone - views show a sign-in prompt), `server-error` for any other BE answer (5xx, 429,
- * a 4xx the FE did not expect), `network-error` when nothing answered (fetch failure, or `REFRESH_UNAVAILABLE`
- * carrying status 0 from a refresh that never reached the BE).
- */
-export function unavailableReason(error: unknown): ApiUnavailable["reason"] {
-  if (!(error instanceof ApiHttpError)) return "network-error";
-  if (error.status === 401 || error.status === 403) return "unauthorized";
-  return error.status === 0 ? "network-error" : "server-error";
 }
 
 const unavailable = <T>(error: unknown): ApiResult<T> => ({ status: "unavailable", reason: unavailableReason(error) });

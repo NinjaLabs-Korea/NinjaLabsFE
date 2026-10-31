@@ -2,7 +2,7 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
-import { useAccountQuery } from "@/components/account/useAccountQuery";
+import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { useAccountApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
