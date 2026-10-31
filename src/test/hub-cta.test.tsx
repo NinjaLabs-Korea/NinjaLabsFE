@@ -52,6 +52,53 @@ describe("hub primary CTA (StartLink with the dashboard as the finished target)"
     expect(placeholder?.className).toContain("cta");
   });
 
+  describe("returning member (browser hints) while the session is restored", () => {
+    const hint = (member: boolean, cookie = true) => {
+      if (member) window.localStorage.setItem("ninja.session.member", "1");
+      if (cookie) window.localStorage.setItem("ninja.session", "1");
+    };
+    afterEach(() => window.localStorage.clear());
+
+    it("shows the member link at once instead of an empty box", () => {
+      hint(true);
+      state.auth = loading;
+      renderWithIntl(cta());
+      expect(screen.getByRole("link", { name: "My activity" }).getAttribute("href")).toBe("/home");
+    });
+
+    it("keeps the same element and classes once the session confirms it (the fade does not restart)", () => {
+      hint(true);
+      state.auth = loading;
+      const view = renderWithIntl(cta());
+      const before = screen.getByRole("link", { name: "My activity" });
+      state.auth = finished;
+      view.rerender(cta());
+      const after = screen.getByRole("link", { name: "My activity" });
+      expect(after).toBe(before);
+      expect(after.className).toBe(before.className);
+    });
+
+    it("falls back to the hidden box without the refresh-cookie hint, or without memberHref", () => {
+      hint(true, false);
+      state.auth = loading;
+      const view = renderWithIntl(cta());
+      expect(screen.queryByRole("link")).toBeNull();
+      view.unmount();
+      hint(true);
+      renderWithIntl(<StartLink className="cta" memberLabel="My profile" resumeLabel="r" signUpLabel="s" />);
+      expect(screen.queryByRole("link")).toBeNull();
+    });
+
+    it("turns into Get started when the restore ends signed out", () => {
+      hint(true);
+      state.auth = loading;
+      const view = renderWithIntl(cta());
+      state.auth = signedOut;
+      view.rerender(cta());
+      expect(screen.getByRole("link", { name: "Get Started" }).getAttribute("href")).toBe("/signup");
+    });
+  });
+
   it("without memberHref a finished user still gets their profile (the bounty hero keeps this)", () => {
     state.auth = finished;
     renderWithIntl(<StartLink className="cta" memberLabel="My profile" resumeLabel="r" signUpLabel="s" />);

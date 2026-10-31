@@ -24,7 +24,7 @@ import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
 import { registerTabFoundationReset } from "@/lib/tab-foundation-reset";
 import { createApiApiClient } from "@/lib/api/api-client";
 import { createApiAuthAdapter } from "@/lib/api/auth-adapter";
-import { clearSessionHint, setSessionHint } from "@/lib/foundation/session-hint";
+import { clearSessionHint, setMemberHint, setSessionHint } from "@/lib/foundation/session-hint";
 
 export type { FoundationConfig } from "@/lib/runtime/config";
 import type { FoundationConfig } from "@/lib/runtime/config";
@@ -157,13 +157,18 @@ export function FoundationProvider({
 
   useEffect(() => value.adapter.initialize?.(), [value]);
 
-  // Keep the tab's session hint in step with the auth snapshot (see session-hint.ts). `loading` and a session that could
+  // Keep the tab's session hint (and the browser's member hint) in step with the auth snapshot (see session-hint.ts). `loading` and a session that could
   // not be checked (`unavailable`, cookie kept) leave it as is; every real sign-out, logout, withdrawal or 401 clears it.
   useEffect(() => {
     const sync = () => {
       const snapshot = value.adapter.getSnapshot();
-      if (snapshot.status === "signed-in") setSessionHint();
-      else if (snapshot.status === "signed-out" && snapshot.reason !== "unavailable") clearSessionHint();
+      if (snapshot.status === "signed-in") {
+        setSessionHint();
+        setMemberHint(snapshot.user.onboardingCompleted === true);
+      } else if (snapshot.status === "signed-out" && snapshot.reason !== "unavailable") {
+        clearSessionHint();
+        setMemberHint(false);
+      }
     };
     sync();
     return value.adapter.subscribe(sync);

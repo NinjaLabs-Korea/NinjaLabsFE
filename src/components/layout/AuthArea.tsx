@@ -5,7 +5,7 @@ import { useAuthActions, useAuthSnapshot } from "@/components/auth/FoundationPro
 import { NAV_DESKTOP_ONLY_BLOCK, NAV_DESKTOP_ONLY_FLEX, NAV_DESKTOP_ONLY_INLINE } from "@/components/layout/nav-breakpoint";
 import { getAccountNavigationItems, userChipAvatarSizeClass, userChipBoxClass, UserMenu } from "@/components/layout/UserMenu";
 import { Link } from "@/i18n/navigation";
-import { useSessionHint } from "@/lib/foundation/session-hint";
+import { useMemberHint, useSessionHint } from "@/lib/foundation/session-hint";
 
 type AuthAreaProps = {
   variant: "desktop" | "mobile";
@@ -16,7 +16,11 @@ export function AuthArea({ variant }: AuthAreaProps) {
   const tMenu = useTranslations("common.userMenu");
   const snapshot = useAuthSnapshot();
   const { signOut } = useAuthActions();
-  const hadSession = useSessionHint();
+  const tabHadSession = useSessionHint();
+  const likelyMember = useMemberHint();
+  // Reserve the user chip box when this tab had a session (locale remount) or the browser's last session was a member
+  // (reload, new tab), so the chip replaces a same-size box instead of shifting the header.
+  const hadSession = tabHadSession || likelyMember;
   const user = snapshot.status === "signed-in" ? snapshot.user : null;
 
   if (variant === "desktop") {
