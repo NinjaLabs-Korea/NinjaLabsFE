@@ -84,7 +84,8 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
       path: typeof window === "undefined" ? "server" : window.location.pathname,
       hasSession: http.hasSession(),
     });
-    const { me, unavailable } = await readMe(http);
+    // A refresh/exchange that carried the `/auth/me` payload saves the second round trip; without it, `GET /auth/me`.
+    const { me, unavailable } = await readMe(http, init?.ok ? init.user : undefined);
     // The session could not be checked (refresh/me answered 5xx or 429, or the network failed): the cookie is kept, so say
     // "unavailable" instead of "signed out" (a reload after the BE recovers restores the session).
     const couldNotCheck = !me && (unavailable || (init?.ok === false && init.reason === "unavailable"));
@@ -116,7 +117,7 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     if (initializing()) return;
     const refreshed = await http.initSession();
     if (!refreshed.ok) return;
-    const me = await fetchMe(http);
+    const me = await fetchMe(http, refreshed.user);
     if (!me || initializing() || !http.hasSession()) return;
     const user = toClientUser(me);
     if (snapshot.status === "signed-in" && snapshot.user.id === user.id) return;
@@ -189,10 +190,12 @@ export function createApiAuthAdapter(apiUrl: string): AuthAdapter & { http: ApiH
     if (!isAuthCallbackPath(window.location.pathname)) discardLoginVerifier();
     void (async () => {
       let init: RefreshResult | undefined;
-      if (await exchangeLoginCodeFromLocation()) {
+      const exchanged = await exchangeLoginCodeFromLocation();
+      if (exchanged) {
         // A fresh login supersedes any token a pre-cookie build left behind.
         discardLegacyTokens();
         events.broadcast("signed-in");
+        init = exchanged;
       } else {
         init = await http.initSession();
       }
