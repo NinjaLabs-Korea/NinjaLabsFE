@@ -5,7 +5,7 @@
 import { Browser, report } from '../lib/cdp.mjs';
 import { state } from '../lib/state.mjs';
 import { denseProbe } from '../lib/layout-audit.mjs';
-import { API, ids, seed, check, clean, done, sleep, signIn, apiAs, tokenFor, mainText } from '../lib/harness.mjs';
+import { API, sql, ids, seed, check, clean, done, sleep, signIn, apiAs, tokenFor, mainText } from '../lib/harness.mjs';
 
 const b = await Browser.connect();
 const adminToken = tokenFor(ids.ADMIN, true);
@@ -108,6 +108,12 @@ console.log('hall of fame stats', JSON.stringify(stats), 'allZero', statsAllZero
   check('finished user: hero CTA is My activity -> /home', hero.includes('My activity -> /en/home'), hero);
   const logo = await p.eval(`document.querySelector('header a[aria-label="Ninja Labs home"]').getAttribute('href')`);
   check('finished user: the logo points at the hub', logo === '/en', logo);
+  // Reload: the header user chip (initials + nickname) is painted from the display hint right after hydration, not after the session restore.
+  const nick = sql(`select nickname from "user" where id='${ids.BUILDER}'`);
+  await p.goto('/en/notices');
+  const chipSeenAt = await p.eval(`new Promise((resolve) => { const t0 = performance.now(); const tick = () => { const els = [...document.querySelectorAll('header [data-testid="user-chip-hint"], header button[aria-haspopup]')]; if (els.some((el) => el.textContent.includes('${nick}'))) resolve(Math.round(performance.now() - t0)); else if (performance.now() - t0 > 3000) resolve(-1); else setTimeout(tick, 10); }; tick(); })`);
+  check('finished user: after a reload the header chip shows the nickname within 300ms of load', chipSeenAt >= 0 && chipSeenAt <= 300, { chipSeenAt, nick });
+  await p.goto('/en'); await p.waitText('My activity', 8000);
   const fOrder = await h2s(p);
   check('finished user: the same sections as a visitor, bounty entry last', /^Bounties$/.test(fOrder[fOrder.length - 1] ?? ''), fOrder);
   clean(await report(p, 'finished hub', {}));
