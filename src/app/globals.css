@@ -54,10 +54,12 @@
   /* motion (docs/design.md "Motion"): easing + opacity/transform-only keyframes. Durations are plain :root properties below. */
   --ease-out-soft: cubic-bezier(0.2, 0, 0, 1);
   --animate-fade-in: fade-in var(--motion-base) var(--ease-out-soft) both;
+  --animate-page-in: page-in var(--motion-slow) var(--ease-out-soft) both; /* #main-content after a page change; starts at the leaving dim (0.5) */
   --animate-pop-in: pop-in var(--motion-fast) var(--ease-out-soft) both;
   --animate-toast-in: toast-in var(--motion-base) var(--ease-out-soft) both;
   --animate-nav-progress: nav-progress 2s var(--ease-out-soft) 120ms both; /* 120 ms delay: fast navigations never flash the bar */
   @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes page-in { from { opacity: 0.5; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   @keyframes pop-in { from { opacity: 0; transform: translateY(-4px) scale(0.98); } to { opacity: 1; transform: none; } }
   @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   @keyframes nav-progress { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(0.85); transform-origin: left; } }
@@ -127,6 +129,14 @@ html:lang(ko) {
   vertical-align: -0.125em;
 }
 
+/* Leaving feedback (layout/RouteFade): the old page eases to a dim from the click until the new path lands. Opacity only. */
+#main-content {
+  transition: opacity var(--motion-fast) var(--ease-out-soft);
+}
+#main-content[data-route-leaving] {
+  opacity: 0.5;
+}
+
 /* Global reduced-motion safety net (components still pair animate-* with motion-reduce:animate-none, docs/design.md). */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after, ::backdrop {
@@ -138,5 +148,9 @@ html:lang(ko) {
   }
   .motion-press:active {
     transform: none !important;
+  }
+  /* The dim is state feedback and stays, but it switches without easing. */
+  #main-content {
+    transition: none !important;
   }
 }
