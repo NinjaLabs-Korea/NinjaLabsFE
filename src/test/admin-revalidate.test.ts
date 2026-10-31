@@ -52,6 +52,8 @@ describe("publicListTagForPath", () => {
   it("tags cached list paths by resource", () => {
     expect(publicListTagForPath("/notices?sort=eventDate")).toEqual(["public:notices"]);
     expect(publicListTagForPath("/bounties")).toEqual(["public:bounties"]);
-    expect(publicListTagForPath("/members")).toEqual([]);
+    expect(publicListTagForPath("/members")).toEqual(["public:members"]);
+    expect(publicListTagForPath("/hall-of-fame/stats")).toEqual(["public:hall-of-fame"]);
+    expect(publicListTagForPath("/users/ninja")).toEqual([]);
   });
 });

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const fetchPublicJson = vi.fn();
 vi.mock("@/lib/api/public", async (importOriginal) => ({
   settle: (await importOriginal<typeof import("@/lib/api/public")>()).settle,
+  PUBLIC_LIST_REVALIDATE_SECONDS: 30,
   fetchPublicJson: (path: string) => fetchPublicJson(path),
   loadFromRuntime: (sources: { api: () => unknown }) => sources.api(),
 }));
