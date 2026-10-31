@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { clearSessionHint, getSessionHint, setSessionHint } from "@/lib/foundation/session-hint";
+import { clearSessionHint, getMemberHint, getSessionHint, setMemberHint, setSessionHint } from "@/lib/foundation/session-hint";
 
 describe("session hint", () => {
   afterEach(() => {
@@ -34,5 +34,18 @@ describe("session hint", () => {
     setSessionHint();
     const Probe = () => createElement("output", null, String(useSessionHint()));
     expect(renderToString(createElement(Probe))).toContain(">false<");
+  });
+
+  it("member hint: localStorage flag read only together with the refresh-cookie hint", () => {
+    window.localStorage.clear();
+    setMemberHint(true);
+    expect(window.localStorage.getItem("ninja.session.member")).toBe("1");
+    expect(getMemberHint()).toBe(false);
+    window.localStorage.setItem("ninja.session", "1");
+    expect(getMemberHint()).toBe(true);
+    setMemberHint(false);
+    expect(getMemberHint()).toBe(false);
+    expect(window.localStorage.getItem("ninja.session.member")).toBeNull();
+    window.localStorage.clear();
   });
 });
