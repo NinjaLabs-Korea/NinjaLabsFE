@@ -444,6 +444,15 @@ export function validateQuestionInputs(questions: readonly CohortQuestionInput[]
 }
 
 /**
+ * "Have I applied to this cohort?": my application to `cohortId` unless I withdrew it. Single source for the hub CTA, the
+ * recruitment banner, the home card and `/recruit`. The BE keeps one row per user and cohort (`uq_cohort_application_user`),
+ * so a withdrawn row means "not applied" and nothing else can be found.
+ */
+export function activeCohortApplication(mine: readonly MyCohortApplication[] | null | undefined, cohortId: string): MyCohortApplication | undefined {
+  return mine?.find((item) => item.cohortId === cohortId && item.status !== "WITHDRAWN");
+}
+
+/**
  * Whether the apply form is the right thing to show for the cohort and the viewer's own application.
  * `form`: no (or a withdrawn) application and the cohort accepts. `not-accepting`: no usable application and it does not. The rest follow the application.
  */
@@ -455,9 +464,11 @@ export type CohortApplyView =
   | { kind: "rejected"; application: MyCohortApplication };
 
 export function resolveCohortApplyView(cohort: PublicCohort, mine: readonly MyCohortApplication[]): CohortApplyView {
-  const application = mine.find((item) => item.cohortId === cohort.id);
-  if (!application || application.status === "WITHDRAWN") {
-    return cohort.acceptingApplications ? { kind: "form", reapply: application !== undefined } : { kind: "not-accepting" };
+  const application = activeCohortApplication(mine, cohort.id);
+  if (!application) {
+    // A withdrawn row is the only other row the BE can hold for this cohort: applying again is a re-application.
+    const reapply = mine.some((item) => item.cohortId === cohort.id);
+    return cohort.acceptingApplications ? { kind: "form", reapply } : { kind: "not-accepting" };
   }
   if (application.status === "ACCEPTED") return { kind: "accepted", application };
   if (application.status === "REJECTED") return { kind: "rejected", application };

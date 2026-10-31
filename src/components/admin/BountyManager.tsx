@@ -18,12 +18,14 @@ import { type AdminBounty, adminErrorDescription, adminTextFieldErrors, expirePu
 import { bountyToForm, emptyBountyForm, formToBounty, isIsoDateTime, rewardIntegerDigitsMax, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { tokenDecimalsFor } from "@/lib/api/codecs";
+import { BOUNTY_CATEGORIES } from "@/lib/bounty-categories";
+import { isDeadlinePassed } from "@/lib/bounty-status";
 import { opsErrorCode } from "@/lib/admin-operations";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { Link } from "@/i18n/navigation";
 
 /** An OPEN bounty still reads Active in the BE until someone transitions it; past its deadline it no longer accepts submissions. */
-const isPastDeadline = (iso: string) => isIsoDateTime(iso) && new Date(iso).getTime() < Date.now();
+const isPastDeadline = (iso: string) => isIsoDateTime(iso) && isDeadlinePassed(iso);
 
 const columns = [
   { id: "title", widthClass: "w-[244px]" },
@@ -35,7 +37,6 @@ const columns = [
   { id: "action", widthClass: "w-[147px]" },
 ];
 
-const tags = ["Dev", "Design", "Content", "Other"] as const;
 const statusVariants = { draft: "neutral", funding: "warning", active: "success", submissionClosed: "warning", reviewing: "warning", completed: "neutral", cancelled: "danger" } as const;
 
 type Mode = { kind: "create" } | { kind: "edit"; slug: string };
@@ -284,7 +285,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
             <div>
               <p className="text-sm font-semibold text-ink" id="bounty-tags-label">{t("form.tags")}</p>
               <div aria-labelledby="bounty-tags-label" className="mt-2 flex flex-wrap gap-2" role="group">
-                {tags.map((tag) => <button aria-pressed={form.tags.includes(tag)} className={form.tags.includes(tag) ? "inline-flex h-6 items-center rounded-full max-sm:h-10 bg-primary px-2.5 max-sm:px-4 text-xs font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" : "inline-flex h-6 items-center rounded-full max-sm:h-10 max-sm:px-4 bg-primary-soft px-2.5 text-xs font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"} key={tag} onClick={() => selectTag(tag)} type="button">{t(`tags.${tag}`)}</button>)}
+                {BOUNTY_CATEGORIES.map((tag) => <button aria-pressed={form.tags.includes(tag)} className={form.tags.includes(tag) ? "inline-flex h-6 items-center rounded-full max-sm:h-10 bg-primary px-2.5 max-sm:px-4 text-xs font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" : "inline-flex h-6 items-center rounded-full max-sm:h-10 max-sm:px-4 bg-primary-soft px-2.5 text-xs font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"} key={tag} onClick={() => selectTag(tag)} type="button">{t(`tags.${tag}`)}</button>)}
               </div>
             </div>
             <label className="block text-sm font-semibold text-ink">{t("form.description")}

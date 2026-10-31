@@ -1,4 +1,4 @@
-import type { BountyCategory } from "@/lib/types";
+import { isBountyCategory, type BountyCategory } from "@/lib/bounty-categories";
 
 export type BountyCategoryFilter = "All" | BountyCategory;
 export type BountyStatusFilter = "All" | "Active" | "Closed";
@@ -6,7 +6,6 @@ export type BountyFilterState = { category: BountyCategoryFilter; status: Bounty
 
 export const DEFAULT_BOUNTY_FILTERS: BountyFilterState = { category: "All", status: "All", query: "" };
 
-const CATEGORIES: readonly BountyCategory[] = ["Dev", "Design", "Content", "Other"];
 const STATUSES = ["Active", "Closed"] as const;
 const QUERY_MAX = 200;
 
@@ -19,7 +18,7 @@ export function parseBountyFilters(search: string): BountyFilterState {
   const category = params.get("category");
   const status = params.get("status");
   return {
-    category: CATEGORIES.find((item) => item === category) ?? "All",
+    category: isBountyCategory(category) ? category : "All",
     status: STATUSES.find((item) => item === status) ?? "All",
     query: (params.get("q") ?? "").slice(0, QUERY_MAX),
   };

@@ -6,14 +6,13 @@ import { useEffect, useMemo, useState } from "react";
 import { BountyCard } from "@/components/cards/BountyCard";
 import { Badge } from "@/components/ui/Badge";
 import { parseBountyFilters, serializeBountyFilters, type BountyCategoryFilter as CategoryFilter, type BountyStatusFilter as StatusFilter } from "@/lib/bounty-filter-params";
-import type { Bounty, BountyCategory } from "@/lib/types";
+import { BOUNTY_CATEGORIES } from "@/lib/bounty-categories";
+import type { Bounty } from "@/lib/types";
 
 type BountyFiltersProps = {
   bounties: Bounty[];
 };
 
-// Canonical chip order; only categories present in the list are offered (14 draws Dev / Design / Content).
-const categoryOrder: BountyCategory[] = ["Dev", "Design", "Content", "Other"];
 const statusFilters: Exclude<StatusFilter, "All">[] = ["Active", "Closed"];
 // Filter values stay in English (matched against data); only the displayed labels are localized.
 const statusLabelKeys = { Active: "status.active", Closed: "filters.statusClosed" } as const;
@@ -62,7 +61,8 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
   };
   const categoryFilters = useMemo(() => {
     const present = new Set(bounties.map((bounty) => bounty.category));
-    return categoryOrder.filter((item) => present.has(item));
+    // Canonical chip order; only categories present in the list are offered (14 draws Dev / Design / Content).
+    return BOUNTY_CATEGORIES.filter((item) => present.has(item));
   }, [bounties]);
 
   const visibleBounties = useMemo(() => {

@@ -28,7 +28,7 @@ vi.mock("@/components/auth/FoundationProvider", () => ({
 }));
 import { createApiApiClient } from "@/lib/api/api-client";
 import { deriveActionView, type BountyActionInput } from "@/lib/bounty-action-state";
-import { applicationStatusLabel } from "@/components/account/ApplicationsView";
+import { applicationStatusLabel } from "@/lib/application-badge";
 import type { ApiHttp } from "@/lib/api/http";
 
 const BOUNTY = "b-1";

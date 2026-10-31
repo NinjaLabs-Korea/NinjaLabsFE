@@ -1,34 +1,25 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
+import { useState } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
-import { applicationStatusLabel, statusVariants } from "@/components/account/ApplicationsView";
 import { useAccountApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
-import type { ApplicationStatus } from "@/lib/contracts/account";
+import { applicationBadge } from "@/lib/application-badge";
 import { PageLoading } from "@/components/ui/PageLoading";
 
 /** How many of my latest rows the home lists; the rest is on /applications. */
 const HOME_ACTIVITY_LIMIT = 4;
-
-// `account.applications` keys of each status label (the same words as the My applications page, except that the compact
-// home card keeps the short step names for approved rows). Rejected and not-accepted rows go through the shared label so a
-// reward-not-paid case reads the same here and on /applications.
-const statusLabelKeys: Partial<Record<ApplicationStatus, string>> = {
-  open: "steps.open",
-  approved: "steps.approved",
-  submitted: "steps.submitted",
-  completed: "steps.completed",
-  revisionRequested: "revisionRequestedStatus",
-};
 
 /** My bounty applications and submissions with their status (the latest few), linking to the full list. */
 export function HomeActivity() {
   const t = useTranslations("home.activity");
   const tApplications = useTranslations("account.applications");
   const format = useFormatter();
+  // Page-load time, like /applications: deadlines are compared once per visit.
+  const [now] = useState(() => Date.now());
   const api = useAccountApi();
   const query = useAccountQuery(api.getApplications);
   const rows = [...(query.data ?? [])].sort((a, b) => b.appliedAt.localeCompare(a.appliedAt)).slice(0, HOME_ACTIVITY_LIMIT);
@@ -50,20 +41,23 @@ export function HomeActivity() {
         </div>
       ) : (
         <ul className="mt-7 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {rows.map((row) => (
-            <li key={row.id}>
-              <Link
-                className="flex h-full min-w-0 flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                href={row.source === "submission" || row.status !== "open" ? `/bounties/${row.bountySlug}` : "/applications"}
-              >
-                <span className="flex flex-wrap items-center justify-between gap-2">
-                  <Badge variant={statusVariants[row.status]}>{statusLabelKeys[row.status] ? tApplications(statusLabelKeys[row.status]!) : applicationStatusLabel(tApplications, row)}</Badge>
-                  <span className="text-xs text-ink-muted">{format.dateTime(new Date(row.appliedAt), { dateStyle: "medium" })}</span>
-                </span>
-                <span className="line-clamp-2 break-words font-display text-lg font-bold text-ink">{row.bountyTitle}</span>
-              </Link>
-            </li>
-          ))}
+          {rows.map((row) => {
+            const badge = applicationBadge(tApplications, row, now, { compact: true });
+            return (
+              <li key={row.id}>
+                <Link
+                  className="flex h-full min-w-0 flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  href={row.source === "submission" || row.status !== "open" ? `/bounties/${row.bountySlug}` : "/applications"}
+                >
+                  <span className="flex flex-wrap items-center justify-between gap-2">
+                    <Badge variant={badge.variant}>{badge.label}</Badge>
+                    <span className="text-xs text-ink-muted">{format.dateTime(new Date(row.appliedAt), { dateStyle: "medium" })}</span>
+                  </span>
+                  <span className="line-clamp-2 break-words font-display text-lg font-bold text-ink">{row.bountyTitle}</span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>
