@@ -40,9 +40,9 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
   // Figma 17 footnote links to the owned-agents area of the profile; outside mock mode the signed-in user's own agents page is the real destination.
   const agentsProfileHref = await loadFromRuntime({ mock: () => `/members/${PROFILE_FILLED_EXAMPLE_ID}#agents`, api: async () => "/agents" });
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
+    <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <Link
-        className="inline-block text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="inline-flex min-h-11 items-center text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         href="/agents"
       >
         {t("back")}
@@ -53,6 +53,7 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("eyebrow")}</p>
           <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] sm:text-5xl sm:-tracking-[0.48px] text-ink">{t("heading")}</h1>
           <p className="mt-4 text-lg text-ink-secondary">{t("intro")}</p>
+          <p className="mt-2 text-base font-semibold text-ink">{t("lead")}</p>
         </div>
         <BountyApplyAuthBadge />
       </section>
@@ -66,7 +67,7 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
             {step === "doc" ? (
               // 로케일 경로가 아닌 정적 다운로드라서 i18n Link 대신 <a>를 쓴다.
               <a
-                className="mt-3 inline-block text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 download
                 href={AGENT_SKILL_PATH}
               >

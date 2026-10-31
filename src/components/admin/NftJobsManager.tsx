@@ -8,6 +8,7 @@ import { opsButton, opsDateTime, opsCell, opsPrimaryButton, opsShort } from "@/c
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
+import { useKeyedSingleFlight } from "@/components/ui/useSingleFlight";
 import { NFT_JOB_STATUSES, opsErrorCode, type AdminNftJobPage, type NftJobStatus } from "@/lib/admin-operations";
 
 /** BE `nft.status` values with a label under `admin.nftJobs.nftStatuses`; anything else is shown as the BE sent it. */
@@ -28,8 +29,7 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
   const [page, setPage] = useState(1);
   const [data, setData] = useState<AdminNftJobPage | null>(null);
   const [failed, setFailed] = useState(false);
-  const [retrying, setRetrying] = useState<ReadonlySet<string>>(new Set());
-  const inFlight = useRef(new Set<string>());
+  const { isBusy: isRetrying, run: runRetry } = useKeyedSingleFlight();
   // Only the newest request may write state: a slow FAILED page must not overwrite the PENDING page the operator switched to.
   const latestRequest = useRef(0);
   // The page the rows on screen belong to: a failed fetch of another page steps back to it, so the pager never labels old rows with the new page.
@@ -65,22 +65,19 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
     void load();
   }, [load]);
 
-  const retry = async (jobId: string) => {
-    if (inFlight.current.has(jobId)) return;
-    inFlight.current.add(jobId);
-    setRetrying(new Set(inFlight.current));
-    try {
-      await api.retryAdminNftJob(jobId);
-      pushAdminToast({ variant: "success", title: t("toast.retriedTitle"), description: t("toast.retriedDescription") });
-    } catch (error) {
-      const { code, known } = opsErrorCode(error);
-      pushAdminToast({ variant: "danger", title: t("toast.retryFailedTitle"), description: known ? tOps(`errors.${code}`) : tOps("errors.unknown", { code }) });
-    } finally {
-      inFlight.current.delete(jobId);
-      setRetrying(new Set(inFlight.current));
-      await load();
-    }
-  };
+  // The key stays busy through the reload: the retried row is still on screen (with an enabled button) until the new page lands.
+  const retry = (jobId: string) =>
+    runRetry(jobId, async () => {
+      try {
+        await api.retryAdminNftJob(jobId);
+        pushAdminToast({ variant: "success", title: t("toast.retriedTitle"), description: t("toast.retriedDescription") });
+      } catch (error) {
+        const { code, known } = opsErrorCode(error);
+        pushAdminToast({ variant: "danger", title: t("toast.retryFailedTitle"), description: known ? tOps(`errors.${code}`) : tOps("errors.unknown", { code }) });
+      } finally {
+        await load();
+      }
+    });
 
   const formatDate = (value: string | null) => opsDateTime(format, value, timeZone);
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
@@ -125,7 +122,7 @@ export function NftJobsManager({ children, tabs }: { children: ReactNode; tabs: 
                 <td className={opsCell}>{job.retryCount}</td>
                 <td className={`${opsCell} max-w-[320px] font-mono text-xs ${adminLongTextCell}`}>{job.lastError ?? "–"}</td>
                 <td className={opsCell}>{formatDate(job.updatedAt)}</td>
-                <td className={opsCell}>{job.status === "FAILED" ? <button className={opsPrimaryButton} disabled={retrying.has(job.id)} onClick={() => void retry(job.id)} type="button">{retrying.has(job.id) ? tOps("working") : t("retry")}</button> : null}</td>
+                <td className={opsCell}>{job.status === "FAILED" ? <button className={opsPrimaryButton} disabled={isRetrying(job.id)} onClick={() => void retry(job.id)} type="button">{isRetrying(job.id) ? tOps("working") : t("retry")}</button> : null}</td>
               </tr>
             ))}
           </AdminTable>

@@ -3,14 +3,15 @@
 import { hasVisibleText } from "@/lib/visible-text";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
+import { AdminLongText, AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import type { OpsDateFormatter, OpsRunner } from "@/components/admin/BountyOperations";
 import { OpsActorCell } from "@/components/admin/OpsActorCell";
 import { OpsFormModal } from "@/components/admin/OpsFormModal";
 import { opsButton, opsCell, opsDangerButton, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPrimaryButton, opsShort, opsTextarea } from "@/components/admin/ops-ui";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
-import { OPS_NOTE_MAX, submissionCommentRequired, submissionDecisionsFor, type AdminOperations, type OpsSubmission, type SubmissionDecision } from "@/lib/admin-operations";
+import { submissionCommentRequired, submissionDecisionsFor, type AdminOperations, type OpsSubmission, type SubmissionDecision } from "@/lib/admin-operations";
+import { OPS_NOTE_MAX } from "@/lib/input-limits";
 import { safeHttpUrl } from "@/lib/api/codecs";
 
 const columns = ["submitter", "work", "status", "wallet", "action"] as const;
@@ -55,7 +56,7 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
         <p className="mt-4 text-sm text-ink-muted">{t("submissions.empty")}</p>
       ) : (
         <div className="mt-4">
-          <AdminTable columns={columns.map((id) => ({ id, label: t(`submissions.columns.${id}`) }))} minWidthClass="min-w-[960px]">
+          <AdminTable columns={columns.map((id) => ({ id, label: t(`submissions.columns.${id}`) }))} idPrefix="ops-submissions-col" minWidthClass="min-w-[960px]">
             {ops.submissions.map((submission) => {
               const latest = submission.revisions[0];
               const work = safeHttpUrl(latest?.submissionUrl);
@@ -66,7 +67,7 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
                   <td className={`${opsCell} ${adminLongTextCell}`}><OpsActorCell actor={submission} /><p className="mt-1 text-xs text-ink-muted">{formatDate(submission.submittedAt)}</p></td>
                   <td className={`${opsCell} max-w-[360px] ${adminLongTextCell}`}>
                     <p className="text-xs font-semibold text-ink">{t("submissions.revision", { revision: submission.currentRevisionNo })}</p>
-                    {latest ? <p className="mt-1 whitespace-pre-line break-words">{latest.description}</p> : null}
+                    {latest ? <div className="mt-1"><AdminLongText labelledBy="ops-submissions-col-work">{latest.description}</AdminLongText></div> : null}
                     <div className="mt-1 flex flex-wrap gap-3 text-xs font-semibold">
                       {work ? <a className="text-primary-strong underline" href={work} rel="noreferrer" target="_blank">{t("submissions.workLink")}</a> : null}
                       {repo ? <a className="text-primary-strong underline" href={repo} rel="noreferrer" target="_blank">{t("submissions.repoLink")}</a> : null}

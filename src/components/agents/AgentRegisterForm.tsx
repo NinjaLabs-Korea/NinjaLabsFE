@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { ApiKeyReveal } from "@/components/agents/ApiKeyReveal";
 import {
@@ -13,12 +13,14 @@ import { isSameWalletAddress } from "@/lib/injective-address";
 import { Link } from "@/i18n/navigation";
 import { shortWalletAddress, useWalletConnection } from "@/components/wallet/useWalletConnection";
 import type { AgentVerification } from "@/lib/contracts/api";
+import { getOnboardingPath } from "@/lib/api/auth-adapter";
+import { useSingleFlight } from "@/components/ui/useSingleFlight";
+import { ApiHttpError } from "@/lib/api/http";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
 import { formatUtcDateTime } from "@/lib/format";
 import { validationFieldsFromError } from "@/lib/api/validation";
+import { AGENT_DESCRIPTION_MAX, AGENT_NAME_MAX } from "@/lib/input-limits";
 import {
-  AGENT_DESCRIPTION_MAX,
-  AGENT_NAME_MAX,
   agentErrorsFromValidationFields,
   hasVisibleText,
   validateAgentRegisterForm,
@@ -37,6 +39,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const t = useTranslations("agents.form");
   const tRegisterErrors = useTranslations(ERROR_COPY.agentRegister.messages);
   const tWallet = useTranslations("common.wallet");
+  const noWalletId = useId();
   // UTC-pinned via src/i18n/request.ts, like AgentsView's key expiry.
   const format = useFormatter();
   const auth = useAuthSnapshot();
@@ -49,6 +52,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // 필드 검증 에러 (BE RegisterAgentDto 한도의 거울, `lib/agent-register-form.ts`). 요청 실패 문구(errorMessage)와는 따로 표시한다.
   const [fieldErrors, setFieldErrors] = useState<AgentRegisterErrors>({});
+  const [profileRequired, setProfileRequired] = useState(false);
   const [verification, setVerification] = useState<AgentVerification | null>(null);
   // The one-time key belongs to the session that received it: signing out (or switching account) on this page must drop
   // it from state and the DOM, not leave it on screen for the next person at the machine.
@@ -56,7 +60,7 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
   const [verificationOwner, setVerificationOwner] = useState(sessionUserId);
   // ...and a key that arrives after the session changed (verify still in flight) must never be shown to the new session.
   const sessionUserIdRef = useRef(sessionUserId);
-  const inFlightRef = useRef(false);
+  const { run: runRegister } = useSingleFlight();
   useEffect(() => {
     sessionUserIdRef.current = sessionUserId;
   }, [sessionUserId]);
@@ -93,7 +97,6 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
     event.preventDefault();
     // Synchronous guard: several submit events can land in one tick, before `submissionState` (React state) is set and the
     // button re-renders disabled. Each would otherwise register an agent, ask the wallet for a signature and verify.
-    if (inFlightRef.current) return;
     if (
       auth.status !== "signed-in" ||
       !address ||
@@ -112,65 +115,71 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       return;
     }
 
-    inFlightRef.current = true;
-    const agentAddress = address;
-    const requestingUserId = sessionUserId;
-    setErrorMessage(null);
-    setFieldErrors({});
-    setVerification(null);
-    try {
-      setSubmissionState("registering");
-      onboardingLog("agent.registration.started", {
-        wallet: maskWalletAddress(agentAddress),
-      });
-      const registration = await agentApi.registerAgent({
-        name: name.trim(),
-        ...(description.trim() ? { description: description.trim() } : {}),
-        walletAddress: agentAddress,
-      });
+    await runRegister(async () => {
+      const agentAddress = address;
+      const requestingUserId = sessionUserId;
+      setErrorMessage(null);
+      setProfileRequired(false);
+      setFieldErrors({});
+      setVerification(null);
+      let signingStage = false;
+      try {
+        setSubmissionState("registering");
+        onboardingLog("agent.registration.started", {
+          wallet: maskWalletAddress(agentAddress),
+        });
+        const registration = await agentApi.registerAgent({
+          name: name.trim(),
+          ...(description.trim() ? { description: description.trim() } : {}),
+          walletAddress: agentAddress,
+        });
 
-      setSubmissionState("signing");
-      onboardingLog("agent.signature.requested", {
-        wallet: maskWalletAddress(agentAddress),
-        signatureType: "EIP191",
-        agentId: registration.agentId,
-      });
-      const signature = await signMessageAsync({
-        account: agentAddress,
-        message: registration.verificationMessage,
-      });
+        setSubmissionState("signing");
+        signingStage = true;
+        onboardingLog("agent.signature.requested", {
+          wallet: maskWalletAddress(agentAddress),
+          signatureType: "EIP191",
+          agentId: registration.agentId,
+        });
+        const signature = await signMessageAsync({
+          account: agentAddress,
+          message: registration.verificationMessage,
+        });
 
-      setSubmissionState("verifying");
-      const verified = await agentApi.verifyAgent(registration.agentId, signature);
-      if (sessionUserIdRef.current !== requestingUserId) return;
-      setVerification(verified);
-      // Re-read /agents/me so the "pending verification" banner (derived from the list) disappears with the new ACTIVE row.
-      refreshAgents();
-      onboardingLog("agent.registration.succeeded", {
-        wallet: maskWalletAddress(agentAddress),
-        agentId: verified.agentId,
-      });
-    } catch (caught) {
-      onboardingLog("agent.registration.failed", {
-        wallet: address ? maskWalletAddress(address) : null,
-        ...onboardingErrorDetails(caught),
-      });
-      // BE 400 VALIDATION_FAILED: message[]가 가리키는 필드를 인라인 에러로 돌려준다.
-      const rejected = agentErrorsFromValidationFields(validationFieldsFromError(caught), { name, description });
-      if (rejected.name || rejected.description) {
-        setFieldErrors(rejected);
-        setErrorMessage(t("errorInvalid"));
-      } else {
-        const key = errorCopyKey(caught, ERROR_COPY.agentRegister);
-        // The BE answers one code for "your own agent holds this wallet" and "another account's pending agent holds it".
-        // "View it in My agents" only helps in the first case: tell the user when /agents/me (already loaded) has no such agent.
-        const heldByOthers = key === "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED" && Boolean(agents) && !agents?.some((agent) => agent.walletAddress.toLowerCase() === agentAddress.toLowerCase());
-        setErrorMessage(tRegisterErrors(heldByOthers ? "walletHeldByOther" : key));
+        signingStage = false;
+        setSubmissionState("verifying");
+        const verified = await agentApi.verifyAgent(registration.agentId, signature);
+        if (sessionUserIdRef.current !== requestingUserId) return;
+        setVerification(verified);
+        // Re-read /agents/me so the "pending verification" banner (derived from the list) disappears with the new ACTIVE row.
+        refreshAgents();
+        onboardingLog("agent.registration.succeeded", {
+          wallet: maskWalletAddress(agentAddress),
+          agentId: verified.agentId,
+        });
+      } catch (caught) {
+        onboardingLog("agent.registration.failed", {
+          wallet: address ? maskWalletAddress(address) : null,
+          ...onboardingErrorDetails(caught),
+        });
+        // BE 400 VALIDATION_FAILED: message[]가 가리키는 필드를 인라인 에러로 돌려준다.
+        const rejected = agentErrorsFromValidationFields(validationFieldsFromError(caught), { name, description });
+        if (rejected.name || rejected.description) {
+          setFieldErrors(rejected);
+          setErrorMessage(t("errorInvalid"));
+        } else {
+          // Only a failure of the wallet signing step (rejected / failed in the wallet) gets the signature hint.
+          const key = signingStage && !(caught instanceof ApiHttpError) ? "signature" : errorCopyKey(caught, ERROR_COPY.agentRegister);
+          setProfileRequired(key === "PROFILE_REQUIRED");
+          // The BE answers one code for "your own agent holds this wallet" and "another account's pending agent holds it".
+          // "View it in My agents" only helps in the first case: tell the user when /agents/me (already loaded) has no such agent.
+          const heldByOthers = key === "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED" && Boolean(agents) && !agents?.some((agent) => agent.walletAddress.toLowerCase() === agentAddress.toLowerCase());
+          setErrorMessage(tRegisterErrors(heldByOthers ? "walletHeldByOther" : key));
+        }
+      } finally {
+        setSubmissionState("idle");
       }
-    } finally {
-      inFlightRef.current = false;
-      setSubmissionState("idle");
-    }
+    });
   }
 
   const fieldErrorText = (field: keyof AgentRegisterErrors) => {
@@ -286,7 +295,17 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
           {t("pending")}
         </p>
       ) : null}
-      {errorMessage ? <p className="mt-3 text-sm text-danger" role="alert">{errorMessage}</p> : null}
+      {errorMessage ? (
+        <p className="mt-3 text-sm text-danger" role="alert">
+          {errorMessage}
+          {profileRequired && auth.user ? (
+            <>
+              {" "}
+              <Link className="font-semibold underline" href={getOnboardingPath(auth.user) ?? "/"}>{tRegisterErrors("profileLink")}</Link>
+            </>
+          ) : null}
+        </p>
+      ) : null}
       {isWrongNetwork && switchError ? (
         <p className="mt-3 text-sm text-danger" role="alert">
           {tWallet(switchError === "rejected" ? "switchRejected" : "switchFailed")}
@@ -299,14 +318,18 @@ export function AgentRegisterForm({ chainId }: AgentRegisterFormProps) {
       ) : null}
 
       {!isConnected ? (
-        <button
-          className="mt-5 h-[46px] w-full rounded-control bg-primary px-5 text-sm font-semibold text-on-inverse disabled:opacity-60"
-          disabled={!hasInjectedWallet || !connector || isConnecting}
-          onClick={connect}
-          type="button"
-        >
-          {isConnecting ? t("connecting") : t("connect")}
-        </button>
+        <>
+          <button
+            aria-describedby={hasInjectedWallet ? undefined : noWalletId}
+            className="mt-5 h-[46px] w-full rounded-control bg-primary px-5 text-sm font-semibold text-on-inverse disabled:opacity-60"
+            disabled={!hasInjectedWallet || !connector || isConnecting}
+            onClick={connect}
+            type="button"
+          >
+            {isConnecting ? t("connecting") : t("connect")}
+          </button>
+          {hasInjectedWallet ? null : <p className="mt-2 text-sm text-warning" id={noWalletId}>{t("noWallet")}</p>}
+        </>
       ) : isWrongNetwork ? (
         <button
           className="mt-5 h-[46px] w-full rounded-control bg-warning-soft px-5 text-sm font-semibold text-warning disabled:opacity-60"

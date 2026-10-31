@@ -1,13 +1,10 @@
-import { Inter, Space_Grotesk } from "next/font/google";
+import { inter, spaceGrotesk } from "@/components/layout/fonts";
 import { getTranslations } from "next-intl/server";
 import { ClientIntlProvider } from "@/components/layout/ClientIntlProvider";
 import { getNotFoundCopy } from "@/components/layout/NotFoundSection";
 import { RootNotFoundCopy } from "@/components/layout/RootNotFoundCopy";
 import { type Locale, routing } from "@/i18n/routing";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
 
 // Root not-found (`/_not-found`): only paths outside the `[locale]` routes reach it (proxy-excluded files such as
 // `/logo.svg` or `/ko/missing.png`) - in-locale misses are rewritten by `src/proxy.ts` to the static, localized

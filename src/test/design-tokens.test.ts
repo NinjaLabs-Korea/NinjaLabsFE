@@ -39,3 +39,15 @@ describe("text color tokens meet WCAG AA", () => {
     expect(contrast(token(foreground), token(background))).toBeGreaterThanOrEqual(AA);
   });
 });
+
+describe("motion tokens", () => {
+  it.each(["--motion-fast", "--motion-base", "--motion-slow", "--ease-out-soft", "--animate-fade-in", "--animate-pop-in", "--animate-toast-in", "--animate-nav-progress"])("defines %s", (name) => {
+    expect(css).toContain(`${name}:`);
+  });
+  it.each(["motion-control", "motion-press", "spinner"])("defines the @utility %s", (name) => {
+    expect(css).toContain(`@utility ${name}`);
+  });
+  it("has a prefers-reduced-motion safety net", () => {
+    expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+  });
+});

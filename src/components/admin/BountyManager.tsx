@@ -7,15 +7,23 @@ import { AdminSelect } from "@/components/admin/AdminSelect";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
-import { useAdminList } from "@/components/admin/useAdminList";
+import { BOUNTY_TEXT_MAX } from "@/lib/input-limits";
+import { scrollIntoViewRespectingMotion } from "@/lib/scroll";
+import { opsInput, opsTextarea } from "@/components/admin/ops-ui";
+import { useAdminList, useAdminRecordDelete, useLoadFailedToast, useSingleFlightCallback } from "@/components/admin/useAdminList";
 import { Badge } from "@/components/ui/Badge";
+import { useKeyedSingleFlight } from "@/components/ui/useSingleFlight";
 import { RewardPill } from "@/components/ui/RewardPill";
-import { type AdminBounty, adminErrorDescription } from "@/lib/admin-helpers";
-import { BOUNTY_SPONSOR_MAX, BOUNTY_TEXT_MAX, BOUNTY_TITLE_MAX, bountyToForm, emptyBountyForm, formToBounty, isIsoDateTime, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
+import { type AdminBounty, adminErrorDescription, adminTextFieldErrors, expirePublicLists } from "@/lib/admin-helpers";
+import { bountyToForm, emptyBountyForm, formToBounty, isIsoDateTime, rewardIntegerDigitsMax, validateBountyForm, type BountyFormErrors, type BountyFormValues } from "@/lib/admin-bounty-form";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
+import { tokenDecimalsFor } from "@/lib/api/codecs";
 import { opsErrorCode } from "@/lib/admin-operations";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { Link } from "@/i18n/navigation";
+
+/** An OPEN bounty still reads Active in the BE until someone transitions it; past its deadline it no longer accepts submissions. */
+const isPastDeadline = (iso: string) => isIsoDateTime(iso) && new Date(iso).getTime() < Date.now();
 
 const columns = [
   { id: "title", widthClass: "w-[244px]" },
@@ -46,13 +54,9 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const [errors, setErrors] = useState<BountyFormErrors>({});
   const [originalDeadline, setOriginalDeadline] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
-  // Synchronous single-flight guard: several submit events can land in one tick, before React re-renders `saving`.
-  const savingRef = useRef(false);
-  const deletingRef = useRef(false);
   const [pendingDelete, setPendingDelete] = useState<AdminBounty | null>(null);
   // Bounties with a transition in flight: a second click would send the same target again and answer INVALID_TRANSITION right after the success toast.
-  const transitioning = useRef(new Set<string>());
-  const [transitioningSlugs, setTransitioningSlugs] = useState<ReadonlySet<string>>(new Set());
+  const transitionFlight = useKeyedSingleFlight();
   const formRef = useRef<HTMLElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const editing = mode.kind === "edit";
@@ -77,7 +81,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   // `reload` re-reads the list after a write. The write has already succeeded by then, so a failed re-read only says "could not load"
   // (never "save failed": a retry of an already-created bounty would create a duplicate).
   const fetchBounties = useCallback(() => api.getAdminBounties(), [api]);
-  const toastLoadFailed = useCallback(() => pushAdminToast({ variant: "danger", title: t("toast.loadFailedTitle"), description: t("toast.loadFailedDescription") }), [t]);
+  const toastLoadFailed = useLoadFailedToast(t("toast.loadFailedTitle"), t("toast.loadFailedDescription"));
   const { records, setRecords, loadState, reload, retry } = useAdminList(fetchBounties, bounties, toastLoadFailed);
 
   const updateForm = <Key extends keyof BountyFormValues>(key: Key, value: BountyFormValues[Key]) => {
@@ -87,7 +91,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   const fieldError = (key: keyof BountyFormValues) => {
     const error = errors[key];
-    return error ? <span className="mt-1 block text-xs font-normal text-danger" id={`bounty-${key}-error`}>{t(`form.errors.${error}`, { max: key === "description" ? BOUNTY_TEXT_MAX.description : key === "reviewProcess" ? BOUNTY_TEXT_MAX.reviewProcess : BOUNTY_TEXT_MAX.deliverables })}</span> : null;
+    return error ? <span className="mt-1 block text-xs font-normal text-danger" id={`bounty-${key}-error`}>{t(`form.errors.${error}`, { digits: rewardIntegerDigitsMax(tokenDecimalsFor(form.currency) ?? 18), max: key === "description" ? BOUNTY_TEXT_MAX.description : key === "reviewProcess" ? BOUNTY_TEXT_MAX.reviewProcess : BOUNTY_TEXT_MAX.deliverables })}</span> : null;
   };
 
   const invalidProps = (key: keyof BountyFormValues) =>
@@ -99,7 +103,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     clearCoverFile();
     setErrors({});
     setOriginalDeadline(undefined);
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   };
 
   const startEdit = (bounty: AdminBounty) => {
@@ -109,7 +113,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     clearCoverFile();
     setErrors({});
     setOriginalDeadline(initial.deadline);
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    scrollIntoViewRespectingMotion(formRef.current);
   };
 
   // The BE stores one `category` (`formToBounty` → `tags[0]`), so the chips are single-select: a multi-toggle let
@@ -118,16 +122,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
     setForm((current) => ({ ...current, tags: [tag] }));
   };
 
-  const save = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (savingRef.current) return;
-    const nextErrors = validateBountyForm(form, { originalDeadline, editing });
-    if (Object.values(nextErrors).some(Boolean)) {
-      setErrors(nextErrors);
-      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("form.errors.summary") });
-      return;
-    }
-    savingRef.current = true;
+  // Validation runs outside the single-flight guard: a rejected form must not hold it (a fixed retry right after has to go through).
+  const persistBounty = useSingleFlightCallback(async () => {
     setSaving(true);
     try {
       const coverImage = coverFile ? (await api.uploadAdminMedia(coverFile)).url : form.coverImage;
@@ -136,56 +132,70 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
         ? { slug: mode.slug, coverImage, existingStatus: existing?.status ?? "draft" }
         : { slug: "", coverImage });
       await api.saveAdminBounty(bounty, mode.kind === "create");
+      expirePublicLists(["bounties"]);
       pushAdminToast({ variant: "success", title: mode.kind === "edit" ? t("toast.updatedTitle") : t("toast.createdTitle"), description: tCommon("savedDescription", { title: form.title }) });
       startCreate();
       await reload();
     } catch (error) {
-      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
+      // A BE-only text rejection (hidden characters, nothing visible) names its property: show it on the field, not as a generic failure.
+      const inline = adminTextFieldErrors(error, { title: "title", sponsorName: "sponsor", description: "description", requirements: "deliverables", evaluationCriteria: "reviewProcess" } as const);
+      if (Object.keys(inline).length > 0) {
+        setErrors((current) => ({ ...current, ...inline }));
+        pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("form.errors.summary") });
+      } else {
+        pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: adminErrorDescription(error, tCommon, t("toast.saveFailedDescription")) });
+      }
     } finally {
-      savingRef.current = false;
       setSaving(false);
     }
+  });
+
+  const saveBounty = () => {
+    const nextErrors = validateBountyForm(form, { originalDeadline, editing });
+    if (Object.values(nextErrors).some(Boolean)) {
+      setErrors(nextErrors);
+      pushAdminToast({ variant: "danger", title: tCommon("saveFailed"), description: t("form.errors.summary") });
+      return;
+    }
+    void persistBounty();
+  };
+
+  const save = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void saveBounty();
   };
 
   const transition = async (bounty: AdminBounty) => {
-    if (transitioning.current.has(bounty.slug)) return;
     const to = bounty.status === "active" ? "SUBMISSION_CLOSED" : "OPEN";
-    transitioning.current.add(bounty.slug);
-    setTransitioningSlugs(new Set(transitioning.current));
-    try {
-      await api.transitionAdminBounty(bounty.slug, to);
-      pushAdminToast({ variant: "success", title: t("toast.statusUpdatedTitle"), description: t("toast.statusUpdatedDescription", { title: bounty.title, to }) });
-      await reload();
-    } catch (error) {
-      // A blocked transition (BE 400 with a blocker list, e.g. REWARDS_UNFUNDED) is the common failure here; the blockers themselves live in Operations.
-      const blocked = opsErrorCode(error, "transition").code === "TRANSITION_BLOCKED";
-      pushAdminToast({ variant: "danger", title: t("toast.transitionFailedTitle"), description: blocked ? t("toast.transitionBlockedDescription") : adminErrorDescription(error, tCommon, t("toast.transitionFailedDescription")) });
-    }
-    finally {
-      transitioning.current.delete(bounty.slug);
-      setTransitioningSlugs(new Set(transitioning.current));
-    }
+    await transitionFlight.run(bounty.slug, async () => {
+      try {
+        await api.transitionAdminBounty(bounty.slug, to);
+        expirePublicLists(["bounties"]);
+        pushAdminToast({ variant: "success", title: t("toast.statusUpdatedTitle"), description: t("toast.statusUpdatedDescription", { title: bounty.title, to }) });
+        await reload();
+      } catch (error) {
+        // A blocked transition (BE 400 with a blocker list, e.g. REWARDS_UNFUNDED) is the common failure here; the blockers themselves live in Operations.
+        const blocked = opsErrorCode(error, "transition").code === "TRANSITION_BLOCKED";
+        pushAdminToast({ variant: "danger", title: t("toast.transitionFailedTitle"), description: blocked ? t("toast.transitionBlockedDescription") : adminErrorDescription(error, tCommon, t("toast.transitionFailedDescription")) });
+      }
+    });
   };
 
-  const remove = async (bounty: AdminBounty) => {
-    // Single flight: a double click lands before the dialog closes, and every extra DELETE would answer 404/409 and toast "failed".
-    if (deletingRef.current) return;
-    deletingRef.current = true;
-    setPendingDelete(null);
-    try {
-      await api.deleteAdminBounty(bounty.slug);
-      setRecords((current) => current.filter((item) => item.slug !== bounty.slug));
+  const remove = useAdminRecordDelete<AdminBounty>({
+    call: (bounty) => api.deleteAdminBounty(bounty.slug),
+    keyOf: (bounty) => bounty.slug,
+    setRecords,
+    closeDialog: () => setPendingDelete(null),
+    onRemoved: (bounty) => {
+      expirePublicLists(["bounties"]);
       // The form may be editing the record that just went away: a later save would PATCH a missing row.
       if (mode.kind === "edit" && mode.slug === bounty.slug) startCreate();
-      pushAdminToast({ variant: "success", title: t("toast.deletedTitle"), description: bounty.title });
-    } catch (error) {
-      pushAdminToast({ variant: "danger", title: tCommon("deleteFailed"), description: adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")) });
-      // The row may be gone already (another admin deleted it) or have changed: show the server's list, not the stale one.
-      void reload();
-    } finally {
-      deletingRef.current = false;
-    }
-  };
+    },
+    describeError: (error) => adminErrorDescription(error, tCommon, t("toast.deleteFailedDescription")),
+    successToast: (bounty) => ({ title: t("toast.deletedTitle"), description: bounty.title }),
+    failedTitle: tCommon("deleteFailed"),
+    reload,
+  });
 
   return (
     <>
@@ -208,9 +218,9 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <td className={`px-5 py-4 text-sm text-ink-secondary ${adminLongTextCell}`}>{bounty.sponsor}</td>
               <td className="px-5 py-4"><RewardPill reward={bounty.reward} />{bounty.rewardContractAddress ? <p className="mt-1 text-xs text-ink-muted" title={bounty.rewardContractAddress}>EVM {bounty.rewardChainId} · {bounty.rewardContractAddress.slice(0, 6)}…{bounty.rewardContractAddress.slice(-4)}</p> : null}</td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{t(`intake.${bounty.intakeEnabled ? "ON" : "OFF"}`)}<p className="mt-1 text-xs text-ink-muted">{t(`submissionModes.${bounty.submissionMode === "agent" ? "Agent" : "Direct"}`)}</p></td>
-              <td className="px-5 py-4"><Badge variant={statusVariants[bounty.status]}>{t(`statuses.${bounty.status}`)}</Badge></td>
+              <td className="px-5 py-4">{bounty.status === "active" && isPastDeadline(bounty.deadline) ? <Badge variant="warning">{t("statuses.pastDeadline")}</Badge> : <Badge variant={statusVariants[bounty.status]}>{t(`statuses.${bounty.status}`)}</Badge>}</td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{deadlineCell(bounty.deadline)}</td>
-              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong disabled:cursor-not-allowed disabled:opacity-60" disabled={transitioningSlugs.has(bounty.slug)} onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<Link className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={{ pathname: "/admin/operations", query: { bounty: bounty.slug } }}>{t("operations")}</Link><button className="rounded-control border border-danger px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
+              <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong disabled:cursor-not-allowed disabled:opacity-60" disabled={transitionFlight.isBusy(bounty.slug)} onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<Link className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={{ pathname: "/admin/operations", query: { bounty: bounty.slug } }}>{t("operations")}</Link><button className="rounded-control border border-danger px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
             </tr>
           ))}
         </AdminTable>
@@ -223,28 +233,34 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
         <form noValidate onSubmit={save}>
           <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
             <label className="block text-sm font-semibold text-ink">{t("form.title")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("title")} maxLength={BOUNTY_TITLE_MAX} onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} type="text" value={form.title} />
+              <input className={opsInput} {...invalidProps("title")} onChange={(event) => updateForm("title", event.target.value)} placeholder={t("form.titlePlaceholder")} type="text" value={form.title} />
               {fieldError("title")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.sponsor")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("sponsor")} maxLength={BOUNTY_SPONSOR_MAX} onChange={(event) => updateForm("sponsor", event.target.value)} placeholder={t("form.sponsorPlaceholder")} type="text" value={form.sponsor} />
+              <input className={opsInput} {...invalidProps("sponsor")} onChange={(event) => updateForm("sponsor", event.target.value)} placeholder={t("form.sponsorPlaceholder")} type="text" value={form.sponsor} />
               {fieldError("sponsor")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.deadline")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("deadline")} onChange={(event) => updateForm("deadline", event.target.value)} required type="datetime-local" value={form.deadline} />
+              <input className={opsInput} {...invalidProps("deadline")} onChange={(event) => updateForm("deadline", event.target.value)} required type="datetime-local" value={form.deadline} />
               {fieldError("deadline")}
             </label>
+            {form.intake === "ON" || form.applicationDeadline ? (
+              <label className="block text-sm font-semibold text-ink">{t("form.applicationDeadline")}
+                <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("applicationDeadline")} onChange={(event) => updateForm("applicationDeadline", event.target.value)} type="datetime-local" value={form.applicationDeadline} />
+                {fieldError("applicationDeadline")}
+              </label>
+            ) : null}
             <div>
               <p className="text-sm font-semibold text-ink">{t("form.reward")}</p>
               <div className="mt-2 flex gap-3">
                 <div className="w-fit"><AdminSelect disabled={editing} label={t("form.rewardCurrency")} onChange={(value) => updateForm("currency", value as BountyFormValues["currency"])} options={["INJ", "USDC"]} value={form.currency} /></div>
-                <input aria-label={t("form.rewardAmount")} className="h-[46px] min-w-0 flex-1 rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("amount")} disabled={editing} inputMode="decimal" onChange={(event) => updateForm("amount", event.target.value)} placeholder={t("form.amountPlaceholder")} type="text" value={form.amount} />
+                <input aria-label={t("form.rewardAmount")} className={`${opsInput} mt-0! min-w-0 flex-1`} {...invalidProps("amount")} disabled={editing} inputMode="decimal" onChange={(event) => updateForm("amount", event.target.value)} placeholder={t("form.amountPlaceholder")} type="text" value={form.amount} />
               </div>
               {fieldError("amount")}
               {editing ? <p className="mt-2 text-xs text-ink-muted">{t("form.rewardLockedHint")}</p> : null}
             </div>
             <label className="block text-sm font-semibold text-ink">{t("form.maxWinners")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("maxWinners")} inputMode="numeric" onChange={(event) => updateForm("maxWinners", event.target.value)} type="text" value={form.maxWinners} />
+              <input className={opsInput} {...invalidProps("maxWinners")} inputMode="numeric" onChange={(event) => updateForm("maxWinners", event.target.value)} type="text" value={form.maxWinners} />
               {fieldError("maxWinners")}
               <span className="mt-2 block text-xs font-normal text-ink-muted">{t("form.maxWinnersHint")}</span>
             </label>
@@ -272,21 +288,21 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               </div>
             </div>
             <label className="block text-sm font-semibold text-ink">{t("form.description")}
-              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("description")} onChange={(event) => updateForm("description", event.target.value)} placeholder={t("form.descriptionPlaceholder")} value={form.description} />
+              <textarea className={opsTextarea} {...invalidProps("description")} onChange={(event) => updateForm("description", event.target.value)} placeholder={t("form.descriptionPlaceholder")} value={form.description} />
               {fieldError("description")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.deliverables")}
-              <textarea className="mt-2 min-h-[112px] w-full rounded-control border border-border px-[17px] py-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("deliverables")} onChange={(event) => updateForm("deliverables", event.target.value)} placeholder={t("form.deliverablesPlaceholder")} value={form.deliverables} />
+              <textarea className={opsTextarea} {...invalidProps("deliverables")} onChange={(event) => updateForm("deliverables", event.target.value)} placeholder={t("form.deliverablesPlaceholder")} value={form.deliverables} />
               <p className="mt-2 text-xs text-ink-muted">{t("form.deliverablesHint")}</p>
               {fieldError("deliverables")}
             </label>
             <label className="block text-sm font-semibold text-ink">{t("form.reviewProcess")}
-              <input className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" {...invalidProps("reviewProcess")} onChange={(event) => updateForm("reviewProcess", event.target.value)} placeholder={t("form.reviewProcessPlaceholder")} type="text" value={form.reviewProcess} />
+              <input className={opsInput} {...invalidProps("reviewProcess")} onChange={(event) => updateForm("reviewProcess", event.target.value)} placeholder={t("form.reviewProcessPlaceholder")} type="text" value={form.reviewProcess} />
               {fieldError("reviewProcess")}
             </label>
           </div>
           <button className="mt-5 h-[45px] rounded-control bg-primary px-4 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60" disabled={saving} type="submit">{saving ? tCommon("saving") : editing ? t("form.save") : t("form.create")}</button>
-          <p className="mt-3 text-xs text-ink-muted">{t("form.rewardNote")}</p>
+          {editing ? null : <p className="mt-3 text-xs text-ink-muted">{t("form.rewardNote")}</p>}
         </form>
       </section>
       <DeleteConfirmDialog onCancel={() => setPendingDelete(null)} onConfirm={() => pendingDelete && void remove(pendingDelete)} title={pendingDelete?.title ?? null} />

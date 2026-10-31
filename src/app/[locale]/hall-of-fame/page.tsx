@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import type { HighlightTypeLabel } from "@/lib/api/codecs";
-import { formatStatValue, loadRuntimeHallOfFame, visibleStats } from "@/lib/hall-of-fame";
+import { settle } from "@/lib/api/public";
+import { emptyHallOfFame, formatStatValue, getRuntimeHallOfFame, visibleStats } from "@/lib/hall-of-fame";
 import { imageProps } from "@/lib/image";
 import { localeMetadata } from "@/i18n/alternates";
 
@@ -30,6 +31,14 @@ const highlightLabelKeys = {
   Other: "other",
 } as const satisfies Record<HighlightTypeLabel, string>;
 
+const highlightCardClass = "min-w-0 overflow-hidden rounded-card border border-border bg-surface shadow-card";
+
+/** A highlight with a usable link is a link card; one without is a plain article (no hover/press affordance, no navigation). */
+function HighlightCard({ href, children }: { href: string | null; children: React.ReactNode }) {
+  if (!href) return <article className={highlightCardClass}>{children}</article>;
+  return <Link href={href} className={`${highlightCardClass} hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`}>{children}</Link>;
+}
+
 export async function generateMetadata({ params }: PageProps<"/[locale]/hall-of-fame">): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "hallOfFame.metadata" });
@@ -40,23 +49,32 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("hallOfFame");
-  const { hallOfFame, unavailable } = await loadRuntimeHallOfFame(locale);
+  const { value: hallOfFame, unavailable } = await settle(getRuntimeHallOfFame(locale), emptyHallOfFame);
   // A brand-new platform has all-zero stats: hide the block until one value is above zero.
   const stats = visibleStats(hallOfFame.stats);
+  // Nothing to show at all (and the API is reachable): say so instead of leaving a header over blank space.
+  const isEmpty = !unavailable && stats.length === 0 && hallOfFame.highlights.length === 0 && hallOfFame.milestones.length === 0 && hallOfFame.partners.length === 0;
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
+    <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <SectionHeader eyebrow={t("header.eyebrow")} heading={t("header.heading")} level={1} size="xl" />
           <p className="mt-4 max-w-[768px] text-lg text-ink-muted">{t("header.description")}</p>
         </div>
-        <Badge variant="success">{t("header.public")}</Badge>
       </div>
 
       {unavailable ? (
         <div className="mt-10 rounded-card border border-dashed border-border bg-surface-subtle p-6 text-center" role="status">
           <p className="font-display text-lg font-bold text-ink">{t("unavailable.title")}</p>
           <p className="mt-1 text-sm text-ink-muted">{t("unavailable.body")}</p>
+        </div>
+      ) : null}
+
+      {isEmpty ? (
+        <div className="mt-10 rounded-card border border-dashed border-border bg-surface-subtle p-8 text-center [overflow-wrap:anywhere]" data-testid="hall-of-fame-empty">
+          <p className="font-display text-lg font-bold text-ink">{t("empty.title")}</p>
+          <p className="mx-auto mt-1 max-w-md text-sm text-ink-muted">{t("empty.body")}</p>
+          <Link href="/notices" className="mt-4 inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">{t("empty.cta")}</Link>
         </div>
       ) : null}
 
@@ -80,7 +98,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
           <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-3">
             {hallOfFame.highlights.map((highlight, index) => (
               // Admin-entered titles are not unique: the index keeps React keys distinct.
-              <Link href={highlight.href} key={`${index}:${highlight.title}`} className="min-w-0 overflow-hidden rounded-card border border-border bg-surface shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+              <HighlightCard href={highlight.href} key={`${index}:${highlight.title}`}>
                 <div className="relative aspect-[16/9] bg-gradient-to-br from-primary-soft-border to-surface-subtle">
                   {highlight.image ? <Image {...imageProps(highlight.image)} alt="" className="object-cover" fill sizes="(max-width: 768px) 100vw, 370px" /> : null}
                 </div>
@@ -89,7 +107,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
                   <h3 className="mt-3 font-display text-lg font-bold text-ink">{highlight.title}</h3>
                   <p className="mt-2 text-sm text-ink-muted">{highlight.body}</p>
                 </div>
-              </Link>
+              </HighlightCard>
             ))}
           </div>
         </section>
@@ -115,7 +133,7 @@ export default async function HallOfFamePage({ params }: PageProps<"/[locale]/ha
           <SectionHeader eyebrow={t("partners.eyebrow")} heading={t("partners.heading")} />
           <ul className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
             {hallOfFame.partners.map((partner, index) => {
-              const logo = <span className="relative block h-12 w-full"><Image {...imageProps(partner.logo)} alt={partner.name} className="object-contain" fill sizes="(max-width: 640px) 50vw, 240px" /></span>;
+              const logo = <span className="relative block h-12 w-full rounded-tile bg-surface-subtle"><Image {...imageProps(partner.logo)} alt={partner.name} className="object-contain" fill sizes="(max-width: 640px) 50vw, 240px" /></span>;
               const tileClass = "flex h-28 items-center justify-center rounded-card border border-border bg-surface p-5 shadow-card";
               return (
                 <li key={`${index}:${partner.name}`}>

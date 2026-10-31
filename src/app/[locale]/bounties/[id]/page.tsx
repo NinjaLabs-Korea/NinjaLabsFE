@@ -5,8 +5,8 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 
 import { Badge } from "@/components/ui/Badge";
 import { BountyAgentPanel } from "@/components/agents/BountyAgentPanel";
-import { BountyAccessBadges } from "@/components/bounties/BountyAccessBadges";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
+import { LocalDateTime } from "@/components/bounties/LocalDateTime";
 import { Markdown } from "@/components/ui/Markdown";
 import { formatRewardAmount, isRewardUnset, RewardPill } from "@/components/ui/RewardPill";
 import { Link } from "@/i18n/navigation";
@@ -70,11 +70,15 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   const deliverables = bounty.deliverables ?? [];
   const rewards = bounty.rewards ?? [bounty.reward];
   const isClosedDeadline = bounty.deadline === "Closed";
+  // Application-required bounties lead with the short summary; the full markdown follows unless it is only that summary again.
+  const fullDescription = applicationRequired && bounty.applicationDescription
+    ? (bounty.descriptionMarkdown !== bounty.summary ? bounty.descriptionMarkdown : undefined)
+    : (bounty.descriptionMarkdown ?? bounty.summary);
   const stepKeys = applicationRequired ? afterApprovalStepKeys : completionStepKeys;
   const stepNamespace = applicationRequired ? "detail.afterApprovalSteps" : "detail.completionSteps";
 
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
+    <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <Link
         className="text-sm font-semibold text-primary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         href="/bounties"
@@ -98,7 +102,6 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               : <Badge variant="neutral">{submissionMode === "agent" ? t("detail.agentSubmission") : t("detail.directSubmission")}</Badge>}
           </div>
         </div>
-        <BountyAccessBadges actionsOpen={bounty.status === "active"} />
       </section>
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -108,35 +111,45 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">{applicationRequired ? t("detail.descriptionHeadingApply") : t("detail.descriptionHeading")}</h2>
             {applicationRequired && bounty.applicationDescription ? (
               <p className="mt-4 text-base text-ink-secondary">{bounty.applicationDescription}</p>
-            ) : (
+            ) : null}
+            {fullDescription ? (
               <div className="mt-4">
-                <Markdown>{bounty.descriptionMarkdown ?? bounty.summary}</Markdown>
+                <Markdown>{fullDescription}</Markdown>
               </div>
-            )}
-            {!applicationRequired ? (
+            ) : null}
+            <div className={`mt-8 grid grid-cols-1 gap-3 ${applicationRequired ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+              <MetaCell label={t("detail.deliverable")}>
+                {deliverables.length > 0
+                  ? deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)
+                  : <span>{bounty.submissionGuideMarkdown ? t("detail.deliverableSeeGuide") : t("detail.deliverableDescribed")}</span>}
+              </MetaCell>
+              {applicationRequired ? (
+                <>
+                  {/* No application deadline: nothing to show as a value (a status word like "Active" read as a date), so no cell. */}
+                  {bounty.applicationDeadlineDetail ? (
+                    <MetaCell label={t("detail.applicationDeadline")}>
+                      <LocalDateTime iso={bounty.applicationDeadlineAt} utcText={bounty.applicationDeadlineDetail} />
+                      {bounty.applicationClosed ? <span className="font-semibold text-danger">{t("detail.applicationsClosed")}</span> : null}
+                    </MetaCell>
+                  ) : null}
+                  <MetaCell label={t("detail.submissionDeadline")}>{bounty.deadlineDetail ? <LocalDateTime iso={bounty.deadlineAt} utcText={bounty.deadlineDetail} /> : t(isClosedDeadline ? "status.closed" : "status.active")}</MetaCell>
+                </>
+              ) : (
+                <MetaCell label={t("detail.deadline")}>{bounty.deadlineDetail ? <LocalDateTime iso={bounty.deadlineAt} utcText={bounty.deadlineDetail} /> : t(isClosedDeadline ? "status.closed" : "status.active")}</MetaCell>
+              )}
+              <MetaCell label={t("detail.review")}>{bounty.reviewProcess ?? t("detail.defaultReview")}</MetaCell>
+            </div>
+            {bounty.submissionGuideMarkdown ? (
               <>
-                <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <MetaCell label={t("detail.deliverable")}>
-                    {deliverables.length > 0
-                      ? deliverables.map((deliverable) => <span key={deliverable}>{deliverable}</span>)
-                      : <span>{bounty.submissionGuideMarkdown ? t("detail.deliverableSeeGuide") : t("detail.deliverableDescribed")}</span>}
-                  </MetaCell>
-                  <MetaCell label={t("detail.deadline")}>{bounty.deadlineDetail || t(isClosedDeadline ? "status.closed" : "status.active")}</MetaCell>
-                  <MetaCell label={t("detail.review")}>{bounty.reviewProcess ?? t("detail.defaultReview")}</MetaCell>
+                <h3 className="mt-8 font-display text-lg font-bold text-ink">{t("detail.submissionGuide")}</h3>
+                <div className="mt-3">
+                  <Markdown>{bounty.submissionGuideMarkdown}</Markdown>
                 </div>
-                {bounty.submissionGuideMarkdown ? (
-                  <>
-                    <h3 className="mt-8 font-display text-lg font-bold text-ink">{t("detail.submissionGuide")}</h3>
-                    <div className="mt-3">
-                      <Markdown>{bounty.submissionGuideMarkdown}</Markdown>
-                    </div>
-                  </>
-                ) : null}
               </>
             ) : null}
           </article>
 
-          <BountyActionPanel bountyId={bounty.slug} applicationRequired={applicationRequired} applicationClosed={bounty.applicationClosed} deadlinePassed={bounty.deadlinePassed} completed={bounty.completed} status={bounty.status} submissionMode={submissionMode} />
+          <BountyActionPanel bountyId={bounty.slug} applicationRequired={applicationRequired} applicationClosed={bounty.applicationClosed} closedReason={bounty.closedReason} status={bounty.status} submissionMode={submissionMode} />
 
           {applicationRequired ? (
             <section className="rounded-card border border-border bg-surface p-[21px] shadow-card">
@@ -160,7 +173,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               {rewards.map((reward) => <SponsorPaysPill key={reward.currency} label={t("detail.sponsorPays", { reward: isRewardUnset(reward) ? tReward("tbd") : `${formatRewardAmount(reward.amount, format.number)} ${reward.currency}` })} reward={reward} />)}
             </div>
             <ol className="mt-4 space-y-3">
-              {(["flow", "token", "noSwap"] as const).map((note, index) => (
+              {(["flow", "token"] as const).map((note, index) => (
                 <li className="flex gap-3 text-sm text-ink-secondary" key={note}>
                   <span className="shrink-0 text-xs font-bold leading-5 text-primary">{index + 1}</span>
                   {applicationRequired ? t(`detail.rewardNotesApply.${note}`, { currency: rewards[0].currency }) : t(`detail.rewardNotes.${note}`)}
@@ -185,7 +198,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
       </div>
 
       <p className="mt-8 text-sm text-ink-muted">
-        {applicationRequired ? t("detail.applyFootnote") : t("detail.footnote")}
+        {t("detail.footnote")}
       </p>
     </div>
   );

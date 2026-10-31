@@ -1,8 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getAdminBounties } from "@/lib/admin";
+import { BOUNTY_SPONSOR_MAX, BOUNTY_TITLE_MAX } from "@/lib/input-limits";
 import {
-  BOUNTY_SPONSOR_MAX,
-  BOUNTY_TITLE_MAX,
   bountyToForm,
   emptyBountyForm,
   formToBounty,
@@ -98,10 +97,10 @@ describe("admin bounty form mapping", () => {
   it("sends the admin's max winners on create and edit, and rejects values the BE refuses", () => {
     const form = { ...emptyBountyForm(), deadline: "2026-07-14T23:59", maxWinners: " 4 " };
     expect(formToBounty(form, { slug: "", coverImage: null }).maxWinners).toBe(4);
-    for (const bad of ["", "0", "-1", "1.5", "1e2", "abc", "2147483648"]) {
+    for (const bad of ["", "0", "-1", "1.5", "1e2", "abc", "1001", "2147483648"]) {
       expect(validateBountyForm({ ...{ ...emptyBountyForm(), title: "T", sponsor: "S", description: "D", deliverables: "R", reviewProcess: "P", deadline: "2026-07-14T23:59" }, maxWinners: bad }, { now: new Date("2026-01-01") }).maxWinners, bad).toBe("maxWinnersInvalid");
     }
-    for (const ok of ["1", "3", "2147483647"]) {
+    for (const ok of ["1", "3", "1000"]) {
       expect(validateBountyForm({ ...{ ...emptyBountyForm(), title: "T", sponsor: "S", description: "D", deliverables: "R", reviewProcess: "P", deadline: "2026-07-14T23:59" }, maxWinners: ok }, { now: new Date("2026-01-01") }).maxWinners, ok).toBeUndefined();
     }
   });
@@ -259,5 +258,40 @@ describe("isIsoDateTime", () => {
     expect(isIsoDateTime("07.14")).toBe(false);
     expect(isIsoDateTime("2026-10-25 12:34:56")).toBe(false);
     expect(isIsoDateTime("2026-10-25T12:34:56.1234567890Z")).toBe(false);
+  });
+});
+
+describe("admin bounty form: BE visible-text rules and code-point counting", () => {
+  const valid: BountyFormValues = { ...emptyBountyForm(), title: "T", sponsor: "S", deadline: "2030-01-01T10:00", description: "d", deliverables: "x", reviewProcess: "r" };
+  const now = new Date("2026-10-25T00:00:00.000Z");
+
+  it("counts the title in code points: 200 emoji pass, 201 fail", () => {
+    expect(validateBountyForm({ ...valid, title: "😀".repeat(BOUNTY_TITLE_MAX) }, { now })).toEqual({});
+    expect(validateBountyForm({ ...valid, title: "😀".repeat(BOUNTY_TITLE_MAX + 1) }, { now })).toEqual({ title: "titleTooLong" });
+    expect(validateBountyForm({ ...valid, sponsor: "😀".repeat(BOUNTY_SPONSOR_MAX) }, { now })).toEqual({});
+    expect(validateBountyForm({ ...valid, sponsor: "😀".repeat(BOUNTY_SPONSOR_MAX + 1) }, { now })).toEqual({ sponsor: "sponsorTooLong" });
+  });
+
+  it("rejects bidi override and control characters in title and sponsor (tab included), bidi only in body fields", () => {
+    expect(validateBountyForm({ ...valid, title: "abc‮def" }, { now })).toEqual({ title: "bidiChars" });
+    expect(validateBountyForm({ ...valid, title: "a\tb" }, { now })).toEqual({ title: "bidiChars" });
+    expect(validateBountyForm({ ...valid, sponsor: "a‮b" }, { now })).toEqual({ sponsor: "bidiChars" });
+    expect(validateBountyForm({ ...valid, description: "x‮y" }, { now })).toEqual({ description: "bidiChars" });
+    expect(validateBountyForm({ ...valid, reviewProcess: "x⁦y" }, { now })).toEqual({ reviewProcess: "bidiChars" });
+    expect(validateBountyForm({ ...valid, deliverables: "x‮y" }, { now })).toEqual({ deliverables: "bidiChars" });
+    // Multi-line bodies keep tabs and line breaks.
+    expect(validateBountyForm({ ...valid, description: "line1\n\tline2" }, { now })).toEqual({});
+  });
+
+  it("treats invisible-only text as missing", () => {
+    expect(validateBountyForm({ ...valid, title: "​​" }, { now })).toEqual({ title: "required" });
+    expect(validateBountyForm({ ...valid, description: "​​" }, { now })).toEqual({ description: "required" });
+    expect(validateBountyForm({ ...valid, deliverables: "​​" }, { now })).toEqual({ deliverables: "deliverablesRequired" });
+  });
+
+  it("limits the reward integer part to the BE 30-digit base-unit cap", () => {
+    expect(validateBountyForm({ ...valid, amount: "9".repeat(12) }, { now })).toEqual({});
+    expect(validateBountyForm({ ...valid, amount: "1" + "0".repeat(12) }, { now })).toEqual({ amount: "amountTooLarge" });
+    expect(validateBountyForm({ ...valid, currency: "USDC", amount: "1" + "0".repeat(12) }, { now })).toEqual({});
   });
 });

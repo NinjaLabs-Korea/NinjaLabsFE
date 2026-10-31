@@ -4,16 +4,23 @@
     "description": "在 Injective 上学习、构建与行动的人们的 Contributor Hub。开发者、营销人员、研究员、创作者都可以认识社区、了解往期活动并加入。",
     "og": {
       "alt": "Ninja Labs | Injective Contributor Hub",
-      "headline": "在 Injective 上学习、构建，",
-      "highlight": "一起行动的人。",
+      "headline": "在 Injective 上一起学习，",
+      "highlight": "一起构建。",
       "tagline": "在 Injective 上学习、构建与行动的人们的 Contributor Hub。"
     }
   },
+  "loading": "加载中",
   "layout": {
     "skipToContent": "跳到主要内容"
   },
   "localeSwitcher": {
-    "label": "语言"
+    "label": "语言",
+    "unsaved": {
+      "title": "要切换语言吗？",
+      "body": "页面将以新语言重新加载，您在此处输入的内容会被清除。",
+      "confirm": "切换并清除",
+      "cancel": "继续编辑"
+    }
   },
   "nav": {
     "bounties": "赏金",
@@ -32,18 +39,20 @@
     "getStarted": "开始使用"
   },
   "footer": {
-    "tagline": "构建、完成、拥有你的成果记录。就在 Injective。",
+    "tagline": "在 Injective 上一起学习、构建、行动。",
     "platform": "平台",
     "community": "社区",
-    "legal": "© 2026 Ninja Labs · 所有内容无需登录即可查看",
+    "legal": "© 2026 Ninja Labs",
     "contact": "联系我们",
     "privacy": "隐私政策",
-    "terms": "服务条款"
+    "terms": "服务条款",
+    "homeLabel": "Ninja Labs 首页",
+    "newTab": "（在新标签页打开）"
   },
   "userMenu": {
     "accountNavigation": "账户导航",
     "myProfile": "我的主页",
-    "myApplications": "我的申请",
+    "myApplications": "申请记录",
     "myAgents": "我的代理",
     "accountSettings": "账户设置",
     "signOut": "退出登录",
@@ -79,7 +88,9 @@
       "CHALLENGE_NOT_FOUND": "未找到验证请求。请再次点击“验证钱包”获取新的请求。",
       "CHALLENGE_EXPIRED": "验证请求已过期或已被使用。请再次点击“验证钱包”并签署新消息。",
       "INVALID_SIGNATURE": "签名与该钱包不匹配。请使用已连接的地址签名后重试。",
-      "WALLET_ALREADY_LINKED": "该钱包已关联到其他账户，或您的账户已有关联钱包。已关联的钱包无法在此更改。如果关联有误，或该钱包属于其他账户，请联系 Ninja Labs 团队。",
+      "WALLET_ALREADY_LINKED": "该钱包或此账户已有其他关联。如需更改，请联系 Ninja Labs 团队。",
+      "WALLET_LINKED_TO_OTHER_ACCOUNT": "该钱包已被其他账户使用。请连接其他钱包。",
+      "ACCOUNT_ALREADY_HAS_WALLET": "此账户已连接钱包。如需更换，请联系 Ninja Labs 团队。",
       "AGENT_WALLET_IS_OWNER_WALLET": "此地址已被你的某个代理用作钱包。请为账户连接另一个个人钱包。",
       "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
@@ -97,7 +108,7 @@
   },
   "stepIndicator": {
     "login": "1. 登录",
-    "wallet": "2. 钱包 + NFT",
+    "wallet": "2. 钱包（可选）",
     "profile": "3. 个人资料",
     "getStarted": "4. 开始使用"
   },
@@ -112,13 +123,13 @@
     "title": "出错了",
     "description": "无法加载此页面，请重试。",
     "retry": "重试",
-    "home": "返回首页"
+    "home": "回到首页"
   },
   "notFound": {
     "title": "页面未找到",
-    "description": "你要查找的页面不存在或已被移动。",
-    "home": "返回首页",
-    "browseBounties": "浏览赏金",
+    "description": "页面可能已移动或不存在。",
+    "home": "回到首页",
+    "notices": "查看公告",
     "metaTitle": "页面未找到 | Ninja Labs"
   },
   "reward": {
@@ -140,6 +151,14 @@
     "profileSaved": {
       "title": "资料已保存",
       "description": "你的修改已更新到账户和公开资料。"
+    },
+    "applicationWithdrawn": {
+      "title": "申请已撤回",
+      "description": "赏金仍在进行时，你可以重新申请。"
     }
+  },
+  "form": {
+    "requiredHint": "带 * 的为必填项。",
+    "invalidSummary": "有 {count} 项需要检查。"
   }
 }

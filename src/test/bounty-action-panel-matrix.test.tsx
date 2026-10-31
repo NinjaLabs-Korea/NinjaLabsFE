@@ -2,6 +2,7 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { resetAccountQueryCache } from "@/components/account/useAccountQuery";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import type { AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { ApiClient, ApiResult } from "@/lib/contracts/api";
@@ -92,6 +93,9 @@ const matrix = statuses.flatMap((status) =>
   authStatuses.flatMap((auth) => modes.flatMap((mode) => [true, false].map((applicationRequired) => [status, auth, mode, applicationRequired] as const))),
 );
 
+// The module-level reads are shared by every test: forget the answers remembered for the previous one.
+beforeEach(() => resetAccountQueryCache());
+
 describe("BountyActionPanel state matrix (no existing rows)", () => {
   beforeEach(() => {
     state.applications = Promise.resolve({ status: "available", data: [] });
@@ -162,12 +166,12 @@ describe("BountyActionPanel transitional states", () => {
     expect(await screen.findByRole("button", { name: "Submit" })).toBeTruthy();
   });
 
-  it("previews a disabled apply form for signed-out visitors with links to the intake rules and sign-up", async () => {
+  it("previews a disabled apply form for signed-out visitors with links to the how-it-works guide and sign-up", async () => {
     state.auth = auths["signed-out"];
     renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
     const note = await screen.findByRole("textbox", { name: "Application note" });
     expect((note.closest("fieldset") as HTMLFieldSetElement).disabled).toBe(true);
-    expect(screen.getByRole("link", { name: "View intake rules" }).getAttribute("href")).toBe("/bounties/apply");
+    expect(screen.getByRole("link", { name: "See how it works" }).getAttribute("href")).toBe("/bounties/apply");
     expect(screen.getByRole("link", { name: "Apply" }).getAttribute("href")).toBe("/signup?returnTo=%2Fbounties%2Fbounty-1");
     expect(screen.getByText("Submit disabled until approved")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
@@ -176,8 +180,8 @@ describe("BountyActionPanel transitional states", () => {
   it("sends the optional submission fields only when filled", async () => {
     renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
     fireEvent.change(await screen.findByLabelText("Completed work link"), { target: { value: "https://example.test/w" } });
-    fireEvent.change(screen.getByLabelText("Repository URL (optional)"), { target: { value: "https://github.com/x/y" } });
-    fireEvent.change(screen.getByLabelText("Commit SHA (optional)"), { target: { value: "abc1234" } });
+    fireEvent.change(screen.getByLabelText("Code repository (optional)"), { target: { value: "https://github.com/x/y" } });
+    fireEvent.change(screen.getByLabelText("Commit hash (optional, code work only)"), { target: { value: "abc1234" } });
     fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "Done" } });
     fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
     await waitFor(() => expect(submitBounty).toHaveBeenCalledTimes(1));

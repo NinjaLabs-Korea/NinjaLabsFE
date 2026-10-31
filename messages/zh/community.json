@@ -1,12 +1,12 @@
 {
   "metadata": {
-    "title": "关于 Ninja Labs | Ninja Labs",
+    "title": "关于我们 | Ninja Labs",
     "description": "认识在 Injective 上学习、构建与行动的 Contributor Hub:往期活动、成果与成员。"
   },
   "about": {
     "eyebrow": "关于 Ninja Labs",
     "heading": "在 Injective 上学习、构建、行动",
-    "body": "Ninja Labs 是在 Injective 上学习、构建与行动的人们的 Contributor Hub。开发者、营销人员、研究员、创作者,任何人都可以自由参与。",
+    "body": "Ninja Labs 是一个一起学习、举办活动、通过赏金做出真实成果的社区。",
     "roles": {
       "developer": {
         "title": "开发者",
@@ -14,7 +14,7 @@
       },
       "marketer": {
         "title": "营销人员",
-        "description": "壮大社区,讲好 Injective 的故事。"
+        "description": "壮大社区，讲好 Injective 的故事。"
       },
       "researcher": {
         "title": "研究员",
@@ -27,32 +27,34 @@
     }
   },
   "upcoming": {
-    "eyebrow": "进行中与即将举行",
     "heading": "进行中·即将举行的活动",
-    "viewAll": "查看全部活动 →"
+    "viewAll": "更多即将举行的活动 →"
   },
   "activities": {
-    "eyebrow": "往期活动",
     "heading": "我们一起做过的事",
-    "viewAll": "查看全部活动 →",
+    "viewAll": "更多往期活动 →",
     "unavailable": "暂时无法加载往期活动。",
-    "unavailableBody": "无法连接到服务器,请稍后刷新。",
-    "empty": "还没有活动动态,请稍后再来。"
+    "unavailableBody": "无法连接到服务器，请稍后刷新。",
+    "empty": "暂时还没有动态，新动态会最先出现在公告页。",
+    "emptyAction": "查看公告 →"
   },
   "achievements": {
     "eyebrow": "近期成果",
     "heading": "社区的成果",
     "viewAll": "查看荣誉殿堂 →",
     "unavailable": "暂时无法加载成果。",
-    "unavailableBody": "无法连接到服务器,请稍后刷新。",
-    "empty": "随着社区的推进,成果将显示在这里。"
+    "unavailableBody": "无法连接到服务器，请稍后刷新。",
+    "empty": "暂时还没有成果，新成果会陆续收录到名人堂。",
+    "emptyAction": "查看名人堂 →"
   },
   "members": {
-    "eyebrow": "成员",
     "heading": "认识成员",
     "viewAll": "全部成员 →",
     "unavailable": "暂时无法加载成员。",
-    "unavailableBody": "无法连接到服务器,请稍后刷新。",
-    "empty": "官方成员确定后将显示在这里。"
-  }
+    "unavailableBody": "无法连接到服务器，请稍后刷新。",
+    "empty": "暂时还没有公开的成员，想加入的话可以看看成员招募。",
+    "emptyAction": "查看成员招募 →"
+  },
+  "pageUnavailable": "暂时无法加载，请稍后再试。",
+  "retry": "请重试"
 }

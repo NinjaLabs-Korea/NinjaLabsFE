@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { BrandLink } from "@/components/layout/BrandLink";
 import { Link } from "@/i18n/navigation";
 import { CONTACT_EMAIL } from "@/lib/contact";
 
@@ -24,8 +25,8 @@ const injectiveLinks = [
   { href: "https://injective.com/", label: "Injective.com" },
   { href: "https://x.com/InjectiveKR", label: "X (@InjectiveKR)" },
   { href: "https://t.me/Injective_Korea", label: "Telegram (@Injective_Korea)" },
-  { href: "https://discord.com/invite/injective", label: "Discord" },
-  { href: "https://injhub.com/ecosystem/", label: "Ecosystem" },
+  { href: "https://discord.com/invite/injective", label: "Injective Discord" },
+  { href: "https://injhub.com/ecosystem/", label: "Injective Ecosystem" },
 ];
 
 export function Footer() {
@@ -34,16 +35,18 @@ export function Footer() {
 
   return (
     <footer className="bg-inverse-surface text-on-inverse">
-      <div className="mx-auto max-w-content px-6 pt-12">
+      <div className="mx-auto max-w-content px-gutter pt-12">
         <div className="flex flex-col justify-between gap-10 lg:flex-row">
           <div>
-            <Image
-              src="/brand/ninja-labs-kr-logo.png"
-              alt="Ninja Labs KR"
-              width={370}
-              height={86}
-              className="h-[34px] w-auto"
-            />
+            <BrandLink className="inline-block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" label={t("homeLabel")}>
+              <Image
+                src="/brand/ninja-labs-kr-logo.png"
+                alt=""
+                width={370}
+                height={86}
+                className="h-[34px] w-auto"
+              />
+            </BrandLink>
             <p className="mt-3 max-w-[287px] text-sm text-on-inverse-muted">
               {t("tagline")}
             </p>
@@ -63,16 +66,16 @@ export function Footer() {
           <p className="text-xs leading-4 text-on-inverse-muted">
             {t("legal")}
           </p>
-          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs leading-4 text-on-inverse-muted">
-            <Link className="text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/privacy">
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-0 text-xs sm:gap-x-3 sm:gap-y-1 leading-4 text-on-inverse-muted">
+            <Link className="motion-control inline-flex max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/privacy">
               {t("privacy")}
             </Link>
-            <Link className="text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/terms">
+            <Link className="motion-control inline-flex max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/terms">
               {t("terms")}
             </Link>
-            <span>
+            <span className="inline-flex max-sm:min-h-11 flex-wrap items-center gap-x-1">
               {t("contact")}{" "}
-              <a className="text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`mailto:${CONTACT_EMAIL}`}>
+              <a className="motion-control inline-flex max-sm:min-h-11 items-center text-on-inverse-secondary hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={`mailto:${CONTACT_EMAIL}`}>
                 {CONTACT_EMAIL}
               </a>
             </span>
@@ -92,23 +95,25 @@ function FooterLinkColumn({
   links: { href: string; label: string }[];
   external?: boolean;
 }) {
+  const t = useTranslations("common.footer");
   return (
     <div>
       <h2 className="text-sm font-semibold text-on-inverse/90">{heading}</h2>
-      <ul className="mt-2 space-y-2 text-sm leading-5">
+      <ul className="mt-1 text-sm leading-5 sm:mt-2 sm:space-y-2">
         {links.map(({ href, label }) => (
           <li key={label}>
             {external ? (
               <a
-                className="text-sm text-on-inverse-secondary"
+                className="motion-control inline-flex min-h-10 items-center sm:min-h-0 text-sm text-on-inverse-secondary"
                 href={href}
                 target="_blank"
                 rel="noreferrer"
               >
                 {label}
+                <span className="sr-only">{t("newTab")}</span>
               </a>
             ) : (
-              <Link className="text-sm text-on-inverse-secondary" href={href}>
+              <Link className="motion-control inline-flex min-h-10 items-center sm:min-h-0 text-sm text-on-inverse-secondary" href={href} prefetch={true}>
                 {label}
               </Link>
             )}

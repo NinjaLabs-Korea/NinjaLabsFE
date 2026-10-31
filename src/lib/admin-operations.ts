@@ -2,12 +2,12 @@
 // Client islands import from here; the BE mapping lives in `lib/api/admin.ts`, the in-memory twin in `lib/mocks/api-client.ts`.
 // Status values stay the BE codes verbatim (the console shows operators the real state machine); copy lives under
 // `admin.operations.*` / `admin.nftJobs.*`.
-import { ERROR_COPY, listedCode } from "./api/error-copy";
-import { ApiHttpError } from "./api/http";
+import { ERROR_COPY, listedCode, normalizedCode } from "./api/error-copy";
+import { PAYABLE_REWARD_STATUSES } from "./payout-status";
+import { isBountyFinished, isBountyInProgress, type BountyStatusCode } from "./bounty-status";
 
-/** BE `bounty.status` (NinjaLabsBE/src/bounties/bounty-status.ts). */
-export type BountyStatusCode = "DRAFT" | "FUNDING_PENDING" | "OPEN" | "SUBMISSION_CLOSED" | "IN_REVIEW" | "COMPLETED" | "CANCELLED";
-export const BOUNTY_STATUS_CODES: readonly BountyStatusCode[] = ["DRAFT", "FUNDING_PENDING", "OPEN", "SUBMISSION_CLOSED", "IN_REVIEW", "COMPLETED", "CANCELLED"];
+// The lifecycle predicates live in `bounty-status.ts`; re-exported so the console imports its rules from one place.
+export { isBountyFinished, isBountyInProgress };
 
 /** Mirror of the BE transition table (`bounty-status.ts TRANSITIONS`) - the mock uses it; api mode reads `lifecycle.allowedTransitions`. */
 export const BOUNTY_TRANSITIONS: Readonly<Partial<Record<BountyStatusCode, readonly BountyStatusCode[]>>> = {
@@ -17,10 +17,6 @@ export const BOUNTY_TRANSITIONS: Readonly<Partial<Record<BountyStatusCode, reado
   SUBMISSION_CLOSED: ["IN_REVIEW", "OPEN"],
   IN_REVIEW: ["COMPLETED", "OPEN"],
 };
-
-/** BE `BountyStatusPolicy.isInProgress` - reviews and payout requests are accepted only here. */
-export const isBountyInProgress = (status: string): boolean => status === "OPEN" || status === "SUBMISSION_CLOSED" || status === "IN_REVIEW";
-export const isBountyFinished = (status: string): boolean => status === "COMPLETED" || status === "CANCELLED";
 
 /** BE `LifecycleBlockerCode` (bounty-lifecycle.service.ts) - `admin.operations.blockers.<code>`. */
 export const LIFECYCLE_BLOCKER_CODES = ["DEADLINE_PASSED", "REWARDS_UNFUNDED", "PENDING_APPLICATIONS", "UNSUBMITTED_PARTICIPANTS", "UNRESOLVED_SUBMISSIONS", "UNPAID_WINNERS"] as const;
@@ -133,7 +129,7 @@ export function applicationDecisionsFor(application: Pick<OpsApplication, "statu
 
 export const canApprovePayout = (payout: Pick<OpsPayout, "status">): boolean => payout.status === "REQUESTED" || payout.status === "AWAITING_MULTISIG_APPROVAL";
 export const canMarkPayoutPaid = (payout: Pick<OpsPayout, "status">): boolean => payout.status === "APPROVED" || payout.status === "BROADCASTING";
-export const isRewardFunded = (reward: Pick<OpsReward, "status">): boolean => reward.status === "FUNDED" || reward.status === "PARTIALLY_PAID" || reward.status === "PAID";
+export const isRewardFunded = (reward: Pick<OpsReward, "status">): boolean => PAYABLE_REWARD_STATUSES.includes(reward.status);
 
 /** Two-person rule as the console shows it: blocked (needs another admin), allowed-with-audit, or a normal approval. */
 export function payoutApprovalMode(payout: Pick<OpsPayout, "requestedByMe">, policy: AdminOperations["policy"]): "self-blocked" | "self-allowed" | "normal" {
@@ -161,9 +157,6 @@ export function rewardHeadroom(reward: Pick<OpsReward, "cap" | "allocated">): st
 /** Mirror of NinjaLabsBE `common/validation/tx-hash.ts TX_HASH` (32-byte hex, optional lowercase `0x`, surrounding spaces trimmed). */
 export const TX_HASH_PATTERN = /^(0x)?[0-9a-fA-F]{64}$/;
 export const isTxHash = (value: string): boolean => TX_HASH_PATTERN.test(value.trim());
-
-/** BE review note/comment `@MaxLength(2000)`. */
-export const OPS_NOTE_MAX = 2000;
 
 // ── NFT jobs ────────────────────────────────────────────
 export const NFT_JOB_STATUSES = ["FAILED", "PENDING", "PROCESSING"] as const;
@@ -194,20 +187,16 @@ export type AdminNftJobPage = { items: AdminNftJob[]; page: number; pageSize: nu
  * 코드 목록은 `lib/api/error-copy.ts`의 `ERROR_COPY.adminOperations`가 소유한다 - 추가/삭제는 거기서.
  */
 export const OPS_ERROR_CODES = ERROR_COPY.adminOperations.codes;
-export type OpsErrorCode = (typeof OPS_ERROR_CODES)[number];
 
 /**
- * Normalizes a failed operations call to a message code. `INVALID_TRANSITION:OPEN->COMPLETED` → `INVALID_TRANSITION`;
- * a transition's 400 with a blocker list (Nest sends `message: string[]`, surfaced as VALIDATION_FAILED) → `TRANSITION_BLOCKED`;
- * 429 → `TOO_MANY_REQUESTS`; 401 → `UNAUTHORIZED`; a non-HTTP failure (fetch TypeError) → `NETWORK_ERROR`.
+ * Normalizes a failed operations call to a message code: `normalizedCode` (non-HTTP failure → `NETWORK_ERROR`, 401 → `UNAUTHORIZED`,
+ * 429 → `TOO_MANY_REQUESTS`, else the BE code), then two ops-specific rules: `INVALID_TRANSITION:OPEN->COMPLETED` → `INVALID_TRANSITION`;
+ * a transition's 400 with a blocker list (Nest sends `message: string[]`, surfaced as VALIDATION_FAILED) → `TRANSITION_BLOCKED`.
  * Returns `{ code, known }` - unknown codes keep their raw value for the `errors.unknown` copy.
  */
 export function opsErrorCode(error: unknown, context: "transition" | "other" = "other"): { code: string; known: boolean } {
-  if (!(error instanceof ApiHttpError)) return { code: "NETWORK_ERROR", known: true };
-  let code = error.code;
+  let code = normalizedCode(error);
   if (code.startsWith("INVALID_TRANSITION")) code = "INVALID_TRANSITION";
   else if (code === "VALIDATION_FAILED" && context === "transition") code = "TRANSITION_BLOCKED";
-  else if (error.status === 429) code = "TOO_MANY_REQUESTS";
-  else if (error.status === 401) code = "UNAUTHORIZED";
   return { code, known: listedCode(code, OPS_ERROR_CODES) !== null };
 }

@@ -21,8 +21,10 @@ import type {
   WalletApi,
 } from "@/lib/contracts/api";
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
+import { registerTabFoundationReset } from "@/lib/tab-foundation-reset";
 import { createApiApiClient } from "@/lib/api/api-client";
 import { createApiAuthAdapter } from "@/lib/api/auth-adapter";
+import { clearSessionHint, setSessionHint } from "@/lib/foundation/session-hint";
 
 export type { FoundationConfig } from "@/lib/runtime/config";
 import type { FoundationConfig } from "@/lib/runtime/config";
@@ -47,7 +49,7 @@ function createApiFoundation(apiUrl: string): FoundationContextValue {
 // 정적으로 import하면 fixture(preview 사용자, 가짜 API 키)가 모든 페이지의 클라이언트 번들에 실린다.
 async function loadMockFoundation(config: MockFoundationConfig): Promise<FoundationContextValue> {
   const [{ createSessionPreviewAuthAdapter }, { createMockApiClient }] = await Promise.all([
-    import("@/lib/foundation/auth-adapter"),
+    import("@/lib/mocks/session-preview-auth-adapter"),
     import("@/lib/mocks/api-client"),
   ]);
   return {
@@ -100,6 +102,31 @@ function createInitialState(config: FoundationConfig): FoundationState {
   return { value: createPendingFoundation(ready), ready };
 }
 
+/**
+ * One foundation per browser tab. A locale switch changes the `[locale]` segment, so React unmounts and remounts the whole
+ * shell (`AppShell` renders `<html>`), and with it this provider. A fresh adapter per mount would start in `loading`,
+ * run the session restore again (POST /api/auth/refresh + GET /auth/me) and flash every auth-dependent control
+ * (header menu, hub CTAs) as a placeholder. Reusing the same adapter keeps the signed-in or signed-out snapshot across
+ * the remount. The adapter already follows user changes itself (adoptOtherTabSession, sign-out), so caching the object
+ * does not keep a stale user. Never cached on the server: there every request renders its own `loading` foundation.
+ */
+let tabFoundation: { key: string; state: FoundationState } | null = null;
+
+const foundationKey = (config: FoundationConfig) => (config.mode === "api" ? `api:${config.apiUrl}` : "mock");
+
+function stateForMount(config: FoundationConfig): FoundationState {
+  if (typeof window === "undefined") return createInitialState(config);
+  const key = foundationKey(config);
+  if (tabFoundation?.key !== key) tabFoundation = { key, state: createInitialState(config) };
+  return tabFoundation.state;
+}
+
+/** Test seam: forget the cached foundation so the next mount builds a fresh adapter. */
+export function resetTabFoundationForTests(): void {
+  tabFoundation = null;
+}
+registerTabFoundationReset(resetTabFoundationForTests);
+
 export function FoundationProvider({
   children,
   config,
@@ -107,7 +134,7 @@ export function FoundationProvider({
   children: ReactNode;
   config: FoundationConfig;
 }>) {
-  const [state, setState] = useState(() => createInitialState(config));
+  const [state, setState] = useState(() => stateForMount(config));
   const { value, ready } = state;
 
   useEffect(() => {
@@ -115,6 +142,7 @@ export function FoundationProvider({
     let active = true;
     ready.then(
       (loaded) => {
+        if (tabFoundation && tabFoundation.state.ready === ready) tabFoundation.state = { value: loaded, ready: null };
         if (active) setState({ value: loaded, ready: null });
       },
       (error: unknown) => {
@@ -128,6 +156,18 @@ export function FoundationProvider({
   }, [ready]);
 
   useEffect(() => value.adapter.initialize?.(), [value]);
+
+  // Keep the tab's session hint in step with the auth snapshot (see session-hint.ts). `loading` and a session that could
+  // not be checked (`unavailable`, cookie kept) leave it as is; every real sign-out, logout, withdrawal or 401 clears it.
+  useEffect(() => {
+    const sync = () => {
+      const snapshot = value.adapter.getSnapshot();
+      if (snapshot.status === "signed-in") setSessionHint();
+      else if (snapshot.status === "signed-out" && snapshot.reason !== "unavailable") clearSessionHint();
+    };
+    sync();
+    return value.adapter.subscribe(sync);
+  }, [value]);
 
   return <FoundationContext.Provider value={value}>{children}</FoundationContext.Provider>;
 }

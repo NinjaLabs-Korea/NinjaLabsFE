@@ -1,12 +1,12 @@
 {
   "metadata": {
-    "title": "닌자랩스 멤버 모집 | Ninja Labs",
-    "description": "닌자랩스 다음 기수 멤버를 모집합니다. 커뮤니티를 확인하고 지원서를 보내 주세요."
+    "title": "멤버 모집 | Ninja Labs",
+    "description": "닌자랩스 다음 기수 멤버를 모집해요. 커뮤니티를 확인하고 지원서를 보내 주세요."
   },
   "hero": {
     "eyebrow": "멤버 모집",
     "heading": "닌자랩스와 함께 만들어요",
-    "description": "커뮤니티가 어떤 곳인지 확인한 뒤, 모집 중인 기수에 지원해 주세요. 가입(온보딩)을 마친 닌자랩스 계정이 필요해요."
+    "description": "커뮤니티를 둘러본 뒤, 모집 중인 기수에 지원해 주세요. 가입을 마친 계정이 필요해요."
   },
   "banner": {
     "label": "멤버 모집 안내",
@@ -34,12 +34,11 @@
     "retry": "다시 시도",
     "failed": {
       "title": "지금은 불러오지 못했어요.",
-      "body": "서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요."
+      "body": "서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요."
     },
     "noCohort": {
-      "title": "지금 모집 중인 기수가 없어요.",
-      "body": "다음 기수 모집은 공지사항으로 알려 드릴게요.",
-      "cta": "공지사항 보기"
+      "title": "지금은 모집 중이 아니에요.",
+      "body": "다음 기수 모집은 공지사항으로 알려 드릴게요. 그동안 지난 활동을 둘러보세요."
     },
     "signIn": {
       "title": "지원하려면 로그인이 필요해요",
@@ -53,12 +52,16 @@
         "upcoming": "아직 모집 전이에요.",
         "closed": "모집이 마감되었어요."
       },
-      "body": "다음 모집은 공지사항으로 알려 드릴게요."
+      "body": "다음 모집은 공지사항으로 알려 드릴게요. 그동안 지난 활동을 둘러보세요."
     },
     "onboarding": {
       "title": "먼저 가입을 마쳐 주세요",
-      "body": "지원하려면 가입(온보딩)을 마쳐야 해요. 남은 단계를 끝내면 이 페이지로 돌아올 수 있어요.",
+      "body": "지원하려면 가입을 먼저 마쳐야 해요. 남은 단계를 끝내면 이 페이지로 돌아와요.",
       "cta": "가입 이어서 하기"
+    },
+    "actions": {
+      "notices": "공지사항 보기",
+      "past": "지난 활동 보기"
     }
   },
   "form": {
@@ -66,11 +69,12 @@
     "eyebrow": "지원서",
     "title": "나를 소개해 주세요",
     "intro": {
-      "label": "자기소개 및 지원 동기*",
+      "label": "자기소개 및 지원 동기",
       "placeholder": "어떤 사람인지, 어떤 일을 해 왔는지, 왜 닌자랩스에 지원하는지 적어 주세요.",
-      "hint": "{min}~{max}자 추천 (최대 {limit}자)",
+      "hint": "{min}자 이상 적어 주세요 (최대 {limit}자)",
       "counter": "{count}/{limit}"
     },
+    "lead": "자기소개와 닌자랩스에서 하고 싶은 일을 알려 주세요. 모집 기간에는 지원서를 수정하거나 철회할 수 있습니다.",
     "reapplyIntro": "이전 지원서를 철회했어요. 모집 중이라면 다시 지원할 수 있어요.",
     "eyebrowEdit": "지원서 수정",
     "titleEdit": "지원서를 수정해요",
@@ -79,57 +83,19 @@
       "updated": "지원서를 수정했어요."
     },
     "displayName": {
-      "label": "이름 (실명 또는 닉네임)*",
+      "label": "이름 (실명 또는 닉네임)",
       "placeholder": "이름을 입력하세요",
       "hint": "최대 60자까지 입력할 수 있어요."
     },
     "telegram": {
-      "label": "Telegram 아이디*",
+      "label": "Telegram 아이디",
       "placeholder": "@your_telegram",
       "hint": "영문, 숫자, _ 5~32자예요. t.me 링크를 넣어도 돼요."
     },
     "twitter": {
-      "label": "Twitter 아이디*",
+      "label": "X(트위터) 아이디",
       "placeholder": "@your_x_id",
       "hint": "영문, 숫자, _ 1~15자예요. x.com 링크를 넣어도 돼요."
-    },
-    "web3Experience": {
-      "label": "Web3 경력*",
-      "options": {
-        "LT_1Y": "1년 미만",
-        "Y1_3": "1~3년",
-        "GT_3Y": "3년 이상"
-      }
-    },
-    "activityType": {
-      "label": "현재 활동 유형*",
-      "options": {
-        "DEVELOPER": "개발자",
-        "CONTENT_CREATOR": "콘텐츠 크리에이터",
-        "KOL": "KOL(인플루언서)",
-        "COMMUNITY_MARKETING": "커뮤니티·마케팅",
-        "RESEARCHER": "리서처",
-        "BIZDEV": "사업개발",
-        "STUDENT": "학생",
-        "OTHER": "기타"
-      },
-      "otherLabel": "어떤 활동인지 알려 주세요*",
-      "otherPlaceholder": "예: 디자이너"
-    },
-    "interestAreas": {
-      "label": "참여하고 싶은 분야*",
-      "hint": "해당하는 분야를 모두 골라 주세요.",
-      "options": {
-        "DEVELOPER": "개발자",
-        "CONTENT_CREATOR": "콘텐츠 크리에이터",
-        "KOL": "KOL(인플루언서)",
-        "COMMUNITY_MARKETING": "커뮤니티·마케팅",
-        "RESEARCHER": "리서처",
-        "BIZDEV": "사업개발",
-        "OTHER": "기타"
-      },
-      "otherLabel": "어떤 분야인지 알려 주세요*",
-      "otherPlaceholder": "예: UX 리서치"
     },
     "submit": "지원서 보내기",
     "submitting": "보내는 중…",
@@ -142,11 +108,12 @@
       "tooLong": "너무 길어요. 최대 {max}자까지 입력할 수 있어요.",
       "invalid": "서버가 이 값을 받아들이지 않았어요. 확인 후 다시 시도해 주세요.",
       "telegramInvalid": "영문으로 시작하는 영문·숫자·_ 5~32자로 입력해 주세요.",
-      "twitterInvalid": "영문·숫자·_ 1~15자로 입력해 주세요."
+      "twitterInvalid": "영문·숫자·_ 1~15자로 입력해 주세요.",
+      "otherRequired": "내용을 적어 주세요."
     },
     "saveErrors": {
       "network": "지원서를 보내지 못했어요. 연결을 확인하고 다시 시도해 주세요.",
-      "session": "로그인 세션이 끝났어요. 다시 로그인해 주세요.",
+      "session": "로그인이 만료됐어요. 쓰던 내용은 이 화면에 그대로 있어요. 새 탭에서 다시 로그인한 뒤 돌아와 보내 주세요.",
       "invalid": "모든 항목을 확인한 뒤 다시 시도해 주세요.",
       "generic": "지원서를 저장하지 못했어요. 다시 시도해 주세요.",
       "PROFILE_REQUIRED": "지원하려면 가입(프로필 단계)을 먼저 마쳐야 해요.",
@@ -155,10 +122,16 @@
       "COHORT_ALREADY_APPLIED": "이미 이 기수에 지원했어요. 화면을 새로 불러왔어요.",
       "COHORT_APPLICATION_NOT_FOUND": "지원서를 찾을 수 없어요.",
       "COHORT_APPLICATION_NOT_SUBMITTED": "이미 심사되었거나 철회된 지원서라 수정할 수 없어요.",
-      "COHORT_OTHER_DETAIL_REQUIRED": "‘기타’를 골랐다면 내용을 적어 주세요.",
+      "COHORT_OTHER_DETAIL_REQUIRED": "고른 항목의 내용을 적어 주세요.",
       "INVALID_CHARACTER": "저장할 수 없는 문자가 들어 있어요. 지우고 다시 시도해 주세요.",
-      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
-      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
+      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없어요. 잠시 후 다시 시도해 주세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.",
+      "COHORT_ANSWERS_INVALID": "모집 질문이 바뀌었어요. 새 질문을 확인하고 다시 보내 주세요."
+    },
+    "question": {
+      "counter": "{count}/{limit}",
+      "detailLabel": "자세히 알려 주세요",
+      "detailPlaceholder": "예: UX 리서치"
     }
   },
   "status": {
@@ -197,10 +170,13 @@
     "withdrawErrors": {
       "COHORT_APPLICATION_NOT_FOUND": "지원서를 찾을 수 없어요.",
       "COHORT_APPLICATION_NOT_SUBMITTED": "이미 심사되었거나 철회된 지원서예요.",
-      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
-      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없어요. 잠시 후 다시 시도해 주세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.",
       "generic": "지원서를 철회하지 못했어요. 잠시 후 다시 시도해 주세요."
     }
+  },
+  "past": {
+    "heading": "이전 지원 내역"
   },
   "account": {
     "heading": "기수 지원 현황",

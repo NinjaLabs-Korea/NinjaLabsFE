@@ -1,5 +1,6 @@
 import { formatUtcDate, toCategoryLabel, toRewards, type RewardRow } from "./api/codecs";
 import type { Bounty } from "./types";
+import { toClosedReason, toLifecycleStatus, toPublicStatus } from "./bounty-status";
 import { fetchAllPublicPages } from "./api/paging";
 import { cache } from "react";
 import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH } from "./api/public";
@@ -12,7 +13,7 @@ export const bounties: Bounty[] = [
     slug: "wallet-onboarding-states", title: "Design wallet onboarding states", summary: "Map install, connect, failure, and retry states for new builders.", descriptionMarkdown: "Design a wallet onboarding flow that helps new builders understand each connection state. Account for success, failure, and recovery without making the first connection feel intimidating.\n\nDeliver an **annotated end-to-end flow** with high-fidelity screens and handoff notes that engineers can implement directly, covering every state a new builder can land in.", submissionGuideMarkdown: "Include the full design package so review can start immediately.\n\n- The annotated onboarding flow showing every connection state\n- High-fidelity screens for success, failure, and recovery paths\n- State documentation and handoff notes for engineering", category: "Design", status: "active", reward: { amount: 300, currency: "USDC" }, sponsor: "Helix", deadline: "Open", daysLeft: 5, coverImage: "", deliverables: ["Annotated flow", "High-fidelity screens", "State and handoff notes"], reviewProcess: "Ninja Labs reviews the flow before Helix approves the final handoff.", submissionMode: "direct",
   },
   {
-    slug: "contract-security-audit", title: "Smart contract security audit", summary: "Review a CosmWasm reward vault and deliver a concise findings report.", descriptionMarkdown: "Review an Injective smart contract for security issues and document findings with reproducible evidence. Focus on meaningful risks, practical remediation, and a report a sponsor can act on.\n\nProduce an **actionable audit report** that ranks findings by severity, includes reproduction notes for each issue, and gives the sponsor concrete remediation steps.", submissionGuideMarkdown: "Package findings so the sponsor can verify and act on them quickly.\n\n- The audit report with findings ranked by severity\n- Reproduction notes with exact steps and evidence for each finding\n- Remediation recommendations mapped to each issue", category: "Dev", status: "active", reward: { amount: 800, currency: "USDC" }, sponsor: "Ninja Labs", deadline: "Open", daysLeft: 12, coverImage: "", deliverables: ["Audit report", "Reproduction notes", "Remediation recommendations"], reviewProcess: "Ninja Labs validates findings and coordinates sponsor review.", submissionMode: "direct", applicationRequired: true, applicationTitle: "Smart contract audit for reward vault", applicationDescription: "Audit the CosmWasm reward vault before mainnet exposure. Applications are reviewed by the sponsor; approved applicants receive the audit scope and submit findings with reproducible evidence.",
+    slug: "contract-security-audit", title: "Smart contract security audit", summary: "Review a CosmWasm reward vault and deliver a concise findings report.", descriptionMarkdown: "Review an Injective smart contract for security issues and document findings with reproducible evidence. Focus on meaningful risks, practical remediation, and a report a sponsor can act on.\n\nProduce an **actionable audit report** that ranks findings by severity, includes reproduction notes for each issue, and gives the sponsor concrete remediation steps.", submissionGuideMarkdown: "Package findings so the sponsor can verify and act on them quickly.\n\n- The audit report with findings ranked by severity\n- Reproduction notes with exact steps and evidence for each finding\n- Remediation recommendations mapped to each issue", category: "Dev", status: "active", reward: { amount: 800, currency: "USDC" }, sponsor: "Ninja Labs", deadline: "Open", daysLeft: 12, coverImage: "", deliverables: ["Audit report", "Reproduction notes", "Remediation recommendations"], reviewProcess: "Ninja Labs validates findings and coordinates sponsor review.", submissionMode: "direct", applicationRequired: true, applicationTitle: "Smart contract audit for reward vault", applicationDeadlineDetail: "June 30, 2026 at 23:59 UTC", deadlineDetail: "July 14, 2026 at 23:59 UTC", applicationDescription: "Audit the CosmWasm reward vault before mainnet exposure. Applications are reviewed by the sponsor; approved applicants receive the audit scope and submit findings with reproducible evidence.",
   },
   {
     slug: "injective-dev-tutorial", title: "Write an Injective dev tutorial", summary: "Explain account funding, contract interaction, and testnet verification.", descriptionMarkdown: "Write an educational tutorial that helps Injective developers complete a useful task from start to finish. Use clear steps, accurate examples, and enough context for a new builder to follow along.\n\nDeliver a **published-ready tutorial draft** with working code examples that have been verified against current Injective tooling, so editorial review can focus on clarity instead of correctness.", submissionGuideMarkdown: "Submit the tutorial in a form the editorial team can verify and publish.\n\n- The tutorial draft in published-ready markdown\n- Working code examples verified against current Injective tooling\n- A short note on the developer task covered and any prerequisites", category: "Content", status: "active", reward: { amount: 250, currency: "INJ" }, sponsor: "Injective", deadline: "Open", daysLeft: 9, coverImage: "", deliverables: ["Tutorial draft", "Working code examples", "Published-ready markdown"], reviewProcess: "Ninja Labs checks technical accuracy before Injective editorial approval.", submissionMode: "direct",
@@ -30,16 +31,15 @@ export const bounties: Bounty[] = [
     slug: "agent-skill-benchmark", title: "Agent skill benchmark suite", summary: "Score agent submissions against a reproducible Injective task set.", descriptionMarkdown: "Build a benchmark suite that scores AI agent submissions against a reproducible set of Injective tasks. Submissions are in and the sponsor is reviewing them; a requested revision can still be resubmitted.\n\nDeliver a **runnable benchmark harness** with task definitions, scoring rules, and a results report.", submissionGuideMarkdown: "Submit the harness in a state reviewers can run end to end.\n\n- The benchmark repository with setup instructions\n- Task definitions and scoring rules\n- A results report for the reference agents", category: "Dev", status: "reviewing", reward: { amount: 400, currency: "INJ" }, sponsor: "Ninja Labs", deadline: "Closed", deadlineDetail: "July 10, 2026 at 23:59 UTC", coverImage: "", deliverables: ["Benchmark repository", "Task definitions and scoring rules", "Results report"], reviewProcess: "Ninja Labs scores the harness before sponsor approval.", submissionMode: "direct",
   },
   {
-    slug: "design-system-build", title: "Design system build", summary: "Component inventory and page polish for the first Ninja Labs client demo.", descriptionMarkdown: "Create a consistent design system for an Injective product with reusable foundations and components. The completed work should make future product surfaces easier to build and maintain.\n\nThe finished system paired a **reusable component library** with design foundations and usage guidance so teams could adopt it without guesswork.", category: "Design", status: "closed", completed: true, reward: { amount: 300, currency: "INJ" }, sponsor: "Helix", deadline: "Closed", coverImage: "", deliverables: ["Design foundations", "Component library", "Usage guidance"], reviewProcess: "Ninja Labs reviewed the system and approved the completed delivery.", submissionMode: "direct",
+    slug: "design-system-build", title: "Design system build", summary: "Component inventory and page polish for the first Ninja Labs client demo.", descriptionMarkdown: "Create a consistent design system for an Injective product with reusable foundations and components. The completed work should make future product surfaces easier to build and maintain.\n\nThe finished system paired a **reusable component library** with design foundations and usage guidance so teams could adopt it without guesswork.", category: "Design", status: "closed", closedReason: "completed", reward: { amount: 300, currency: "INJ" }, sponsor: "Helix", deadline: "Closed", coverImage: "", deliverables: ["Design foundations", "Component library", "Usage guidance"], reviewProcess: "Ninja Labs reviewed the system and approved the completed delivery.", submissionMode: "direct",
   },
   {
-    slug: "quest-copy-refresh", title: "Quest copy refresh", summary: "Rewrite onboarding quests to make first testnet actions easier to finish.", descriptionMarkdown: "Refresh onboarding quest copy so builders understand each step and its value. Keep the voice direct, useful, and consistent across the quest experience.\n\nThe refresh delivered **updated quest copy** alongside voice and terminology notes so future edits stay consistent with the builder-facing tone.", category: "Content", status: "closed", completed: true, reward: { amount: 150, currency: "USDC" }, sponsor: "Ninja Labs", deadline: "Closed", coverImage: "", deliverables: ["Updated quest copy", "Voice and terminology notes", "Change summary"], reviewProcess: "Ninja Labs and Injective approved the completed copy refresh.", submissionMode: "direct",
+    slug: "quest-copy-refresh", title: "Quest copy refresh", summary: "Rewrite onboarding quests to make first testnet actions easier to finish.", descriptionMarkdown: "Refresh onboarding quest copy so builders understand each step and its value. Keep the voice direct, useful, and consistent across the quest experience.\n\nThe refresh delivered **updated quest copy** alongside voice and terminology notes so future edits stay consistent with the builder-facing tone.", category: "Content", status: "closed", closedReason: "completed", reward: { amount: 150, currency: "USDC" }, sponsor: "Ninja Labs", deadline: "Closed", coverImage: "", deliverables: ["Updated quest copy", "Voice and terminology notes", "Change summary"], reviewProcess: "Ninja Labs and Injective approved the completed copy refresh.", submissionMode: "direct",
   },
 ];
 
 export function getBounties(): Bounty[] { return bounties; }
 export function getBounty(slug: string): Bounty | undefined { return bounties.find((bounty) => bounty.slug === slug); }
-export function getActiveBounties(): Bounty[] { return bounties.filter((bounty) => bounty.status === "active"); }
 
 type BountyRewardRow = RewardRow & { tokenType: string };
 type BountyListRow = {
@@ -74,23 +74,8 @@ function isPast(deadline: string | null, now = Date.now()): boolean {
   return deadline !== null && new Date(deadline).getTime() <= now;
 }
 
-/** BE lifecycle → public status. DRAFT/FUNDING_PENDING never reach the public list, so anything else that is not open or under review is closed. */
-export function toBountyStatus(status: string): Bounty["status"] {
-  if (status === "OPEN") return "active";
-  if (status === "SUBMISSION_CLOSED" || status === "IN_REVIEW") return "reviewing";
-  return "closed";
-}
-
-/**
- * Public status including the deadline: a BE `OPEN` bounty whose `submission_deadline` has passed (or cannot be parsed)
- * no longer accepts applications or submissions (BE answers DEADLINE_PASSED), so it presents as `closed` - status badge,
- * list chip and action panel alike - instead of "Active" with no countdown.
- */
-export function toPublicBountyStatus(status: string, submissionDeadline: string, now = Date.now()): Bounty["status"] {
-  if (status !== "OPEN") return toBountyStatus(status);
-  const deadline = new Date(submissionDeadline).getTime();
-  return Number.isNaN(deadline) || deadline <= now ? "closed" : "active";
-}
+// The BE status folds (public status, closed reason) live in `bounty-status.ts`; these names stay for existing callers and tests.
+export { toLifecycleStatus as toBountyStatus, toPublicStatus as toPublicBountyStatus };
 
 const DEADLINE_DETAIL_FORMAT: Intl.DateTimeFormatOptions = {
   year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short",
@@ -117,15 +102,17 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
   const rewards = toRewards(row.rewards);
   const detail = "description" in row ? row : null;
   const submissionMode = row.submission_mode === "AGENT" ? "agent" : "direct";
-  const status = toPublicBountyStatus(row.status, row.submission_deadline);
+  const status = toPublicStatus(row.status, row.submission_deadline);
+  const closedReason = toClosedReason(row.status, status);
   const daysLeft = status === "active" ? daysUntil(row.submission_deadline) : 0;
+  const applicationDeadlineDetail = formatUtcDate(row.application_deadline, locale, DEADLINE_DETAIL_FORMAT);
   return {
     slug: row.id,
     title: row.title,
     summary: row.summary,
     category: toCategoryLabel(row.category) ?? "Other",
     status,
-    ...(row.status === "COMPLETED" ? { completed: true } : {}),
+    ...(closedReason ? { closedReason } : {}),
     reward: rewards[0] ?? { amount: 0, currency: "INJ" },
     ...(rewards.length > 1 ? { rewards } : {}),
     sponsor: row.sponsor_name,
@@ -133,6 +120,8 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     ...(daysLeft > 0 ? { daysLeft } : {}),
     // UTC-pinned like every other displayed date; "" when the BE value cannot be parsed (the detail page then shows the status label).
     deadlineDetail: formatUtcDate(row.submission_deadline, locale, DEADLINE_DETAIL_FORMAT),
+    ...(row.submission_deadline ? { deadlineAt: row.submission_deadline } : {}),
+    ...(row.application_required && row.application_deadline ? { applicationDeadlineAt: row.application_deadline } : {}),
     coverImage: row.cover_image_url ?? "",
     descriptionMarkdown: detail?.description ?? row.summary,
     submissionGuideMarkdown: detail?.requirements,
@@ -143,7 +132,7 @@ function toBounty(row: BountyListRow | BountyDetailRow, locale: string): Bounty 
     applicationRequired: row.application_required,
     applicationTitle: row.application_required ? row.title : undefined,
     applicationDescription: row.application_required ? row.summary : undefined,
-    ...(row.status === "OPEN" && status === "closed" ? { deadlinePassed: true } : {}),
+    ...(row.application_required && applicationDeadlineDetail ? { applicationDeadlineDetail } : {}),
     ...(row.application_required && isPast(row.application_deadline) ? { applicationClosed: true } : {}),
   };
 }
@@ -172,15 +161,6 @@ export function pickGuideBounties(list: readonly Bounty[]): { applicationBounty?
     applicationBounty: active.find((bounty) => bounty.applicationRequired && !bounty.applicationClosed),
     directBounty: active.find((bounty) => !bounty.applicationRequired),
   };
-}
-
-/** Page-level loader: an unreachable API renders an unavailable state instead of the error boundary. */
-export async function loadRuntimeBounties(locale: string): Promise<{ bounties: Bounty[]; unavailable: boolean }> {
-  try {
-    return { bounties: await getRuntimeBounties(locale), unavailable: false };
-  } catch {
-    return { bounties: [], unavailable: true };
-  }
 }
 
 /**

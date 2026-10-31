@@ -9,8 +9,8 @@ export type Bounty = {
   category: BountyCategory;
   /** `reviewing` = BE SUBMISSION_CLOSED | IN_REVIEW: no new applications/submissions, but a requested revision can still be resubmitted. */
   status: 'active' | 'reviewing' | 'closed';
-  /** Closed because the work was finished (BE COMPLETED), not cancelled or past its deadline; the landing hero lists only these as completed work. */
-  completed?: boolean;
+  /** Why a `closed` bounty is closed (`lib/bounty-status.ts toClosedReason`): finished work, a cancellation, or only its deadline having passed. Omitted while `active` / `reviewing`. */
+  closedReason?: 'completed' | 'cancelled' | 'deadline';
   /** Primary reward (first funded token); shown on cards. */
   reward: Reward;
   /** Every reward token the bounty pays, primary first. Omitted when only `reward` exists. */
@@ -22,6 +22,9 @@ export type Bounty = {
   daysLeft?: number;
   // Figma 14 (list card) shows the D-7 label; Figma 15 (detail meta cell) shows the full UTC deadline
   deadlineDetail?: string;
+  /** ISO instants behind the two detail strings, so the detail page can show the viewer's local time. */
+  deadlineAt?: string;
+  applicationDeadlineAt?: string;
   coverImage: string;
   /** Markdown (rendered by ui/Markdown): supported subset is p/a/strong/em/ul/ol/li/h2/h3/code/pre/blockquote/br/del. Tables, images, and task lists are unsupported by design. */
   descriptionMarkdown?: string;
@@ -35,10 +38,10 @@ export type Bounty = {
   /** Figma 15v renders variant-specific masthead/description copy without changing list copy. */
   applicationTitle?: string;
   applicationDescription?: string;
+  /** UTC-formatted BE `application_deadline`; application-required bounties only, absent when null or unparsable. */
+  applicationDeadlineDetail?: string;
   /** Application-required bounty whose `application_deadline` has passed: new applications are refused (BE `APPLICATION_DEADLINE_PASSED`); approved applicants can still submit. */
   applicationClosed?: boolean;
-  /** BE status is still `OPEN` but `submission_deadline` has passed, so `status` is `closed`: no new submissions, yet a requested revision can still be resubmitted (BE `canResubmitAfterIntakeClosed`). */
-  deadlinePassed?: boolean;
 };
 
 export type Notice = {
@@ -118,6 +121,8 @@ export type Profile = {
   initials: string;
   bio: string;
   skills: BountyCategory[];
+  /** Official team role (public profile `is_member` + `member_role`); absent for ordinary builders. */
+  teamRole?: Member["role"];
   joinedAt: string;
   completions: Completion[];
   nfts: ProfileNft[];

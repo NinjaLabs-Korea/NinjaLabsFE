@@ -20,9 +20,12 @@ export default async function SignupPage({ params }: PageProps<"/[locale]/signup
   const { locale } = await params;
   setRequestLocale(locale);
   const tLogin = await getTranslations("signup.login");
-  const t = await getTranslations(`signup.login.${loadRuntimeConfig().runtimeMode}`);
+  const config = loadRuntimeConfig();
+  const t = await getTranslations(`signup.login.${config.runtimeMode}`);
+  // Mock mode never renders the widget (GoogleLoginButton), so only api mode with a site key reserves its height.
+  const withTurnstile = config.runtimeMode !== "mock" && Boolean(config.turnstileSiteKey);
   return (
-    <section className="mx-auto max-w-content px-6 py-16 pb-20">
+    <section className="mx-auto max-w-content px-gutter py-16 pb-20">
       <div className="mx-auto max-w-[768px]">
         <div>
           <SignupStepIndicator current={1} />
@@ -34,8 +37,8 @@ export default async function SignupPage({ params }: PageProps<"/[locale]/signup
             <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] text-ink">{t("title")}</h1>
             <p className="mt-3 text-base text-ink-muted">{t("description")}</p>
           </div>
-          <SignupGate step={1}>
-            <GoogleLoginButton turnstileSiteKey={loadRuntimeConfig().turnstileSiteKey} />
+          <SignupGate step={1} withTurnstile={withTurnstile}>
+            <GoogleLoginButton turnstileSiteKey={config.turnstileSiteKey} />
             <div className="mt-5 rounded-tile border border-border bg-primary-soft p-4 text-center text-sm text-ink-notice">
               {t("disclosure")}
             </div>

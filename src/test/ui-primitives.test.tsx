@@ -41,6 +41,14 @@ describe("ConfirmDialog", () => {
     expect(describedBy && document.getElementById(describedBy)?.textContent).toBe("The agent loses access immediately.");
   });
 
+  it("shows an aria-hidden spinner and aria-busy while pending, label unchanged", () => {
+    renderDialog({ pending: true, confirmDisabled: true });
+    const confirm = screen.getByRole("button", { name: "Revoke" });
+    expect(confirm.getAttribute("aria-busy")).toBe("true");
+    expect(confirm.textContent).toBe("Revoke");
+    expect(confirm.querySelector('span.spinner[aria-hidden="true"]')).toBeTruthy();
+  });
+
   it("is an alertdialog with the callout when destructive", () => {
     renderDialog({ destructive: true, calloutText: "This cannot be undone." });
     expect(screen.getByRole("alertdialog", { name: "Revoke agent?" })).toBeTruthy();
@@ -119,6 +127,14 @@ describe("Toast", () => {
     rerender(<Toast actionLabel="Undo" onDismiss={onDismiss} title="Saved" variant="success" />);
     expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
     expect(screen.queryByText("Saved 3 rows")).toBeNull();
+  });
+});
+
+describe("Toast touch targets", () => {
+  it("gives the dismiss button a 40px hit area and the action button vertical padding", () => {
+    renderWithIntl(<Toast actionLabel="Undo" onAction={() => undefined} onDismiss={() => undefined} title="Saved" variant="success" />);
+    expect(screen.getByRole("button", { name: "Dismiss" }).className).toMatch(/\bsize-10\b/);
+    expect(screen.getByRole("button", { name: "Undo" }).className).toMatch(/\bpy-2\b/);
   });
 });
 
@@ -231,7 +247,7 @@ describe("StepIndicator", () => {
   it("lists the four onboarding steps in order and marks only the current one", () => {
     renderWithIntl(<StepIndicator current={3} />);
     const items = screen.getAllByRole("listitem");
-    expect(items.map((item) => item.textContent)).toEqual(["1. Login", "2. Wallet + NFT", "3. Profile", "4. Get Started"]);
+    expect(items.map((item) => item.textContent)).toEqual(["1. Login", "2. Wallet (optional)", "3. Profile", "4. Get Started"]);
     expect(items.map((item) => item.getAttribute("aria-current"))).toEqual([null, null, "step", null]);
   });
 });

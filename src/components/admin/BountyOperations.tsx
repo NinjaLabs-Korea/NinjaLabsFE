@@ -12,6 +12,8 @@ import { opsButton, opsDateTime } from "@/components/admin/ops-ui";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
+import { useKeyedSingleFlight } from "@/components/ui/useSingleFlight";
+import { ApiHttpError } from "@/lib/api/http";
 import { opsErrorCode, type AdminOperations } from "@/lib/admin-operations";
 
 /** Runs one operations write: ignores a second click while the same key is in flight, toasts the outcome, re-reads the bounty. */
@@ -29,15 +31,19 @@ export function BountyOperations({ bountyId, onStatusChange }: { bountyId: strin
   const timeZone = useBrowserTimeZone();
   const [ops, setOps] = useState<AdminOperations | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "failed">("loading");
-  const [busy, setBusy] = useState<ReadonlySet<string>>(new Set());
-  // Synchronous guard: two clicks in the same tick both see the old `busy` state.
-  const inFlight = useRef(new Set<string>());
+  const { busy, run: runKeyed } = useKeyedSingleFlight();
   // Only the newest read may write state: Refresh / the re-read after an action can overlap, and an older answer landing last
   // would put back a payout or submission state the operator has already moved past.
   const latestLoad = useRef(0);
 
   const describe = useCallback((error: unknown, context: "transition" | "other" = "other"): string => {
     const { code, known } = opsErrorCode(error, context);
+    // A BE 400 on a free-text note names what was wrong: say it instead of the generic "check the fields".
+    if (code === "VALIDATION_FAILED" && error instanceof ApiHttpError) {
+      const messages = error.details.join(" ");
+      if (/bidirectional/i.test(messages)) return t("errors.NOTE_BIDI_CHARS");
+      if (/forfeited/i.test(messages)) return t("errors.NOTE_RESERVED_PREFIX");
+    }
     return known ? t(`errors.${code}`) : t("errors.unknown", { code });
   }, [t]);
 
@@ -62,27 +68,23 @@ export function BountyOperations({ bountyId, onStatusChange }: { bountyId: strin
     void load();
   }, [load]);
 
-  const run: OpsRunner = async (key, action, success, context = "other") => {
-    if (inFlight.current.has(key)) return false;
-    inFlight.current.add(key);
-    setBusy(new Set(inFlight.current));
-    try {
-      await action();
-      pushAdminToast({ variant: "success", title: success.title, description: success.description ?? "" });
-      return true;
-    } catch (error) {
-      pushAdminToast({ variant: "danger", title: t("toast.actionFailedTitle"), description: describe(error, context) });
-      return false;
-    } finally {
-      // Re-read on success AND failure: a 409/400 usually means the row moved under us (another admin, a resubmission).
-      // The key stays busy through the re-read: the dialog of a succeeded action is still open until the new state lands,
-      // and a second click in that window would send the same write again and toast an error right after the success.
-      await load();
-      inFlight.current.delete(key);
-      setBusy(new Set(inFlight.current));
-      if (context === "transition") onStatusChange?.();
-    }
-  };
+  const run: OpsRunner = async (key, action, success, context = "other") =>
+    // The key stays busy through the re-read: the dialog of a succeeded action is still open until the new state lands,
+    // and a second click in that window would send the same write again and toast an error right after the success.
+    (await runKeyed(key, async () => {
+      try {
+        await action();
+        pushAdminToast({ variant: "success", title: success.title, description: success.description ?? "" });
+        return true;
+      } catch (error) {
+        pushAdminToast({ variant: "danger", title: t("toast.actionFailedTitle"), description: describe(error, context) });
+        return false;
+      } finally {
+        // Re-read on success AND failure: a 409/400 usually means the row moved under us (another admin, a resubmission).
+        await load();
+        if (context === "transition") onStatusChange?.();
+      }
+    })) ?? false;
 
   const formatDate: OpsDateFormatter = (value) => opsDateTime(format, value, timeZone);
 

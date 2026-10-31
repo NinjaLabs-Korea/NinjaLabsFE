@@ -86,6 +86,24 @@ describe("GET /applications/me + /submissions/me join", () => {
   });
 });
 
+describe("GET /submissions/me content fields", () => {
+  it("maps submission_url, repository_url, commit_sha and description, and omits null or absent ones", async () => {
+    const { http } = createHttp({
+      "/submissions/me": [
+        { status: "SUBMITTED", bounty_id: "b1", submission_url: "https://x.test/w", repository_url: "https://github.com/o/r", commit_sha: "3f2a9c1", description: "d" },
+        { status: "SUBMITTED", bounty_id: "b2", submission_url: "https://x.test/w", repository_url: null, commit_sha: null },
+        { status: "SUBMITTED", bounty_id: "b3" },
+      ],
+    });
+    const result = await createApiApiClient(http).getSubmissions(signedIn);
+    const rows = result.status === "available" ? result.data : [];
+    expect(rows[0]).toMatchObject({ submissionUrl: "https://x.test/w", repositoryUrl: "https://github.com/o/r", commitSha: "3f2a9c1", description: "d" });
+    expect(Object.keys(rows[1]!)).not.toContain("repositoryUrl");
+    expect(Object.keys(rows[1]!)).not.toContain("commitSha");
+    expect(Object.keys(rows[2]!)).not.toEqual(expect.arrayContaining(["submissionUrl"]));
+  });
+});
+
 describe("standalone submissions on /applications", () => {
   it("lists direct and agent-mode submissions (no application behind them) with status, reviewer comment and payout", async () => {
     const agent = { id: "ag1", name: "Scout" };
@@ -349,5 +367,28 @@ describe("write requests: method, path encoding and body", () => {
     const { http, fetchJson } = createHttp();
     fetchJson.mockRejectedValueOnce(new ApiHttpError(409, "ALREADY_APPLIED"));
     await expect(createApiApiClient(http).applyToBounty("b1", { message: "m" })).rejects.toMatchObject({ status: 409, code: "ALREADY_APPLIED" });
+  });
+});
+
+describe("GET /applications/me bounty state fields", () => {
+  it("maps bounty_status and deadlines when the BE sends them", async () => {
+    const { http } = createHttp({
+      "/applications/me": [application({ bounty_status: "CANCELLED", submission_deadline: "2026-08-01T00:00:00.000Z", application_deadline: null })],
+      "/submissions/me": [],
+    });
+    const result = await createApiApiClient(http).getApplications(signedIn);
+    const row = result.status === "available" ? result.data[0] : undefined;
+    expect(row?.bountyStatus).toBe("CANCELLED");
+    expect(row?.submissionDeadline).toBe("2026-08-01T00:00:00.000Z");
+    expect(row?.applicationDeadline).toBeNull();
+  });
+
+  it("leaves the fields absent for an older BE", async () => {
+    const { http } = createHttp({ "/applications/me": [application({})], "/submissions/me": [] });
+    const result = await createApiApiClient(http).getApplications(signedIn);
+    const row = result.status === "available" ? result.data[0] : undefined;
+    expect(row && "bountyStatus" in row).toBe(false);
+    expect(row && "submissionDeadline" in row).toBe(false);
+    expect(row && "applicationDeadline" in row).toBe(false);
   });
 });

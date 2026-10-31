@@ -3,6 +3,7 @@ import type { AdminApi } from "@/lib/contracts/api";
 import { deliverablesFromRequirements, type AdminBounty, type AdminHighlight, type AdminPost, type AdminUser } from "@/lib/admin-helpers";
 import type { AdminAuditLogPage } from "@/lib/admin-audit";
 import type { AdminNftJobPage, AdminOperations, OpsActor } from "@/lib/admin-operations";
+import { toAdminStatus } from "@/lib/bounty-status";
 import { markdownToPlainSummary } from "@/lib/markdown-summary";
 import { formatIsoDate, rewardFromBaseUnits, rewardToBaseUnits, toCategoryCode, toCategoryLabel, toMemberRoleCode, toMemberRoleLabel, toNoticeCategoryCode, toNoticeCategoryLabel, type CategoryCode, type MemberRoleCode } from "@/lib/api/codecs";
 
@@ -61,16 +62,6 @@ export function toAdminOperations(body: OperationsResponse): AdminOperations {
 
 type HighlightRow = { id: string; type: string; title: string; description: string; image_url: string | null; link_url: string | null; display_order: number; is_published: boolean };
 
-const bountyStatus = (status: string): AdminBounty["status"] => {
-  if (status === "DRAFT") return "draft";
-  if (status === "FUNDING_PENDING") return "funding";
-  if (status === "OPEN") return "active";
-  if (status === "SUBMISSION_CLOSED") return "submissionClosed";
-  if (status === "IN_REVIEW") return "reviewing";
-  if (status === "CANCELLED") return "cancelled";
-  // COMPLETED, and any status a newer BE adds: shown as finished rather than guessed.
-  return "completed";
-};
 
 /** 운영자 콘솔 API - BE 행(snake_case, 코드값)을 FE 어드민 타입으로 변환한다 */
 export function createAdminApi(http: ApiHttp): AdminApi {
@@ -104,7 +95,7 @@ export function createAdminApi(http: ApiHttp): AdminApi {
         reward: rewardFromBaseUnits(row.rewards[0]),
         ...(row.rewards[0]?.tokenContractAddress ? { rewardContractAddress: row.rewards[0].tokenContractAddress } : {}),
         ...(row.rewards[0]?.evmChainId ? { rewardChainId: row.rewards[0].evmChainId } : {}),
-        intakeEnabled: row.application_required, status: bountyStatus(row.status),
+        intakeEnabled: row.application_required, status: toAdminStatus(row.status),
         submissionMode: row.submission_mode === "AGENT" ? "agent" : "direct",
         coverImage: row.cover_image_url,
         deadline: row.submission_deadline, applicationDeadline: row.application_deadline ?? null,
@@ -129,6 +120,8 @@ export function createAdminApi(http: ApiHttp): AdminApi {
         submissionMode: bounty.submissionMode === "agent" ? "AGENT" : "DIRECT",
         coverImageUrl: bounty.coverImage,
         submissionDeadline: bounty.deadline,
+        // Create sends it only when set; PATCH always sends it so clearing the field (null) clears the column. An unchanged value is the stored ISO, which the BE treats as "not changed".
+        ...(create && !bounty.applicationDeadline ? {} : { applicationDeadline: bounty.applicationDeadline }),
         ...(create && bounty.reward.amount > 0 ? { reward: {
           tokenType: bounty.reward.currency === "USDC" ? "ERC20" : "NATIVE",
           ...(bounty.reward.currency === "INJ" ? { tokenDenom: "inj" } : {}),

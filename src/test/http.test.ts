@@ -9,7 +9,7 @@ import {
   getAccessToken,
   installSession,
   resetSessionState,
-  SESSION_HINT_KEY,
+  REFRESH_COOKIE_HINT_KEY,
 } from "@/lib/api/http";
 import { FakeBroadcastChannel } from "./fake-broadcast-channel";
 
@@ -32,11 +32,22 @@ function stubRefreshFlow(refresh: Handler, extra?: Handler) {
   return request;
 }
 
+/** One turn of the event loop, not a timer: everything already queued (microtasks, resolved I/O) has run afterwards. */
+const nextTurn = () => new Promise<void>((resolve) => setImmediate(resolve));
+
+/** Waits for every response a stubbed fetch handed out, then lets the code that consumed them finish. Use before asserting that nothing happened. */
+async function settled(request: ReturnType<typeof vi.fn>) {
+  for (let pass = 0; pass < 3; pass += 1) {
+    await Promise.all(request.mock.results.map((result) => result.value));
+    await nextTurn();
+  }
+}
+
 const urls = (request: ReturnType<typeof vi.fn>) => request.mock.calls.map(([url]) => url as string);
 const refreshCalls = (request: ReturnType<typeof vi.fn>) => request.mock.calls.filter(([url]) => url === REFRESH);
 
 /** The only keys this auth layer may leave in Web Storage; none of them holds a secret. */
-const ALLOWED_STORAGE_KEYS = [SESSION_HINT_KEY, AUTH_EVENT_STORAGE_KEY, "ninja.oauthVerifier", "ninja.onboardingTraceId"];
+const ALLOWED_STORAGE_KEYS = [REFRESH_COOKIE_HINT_KEY, AUTH_EVENT_STORAGE_KEY, "ninja.oauthVerifier", "ninja.onboardingTraceId"];
 
 /** Every key Web Storage holds must be non-secret: no token-shaped value is ever written. */
 function expectNoTokensInStorage() {
@@ -52,7 +63,7 @@ function expectNoTokensInStorage() {
 
 /** localStorage holds nothing but the non-secret session hint (`present`) or nothing at all. */
 function expectOnlySessionHint(present = true) {
-  expect({ ...localStorage }).toEqual(present ? { [SESSION_HINT_KEY]: "1" } : {});
+  expect({ ...localStorage }).toEqual(present ? { [REFRESH_COOKIE_HINT_KEY]: "1" } : {});
 }
 
 beforeEach(() => {
@@ -61,7 +72,7 @@ beforeEach(() => {
   resetSessionState();
   window.history.replaceState(null, "", "/en/bounties");
   // Returning visitor by default: an earlier sign-in left the session hint, so page loads try the refresh cookie.
-  localStorage.setItem(SESSION_HINT_KEY, "1");
+  localStorage.setItem(REFRESH_COOKIE_HINT_KEY, "1");
   // Node's real BroadcastChannel would deliver asynchronously to adapters left over from earlier tests.
   FakeBroadcastChannel.instances = [];
   vi.stubGlobal("BroadcastChannel", FakeBroadcastChannel);
@@ -296,7 +307,7 @@ describe("API refresh across tabs", () => {
     const request = stubRefreshFlow(async () => {
       inFlight += 1;
       maxInFlight = Math.max(maxInFlight, inFlight);
-      await new Promise((resolve) => setTimeout(resolve, 5));
+      await nextTurn(); // a real suspension point: a second, unserialized refresh would start here
       inFlight -= 1;
       return Response.json({ accessToken: "fresh-access" });
     });
@@ -577,19 +588,20 @@ describe("API auth adapter cross-tab sign-out", () => {
       endLocalSession();
       await tab.signOut();
       expect(tab.getSnapshot().status).toBe("signed-out");
-      localStorage.setItem(SESSION_HINT_KEY, "1"); // the other tab's login wrote it
+      localStorage.setItem(REFRESH_COOKIE_HINT_KEY, "1"); // the other tab's login wrote it
       switchTo("b");
       signedInElsewhere();
       await vi.waitFor(() => expect(tab.getSnapshot().user?.handle).toBe("bob"));
     });
 
     it("keeps the snapshot object when the same user signed in", async () => {
-      cookieOwner();
+      const { request } = cookieOwner();
       const tab = await signedInTab();
       const before = tab.getSnapshot();
+      const probes = request.mock.calls.length;
       signedInElsewhere();
-      await vi.waitFor(() => expect(getAccessToken()).toBe("a-access"));
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await vi.waitFor(() => expect(request.mock.calls.length).toBeGreaterThan(probes));
+      await settled(request);
       expect(tab.getSnapshot()).toBe(before);
     });
 
@@ -597,8 +609,10 @@ describe("API auth adapter cross-tab sign-out", () => {
       const { request } = cookieOwner();
       const tab = await signedInTab();
       request.mockImplementation(async () => new Response(null, { status: 503 }));
+      const probes = request.mock.calls.length;
       signedInElsewhere();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await vi.waitFor(() => expect(request.mock.calls.length).toBeGreaterThan(probes));
+      await settled(request);
       expect(tab.getSnapshot().user?.handle).toBe("alice");
     });
   });
@@ -617,7 +631,7 @@ describe("API auth adapter cross-tab sign-out", () => {
       (teardown as () => void)();
       expect(FakeBroadcastChannel.instances.filter((channel) => !channel.closed)).toHaveLength(0);
       signedInElsewhere();
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await settled(request);
       expect(request.mock.calls).toHaveLength(calls);
     });
 
@@ -715,7 +729,7 @@ describe("API auth adapter session end without reload", () => {
 });
 
 describe("non-secret session hint (skips the anonymous refresh probe)", () => {
-  beforeEach(() => localStorage.removeItem(SESSION_HINT_KEY));
+  beforeEach(() => localStorage.removeItem(REFRESH_COOKIE_HINT_KEY));
 
   it("an anonymous page load without the hint sends no network request and ends signed-out", async () => {
     const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
@@ -735,7 +749,7 @@ describe("non-secret session hint (skips the anonymous refresh probe)", () => {
   });
 
   it("with the hint, the page load tries the refresh cookie and keeps the hint on success", async () => {
-    localStorage.setItem(SESSION_HINT_KEY, "1");
+    localStorage.setItem(REFRESH_COOKIE_HINT_KEY, "1");
     const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
     const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
@@ -745,21 +759,21 @@ describe("non-secret session hint (skips the anonymous refresh probe)", () => {
   });
 
   it.each([401, 403])("clears the hint when the refresh answers %i", async (status) => {
-    localStorage.setItem(SESSION_HINT_KEY, "1");
+    localStorage.setItem(REFRESH_COOKIE_HINT_KEY, "1");
     stubRefreshFlow(() => new Response(null, { status }));
     await expect(createApiHttp(API).initSession()).resolves.toEqual({ ok: false, reason: "rejected" });
     expectOnlySessionHint(false);
   });
 
   it.each([429, 503])("keeps the hint when the refresh is only unavailable (%i)", async (status) => {
-    localStorage.setItem(SESSION_HINT_KEY, "1");
+    localStorage.setItem(REFRESH_COOKIE_HINT_KEY, "1");
     stubRefreshFlow(() => new Response(null, { status }));
     await createApiHttp(API).initSession();
     expectOnlySessionHint();
   });
 
   it("clears the hint on sign-out", async () => {
-    localStorage.setItem(SESSION_HINT_KEY, "1");
+    localStorage.setItem(REFRESH_COOKIE_HINT_KEY, "1");
     stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }), () => new Response(null, { status: 204 }));
     const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
@@ -769,12 +783,12 @@ describe("non-secret session hint (skips the anonymous refresh probe)", () => {
   });
 
   it("clears the hint when another tab signs out", async () => {
-    localStorage.setItem(SESSION_HINT_KEY, "1");
+    localStorage.setItem(REFRESH_COOKIE_HINT_KEY, "1");
     stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
     const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
-    localStorage.setItem(SESSION_HINT_KEY, "1");
+    localStorage.setItem(REFRESH_COOKIE_HINT_KEY, "1");
     new FakeBroadcastChannel(AUTH_CHANNEL_NAME).postMessage({ type: "signed-out" });
     expect(adapter.getSnapshot().status).toBe("signed-out");
     expectOnlySessionHint(false);
@@ -803,10 +817,10 @@ describe("non-secret session hint (skips the anonymous refresh probe)", () => {
   });
 
   it("only ever stores the literal '1' (never a token) and ignores any other value", async () => {
-    localStorage.setItem(SESSION_HINT_KEY, "fresh-access");
+    localStorage.setItem(REFRESH_COOKIE_HINT_KEY, "fresh-access");
     const request = stubRefreshFlow(() => Response.json({ accessToken: "fresh-access" }));
     await createApiHttp(API).initSession();
     expect(request).not.toHaveBeenCalled();
-    localStorage.removeItem(SESSION_HINT_KEY);
+    localStorage.removeItem(REFRESH_COOKIE_HINT_KEY);
   });
 });

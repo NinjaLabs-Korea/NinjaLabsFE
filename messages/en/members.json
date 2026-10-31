@@ -4,21 +4,13 @@
     "description": "Meet the people operating Ninja Labs, reviewing bounty submissions, and helping Injective builders ship useful work."
   },
   "list": {
-    "eyebrow": "Official members",
-    "heading": "Team",
-    "description": "Meet the people operating Ninja Labs, reviewing bounty submissions, and helping Injective builders ship useful work.",
-    "public": "Public",
-    "howItWorks": "Member assignment rules",
-    "rules": {
-      "registration": "Same sign-up path as any user, with no separate member registration.",
-      "adminEnables": "After sign-up, an admin flags the user as a member and assigns a role.",
-      "memberEdits": "Members write and edit their own intro through their public profile.",
-      "unassign": "When unassigned, they drop from this tab immediately while the profile stays live."
-    },
-    "howItWorksEyebrow": "How it works"
+    "eyebrow": "Members",
+    "heading": "Ninja Labs members",
+    "description": "The people behind Ninja Labs."
   },
   "filters": {
     "ariaLabel": "Member roles",
+    "resultCount": "{count, plural, one {# member} other {# members}}",
     "all": "All",
     "listAriaLabel": "Members",
     "emptyTitle": "No members match your filters",
@@ -38,7 +30,6 @@
     "profileLabel": "Profile of {name}",
     "linkLabel": "{link} of {name}",
     "defaultTitle": "Ninja Labs member",
-    "defaultBio": "Building in the Injective ecosystem.",
     "links": {
       "posts": "Posts",
       "agents": "Agents",
@@ -50,7 +41,8 @@
     "notFoundTitle": "Page not found | Ninja Labs",
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "{count, plural, one {# bounty completed} other {# bounties completed}}",
-    "newBuilder": "New builder",
+    "newBuilder": "New here",
+    "teamBadge": "Team · {role}",
     "categories": {
       "dev": "Dev",
       "design": "Design",
@@ -61,33 +53,20 @@
       "eyebrow": "Portfolio",
       "headingCompleted": "On-chain proof that keeps growing",
       "headingEmpty": "No completed bounties yet",
-      "bodyCompleted": "The Ninja NFT is the parent identity. Every approved bounty mints a child NFT beneath it, turning completed work into a portable builder portfolio.",
-      "bodyEmpty": "The Ninja NFT is already minted as the parent identity. Approved bounties add child NFTs to this public collection.",
-      "bodyEmptyPending": "The Ninja NFT parent identity is being minted. Approved bounties will add child NFTs to this public collection.",
-      "bodyEmptyNotMinted": "No Ninja NFT has been minted for this member yet. Approved bounties will add child NFTs to this public collection once it is.",
+      "bodyCompleted": "Each completed bounty adds a proof here.",
+      "bodyEmpty": "Complete a bounty and its proof shows up here.",
       "token": "Token {id}",
       "tx": "Tx {hash}",
       "untitledNft": "Bounty NFT",
-      "next": "+ next",
-      "emptyTitle": "No bounty NFTs yet",
-      "emptyBodyCompleted": "Approved work appears here after payout and minting begins.",
-      "emptyBodyNew": "Child NFTs for approved bounties appear here as on-chain proof.",
-      "memberSince": "Ninja NFT · member since {date}",
-      "summaryCompleted": "{count, plural, one {# bounty completed} other {# bounties completed}} · a growing on-chain portfolio",
-      "summaryEmpty": "0 bounties completed"
+      "memberSince": "Ninja NFT · member since {date}"
     },
     "nftStatus": {
-      "PENDING": "PENDING",
-      "MINTING": "MINTING",
-      "MINTED": "MINTED",
-      "ATTACHING": "ATTACHING",
-      "ATTACHED": "ATTACHED",
-      "FAILED": "FAILED"
+      "minting": "Minting",
+      "minted": "Minted"
     },
     "history": {
       "eyebrow": "Completed work",
       "heading": "Recent bounty completions",
-      "viewFilled": "View filled profile",
       "completedOn": "Completed {date} · {reward}",
       "emptyTitle": "No completed bounties yet",
       "emptyBody": "Completed bounties appear here with their completion date, reward, and child NFT proof.",
@@ -104,7 +83,6 @@
       "emptyBody": "This member has not registered any verified agents.",
       "wallet": "Registered wallet: {wallet}"
     },
-    "shareable": "Shareable URL, no login needed",
     "payoutPending": "Payout pending",
     "payoutPartial": "Partially paid",
     "payoutPaid": "Paid"

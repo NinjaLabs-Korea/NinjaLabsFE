@@ -6,6 +6,7 @@ import { ERROR_COPY } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
 import {
   bountyActionErrorCopy,
+  isSessionEndedError,
   deriveActionView,
   splitRows,
   type BountyActionInput,
@@ -97,9 +98,9 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["rows for other bounties do not count", { applicationRequired: true, applications: loaded([app("approved", null, "other")]) }, { kind: "applyForm" }],
   ["application rejected", { applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["application rejected with the operator's note", { applicationRequired: true, applications: loaded([{ ...app("rejected"), reviewNote: "Portfolio too thin" }]) }, { kind: "applicationRejected", note: "Portfolio too thin" }],
-  ["application auto-rejected by a cancelled bounty", { status: "closed", applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "closed", reason: "cancelled" }],
-  ["rejection on a completed bounty stays a rejection", { status: "closed", completed: true, applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
-  ["rejection on a bounty only past its deadline stays a rejection", { status: "closed", deadlinePassed: true, applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
+  ["application auto-rejected by a cancelled bounty", { status: "closed", closedReason: "cancelled", applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "closed", reason: "cancelled" }],
+  ["rejection on a completed bounty stays a rejection", { status: "closed", closedReason: "completed", applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
+  ["rejection on a bounty only past its deadline stays a rejection", { status: "closed", closedReason: "deadline", applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["rejection beats the local applied flag", { applicationRequired: true, applied: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["application under review", { applicationRequired: true, applications: loaded([app("open")]) }, { kind: "applicationUnderReview" }],
   ["the local applied flag does not hide an approved server row", { applicationRequired: true, applied: true, applications: loaded([app("approved")]) }, firstSubmit],
@@ -109,7 +110,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["application approved, bounty reviewing, nothing submitted", { applicationRequired: true, status: "reviewing", applications: loaded([app("approved")]) }, { kind: "closed", reason: "reviewing" }],
   ["pending application on an ended bounty (completed/cancelled) is shown as closed", { applicationRequired: true, status: "closed", applications: loaded([app("open")]) }, { kind: "closed", reason: "closed" }],
   ["pending application on a bounty that moved to SUBMISSION_CLOSED / IN_REVIEW can no longer unlock a submission", { applicationRequired: true, status: "reviewing", applications: loaded([app("open")]) }, { kind: "closed", reason: "reviewing" }],
-  ["pending application on a bounty closed only by its deadline is still under review", { applicationRequired: true, status: "closed", deadlinePassed: true, applications: loaded([app("open")]) }, { kind: "applicationUnderReview" }],
+  ["pending application past the submission deadline: nothing left to do, plain closed (not the applications-closed promise)", { applicationRequired: true, status: "closed", closedReason: "deadline", applications: loaded([app("open")]) }, { kind: "closed", reason: "closed" }],
   // 7. 확정된 제출
   ["submission approved", { submissions: loaded([sub("approved")]) }, { kind: "submissionApproved" }],
   ["submission approved carries its payout status", { submissions: loaded([{ ...sub("approved"), paymentStatus: "PARTIALLY_PAID" as const }]) }, { kind: "submissionApproved", payout: "PARTIALLY_PAID" }],
@@ -121,15 +122,16 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["submission rejected with a blank comment", { submissions: loaded([sub("rejected", null, BOUNTY, "   ")]) }, { kind: "submissionRejected" }],
   // 8. 진행 중이 아님
   ["reviewing, submission pending", { status: "reviewing", submissions: loaded([sub("in_review")]) }, { kind: "inReviewLocked" }],
-  ["closed only by the deadline, submission resubmitted (the sponsor can still review)", { status: "closed", deadlinePassed: true, submissions: loaded([sub("resubmitted")]) }, { kind: "inReviewLocked" }],
-  ["cancelled bounty, submission pending: nobody is reviewing it", { status: "closed", submissions: loaded([sub("submitted")]) }, { kind: "closed", reason: "cancelled" }],
-  ["cancelled bounty, submission in review", { status: "closed", submissions: loaded([sub("in_review")]) }, { kind: "closed", reason: "cancelled" }],
+  ["closed only by the deadline, submission resubmitted (the sponsor can still review)", { status: "closed", closedReason: "deadline", submissions: loaded([sub("resubmitted")]) }, { kind: "inReviewLocked" }],
+  ["cancelled bounty, submission pending: nobody is reviewing it", { status: "closed", closedReason: "cancelled", submissions: loaded([sub("submitted")]) }, { kind: "closed", reason: "cancelled" }],
+  ["cancelled bounty, submission in review", { status: "closed", closedReason: "cancelled", submissions: loaded([sub("in_review")]) }, { kind: "closed", reason: "cancelled" }],
   ["reviewing, just submitted", { status: "reviewing", submitted: true }, { kind: "inReviewLocked" }],
   ["reviewing, nothing submitted", { status: "reviewing" }, { kind: "closed", reason: "reviewing" }],
-  ["cancelled, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "cancelled" }],
-  ["completed, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", completed: true, submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "closed" }],
-  ["closed only by the deadline, revision requested (BE still resubmittable)", { status: "closed", deadlinePassed: true, submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: false }],
-  ["closed only by the deadline, nothing submitted", { status: "closed", deadlinePassed: true }, { kind: "closed", reason: "closed" }],
+  ["cancelled, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", closedReason: "cancelled", submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "cancelled" }],
+  ["closedReason alone drives a deadline-only close (no other flag): revision stays resubmittable", { status: "closed", closedReason: "deadline", submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: false }],
+  ["completed, revision requested (BE answers BOUNTY_REVIEW_CLOSED)", { status: "closed", closedReason: "completed", submissions: loaded([sub("revision_requested")]) }, { kind: "closed", reason: "closed" }],
+  ["closed only by the deadline, revision requested (BE still resubmittable)", { status: "closed", closedReason: "deadline", submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: false }],
+  ["closed only by the deadline, nothing submitted", { status: "closed", closedReason: "deadline" }, { kind: "closed", reason: "closed" }],
   // 9. 제출 폼
   ["first submission", {}, firstSubmit],
   ["submission pending → update form", { submissions: loaded([sub("submitted")]) }, updateSubmit],
@@ -183,6 +185,13 @@ describe("bountyActionErrorCopy - bounties.action.errors key for a failed apply/
 
   it("mock-mode errors take the same path", () => {
     expect(bountyActionErrorCopy(new MockApiError(409, "ALREADY_APPLIED"))).toEqual({ key: "ALREADY_APPLIED" });
+  });
+
+  it("any 401 means the session ended (no error copy of its own)", () => {
+    expect(isSessionEndedError(new ApiHttpError(401, "INVALID_ACCESS_TOKEN"))).toBe(true);
+    expect(isSessionEndedError(new ApiHttpError(401, "UNAUTHORIZED"))).toBe(true);
+    expect(isSessionEndedError(new ApiHttpError(409, "ALREADY_APPLIED"))).toBe(false);
+    expect(isSessionEndedError(new Error("x"))).toBe(false);
   });
 
   it("an unlisted BE code shows `unknown` with the raw code", () => {

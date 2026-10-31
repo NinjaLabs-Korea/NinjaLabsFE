@@ -1,5 +1,5 @@
 import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toPayoutStatus, toRewards, type RewardRow } from "./api/codecs";
-import type { Completion, Member, PayoutStatus, Profile, ProfileNft, Reward } from "./types";
+import type { Completion, Member, PayoutStatus, Profile, Reward } from "./types";
 import { nicknameInitials } from "./nickname";
 import { onboardingLog } from "./onboarding-log";
 import { cache } from "react";
@@ -35,10 +35,10 @@ export const profiles: Record<string, Profile> = {
     agents: [{ name: "market-scout-agent", wallet: "inj1...9k4d", verified: true, completedBounties: 3 }, { name: "docs-runner-agent", wallet: "inj1...x7ab", verified: true, completedBounties: 2 }],
   },
   sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "New Injective builder exploring market data tasks, documentation bounties, and small UI components. This public profile is ready to become a portfolio as work is completed.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], nfts: [{ id: "sora-parent", type: "parent", title: "Ninja NFT", status: "MINTED", contractAddress: "preview", tokenId: "1", mintTxHash: null }], agents: [] },
-  jinyoung: { slug: "jinyoung", handle: "jinyoung.inj", initials: "JP", bio: "Product lead building the bounty marketplace for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
-  juho: { slug: "juho", handle: "juho.inj", initials: "JK", bio: "Protocol engineer making on-chain proof useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
-  mina: { slug: "mina", handle: "mina.inj", initials: "MS", bio: "Experience designer creating clear paths from first task to lasting proof.", skills: ["Design"], joinedAt: "June 2026", completions: [], nfts: [], agents: [] },
-  ara: { slug: "ara", handle: "ara.inj", initials: "AR", bio: "Community operator supporting builders and the work around them.", skills: ["Content"], joinedAt: "June 2026", completions: [], nfts: [], agents: [] },
+  jinyoung: { slug: "jinyoung", handle: "jinyoung.inj", initials: "JP", teamRole: "Core", bio: "Product lead building the bounty marketplace for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
+  juho: { slug: "juho", handle: "juho.inj", initials: "JK", teamRole: "Dev", bio: "Protocol engineer making on-chain proof useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
+  mina: { slug: "mina", handle: "mina.inj", initials: "MS", teamRole: "Design", bio: "Experience designer creating clear paths from first task to lasting proof.", skills: ["Design"], joinedAt: "June 2026", completions: [], nfts: [], agents: [] },
+  ara: { slug: "ara", handle: "ara.inj", initials: "AR", teamRole: "Ops", bio: "Community operator supporting builders and the work around them.", skills: ["Content"], joinedAt: "June 2026", completions: [], nfts: [], agents: [] },
 };
 
 export function getMembers() { return members.filter((member) => member.isMember); }
@@ -75,6 +75,9 @@ async function fetchMembers(): Promise<Member[]> {
 type PublicProfileResponse = {
   nickname: string;
   bio: string;
+  /** Official team member flag and role (absent on an older BE) */
+  is_member?: boolean;
+  member_role?: string | null;
   created_at: string;
   tags: string[];
   completedBounties: Array<{
@@ -130,6 +133,11 @@ export function toCompletionReward(row: Pick<PublicProfileResponse["completedBou
 
 export { payoutBadge } from "./payout";
 
+function teamRoleField(code: string): { teamRole?: Member["role"] } {
+  const teamRole = toMemberRoleLabel(code);
+  return teamRole ? { teamRole } : {};
+}
+
 function toProfile(data: PublicProfileResponse, locale: string): Profile {
   const completions = data.completedBounties.flatMap((completion) => {
     const category = toCategoryLabel(completion.category);
@@ -148,6 +156,7 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
     handle: data.nickname,
     initials: nicknameInitials(data.nickname),
     bio: data.bio,
+    ...(data.is_member && data.member_role ? teamRoleField(data.member_role) : {}),
     skills: data.tags.flatMap((tag) => {
       const category = toCategoryLabel(tag);
       return category ? [category] : [];
@@ -175,23 +184,17 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
   };
 }
 
-export type ParentNftState = "minted" | "pending" | "none";
+/** Label key under `members.nftStatus` for a public NFT tile; `null` = no label (fully attached). */
+export type PublicNftStatusKey = "minting" | "minted";
 
 /**
- * Where the member's parent Ninja NFT stands, from the public profile's NFT list. Only a parent that is on chain
- * (MINTED, or further along) counts as minted; PENDING/MINTING is in progress; no parent row or FAILED is "not minted".
+ * Visitors only need "in progress" vs "done". PENDING, MINTING, ATTACHING, FAILED and any status the BE adds later all read as
+ * "minting"; a FAILED mint is handled by operators in /admin/nft-jobs, not shown to visitors. ATTACHED is the normal tile: no label.
  */
-export function parentNftState(nfts: readonly Pick<ProfileNft, "type" | "status">[]): ParentNftState {
-  const parents = nfts.filter((nft) => nft.type === "parent");
-  if (parents.some((nft) => nft.status === "MINTED" || nft.status === "ATTACHING" || nft.status === "ATTACHED")) return "minted";
-  if (parents.some((nft) => nft.status === "PENDING" || nft.status === "MINTING")) return "pending";
-  return "none";
-}
-
-/** `members.profile.portfolio.*` key for the portfolio intro paragraph. */
-export function portfolioBodyKey(completed: boolean, parent: ParentNftState) {
-  if (completed) return "bodyCompleted" as const;
-  return parent === "minted" ? ("bodyEmpty" as const) : parent === "pending" ? ("bodyEmptyPending" as const) : ("bodyEmptyNotMinted" as const);
+export function publicNftStatusKey(status: string): PublicNftStatusKey | null {
+  if (status === "ATTACHED") return null;
+  if (status === "MINTED") return "minted";
+  return "minting";
 }
 
 /**

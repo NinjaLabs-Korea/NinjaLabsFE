@@ -17,7 +17,7 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({ useAuthSnapshot: () => state.auth, useCohortApi: () => cohortApi }));
 
-const cohort: PublicCohort = { id: "c1", name: "2nd cohort", description: "", opensAt: null, closesAt: null, acceptingApplications: true };
+const cohort: PublicCohort = { id: "c1", name: "2nd cohort", description: "", opensAt: null, closesAt: null, acceptingApplications: true, questions: [] };
 const unfinished = signedInWith({ onboardingCompleted: false, onboardingStep: 3 });
 const finished = signedInWith({ onboardingCompleted: true, profileSlug: "pelican" });
 const mine = (status: string, cohortId = "c1") => [{ id: "a1", cohortId, status }] as never;
@@ -62,10 +62,10 @@ describe("hub primary CTA (StartLink with the dashboard as the finished target)"
 describe("hub secondary CTA (HeroSecondaryCta)", () => {
   const view = () => renderWithIntl(<HeroSecondaryCta className="x" fallbackHref="/notices?category=events" fallbackLabel="See past activities" />);
 
-  it("shows the past activities until the cohort read settles, then the apply link while a cohort accepts", async () => {
+  it("shows no label until the cohort read settles, then the apply link while a cohort accepts", async () => {
     state.auth = signedOut;
     view();
-    expect(screen.getByRole("link", { name: "See past activities" })).toBeTruthy();
+    expect(screen.queryByRole("link")).toBeNull();
     const apply = await screen.findByRole("link", { name: "Apply to join 2nd cohort" });
     expect(apply.getAttribute("href")).toBe("/recruit");
   });

@@ -27,6 +27,7 @@
 
 import { getOnboardingTraceId, onboardingLog } from "@/lib/onboarding-log";
 import { stripLocale } from "@/i18n/routing";
+import { readStorage, removeStorage, writeStorage } from "@/lib/safe-storage";
 
 /** Same-origin prefix that `next.config.ts` rewrites to `${NINJA_API_BASE_URL}/auth`. */
 export const AUTH_PROXY_PATH = "/api/auth";
@@ -37,8 +38,8 @@ export const SESSION_MODE_VALUE = "cookie";
 export const LEGACY_ACCESS_TOKEN_KEY = "ninja.accessToken";
 export const LEGACY_REFRESH_TOKEN_KEY = "ninja.refreshToken";
 const REFRESH_LOCK = "ninja.auth.refresh";
-/** Non-secret "a session may exist" hint (never a token, never used for authorization). */
-export const SESSION_HINT_KEY = "ninja.session";
+/** Non-secret "a refresh cookie may exist" hint in localStorage (never a token, never used for authorization). Not the sessionStorage signed-in chip hint in `lib/foundation/session-hint.ts`. */
+export const REFRESH_COOKIE_HINT_KEY = "ninja.session";
 
 /**
  * What this tab knows about the refresh cookie (it cannot read it). `absent` after a rejected refresh or a sign-out:
@@ -56,13 +57,9 @@ const isBrowser = () => typeof window !== "undefined";
 
 /** Deletes the pre-cookie-mode token keys (also called after a fresh login, which supersedes them). */
 export function discardLegacyTokens(): void {
-  try {
-    if (!isBrowser()) return;
-    window.localStorage.removeItem(LEGACY_ACCESS_TOKEN_KEY);
-    window.localStorage.removeItem(LEGACY_REFRESH_TOKEN_KEY);
-  } catch {
-    // storage unavailable: nothing could have been stored either
-  }
+  // storage unavailable: nothing could have been stored either
+  removeStorage("local", LEGACY_ACCESS_TOKEN_KEY);
+  removeStorage("local", LEGACY_REFRESH_TOKEN_KEY);
 }
 
 /** BE OAuth returns to `/auth/callback` (the locale proxy makes it `/<locale>/auth/callback`, fragment kept). */
@@ -70,31 +67,19 @@ export function isAuthCallbackPath(pathname: string): boolean {
   return stripLocale(pathname) === "/auth/callback";
 }
 
-function writeSessionHint(present: boolean): void {
-  try {
-    if (!isBrowser()) return;
-    if (present) window.localStorage.setItem(SESSION_HINT_KEY, "1");
-    else window.localStorage.removeItem(SESSION_HINT_KEY);
-  } catch {
-    // storage unavailable: the next page load simply skips (or keeps) the refresh attempt
-  }
+function writeRefreshCookieHint(present: boolean): void {
+  // storage unavailable: the next page load simply skips (or keeps) the refresh attempt
+  if (present) writeStorage("local", REFRESH_COOKIE_HINT_KEY, "1");
+  else removeStorage("local", REFRESH_COOKIE_HINT_KEY);
 }
 
 /** True when this browser may hold a refresh cookie. Only decides whether to try a refresh; never trusted. */
-export function hasSessionHint(): boolean {
-  try {
-    return isBrowser() && window.localStorage.getItem(SESSION_HINT_KEY) === "1";
-  } catch {
-    return false;
-  }
+export function hasRefreshCookieHint(): boolean {
+  return readStorage("local", REFRESH_COOKIE_HINT_KEY) === "1";
 }
 
 function readLegacyRefreshToken(): string | null {
-  try {
-    return isBrowser() ? window.localStorage.getItem(LEGACY_REFRESH_TOKEN_KEY) : null;
-  } catch {
-    return null;
-  }
+  return readStorage("local", LEGACY_REFRESH_TOKEN_KEY);
 }
 
 export function getAccessToken(): string | null {
@@ -105,7 +90,7 @@ export function getAccessToken(): string | null {
 export function installSession(token: string): void {
   accessToken = token;
   cookieState = "present";
-  writeSessionHint(true);
+  writeRefreshCookieHint(true);
 }
 
 /** This tab's session is over (local sign-out, or another tab signed out). Does not call the BE. */
@@ -113,7 +98,7 @@ export function endLocalSession(): void {
   sessionEpoch += 1;
   accessToken = null;
   cookieState = "absent";
-  writeSessionHint(false);
+  writeRefreshCookieHint(false);
 }
 
 /** Another tab signed in: the shared cookie jar may hold a session again, so the next 401 may refresh. */
@@ -323,7 +308,7 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       if (res.status === 401 || res.status === 403) {
         // refresh 쿠키가 없음·만료·폐기됨: 이 탭의 세션은 끝났다.
         onboardingLog("http.refresh.failed", { status: res.status, reason: "REJECTED" });
-        writeSessionHint(false);
+        writeRefreshCookieHint(false);
         if (sessionEpoch === epoch) {
           const hadSession = accessToken !== null || cookieState === "present";
           endLocalSession();
@@ -353,7 +338,7 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       }
       accessToken = token;
       cookieState = "present";
-      writeSessionHint(true);
+      writeRefreshCookieHint(true);
       onboardingLog("http.refresh.succeeded", { status: res.status });
       return { ok: true };
     } catch {
@@ -402,7 +387,7 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       if (readLegacyRefreshToken() === null) {
         // A stray legacy access token alone is useless (and a secret at rest): drop it without a migration call.
         discardLegacyTokens();
-        if (!hasSessionHint() && !(isBrowser() && isAuthCallbackPath(window.location.pathname))) {
+        if (!hasRefreshCookieHint() && !(isBrowser() && isAuthCallbackPath(window.location.pathname))) {
           // No hint: this browser never completed a sign-in (or signed out). Do not probe the cookie.
           onboardingLog("http.refresh.skipped", { reason: "NO_SESSION_HINT" });
           if (!refreshing) cookieState = "absent";

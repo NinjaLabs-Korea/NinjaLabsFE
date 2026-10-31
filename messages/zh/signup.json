@@ -2,16 +2,16 @@
   "login": {
     "pageTitle": "{title} | Ninja Labs",
     "mock": {
-      "title": "预览 Ninja Labs 登录流程",
+      "title": "预览登录流程",
       "description": "通过本地会话预览体验此步骤。不会连接 Google，也不会创建账户。",
       "disclosure": "模拟模式仅用于本地测试。此预览不会连接 Google，也不会创建账户。"
     },
     "api": {
-      "title": "开始使用 Ninja Labs",
-      "description": "使用 Google 开始，无需安装钱包。",
-      "disclosure": "登录会创建或恢复你的 Ninja Labs 账户。我们只会获取你的 Google 邮箱，不会共享密码。"
+      "title": "开始使用",
+      "description": "只需一个 Google 账号，无需钱包。",
+      "disclosure": "首次登录会自动创建账号，已有账号则直接继续。我们只会获取你的 Google 邮箱，不会获取密码。"
     },
-    "eyebrow": "创建账户"
+    "eyebrow": "登录"
   },
   "wallet": {
     "linked": {
@@ -25,17 +25,16 @@
       "descriptionMock": "预览 Injective 钱包连接。"
     },
     "title": "连接你的钱包",
-    "introApi": "连接你的 Injective EVM 钱包，然后签署一条免 Gas 消息以证明所有权。",
+    "introApi": "连接钱包，只需签名一次即可确认这是你的钱包，不收取任何费用。",
     "introMock": "在此本地会话预览中连接 Injective EVM 钱包。",
     "unavailableButton": "钱包不可用",
     "unavailableNote": "在配置受支持的 Injective EVM 链之前，无法连接钱包。",
     "badgeApi": "免 Gas 验证",
     "badgeMock": "仅连接预览",
-    "noteApi": "签名不会提交交易。验证后的钱包将关联到你的账户，并将你的 Ninja NFT 铸造加入队列。",
+    "noteApi": "确认完成后会发放 Ninja NFT。",
     "noteMock": "模拟模式不会签名、关联账户或调用后端。",
     "connectLater": "稍后连接",
     "optionalNote": "钱包验证为可选项。你可以先继续，稍后再连接。",
-    "whatHappens": "会发生什么",
     "steps": {
       "connection": {
         "term": "连接",
@@ -43,7 +42,7 @@
       },
       "signing": {
         "term": "签名",
-        "detail": "EIP-191 personal_sign 所有权证明"
+        "detail": "用钱包签名确认所有权"
       },
       "gas": {
         "term": "Gas 费",
@@ -55,11 +54,11 @@
       },
       "nft": {
         "term": "NFT",
-        "detail": "父 Ninja NFT 铸造已加入队列"
+        "detail": "Ninja NFT 铸造已加入队列"
       }
     },
     "eyebrow": "钱包",
-    "whatHappensEyebrow": "NFT 铸造"
+    "moreDetails": "查看详情"
   },
   "profile": {
     "metadata": {
@@ -68,16 +67,16 @@
     },
     "title": "设置你的个人资料",
     "form": {
-      "nicknameLabel": "昵称*",
+      "nicknameLabel": "昵称",
       "nicknamePlaceholder": "请输入昵称",
-      "fieldTags": "领域标签*",
+      "fieldTags": "领域标签",
       "tags": {
         "dev": "开发",
         "design": "设计",
         "content": "内容",
         "other": "其他"
       },
-      "bioLabel": "简介*",
+      "bioLabel": "简介",
       "bioPlaceholder": "向社区介绍一下你自己",
       "bioHint": "请填写简短介绍。",
       "submit": "下一步",
@@ -129,11 +128,11 @@
   "getStarted": {
     "metadata": {
       "title": "开始使用 | Ninja Labs",
-      "description": "以下均可跳过。你可以随时从主导航返回这些选项。"
+      "description": "注册已完成。可以从赏金、Injective 文档或社区开始。"
     },
-    "eyebrow": "引导完成",
-    "title": "接下来想做什么？",
-    "subtitle": "以下均可跳过。你可以随时从主导航返回这些选项。",
+    "eyebrow": "注册完成",
+    "title": "欢迎！先做点什么？",
+    "subtitle": "随便选一个，也可以全部跳过。",
     "actions": {
       "browseBounties": {
         "title": "浏览进行中的赏金",
@@ -148,12 +147,13 @@
         "description": "走进社区中心：活动、成员与成果。"
       }
     },
-    "skip": "跳过并前往首页",
-    "savedNote": "你的引导进度已保存。之后可以随时更新钱包和个人资料。",
+    "skip": "暂时跳过",
+    "savedNote": "注册已完成。钱包和个人资料可随时在账户设置中修改。",
     "completeError": {
       "message": "未能完成保存引导进度，请重试。",
       "retry": "重试"
     },
+    "returning": "正在带你返回之前的页面",
     "returnNotice": {
       "message": "你之前正在进行某件事。注册完成后可以继续。",
       "cta": "继续"

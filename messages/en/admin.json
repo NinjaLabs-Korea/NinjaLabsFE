@@ -19,9 +19,12 @@
     "urlHint": "https://… or /media/… path",
     "httpUrlHint": "https://… (http or https only)",
     "urlInvalid": "Enter an http(s) URL (or an allowed site path).",
+    "publicUrl": "Enter a public http(s) URL. Localhost and private network addresses are not allowed.",
     "orderInvalid": "Enter a whole number from 0 up.",
     "required": "This field is required.",
     "tooLong": "Too long: use at most {max} characters.",
+    "dateRange": "Choose a date between 2000-01-01 and 2100-12-31.",
+    "bidiChars": "Remove the text-direction control characters (for example U+202E).",
     "fixFields": "Fix the highlighted fields before saving.",
     "saving": "Saving…",
     "loading": "Loading…",
@@ -40,6 +43,8 @@
       "USDC_EVM_CONTRACT_NOT_CONFIGURED": "The server has no USDC contract address configured, so a USDC reward cannot be created. Ask the operator to set it, or use INJ.",
       "INJECTIVE_EVM_CHAIN_NOT_CONFIGURED": "The server has no Injective EVM chain ID configured, so a USDC reward cannot be created. Ask the operator to set it, or use INJ.",
       "DEADLINE_IN_PAST": "The deadline cannot be moved into the past. Pick a future date and time, or keep the saved deadline.",
+      "APPLICATION_DEADLINE_AFTER_SUBMISSION_DEADLINE": "The application deadline is later than the submission deadline. Move the application deadline earlier or choose a later deadline.",
+      "REWARD_SYMBOL_DENOM_MISMATCH": "The reward symbol does not match the token. A native reward must use the inj denom with the INJ symbol.",
       "MAX_WINNERS_BELOW_APPROVED": "The maximum number of winners cannot be lower than the number of submissions already approved.",
       "MEDIA_FILE_TOO_LARGE": "The image is larger than 5 MB. Choose a smaller file and try again.",
       "MEDIA_FILE_TYPE_UNSUPPORTED": "Only PNG, JPEG and WebP images can be uploaded. Choose a different file and try again.",
@@ -57,7 +62,8 @@
     "operations": "Operations",
     "nftJobs": "NFT Jobs",
     "audit": "Audit log",
-    "recruitment": "Recruitment"
+    "recruitment": "Recruitment",
+    "ariaLabel": "Admin sections"
   },
   "gate": {
     "checking": "Checking admin access…",
@@ -158,7 +164,8 @@
       "submissionClosed": "Submissions closed",
       "reviewing": "In review",
       "completed": "Completed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "pastDeadline": "Past deadline"
     },
     "tags": {
       "Dev": "Dev",
@@ -182,6 +189,7 @@
       "rewardCurrency": "Reward token",
       "rewardAmount": "Reward amount",
       "amountPlaceholder": "500",
+      "applicationDeadline": "Application deadline (optional)",
       "maxWinners": "Max winners",
       "maxWinnersHint": "How many submissions can be approved and paid. It cannot go below the number already approved.",
       "intake": "Application intake",
@@ -204,12 +212,16 @@
         "required": "This field is required.",
         "tooLong": "Too long: use at most {max} characters.",
         "deadlineInvalid": "Enter a valid date and time.",
+        "applicationDeadlineInvalid": "Enter a valid date and time.",
+        "applicationDeadlineAfterDeadline": "The application deadline must be on or before the deadline.",
         "deadlinePast": "Choose a deadline in the future.",
         "amountInvalid": "Enter an amount greater than 0 with no more decimals than the token supports (USDC 6, INJ 18), or leave it empty for a draft.",
         "deliverablesRequired": "Add the deliverables or a submission guide.",
-        "maxWinnersInvalid": "Enter a whole number of 1 or more.",
+        "maxWinnersInvalid": "Enter a whole number from 1 to 1,000.",
         "titleTooLong": "Use at most 200 characters.",
-        "sponsorTooLong": "Use at most 100 characters."
+        "sponsorTooLong": "Use at most 100 characters.",
+        "bidiChars": "Remove hidden direction or control characters (for example U+202E, or a tab).",
+        "amountTooLarge": "Use at most {digits} digits before the decimal point."
       },
       "rewardLockedHint": "Reward is fixed once the bounty exists; it cannot be changed here.",
       "rewardNote": "After you create it, the sponsor sends the reward to the multisig wallet and an admin confirms the deposit in Operations. Only then can the bounty open. The reward cannot be changed once the bounty exists."
@@ -219,7 +231,7 @@
       "loadFailedDescription": "Could not load admin bounties.",
       "createdTitle": "Bounty created",
       "updatedTitle": "Bounty updated",
-      "saveFailedDescription": "The bounty was not saved. Check the fields and your admin permissions.",
+      "saveFailedDescription": "The bounty was not saved. Check the highlighted fields and try again.",
       "statusUpdatedTitle": "Status updated",
       "statusUpdatedDescription": "{title} is now {to, select, OPEN {open} other {submission closed}}.",
       "transitionFailedTitle": "Transition failed",
@@ -439,7 +451,11 @@
       },
       "cancelTitle": "Cancel this bounty?",
       "cancelDescription": "\"{title}\" stops accepting work and no further reviews or payout requests are possible.",
-      "cancelCallout": "Cancelling cannot be undone from the console."
+      "cancelCallout": "Cancelling cannot be undone from the console.",
+      "reopen": {
+        "label": "Reopen bounty",
+        "description": "Accepts submissions again. The submission deadline must still be in the future."
+      }
     },
     "rewards": {
       "eyebrow": "Rewards",
@@ -461,7 +477,8 @@
       "modalTitle": "Confirm reward deposit",
       "modalDescription": "Record the on-chain deposit of at least {amount} to {address}. Check the transaction on the explorer first.",
       "depositedAmount": "Deposited amount ({symbol})",
-      "amountBelowPosted": "The deposit must cover the posted reward ({amount})."
+      "amountBelowPosted": "The deposit must cover the posted reward ({amount}).",
+      "multisigNotConfigured": "Multisig address not configured. Set REWARD_MULTISIG_ADDRESS (runbook §1) before confirming deposits."
     },
     "applications": {
       "eyebrow": "Applications",
@@ -558,7 +575,8 @@
       "amountHintBaseUnits": "This token is not known here, so enter the amount in base units (a whole number, e.g. 25000000).",
       "noteOptional": "Note (optional)",
       "commentOptional": "Comment (optional)",
-      "commentRequired": "Comment (required)"
+      "commentRequired": "Comment (required)",
+      "amountTooLarge": "Use at most {digits} digits before the decimal point."
     },
     "toast": {
       "loadFailedTitle": "Operations unavailable",
@@ -598,7 +616,7 @@
       "REWARD_NOT_FUNDED": "Confirm the reward deposit before requesting payouts.",
       "INVALID_TX_HASH": "That is not a valid transaction hash.",
       "INVALID_TOKEN_AMOUNT": "The amount must be a positive whole number of base units.",
-      "TX_HASH_ALREADY_USED": "This transaction hash is already recorded (as a deposit, or as another bounty's payout).",
+      "TX_HASH_ALREADY_USED": "This transaction hash is already recorded (as a deposit, a payout or a refund).",
       "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND": "The submission is not approved, or its owner has no linked primary wallet.",
       "APPROVED_SUBMISSION_NOT_FOUND": "The paid submission is no longer approved.",
       "PAYOUT_ALREADY_REQUESTED": "A payout for this submission and reward already exists.",
@@ -616,7 +634,9 @@
       "REFRESH_UNAVAILABLE": "Your session could not be refreshed. Sign in again.",
       "NETWORK_ERROR": "The server could not be reached. Check your connection and try again.",
       "unknown": "Something went wrong ({code}).",
-      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "NOTE_BIDI_CHARS": "The note contains hidden direction or control characters. Remove them and try again.",
+      "NOTE_RESERVED_PREFIX": "A note cannot start with \"forfeited:\" (reserved for the system)."
     }
   },
   "nftJobs": {
@@ -733,12 +753,32 @@
       "PAYOUT_CANCELLED_MANUAL": "Payout cancelled by hand",
       "REWARD_DEPOSIT_CONFIRMED": "Reward deposit confirmed",
       "REWARD_REFUNDED": "Reward refund recorded",
-      "SUBMISSION_AWARD_FORFEITED": "Award forfeited",
+      "SUBMISSION_AWARD_FORFEITED": "Reward marked unpaid",
       "USER_MEMBER_GRANTED": "Member role assigned",
       "USER_MEMBER_REVOKED": "Member role removed",
       "USER_NICKNAME_CHANGED": "Nickname changed",
       "USER_WITHDRAWN": "Account deleted",
-      "SYSTEM": "System"
+      "SYSTEM": "System",
+      "APPLICATION_REJECTED": "Application rejected",
+      "BOUNTY_FUNDING_PENDING": "Bounty marked funding pending",
+      "BOUNTY_OPEN": "Bounty opened",
+      "BOUNTY_SUBMISSION_CLOSED": "Bounty submissions closed",
+      "BOUNTY_IN_REVIEW": "Bounty moved to review",
+      "BOUNTY_COMPLETED": "Bounty completed",
+      "SUBMISSION_APPROVE": "Submission approved",
+      "SUBMISSION_REJECT": "Submission rejected",
+      "SUBMISSION_REQUEST_REVISION": "Revision requested",
+      "SUBMISSION_START_REVIEW": "Submission review started",
+      "PAYOUT_PAID": "Payout marked paid",
+      "COHORT_OPENED": "Cohort opened for applications",
+      "COHORT_REOPENED": "Cohort reopened",
+      "COHORT_CLOSED": "Cohort closed",
+      "COHORT_APPLICATION_SUBMITTED": "Cohort application submitted",
+      "COHORT_APPLICATION_UPDATED": "Cohort application updated",
+      "COHORT_APPLICATION_WITHDRAWN": "Cohort application withdrawn",
+      "COHORT_APPLICATION_REAPPLIED": "Cohort re-applied after withdrawal",
+      "COHORT_APPLICATION_ACCEPTED": "Cohort application accepted",
+      "COHORT_QUESTIONS_UPDATED": "Application questions updated"
     },
     "empty": "No audit log entries match.",
     "pagination": "Audit log pages",
@@ -752,7 +792,7 @@
     }
   },
   "recruitment": {
-    "metaTitle": "Recruitment | Ninja Labs Admin",
+    "metaTitle": "Admin · Recruitment | Ninja Labs",
     "metaDescription": "Create cohorts, open and close recruitment, and review applications.",
     "title": "Member recruitment",
     "description": "Create a cohort, open it for applications, review who applied and export the list. Accepting an applicant does not make them a member: set that on the Users tab.",
@@ -839,13 +879,13 @@
       "filters": {
         "label": "Filter applications",
         "status": "Status",
-        "activityType": "Activity type",
-        "interestArea": "Interest area",
         "search": "Search",
         "searchPlaceholder": "Name, Telegram, X, nickname, email",
         "all": "All",
         "apply": "Apply",
-        "reset": "Reset"
+        "reset": "Reset",
+        "question": "Question",
+        "option": "Option"
       },
       "statuses": {
         "SUBMITTED": "Waiting",
@@ -860,9 +900,7 @@
       "columns": {
         "applicant": "Applicant",
         "contact": "Contact",
-        "experience": "Web3 experience",
-        "activity": "Activity",
-        "interests": "Interests",
+        "intro": "Introduction",
         "status": "Status",
         "applied": "Applied",
         "action": "Actions"
@@ -931,7 +969,80 @@
       "ADMIN_ONLY": "This account no longer has admin access.",
       "UNAUTHORIZED": "Your session has expired. Sign in again.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
-      "generic": "The request failed. Please try again."
+      "generic": "The request failed. Please try again.",
+      "COHORT_QUESTIONS_INVALID": "Could not save the questions. Check the number of options and the wording."
+    },
+    "questions": {
+      "action": "Questions",
+      "eyebrow": "Application questions",
+      "heading": "{name} application questions",
+      "intro": "Name, Telegram, X and introduction are always collected. These are the extra questions for this cohort.",
+      "note": "Answers in applications already received do not change.",
+      "empty": "There are no extra questions. Add one below.",
+      "add": "Add question",
+      "addType": "New question type",
+      "close": "Close",
+      "dirty": "You have unsaved changes.",
+      "types": {
+        "SHORT_TEXT": "Short answer",
+        "LONG_TEXT": "Long answer",
+        "SINGLE_CHOICE": "Choose one",
+        "MULTI_CHOICE": "Choose several"
+      },
+      "question": "Question {number}",
+      "moveUp": "Move question {number} up",
+      "moveDown": "Move question {number} down",
+      "remove": "Delete question {number}",
+      "labelKo": "Question (Korean)",
+      "labelEn": "Question (English, optional)",
+      "labelZh": "Question (Chinese, optional)",
+      "translationHint": "Left empty, the Korean text is shown.",
+      "helpKo": "Help text (Korean, optional)",
+      "helpEn": "Help text (English, optional)",
+      "helpZh": "Help text (Chinese, optional)",
+      "required": "Required question",
+      "options": "Options",
+      "optionKo": "Option {number} (Korean)",
+      "optionEn": "Option {number} (English, optional)",
+      "optionZh": "Option {number} (Chinese, optional)",
+      "addOption": "Add option",
+      "removeOption": "Delete option {number}",
+      "moveOptionUp": "Move option {number} up",
+      "moveOptionDown": "Move option {number} down",
+      "withDetail": "Ask for details",
+      "withDetailHint": "When chosen, the applicant adds one more line. Only one option per question.",
+      "limits": "Up to {questions} questions, {min} to {max} options per choice question.",
+      "save": "Save questions",
+      "saving": "Saving…",
+      "savedTitle": "Application questions saved",
+      "savedDescription": "{name}",
+      "removeDialog": {
+        "eyebrow": "Delete question",
+        "title": "Delete this question?",
+        "description": "After you save, new applicants no longer see it. Answers already received stay as they are.",
+        "confirm": "Delete question"
+      },
+      "discardDialog": {
+        "eyebrow": "Questions",
+        "title": "Discard unsaved changes?",
+        "description": "Your unsaved question changes will be lost.",
+        "confirm": "Discard"
+      },
+      "errors": {
+        "tooManyQuestions": "At most {max} questions.",
+        "labelRequired": "Write the question in Korean.",
+        "labelTooLong": "The question is too long. Up to {max} characters.",
+        "labelInvalid": "The question cannot contain line breaks or invisible characters.",
+        "helpKoRequired": "Add the Korean help text too.",
+        "helpTooLong": "The help text is too long. Up to {max} characters.",
+        "helpInvalid": "The help text contains a character that is not allowed.",
+        "optionsCount": "A choice question needs {min} to {max} options.",
+        "withDetailMax": "Only one option per question can ask for details.",
+        "optionLabelRequired": "Write the option in Korean.",
+        "optionLabelTooLong": "The option is too long. Up to {max} characters.",
+        "optionLabelInvalid": "The option cannot contain line breaks or invisible characters."
+      },
+      "fix": "Fix the marked items."
     }
   }
 }

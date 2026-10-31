@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useAuthActions, useAuthSnapshot, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { menuItemClass, menuPanelClass, useMenuButton } from "@/components/layout/useMenuButton";
 import { Link } from "@/i18n/navigation";
+import { shortAddress } from "@/lib/format";
 import type { ClientUser } from "@/lib/contracts/auth";
 
 // `key` is a message key under `common.userMenu`.
@@ -16,6 +17,10 @@ export function getAccountNavigationItems(user: Pick<ClientUser, "profileSlug">)
     { key: "accountSettings", href: "/account" },
   ] as const;
 }
+
+/** Box of the trigger chip (without colors); `AuthArea` reserves the same box while the session is restored. */
+export const userChipBoxClass = "flex items-center gap-2.5 rounded-full border py-1 pl-1 pr-3";
+export const userChipAvatarSizeClass = "size-8";
 
 export function UserMenu() {
   const t = useTranslations("common.userMenu");
@@ -35,13 +40,13 @@ export function UserMenu() {
     <div className="relative" {...menu.rootProps}>
       <button
         {...menu.buttonProps()}
-        className={`flex items-center gap-2.5 rounded-full border bg-surface py-1 pl-1 pr-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary${menu.open ? " border-primary-outline" : " border-border"}`}
+        className={`${userChipBoxClass} bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary${menu.open ? " border-primary-outline" : " border-border"}`}
       >
-        <span className="grid size-8 place-items-center rounded-full bg-primary-soft-border font-display text-[13px] font-bold text-primary-strong">
+        <span className={`grid ${userChipAvatarSizeClass} place-items-center rounded-full bg-primary-soft-border font-display text-[13px] font-bold text-primary-strong`}>
           {user.initials}
         </span>
         <span className="max-w-[9rem] truncate text-sm font-semibold text-ink">{user.handle}</span>
-        <span aria-hidden="true" className="text-xs text-ink-muted">{menu.open ? "▴" : "▾"}</span>
+        <span aria-hidden="true" className={`text-xs text-ink-muted motion-control motion-reduce:transition-none${menu.open ? " rotate-180" : ""}`}>▾</span>
       </button>
 
       {menu.open ? (
@@ -52,9 +57,7 @@ export function UserMenu() {
               <p className="whitespace-nowrap text-xs text-ink-muted" title={user.walletAddress}>
                 <span className="sr-only">{t("walletAddress", { wallet: user.walletAddress })}</span>
                 <span aria-hidden="true">
-                  {user.walletAddress.length > 12
-                    ? `${user.walletAddress.slice(0, 6)}…${user.walletAddress.slice(-4)}`
-                    : user.walletAddress}
+                  {shortAddress(user.walletAddress)}
                 </span>
               </p>
             ) : null}
@@ -76,7 +79,7 @@ export function UserMenu() {
             <div className="my-1.5 border-t border-border" />
             <button
               {...menu.itemProps(menuItems.length)}
-              className="w-full rounded-control px-3 py-2 text-left text-sm font-semibold text-danger hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="w-full motion-control rounded-control px-3 py-2 text-left text-sm font-semibold text-danger hover:bg-danger-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               onClick={() => {
                 void signOut();
                 menu.closeMenu();

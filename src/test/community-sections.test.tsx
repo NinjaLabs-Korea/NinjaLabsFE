@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, screen, within } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AboutSection } from "@/components/community/AboutSection";
@@ -16,12 +16,14 @@ import { createMockApiClient } from "@/lib/mocks/api-client";
 import type { Bounty, Member, Notice } from "@/lib/types";
 import { renderWithIntl } from "@/test/intl";
 
+const refresh = vi.hoisted(() => vi.fn());
 vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({ refresh }),
   Link: ({ children, href, ...props }: ComponentProps<"a">) => <a href={href} {...props}>{children}</a>,
 }));
 let api: ApiClient;
 vi.mock("@/components/auth/FoundationProvider", async () =>
-  (await import("./support/foundation")).foundationMock({ useCohortApi: () => api }));
+  (await import("./support/foundation")).foundationMock({ useAuthSnapshot: () => ({ status: "signed-out", user: null }), useCohortApi: () => api }));
 
 const notice = (overrides: Partial<Notice> = {}): Notice => ({
   slug: "n1", title: "Builder meetup", excerpt: "We met.", bodyMarkdown: "We met.", category: "Events", publishedAt: "2026.06.20", thumbnail: "", ...overrides,
@@ -46,7 +48,7 @@ describe("AboutSection", () => {
   it("introduces the hub and the four roles that can join", () => {
     renderWithIntl(<AboutSection />);
     expect(screen.getByRole("heading", { level: 2 })).toBeTruthy();
-    expect(screen.getByText(/Contributor Hub for people who learn, build and move on Injective/)).toBeTruthy();
+    expect(screen.getByText(/studies together, runs events and ships real work through bounties/)).toBeTruthy();
     for (const role of ["Developers", "Marketers", "Researchers", "Creators"]) expect(screen.getByText(role)).toBeTruthy();
   });
 
@@ -65,12 +67,13 @@ describe("ActivitiesSection", () => {
     expect(within(cards[0]).getByText("Event date 2026.06.18")).toBeTruthy();
     expect(within(cards[0]).getByText("Events")).toBeTruthy();
     expect(within(cards[1]).getByText("2026.06.20")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "See all events →" }).getAttribute("href")).toBe("/notices?category=events");
+    expect(screen.getByRole("link", { name: "More past activities →" }).getAttribute("href")).toBe("/notices?category=events");
   });
 
   it("has an empty and an unavailable state", () => {
     const empty = renderWithIntl(<ActivitiesSection events={[]} unavailable={false} />);
-    expect(screen.getByText("No events have been posted yet. Check back soon.")).toBeTruthy();
+    expect(screen.getByText("No news yet. New posts show up in Notices first.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "See notices →" }).getAttribute("href")).toBe("/notices");
     empty.unmount();
     renderWithIntl(<ActivitiesSection events={[]} unavailable />);
     expect(screen.getByText("Past activities are temporarily unavailable.")).toBeTruthy();
@@ -91,7 +94,8 @@ describe("AchievementsSection, MembersPreviewSection, BountiesEntrySection", () 
 
   it("shows the empty state when there are only zero stats and no highlights", () => {
     renderWithIntl(<AchievementsSection hall={{ stats: [{ value: "0", labelKey: "bountiesCompleted" }], milestones: [], partners: [], highlights: [] }} locale="en" unavailable={false} />);
-    expect(screen.getByText(/shipped|appear here/i)).toBeTruthy();
+    expect(screen.getByText(/No achievements yet/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "See the Hall of Fame →" }).getAttribute("href")).toBe("/hall-of-fame");
   });
 
   it("explains the bounties and previews the open ones with a link to /bounties", () => {
@@ -120,7 +124,7 @@ describe("AchievementsSection, MembersPreviewSection, BountiesEntrySection", () 
     renderWithIntl(<UpcomingEventsSection events={[notice({ slug: "u1", title: "Demo day", eventDate: "2999-01-01" })]} />);
     expect(screen.getByRole("heading", { level: 2, name: "Ongoing and upcoming events" })).toBeTruthy();
     expect(screen.getByText("Event date 2999.01.01")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "See all events →" }).getAttribute("href")).toBe("/notices?category=events");
+    expect(screen.getByRole("link", { name: "More upcoming events →" }).getAttribute("href")).toBe("/notices?category=events");
   });
 
   it("shows the hall of fame stats and the first highlights, linking to the hall of fame", () => {
@@ -147,6 +151,22 @@ describe("AchievementsSection, MembersPreviewSection, BountiesEntrySection", () 
   it("gives every section an unavailable state that is not the empty state", () => {
     renderWithIntl(<><ActivitiesSection events={[]} unavailable /><AchievementsSection hall={data().hall} locale="en" unavailable /><MembersPreviewSection members={[]} unavailable /></>);
     expect(screen.getAllByRole("status").map((node) => node.textContent)).toEqual(expect.arrayContaining([expect.stringContaining("Past activities are temporarily unavailable"), expect.stringContaining("Achievements are temporarily unavailable"), expect.stringContaining("Members are temporarily unavailable")]));
+  });
+});
+
+describe("hub empty and unavailable states offer a next step", () => {
+  it("links an empty members section to the recruitment page", () => {
+    renderWithIntl(<MembersPreviewSection members={[]} unavailable={false} />);
+    expect(screen.getByRole("link", { name: "See member recruitment →" }).getAttribute("href")).toBe("/recruit");
+  });
+
+  it("gives each unavailable section a retry button that re-reads the page", () => {
+    refresh.mockClear();
+    renderWithIntl(<><ActivitiesSection events={[]} unavailable /><AchievementsSection hall={data().hall} locale="en" unavailable /><MembersPreviewSection members={[]} unavailable /></>);
+    const buttons = screen.getAllByRole("button", { name: "Try again" });
+    expect(buttons).toHaveLength(3);
+    fireEvent.click(buttons[0]);
+    expect(refresh).toHaveBeenCalledTimes(1);
   });
 });
 

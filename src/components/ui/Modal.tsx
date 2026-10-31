@@ -63,7 +63,7 @@ export function Modal({ open, onClose, labelledBy, describedBy, role, children, 
       aria-labelledby={labelledBy}
       aria-describedby={describedBy}
       role={role}
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-[440px] overflow-y-auto rounded-card border border-border bg-surface p-6 shadow-frame backdrop:bg-ink/40 backdrop:backdrop-blur-[2px]"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-[440px] overflow-y-auto rounded-card border border-border bg-surface p-6 shadow-frame backdrop:bg-ink/40 backdrop:backdrop-blur-[2px] open:animate-pop-in backdrop:animate-fade-in motion-reduce:animate-none motion-reduce:backdrop:animate-none"
       onCancel={(event) => {
         event.preventDefault();
         onClose();

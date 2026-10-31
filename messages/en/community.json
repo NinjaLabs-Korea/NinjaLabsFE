@@ -1,12 +1,12 @@
 {
   "metadata": {
-    "title": "About Ninja Labs | Ninja Labs",
+    "title": "About us | Ninja Labs",
     "description": "Meet the Contributor Hub for people who learn, build and move on Injective: past activities, achievements and members."
   },
   "about": {
     "eyebrow": "About Ninja Labs",
     "heading": "Learn, build and move on Injective",
-    "body": "Ninja Labs is the Contributor Hub for people who learn, build and move on Injective. Developers, marketers, researchers and creators are all free to take part.",
+    "body": "Ninja Labs is a community that studies together, runs events and ships real work through bounties.",
     "roles": {
       "developer": {
         "title": "Developers",
@@ -27,17 +27,16 @@
     }
   },
   "upcoming": {
-    "eyebrow": "Happening now and next",
     "heading": "Ongoing and upcoming events",
-    "viewAll": "See all events →"
+    "viewAll": "More upcoming events →"
   },
   "activities": {
-    "eyebrow": "Past activities",
     "heading": "What we have done together",
-    "viewAll": "See all events →",
+    "viewAll": "More past activities →",
     "unavailable": "Past activities are temporarily unavailable.",
     "unavailableBody": "We couldn’t reach the server. Please reload shortly.",
-    "empty": "No events have been posted yet. Check back soon."
+    "empty": "No news yet. New posts show up in Notices first.",
+    "emptyAction": "See notices →"
   },
   "achievements": {
     "eyebrow": "Recent achievements",
@@ -45,14 +44,17 @@
     "viewAll": "Open the Hall of Fame →",
     "unavailable": "Achievements are temporarily unavailable.",
     "unavailableBody": "We couldn’t reach the server. Please reload shortly.",
-    "empty": "Achievements will show up here as the community ships."
+    "empty": "No achievements yet. They will be added to the Hall of Fame as they come in.",
+    "emptyAction": "See the Hall of Fame →"
   },
   "members": {
-    "eyebrow": "Members",
     "heading": "Meet the members",
     "viewAll": "All members →",
     "unavailable": "Members are temporarily unavailable.",
     "unavailableBody": "We couldn’t reach the server. Please reload shortly.",
-    "empty": "Official members will be listed here."
-  }
+    "empty": "No members listed yet. Want to join? Check member recruitment.",
+    "emptyAction": "See member recruitment →"
+  },
+  "pageUnavailable": "We cannot load this right now. Please try again shortly.",
+  "retry": "Try again"
 }

@@ -32,6 +32,7 @@
       "none": "未签发"
     },
     "keyExpires": "{date} 过期",
+    "keyExpiredOn": "已于 {date} 过期",
     "keyExpiringToday": "此密钥将在 24 小时内过期，请在过期前轮换。",
     "keyExpiringSoon": "此密钥将在 {days} 天后过期，请在过期前轮换。",
     "keyExpired": "此密钥已过期。请轮换密钥以继续使用该代理。",
@@ -43,7 +44,8 @@
       "generic": "无法轮换密钥，请重试。",
       "AGENT_NOT_ACTIVE": "只有处于活动状态的代理才能轮换密钥。",
       "AGENT_NOT_FOUND": "该代理已不存在。列表已刷新。",
-      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
+      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后再试。"
     },
     "revokeAgent": "撤销代理",
     "revoking": "正在撤销…",
@@ -63,9 +65,10 @@
     "eyebrow": "代理",
     "heading": "注册我的代理",
     "intro": "将已验证的 AI 代理绑定到你的 Ninja Labs 账户，使其能以你的名义提交已完成的赏金工作。",
+    "lead": "代理是替你申请赏金并提交成果的 AI 工具。",
     "steps": {
       "doc": {
-        "heading": "获取 REST API 文档",
+        "heading": "获取代理指南",
         "body": "下载 skill.md 以及用于代理提交的 API 使用指南。",
         "download": "下载 skill.md →"
       },
@@ -75,14 +78,14 @@
       },
       "ownership": {
         "heading": "证明所有权",
-        "body": "签署挑战消息，以便 Ninja Labs 验证私钥持有者。"
+        "body": "签名一次，确认此钱包属于你的代理。"
       },
       "apiKey": {
         "heading": "获取 API key",
         "body": "使用生成的密钥进行已验证的代理提交和状态查询。"
       }
     },
-    "verificationHeading": "如何证明所有权",
+    "verificationHeading": "所有权验证",
     "verificationItems": {
       "challenge": "AI 代理拥有独立于所有者的专用 EVM 钱包。",
       "signature": "用户注册“我的代理”时，通过签名证明所有权：私钥 → 签名 → 公钥验证。",
@@ -113,7 +116,8 @@
     "viewAgents": "查看我的代理",
     "pending": "此代理正在等待验证。请重新签名以完成注册。",
     "connecting": "连接中…",
-    "connect": "连接代理 MetaMask",
+    "connect": "连接代理钱包",
+    "noWallet": "在此浏览器中未找到钱包。请安装 MetaMask，或在钱包应用的浏览器中打开此页面。",
     "switching": "切换中…",
     "switchNetwork": "切换到 Injective EVM",
     "registering": "正在生成挑战消息…",
@@ -124,8 +128,15 @@
       "AGENT_WALLET_IS_OWNER_WALLET": "这是你的个人注册钱包。请在 MetaMask 中切换到专用的代理账户。",
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "此钱包已注册，请在“我的代理”中查看。",
       "walletHeldByOther": "此钱包已被其他账户注册。请使用其他钱包。",
-      "generic": "代理注册失败，请检查钱包签名后重试。",
-      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
+      "generic": "代理注册失败，请重试。",
+      "TOO_MANY_REQUESTS": "请求过多。请稍后再试。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后再试。",
+      "INVALID_AGENT_WALLET_ADDRESS": "钱包地址无效，请重新连接钱包后再试。",
+      "PROFILE_REQUIRED": "注册代理前请先完善个人资料。",
+      "signature": "钱包签名失败。请检查钱包签名后重试。",
+      "AGENT_ALREADY_VERIFIED": "该代理已验证。",
+      "AGENT_NOT_FOUND": "找不到该代理，请刷新列表。",
+      "profileLink": "完善个人资料"
     },
     "verified": "代理已验证",
     "copyKey": "请立即复制此 API key，它不会再次显示。",
@@ -136,8 +147,10 @@
     "errors": {
       "nameRequired": "请输入代理名称。",
       "nameTooLong": "最多 {max} 个字符。",
-      "nameRejected": "服务器拒绝了此名称，请缩短或简化。",
+      "nameRejected": "服务器拒绝了此名称，请检查字符和长度。",
+      "nameInvalidChars": "请从名称中删除换行符、制表符、文字方向控制字符或零宽字符。",
       "descriptionTooLong": "最多 {max} 个字符。",
+      "descriptionInvalidChars": "请从描述中删除无法保存的字符（例如 NUL）。",
       "descriptionRejected": "服务器拒绝了此描述，请缩短。"
     }
   },

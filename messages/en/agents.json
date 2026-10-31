@@ -32,6 +32,7 @@
       "none": "Not issued"
     },
     "keyExpires": "Expires {date}",
+    "keyExpiredOn": "Expired {date}",
     "keyExpiringToday": "This key expires in less than a day. Rotate it before it expires.",
     "keyExpiringSoon": "This key expires in {days, plural, one {# day} other {# days}}. Rotate it before it expires.",
     "keyExpired": "This key has expired. Rotate it to keep the agent working.",
@@ -43,7 +44,8 @@
       "generic": "The key could not be rotated. Try again.",
       "AGENT_NOT_ACTIVE": "Only active agents can rotate keys.",
       "AGENT_NOT_FOUND": "This agent no longer exists. The list was refreshed.",
-      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment."
     },
     "revokeAgent": "Revoke agent",
     "revoking": "Revoking…",
@@ -63,9 +65,10 @@
     "eyebrow": "AGENTS",
     "heading": "Register my agent",
     "intro": "Bind a verified AI agent to your Ninja Labs account so it can submit completed bounty work under your ownership.",
+    "lead": "An agent is an AI tool that applies to bounties and submits work for you.",
     "steps": {
       "doc": {
-        "heading": "Get REST API doc",
+        "heading": "Get the agent guide",
         "body": "Download skill.md and the API usage guide for agent submissions.",
         "download": "Download skill.md →"
       },
@@ -75,14 +78,14 @@
       },
       "ownership": {
         "heading": "Prove ownership",
-        "body": "Sign a challenge so Ninja Labs can verify the private key holder."
+        "body": "Sign once to confirm this wallet belongs to your agent."
       },
       "apiKey": {
         "heading": "Receive API key",
         "body": "Use the generated key for verified agent submissions and status checks."
       }
     },
-    "verificationHeading": "How ownership is proven",
+    "verificationHeading": "Ownership check",
     "verificationItems": {
       "challenge": "The AI agent has its own dedicated EVM wallet, separate from the owner's.",
       "signature": "When a user registers \"my agent\", ownership is proven by signature: private key → signature → public-key verification.",
@@ -113,7 +116,8 @@
     "viewAgents": "View my agents",
     "pending": "This agent is pending verification. Sign again to finish registration.",
     "connecting": "Connecting…",
-    "connect": "Connect agent MetaMask",
+    "connect": "Connect agent wallet",
+    "noWallet": "No wallet found in this browser. Install MetaMask, or open this page in your wallet app's browser.",
     "switching": "Switching…",
     "switchNetwork": "Switch to Injective EVM",
     "registering": "Creating challenge…",
@@ -124,8 +128,15 @@
       "AGENT_WALLET_IS_OWNER_WALLET": "This is your personal onboarding wallet. Switch MetaMask to a dedicated agent account.",
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "This wallet is already registered. View it in My agents.",
       "walletHeldByOther": "This wallet is already registered to another account. Use a different wallet.",
-      "generic": "Agent registration failed. Check the wallet signature and try again.",
-      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
+      "generic": "Agent registration failed. Please try again.",
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "INVALID_AGENT_WALLET_ADDRESS": "This wallet address is not valid. Reconnect your wallet and try again.",
+      "PROFILE_REQUIRED": "Finish your profile before registering an agent.",
+      "signature": "The wallet signature failed. Check the wallet signature and try again.",
+      "AGENT_ALREADY_VERIFIED": "This agent is already verified.",
+      "AGENT_NOT_FOUND": "This agent was not found. Refresh the list.",
+      "profileLink": "Finish your profile"
     },
     "verified": "Agent verified",
     "copyKey": "Copy this API key now. It will not be shown again.",
@@ -136,8 +147,10 @@
     "errors": {
       "nameRequired": "Enter an agent name.",
       "nameTooLong": "Use at most {max} characters.",
-      "nameRejected": "The server rejected this name. Shorten or simplify it.",
+      "nameRejected": "The server rejected this name. Check its characters and length.",
+      "nameInvalidChars": "Remove line breaks, tabs, text-direction or zero-width characters from the name.",
       "descriptionTooLong": "Use at most {max} characters.",
+      "descriptionInvalidChars": "Remove unsupported characters (such as NUL) from the description.",
       "descriptionRejected": "The server rejected this description. Shorten it."
     }
   },

@@ -6,7 +6,7 @@ import { useAuthActions, useFoundationMode } from "@/components/auth/FoundationP
 import { TurnstileWidget, type TurnstileHandle, type TurnstileStatus } from "@/components/auth/TurnstileWidget";
 import { useRouter } from "@/i18n/navigation";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
-import { rememberReturnPath } from "@/lib/return-path";
+import { clearReturnPath, rememberReturnPath } from "@/lib/return-path";
 
 type LoginState = "idle" | "pending" | "error";
 
@@ -51,12 +51,14 @@ export function GoogleLoginButton({ turnstileSiteKey }: GoogleLoginButtonProps =
     setLoginState("pending");
     // `/signup?returnTo=/recruit`: come back to the page that asked for the sign-in once it (and onboarding) is done.
     const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+    // A plain sign-in must not inherit a path left by an earlier abandoned attempt (e.g. `/recruit`).
     if (returnTo) rememberReturnPath(returnTo);
+    else clearReturnPath();
 
     try {
       if (simulateFailure) {
         // mock 전용 모듈: 이 분기에서만 불러와 세션 미리보기 어댑터가 공용 번들에 실리지 않게 한다.
-        const { simulateMockSignInFailure } = await import("@/lib/foundation/auth-adapter");
+        const { simulateMockSignInFailure } = await import("@/lib/mocks/session-preview-auth-adapter");
         await simulateMockSignInFailure();
       } else {
         // api 모드: 구글 동의 화면으로 전체 페이지 리다이렉트 (Promise는 resolve되지 않음). 위젯 토큰은 BE가 1회 검증한다.
@@ -82,12 +84,12 @@ export function GoogleLoginButton({ turnstileSiteKey }: GoogleLoginButtonProps =
         aria-label={buttonLabel}
         aria-busy={pending}
         aria-describedby="google-login-status"
-        className="flex w-full items-center justify-center gap-2 rounded-control bg-primary px-5 py-3 text-base font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-control bg-primary px-5 py-3 text-base font-semibold text-on-inverse motion-control motion-press hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
         disabled={pending || awaitingTurnstile}
         onClick={() => void handleSignIn()}
         type="button"
       >
-        <span className="text-base font-bold">G</span>
+        {pending ? <span aria-hidden="true" className="spinner" /> : <span className="text-base font-bold">G</span>}
         {buttonLabel}
       </button>
       {turnstileKey ? <TurnstileWidget onChange={handleTurnstile} ref={turnstileRef} siteKey={turnstileKey} /> : null}

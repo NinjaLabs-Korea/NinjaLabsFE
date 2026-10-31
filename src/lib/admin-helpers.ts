@@ -2,8 +2,11 @@
 // `lib/admin.ts`, whose mock registries (bounties/members/notices/hall-of-fame fixtures) would otherwise be bundled
 // into the shared client chunk. `lib/admin.ts` re-exports everything for server code and tests.
 import { isHighlightTypeCode, type HighlightTypeCode } from "./api/codecs";
-import { ERROR_COPY, knownCode } from "./api/error-copy";
-import { ApiHttpError } from "./api/http";
+import { ERROR_COPY, listedCode, normalizedCode } from "./api/error-copy";
+import { getAccessToken } from "./api/http";
+import type { PublicListResource } from "./api/public";
+import { validationFieldsFromError } from "./api/validation";
+import { refreshPublicLists } from "./admin-revalidate";
 import { noticeCategoryKeys } from "./notice-categories";
 import type { Notice } from "./types";
 
@@ -15,12 +18,8 @@ export const ADMIN_API_ERROR_CODES = ERROR_COPY.adminWrite.codes;
 export type AdminApiErrorCode = (typeof ADMIN_API_ERROR_CODES)[number];
 
 export function adminApiErrorCode(error: unknown): AdminApiErrorCode | null {
-  // Same status normalization as `opsErrorCode`: the throttler's 429 and a refused session carry no catalog code of their own.
-  if (error instanceof ApiHttpError) {
-    if (error.status === 429) return "TOO_MANY_REQUESTS";
-    if (error.status === 401) return "UNAUTHORIZED";
-  }
-  return knownCode(error, ADMIN_API_ERROR_CODES);
+  // `normalizedCode` maps the throttler's 429 and a refused session (401), which carry no catalog code of their own.
+  return listedCode(normalizedCode(error), ADMIN_API_ERROR_CODES);
 }
 
 /** Toast description for a failed admin write: the mapped BE code's copy, else the action's generic `fallback`. */
@@ -28,6 +27,51 @@ export function adminErrorDescription(error: unknown, translate: (key: `errors.$
   const code = adminApiErrorCode(error);
   return code ? translate(`errors.${code}`) : fallback;
 }
+
+/**
+ * A BE 400 `VALIDATION_FAILED` that names URL properties (`externalUrl`, `thumbnailUrl`, `imageUrl`, `linkUrl`, `coverImageUrl`) as inline
+ * field errors instead of the generic save-failed toast. `publicUrl` when the BE message says the host must be public, else `urlInvalid`.
+ * Keys are BE property names; callers map them to their own form fields. Empty when the error is something else.
+ */
+export const ADMIN_URL_PROPERTIES = ["externalUrl", "thumbnailUrl", "imageUrl", "linkUrl", "coverImageUrl"] as const;
+export function adminUrlFieldErrors(error: unknown): Partial<Record<(typeof ADMIN_URL_PROPERTIES)[number], "publicUrl" | "urlInvalid">> {
+  const fields = validationFieldsFromError(error);
+  const result: Partial<Record<(typeof ADMIN_URL_PROPERTIES)[number], "publicUrl" | "urlInvalid">> = {};
+  for (const property of ADMIN_URL_PROPERTIES) {
+    if (Object.hasOwn(fields, property)) result[property] = fields[property].includes("public http(s)") ? "publicUrl" : "urlInvalid";
+  }
+  return result;
+}
+
+/**
+ * A BE 400 `VALIDATION_FAILED` that says a text property has no visible characters or contains bidirectional/control formatting
+ * characters (BE `visible-text.ts`), as inline field errors. `map` is BE property name -> the caller's form field key.
+ * `required` for "must contain visible characters", `bidiChars` for the bidirectional/control messages. Empty for anything else.
+ */
+export function adminTextFieldErrors<Key extends string>(error: unknown, map: Readonly<Record<string, Key>>): Partial<Record<Key, "required" | "bidiChars">> {
+  const fields = validationFieldsFromError(error);
+  const result: Partial<Record<Key, "required" | "bidiChars">> = {};
+  for (const [property, key] of Object.entries(map)) {
+    if (!Object.hasOwn(fields, property)) continue;
+    const message = fields[property];
+    if (message.includes("bidirectional")) result[key] = "bidiChars";
+    else if (message.includes("visible characters")) result[key] = "required";
+  }
+  return result;
+}
+
+/**
+ * After a successful admin write, expire the cached public lists so `/notices`, `/bounties` and the hub reflect it on the next visit.
+ * Fire and forget: the write already succeeded, so a failure here is only logged and never reaches the success toast.
+ */
+export function expirePublicLists(resources: readonly PublicListResource[]): void {
+  const token = getAccessToken();
+  if (!token) return;
+  void refreshPublicLists(resources, token).catch((error: unknown) => console.error("expirePublicLists failed", error));
+}
+
+/** Custody address the BE stores while REWARD_MULTISIG_ADDRESS is unset (reward-token.resolver.ts). Must equal BE PENDING_MULTISIG_SETUP. */
+export const PENDING_MULTISIG_SETUP = "PENDING_MULTISIG_SETUP";
 
 /** Postgres INTEGER ceiling: BE `MaxPgInt` on `displayOrder` (member and highlight ordering). Above it the BE answers 400. */
 export const DISPLAY_ORDER_MAX = 2_147_483_647;

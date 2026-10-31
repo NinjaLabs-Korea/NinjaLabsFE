@@ -53,11 +53,15 @@ beforeEach(() => {
 describe("WalletSettings", () => {
   const noWallet = signedInWith({ id: "u1", handle: "ninja", walletAddress: undefined });
 
-  it("lets someone who connected later link a wallet here, and re-reads the session when it is verified", () => {
+  it("lets someone who connected later link a wallet here, and re-reads the session when it is verified", async () => {
     state.auth = noWallet;
     renderWithIntl(<WalletSettings wallet={{ chainId: 1439, rpcUrl: "https://rpc.example" }} />);
     expect(screen.getByText("Not connected")).toBeTruthy();
-    expect(screen.getByTestId("wallet-provider").getAttribute("data-chain")).toBe("1439");
+    // The wagmi stack loads on demand: nothing of it is mounted until Connect is pressed.
+    expect(screen.queryByTestId("wallet-provider")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Connect wallet" }));
+    expect((await screen.findByTestId("wallet-provider")).getAttribute("data-chain")).toBe("1439");
+    await screen.findByRole("button", { name: "Connect wallet" });
     expect(screen.getByRole("button", { name: "Connect wallet" })).toBeTruthy();
     verifyHandlers.onVerified?.();
     expect(refresh).toHaveBeenCalledTimes(1);
@@ -93,12 +97,12 @@ describe("ProfileForm in edit mode (account page)", () => {
     vi.stubGlobal("location", { ...window.location, assign, pathname: "/en/account" });
     const onSaved = vi.fn();
     renderWithIntl(<ProfileForm mode="edit" onSaved={onSaved} />);
-    expect((screen.getByLabelText("Nickname*") as HTMLInputElement).value).toBe("ninja");
-    expect((screen.getByLabelText("Bio*") as HTMLTextAreaElement).value).toBe("Builder");
+    expect((screen.getByLabelText("Nickname") as HTMLInputElement).value).toBe("ninja");
+    expect((screen.getByLabelText("Bio") as HTMLTextAreaElement).value).toBe("Builder");
     expect(screen.getByRole("button", { name: "Dev" }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByRole("button", { name: "Content" }).getAttribute("aria-pressed")).toBe("false");
 
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Builder and writer" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Builder and writer" } });
     fireEvent.click(screen.getByRole("button", { name: "Content" }));
     fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
@@ -124,30 +128,41 @@ describe("ProfileForm in edit mode (account page)", () => {
 });
 
 describe("AccountSettingsView sections", () => {
+  it("lets a long unbroken nickname, bio and wallet address wrap inside the card", () => {
+    const long = "W".repeat(50);
+    state.auth = signedInWith({ id: previewUser.id, handle: long, bio: long, tags: [], walletAddress: `inj1${long}` });
+    renderWithIntl(<AccountSettingsView wallet={null} />);
+    for (const text of [long, `inj1${long}`]) {
+      const dd = screen.getAllByText(text).find((node) => node.tagName === "DD");
+      expect(dd?.className).toContain("min-w-0");
+      expect(dd?.className).toContain("[overflow-wrap:anywhere]");
+    }
+  });
+
   it("shows bio and tags, opens the editor on demand and closes it after a save", async () => {
     state.auth = signedInWith({ id: previewUser.id, handle: "ninja", bio: "Builder", tags: ["DEV"], walletAddress: "inj1abc" });
     renderWithIntl(<AccountSettingsView wallet={{ chainId: 1439 }} />);
     expect(screen.getByText("Builder")).toBeTruthy();
     expect(screen.getByText("Dev")).toBeTruthy();
-    expect(screen.queryByLabelText("Nickname*")).toBeNull();
+    expect(screen.queryByLabelText("Nickname")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Edit profile" }));
-    expect(screen.getByLabelText("Nickname*")).toBeTruthy();
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "Changed" } });
+    expect(screen.getByLabelText("Nickname")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "Changed" } });
     fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
-    await waitFor(() => expect(screen.queryByLabelText("Nickname*")).toBeNull());
+    await waitFor(() => expect(screen.queryByLabelText("Nickname")).toBeNull());
     fireEvent.click(screen.getByRole("button", { name: "Edit profile" }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel editing" }));
-    expect(screen.queryByLabelText("Nickname*")).toBeNull();
+    expect(screen.queryByLabelText("Nickname")).toBeNull();
   });
 
   it("keeps the open profile editor and its typed bio when the session ends, and says so", () => {
     state.auth = signedInWith({ id: previewUser.id, handle: "ninja", bio: "Builder", tags: ["DEV"] });
     const view = renderWithIntl(<AccountSettingsView wallet={{ chainId: 1439 }} />);
     fireEvent.click(screen.getByRole("button", { name: "Edit profile" }));
-    fireEvent.change(screen.getByLabelText("Bio*"), { target: { value: "A long new bio" } });
+    fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "A long new bio" } });
     state.auth = { status: "signed-out", user: null, reason: "session-ended" };
     view.rerender(<AccountSettingsView wallet={{ chainId: 1439 }} />);
-    expect((screen.getByLabelText("Bio*") as HTMLTextAreaElement).value).toBe("A long new bio");
+    expect((screen.getByLabelText("Bio") as HTMLTextAreaElement).value).toBe("A long new bio");
     expect(screen.getByText("Your session has ended. Sign in again to continue.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Sign in again in a new tab, then save here" }).getAttribute("target")).toBe("_blank");
   });
@@ -158,7 +173,7 @@ describe("AccountSettingsView sections", () => {
     state.auth = { status: "signed-out", user: null, reason: "session-ended" };
     view.rerender(<AccountSettingsView wallet={{ chainId: 1439 }} />);
     expect(screen.getByText("Your session has expired. Sign in again to continue.")).toBeTruthy();
-    expect(screen.queryByLabelText("Bio*")).toBeNull();
+    expect(screen.queryByLabelText("Bio")).toBeNull();
   });
 
   it("puts the wallet card and the cohort applications between the profile and the danger zone", () => {
@@ -172,7 +187,7 @@ describe("AccountSettingsView sections", () => {
 });
 
 describe("MyCohortApplications", () => {
-  const values = { displayName: "Me", telegram: "@me_builds", twitter: "@me_x", web3Experience: "GT_3Y" as const, activityType: "DEVELOPER" as const, activityTypeOther: null, interestAreas: ["DEVELOPER" as const], interestOther: null, intro: "hi" };
+  const values = { displayName: "Me", telegram: "@me_builds", twitter: "@me_x", intro: "hi", answers: [{ questionId: "web3_experience", choices: ["GT_3Y"] }, { questionId: "interest_areas", choices: ["DEVELOPER"] }] };
 
   it("is empty before the first application, then lists it with its status and a link to the application page", async () => {
     const view = renderWithIntl(<MyCohortApplications />);

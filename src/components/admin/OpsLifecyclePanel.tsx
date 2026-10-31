@@ -41,6 +41,8 @@ export function OpsLifecyclePanel({ ops, busy, run }: { ops: AdminOperations; bu
             const blockers = ops.lifecycle.blockers[to] ?? [];
             const cancel = to === "CANCELLED";
             const pending = busy.has(`transition:${to}`);
+            // OPEN from SUBMISSION_CLOSED / IN_REVIEW re-opens an already published bounty; "Open bounty" would suggest a first publish.
+            const reopen = to === "OPEN" && (ops.bounty.status === "SUBMISSION_CLOSED" || ops.bounty.status === "IN_REVIEW");
             return (
               <li className="rounded-tile border border-border p-4" key={to}>
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -52,7 +54,7 @@ export function OpsLifecyclePanel({ ops, busy, run }: { ops: AdminOperations; bu
                     onClick={() => (cancel ? setConfirmCancel(true) : void transition(to))}
                     type="button"
                   >
-                    {pending ? t("working") : t(`lifecycle.actions.${to}`)}
+                    {pending ? t("working") : reopen ? t("lifecycle.reopen.label") : t(`lifecycle.actions.${to}`)}
                   </button>
                 </div>
                 {blockers.length ? (
@@ -60,7 +62,7 @@ export function OpsLifecyclePanel({ ops, busy, run }: { ops: AdminOperations; bu
                     {blockers.map((blocker, index) => <li key={`${blocker.code}-${index}`}>{blockerText(blocker)}</li>)}
                   </ul>
                 ) : (
-                  <p className="mt-3 text-xs text-ink-muted">{t(`lifecycle.hints.${to}`)}</p>
+                  <p className="mt-3 text-xs text-ink-muted">{reopen ? t("lifecycle.reopen.description") : t(`lifecycle.hints.${to}`)}</p>
                 )}
               </li>
             );

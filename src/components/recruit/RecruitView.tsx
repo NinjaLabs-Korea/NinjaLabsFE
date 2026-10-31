@@ -4,6 +4,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAccountQuery } from "@/components/account/useAccountQuery";
 import { useAuthSnapshot, useCohortApi, useFoundationMode } from "@/components/auth/FoundationProvider";
+import { MyCohortApplications } from "@/components/account/MyCohortApplications";
 import { CohortApplicationCard } from "@/components/recruit/CohortApplicationCard";
 import { CohortApplicationForm } from "@/components/recruit/CohortApplicationForm";
 import { RecruitNotice } from "@/components/recruit/RecruitNotice";
@@ -13,11 +14,23 @@ import { Link } from "@/i18n/navigation";
 import { getOnboardingPath } from "@/lib/auth-route";
 import { cohortPhase, resolveCohortApplyView, type PublicCohort } from "@/lib/cohorts";
 import { rememberReturnPath } from "@/lib/return-path";
+import { PageLoading } from "@/components/ui/PageLoading";
 
 const primaryLinkClass =
   "rounded-control bg-primary px-[21px] py-3 text-sm leading-[21px] font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const secondaryLinkClass =
   "rounded-control border border-primary-outline px-[21px] py-3 text-sm leading-[21px] font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+/** The two ways out of a page with no form: what the community announces, and what it has done so far. */
+function PastActivityActions() {
+  const t = useTranslations("recruit.states.actions");
+  return (
+    <>
+      <Link className={primaryLinkClass} href="/notices">{t("notices")}</Link>
+      <Link className={secondaryLinkClass} href="/notices?category=events">{t("past")}</Link>
+    </>
+  );
+}
 
 const phaseVariant = { open: "success", upcoming: "warning", closed: "neutral" } as const;
 
@@ -35,7 +48,7 @@ function CohortInfo({ cohort }: { cohort: PublicCohort }) {
           ? t("cohort.periodFrom", { from: date(cohort.opensAt) })
           : t("cohort.periodOpen");
   return (
-    <section aria-labelledby="cohort-name" className="mx-auto max-w-content px-4 sm:px-6">
+    <section aria-labelledby="cohort-name" className="mx-auto max-w-content px-gutter">
       <div className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -84,7 +97,7 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
   let body: ReactNode;
   const cohort = current.cohort;
   if (current.status === "loading") {
-    body = <p className="text-sm text-ink-muted" role="status">{t("states.loading")}</p>;
+    body = <PageLoading label={t("states.loading")} variant="list" />;
   } else if (current.status === "failed") {
     body = (
       <RecruitNotice body={t("states.failed.body")} title={t("states.failed.title")}>
@@ -94,7 +107,7 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
   } else if (!cohort) {
     body = (
       <RecruitNotice body={t("states.noCohort.body")} title={t("states.noCohort.title")}>
-        <Link className={secondaryLinkClass} href="/notices">{t("states.noCohort.cta")}</Link>
+        <PastActivityActions />
       </RecruitNotice>
     );
   } else if (auth.status === "loading") {
@@ -105,7 +118,9 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
         <Link className={primaryLinkClass} href={{ pathname: "/signup", query: { returnTo: "/recruit" } }}>{t("states.signIn.cta")}</Link>
       </RecruitNotice>
     ) : (
-      <RecruitNotice body={t("states.notAccepting.body")} title={t(`states.notAccepting.title.${cohortPhase(cohort)}`)} />
+      <RecruitNotice body={t("states.notAccepting.body")} title={t(`states.notAccepting.title.${cohortPhase(cohort)}`)}>
+        <PastActivityActions />
+      </RecruitNotice>
     );
   } else if (!finished) {
     body = (
@@ -132,7 +147,7 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
         <div className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("form.eyebrow")}</p>
           <h2 className="mt-1 font-display text-2xl text-ink">{t("form.title")}</h2>
-          <p className="mt-2 text-sm text-ink-muted">{view.reapply ? t("form.reapplyIntro") : t("form.intro")}</p>
+          <p className="mt-2 text-sm text-ink-muted">{view.reapply ? t("form.reapplyIntro") : t("form.lead")}</p>
           <div className="mt-6">
             <CohortApplicationForm
               cohortId={cohort.id}
@@ -146,7 +161,11 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
         </div>
       );
     } else if (view.kind === "not-accepting") {
-      body = <RecruitNotice body={t("states.notAccepting.body")} title={t(`states.notAccepting.title.${cohortPhase(cohort)}`)} />;
+      body = (
+        <RecruitNotice body={t("states.notAccepting.body")} title={t(`states.notAccepting.title.${cohortPhase(cohort)}`)}>
+          <PastActivityActions />
+        </RecruitNotice>
+      );
     } else if (view.kind === "submitted" && editing) {
       body = (
         <div className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">
@@ -186,15 +205,24 @@ export function RecruitView({ aboutSlot }: { aboutSlot: ReactNode }) {
 
   return (
     <>
-      {cohort ? <CohortInfo cohort={cohort} /> : null}
+      {cohort ? (
+        <CohortInfo cohort={cohort} />
+      ) : current.status === "loading" ? (
+        // Reserve roughly the cohort card's height until the read settles: the card is inserted above the about section and
+        // the application area, so without it the whole page (footer included) jumps down when it arrives (CLS 0.17).
+        <div aria-hidden="true" className="mx-auto max-w-content px-gutter"><div className="min-h-[132px]" /></div>
+      ) : null}
       {aboutSlot}
-      <section aria-label={t("form.sectionLabel")} className="mx-auto max-w-content px-4 pb-20 sm:px-6">
+      <section aria-label={t("form.sectionLabel")} className="mx-auto max-w-content px-gutter pb-20">
         <div className="mx-auto max-w-[896px]">
           {saved ? (
             <p className="mb-5 rounded-tile border border-border bg-success-soft p-4 text-sm font-semibold text-success" role="status">{t(`form.saved.${saved}`)}</p>
           ) : null}
           {body}
         </div>
+        {finished && current.status === "ready" ? (
+          <div className="mx-auto mt-8 max-w-[896px]"><MyCohortApplications pastOf={cohort?.id ?? null} /></div>
+        ) : null}
       </section>
     </>
   );

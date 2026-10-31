@@ -8,7 +8,8 @@ import type { AccountAgent } from "@/lib/contracts/account";
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { ApiHttpError } from "@/lib/api/http";
-import { AGENT_DESCRIPTION_MAX, AGENT_NAME_MAX, validateAgentRegisterForm } from "@/lib/agent-register-form";
+import { validateAgentRegisterForm } from "@/lib/agent-register-form";
+import { AGENT_DESCRIPTION_MAX, AGENT_NAME_MAX } from "@/lib/input-limits";
 import { renderWithIntl } from "@/test/intl";
 import { signedInWith } from "@/test/support/auth";
 
@@ -93,6 +94,25 @@ describe("AgentRegisterForm connected-wallet check", () => {
 
   afterEach(() => {
     Reflect.deleteProperty(window.navigator, "clipboard");
+  });
+
+  it("explains why Connect is disabled when the browser has no wallet extension", async () => {
+    Object.assign(wallet, { hasInjectedWallet: false, isConnected: false, connector: undefined });
+    renderWithIntl(<AgentRegisterForm chainId={1439} />);
+    const button = (await screen.findByRole("button", { name: "Connect agent wallet" })) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    const noteId = button.getAttribute("aria-describedby");
+    expect(noteId).toBeTruthy();
+    const note = document.getElementById(noteId as string);
+    expect(note?.textContent).toBe("No wallet found in this browser. Install MetaMask, or open this page in your wallet app's browser.");
+  });
+
+  it("shows no wallet note when a wallet is available", async () => {
+    Object.assign(wallet, { isConnected: false });
+    renderWithIntl(<AgentRegisterForm chainId={1439} />);
+    const button = await screen.findByRole("button", { name: "Connect agent wallet" });
+    expect(button.getAttribute("aria-describedby")).toBeNull();
+    expect(screen.queryByText(/No wallet found/)).toBeNull();
   });
 
   it("disables the switch button and explains when the configured chain has no RPC URL (canSwitch false)", async () => {
@@ -294,8 +314,8 @@ describe("AgentRegisterForm repeated submit in one tick", () => {
     fireEvent.submit(form);
     fireEvent.submit(form);
     fireEvent.submit(form);
-    await waitFor(() => expect(verifyAgent).toHaveBeenCalled());
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    // The flow's observable end state (verified), after which any duplicate call would already have happened.
+    expect(await screen.findByText("Agent verified")).toBeTruthy();
     expect(registerAgent).toHaveBeenCalledTimes(1);
     expect(signMessageAsync).toHaveBeenCalledTimes(1);
     expect(verifyAgent).toHaveBeenCalledTimes(1);
@@ -319,9 +339,11 @@ describe("AgentRegisterForm session change mid-flight", () => {
     try {
       authState.current = { status: "signed-out", user: null };
       view.rerender(<AgentRegisterForm chainId={1439} />);
-      release({ agentId: "agent-new", status: "ACTIVE", apiKey: "nl_live_late_key", expiresAt: "2027-01-01T00:00:00Z" });
-      await waitFor(() => expect(submit.closest("form")).toBeTruthy());
-      await new Promise((resolve) => setTimeout(resolve, 20));
+      // Resolve the pending verify call and let the form consume the result before asserting that nothing showed.
+      await act(async () => {
+        release({ agentId: "agent-new", status: "ACTIVE", apiKey: "nl_live_late_key", expiresAt: "2027-01-01T00:00:00Z" });
+        await verifyAgent.mock.results[0]?.value;
+      });
       expect(screen.queryByLabelText("New API key")).toBeNull();
       expect(view.container.innerHTML).not.toContain("nl_live_late_key");
     } finally {
@@ -343,7 +365,7 @@ describe("AgentRegisterForm field limits (mirror of BE RegisterAgentDto)", () =>
     expect(validateAgentRegisterForm({ name: "   ", description: "" })).toEqual({ name: "required" });
     // Zero-width space / word joiner / Hangul filler only: blank to the reader, so blank to the rule.
     expect(validateAgentRegisterForm({ name: "\u200B\u2060 \u3164", description: "" })).toEqual({ name: "required" });
-    expect(validateAgentRegisterForm({ name: "Bot\u200B", description: "" })).toEqual({});
+    expect(validateAgentRegisterForm({ name: "Bot\u200B", description: "" })).toEqual({ name: "invalidChars" });
   });
 
   it("caps the inputs with maxLength and shows a live description counter", async () => {
@@ -386,8 +408,18 @@ describe("AgentRegisterForm field limits (mirror of BE RegisterAgentDto)", () =>
     fireEvent.change(screen.getByLabelText("Agent name"), { target: { value: "weird" } });
     await waitFor(() => expect(submit.disabled).toBe(false));
     fireEvent.submit(submit.closest("form") as HTMLFormElement);
-    expect(await screen.findByText("The server rejected this name. Shorten or simplify it.")).toBeTruthy();
+    expect(await screen.findByText("The server rejected this name. Check its characters and length.")).toBeTruthy();
     expect(screen.getByText("Fix the highlighted fields before registering.")).toBeTruthy();
+  });
+
+  it.each(["Evil\u202Ename", "a\tb"])("shows the invalid-characters message for name %j and sends nothing", async (name) => {
+    renderWithIntl(<AgentRegisterForm chainId={1439} />);
+    const submit = (await screen.findByRole("button", { name: "Sign & Register" })) as HTMLButtonElement;
+    fireEvent.change(screen.getByLabelText("Agent name"), { target: { value: name } });
+    await waitFor(() => expect(submit.disabled).toBe(false));
+    fireEvent.submit(submit.closest("form") as HTMLFormElement);
+    expect(await screen.findByText("Remove line breaks, tabs, text-direction or zero-width characters from the name.")).toBeTruthy();
+    expect(registerAgent).not.toHaveBeenCalled();
   });
 });
 

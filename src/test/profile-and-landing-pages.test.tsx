@@ -78,12 +78,12 @@ describe("Intro (/) hero", () => {
     renderWithIntl(await CommunityHero());
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Learn, build, and move together on Injective.");
     expect(screen.getByText("Injective Contributor Hub")).toBeTruthy();
-    expect(screen.getByText(/Contributor Hub for people who learn, build and move on Injective/)).toBeTruthy();
+    expect(screen.getByText("Developers, marketers, researchers and creators are all welcome.")).toBeTruthy();
     expect(screen.queryByText("Complete bounties. Collect proof.")).toBeNull();
     expect(screen.queryByText("ninja.inj")).toBeNull();
     for (const role of ["Developers", "Marketers", "Researchers", "Creators"]) expect(screen.getByText(role)).toBeTruthy();
     expect(screen.getByRole("link", { name: "Get Started" }).getAttribute("href")).toBe("/signup");
-    expect(screen.getByRole("link", { name: "See past activities" }).getAttribute("href")).toBe("/notices?category=events");
+    expect((await screen.findByRole("link", { name: "See past activities" })).getAttribute("href")).toBe("/notices?category=events");
   });
 
   it("swaps the second call to action for the cohort application while a cohort accepts applications", async () => {
@@ -103,20 +103,14 @@ describe("bounty hero (top of /bounties)", () => {
     ...overrides,
   });
 
-  it("carries the moved headline, CTAs and the NFT portfolio card", async () => {
+  it("carries the headline, the one-line pitch and the how-it-works link, with no sign-up CTA or mock portfolio card", async () => {
     renderWithIntl(await BountyHero({ hero: hero(), locale: "en" }));
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Complete bounties. Collect proof. Own your track record.");
-    expect(screen.getByText("ninja.inj")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Get Started" }).getAttribute("href")).toBe("/signup");
-    expect(screen.getByRole("link", { name: "How applying works →" }).getAttribute("href")).toBe("/bounties/apply");
-  });
-
-  it("renders closed bounties that share a title without duplicate-key warnings", async () => {
-    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    renderWithIntl(await BountyHero({ hero: hero({ portfolio: { handle: "ninja.inj", memberSince: 2026, completed: ["Same", "Same"], totalCompleted: 2 } }), locale: "en" }));
-    expect(error.mock.calls.filter(([message]) => String(message).includes("same key"))).toEqual([]);
-    error.mockRestore();
-    expect(screen.getAllByText("Same")).toHaveLength(2);
+    expect(screen.getByText("Pick up tasks posted by sponsors and submit your work. Every completed bounty adds an on-chain record.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "How it works →" }).getAttribute("href")).toBe("/bounties/apply");
+    expect(screen.queryByRole("link", { name: "Get Started" })).toBeNull();
+    expect(screen.queryByText("ninja.inj")).toBeNull();
+    expect(screen.queryByText("+ next")).toBeNull();
   });
 
   it("shows no stat block and no completed line while there is nothing to count", async () => {
@@ -132,6 +126,5 @@ describe("bounty hero (top of /bounties)", () => {
     }));
     expect(screen.getByText("1,234", { selector: "dt" })).toBeTruthy();
     expect(screen.getByText("12,500 USDC · 300 INJ", { selector: "dt" })).toBeTruthy();
-    expect(screen.getByText("1,234 bounties completed · a growing on-chain portfolio")).toBeTruthy();
   });
 });

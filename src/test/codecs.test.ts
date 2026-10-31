@@ -24,9 +24,11 @@ describe("api codecs", () => {
     expect(rewardToBaseUnits({ amount: 1.5, currency: "INJ" })).toBe("1500000000000000000");
   });
 
-  it("formats ISO dates as UTC YYYY-MM-DD and returns an empty string for unparseable input", () => {
-    expect(formatIsoDate("2026-06-20T23:30:00Z")).toBe("2026-06-20");
+  it("formats ISO dates as home-zone (KST) YYYY-MM-DD and returns an empty string for unparseable input", () => {
+    expect(formatIsoDate("2026-06-20T23:30:00Z")).toBe("2026-06-21");
     expect(formatIsoDate("2026-06-20T23:30:00+09:00")).toBe("2026-06-20");
+    expect(formatIsoDate("2026-10-30T16:30:00Z")).toBe("2026-10-31");
+    expect(formatIsoDate("2026-10-30")).toBe("2026-10-30");
     expect(formatIsoDate("not-a-date")).toBe("");
     expect(formatIsoDate("")).toBe("");
     expect(formatIsoDate(null)).toBe("");

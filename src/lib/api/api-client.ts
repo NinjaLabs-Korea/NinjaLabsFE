@@ -1,5 +1,5 @@
 import { newestFirst } from "@/lib/account-order";
-import type { Account, AccountAgent, AccountAgentRef, AccountApplication, AccountSubmission, ApplicationStatus, SubmissionStatus } from "@/lib/contracts/account";
+import type { Account, AccountAgent, AccountAgentRef, AccountApplication, AccountSubmission, ApplicationStatus, BountyStatusCode, SubmissionStatus } from "@/lib/contracts/account";
 import type { ApiClient, ApiResult, ApiUnavailable } from "@/lib/contracts/api";
 import { ApiHttpError, type ApiHttp } from "@/lib/api/http";
 import { fetchMe, toClientUser } from "@/lib/api/me";
@@ -23,6 +23,10 @@ type ApplicationRow = {
   bounty_title: string;
   category: CategoryCode;
   agent?: AgentRef;
+  /** Added by the BE after the first release; older BEs omit all three. */
+  bounty_status?: BountyStatusCode;
+  submission_deadline?: string;
+  application_deadline?: string | null;
 };
 
 /** BE GET /agents/me 행 (one row per agent; no duplicates) */
@@ -46,6 +50,10 @@ type SubmissionRow = {
   category?: string;
   submitted_at?: string;
   description?: string;
+  /** Added with BE-1 (`GET /submissions/me`); older BEs omit all three. */
+  submission_url?: string | null;
+  repository_url?: string | null;
+  commit_sha?: string | null;
   status: "SUBMITTED" | "RESUBMITTED" | "IN_REVIEW" | "REVISION_REQUESTED" | "APPROVED" | "REJECTED";
   bounty_id: string;
   agent?: AgentRef;
@@ -53,7 +61,16 @@ type SubmissionRow = {
   payment_status?: string;
   /** latest `submission_review.comment`; older BE omits it */
   review_comment?: string | null;
+  /** Added with BE-2 (`GET /submissions/me`); older BEs omit all three. */
+  bounty_status?: BountyStatusCode;
+  submission_deadline?: string;
+  has_review?: boolean;
 };
+
+/** A REJECTED submission that no reviewer ever looked at because the sponsor cancelled the bounty. Unknown (fields absent) = false. */
+function closedByCancellation(row: SubmissionRow): boolean {
+  return row.status === "REJECTED" && row.has_review === false && row.bounty_status === "CANCELLED";
+}
 
 function toAgentRef(agent: AgentRef | undefined): AccountAgentRef | null {
   return agent ? { id: agent.id, name: agent.name } : null;
@@ -75,6 +92,11 @@ function toSubmission(row: SubmissionRow): AccountSubmission {
     agent: toAgentRef(row.agent),
     paymentStatus: toPayoutStatus(row.payment_status) ?? "NONE",
     reviewComment: row.review_comment?.trim() || null,
+    ...(closedByCancellation(row) ? { closedByCancellation: true } : {}),
+    ...(row.submission_url ? { submissionUrl: row.submission_url } : {}),
+    ...(row.repository_url ? { repositoryUrl: row.repository_url } : {}),
+    ...(row.commit_sha ? { commitSha: row.commit_sha } : {}),
+    ...(row.description ? { description: row.description } : {}),
   };
 }
 
@@ -103,6 +125,9 @@ function submissionToRow(row: SubmissionRow): AccountApplication {
     reviewComment: submission.reviewComment,
     reviewNote: null,
     paymentStatus: submission.paymentStatus,
+    ...(submission.closedByCancellation ? { closedByCancellation: true } : {}),
+    ...(row.bounty_status ? { bountyStatus: row.bounty_status } : {}),
+    ...(row.submission_deadline ? { submissionDeadline: row.submission_deadline } : {}),
   };
 }
 
@@ -121,6 +146,9 @@ function toApplication(row: ApplicationRow): AccountApplication {
     reviewComment: null,
     reviewNote: row.review_note?.trim() || null,
     paymentStatus: "NONE",
+    ...(row.bounty_status ? { bountyStatus: row.bounty_status } : {}),
+    ...(row.submission_deadline ? { submissionDeadline: row.submission_deadline } : {}),
+    ...(row.application_deadline !== undefined ? { applicationDeadline: row.application_deadline } : {}),
   };
 }
 
@@ -156,6 +184,18 @@ const unavailable = <T>(error: unknown): ApiResult<T> => ({ status: "unavailable
 
 /** api 모드 실제 클라이언트: BE 계약(docs/api-contract.md)에 연결 */
 export function createApiApiClient(http: ApiHttp): ApiClient {
+  // The bounty detail asks for /applications/me (joined with /submissions/me) and /submissions/me side by side. Reads that are
+  // already in flight are shared; the entry is dropped once the request settles, so a refresh after a mutation hits the network.
+  const inFlight = new Map<string, Promise<unknown>>();
+  const sharedGet = <T,>(path: string): Promise<T> => {
+    const pending = inFlight.get(path);
+    if (pending) return pending as Promise<T>;
+    const request = http.fetchJson<T>(path).finally(() => {
+      if (inFlight.get(path) === request) inFlight.delete(path);
+    });
+    inFlight.set(path, request);
+    return request;
+  };
   return {
     getAccount: async (auth) => {
       if (auth.status !== "signed-in") return { status: "available", data: null };
@@ -171,8 +211,8 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
       if (auth.status !== "signed-in") return { status: "available", data: [] };
       try {
         const [rows, submissions] = await Promise.all([
-          http.fetchJson<ApplicationRow[]>("/applications/me"),
-          http.fetchJson<SubmissionRow[]>("/submissions/me"),
+          sharedGet<ApplicationRow[]>("/applications/me"),
+          sharedGet<SubmissionRow[]>("/submissions/me"),
         ]);
         // Owner and agent rows can coexist on one bounty: match each application to its own submission.
         const submissionKey = (bountyId: string, agent: AgentRef | undefined) => `${bountyId}:${agent?.id ?? "self"}`;
@@ -189,9 +229,14 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
               const application = toApplication(row);
               const submission = submissionsByRow.get(submissionKey(row.bounty_id, row.agent));
               if (!submission || application.status !== "approved") return application;
-              // REJECTED is final (also a forfeited award: approved work, no payout) - not another "Submitted" step.
+              // REJECTED is final (also a reward-not-paid case: approved work, no payout) - not another "Submitted" step.
               if (submission.status === "REJECTED") {
-                return { ...application, status: "notAccepted" as const, reviewComment: submission.review_comment?.trim() || null };
+                return {
+                  ...application,
+                  status: "notAccepted" as const,
+                  reviewComment: submission.review_comment?.trim() || null,
+                  ...(closedByCancellation(submission) ? { closedByCancellation: true } : {}),
+                };
               }
               if (submission.status === "REVISION_REQUESTED") {
                 return { ...application, status: "revisionRequested" as const, reviewComment: submission.review_comment?.trim() || null };
@@ -210,7 +255,7 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
     getSubmissions: async (auth) => {
       if (auth.status !== "signed-in") return { status: "available", data: [] };
       try {
-        const rows = await http.fetchJson<SubmissionRow[]>("/submissions/me");
+        const rows = await sharedGet<SubmissionRow[]>("/submissions/me");
         return { status: "available", data: rows.map(toSubmission) };
       } catch (error) {
         return unavailable<readonly AccountSubmission[]>(error);

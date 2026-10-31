@@ -1,7 +1,9 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useUnsavedInputGuard } from "@/components/layout/useUnsavedInputGuard";
 import { menuItemBaseClass, menuItemClass, menuPanelClass, useMenuButton } from "@/components/layout/useMenuButton";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { localeLabels, routing, type Locale } from "@/i18n/routing";
@@ -14,25 +16,38 @@ export function LocaleSwitcher() {
   const [pending, startTransition] = useTransition();
   const menu = useMenuButton(routing.locales.length);
 
+  const { hasUnsavedInput } = useUnsavedInputGuard();
+  const [pendingLocale, setPendingLocale] = useState<Locale | null>(null);
+
+  const navigateTo = (next: Locale) => {
+    startTransition(() => {
+      // Keep query and hash: /auth/callback#loginCode must survive a locale switch.
+      router.replace(`${pathname}${window.location.search}${window.location.hash}`, { locale: next, scroll: false });
+    });
+  };
+
   const switchTo = (next: Locale) => {
     menu.closeMenu(true);
     if (next === locale) return;
-    startTransition(() => {
-      // Keep query and hash: /auth/callback#loginCode must survive a locale switch.
-      router.replace(`${pathname}${window.location.search}${window.location.hash}`, { locale: next });
-    });
+    // A locale switch remounts the page, so typed form text would be lost silently: ask first.
+    if (hasUnsavedInput()) {
+      setPendingLocale(next);
+      return;
+    }
+    navigateTo(next);
   };
 
   return (
     <div className="relative" {...menu.rootProps}>
       <button
         {...menu.buttonProps(routing.locales.indexOf(locale))}
-        aria-label={t("label")}
         className={`flex items-center gap-1.5 whitespace-nowrap rounded-control px-2 py-3 text-sm sm:px-3 leading-[21px] font-semibold hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${menu.open ? "text-ink" : "text-ink-secondary"}`}
         disabled={pending}
       >
+        {/* Accessible name = "Language English": keeps the visible text inside the name (WCAG 2.5.3). */}
+        <span className="sr-only">{t("label")} </span>
         {localeLabels[locale]}
-        <span aria-hidden="true" className="text-xs text-ink-muted">{menu.open ? "▴" : "▾"}</span>
+        <span aria-hidden="true" className={`text-xs text-ink-muted motion-control motion-reduce:transition-none${menu.open ? " rotate-180" : ""}`}>▾</span>
       </button>
 
       {menu.open ? (
@@ -55,6 +70,21 @@ export function LocaleSwitcher() {
           ))}
         </div>
       ) : null}
+
+      <ConfirmDialog
+        cancelLabel={t("unsaved.cancel")}
+        confirmLabel={t("unsaved.confirm")}
+        description={t("unsaved.body")}
+        eyebrow={t("label")}
+        onCancel={() => setPendingLocale(null)}
+        onConfirm={() => {
+          const next = pendingLocale;
+          setPendingLocale(null);
+          if (next) navigateTo(next);
+        }}
+        open={pendingLocale !== null}
+        title={t("unsaved.title")}
+      />
     </div>
   );
 }

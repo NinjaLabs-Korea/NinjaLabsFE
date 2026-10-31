@@ -5,7 +5,8 @@ name: Integration (real browser)
 #
 # The flows are split over parallel jobs (a matrix), each with its own full stack (Postgres, BE, FE, Chrome), so one job
 # stays well under its timeout. Flows inside a group run in order; groups must not depend on each other. Dependencies:
-# flows 7 and 8 need 4 and 5 (same group). Everything else seeds what it needs or compares before/after.
+# flows 7 and 8 need 4 and 5 (same group). Everything else seeds what it needs or compares before/after (flow 10 seeds the
+# builder application and submission that flow 4 would make).
 # The full dense layout sweep (NINJA_IT_SWEEP=full, 30+ minutes) is NOT part of this run: use the `sweep_full` input.
 on:
   workflow_dispatch:

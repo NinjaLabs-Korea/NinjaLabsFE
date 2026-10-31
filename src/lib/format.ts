@@ -2,6 +2,15 @@ import type { useFormatter } from "next-intl";
 
 const MAX_FRACTION_DIGITS = 6;
 
+/**
+ * `0x1234…abcd` for long addresses and hashes. A value no longer than `keepWhole` is returned as is (default `head + tail + 2`,
+ * i.e. when the ellipsis would not make it shorter); pass `keepWhole: 0` to always shorten. Pure string work: safe to import
+ * where wagmi/viem must not load.
+ */
+export function shortAddress(value: string, { head = 6, tail = 4, keepWhole = head + tail + 2 }: { head?: number; tail?: number; keepWhole?: number } = {}): string {
+  return value.length > keepWhole ? `${value.slice(0, head)}…${value.slice(-tail)}` : value;
+}
+
 /** Integer part that `Number` can hold exactly (15 digits stays well below 2^53). */
 const SAFE_INTEGER_DIGITS = 15;
 
@@ -34,4 +43,22 @@ export function formatUtcDateTime(format: Pick<ReturnType<typeof useFormatter>, 
   return format.dateTime(typeof value === "string" ? new Date(value) : value, {
     year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC", timeZoneName: "short",
   });
+}
+
+/**
+ * Same fields as `formatUtcDateTime` but in the viewer's own zone (`Nov 9, 2026, 6:36 AM GMT+9`). The zone is read from the
+ * browser and passed explicitly because the next-intl provider's `timeZone` is a fixed site-wide value, not the viewer's.
+ * Returns "" when the value or the browser zone cannot be used, so callers keep their UTC text.
+ */
+export function formatLocalDateTime(format: Pick<ReturnType<typeof useFormatter>, "dateTime">, value: string | Date, timeZone?: string): string {
+  try {
+    const date = typeof value === "string" ? new Date(value) : value;
+    if (Number.isNaN(date.getTime())) return "";
+    return format.dateTime(date, {
+      year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+      timeZone: timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone, timeZoneName: "short",
+    });
+  } catch {
+    return "";
+  }
 }

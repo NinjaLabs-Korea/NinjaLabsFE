@@ -2,23 +2,25 @@ import type { AdminCohortApi, ApiResult, CohortApi } from "@/lib/contracts/api";
 import type { ApiHttp } from "@/lib/api/http";
 import { unavailableReason } from "@/lib/api/api-client";
 import {
-  ACTIVITY_TYPES,
   COHORT_APPLICATION_STATUSES,
+  COHORT_QUESTION_TYPES,
   COHORT_STATUSES,
-  INTEREST_AREAS,
-  WEB3_EXPERIENCES,
   cohortApplicationQuery,
-  type ActivityType,
+  isChoiceType,
   type AdminCohort,
   type AdminCohortApplication,
   type AdminCohortCounts,
+  type ApplicationAnswer,
+  type CohortApplicationRead,
   type CohortApplicationStatus,
   type CohortApplicationValues,
+  type CohortQuestion,
+  type CohortQuestionOption,
+  type CohortQuestionType,
   type CohortStatus,
-  type InterestArea,
+  type LocalizedText,
   type MyCohortApplication,
   type PublicCohort,
-  type Web3Experience,
 } from "@/lib/cohorts";
 
 // ── BE rows (camelCase, ISO dates; docs/api-contract.md "기수 모집") ──
@@ -30,12 +32,9 @@ type ApplicationFieldsRow = {
   displayName: string;
   telegram: string;
   twitter: string;
-  web3Experience: string;
-  activityType: string;
-  activityTypeOther: string | null;
-  interestAreas: string[];
-  interestOther: string | null;
   intro: string;
+  /** Absent from a BE older than the configurable questions. */
+  answers?: unknown;
   createdAt: string;
   updatedAt: string;
 };
@@ -63,6 +62,7 @@ type AdminCohortRow = {
   acceptingApplications: boolean;
   applicationCounts: Partial<Record<string, number>>;
   allowedTransitions: string[];
+  questions?: unknown;
   createdAt: string;
   updatedAt: string;
 };
@@ -71,18 +71,58 @@ type AdminCohortRow = {
 // an unknown application status reads as SUBMITTED-less "WITHDRAWN" (no action offered), an unknown cohort status as CLOSED.
 const pick = <T extends string>(options: readonly T[], value: unknown, fallback: T): T => (options.includes(value as T) ? (value as T) : fallback);
 
-function toValues(row: ApplicationFieldsRow): CohortApplicationValues {
-  return {
-    displayName: row.displayName,
-    telegram: row.telegram,
-    twitter: row.twitter,
-    web3Experience: pick<Web3Experience>(WEB3_EXPERIENCES, row.web3Experience, "LT_1Y"),
-    activityType: pick<ActivityType>(ACTIVITY_TYPES, row.activityType, "OTHER"),
-    activityTypeOther: row.activityTypeOther ?? null,
-    interestAreas: (row.interestAreas ?? []).filter((area): area is InterestArea => (INTEREST_AREAS as readonly string[]).includes(area)),
-    interestOther: row.interestOther ?? null,
-    intro: row.intro,
-  };
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
+const optionalText = (value: unknown): string | null => (typeof value === "string" && value.trim() !== "" ? value : null);
+
+function toLocalized(value: unknown): LocalizedText | null {
+  if (!isRecord(value) || typeof value.ko !== "string") return null;
+  return { ko: value.ko, en: optionalText(value.en), zh: optionalText(value.zh) };
+}
+
+function toOption(value: unknown): CohortQuestionOption | null {
+  if (!isRecord(value) || typeof value.id !== "string") return null;
+  const label = toLocalized(value.label);
+  return label ? { id: value.id, label, withDetail: value.withDetail === true } : null;
+}
+
+/** A question of a type this client does not know (a newer BE) is skipped instead of breaking the whole form. Missing list -> `[]`. */
+export function parseQuestions(raw: unknown): CohortQuestion[] {
+  if (!Array.isArray(raw)) return [];
+  const questions: CohortQuestion[] = [];
+  for (const item of raw) {
+    if (!isRecord(item) || typeof item.id !== "string") continue;
+    if (!COHORT_QUESTION_TYPES.includes(item.type as CohortQuestionType)) continue;
+    const type = item.type as CohortQuestionType;
+    const label = toLocalized(item.label);
+    if (!label) continue;
+    const options = isChoiceType(type) && Array.isArray(item.options) ? item.options.map(toOption).filter((option): option is CohortQuestionOption => option !== null) : null;
+    if (isChoiceType(type) && (!options || options.length === 0)) continue;
+    questions.push({ id: item.id, type, label, help: toLocalized(item.help), required: item.required === true, options });
+  }
+  return questions;
+}
+
+export function parseAnswers(raw: unknown): ApplicationAnswer[] {
+  if (!Array.isArray(raw)) return [];
+  const answers: ApplicationAnswer[] = [];
+  for (const item of raw) {
+    if (!isRecord(item) || typeof item.questionId !== "string") continue;
+    if (!COHORT_QUESTION_TYPES.includes(item.type as CohortQuestionType)) continue;
+    const label = toLocalized(item.label);
+    if (!label) continue;
+    const choices = Array.isArray(item.choices)
+      ? item.choices.flatMap((choice) => {
+          const choiceLabel = isRecord(choice) ? toLocalized(choice.label) : null;
+          return isRecord(choice) && typeof choice.id === "string" && choiceLabel ? [{ id: choice.id, label: choiceLabel }] : [];
+        })
+      : null;
+    answers.push({ questionId: item.questionId, type: item.type as CohortQuestionType, label, text: typeof item.text === "string" ? item.text : null, choices, other: optionalText(item.other) });
+  }
+  return answers;
+}
+
+function toValues(row: ApplicationFieldsRow): CohortApplicationRead {
+  return { displayName: row.displayName, telegram: row.telegram, twitter: row.twitter, intro: row.intro, answers: parseAnswers(row.answers) };
 }
 
 export function toMyCohortApplication(row: MyApplicationRow): MyCohortApplication {
@@ -105,7 +145,7 @@ export function toMyCohortApplication(row: MyApplicationRow): MyCohortApplicatio
   };
 }
 
-export function toPublicCohort(row: PublicCohort | null | undefined): PublicCohort | null {
+export function toPublicCohort(row: (Omit<PublicCohort, "questions"> & { questions?: unknown }) | null | undefined): PublicCohort | null {
   if (!row || typeof row !== "object") return null;
   return {
     id: row.id,
@@ -114,6 +154,7 @@ export function toPublicCohort(row: PublicCohort | null | undefined): PublicCoho
     opensAt: row.opensAt ?? null,
     closesAt: row.closesAt ?? null,
     acceptingApplications: row.acceptingApplications === true,
+    questions: parseQuestions(row.questions),
   };
 }
 
@@ -129,6 +170,7 @@ export function toAdminCohort(row: AdminCohortRow): AdminCohort {
     acceptingApplications: row.acceptingApplications === true,
     applicationCounts: counts,
     allowedTransitions: (row.allowedTransitions ?? []).filter((to): to is "OPEN" | "CLOSED" => to === "OPEN" || to === "CLOSED"),
+    questions: parseQuestions(row.questions),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -148,12 +190,12 @@ export function toAdminCohortApplication(row: AdminApplicationRow): AdminCohortA
   };
 }
 
-/** An empty "other" detail is sent as `null` so the BE drops it; the BE ignores it unless "other" is chosen anyway. */
-const body = (values: CohortApplicationValues) => ({ ...values });
+/** The CONTRACT A5 body: the four fixed fields and the answers (no legacy fields: the BE rejects the two shapes mixed). */
+const body = (values: CohortApplicationValues) => ({ displayName: values.displayName, telegram: values.telegram, twitter: values.twitter, intro: values.intro, answers: values.answers });
 
 export function createCohortApi(http: ApiHttp): CohortApi {
   return {
-    getCurrentCohort: async () => toPublicCohort(await http.fetchJson<PublicCohort | null | undefined>("/cohorts/current")),
+    getCurrentCohort: async () => toPublicCohort(await http.fetchJson<Parameters<typeof toPublicCohort>[0]>("/cohorts/current")),
 
     getMyCohortApplications: async (auth): Promise<ApiResult<readonly MyCohortApplication[]>> => {
       if (auth.status !== "signed-in") return { status: "available", data: [] };
@@ -190,6 +232,9 @@ export function createAdminCohortApi(http: ApiHttp): AdminCohortApi {
 
     transitionAdminCohort: async (cohortId, to) =>
       toAdminCohort(await http.fetchJson<AdminCohortRow>(`/admin/cohorts/${encodeURIComponent(cohortId)}/transition`, { method: "POST", body: { to } })),
+
+    saveAdminCohortQuestions: async (cohortId, questions) =>
+      toAdminCohort(await http.fetchJson<AdminCohortRow>(`/admin/cohorts/${encodeURIComponent(cohortId)}/questions`, { method: "PUT", body: { questions } })),
 
     deleteAdminCohort: async (cohortId) => {
       await http.fetchJson(`/admin/cohorts/${encodeURIComponent(cohortId)}`, { method: "DELETE" });

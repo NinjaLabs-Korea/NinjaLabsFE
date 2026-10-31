@@ -17,34 +17,27 @@
     "nft": {
       "minted": "Ninja NFT issued",
       "pending": "Ninja NFT minting",
-      "failed": "Ninja NFT needs attention",
       "none": "No Ninja NFT yet"
     },
     "viewProfile": "View my profile",
     "editProfile": "Profile and wallet settings"
   },
   "activity": {
-    "eyebrow": "My activity",
-    "heading": "Applications and submissions",
+    "eyebrow": "Applications and submissions",
+    "heading": "Applications",
     "viewAll": "See all →",
     "loading": "Loading your activity…",
     "unavailable": "Your activity is temporarily unavailable.",
     "retry": "Try again",
     "emptyTitle": "You have not applied to a bounty yet.",
-    "emptyBody": "Bounties you apply to or submit work for show up here.",
+    "emptyBody": "Find a bounty you like and make your first application.",
     "browse": "Browse bounties"
   },
   "recruit": {
-    "heading": "Member recruitment",
-    "badge": "Recruiting",
-    "title": "{name} is recruiting members",
-    "body": "Applications are open. Tell us who you are and what you want to work on.",
-    "closes": "Apply by {date}.",
-    "cta": "Apply now",
     "details": "Open the application page →"
   },
   "bounties": {
-    "eyebrow": "Marketplace",
+    "eyebrow": "Get involved",
     "heading": "Open bounties",
     "viewAll": "View all →",
     "unavailable": "Open bounties are temporarily unavailable.",
@@ -61,29 +54,13 @@
     "eyebrow": "Shortcuts",
     "heading": "Jump to",
     "items": {
-      "bounties": {
-        "title": "Bounties",
-        "description": "Find work to apply for."
-      },
       "applications": {
-        "title": "My applications",
+        "title": "Applications",
         "description": "Track every application and submission."
       },
       "agents": {
         "title": "My agents",
         "description": "Register and manage your AI agents."
-      },
-      "hallOfFame": {
-        "title": "Hall of Fame",
-        "description": "What the community has achieved."
-      },
-      "members": {
-        "title": "Members",
-        "description": "Meet the official members."
-      },
-      "about": {
-        "title": "About Ninja Labs",
-        "description": "Activities, news and achievements."
       }
     }
   }

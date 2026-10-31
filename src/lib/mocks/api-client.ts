@@ -5,9 +5,10 @@ import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
 import { MockApiError } from "@/lib/mocks/mock-error";
 import { getBounty } from "@/lib/bounties";
+import { toAdminStatus } from "@/lib/bounty-status";
 import { createMockFixtures, getMockFixtureSnapshot, type MockAccountFixtures } from "@/lib/mocks/fixtures";
 import { getAdminBounties, getAdminHighlights, getAdminPosts, getAdminUsers } from "@/lib/admin";
-import { ADMIN_STATUS_FROM_CODE, createMockOperationsApi } from "@/lib/mocks/admin-operations";
+import { createMockOperationsApi } from "@/lib/mocks/admin-operations";
 import { createMockCohortApis } from "@/lib/mocks/cohorts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -46,6 +47,27 @@ function toPreviewApplication(id: string, bountyId: string, message: string): Ac
 }
 
 /** Fixture submissions mirror the api client's join: a submitted/completed application has a submission row. */
+type SubmitInput = Parameters<ApiClient["submitBounty"]>[1];
+
+/** The content fields a resubmission replaces wholesale (like the BE): a field left empty in the new form is gone. */
+function submissionContent(input: SubmitInput): Pick<AccountSubmission, "submissionUrl" | "repositoryUrl" | "commitSha" | "description"> {
+  return {
+    ...(input.submissionUrl ? { submissionUrl: input.submissionUrl } : {}),
+    ...(input.repositoryUrl ? { repositoryUrl: input.repositoryUrl } : {}),
+    ...(input.commitSha ? { commitSha: input.commitSha } : {}),
+    ...(input.description ? { description: input.description } : {}),
+  };
+}
+
+function withoutContent(submission: AccountSubmission): AccountSubmission {
+  const rest = { ...submission };
+  delete rest.submissionUrl;
+  delete rest.repositoryUrl;
+  delete rest.commitSha;
+  delete rest.description;
+  return rest;
+}
+
 function fixtureSubmissions(applications: readonly AccountApplication[]): AccountSubmission[] {
   return applications
     .filter((application) => application.status === "submitted" || application.status === "revisionRequested" || application.status === "completed" || application.status === "notAccepted")
@@ -120,17 +142,17 @@ export function createMockApiClient(seed = "default"): ApiClient {
       applications = applications.filter((application) => application.id !== applicationId);
       return { id: applicationId, status: "WITHDRAWN" };
     },
-    submitBounty: async (bountyId) => {
+    submitBounty: async (bountyId, input) => {
       const revisionNo = (revisions.get(bountyId) ?? 0) + 1;
       revisions.set(bountyId, revisionNo);
       const existing = submissions.find((submission) => submission.bountySlug === bountyId && submission.agent === null);
       submissions = existing
         ? submissions.map((submission) =>
             submission === existing
-              ? { ...submission, status: submission.status === "revision_requested" ? ("resubmitted" as const) : ("submitted" as const) }
+              ? { ...withoutContent(submission), ...submissionContent(input), status: submission.status === "revision_requested" ? ("resubmitted" as const) : ("submitted" as const) }
               : submission,
           )
-        : [{ bountySlug: bountyId, status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null }, ...submissions];
+        : [{ bountySlug: bountyId, status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null, ...submissionContent(input) }, ...submissions];
       // Like the api client's /applications/me + /submissions/me join: an approved application - or one whose work came back
       // for revision (BE RESUBMITTED maps to `submitted`) - is now "submitted".
       applications = applications.map((application) =>
@@ -265,7 +287,7 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
       requireOne(bounties, (item) => item.slug === bountyId, "BOUNTY_NOT_FOUND");
       // A bounty opened in the operations console enforces the BE transition table + lifecycle blockers on its mock rows.
       if (openedOperations.has(bountyId)) transitionOperations(bountyId, to);
-      const status = ADMIN_STATUS_FROM_CODE[to] ?? "completed";
+      const status = toAdminStatus(to);
       bounties = bounties.map((item) => (item.slug === bountyId ? { ...item, status } : item));
     },
     deleteAdminBounty: async (bountyId) => {

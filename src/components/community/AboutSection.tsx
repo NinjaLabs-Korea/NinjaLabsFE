@@ -10,7 +10,7 @@ const roles = ["developer", "marketer", "researcher", "creator"] as const;
 export function AboutSection({ level = 2 }: { level?: 1 | 2 }) {
   const t = useTranslations("community.about");
   return (
-    <section className="mx-auto max-w-content px-4 py-16 sm:px-6">
+    <section className="mx-auto max-w-content px-gutter py-16">
       <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={level} size={level === 1 ? "xl" : "lg"} />
       <p className="mt-4 max-w-[768px] text-lg text-ink-muted">{t("body")}</p>
       <ul className="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

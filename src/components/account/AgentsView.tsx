@@ -19,6 +19,7 @@ import { ERROR_COPY, errorCopyKey, knownCode } from "@/lib/api/error-copy";
 import { formatUtcDateTime } from "@/lib/format";
 import type { AccountAgent } from "@/lib/contracts/account";
 import type { AgentKeyRotation } from "@/lib/contracts/api";
+import { PageLoading } from "@/components/ui/PageLoading";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -96,7 +97,7 @@ export function AgentsView() {
   }
 
   if (authSnapshot.status === "loading" || !agents) {
-    return <p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p>;
+    return <PageLoading label={tAccount("loading")} variant="list" />;
   }
 
   if (agents.length === 0) {
@@ -205,7 +206,7 @@ export function AgentsView() {
                     <Badge variant={key.kind === "active" ? (key.expiringSoon ? "warning" : "success") : key.kind === "none" ? "neutral" : "danger"}>
                       {keyStatusLabel}
                     </Badge>
-                    {agent.keyExpiresAt && key.kind !== "revoked" ? <span>{t("keyExpires", { date: formatDate(agent.keyExpiresAt) })}</span> : null}
+                    {agent.keyExpiresAt && key.kind !== "revoked" ? <span>{t(key.kind === "expired" ? "keyExpiredOn" : "keyExpires", { date: formatDate(agent.keyExpiresAt) })}</span> : null}
                   </dd>
                 </div>
                 <div className="flex gap-2">

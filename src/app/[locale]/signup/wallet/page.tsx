@@ -35,15 +35,15 @@ export default async function SignupWalletPage({ params }: PageProps<"/[locale]/
   setRequestLocale(locale);
   const t = await getTranslations("signup");
   return (
-    <section className="mx-auto max-w-content px-6 py-16 pb-20">
+    <section className="mx-auto max-w-content px-gutter py-16 pb-20">
       <div className="mx-auto max-w-[1024px]">
         <div>
           <SignupStepIndicator current={2} />
         </div>
         <div className="mt-6">
           <SignupGate step={2}>
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
-              <article className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] lg:col-span-3">
+            <div className="mx-auto max-w-[640px]">
+              <article className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">
                 <div className="text-center">
                   <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("wallet.eyebrow")}</p>
                   <h1 className="mt-3 font-display text-4xl -tracking-[0.36px] text-ink">
@@ -86,7 +86,7 @@ export default async function SignupWalletPage({ params }: PageProps<"/[locale]/
                     </p>
                   </div>
                   <Link
-                    className="mt-5 block w-full rounded-control border border-primary-outline px-5 py-3 text-center text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    className="mt-5 flex min-h-11 w-full items-center justify-center rounded-control border border-border px-4 py-3 text-center text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     href="/signup/profile"
                   >
                     {t("wallet.connectLater")}
@@ -94,22 +94,21 @@ export default async function SignupWalletPage({ params }: PageProps<"/[locale]/
                   <p className="mt-4 text-center text-sm text-ink-muted">
                     {t("wallet.optionalNote")}
                   </p>
+                  <details className="mt-4 text-sm text-ink-muted">
+                    <summary className="cursor-pointer font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                      {t("wallet.moreDetails")}
+                    </summary>
+                    <dl className="mt-3 space-y-3">
+                      {walletSteps.map((step) => (
+                        <div key={step}>
+                          <dt className="font-semibold text-ink">{t(`wallet.steps.${step}.term`)}</dt>
+                          <dd className="mt-0.5">{t(`wallet.steps.${step}.detail`)}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </details>
                 </LinkedWalletGate>
               </article>
-              <aside className="rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] lg:col-span-2">
-                <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("wallet.whatHappensEyebrow")}</p>
-                <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">
-                  {t("wallet.whatHappens")}
-                </h2>
-                <dl className="mt-5 space-y-4">
-                  {walletSteps.map((step) => (
-                    <div key={step}>
-                      <dt className="text-sm font-semibold text-ink">{t(`wallet.steps.${step}.term`)}</dt>
-                      <dd className="mt-1 text-sm text-ink-muted">{t(`wallet.steps.${step}.detail`)}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </aside>
             </div>
           </SignupGate>
         </div>

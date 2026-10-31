@@ -20,7 +20,7 @@ import { ApiHttpError } from "./http";
 /**
  * BE가 아니라 FE가 스스로 만드는 코드. 위치:
  * - `VALIDATION_FAILED` / `UNKNOWN_ERROR` / `REFRESH_UNAVAILABLE` - `lib/api/http.ts` (Nest `message[]`, 빈 message, refresh 일시 장애)
- * - `NETWORK_ERROR` / `UNAUTHORIZED` / `TOO_MANY_REQUESTS` / `TRANSITION_BLOCKED` - `lib/admin-operations.ts opsErrorCode` 정규화 결과 (`TOO_MANY_REQUESTS`는 `knownCode`도 429에서 만든다)
+ * - `NETWORK_ERROR` / `UNAUTHORIZED` / `TOO_MANY_REQUESTS` / `TRANSITION_BLOCKED` - `normalizedCode`(이 파일)가 만드는 정규화 결과 (`TRANSITION_BLOCKED`만 `lib/admin-operations.ts opsErrorCode`)
  */
 export const FE_ERROR_CODES = [
   "VALIDATION_FAILED",
@@ -60,6 +60,9 @@ export const ERROR_COPY = {
       "INVALID_SIGNATURE",
       // 409: 이 주소가 다른 계정에 연결됐거나, 내 계정에 이미 대표 지갑이 있다.
       "WALLET_ALREADY_LINKED",
+      // 409: 새 BE가 원인별로 나눠 보낸다 (a: 이 주소가 다른 계정에 있다 / b: 이 계정에 이미 다른 대표 지갑이 있다).
+      "WALLET_LINKED_TO_OTHER_ACCOUNT",
+      "ACCOUNT_ALREADY_HAS_WALLET",
       // 400: 이 주소가 내 에이전트의 지갑이다. 개인 지갑은 에이전트 지갑과 달라야 한다.
       "AGENT_WALLET_IS_OWNER_WALLET",
       "DATABASE_UNAVAILABLE",
@@ -105,13 +108,16 @@ export const ERROR_COPY = {
   /** 내 에이전트 → API 키 회전 - `account/AgentsView.tsx` */
   agentRotate: {
     messages: "agents.list.rotateErrors",
-    codes: ["AGENT_NOT_ACTIVE", "AGENT_NOT_FOUND", "TOO_MANY_REQUESTS"],
+    codes: ["AGENT_NOT_ACTIVE", "AGENT_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS"],
     fallback: "generic",
   },
   /** 에이전트 등록 (register → 서명 → verify) - `agents/AgentRegisterForm.tsx`. 필드 검증(VALIDATION_FAILED)은 인라인으로 따로 처리한다. */
   agentRegister: {
     messages: "agents.form.registerErrors",
-    codes: ["AGENT_KEY_OR_WALLET_ALREADY_REGISTERED", "AGENT_WALLET_IS_OWNER_WALLET", "TOO_MANY_REQUESTS"],
+    codes: [
+      "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED", "AGENT_WALLET_IS_OWNER_WALLET", "INVALID_AGENT_WALLET_ADDRESS", "PROFILE_REQUIRED",
+      "AGENT_ALREADY_VERIFIED", "AGENT_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS",
+    ],
     fallback: "generic",
   },
   /**
@@ -132,7 +138,7 @@ export const ERROR_COPY = {
     messages: "recruit.form.saveErrors",
     codes: [
       "PROFILE_REQUIRED", "COHORT_NOT_FOUND", "COHORT_NOT_ACCEPTING", "COHORT_ALREADY_APPLIED", "COHORT_APPLICATION_NOT_FOUND",
-      "COHORT_APPLICATION_NOT_SUBMITTED", "COHORT_OTHER_DETAIL_REQUIRED", "INVALID_CHARACTER", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS",
+      "COHORT_APPLICATION_NOT_SUBMITTED", "COHORT_OTHER_DETAIL_REQUIRED", "COHORT_ANSWERS_INVALID", "INVALID_CHARACTER", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS",
     ],
     fallback: "generic",
   },
@@ -150,7 +156,7 @@ export const ERROR_COPY = {
     messages: "admin.recruitment.errors",
     codes: [
       "COHORT_NOT_FOUND", "COHORT_ALREADY_OPEN", "COHORT_HAS_APPLICATIONS", "COHORT_INVALID_WINDOW", "COHORT_INVALID_TRANSITION",
-      "COHORT_APPLICATION_NOT_FOUND", "COHORT_APPLICATION_WITHDRAWN", "INVALID_CHARACTER", "INVALID_DATE", "DATABASE_UNAVAILABLE",
+      "COHORT_APPLICATION_NOT_FOUND", "COHORT_APPLICATION_WITHDRAWN", "COHORT_QUESTIONS_INVALID", "INVALID_CHARACTER", "INVALID_DATE", "DATABASE_UNAVAILABLE",
       "ADMIN_ONLY", "UNAUTHORIZED", "TOO_MANY_REQUESTS",
     ],
     fallback: "generic",
@@ -179,6 +185,8 @@ export const ERROR_COPY = {
       "DEADLINE_IN_PAST",
       // 바운티 수정: 최대 당선자 수를 이미 승인된 제출 수보다 낮춤 (400)
       "MAX_WINNERS_BELOW_APPROVED",
+      // 바운티 생성·수정: 지원 마감이 제출 마감보다 늦음, 보상 심볼과 토큰 불일치 (400)
+      "APPLICATION_DEADLINE_AFTER_SUBMISSION_DEADLINE", "REWARD_SYMBOL_DENOM_MISMATCH",
       // 커버/썸네일/하이라이트 이미지 업로드 (POST /admin/media - 5 MiB, PNG/JPEG/WebP 시그니처 검사)
       "MEDIA_FILE_TOO_LARGE", "MEDIA_FILE_TYPE_UNSUPPORTED",
       // 503: BE가 DB에 닿지 못함 (일시 장애)
@@ -241,14 +249,26 @@ export function listedCode<const C extends string>(value: unknown, codes: readon
 }
 
 /**
- * 실패한 API 호출의 BE 코드가 `codes`에 있으면 그 코드, 아니면 null (네트워크 오류 등 `ApiHttpError`가 아닌 것도 null).
- * mock 모드의 `MockApiError`도 `ApiHttpError`를 상속하므로 같은 경로를 탄다.
- * 429는 코드를 `TOO_MANY_REQUESTS`로 정규화한다: Nest throttler 본문(`ThrottlerException: Too Many Requests`)에는 카탈로그 코드가 없어
- * 그대로 두면 "알 수 없는 오류 (ThrottlerException…)"처럼 원문이 화면에 샌다. 이 코드를 `codes`에 넣은 화면만 전용 문구를 쓴다.
+ * 실패한 API 호출을 화면이 비교할 코드 한 개로 정규화한다 (운영자 콘솔·모집 화면이 같이 쓰는 **유일한** 상태 -> 코드 규칙):
+ * HTTP 응답이 아닌 실패(fetch TypeError 등) -> `NETWORK_ERROR`, 401 -> `UNAUTHORIZED`, 429 -> `TOO_MANY_REQUESTS`, 그 밖에는 BE 본문의 `error.code`.
+ * 401(거절된 세션)과 429(Nest throttler 본문 `ThrottlerException: Too Many Requests`)에는 카탈로그 코드가 없어서 그대로 두면
+ * "알 수 없는 오류 (ThrottlerException...)"처럼 원문이 화면에 샌다.
+ */
+export function normalizedCode(error: unknown): string {
+  if (!(error instanceof ApiHttpError)) return "NETWORK_ERROR";
+  if (error.status === 401) return "UNAUTHORIZED";
+  if (error.status === 429) return "TOO_MANY_REQUESTS";
+  return error.code;
+}
+
+/**
+ * 실패한 API 호출의 BE 코드(429만 `normalizedCode`로 `TOO_MANY_REQUESTS`)가 `codes`에 있으면 그 코드, 아니면 null (네트워크 오류 등 `ApiHttpError`가 아닌 것도 null).
+ * mock 모드의 `MockApiError`도 `ApiHttpError`를 상속하므로 같은 경로를 탄다. 이 코드를 `codes`에 넣은 화면만 전용 문구를 쓴다.
  */
 export function knownCode<const C extends string>(error: unknown, codes: readonly C[]): C | null {
   if (!(error instanceof ApiHttpError)) return null;
-  return listedCode(error.status === 429 ? "TOO_MANY_REQUESTS" : error.code, codes);
+  // 401 is deliberately not normalized here: user-facing flows get codes under 401 (wallet verify `INVALID_SIGNATURE`) that carry their own copy.
+  return listedCode(error.status === 429 ? normalizedCode(error) : error.code, codes);
 }
 
 type SurfaceWithFallback = { readonly codes: readonly string[]; readonly fallback: string };

@@ -32,6 +32,7 @@
       "none": "미발급"
     },
     "keyExpires": "{date} 만료",
+    "keyExpiredOn": "{date}에 만료됨",
     "keyExpiringToday": "이 키는 24시간 안에 만료됩니다. 만료 전에 교체하세요.",
     "keyExpiringSoon": "이 키는 {days}일 후 만료됩니다. 만료 전에 교체하세요.",
     "keyExpired": "이 키는 만료되었습니다. 에이전트를 계속 사용하려면 키를 교체하세요.",
@@ -43,7 +44,8 @@
       "generic": "키를 교체하지 못했습니다. 다시 시도해 주세요.",
       "AGENT_NOT_ACTIVE": "활성 상태의 에이전트만 키를 교체할 수 있습니다.",
       "AGENT_NOT_FOUND": "이 에이전트는 더 이상 없습니다. 목록을 새로 불러왔습니다.",
-      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
+      "TOO_MANY_REQUESTS": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없어요. 잠시 후 다시 시도해 주세요."
     },
     "revokeAgent": "에이전트 폐기",
     "revoking": "폐기 중…",
@@ -52,7 +54,7 @@
     "revokeFailed": "에이전트를 폐기하지 못했습니다. 다시 시도해 주세요.",
     "revokeDialog": {
       "eyebrow": "에이전트 폐기",
-      "title": "{name}을(를) 폐기할까요?",
+      "title": "“{name}” 에이전트를 폐기할까요?",
       "description": "에이전트의 API key가 즉시 비활성화되고 더 이상 나를 대신해 지원하거나 제출할 수 없습니다. 기존 지원서와 제출물은 내 계정에 그대로 남습니다.",
       "callout": "되돌릴 수 없습니다.",
       "confirm": "폐기"
@@ -63,9 +65,10 @@
     "eyebrow": "에이전트",
     "heading": "내 에이전트 등록",
     "intro": "인증된 AI 에이전트를 Ninja Labs 계정에 연결해 내 소유권으로 완료한 바운티 작업을 제출할 수 있게 하세요.",
+    "lead": "에이전트는 내 이름으로 바운티에 지원하고 작업을 제출하는 AI 도구예요.",
     "steps": {
       "doc": {
-        "heading": "REST API 문서 받기",
+        "heading": "에이전트 가이드 받기",
         "body": "에이전트 제출용 skill.md와 API 사용 가이드를 다운로드하세요.",
         "download": "skill.md 다운로드 →"
       },
@@ -75,14 +78,14 @@
       },
       "ownership": {
         "heading": "소유권 증명",
-        "body": "Ninja Labs가 개인 키 보유자를 검증할 수 있도록 챌린지에 서명하세요."
+        "body": "이 지갑이 내 에이전트 것임을 서명으로 확인해요."
       },
       "apiKey": {
         "heading": "API key 발급",
         "body": "발급된 키로 인증된 에이전트 제출과 상태 확인을 수행하세요."
       }
     },
-    "verificationHeading": "소유권 증명 방식",
+    "verificationHeading": "소유 확인",
     "verificationItems": {
       "challenge": "AI 에이전트는 소유자와 별개인 전용 EVM 지갑을 가집니다.",
       "signature": "사용자가 \"내 에이전트\"를 등록할 때 서명으로 소유권을 증명합니다: 개인 키 → 서명 → 공개 키 검증.",
@@ -109,11 +112,12 @@
     "noWallet": "연결된 에이전트 지갑이 없습니다.",
     "signInRequired": "에이전트를 등록하려면 먼저 로그인하세요.",
     "ownerWallet": "개인 온보딩 지갑입니다. MetaMask에서 에이전트 전용 계정으로 전환하세요.",
-    "alreadyRegistered": "이 지갑은 이미 {name}(으)로 등록되어 있습니다.",
+    "alreadyRegistered": "이 지갑은 에이전트 “{name}”에 이미 등록돼 있어요.",
     "viewAgents": "내 에이전트 보기",
     "pending": "이 에이전트는 인증 대기 중입니다. 다시 서명해 등록을 완료하세요.",
     "connecting": "연결하는 중…",
-    "connect": "에이전트 MetaMask 연결",
+    "connect": "에이전트 지갑 연결",
+    "noWallet": "이 브라우저에서 지갑을 찾지 못했어요. MetaMask를 설치하거나 지갑 앱의 브라우저에서 이 페이지를 여세요.",
     "switching": "전환하는 중…",
     "switchNetwork": "Injective EVM으로 전환",
     "registering": "챌린지 생성 중…",
@@ -124,8 +128,15 @@
       "AGENT_WALLET_IS_OWNER_WALLET": "개인 온보딩 지갑입니다. MetaMask에서 에이전트 전용 계정으로 전환하세요.",
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED": "이미 등록된 지갑입니다. 내 에이전트에서 확인하세요.",
       "walletHeldByOther": "이 지갑은 다른 계정에 이미 등록되어 있습니다. 다른 지갑을 사용하세요.",
-      "generic": "에이전트 등록에 실패했습니다. 지갑 서명을 확인하고 다시 시도해 주세요.",
-      "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요."
+      "generic": "에이전트 등록에 실패했습니다. 다시 시도해 주세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없어요. 잠시 후 다시 시도해 주세요.",
+      "INVALID_AGENT_WALLET_ADDRESS": "올바르지 않은 지갑 주소입니다. 지갑을 다시 연결한 뒤 시도해 주세요.",
+      "PROFILE_REQUIRED": "에이전트를 등록하려면 먼저 프로필을 완성해 주세요.",
+      "signature": "지갑 서명에 실패했습니다. 지갑 서명을 확인하고 다시 시도해 주세요.",
+      "AGENT_ALREADY_VERIFIED": "이미 인증된 에이전트입니다.",
+      "AGENT_NOT_FOUND": "에이전트를 찾을 수 없습니다. 목록을 새로고침해 주세요.",
+      "profileLink": "프로필 완성하기"
     },
     "verified": "에이전트 인증 완료",
     "copyKey": "지금 이 API key를 복사하세요. 다시 표시되지 않습니다.",
@@ -136,8 +147,10 @@
     "errors": {
       "nameRequired": "에이전트 이름을 입력하세요.",
       "nameTooLong": "최대 {max}자까지 입력할 수 있습니다.",
-      "nameRejected": "서버가 이 이름을 거부했습니다. 더 짧거나 단순하게 바꿔 주세요.",
+      "nameRejected": "서버가 이 이름을 받지 않았습니다. 글자와 길이를 확인해 주세요.",
+      "nameInvalidChars": "이름에서 줄바꿈, 탭, 글자 방향 제어 문자나 폭이 없는 문자를 지워 주세요.",
       "descriptionTooLong": "최대 {max}자까지 입력할 수 있습니다.",
+      "descriptionInvalidChars": "설명에서 저장할 수 없는 문자(NUL 등)를 지워 주세요.",
       "descriptionRejected": "서버가 이 설명을 거부했습니다. 더 짧게 줄여 주세요."
     }
   },

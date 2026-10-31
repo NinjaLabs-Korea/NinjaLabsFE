@@ -123,8 +123,8 @@ export function useMenuButton(itemCount: number) {
 
 /** 헤더 드롭다운 패널과 항목의 공통 스타일. */
 export const menuPanelClass =
-  "absolute right-0 top-full z-50 mt-2 rounded-tile border border-border bg-surface p-1.5 shadow-frame";
+  "absolute right-0 top-full z-50 mt-2 rounded-tile border border-border bg-surface p-1.5 shadow-frame origin-top animate-pop-in motion-reduce:animate-none";
 /** 항목 레이아웃·포커스만. 글자 굵기/색은 `menuItemClass`(기본) 또는 선택 상태처럼 호출부에서 정한다. */
 export const menuItemBaseClass =
-  "flex w-full items-center justify-between rounded-control px-3 py-2 text-left text-sm hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+  "flex w-full items-center justify-between motion-control rounded-control px-3 min-h-11 py-2.5 text-left text-sm hover:bg-surface-subtle hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 export const menuItemClass = `${menuItemBaseClass} font-medium text-ink-secondary`;

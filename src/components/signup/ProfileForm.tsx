@@ -7,14 +7,20 @@ import { useAuthActions, useAuthSnapshot, useOnboardingApi, useFoundationMode } 
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
 import { validationFieldsFromError } from "@/lib/api/validation";
+import { RequiredMark } from "@/components/ui/RequiredMark";
+import { focusFirstInvalid } from "@/lib/form-focus";
 import { Badge } from "@/components/ui/Badge";
 import { NICKNAME_MAX, NICKNAME_MIN, normalizeNickname, validateNickname } from "@/lib/nickname";
 import { PROFILE_BIO_MAX } from "@/lib/input-limits";
 import { pushFlash } from "@/lib/flash";
+import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { signInHref } from "@/lib/return-path";
 import { signup } from "@/lib/signup";
 import { onboardingErrorDetails, onboardingLog } from "@/lib/onboarding-log";
 import { withLocaleOf } from "@/i18n/routing";
+import { readProfileDraft, writeProfileDraft } from "@/lib/profile-draft";
+
+const KNOWN_TAGS: readonly string[] = ["DEV", "DESIGN", "CONTENT", "OTHER"];
 
 // `labelKey` resolves under messages `signup.profile.form.tags`; `value` is sent to the API.
 const fieldTags = [
@@ -49,36 +55,6 @@ export function saveErrorKey(error: unknown): SaveErrorKey {
   return ERROR_COPY.profileSave.fallback;
 }
 
-/**
- * Onboarding draft kept across a session that ended mid-form: the sign-in goes through Google and back (same tab), so
- * sessionStorage survives it. Public profile text only, no secrets; cleared on a successful save.
- */
-const DRAFT_KEY = "ninja.profileDraft";
-type Draft = { nickname: string; bio: string; tags: string[] };
-
-function readDraft(): Draft | null {
-  try {
-    const raw = window.sessionStorage.getItem(DRAFT_KEY);
-    if (!raw) return null;
-    const value: unknown = JSON.parse(raw);
-    if (!value || typeof value !== "object") return null;
-    const { nickname, bio, tags } = value as Record<string, unknown>;
-    if (typeof nickname !== "string" || typeof bio !== "string" || !Array.isArray(tags)) return null;
-    return { nickname, bio, tags: tags.filter((tag): tag is string => fieldTags.some((known) => known.value === tag)) };
-  } catch {
-    return null;
-  }
-}
-
-function writeDraft(draft: Draft | null): void {
-  try {
-    if (draft) window.sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-    else window.sessionStorage.removeItem(DRAFT_KEY);
-  } catch {
-    // storage blocked: the form on screen still keeps what was typed
-  }
-}
-
 type ProfileFormProps = {
   /**
    * `onboarding` (default): signup step 3, saves and continues to step 4. `edit`: the account page, prefilled from the signed-in
@@ -91,6 +67,10 @@ type ProfileFormProps = {
 export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileFormProps = {}) {
   const editing = formMode === "edit";
   const t = useTranslations("signup.profile.form");
+  const tForm = useTranslations("common.form");
+  const formRef = useRef<HTMLFormElement>(null);
+  // Set by a failed submit, cleared once no field is flagged: drives the "N fields need attention" line.
+  const [submitFailed, setSubmitFailed] = useState(false);
   const tSaveErrors = useTranslations(ERROR_COPY.profileSave.messages);
   const apiClient = useOnboardingApi();
   const mode = useFoundationMode();
@@ -103,7 +83,18 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   if (signedInUser && !wasSignedIn) setWasSignedIn(true);
   const sessionEnded = mode === "api" && wasSignedIn && auth.status === "signed-out" && auth.reason === "session-ended";
   // Onboarding only: a draft left by an ended session pre-fills the form once the user is back.
-  const [draft] = useState(() => (!editing && mode === "api" && typeof window !== "undefined" ? readDraft() : null));
+  // The draft belongs to one user (`profile-draft.ts`): it is read only once the signed-in user is known, and another
+  // account's draft is discarded. `draftChecked` flips when the first read happened (at mount, or when the user first appears).
+  const userId = signedInUser?.id ?? null;
+  // Edit mode: the account this editor was opened for. A different signed-in user (another tab switched accounts) must
+  // not receive this form's values.
+  const [editedUserId] = useState(userId);
+  const usesDraft = !editing && mode === "api";
+  const [draftChecked, setDraftChecked] = useState(() => usesDraft && userId !== null);
+  const [draft] = useState(() => (usesDraft && userId && typeof window !== "undefined" ? readProfileDraft(userId, KNOWN_TAGS) : null));
+  // Last known owner: kept while the session is ended so the typed values are still stashed for the re-login.
+  const [draftOwner, setDraftOwner] = useState(userId);
+  if (userId && draftOwner !== userId) setDraftOwner(userId);
   // Edit mode starts from what is saved; onboarding starts empty (mock mode prefills a demo profile).
   const [nickname, setNickname] = useState(editing && signedInUser ? signedInUser.handle : draft ? draft.nickname : mode === "mock" ? signup.profile.nickname : "");
   const [bio, setBio] = useState(editing && signedInUser ? signedInUser.bio ?? "" : draft ? draft.bio : mode === "mock" ? signup.profile.bio : "");
@@ -113,22 +104,39 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   // 필드 검증 에러. 저장 실패(state "error", 예: 닉네임 중복)와는 따로 표시한다.
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   // Synchronous in-flight guard: several submit events can land in one tick before React re-renders the disabled button.
-  const inFlight = useRef(false);
+  const { run: runSave } = useSingleFlight();
   const [saveError, setSaveError] = useState<SaveErrorKey>("generic");
   const [nicknameCheck, setNicknameCheck] = useState<NicknameCheck | null>(null);
+  // The name a save was refused for by the 24-hour change cooldown: the name itself is fine, so no "available" line next to that error.
+  const [cooldownNickname, setCooldownNickname] = useState<string | null>(null);
+
+  // The form mounted before the user was known: restore their draft now, unless they already typed.
+  if (usesDraft && !draftChecked && userId) {
+    setDraftChecked(true);
+    const late = readProfileDraft(userId, KNOWN_TAGS);
+    if (late && !nickname && !bio && tags.length === 0) {
+      setNickname(late.nickname);
+      setBio(late.bio);
+      setTags(late.tags);
+    }
+  }
 
   const trimmedNickname = normalizeNickname(nickname);
   const nicknameRuleError = validateNickname(trimmedNickname);
   // 이미 저장한 내 닉네임(뒤로 가기·재방문)은 BE `check-nickname`(공개, 익명)에게 "사용 중"이지만 저장은 허용된다(자기 행 UPDATE).
   // 그 값은 묻지도 막지도 않는다. BE 비교는 대소문자 무시(`lower(nickname)`).
-  const ownNickname = auth.status === "signed-in" ? normalizeNickname(auth.user.handle).toLowerCase() : null;
+  // The last signed-in handle is remembered: once the session has ended the user's own name must not start looking taken.
+  const [lastHandle, setLastHandle] = useState<string | null>(signedInUser?.handle ?? null);
+  if (signedInUser && signedInUser.handle !== lastHandle) setLastHandle(signedInUser.handle);
+  const ownHandle = signedInUser?.handle ?? lastHandle;
+  const ownNickname = ownHandle ? normalizeNickname(ownHandle).toLowerCase() : null;
   const isOwnNickname = ownNickname !== null && trimmedNickname.toLowerCase() === ownNickname;
   // 규칙을 통과한 값만 BE에 묻는다; 마지막 검사 결과가 현재 입력과 다르면 아직 확인 중이다.
   // A typed name that breaks a rule says why right away (no request is sent for it, so the status line would stay empty and
   // the field would look fine); an empty field is only reported on save.
   const nicknameStatus: "idle" | "invalid" | "checking" | "available" | "taken" = nicknameRuleError && trimmedNickname !== ""
     ? "invalid"
-    : nicknameRuleError || isOwnNickname
+    : nicknameRuleError || isOwnNickname || sessionEnded || cooldownNickname === trimmedNickname
     ? "idle"
     : nicknameCheck?.nickname !== trimmedNickname
       ? "checking"
@@ -142,11 +150,13 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   // `[locale]` route) or a reload remounts the form, and the draft refills it. Cleared on a successful save.
   useEffect(() => {
     if (editing || mode !== "api") return;
-    writeDraft(nickname || bio || tags.length > 0 ? { nickname, bio, tags } : null);
-  }, [editing, mode, nickname, bio, tags]);
+    if (!draftOwner || !draftChecked) return;
+    writeProfileDraft(draftOwner, nickname || bio || tags.length > 0 ? { nickname, bio, tags } : null);
+  }, [editing, mode, nickname, bio, tags, draftOwner, draftChecked]);
 
   useEffect(() => {
-    if (nicknameRuleError || isOwnNickname) return;
+    // A session that ended cannot save anyway (the session banner says so): no availability request for it.
+    if (nicknameRuleError || isOwnNickname || sessionEnded) return;
     let cancelled = false;
     const timer = window.setTimeout(() => {
       apiClient
@@ -162,7 +172,19 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [apiClient, isOwnNickname, nicknameRuleError, trimmedNickname]);
+  }, [apiClient, isOwnNickname, nicknameRuleError, sessionEnded, trimmedNickname]);
+
+  // Back from /signup/get-started restores this page from the bfcache in its "Saving profile..." state (the save already
+  // succeeded and the auth snapshot is stale): start over, and in onboarding reload so the gate re-reads the session.
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      setState("idle");
+      if (!editing) window.location.reload();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [editing]);
 
   const toggleTag = (value: string) => {
     setSaved(false);
@@ -174,7 +196,6 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (inFlight.current) return;
     const nextErrors: FieldErrors = {
       // A non-empty rule violation is already said by the status line under the field (`nickname-status`).
       ...(nicknameRuleError && nicknameStatus !== "invalid" ? { nickname: `nicknameErrors.${nicknameRuleError}` } : {}),
@@ -190,52 +211,69 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         tagCount: tags.length,
       });
       setState("idle");
+      setSubmitFailed(true);
+      focusFirstInvalid(formRef.current);
       return;
     }
 
-    inFlight.current = true;
-    setState("pending");
-    onboardingLog("profile.save.started", {
-      nicknameLength: nickname.trim().length,
-      bioLength: bio.trim().length,
-      tagCount: tags.length,
-    });
-    try {
-      await apiClient.completeProfile({ nickname: trimmedNickname, bio: bio.trim(), tags });
-      if (editing) {
-        onboardingLog("profile.save.succeeded", { targetPath: "(account)" });
-        // The session snapshot carries nickname, bio and tags: re-read it so the header, the profile link and this form agree.
-        await refresh?.().catch(() => undefined);
-        setSaved(true);
-        setState("idle");
-        inFlight.current = false;
-        // The account page closes this form on `onSaved`, so an inline status would never be seen: confirm with a toast.
-        pushFlash("profileSaved");
-        onSaved?.();
-        return;
-      }
-      onboardingLog("profile.save.succeeded", { targetPath: "/signup/get-started" });
-      writeDraft(null);
-      window.location.assign(withLocaleOf(window.location.pathname, "/signup/get-started"));
-    } catch (error) {
-      onboardingLog("profile.save.failed", onboardingErrorDetails(error));
-      const key = saveErrorKey(error);
-      // BE 400 VALIDATION_FAILED의 message[]가 가리키는 필드를 인라인 힌트로 돌려준다 (원문 영어는 보여 주지 않는다).
-      const rejected = validationFieldsFromError(error);
-      setFieldErrors({
-        ...("nickname" in rejected ? { nickname: nicknameRuleError ? `nicknameErrors.${nicknameRuleError}` : "errors.nicknameRejected" } : {}),
-        ...("bio" in rejected ? { bio: bio.trim() ? "errors.bioRejected" : "errors.bio" } : {}),
-        ...("tags" in rejected ? { tags: "errors.tags" } : {}),
-      });
-      if (key === "NICKNAME_TAKEN") setNicknameCheck({ nickname: trimmedNickname, available: false });
-      setSaveError(key);
-      // NICKNAME_TAKEN is already said by the status line under the field, and a 400 whose fields are named is said by
-      // those inline hints; a form-level alert would repeat it in other words (two alerts for one rejected bio).
-      setState(key === "NICKNAME_TAKEN" || (key === "invalid" && Object.keys(rejected).length > 0) ? "idle" : "error");
-      inFlight.current = false;
+    if (editing && userId !== null && editedUserId !== null && userId !== editedUserId) {
+      onboardingLog("profile.save.blocked", { reason: "USER_CHANGED" });
+      setSaveError("generic");
+      setState("error");
+      return;
     }
+
+    await runSave(async () => {
+      setState("pending");
+      onboardingLog("profile.save.started", {
+        nicknameLength: nickname.trim().length,
+        bioLength: bio.trim().length,
+        tagCount: tags.length,
+      });
+      try {
+        await apiClient.completeProfile({ nickname: trimmedNickname, bio: bio.trim(), tags });
+        if (editing) {
+          onboardingLog("profile.save.succeeded", { targetPath: "(account)" });
+          // The session snapshot carries nickname, bio and tags: re-read it so the header, the profile link and this form agree.
+          await refresh?.().catch(() => undefined);
+          setSaved(true);
+          setState("idle");
+          // The account page closes this form on `onSaved`, so an inline status would never be seen: confirm with a toast.
+          pushFlash("profileSaved");
+          onSaved?.();
+          return;
+        }
+        onboardingLog("profile.save.succeeded", { targetPath: "/signup/get-started" });
+        if (draftOwner) writeProfileDraft(draftOwner, null);
+        window.location.assign(withLocaleOf(window.location.pathname, "/signup/get-started"));
+        // assign returns before the page unloads: keep the flight open so a programmatic submit cannot send a second
+        // save while the full page load is pending. A bfcache restore reloads the page (pageshow handler above).
+        await new Promise<never>(() => undefined);
+      } catch (error) {
+        onboardingLog("profile.save.failed", onboardingErrorDetails(error));
+        const key = saveErrorKey(error);
+        // BE 400 VALIDATION_FAILED의 message[]가 가리키는 필드를 인라인 힌트로 돌려준다 (원문 영어는 보여 주지 않는다).
+        const rejected = validationFieldsFromError(error);
+        setFieldErrors({
+          ...("nickname" in rejected ? { nickname: nicknameRuleError ? `nicknameErrors.${nicknameRuleError}` : "errors.nicknameRejected" } : {}),
+          ...("bio" in rejected ? { bio: bio.trim() ? "errors.bioRejected" : "errors.bio" } : {}),
+          ...("tags" in rejected ? { tags: "errors.tags" } : {}),
+          // Said at the nickname field (aria-describedby), not only in the form alert far below it.
+          ...(key === "NICKNAME_CHANGE_COOLDOWN" ? { nickname: "saveErrors.NICKNAME_CHANGE_COOLDOWN" } : {}),
+        });
+        setCooldownNickname(key === "NICKNAME_CHANGE_COOLDOWN" ? trimmedNickname : null);
+        if (key === "NICKNAME_TAKEN") setNicknameCheck({ nickname: trimmedNickname, available: false });
+        setSaveError(key);
+        // NICKNAME_TAKEN is already said by the status line under the field, and a 400 whose fields are named is said by
+        // those inline hints; a form-level alert would repeat it in other words (two alerts for one rejected bio).
+        setState(key === "NICKNAME_TAKEN" || key === "NICKNAME_CHANGE_COOLDOWN" || (key === "invalid" && Object.keys(rejected).length > 0) ? "idle" : "error");
+      }
+    });
   };
 
+  const nicknameInvalid = Boolean(fieldErrors.nickname) || nicknameStatus === "taken" || nicknameStatus === "invalid";
+  const invalidCount = Number(nicknameInvalid) + Number(Boolean(fieldErrors.tags)) + Number(Boolean(fieldErrors.bio));
+  if (invalidCount === 0 && submitFailed) setSubmitFailed(false);
   const nicknameDescribedBy = [
     fieldErrors.nickname ? "nickname-error" : null,
     nicknameStatus === "idle" ? null : "nickname-status",
@@ -243,11 +281,13 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
   ].filter(Boolean).join(" ");
 
   return (
-    <form className="mt-6 space-y-5" noValidate onSubmit={(event) => void submit(event)}>
+    <form className="mt-6 space-y-5" noValidate onSubmit={(event) => void submit(event)} ref={formRef}>
+      <p className="text-xs text-ink-muted">{tForm("requiredHint")}</p>
       <div>
         <label className="text-sm font-semibold text-ink" htmlFor="nickname">
           {t("nicknameLabel")}
         </label>
+        <RequiredMark />
         <input
           className="mt-2 w-full rounded-control border border-border bg-surface px-4 py-3 text-sm text-ink-secondary placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           id="nickname"
@@ -255,7 +295,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
           minLength={NICKNAME_MIN}
           name="nickname"
           aria-describedby={nicknameDescribedBy}
-          aria-invalid={fieldErrors.nickname || nicknameStatus === "taken" || nicknameStatus === "invalid" ? true : undefined}
+          aria-invalid={nicknameInvalid || undefined}
           onChange={(event) => {
             setNickname(event.target.value);
             setSaved(false);
@@ -271,8 +311,8 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         </p>
         <p className="mt-1 text-xs text-ink-muted" id="nickname-hint">{t("nicknameHint")}</p>
       </div>
-      <fieldset>
-        <legend className="text-sm font-semibold text-ink">{t("fieldTags")}</legend>
+      <fieldset aria-invalid={fieldErrors.tags ? true : undefined} tabIndex={-1}>
+        <legend className="text-sm font-semibold text-ink">{t("fieldTags")}<RequiredMark /></legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {fieldTags.map((tag) => {
             const selected = tags.includes(tag.value);
@@ -295,6 +335,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         <label className="text-sm font-semibold text-ink" htmlFor="bio">
           {t("bioLabel")}
         </label>
+        <RequiredMark />
         <textarea
           className="mt-2 min-h-[120px] w-full rounded-control border border-border bg-surface px-4 py-3 text-sm text-ink-secondary placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           id="bio"
@@ -321,6 +362,9 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
       >
         {state === "pending" ? t("saving") : editing ? t("save") : t("submit")}
       </button>
+      {submitFailed && invalidCount > 0 ? (
+        <p className="text-sm text-danger" role="status">{tForm("invalidSummary", { count: invalidCount })}</p>
+      ) : null}
       {saved ? <p className="text-sm font-semibold text-success" role="status">{t("saved")}</p> : null}
       {sessionEnded ? (
         <div className="space-y-2" role="alert">

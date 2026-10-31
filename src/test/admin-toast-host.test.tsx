@@ -21,6 +21,14 @@ describe("AdminToastHost", () => {
     expect(region.textContent).toBe("Saved. Bounty updated.");
   });
 
+  it("animates each toast in", () => {
+    renderWithIntl(<AdminToastHost />);
+    act(() => pushAdminToast({ variant: "success", title: "Saved", description: "Done." }));
+    const item = screen.getByText("Saved").closest("div.flex") as HTMLElement;
+    expect(item.className).toContain("animate-toast-in");
+    expect(item.className).toContain("motion-reduce:animate-none");
+  });
+
   it("re-announces an identical consecutive toast by replacing the live node (keyed by toast id)", () => {
     renderWithIntl(<AdminToastHost />);
     const region = document.querySelector("[aria-live=\"polite\"]") as HTMLElement;

@@ -8,7 +8,7 @@ import { Link } from "@/i18n/navigation";
 
 /**
  * Signup step 2 for someone whose wallet is already linked (back button after Verify, a reload, a second visit): the wallet is
- * shown read-only with a way on, instead of offering "Verify wallet" again (a second verify is a 409 `WALLET_ALREADY_LINKED`).
+ * shown read-only with a way on, instead of offering "Verify wallet" again (a second verify is a 409 `ACCOUNT_ALREADY_HAS_WALLET`).
  * Everyone else sees `children`, the connect UI. Same rule as the account page's wallet card (`account/WalletSettings`).
  */
 export function LinkedWalletGate({ children }: { children: ReactNode }) {

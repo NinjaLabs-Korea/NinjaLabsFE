@@ -14,13 +14,17 @@ type ConfirmDialogProps = {
   description: ReactNode;
   calloutText?: string;
   confirmLabel: string;
+  /** Overrides the default "Cancel" label, e.g. "Keep editing". */
+  cancelLabel?: string;
   destructive?: boolean;
   /** See `Modal.returnFocusTo`: focus target after close when the opener was removed/disabled by the confirmed action. */
   returnFocusTo?: () => HTMLElement | null | undefined;
   /** Extra content between the callout and the actions, e.g. a typed-confirmation field. */
   children?: ReactNode;
-  /** Disables the confirm action (typed confirmation not matched yet, request in flight). */
+  /** Disables the confirm action (typed confirmation not matched yet). `pending` also disables it. */
   confirmDisabled?: boolean;
+  /** Request in flight: shows a spinner before the label and marks the confirm button aria-busy. */
+  pending?: boolean;
 };
 
 export function ConfirmDialog({
@@ -32,10 +36,12 @@ export function ConfirmDialog({
   description,
   calloutText,
   confirmLabel,
+  cancelLabel,
   destructive = false,
   returnFocusTo,
   children,
   confirmDisabled = false,
+  pending = false,
 }: ConfirmDialogProps) {
   const t = useTranslations("common.confirmDialog");
   const titleId = useId();
@@ -76,16 +82,18 @@ export function ConfirmDialog({
           className="rounded-control border border-primary-outline bg-surface px-5 py-3 text-sm font-semibold leading-[21px] text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           onClick={onCancel}
         >
-          {t("cancel")}
+          {cancelLabel ?? t("cancel")}
         </button>
         <button
           type="button"
-          className={`rounded-control px-5 py-3 text-sm font-semibold leading-[21px] text-on-inverse focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${
+          className={`rounded-control px-5 py-3 text-sm font-semibold leading-[21px] text-on-inverse motion-control motion-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${
             destructive ? "bg-danger" : "bg-primary"
           }`}
-          disabled={confirmDisabled}
+          aria-busy={pending || undefined}
+          disabled={confirmDisabled || pending}
           onClick={onConfirm}
         >
+          {pending ? <span aria-hidden="true" className="spinner mr-2" /> : null}
           {confirmLabel}
         </button>
       </div>

@@ -41,6 +41,20 @@ type PublicFetchOptions = {
 export const PUBLIC_LIST_REVALIDATE_SECONDS = 30;
 
 /**
+ * Public list resources that go through the Data Cache. Each one is tagged `public:<resource>` so an admin write can expire it at once
+ * (`lib/admin-revalidate.ts`). Members and highlights (`/members`, `/hall-of-fame`) are fetched uncached and need no tag.
+ */
+export const PUBLIC_LIST_RESOURCES = ["notices", "bounties"] as const;
+export type PublicListResource = (typeof PUBLIC_LIST_RESOURCES)[number];
+export const publicListTag = (resource: PublicListResource): string => `public:${resource}`;
+
+/** The cache tag of a list path (`/notices?sort=eventDate` -> `public:notices`), or none for a resource that is not tagged. */
+export function publicListTagForPath(path: string): string[] {
+  const resource = path.split("?", 1)[0].split("/")[1];
+  return (PUBLIC_LIST_RESOURCES as readonly string[]).includes(resource) ? [publicListTag(resource as PublicListResource)] : [];
+}
+
+/**
  * Options for the bounty/notice/member detail loaders. When the layout's fetch fails, Next renders an error shell in a
  * second React render (`getErrorRSCPayload` → generateMetadata again). React `cache()` does not span renders, so without
  * the replay an outage costs a second BE call, and a hung BE costs a second full timeout (16s instead of 8s).
@@ -74,7 +88,7 @@ export async function fetchPublicJson<T>(path: string, options: PublicFetchOptio
 
   try {
     const response = await fetch(`${config.apiUrl.replace(/\/$/, "")}${path}`, {
-      ...(revalidateSeconds ? { next: { revalidate: revalidateSeconds } } : { cache: "no-store" as const }),
+      ...(revalidateSeconds ? { next: { revalidate: revalidateSeconds, tags: publicListTagForPath(path) } } : { cache: "no-store" as const }),
       signal: AbortSignal.timeout(PUBLIC_FETCH_TIMEOUT_MS),
     });
     if (!response.ok) {
@@ -100,4 +114,17 @@ type RuntimeSources<T> = {
  */
 export async function loadFromRuntime<T>(sources: RuntimeSources<T>): Promise<T> {
   return loadRuntimeConfig().runtimeMode === "mock" ? sources.mock() : sources.api();
+}
+
+/**
+ * The one way a public page degrades when the API is down: a rejected read becomes `fallback` plus `unavailable: true`, so the
+ * page renders an inline unavailable state instead of the error boundary. Pass a promise that is already started so several
+ * sources load in parallel (`Promise.all([settle(a, []), settle(b, [])])`).
+ */
+export async function settle<T>(promise: Promise<T>, fallback: T): Promise<{ value: T; unavailable: boolean }> {
+  try {
+    return { value: await promise, unavailable: false };
+  } catch {
+    return { value: fallback, unavailable: true };
+  }
 }

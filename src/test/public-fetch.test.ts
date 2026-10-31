@@ -27,7 +27,7 @@ describe("fetchPublicJson", () => {
     vi.stubGlobal("fetch", fetchMock);
     await fetchPublicJson("/bounties?page=1", { revalidateSeconds: 30 });
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit & { next?: { revalidate: number } }];
-    expect(init.next).toEqual({ revalidate: 30 });
+    expect(init.next).toEqual({ revalidate: 30, tags: ["public:bounties"] }); // tagged so an admin write can expire it at once
     expect(init.cache).toBeUndefined(); // both at once makes Next warn and pick no-store
   });
 

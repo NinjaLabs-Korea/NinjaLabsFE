@@ -1,5 +1,7 @@
 import type { AdminBounty } from "./admin";
+import { BOUNTY_SPONSOR_MAX, BOUNTY_TEXT_MAX, BOUNTY_TITLE_MAX, MAX_WINNERS_MAX } from "@/lib/input-limits";
 import { deliverablesFromRequirements } from "./admin-helpers";
+import { hasVisibleText } from "./visible-text";
 import { humanToBaseUnits, rewardToBaseUnits, tokenDecimalsFor } from "./api/codecs";
 
 /** 어드민 바운티 폼의 입력 상태 (모든 값은 input/select가 다루는 문자열 형태) */
@@ -7,6 +9,8 @@ export type BountyFormValues = {
   title: string;
   sponsor: string;
   deadline: string;
+  /** 지원 마감(선택, datetime-local 문자열). 빈 문자열 = 지원 마감 없음. 지원형 바운티에서만 입력란이 보인다. */
+  applicationDeadline: string;
   amount: string;
   currency: "INJ" | "USDC";
   intake: "OFF" | "ON";
@@ -28,7 +32,7 @@ export type BountyFormValues = {
    * - 로컬 ↔ UTC 변환을 다시 거치면 초/밀리초가 잘리고, 같은 시각을 "변경"으로 재전송하게 된다.
    */
   originalSubmissionDeadline?: string;
-  /** 폼에 입력란이 없는 지원 마감. 수정 시 손대지 않고 그대로 되돌려 준다. */
+  /** BE가 돌려준 원본 지원 마감 ISO. `applicationDeadline` 입력이 이 값의 로컬 표시와 같으면 원본을 그대로 보낸다. */
   originalApplicationDeadline?: string | null;
   /**
    * BE `requirements` 원문. `deliverables` 입력란이 불러온 값과 같으면 저장 시 이 문자열을 바이트 그대로 보낸다
@@ -36,6 +40,27 @@ export type BountyFormValues = {
    */
   originalRequirements?: string;
 };
+
+/** BE `TOKEN_AMOUNT`: at most 30 digits in base units, so the integer part may have 30 minus the token decimals digits (INJ 18 -> 12). */
+const TOKEN_AMOUNT_MAX_DIGITS = 30;
+
+/** Most digits allowed before the decimal point for a token with `decimals` decimals (INJ 18 -> 12, USDC 6 -> 24). */
+export const rewardIntegerDigitsMax = (decimals: number) => TOKEN_AMOUNT_MAX_DIGITS - decimals;
+
+/** Characters in code points, like BE `MaxChars` (a UTF-16 `.length` counts one emoji as 2 and rejected titles the BE accepts). */
+export const codePointLength = (value: string) => [...value].length;
+
+/** BE `DisplayTitle` (title, sponsorName): `isPlainDisplayText`; `DisplayBody` (description, requirements, evaluationCriteria): `hasNoBidiOverride`. */
+const PLAIN_FORBIDDEN = /[\p{Cc}\u2028\u2029\u200B\u200E\u200F\u202A-\u202E\u2060\u2066-\u2069\uFEFF]/u;
+const BIDI_REORDERING = /[\u202A-\u202E\u2066-\u2069]/u;
+
+/** Required / hidden-character verdict for one text field (client mirror of the BE visible-text rules); `undefined` when fine. */
+function textRuleError(value: string, kind: "plain" | "body"): "required" | "bidiChars" | undefined {
+  const text = value.trim();
+  if (!hasVisibleText(text)) return "required";
+  if ((kind === "plain" ? PLAIN_FORBIDDEN : BIDI_REORDERING).test(text)) return "bidiChars";
+  return undefined;
+}
 
 const pad2 = (value: number) => String(value).padStart(2, "0");
 
@@ -79,6 +104,7 @@ export const emptyBountyForm = (): BountyFormValues => ({
   title: "",
   sponsor: "",
   deadline: "",
+  applicationDeadline: "",
   amount: "",
   currency: "INJ",
   intake: "OFF",
@@ -100,6 +126,7 @@ export function bountyToForm(bounty: AdminBounty): BountyFormValues {
     title: bounty.title,
     sponsor: bounty.sponsor,
     deadline: toLocalDateTimeInput(bounty.deadline),
+    applicationDeadline: bounty.applicationDeadline ? toLocalDateTimeInput(bounty.applicationDeadline) : "",
     // A bounty without a reward row maps to `{ amount: 0 }`; prefilling "0" would trip `amountInvalid` and block every edit of it.
     amount: bounty.reward.amount > 0 ? String(bounty.reward.amount) : "",
     currency: bounty.reward.currency,
@@ -145,7 +172,7 @@ export function formToBounty(
     submissionMode: form.submissionMode === "Agent" ? "agent" : "direct",
     coverImage: target.coverImage,
     deadline: resolveDeadlineIso(form.deadline, form.originalSubmissionDeadline),
-    applicationDeadline: form.originalApplicationDeadline ?? null,
+    applicationDeadline: form.applicationDeadline.trim() ? resolveDeadlineIso(form.applicationDeadline, form.originalApplicationDeadline ?? undefined) : null,
     maxWinners: Number(form.maxWinners.trim()),
     tags: form.tags,
     description: form.description.trim(),
@@ -165,18 +192,17 @@ export type BountyFormError =
   | "sponsorTooLong"
   | "deadlineInvalid"
   | "deadlinePast"
+  | "applicationDeadlineInvalid"
+  | "applicationDeadlineAfterDeadline"
   | "amountInvalid"
   | "deliverablesRequired"
   | "maxWinnersInvalid"
-  | "tooLong";
+  | "tooLong"
+  | "bidiChars"
+  | "amountTooLarge";
 
-/** BE `CreateBountyDto`/`UpdateBountyDto`의 @MaxLength - 입력의 `maxLength`와 검증이 같은 값을 쓴다 */
-export const BOUNTY_TITLE_MAX = 200;
-export const BOUNTY_SPONSOR_MAX = 100;
-/** BE `CreateBountyDto` @MaxLength on the TEXT fields (description 50 000, requirements and evaluationCriteria 20 000); the PATCH limit is double, the stricter create limit applies to both. */
-export const BOUNTY_TEXT_MAX = { description: 50_000, deliverables: 20_000, reviewProcess: 20_000 } as const;
-/** Postgres INTEGER ceiling: BE `MaxPgInt` on `maxWinners`. */
-export const MAX_WINNERS_MAX = 2_147_483_647;
+/** BE `DEADLINE_UNCHANGED_TOLERANCE_MS`: an application deadline less than this after the submission deadline counts as "not later" (the datetime-local input drops seconds). */
+export const APPLICATION_DEADLINE_TOLERANCE_MS = 60_000;
 export type BountyFormErrors = Partial<Record<keyof BountyFormValues, BountyFormError>>;
 
 /**
@@ -202,6 +228,15 @@ function isRewardAmountValid(raw: string, currency: BountyFormValues["currency"]
   }
 }
 
+/** Integer part longer than the BE 30-digit base-unit limit allows for this token (plain decimals only; anything else is `amountInvalid`). */
+function isRewardAmountTooLarge(raw: string, currency: BountyFormValues["currency"]): boolean {
+  const text = raw.trim();
+  const decimals = tokenDecimalsFor(currency);
+  if (decimals === null || !/^(\d+\.?\d*|\.\d+)$/.test(text)) return false;
+  const integerPart = text.split(".")[0].replace(/^0+/, "");
+  return integerPart.length > rewardIntegerDigitsMax(decimals);
+}
+
 /**
  * 저장 전 폼 검증. 필수 항목은 BE `CreateBountyDto`의 @IsNotEmpty 필드와 맞춘다
  * (title, sponsorName, description, requirements, evaluationCriteria, submissionDeadline).
@@ -217,17 +252,23 @@ export function validateBountyForm(
   const errors: BountyFormErrors = {};
   const blank = (value: string) => value.trim().length === 0;
 
-  if (blank(form.title)) errors.title = "required";
-  else if (form.title.trim().length > BOUNTY_TITLE_MAX) errors.title = "titleTooLong";
-  if (blank(form.sponsor)) errors.sponsor = "required";
-  else if (form.sponsor.trim().length > BOUNTY_SPONSOR_MAX) errors.sponsor = "sponsorTooLong";
-  if (blank(form.description)) errors.description = "required";
-  if (blank(form.reviewProcess)) errors.reviewProcess = "required";
-  if (blank(form.deliverables)) errors.deliverables = "deliverablesRequired";
+  const titleRule = textRuleError(form.title, "plain");
+  if (titleRule) errors.title = titleRule;
+  else if (codePointLength(form.title.trim()) > BOUNTY_TITLE_MAX) errors.title = "titleTooLong";
+  const sponsorRule = textRuleError(form.sponsor, "plain");
+  if (sponsorRule) errors.sponsor = sponsorRule;
+  else if (codePointLength(form.sponsor.trim()) > BOUNTY_SPONSOR_MAX) errors.sponsor = "sponsorTooLong";
+  const descriptionRule = textRuleError(form.description, "body");
+  if (descriptionRule) errors.description = descriptionRule;
+  const reviewRule = textRuleError(form.reviewProcess, "body");
+  if (reviewRule) errors.reviewProcess = reviewRule;
+  if (blank(form.deliverables) || !hasVisibleText(form.deliverables)) errors.deliverables = "deliverablesRequired";
+  else if (BIDI_REORDERING.test(form.deliverables)) errors.deliverables = "bidiChars";
 
-  // 상한을 넘기면 BE가 400 VALIDATION_FAILED(일반 문구)로 답한다 - 어느 칸이 문제인지 여기서 알려 준다. 길이는 BE와 같은 Trim 뒤 UTF-16 단위.
-  if (form.description.trim().length > BOUNTY_TEXT_MAX.description) errors.description = "tooLong";
-  if (form.reviewProcess.trim().length > BOUNTY_TEXT_MAX.reviewProcess) errors.reviewProcess = "tooLong";
+  // 상한을 넘기면 BE가 400 VALIDATION_FAILED(일반 문구)로 답한다 - 어느 칸이 문제인지 여기서 알려 준다. 길이는 BE `MaxChars`와 같은 Trim 뒤 코드 포인트 단위.
+  // The BE caps these with @MaxLength (UTF-16 units), unlike the title/sponsor @MaxChars.
+  if (!errors.description && form.description.trim().length > BOUNTY_TEXT_MAX.description) errors.description = "tooLong";
+  if (!errors.reviewProcess && form.reviewProcess.trim().length > BOUNTY_TEXT_MAX.reviewProcess) errors.reviewProcess = "tooLong";
   if (!errors.deliverables && resolveRequirements(form).trim().length > BOUNTY_TEXT_MAX.deliverables) errors.deliverables = "tooLong";
 
   if (blank(form.deadline)) {
@@ -243,10 +284,25 @@ export function validateBountyForm(
     else if (changed && deadline.getTime() <= (options.now ?? new Date()).getTime()) errors.deadline = "deadlinePast";
   }
 
+  const applicationLocal = form.applicationDeadline.trim();
+  if (applicationLocal) {
+    const application = new Date(applicationLocal);
+    if (Number.isNaN(application.getTime())) errors.applicationDeadline = "applicationDeadlineInvalid";
+    else if (!errors.deadline && !blank(form.deadline)) {
+      // Compare like the BE (`assertApplicationDeadlineNotAfterSubmission`) on the ISO values that will actually be sent.
+      const submissionIso = resolveDeadlineIso(form.deadline, form.originalSubmissionDeadline);
+      const applicationIso = resolveDeadlineIso(applicationLocal, form.originalApplicationDeadline ?? undefined);
+      if (new Date(applicationIso).getTime() - new Date(submissionIso).getTime() >= APPLICATION_DEADLINE_TOLERANCE_MS) errors.applicationDeadline = "applicationDeadlineAfterDeadline";
+    }
+  }
+
   const winners = form.maxWinners.trim();
   if (!/^\d+$/.test(winners) || Number(winners) < 1 || Number(winners) > MAX_WINNERS_MAX) errors.maxWinners = "maxWinnersInvalid";
 
-  if (!options.editing && !blank(form.amount) && !isRewardAmountValid(form.amount, form.currency)) errors.amount = "amountInvalid";
+  if (!options.editing && !blank(form.amount)) {
+    if (isRewardAmountTooLarge(form.amount, form.currency)) errors.amount = "amountTooLarge";
+    else if (!isRewardAmountValid(form.amount, form.currency)) errors.amount = "amountInvalid";
+  }
 
   return errors;
 }

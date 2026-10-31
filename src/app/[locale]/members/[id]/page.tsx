@@ -6,9 +6,8 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
-import { loadFromRuntime } from "@/lib/api/public";
 import { decodeDetailId, validateDetailId } from "@/lib/detail-id";
-import { getRuntimeProfile, parentNftState, payoutBadge, portfolioBodyKey, PROFILE_FILLED_EXAMPLE_ID } from "@/lib/members";
+import { getRuntimeProfile, payoutBadge, publicNftStatusKey } from "@/lib/members";
 import { localeMetadata } from "@/i18n/alternates";
 
 type MemberProfilePageProps = PageProps<"/[locale]/members/[id]">;
@@ -37,31 +36,30 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
   const id = decodeDetailId(rawId);
   setRequestLocale(locale);
   const t = await getTranslations("members.profile");
+  const tRoles = await getTranslations("members.roles");
   const format = await getFormatter();
   // Shape check before the fetch (api: nickname, mock: slug); the layout already did it, this keeps the page self-contained.
   if (!(await validateDetailId("members", id))) notFound();
   const profile = await getRuntimeProfile(id, locale);
   if (!profile) notFound();
   const completed = profile.completions.length > 0;
-  // "View filled profile" is a demo affordance from Figma 05-Empty; only the mock fixture has a filled profile to point at.
-  const filledExampleHref = await loadFromRuntime({ mock: () => `/members/${PROFILE_FILLED_EXAMPLE_ID}`, api: async () => null });
   const completionNfts = profile.nfts.filter((nft) => nft.type === "completion");
 
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
+    <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-1 flex-col gap-5 rounded-card border border-border bg-surface p-[21px] shadow-card sm:flex-row sm:items-center sm:gap-6">
           <div className="flex size-24 shrink-0 items-center justify-center rounded-full bg-primary-soft-border font-display text-[30px] text-primary">{profile.initials}</div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               {profile.skills.map((skill) => <Badge key={skill}>{t(`categories.${skill.toLowerCase()}`)}</Badge>)}
-              <Badge variant={completed ? "success" : "neutral"}>{completed ? t("bountiesCompleted", { count: profile.completions.length }) : t("newBuilder")}</Badge>
+              {profile.teamRole ? <Badge variant="selected">{t("teamBadge", { role: tRoles(profile.teamRole.toLowerCase()) })}</Badge> : null}
+              {completed || !profile.teamRole ? <Badge variant={completed ? "success" : "neutral"}>{completed ? t("bountiesCompleted", { count: profile.completions.length }) : t("newBuilder")}</Badge> : null}
             </div>
             <h1 className="mt-3 break-words font-display text-4xl -tracking-[0.36px] text-ink sm:text-5xl sm:-tracking-[0.48px]">{profile.handle}</h1>
-            <p className="mt-3 max-w-[768px] break-words text-base text-ink-muted">{profile.bio}</p>
+            <p className="mt-3 max-w-[768px] whitespace-pre-line break-words text-base text-ink-muted">{profile.bio}</p>
           </div>
         </div>
-        <Badge variant="success">{t("shareable")}</Badge>
       </section>
 
       <section className="mt-10 rounded-panel bg-[linear-gradient(160deg,var(--color-hero-from)_0%,var(--color-hero-via)_55%,var(--color-hero-to)_100%)] p-6 text-on-inverse shadow-frame sm:p-10">
@@ -72,7 +70,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
               {t("portfolio.eyebrow")}
             </Badge>
             <h2 className="mt-4 font-display text-4xl">{completed ? t("portfolio.headingCompleted") : t("portfolio.headingEmpty")}</h2>
-            <p className="mt-4 text-base text-on-inverse/70">{t(`portfolio.${portfolioBodyKey(completed, parentNftState(profile.nfts))}`)}</p>
+            <p className="mt-4 text-base text-on-inverse/70">{completed ? t("portfolio.bodyCompleted") : t("portfolio.bodyEmpty")}</p>
           </div>
           <div className="rounded-card border border-on-inverse/15 bg-on-inverse/10 p-[21px] backdrop-blur-sm lg:col-span-3">
             <div className="flex items-center gap-3">
@@ -84,23 +82,22 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
             </div>
             {completionNfts.length ? (
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {completionNfts.map((nft) => (
+                {completionNfts.map((nft) => {
+                  const statusKey = publicNftStatusKey(nft.status);
+                  return (
                   <div key={nft.id} className={`relative flex aspect-square flex-col overflow-hidden p-3 ${nftTileClass}`} title={[nft.tokenId ? t("portfolio.token", { id: nft.tokenId }) : null, nft.mintTxHash ? t("portfolio.tx", { hash: nft.mintTxHash }) : null].filter(Boolean).join(" · ") || undefined}>
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,var(--color-on-inverse)_0%,transparent_60%)] opacity-35" />
-                    {nft.status !== "ATTACHED" ? <span className="relative text-xs text-on-inverse/70">{t(`nftStatus.${nft.status}`)}</span> : null}
+                    {statusKey ? <span className="relative text-xs text-on-inverse/70">{t(`nftStatus.${statusKey}`)}</span> : null}
                     <span className="relative mt-auto break-words text-xs font-semibold [text-shadow:var(--shadow-tile-text)]">{nft.title || t("portfolio.untitledNft")}</span>
                   </div>
-                ))}
-                <div className="flex aspect-square items-center justify-center rounded-tile border border-dashed border-on-inverse/30 text-sm text-on-inverse/70">{t("portfolio.next")}</div>
+                  );
+                })}
               </div>
             ) : (
               <div className="mt-5 flex min-h-72 flex-col items-center justify-center rounded-card border border-dashed border-on-inverse/25 bg-on-inverse/5 p-6 text-center">
                 <span className={`${mascotTileClass} bg-on-inverse`}><Image alt="" height={36} src="/figma/ninja-labs-mascot.png" width={36} /></span>
-                <h3 className="mt-4 font-display text-xl font-bold">{t("portfolio.emptyTitle")}</h3>
-                <p className="mt-2 max-w-md text-sm text-on-inverse/70">{completed ? t("portfolio.emptyBodyCompleted") : t("portfolio.emptyBodyNew")}</p>
               </div>
             )}
-            <p className="mt-5 text-center text-sm text-on-inverse/75">{completed ? t("portfolio.summaryCompleted", { count: profile.completions.length }) : t("portfolio.summaryEmpty")}</p>
           </div>
         </div>
       </section>
@@ -109,7 +106,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
         <SectionHeader
           eyebrow={t("history.eyebrow")}
           heading={completed ? t("history.heading") : t("history.headingEmpty")}
-          action={completed ? { label: t("history.browseMore"), href: "/bounties" } : filledExampleHref ? { label: t("history.viewFilled"), href: filledExampleHref } : undefined}
+          action={completed ? { label: t("history.browseMore"), href: "/bounties" } : undefined}
         />
         {completed ? (
           <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-3">

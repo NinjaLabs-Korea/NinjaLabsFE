@@ -19,9 +19,12 @@
     "urlHint": "https://… 또는 /media/… 경로",
     "httpUrlHint": "https://… (http 또는 https만 가능)",
     "urlInvalid": "http(s) URL(또는 허용된 사이트 경로)을 입력하세요.",
+    "publicUrl": "공개된 http(s) 주소를 입력해 주세요. localhost나 사설망 주소는 사용할 수 없습니다.",
     "orderInvalid": "0 이상의 정수를 입력하세요.",
     "required": "필수 항목입니다.",
     "tooLong": "너무 깁니다. 최대 {max}자까지 입력할 수 있습니다.",
+    "dateRange": "2000-01-01부터 2100-12-31 사이의 날짜를 고르세요.",
+    "bidiChars": "글자 방향 제어 문자(예: U+202E)를 지워 주세요.",
     "fixFields": "표시된 항목을 수정한 뒤 저장하세요.",
     "saving": "저장 중…",
     "loading": "불러오는 중…",
@@ -40,6 +43,8 @@
       "USDC_EVM_CONTRACT_NOT_CONFIGURED": "서버에 USDC 컨트랙트 주소가 설정되어 있지 않아 USDC 보상을 만들 수 없습니다. 운영 설정을 요청하거나 INJ를 사용하세요.",
       "INJECTIVE_EVM_CHAIN_NOT_CONFIGURED": "서버에 Injective EVM 체인 ID가 설정되어 있지 않아 USDC 보상을 만들 수 없습니다. 운영 설정을 요청하거나 INJ를 사용하세요.",
       "DEADLINE_IN_PAST": "마감일을 과거로 옮길 수 없습니다. 미래의 날짜와 시간을 고르거나 저장된 마감일을 그대로 두세요.",
+      "APPLICATION_DEADLINE_AFTER_SUBMISSION_DEADLINE": "지원 마감이 제출 마감보다 늦습니다. 지원 마감을 앞당기거나 제출 마감을 늦춰 주세요.",
+      "REWARD_SYMBOL_DENOM_MISMATCH": "보상 심볼이 토큰과 맞지 않습니다. 네이티브 보상은 inj denom과 INJ 심볼만 쓸 수 있습니다.",
       "MAX_WINNERS_BELOW_APPROVED": "최대 당선자 수는 이미 승인된 제출 수보다 적을 수 없습니다.",
       "MEDIA_FILE_TOO_LARGE": "이미지가 5MB를 넘습니다. 더 작은 파일을 골라 다시 시도하세요.",
       "MEDIA_FILE_TYPE_UNSUPPORTED": "PNG, JPEG, WebP 이미지만 업로드할 수 있습니다. 다른 파일을 골라 다시 시도하세요.",
@@ -57,7 +62,8 @@
     "operations": "운영",
     "nftJobs": "NFT 잡",
     "audit": "감사 로그",
-    "recruitment": "멤버 모집"
+    "recruitment": "멤버 모집",
+    "ariaLabel": "관리자 메뉴"
   },
   "gate": {
     "checking": "관리자 권한을 확인하는 중…",
@@ -158,7 +164,8 @@
       "submissionClosed": "제출 마감",
       "reviewing": "심사 중",
       "completed": "완료",
-      "cancelled": "취소됨"
+      "cancelled": "취소됨",
+      "pastDeadline": "마감 지남"
     },
     "tags": {
       "Dev": "개발",
@@ -182,6 +189,7 @@
       "rewardCurrency": "보상 토큰",
       "rewardAmount": "보상 금액",
       "amountPlaceholder": "500",
+      "applicationDeadline": "지원 마감 (선택)",
       "maxWinners": "최대 당선자 수",
       "maxWinnersHint": "승인해 보상을 지급할 수 있는 제출 수입니다. 이미 승인된 수보다 줄일 수 없습니다.",
       "intake": "지원 접수",
@@ -204,12 +212,16 @@
         "required": "필수 항목입니다.",
         "tooLong": "너무 깁니다. 최대 {max}자까지 입력할 수 있습니다.",
         "deadlineInvalid": "올바른 날짜와 시간을 입력하세요.",
+        "applicationDeadlineInvalid": "올바른 날짜와 시각을 입력하세요.",
+        "applicationDeadlineAfterDeadline": "지원 마감은 제출 마감과 같거나 그보다 빨라야 합니다.",
         "deadlinePast": "마감일은 현재 이후로 설정하세요.",
         "amountInvalid": "토큰이 지원하는 소수 자릿수(USDC 6, INJ 18) 이내의 0보다 큰 금액을 입력하거나, 초안으로 저장하려면 비워 두세요.",
         "deliverablesRequired": "결과물이나 제출 가이드를 입력하세요.",
-        "maxWinnersInvalid": "1 이상의 정수를 입력하세요.",
+        "maxWinnersInvalid": "1에서 1,000 사이의 정수를 입력하세요.",
         "titleTooLong": "최대 200자까지 입력할 수 있습니다.",
-        "sponsorTooLong": "최대 100자까지 입력할 수 있습니다."
+        "sponsorTooLong": "최대 100자까지 입력할 수 있습니다.",
+        "bidiChars": "보이지 않는 방향·제어 문자(예: U+202E, 탭)를 지워 주세요.",
+        "amountTooLarge": "소수점 앞은 {digits}자리까지 쓸 수 있어요."
       },
       "rewardLockedHint": "보상은 바운티 생성 후에는 바꿀 수 없습니다.",
       "rewardNote": "생성한 뒤 스폰서가 멀티시그 지갑으로 보상을 입금하고, 운영자가 Operations에서 입금을 확인해야 바운티를 열 수 있습니다. 바운티가 생성된 뒤에는 보상을 바꿀 수 없습니다."
@@ -219,7 +231,7 @@
       "loadFailedDescription": "관리자 바운티를 불러오지 못했습니다.",
       "createdTitle": "바운티 생성됨",
       "updatedTitle": "바운티 수정됨",
-      "saveFailedDescription": "바운티가 저장되지 않았습니다. 입력 항목과 관리자 권한을 확인해 주세요.",
+      "saveFailedDescription": "바운티를 저장하지 못했어요. 표시된 칸을 확인하고 다시 시도해 주세요.",
       "statusUpdatedTitle": "상태 변경됨",
       "statusUpdatedDescription": "{title}의 상태가 {to, select, OPEN {모집 중} other {제출 마감}}으로 변경되었습니다.",
       "transitionFailedTitle": "상태 변경 실패",
@@ -344,11 +356,11 @@
     }
   },
   "operations": {
-    "metaTitle": "어드민 · 운영 | Ninja Labs",
+    "metaTitle": "관리자 · 운영 | Ninja Labs",
     "metaDescription": "보상 입금 확인, 지원/제출 심사, 지급 처리, 바운티 상태 전이를 한곳에서 관리합니다.",
     "title": "바운티 운영",
     "description": "보상 입금 확인, 지원/제출 심사, 지급 처리, 바운티 상태 전이를 한곳에서 관리합니다.",
-    "adminOnlyBadge": "ADMIN ONLY",
+    "adminOnlyBadge": "관리자 전용",
     "pickBounty": "바운티",
     "pickBountyPlaceholder": "바운티 선택",
     "bountyNotFound": "id “{id}”인 바운티를 찾을 수 없습니다(삭제되었을 수 있습니다). 목록에서 선택하세요.",
@@ -439,7 +451,11 @@
       },
       "cancelTitle": "이 바운티를 취소할까요?",
       "cancelDescription": "\"{title}\"은(는) 더 이상 작업을 받지 않으며 심사와 지급 요청도 할 수 없습니다.",
-      "cancelCallout": "콘솔에서는 취소를 되돌릴 수 없습니다."
+      "cancelCallout": "콘솔에서는 취소를 되돌릴 수 없습니다.",
+      "reopen": {
+        "label": "바운티 다시 열기",
+        "description": "제출을 다시 받아요. 제출 마감이 아직 지나지 않아야 해요."
+      }
     },
     "rewards": {
       "eyebrow": "보상",
@@ -461,7 +477,8 @@
       "modalTitle": "보상 입금 확인",
       "modalDescription": "{address}(으)로 {amount} 이상 입금된 온체인 거래를 기록합니다. 먼저 익스플로러에서 거래를 확인하세요.",
       "depositedAmount": "입금액 ({symbol})",
-      "amountBelowPosted": "입금액은 게시된 보상({amount}) 이상이어야 합니다."
+      "amountBelowPosted": "입금액은 게시된 보상({amount}) 이상이어야 합니다.",
+      "multisigNotConfigured": "멀티시그 주소가 설정되지 않았어요. 입금을 확인하기 전에 REWARD_MULTISIG_ADDRESS를 설정하세요(runbook §1)."
     },
     "applications": {
       "eyebrow": "지원",
@@ -558,7 +575,8 @@
       "amountHintBaseUnits": "이 토큰은 여기서 단위를 알 수 없으므로 기본 단위(정수, 예: 25000000)로 입력하세요.",
       "noteOptional": "메모(선택)",
       "commentOptional": "코멘트(선택)",
-      "commentRequired": "코멘트(필수)"
+      "commentRequired": "코멘트(필수)",
+      "amountTooLarge": "소수점 앞은 {digits}자리까지 쓸 수 있어요."
     },
     "toast": {
       "loadFailedTitle": "운영 데이터를 사용할 수 없음",
@@ -598,7 +616,7 @@
       "REWARD_NOT_FUNDED": "지급을 요청하기 전에 보상 입금을 확인하세요.",
       "INVALID_TX_HASH": "올바른 거래 해시가 아닙니다.",
       "INVALID_TOKEN_AMOUNT": "금액은 최소 단위의 양의 정수여야 합니다.",
-      "TX_HASH_ALREADY_USED": "이미 기록된 거래 해시입니다(입금 또는 다른 바운티의 지급).",
+      "TX_HASH_ALREADY_USED": "이미 기록된 트랜잭션 해시예요(입금, 지급 또는 환불).",
       "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND": "승인된 제출물이 아니거나 소유자에게 연결된 기본 지갑이 없습니다.",
       "APPROVED_SUBMISSION_NOT_FOUND": "지급 대상 제출물이 더 이상 승인 상태가 아닙니다.",
       "PAYOUT_ALREADY_REQUESTED": "이 제출물과 보상에 대한 지급이 이미 있습니다.",
@@ -616,11 +634,13 @@
       "REFRESH_UNAVAILABLE": "세션을 갱신하지 못했습니다. 다시 로그인하세요.",
       "NETWORK_ERROR": "서버에 연결할 수 없습니다. 네트워크를 확인하고 다시 시도하세요.",
       "unknown": "문제가 발생했습니다 ({code}).",
-      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요."
+      "DATABASE_UNAVAILABLE": "서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+      "NOTE_BIDI_CHARS": "메모에 보이지 않는 방향·제어 문자가 있어요. 지우고 다시 시도해 주세요.",
+      "NOTE_RESERVED_PREFIX": "메모는 \"forfeited:\"로 시작할 수 없어요(시스템 예약)."
     }
   },
   "nftJobs": {
-    "metaTitle": "어드민 · NFT 잡 | Ninja Labs",
+    "metaTitle": "관리자 · NFT 잡 | Ninja Labs",
     "metaDescription": "NFT 민팅/연결 잡을 확인하고 영구 실패한 잡을 다시 시도합니다.",
     "title": "NFT 잡 콘솔",
     "description": "NFT 민팅/연결 잡을 확인하고 영구 실패한 잡을 다시 시도합니다.",
@@ -678,7 +698,7 @@
     }
   },
   "audit": {
-    "metaTitle": "어드민 · 감사 로그 | Ninja Labs",
+    "metaTitle": "관리자 · 감사 로그 | Ninja Labs",
     "metaDescription": "지급 승인과 운영 스크립트 작업의 감사 기록을 읽기 전용으로 검토합니다.",
     "title": "감사 로그",
     "description": "지급 승인과 운영 스크립트 작업의 감사 기록을 읽기 전용으로 검토합니다.",
@@ -733,12 +753,32 @@
       "PAYOUT_CANCELLED_MANUAL": "지급 수동 취소",
       "REWARD_DEPOSIT_CONFIRMED": "보상 입금 확인",
       "REWARD_REFUNDED": "보상 환불 기록",
-      "SUBMISSION_AWARD_FORFEITED": "수상 몰수",
+      "SUBMISSION_AWARD_FORFEITED": "보상 미지급 처리",
       "USER_MEMBER_GRANTED": "멤버 역할 지정",
       "USER_MEMBER_REVOKED": "멤버 역할 해제",
       "USER_NICKNAME_CHANGED": "닉네임 변경",
       "USER_WITHDRAWN": "계정 탈퇴",
-      "SYSTEM": "시스템"
+      "SYSTEM": "시스템",
+      "APPLICATION_REJECTED": "지원 반려",
+      "BOUNTY_FUNDING_PENDING": "바운티 입금 대기로 전환",
+      "BOUNTY_OPEN": "바운티 공개",
+      "BOUNTY_SUBMISSION_CLOSED": "바운티 제출 마감",
+      "BOUNTY_IN_REVIEW": "바운티 심사 시작",
+      "BOUNTY_COMPLETED": "바운티 완료",
+      "SUBMISSION_APPROVE": "제출물 승인",
+      "SUBMISSION_REJECT": "제출물 반려",
+      "SUBMISSION_REQUEST_REVISION": "제출물 수정 요청",
+      "SUBMISSION_START_REVIEW": "제출물 심사 시작",
+      "PAYOUT_PAID": "지급 완료 기록",
+      "COHORT_OPENED": "기수 모집 시작",
+      "COHORT_REOPENED": "기수 모집 재개",
+      "COHORT_CLOSED": "기수 모집 마감",
+      "COHORT_APPLICATION_SUBMITTED": "기수 지원서 제출",
+      "COHORT_APPLICATION_UPDATED": "기수 지원서 수정",
+      "COHORT_APPLICATION_WITHDRAWN": "기수 지원서 철회",
+      "COHORT_APPLICATION_REAPPLIED": "기수 재지원",
+      "COHORT_APPLICATION_ACCEPTED": "기수 지원서 합격",
+      "COHORT_QUESTIONS_UPDATED": "지원서 질문 수정"
     },
     "empty": "조건에 맞는 감사 로그가 없습니다.",
     "pagination": "감사 로그 페이지",
@@ -752,7 +792,7 @@
     }
   },
   "recruitment": {
-    "metaTitle": "멤버 모집 | Ninja Labs 관리자",
+    "metaTitle": "관리자 · 멤버 모집 | Ninja Labs",
     "metaDescription": "기수를 만들고, 모집을 열고 닫고, 지원서를 심사합니다.",
     "title": "멤버 모집 관리",
     "description": "기수를 만들고, 모집을 열고, 지원자를 심사하고, 목록을 내보냅니다. 합격은 멤버 지정이 아니에요. 멤버는 사용자 탭에서 따로 지정하세요.",
@@ -839,13 +879,13 @@
       "filters": {
         "label": "지원서 필터",
         "status": "상태",
-        "activityType": "활동 유형",
-        "interestArea": "참여 분야",
         "search": "검색",
         "searchPlaceholder": "이름, Telegram, X, 닉네임, 이메일",
         "all": "전체",
         "apply": "적용",
-        "reset": "초기화"
+        "reset": "초기화",
+        "question": "질문",
+        "option": "선택지"
       },
       "statuses": {
         "SUBMITTED": "대기",
@@ -860,9 +900,7 @@
       "columns": {
         "applicant": "지원자",
         "contact": "연락처",
-        "experience": "Web3 경력",
-        "activity": "활동 유형",
-        "interests": "참여 분야",
+        "intro": "자기소개",
         "status": "상태",
         "applied": "지원일",
         "action": "작업"
@@ -931,7 +969,80 @@
       "ADMIN_ONLY": "이 계정에는 더 이상 관리자 권한이 없습니다.",
       "UNAUTHORIZED": "세션이 만료되었습니다. 다시 로그인하세요.",
       "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
-      "generic": "요청을 처리하지 못했습니다. 다시 시도해 주세요."
+      "generic": "요청을 처리하지 못했습니다. 다시 시도해 주세요.",
+      "COHORT_QUESTIONS_INVALID": "질문 설정을 저장하지 못했어요. 선택지 수와 문구를 확인해 주세요."
+    },
+    "questions": {
+      "action": "질문 설정",
+      "eyebrow": "지원서 질문",
+      "heading": "{name} 지원서 질문",
+      "intro": "이름, Telegram, X, 자기소개는 모든 지원서에서 항상 받아요. 아래는 이 기수에서 더 묻고 싶은 질문이에요.",
+      "note": "이미 받은 지원서의 답변은 바뀌지 않아요.",
+      "empty": "추가 질문이 없어요. 질문을 추가해 주세요.",
+      "add": "질문 추가",
+      "addType": "새 질문 유형",
+      "close": "닫기",
+      "dirty": "저장하지 않은 변경이 있어요.",
+      "types": {
+        "SHORT_TEXT": "짧은 답변",
+        "LONG_TEXT": "긴 답변",
+        "SINGLE_CHOICE": "하나 선택",
+        "MULTI_CHOICE": "여러 개 선택"
+      },
+      "question": "질문 {number}",
+      "moveUp": "질문 {number} 위로",
+      "moveDown": "질문 {number} 아래로",
+      "remove": "질문 {number} 삭제",
+      "labelKo": "질문 (한국어)",
+      "labelEn": "질문 (영어, 선택)",
+      "labelZh": "질문 (중국어, 선택)",
+      "translationHint": "비워 두면 한국어로 표시해요.",
+      "helpKo": "도움말 (한국어, 선택)",
+      "helpEn": "도움말 (영어, 선택)",
+      "helpZh": "도움말 (중국어, 선택)",
+      "required": "필수 질문",
+      "options": "선택지",
+      "optionKo": "선택지 {number} (한국어)",
+      "optionEn": "선택지 {number} (영어, 선택)",
+      "optionZh": "선택지 {number} (중국어, 선택)",
+      "addOption": "선택지 추가",
+      "removeOption": "선택지 {number} 삭제",
+      "moveOptionUp": "선택지 {number} 위로",
+      "moveOptionDown": "선택지 {number} 아래로",
+      "withDetail": "상세 입력 받기",
+      "withDetailHint": "고르면 지원자가 내용을 한 줄 더 적어요. 질문당 하나만 둘 수 있어요.",
+      "limits": "질문은 최대 {questions}개, 선택지는 질문마다 {min}~{max}개예요.",
+      "save": "질문 저장",
+      "saving": "저장하는 중…",
+      "savedTitle": "지원서 질문을 저장했어요",
+      "savedDescription": "{name}",
+      "removeDialog": {
+        "eyebrow": "질문 삭제",
+        "title": "이 질문을 삭제할까요?",
+        "description": "저장하면 이후 지원자에게 이 질문이 보이지 않아요. 이미 받은 답변은 그대로 남아요.",
+        "confirm": "질문 삭제"
+      },
+      "discardDialog": {
+        "eyebrow": "질문 설정",
+        "title": "저장하지 않은 변경을 버릴까요?",
+        "description": "저장하지 않은 질문 변경이 사라져요.",
+        "confirm": "버리기"
+      },
+      "errors": {
+        "tooManyQuestions": "질문은 최대 {max}개까지 둘 수 있어요.",
+        "labelRequired": "질문을 한국어로 적어 주세요.",
+        "labelTooLong": "질문이 너무 길어요. 최대 {max}자예요.",
+        "labelInvalid": "질문에 줄바꿈이나 보이지 않는 문자를 넣을 수 없어요.",
+        "helpKoRequired": "한국어 도움말도 함께 적어 주세요.",
+        "helpTooLong": "도움말이 너무 길어요. 최대 {max}자예요.",
+        "helpInvalid": "도움말에 넣을 수 없는 문자가 있어요.",
+        "optionsCount": "선택지는 {min}~{max}개여야 해요.",
+        "withDetailMax": "상세 입력은 질문당 하나만 둘 수 있어요.",
+        "optionLabelRequired": "선택지를 한국어로 적어 주세요.",
+        "optionLabelTooLong": "선택지가 너무 길어요. 최대 {max}자예요.",
+        "optionLabelInvalid": "선택지에 줄바꿈이나 보이지 않는 문자를 넣을 수 없어요."
+      },
+      "fix": "표시된 항목을 고쳐 주세요."
     }
   }
 }

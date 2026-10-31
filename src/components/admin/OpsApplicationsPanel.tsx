@@ -2,14 +2,15 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
+import { AdminLongText, AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import type { OpsDateFormatter, OpsRunner } from "@/components/admin/BountyOperations";
 import { OpsActorCell } from "@/components/admin/OpsActorCell";
 import { OpsFormModal } from "@/components/admin/OpsFormModal";
 import { opsButton, opsCell, opsDangerButton, opsPanel, opsPanelEyebrow, opsPanelTitle, opsTextarea } from "@/components/admin/ops-ui";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
-import { OPS_NOTE_MAX, applicationDecisionsFor, type AdminOperations, type OpsApplication } from "@/lib/admin-operations";
+import { applicationDecisionsFor, type AdminOperations, type OpsApplication } from "@/lib/admin-operations";
+import { OPS_NOTE_MAX } from "@/lib/input-limits";
 import { safeHttpUrl } from "@/lib/api/codecs";
 
 const columns = ["applicant", "message", "status", "applied", "action"] as const;
@@ -43,7 +44,7 @@ export function OpsApplicationsPanel({ ops, busy, run, formatDate }: { ops: Admi
         <p className="mt-4 text-sm text-ink-muted">{t("applications.empty")}</p>
       ) : (
         <div className="mt-4">
-          <AdminTable columns={columns.map((id) => ({ id, label: t(`applications.columns.${id}`) }))} minWidthClass="min-w-[860px]">
+          <AdminTable columns={columns.map((id) => ({ id, label: t(`applications.columns.${id}`) }))} idPrefix="ops-applications-col" minWidthClass="min-w-[860px]">
             {ops.applications.map((application) => {
               const decisions = applicationDecisionsFor(application, ops.bounty);
               const portfolio = safeHttpUrl(application.portfolioUrl);
@@ -51,7 +52,7 @@ export function OpsApplicationsPanel({ ops, busy, run, formatDate }: { ops: Admi
                 <tr className="border-t border-border" key={application.id}>
                   <td className={`${opsCell} ${adminLongTextCell}`}><OpsActorCell actor={application} /></td>
                   <td className={`${opsCell} max-w-[320px] ${adminLongTextCell}`}>
-                    <p className="whitespace-pre-line break-words">{application.message}</p>
+                    <AdminLongText labelledBy="ops-applications-col-message">{application.message}</AdminLongText>
                     {portfolio ? <a className="mt-1 block break-all text-xs font-semibold text-primary-strong underline" href={portfolio} rel="noreferrer" target="_blank">{t("applications.portfolio")}</a> : null}
                     {application.reviewNote ? <p className="mt-2 text-xs text-ink-muted">{t("applications.reviewNote", { note: application.reviewNote })}</p> : null}
                   </td>

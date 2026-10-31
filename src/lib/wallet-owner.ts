@@ -1,3 +1,5 @@
+import { readStorage, removeStorage, writeStorage } from "@/lib/safe-storage";
+
 /**
  * Which signed-in user a persisted wagmi connection belongs to.
  *
@@ -12,20 +14,13 @@
 export const WALLET_OWNER_STORAGE_KEY = "ninja.walletOwner";
 
 export function readWalletOwner(): string | null {
-  try {
-    return window.localStorage.getItem(WALLET_OWNER_STORAGE_KEY);
-  } catch {
-    return null;
-  }
+  return readStorage("local", WALLET_OWNER_STORAGE_KEY);
 }
 
 export function writeWalletOwner(userId: string | null): void {
-  try {
-    if (userId) window.localStorage.setItem(WALLET_OWNER_STORAGE_KEY, userId);
-    else window.localStorage.removeItem(WALLET_OWNER_STORAGE_KEY);
-  } catch {
-    // Storage blocked (private mode): the connection then cannot outlive the page either way.
-  }
+  // Storage blocked (private mode): the connection then cannot outlive the page either way.
+  if (userId) writeStorage("local", WALLET_OWNER_STORAGE_KEY, userId);
+  else removeStorage("local", WALLET_OWNER_STORAGE_KEY);
 }
 
 export type WalletOwnerAction = "adopt" | "disconnect" | "clear" | "none";

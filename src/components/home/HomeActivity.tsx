@@ -8,13 +8,14 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import type { ApplicationStatus } from "@/lib/contracts/account";
+import { PageLoading } from "@/components/ui/PageLoading";
 
 /** How many of my latest rows the home lists; the rest is on /applications. */
 const HOME_ACTIVITY_LIMIT = 4;
 
 // `account.applications` keys of each status label (the same words as the My applications page, except that the compact
 // home card keeps the short step names for approved rows). Rejected and not-accepted rows go through the shared label so a
-// forfeited award reads the same here and on /applications.
+// reward-not-paid case reads the same here and on /applications.
 const statusLabelKeys: Partial<Record<ApplicationStatus, string>> = {
   open: "steps.open",
   approved: "steps.approved",
@@ -32,10 +33,10 @@ export function HomeActivity() {
   const query = useAccountQuery(api.getApplications);
   const rows = [...(query.data ?? [])].sort((a, b) => b.appliedAt.localeCompare(a.appliedAt)).slice(0, HOME_ACTIVITY_LIMIT);
   return (
-    <section className="mx-auto max-w-content px-4 pt-16 sm:px-6">
+    <section className="mx-auto max-w-content px-gutter pt-16">
       <SectionHeader eyebrow={t("eyebrow")} heading={t("heading")} level={2} size="lg" action={{ label: t("viewAll"), href: "/applications" }} />
       {query.loading ? (
-        <p className="mt-7 text-sm text-ink-muted" role="status">{t("loading")}</p>
+        <PageLoading className="mt-7" label={t("loading")} variant="list" />
       ) : query.unavailable ? (
         <div className="mt-7 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center" role="status">
           <p className="text-sm font-semibold text-ink">{t("unavailable")}</p>

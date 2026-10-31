@@ -19,6 +19,8 @@ type TurnstileWidgetProps = {
   ref?: Ref<TurnstileHandle>;
 };
 
+const TURNSTILE_NORMAL_WIDTH = 300;
+
 /**
  * Cloudflare Turnstile widget, explicitly rendered into its own container. Reports the token through `onChange` and
  * shows localized loading / expired / error states with a retry. No Figma frame exists for it (docs/figma/design-gaps.md).
@@ -46,25 +48,50 @@ export function TurnstileWidget({ siteKey, onChange, ref }: TurnstileWidgetProps
       onChangeRef.current(next, token);
     };
 
+    let observer: ResizeObserver | undefined;
+    let debounce: number | undefined;
+    let size: "normal" | "compact" | undefined;
+    // Cloudflare's `normal` widget is a fixed 300px box: wider than the sign-in card on narrow phones, so it is clipped.
+    const sizeFor = (container: HTMLElement) => (container.clientWidth > 0 && container.clientWidth < TURNSTILE_NORMAL_WIDTH ? "compact" : "normal");
+    const renderWidget = (api: TurnstileApi, container: HTMLElement) => {
+      size = sizeFor(container);
+      widgetIdRef.current = api.render(container, {
+        sitekey: siteKey,
+        action: "login",
+        language: turnstileLanguage(locale),
+        theme: "auto",
+        size,
+        callback: (token) => report("verified", token),
+        // The widget refreshes an expired token by itself (refresh-expired: auto); until then sign-in waits.
+        "expired-callback": () => report("expired"),
+        "timeout-callback": () => report("error"),
+        "error-callback": (errorCode) => {
+          onboardingLog("oauth.turnstile.error", { errorCode: errorCode ?? null });
+          report("error");
+          return true;
+        },
+      });
+    };
+
     loadTurnstile()
       .then((api) => {
         if (cancelled || !containerRef.current) return;
+        const container = containerRef.current;
         apiRef.current = api;
-        widgetIdRef.current = api.render(containerRef.current, {
-          sitekey: siteKey,
-          action: "login",
-          language: turnstileLanguage(locale),
-          theme: "auto",
-          callback: (token) => report("verified", token),
-          // The widget refreshes an expired token by itself (refresh-expired: auto); until then sign-in waits.
-          "expired-callback": () => report("expired"),
-          "timeout-callback": () => report("error"),
-          "error-callback": (errorCode) => {
-            onboardingLog("oauth.turnstile.error", { errorCode: errorCode ?? null });
-            report("error");
-            return true;
-          },
-        });
+        renderWidget(api, container);
+        // A rotation or resize that crosses the 300px line needs the other size: re-render (the old token is void).
+        if (typeof ResizeObserver !== "undefined") {
+          observer = new ResizeObserver(() => {
+            window.clearTimeout(debounce);
+            debounce = window.setTimeout(() => {
+              if (cancelled || sizeFor(container) === size) return;
+              if (widgetIdRef.current !== undefined) api.remove(widgetIdRef.current);
+              report("loading");
+              renderWidget(api, container);
+            }, 150);
+          });
+          observer.observe(container);
+        }
       })
       .catch(() => {
         onboardingLog("oauth.turnstile.load_failed");
@@ -73,6 +100,8 @@ export function TurnstileWidget({ siteKey, onChange, ref }: TurnstileWidgetProps
 
     return () => {
       cancelled = true;
+      observer?.disconnect();
+      window.clearTimeout(debounce);
       if (apiRef.current && widgetIdRef.current !== undefined) apiRef.current.remove(widgetIdRef.current);
       widgetIdRef.current = undefined;
     };

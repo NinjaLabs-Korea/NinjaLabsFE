@@ -96,7 +96,7 @@ describe("UserMenu", () => {
     expect(menu.getAttribute("aria-label")).toBe("Account navigation");
 
     const items = within(menu).getAllByRole("menuitem");
-    expect(items.map((item) => item.textContent)).toEqual(["My activity", "My profile", "My applications", "My agents", "Account settings", "Sign out"]);
+    expect(items.map((item) => item.textContent)).toEqual(["My activity", "My profile", "Applications", "My agents", "Account settings", "Sign out"]);
     expect(items.slice(0, 5).map((item) => item.getAttribute("href"))).toEqual(["/home", "/members/jaemin", "/applications", "/agents", "/account"]);
     expect(document.activeElement).toBe(items[0]);
     // Roving tabindex: only the active item is in the tab order.
@@ -137,7 +137,7 @@ describe("UserMenu", () => {
     expect(screen.queryByRole("menu")).toBeNull();
 
     fireEvent.click(trigger());
-    fireEvent.click(screen.getByRole("menuitem", { name: "My applications" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Applications" }));
     expect(screen.queryByRole("menu")).toBeNull();
   });
 
@@ -181,17 +181,27 @@ describe("Header", () => {
 
     const main = screen.getByRole("navigation", { name: "Main navigation" });
     expect(within(main).getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
-      ["Bounties", "/bounties"],
-      ["Hall of Fame", "/hall-of-fame"],
+      ["About", "/about"],
       ["Members", "/members"],
+      ["Hall of Fame", "/hall-of-fame"],
       ["Notices", "/notices"],
+      ["Bounties", "/bounties"],
+      ["Join us", "/recruit"],
     ]);
     expect(within(main).getByRole("link", { name: "Members" }).getAttribute("aria-current")).toBe("page");
 
     const mobile = screen.getByRole("navigation", { name: "Mobile navigation", hidden: true });
     expect(within(mobile).getAllByRole("link", { hidden: true }).map((link) => link.textContent)).toEqual([
-      "Bounties", "Hall of Fame", "Members", "Notices", "Browse",
+      "About", "Members", "Hall of Fame", "Notices", "Bounties", "Join us",
     ]);
+  });
+
+  it("prefetches every nav link, so closed-menu and below-the-fold routes load before the click", () => {
+    state.auth = { status: "signed-out", user: null };
+    renderWithIntl(<Header />);
+    const links = screen.getAllByRole("link", { hidden: true }).filter((link) => ["/about", "/members", "/hall-of-fame", "/notices", "/bounties", "/recruit"].includes(link.getAttribute("href") ?? ""));
+    expect(links.length).toBeGreaterThanOrEqual(12);
+    expect(links.every((link) => link.hasAttribute("data-prefetch"))).toBe(true);
   });
 
   it("offers Get Started to visitors and the account menu to signed-in users", () => {
@@ -205,6 +215,14 @@ describe("Header", () => {
     renderWithIntl(<Header />);
     expect(screen.queryByRole("link", { name: "Get Started" })).toBeNull();
     expect(screen.getByRole("button", { name: /jaemin\.inj/ }).getAttribute("aria-haspopup")).toBe("menu");
-    expect(screen.getByRole("button", { name: "Language" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Language/ })).toBeTruthy();
+  });
+
+  it("names the locale button so that the accessible name contains the visible language", () => {
+    state.auth = { status: "signed-out", user: null };
+    renderWithIntl(<Header />);
+    const button = screen.getByRole("button", { name: /Language/ });
+    expect(button.textContent).toContain("English");
+    expect(button.getAttribute("aria-label")).toBeNull();
   });
 });

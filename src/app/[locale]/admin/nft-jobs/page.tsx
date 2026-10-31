@@ -22,7 +22,7 @@ export default async function AdminNftJobsPage({ params }: PageProps<"/[locale]/
   const tCommon = await getTranslations("admin.common");
 
   return (
-    <section className="mx-auto max-w-content px-6 py-16 pb-20">
+    <section className="mx-auto max-w-content px-gutter py-16 pb-20">
       <NftJobsManager tabs={<div className="mt-6"><AdminTabs active="nft-jobs" /></div>}>
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{tCommon("eyebrow")}</p>

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { fireEvent, screen, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BountyCard } from "@/components/cards/BountyCard";
 import { MemberCard } from "@/components/cards/MemberCard";
 import { NewsCard } from "@/components/cards/NewsCard";
@@ -107,10 +107,11 @@ describe("MemberCard", () => {
     expect(screen.getByRole("link", { name: "Posts of Kim" }).getAttribute("href")).toBe("/notices?author=kim");
   });
 
-  it("falls back to the default title and bio when the member has not written one", () => {
-    renderWithIntl(<MemberCard member={member({ title: "", bio: "", role: "Core" })} />);
+  it("falls back to the default title but invents no bio when the member has not written one", () => {
+    const { container } = renderWithIntl(<MemberCard member={member({ title: "", bio: "", role: "Core" })} />);
     expect(screen.getByText("Core · Ninja Labs member")).toBeTruthy();
-    expect(screen.getByText("Building in the Injective ecosystem.")).toBeTruthy();
+    expect(screen.queryByText("Building in the Injective ecosystem.")).toBeNull();
+    expect(container.querySelectorAll("p")).toHaveLength(1);
   });
 
   it("shows the initials avatar for every member, not a hard-coded slug", () => {
@@ -193,6 +194,16 @@ describe("MemberFilters", () => {
     expect(names()).toEqual(["Ana", "Ben", "Cho"]);
   });
 
+  it("announces the filtered count in a status line and shows only the empty state at zero", () => {
+    renderWithIntl(<MemberFilters members={members} />);
+    expect(screen.getByRole("status").textContent).toBe("3 members");
+    fireEvent.click(screen.getByRole("button", { name: "Dev" }));
+    expect(screen.getByRole("status").textContent).toBe("2 members");
+    fireEvent.click(screen.getByRole("button", { name: "Design" }));
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByText("No members match your filters")).toBeTruthy();
+  });
+
   it("says there are no members yet (no dead Reset button) when the feed is empty", () => {
     renderWithIntl(<MemberFilters members={[]} />);
     expect(screen.getByText("No members yet")).toBeTruthy();
@@ -210,7 +221,31 @@ describe("MemberFilters", () => {
   });
 });
 
+describe("filter results fade in", () => {
+  it("re-mounts the member list (new node with animate-fade-in) when a chip changes", () => {
+    renderWithIntl(<MemberFilters members={[member({ slug: "a", name: "Ana", role: "Core" }), member({ slug: "b", name: "Ben", role: "Dev" })]} />);
+    const before = screen.getByRole("region", { name: "Members" });
+    expect(before.className).toContain("animate-fade-in");
+    expect(before.className).toContain("motion-reduce:animate-none");
+    fireEvent.click(within(screen.getByRole("group", { name: "Member roles" })).getByRole("button", { name: "Dev" }));
+    const after = screen.getByRole("region", { name: "Members" });
+    expect(after).not.toBe(before);
+    expect(after.className).toContain("animate-fade-in");
+  });
+
+  it("re-mounts the notice list when a chip changes", () => {
+    renderWithIntl(<NoticeFilters notices={[notice({ slug: "e", title: "Meetup", category: "Events" }), notice({ slug: "n", title: "Release", category: "Ninja Labs" })]} />);
+    const before = screen.getByRole("region", { name: "Notices" });
+    fireEvent.click(within(screen.getByRole("group", { name: "Notice categories" })).getByRole("button", { name: "Events" }));
+    const after = screen.getByRole("region", { name: "Notices" });
+    expect(after).not.toBe(before);
+    expect(after.className).toContain("animate-fade-in");
+  });
+});
+
 describe("NoticeFilters", () => {
+  // The chip lives in the URL, so a previous test's ?category must not leak into the next one.
+  beforeEach(() => window.history.replaceState(null, "", "/en/notices"));
   const notices = [
     notice({ slug: "e", title: "Meetup", category: "Events" }),
     notice({ slug: "n", title: "Release", category: "Ninja Labs" }),
@@ -229,10 +264,68 @@ describe("NoticeFilters", () => {
     expect(titles()).toEqual(["Meetup", "Hackathon"]);
   });
 
+  it("announces the filtered count in a status line and shows none for an empty feed", () => {
+    const { unmount } = renderWithIntl(<NoticeFilters notices={notices} />);
+    expect(screen.getByRole("status").textContent).toBe("3 posts");
+    fireEvent.click(screen.getByRole("button", { name: "Ninja Labs" }));
+    expect(screen.getByRole("status").textContent).toBe("1 post");
+    unmount();
+    renderWithIntl(<NoticeFilters notices={[]} />);
+    expect(screen.getAllByRole("status")).toHaveLength(1);
+    expect(screen.queryByText(/^\d+ posts?$/)).toBeNull();
+  });
+
   it("shows the empty state for an empty feed", () => {
     renderWithIntl(<NoticeFilters notices={[]} />);
     expect(screen.getByText("No news yet")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Reset filters" })).toBeNull();
     expect(within(screen.getByRole("group", { name: "Notice categories" })).getAllByRole("button")).toHaveLength(1);
+  });
+});
+
+describe("filters keep their chip in the URL", () => {
+  const notices: Notice[] = [
+    { slug: "a", title: "A", summary: "s", category: "Events", date: "2026-01-01" } as unknown as Notice,
+    { slug: "b", title: "B", summary: "s", category: "Other", date: "2026-01-02" } as unknown as Notice,
+  ];
+  const members: Member[] = [
+    { slug: "m1", name: "One", role: "Dev", links: {} } as Member,
+    { slug: "m2", name: "Two", role: "Design", links: {} } as Member,
+  ];
+
+  it("writes ?category on a notice chip click and removes it for All", () => {
+    window.history.replaceState(null, "", "/en/notices");
+    renderWithIntl(<NoticeFilters notices={notices} />);
+    fireEvent.click(screen.getByRole("button", { name: "Events" }));
+    expect(window.location.search).toBe("?category=events");
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
+    expect(window.location.search).toBe("");
+  });
+
+  it("selects the chip from ?category on mount even without initialCategory (Back from a notice)", () => {
+    window.history.replaceState(null, "", "/en/notices?category=events");
+    renderWithIntl(<NoticeFilters notices={notices} />);
+    expect(screen.getByRole("button", { name: "Events" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "All" }).getAttribute("aria-pressed")).toBe("false");
+    window.history.replaceState(null, "", "/en/notices");
+  });
+
+  it("re-reads ?category on popstate", () => {
+    window.history.replaceState(null, "", "/en/notices");
+    renderWithIntl(<NoticeFilters notices={notices} />);
+    window.history.replaceState(null, "", "/en/notices?category=events");
+    fireEvent(window, new PopStateEvent("popstate"));
+    expect(screen.getByRole("button", { name: "Events" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("writes and reads ?role for members", () => {
+    window.history.replaceState(null, "", "/en/members?role=design");
+    renderWithIntl(<MemberFilters members={members} />);
+    expect(screen.getByRole("button", { name: "Design" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.queryByText("One")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Dev" }));
+    expect(window.location.search).toBe("?role=dev");
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
+    expect(window.location.search).toBe("");
   });
 });

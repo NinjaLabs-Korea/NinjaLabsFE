@@ -6,7 +6,7 @@ const TZ = 'America/New_York';
 const b = await Browser.connect(); const ctx = await b.newContext(); const p = await b.newPage(ctx);
 await p.send('Emulation.setTimezoneOverride', { timezoneId: TZ });
 await signIn(p, ids.ADMIN);
-const clickSave = async (text = 'Save') => { await p.eval(`[...document.querySelectorAll('main button')].filter(b=>b.innerText.trim()===${JSON.stringify(text)}).pop().click()`); await sleep(1800); await p.idle(); };
+const clickSave = async (text = 'Save') => { const since = p.requests.length; await p.eval(`[...document.querySelectorAll('main button')].filter(b=>b.innerText.trim()===${JSON.stringify(text)}).pop().click()`); await p.waitForMutation({ since }); await p.idle(); };
 const fmt = (iso) => new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: TZ, timeZoneName: 'short' }).format(new Date(iso));
 
 // ---- 6a member assignment
@@ -15,12 +15,13 @@ await p.eval(`(()=>{const row=[...document.querySelectorAll('tr, article, li')].
 await p.waitFor(`!!document.querySelector('[role=dialog], dialog[open]')`, 5000);
 await p.eval(`[...document.querySelector('[role=dialog], dialog[open]').querySelectorAll('button')].find(b=>b.innerText.trim()==='Dev').click()`);
 await p.fill('[role=dialog] input[type=number], dialog[open] input[type=number]', '2');
+const sinceAssign = p.requests.length;
 await p.eval(`[...document.querySelector('[role=dialog], dialog[open]').querySelectorAll('button')].find(b=>b.innerText.trim()==='Confirm').click()`);
-await sleep(1500); await p.idle();
+await p.waitForMutation({ since: sinceAssign }); await p.idle();
 clean(await report(p, 'assign member', { muts: mutations(p) }));
 const member = sql(`select is_member||' '||member_role||' '||member_display_order from "user" where id='${ids.BUILDER}'`);
 check('DB: builderone is a DEV member at order 2', member === 'true DEV 2' || member === 't DEV 2', member);
-await p.goto('/en/members'); await sleep(600);
+await p.goto('/en/members'); await p.waitText('builderone', 8000);
 check('/members lists builderone', (await mainText(p)).includes('builderone'));
 clean(await report(p, '/members after assign'));
 
@@ -55,7 +56,7 @@ const msDeadline = (where) => sql(`select to_char(date_trunc('milliseconds', sub
 const before = msDeadline(`title='Design a mascot'`);
 await rowButton(p, 'Design a mascot', 'Edit');
 await fillLabel(p, 'Title', 'Design a mascot v2'); p.reset();
-await p.click('css:main form button[type=submit]'); await sleep(1800); await p.idle();
+await p.click('css:main form button[type=submit]'); await p.waitForMutation(); await p.idle();
 const muts2 = mutations(p); clean(await report(p, 'edit past-deadline (no reward)', { muts2 }));
 check('edit PATCH 200', muts2.some((m) => /^PATCH \/admin\/bounties\/.+ 200$/.test(m)), muts2);
 check('DB: mascot renamed, deadline unchanged (ms)', msDeadline(`title='Design a mascot v2'`) === before, `${before} -> ${msDeadline(`title='Design a mascot v2'`)}`);
@@ -69,7 +70,7 @@ await rowButton(p, 'Integrate Injective EVM wallet', 'Edit');
 const amountShown = await p.eval(`document.querySelector('main form input[inputmode=decimal]').value`);
 check('edit form pre-fills reward amount 25', amountShown === '25', amountShown);
 await fillLabel(p, 'Title', 'Integrate Injective EVM wallet v2'); p.reset();
-await p.click('css:main form button[type=submit]'); await sleep(1800); await p.idle();
+await p.click('css:main form button[type=submit]'); await p.waitForMutation(); await p.idle();
 const muts3 = mutations(p); clean(await report(p, 'edit past-deadline (rewarded)', { muts3 }));
 check('rewarded edit PATCH 200', muts3.some((m) => /^PATCH \/admin\/bounties\/.+ 200$/.test(m)), muts3);
 const after2 = sql(`select b.title||'|'||r.amount from bounty b join bounty_reward r on r.bounty_id=b.id where b.id='${newId}'`) + '|' + (msDeadline(`id='${newId}'`) === before2);
@@ -87,15 +88,18 @@ check('DB: notice PUBLISHED / EVENT with published_at', n1[1] === 'PUBLISHED' &&
 check('DB: notice summary is plain text', n1[4] === 'Body of round 10 notice with a link.', n1[4]);
 const listRow = await p.eval(`[...document.querySelectorAll('tr')].find(r=>r.innerText.includes('Round 10 notice'))?.innerText.replace(/\\s+/g,' ')`);
 check('admin notice row shows a YYYY-MM-DD publish day', /\b\d{4}-\d{2}-\d{2}\b/.test(listRow ?? '') && !/T\d{2}:/.test(listRow ?? ''), listRow);
-await sleep(1200);
+await p.idle(); // the list refetch after the save must settle before its row is clicked
 await rowButton(p, 'Round 10 notice', 'Edit');
 await fillLabel(p, 'Title', 'Round 10 notice edited'); p.reset();
 await clickSave();
 const muts5 = mutations(p); clean(await report(p, 'notice edit', { muts5 }));
 const n2 = sql(`select title||'|'||status||'|'||published_at from notice where id='${n1[0]}'`).split('|');
 check('DB: notice renamed, still PUBLISHED, published_at unchanged', n2[0] === 'Round 10 notice edited' && n2[1] === 'PUBLISHED' && n2[2] === n1[3], { before: n1[3], after: n2 });
-await p.goto('/en/notices'); await sleep(600);
-check('public /notices shows the edited notice', (await mainText(p)).includes('Round 10 notice edited'));
+// The public list is served from the Data Cache for up to 30 s (PUBLIC_LIST_REVALIDATE_SECONDS) and footer links prefetch /notices on
+// every page, so the pre-edit list may still be cached right after the edit: reload until it revalidates.
+let nt = '';
+for (let i = 0; i < 14; i++) { await p.goto('/en/notices'); await p.mainReady(); nt = await mainText(p); if (nt.includes('Round 10 notice edited')) break; await sleep(3000); /* waits out the Data Cache revalidation, a real time delay */ }
+check('public /notices shows the edited notice', nt.includes('Round 10 notice edited'), nt.slice(0, 300));
 clean(await report(p, 'public notices'));
 
 // ---- highlights
@@ -114,7 +118,7 @@ await clickSave();
 const muts7 = mutations(p); clean(await report(p, 'highlight edit + clear link', { muts7 }));
 const h2 = sql(`select title||'|'||coalesce(link_url,'NULL') from platform_highlight where id='${h1[0]}'`);
 check('DB: highlight renamed and link cleared to NULL', h2 === 'Round 10 award edited|NULL', h2);
-await p.goto('/en/hall-of-fame'); await sleep(600);
+await p.goto('/en/hall-of-fame'); await p.waitText('Round 10 award edited', 8000);
 check('public Hall of Fame shows the edited highlight', (await mainText(p)).includes('Round 10 award edited'));
 clean(await report(p, 'public hall of fame'));
 b.close(); done('6 admin CRUD');

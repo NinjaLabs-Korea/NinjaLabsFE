@@ -15,7 +15,8 @@ const nftStates = {
   ATTACHED: { key: "minted", variant: "success" },
   PENDING: { key: "pending", variant: "warning" },
   MINTING: { key: "pending", variant: "warning" },
-  FAILED: { key: "failed", variant: "danger" },
+  // FAILED reads as pending here too: operators handle a failed mint in /admin/nft-jobs, the owner is not shown an error.
+  FAILED: { key: "pending", variant: "warning" },
 } as const;
 
 /** Greeting plus the profile summary: nickname, wallet and Ninja NFT status, and the way to the public profile and the settings. */
@@ -26,7 +27,7 @@ export function HomeProfileCard() {
   const { user } = snapshot;
   const nft = user.nftStatus ? (nftStates[user.nftStatus as keyof typeof nftStates] ?? nftStates.PENDING) : null;
   return (
-    <section className="mx-auto max-w-content px-4 pt-16 sm:px-6">
+    <section className="mx-auto max-w-content px-gutter pt-16">
       <div className="flex flex-col gap-6 rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 items-center gap-4">
           <span aria-hidden="true" className="grid size-14 shrink-0 place-items-center rounded-full bg-primary-soft-border font-display text-lg font-bold text-primary-strong">{user.initials}</span>
@@ -37,7 +38,7 @@ export function HomeProfileCard() {
               {user.walletAddress ? (
                 <Badge variant="success">{t("profile.walletConnected", { address: shortAddress(user.walletAddress) })}</Badge>
               ) : (
-                <Link className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/account#wallet">
+                <Link className="inline-flex min-h-11 items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/account#wallet">
                   <Badge variant="warning">{t("profile.walletMissing")}</Badge>
                 </Link>
               )}

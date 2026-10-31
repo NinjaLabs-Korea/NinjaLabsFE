@@ -14,7 +14,7 @@ check('/agents lists all three agents', ['DashBot', 'PendingBot', 'KeyBot'].ever
 const keyBefore = sql(`select key_prefix from agent_api_key k join agent a on a.id=k.agent_id where a.name='DashBot' and k.status='ACTIVE'`);
 await p.eval(`[...${card('DashBot')}.querySelectorAll('button')].find(b=>b.innerText.includes('Rotate key')).click()`);
 await p.waitText('New API key issued', 8000); await p.idle();
-const key = await p.eval(`${card('DashBot')}.querySelector('input[readonly]')?.value`);
+const key = await p.eval(`${card('DashBot')}.querySelector('textarea[readonly]')?.value`);
 clean(await report(p, 'rotate'));
 const keyAfter = sql(`select key_prefix from agent_api_key k join agent a on a.id=k.agent_id where a.name='DashBot' and k.status='ACTIVE'`);
 check('rotate shows the new key once', typeof key === 'string' && key.startsWith('nj_'), key?.slice(0, 12));
@@ -38,7 +38,7 @@ check('after reload DashBot shows revoked', (await p.eval(`${card('DashBot')}.in
 // one-time key dropped on sign-out (round 9)
 await p.eval(`[...${card('KeyBot')}.querySelectorAll('button')].find(b=>b.innerText.includes('Rotate key')).click()`);
 await p.waitText('New API key issued', 8000); await p.idle();
-const key2 = await p.eval(`${card('KeyBot')}.querySelector('input[readonly]')?.value`);
+const key2 = await p.eval(`${card('KeyBot')}.querySelector('textarea[readonly]')?.value`);
 check('KeyBot key revealed', typeof key2 === 'string' && key2.startsWith('nj_'));
 p.reset();
 check('signed in before sign-out', await signedInHeader(p));
@@ -48,5 +48,5 @@ const html = await p.eval('document.documentElement.outerHTML');
 clean(await report(p, 'sign out with key shown'));
 check('after sign-out the one-time key is not in the DOM', !html.includes(key2));
 check('after sign-out the account area is signed out', !(await signedInHeader(p)));
-check('after sign-out no readonly key input remains', !(await p.eval(`!!document.querySelector('input[readonly][value^="nj_"]') || [...document.querySelectorAll('input[readonly]')].some(i=>i.value.startsWith('nj_'))`)));
+check('after sign-out no readonly key field remains', !(await p.eval(`!!document.querySelector('textarea[readonly][value^="nj_"]') || [...document.querySelectorAll('textarea[readonly]')].some(i=>i.value.startsWith('nj_'))`)));
 b.close(); done('5 agents');

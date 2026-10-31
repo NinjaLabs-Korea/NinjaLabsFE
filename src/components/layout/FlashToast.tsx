@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Toast } from "@/components/ui/Toast";
 import { FAILURE_FLASH_KEYS, FLASH_EVENT, takeFlash, type FlashKey } from "@/lib/flash";
 
@@ -34,11 +34,47 @@ export function FlashToast() {
     };
   }, []);
 
+  // Pausable auto-dismiss: hovering or focusing the toast stops the clock, leaving resumes with the time that was left.
+  const remaining = useRef(FLASH_TOAST_MS);
+  const startedAt = useRef(0);
+  const timer = useRef<number | undefined>(undefined);
+  // Pointer and focus both hold the toast; resume only once neither is left on it.
+  const pointerInside = useRef(false);
+  const focusInside = useRef(false);
+
+  const resume = useCallback(() => {
+    window.clearTimeout(timer.current);
+    startedAt.current = Date.now();
+    timer.current = window.setTimeout(() => setFlash(null), remaining.current);
+  }, []);
+
+  const pause = useCallback(() => {
+    if (timer.current === undefined) return;
+    window.clearTimeout(timer.current);
+    timer.current = undefined;
+    remaining.current = Math.max(0, remaining.current - (Date.now() - startedAt.current));
+  }, []);
+
   useEffect(() => {
-    if (!flash) return;
-    const timer = window.setTimeout(() => setFlash(null), FLASH_TOAST_MS);
-    return () => window.clearTimeout(timer);
-  }, [flash]);
+    if (!flash) {
+      // The wrapper unmounts without blur/leave events (dismiss button, auto-dismiss): forget where the pointer/focus was.
+      pointerInside.current = false;
+      focusInside.current = false;
+      return;
+    }
+    remaining.current = FLASH_TOAST_MS;
+    // A flash that replaces one under the cursor must not start its clock there.
+    if (!pointerInside.current && !focusInside.current) resume();
+    return () => {
+      window.clearTimeout(timer.current);
+      timer.current = undefined;
+    };
+  }, [flash, resume]);
+
+  const settle = () => {
+    if (pointerInside.current || focusInside.current) pause();
+    else if (timer.current === undefined) resume();
+  };
 
   return (
     <>
@@ -46,7 +82,26 @@ export function FlashToast() {
         {flash ? `${t(`${flash}.title`)} ${t(`${flash}.description`)}` : ""}
       </div>
       {flash ? (
-        <div className="fixed right-4 bottom-4 z-[70] max-w-[calc(100vw-2rem)]">
+        <div
+          className="fixed inset-x-4 bottom-4 z-[70] sm:inset-x-auto sm:right-4 sm:max-w-[calc(100vw-2rem)]"
+          onBlur={(event) => {
+            if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+            focusInside.current = false;
+            settle();
+          }}
+          onFocus={() => {
+            focusInside.current = true;
+            settle();
+          }}
+          onPointerEnter={() => {
+            pointerInside.current = true;
+            settle();
+          }}
+          onPointerLeave={() => {
+            pointerInside.current = false;
+            settle();
+          }}
+        >
           <Toast
             description={t(`${flash}.description`)}
             onDismiss={() => setFlash(null)}

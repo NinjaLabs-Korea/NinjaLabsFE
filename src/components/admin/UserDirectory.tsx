@@ -24,7 +24,7 @@ const USERS_PAGE_SIZE = 30;
 /** BE `SearchUsersQueryDto.q` `@MaxChars(320)` (the longest email): a longer term is a 400 on every pause, so the box stops accepting more. */
 const SEARCH_TERM_MAX = 320;
 /** Pause after the last keystroke before the search term goes to the BE. */
-const SEARCH_DEBOUNCE_MS = 300;
+export const SEARCH_DEBOUNCE_MS = 300;
 
 /** `existing` plus the `incoming` users it does not hold yet (a signup between two requests shifts rows across page boundaries). */
 const withNewUsers = (existing: AdminUser[], incoming: AdminUser[]) => [...existing, ...incoming.filter((user) => !existing.some((known) => known.slug === user.slug))];
@@ -185,7 +185,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
         <input
           id="user-search"
           maxLength={SEARCH_TERM_MAX}
-          className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink outline-none placeholder:text-ink-placeholder sm:w-[384px]"
+          className="mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:w-[384px]"
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t("searchPlaceholder")}
           type="search"

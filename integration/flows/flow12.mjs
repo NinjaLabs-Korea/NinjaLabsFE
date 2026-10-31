@@ -1,16 +1,29 @@
 // Flow 12: member recruitment end to end. Admin creates and opens a cohort in the UI, a builder applies (home banner ->
 // /recruit form), sees the status on the home and /account, edits it, the admin reviews it, the applicant sees the result
 // (never the note), the admin closes the cohort. Also: the hub stays open to finished users, return path after sign-in,
-// onboarding gate, withdraw/reapply and the CSV export.
+// onboarding gate, withdraw/reapply and the CSV export. The admin also edits the cohort's application questions in the UI (add a
+// required short answer, rename the interest question, remove the Web3 experience question); the applicant sees exactly those
+// questions, the review dialog and the CSV show the answers, and an application sent in the legacy shape before the edit stays
+// readable. An unfinished sign-up that started on /recruit comes back to /recruit without the get-started menu.
 import { Browser, report } from '../lib/cdp.mjs';
-import { sql, ids, check, clean, done, sleep, signIn, signInWithReturn, apiAs, tokenFor, fillLabel, rowButton, dialogButton, chip, mutations, mainText, API } from '../lib/harness.mjs';
+import { sql, ids, check, clean, done, sleep, signIn, signInWithReturn, apiAs, tokenFor, fillLabel, rowButton, dialogButton, chip, select, mutations, mainText, API } from '../lib/harness.mjs';
 
 const b = await Browser.connect();
 const NAME = 'IT Spring Cohort';
 const adminToken = tokenFor(ids.ADMIN, true);
 // Flow 2 completes the seeded step-3 user, so this flow makes its own unfinished sign-up (profile step still owed).
 const INCOMPLETE = sql(`INSERT INTO "user"(google_id,email,nickname,bio,onboarding_step) VALUES ('g-inc-12','inc12@test.dev','user_inc120001','',3) RETURNING id`).split(String.fromCharCode(10))[0];
-const clickSave = async (page) => { await page.eval(`[...document.querySelectorAll('main button')].filter(b=>b.innerText.trim()==='Save').pop().click()`); await sleep(1800); await page.idle(); };
+const INCOMPLETE2 = sql(`INSERT INTO "user"(google_id,email,nickname,bio,onboarding_step) VALUES ('g-inc-12b','inc12b@test.dev','user_inc120002','',3) RETURNING id`).split(String.fromCharCode(10))[0];
+const CORE = sql(`select id from "user" where nickname='coreninja'`);
+/** The control of the first label starting with \`txt\` inside the question editor item number \`item\` (1-based); tagged for \`fill\`. */
+async function editorControl(p, item, txt) {
+  const ok = await p.eval(`(()=>{document.querySelectorAll('[data-fill]').forEach(e=>e.removeAttribute('data-fill'));
+    const li=document.querySelectorAll('section[aria-labelledby^="questions-"] > ol > li')[${item - 1}]; if(!li) return false;
+    const l=[...li.querySelectorAll('label')].find(l=>l.innerText.trim().startsWith(${JSON.stringify(txt)})); const el=l && l.querySelector('input,textarea'); if(!el) return false; el.dataset.fill='1'; return true})()`);
+  if (!ok) throw new Error(`editor control not found: question ${item} / ${txt}`);
+  return '[data-fill="1"]';
+}
+const clickSave = async (page) => { const since = page.requests.length; await page.eval(`[...document.querySelectorAll('main button')].filter(b=>b.innerText.trim()==='Save').pop().click()`); await page.waitForMutation({ since }); await page.idle(); };
 
 // ---- admin: create and open a cohort
 const adminCtx = await b.newContext(); const adminPage = await b.newPage(adminCtx);
@@ -29,9 +42,44 @@ check('DB: cohort exists as DRAFT with its description', sql(`select status||'|'
 const cohortId = sql(`select id from cohort where name='${NAME}'`);
 check('draft cohort is invisible to the public API', (await fetch(`${API}/cohorts/current`).then((r) => r.text())) === 'null');
 await rowButton(adminPage, NAME, 'Open'); adminPage.reset();
-await dialogButton(adminPage, 'Open recruitment'); await sleep(800); await adminPage.idle();
+await dialogButton(adminPage, 'Open recruitment'); await adminPage.waitForMutation(); await adminPage.idle();
 check('DB: cohort is OPEN after the confirmed transition', sql(`select status from cohort where id='${cohortId}'`) === 'OPEN');
 check('DB: audit rows for create and open', sql(`select string_agg(action, ',' order by created_at) from audit_log where entity_id='${cohortId}'`) === 'COHORT_CREATED,COHORT_OPENED');
+
+check('DB: the new cohort starts with the two default questions', sql(`select string_agg(q->>'id', ',') from cohort, jsonb_array_elements(questions) q where id='${cohortId}'`) === 'web3_experience,interest_areas');
+check('public API carries the questions', JSON.parse(await fetch(`${API}/cohorts/current`).then((r) => r.text())).questions.map((q) => q.id).join() === 'web3_experience,interest_areas');
+
+// ---- an application sent in the legacy shape (an older FE) before the questions are edited
+{
+  const [st, body] = await apiAs(tokenFor(CORE), 'POST', `/cohorts/${cohortId}/applications`, { displayName: 'Core Legacy', telegram: '@core_legacy', twitter: '@core_legacy', web3Experience: 'GT_3Y', activityType: 'STUDENT', interestAreas: ['DEVELOPER'], intro: 'I applied with the old form.' });
+  check('legacy-shape application: POST 201', st === 201, [st, body.slice(0, 120)]);
+  check('DB: stored in the legacy columns with no answers', sql(`select web3_experience||'|'||activity_type||'|'||jsonb_array_length(answers) from cohort_application where user_id='${CORE}' and cohort_id='${cohortId}'`) === 'GT_3Y|STUDENT|0');
+  check('API: the legacy row reads back with synthesized answers', JSON.parse(body).answers.map((a) => a.questionId).join() === 'web3_experience,interest_areas,activity_type', body.slice(0, 200));
+}
+
+// ---- admin edits the application questions in the UI
+await rowButton(adminPage, NAME, 'Questions'); await adminPage.waitText(`${NAME} application questions`, 8000);
+clean(await report(adminPage, 'admin question editor'));
+check('editor: shows the two default questions and the fixed-fields note', await adminPage.eval(`document.querySelectorAll('section[aria-labelledby^="questions-"] > ol > li').length`) === 2 && (await mainText(adminPage)).includes('Name, Telegram, X and introduction are always collected'));
+await adminPage.fill(await editorControl(adminPage, 2, 'Question (Korean)'), '관심 분야');
+await adminPage.fill(await editorControl(adminPage, 2, 'Question (English'), 'Areas of interest');
+await adminPage.eval(`document.querySelector('button[aria-label="Delete question 1"]').click()`); await sleep(300);
+await dialogButton(adminPage, 'Delete question');
+check('editor: removing the first question leaves one', await adminPage.eval(`document.querySelectorAll('section[aria-labelledby^="questions-"] > ol > li').length`) === 1);
+await adminPage.click('Add question', { exact: true });
+await adminPage.fill(await editorControl(adminPage, 2, 'Question (Korean)'), 'GitHub 주소');
+await adminPage.fill(await editorControl(adminPage, 2, 'Question (English'), 'GitHub URL');
+await adminPage.eval(`[...document.querySelectorAll('section[aria-labelledby^="questions-"] > ol > li')][1].querySelector('input[type=checkbox]').click()`);
+check('editor: unsaved changes are announced', (await mainText(adminPage)).includes('You have unsaved changes.'));
+adminPage.reset();
+await adminPage.click('Save questions', { exact: true }); await adminPage.waitForMutation(); await adminPage.idle();
+check('admin: PUT /admin/cohorts/:id/questions 200', mutations(adminPage).some((m) => new RegExp(`^PUT /admin/cohorts/${cohortId}/questions 200$`).test(m)), mutations(adminPage));
+clean(await report(adminPage, 'admin saved questions'));
+const stored = sql(`select string_agg((q->>'id')||'='||(q->'label'->>'ko')||'/'||coalesce(q->'label'->>'en','')||'/'||(q->>'type')||'/'||(q->>'required'), ';') from cohort, jsonb_array_elements(questions) q where id='${cohortId}'`);
+check('DB: interest_areas kept its id and got the new label, web3_experience is gone, the new question is a required SHORT_TEXT', /^interest_areas=관심 분야\/Areas of interest\/MULTI_CHOICE\/true;q_[0-9a-f]{12}=GitHub 주소\/GitHub URL\/SHORT_TEXT\/true$/.test(stored), stored);
+check('DB: audit row COHORT_QUESTIONS_UPDATED', sql(`select count(*) from audit_log where entity_id='${cohortId}' and action='COHORT_QUESTIONS_UPDATED'`) === '1');
+const GITHUB_ID = sql(`select q->>'id' from cohort, jsonb_array_elements(questions) q where id='${cohortId}' and q->>'type'='SHORT_TEXT'`);
+check('DB: the legacy application is untouched by the edit', sql(`select web3_experience||'|'||jsonb_array_length(answers) from cohort_application where user_id='${CORE}' and cohort_id='${cohortId}'`) === 'GT_3Y|0');
 
 // ---- a visitor sees the banner and is sent to sign in with a return path
 {
@@ -74,31 +122,39 @@ check('hub: the hero offers the application while the cohort accepts', (await bp
 await bp.goto('/en/home');
 await bp.waitText('Welcome back, builderone', 8000); await bp.waitText(`${NAME} is recruiting members`, 8000);
 const home = await bp.text();
-check('home: greeting, activity and the recruitment invitation', home.includes('Welcome back, builderone') && home.includes('Applications and submissions') && home.includes(`${NAME} is recruiting members`));
+check('home: greeting, activity and the recruitment invitation', home.includes('Welcome back, builderone') && home.includes('Applications') && home.includes(`${NAME} is recruiting members`));
 check('home: robots noindex', (await bp.eval(`document.querySelector('meta[name=robots]')?.content || ''`)).includes('noindex'));
 clean(await report(bp, 'home (finished, recruiting)'));
 await bp.click('Apply now', { selector: 'main a' }); await bp.waitFor(`!!document.querySelector('form')`, 8000);
 check('home -> Apply now opens /recruit with the form', (await bp.url()).endsWith('/en/recruit'));
 const formText = await bp.text();
-check('form has the Tally questions and options', ['Name (real name or nickname)*', 'Telegram ID*', 'Twitter (X) ID*', 'Web3 experience*', 'Under 1 year', '1-3 years', 'Over 3 years', 'KOL (influencer)', 'Community & marketing', 'Business development', 'Student', 'Introduction and motivation*'].every((t) => formText.includes(t)));
-check('form shows the recommended length hint', formText.includes('100-300 characters recommended'));
+check('form: fixed fields, then exactly the configured questions in the configured language', ['Name (real name or nickname)*', 'Telegram ID*', 'X (Twitter) handle*', 'Introduction and motivation*', 'Areas of interest*', 'GitHub URL*', 'KOL (influencer)', 'Community & marketing', 'Business development'].every((t) => formText.includes(t)));
+check('form: the removed question and the dropped activity question are gone', !/Web3 experience|Under 1 year|What best describes|Student/.test(formText), formText.slice(0, 300));
+const order = await bp.eval(`[...document.querySelectorAll('main form label, main form legend')].map(e=>e.innerText.replace('*','').trim())`);
+check('form: introduction comes before the configured questions, which keep their order', order.findIndex((t) => t.startsWith('Introduction')) < order.indexOf('Areas of interest') && order.indexOf('Areas of interest') < order.indexOf('GitHub URL'), order);
+check('form shows the recommended length hint', formText.includes('at least 100 characters'));
 // invalid first: nothing is sent
 bp.reset();
 await bp.click('Send application', { exact: true });
 check('empty submit sends nothing and marks the fields', !mutations(bp).length && (await bp.eval(`document.querySelectorAll('main [role=alert]').length`)) >= 6);
-await fillLabel(bp, 'Name', 'Builder Kim'); await fillLabel(bp, 'Telegram ID', 'https://t.me/builder_it'); await fillLabel(bp, 'Twitter (X) ID', 'builder_it');
-await chip(bp, '1-3 years'); await chip(bp, 'Developer', 'What best describes'); await chip(bp, 'Developer', 'Areas you want'); await chip(bp, 'Researcher', 'Areas you want'); await chip(bp, 'Other', 'Areas you want');
-await fillLabel(bp, 'Tell us which area', 'UX research');
+await fillLabel(bp, 'Name', 'Builder Kim'); await fillLabel(bp, 'Telegram ID', 'https://t.me/builder_it'); await fillLabel(bp, 'X (Twitter) handle', 'builder_it');
+await chip(bp, 'Developer', 'Areas of interest'); await chip(bp, 'Researcher', 'Areas of interest'); await chip(bp, 'Other', 'Areas of interest');
+await fillLabel(bp, 'Tell us more', 'UX research');
 await fillLabel(bp, 'Introduction and motivation', 'I build dashboards for Injective and want to help new builders ship faster.');
+// a missing required answer blocks the submit
+bp.reset();
+await bp.click('Send application', { exact: true });
+check('missing required answer (GitHub URL) sends nothing and marks that field', !mutations(bp).length && await bp.eval(`document.querySelector('#cohort-q-${GITHUB_ID}').getAttribute('aria-invalid') === 'true'`), mutations(bp));
+await fillLabel(bp, 'GitHub URL', 'https://github.com/builder-it');
 bp.reset();
 await bp.click('Send application', { exact: true }); await bp.waitText('Your application was sent', 8000); await bp.idle();
 const applied = mutations(bp);
 clean(await report(bp, 'applied', { applied }));
 check('apply: POST /cohorts/:id/applications 201', applied.some((m) => new RegExp(`^POST /cohorts/${cohortId}/applications 201$`).test(m)), applied);
-const row = sql(`select status||'|'||telegram||'|'||twitter||'|'||activity_type||'|'||array_to_string(interest_areas,',')||'|'||coalesce(interest_other,'') from cohort_application where cohort_id='${cohortId}' and user_id='${ids.BUILDER}'`);
-check('DB: application SUBMITTED with normalized handles and the other-detail', row === 'SUBMITTED|@builder_it|@builder_it|DEVELOPER|DEVELOPER,RESEARCHER,OTHER|UX research', row);
+const row = sql(`select status||'|'||telegram||'|'||twitter||'|'||(web3_experience is null and activity_type is null and interest_areas is null)||'|'||(answers->0->>'questionId')||'|'||(select string_agg(c->>'id', ',') from jsonb_array_elements(answers->0->'choices') c)||'|'||coalesce(answers->0->>'other','')||'|'||coalesce(answers->1->>'text','') from cohort_application where cohort_id='${cohortId}' and user_id='${ids.BUILDER}'`);
+check('DB: application SUBMITTED with normalized handles, empty legacy columns and the answers snapshot', row === 'SUBMITTED|@builder_it|@builder_it|true|interest_areas|DEVELOPER,RESEARCHER,OTHER|UX research|https://github.com/builder-it', row);
 const status1 = await mainText(bp);
-check('recruit: shows "Under review" with the answers and Edit/Withdraw', status1.includes('Under review') && status1.includes('Builder Kim') && /Edit application/.test(status1) && /Withdraw/.test(status1));
+check('recruit: shows "Under review" with the answers and Edit/Withdraw', status1.includes('Under review') && status1.includes('Builder Kim') && status1.includes('GitHub URL') && status1.includes('https://github.com/builder-it') && /Edit application/.test(status1) && /Withdraw/.test(status1));
 
 // status on /account and home
 await bp.goto('/en/account'); await bp.waitText('Cohort applications', 8000); await bp.waitText(NAME, 8000);
@@ -126,23 +182,36 @@ clean(await report(adminPage, 'admin applications'));
 const adminText = await mainText(adminPage);
 check('admin: applications table shows the applicant, contacts and status', adminText.includes('Builder Kim') && adminText.includes('@builder_it') && adminText.includes('builder@test.dev') && adminText.includes('Waiting'));
 // filters: status that does not match, then the search
-await adminPage.eval(`document.querySelector('main [role=combobox][aria-label=Status]').click()`); await sleep(200);
+await adminPage.eval(`document.querySelector('main [role=combobox][aria-label=Status]').click()`); await adminPage.waitForSelector('[role=option]');
 await adminPage.eval(`(()=>{const o=[...document.querySelectorAll('[role=option]')].find(o=>o.innerText.trim()==='Accepted'); o.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true})); o.click()})()`);
-await adminPage.click('Apply', { exact: true, selector: 'main form button' }); await sleep(800);
+await adminPage.click('Apply', { exact: true, selector: 'main form button' }); await adminPage.waitText('No application matches these filters.', 8000);
 check('admin: status filter Accepted hides the waiting applicant', (await mainText(adminPage)).includes('No application matches these filters.'));
 await adminPage.click('Reset', { exact: true, selector: 'main form button' }); await adminPage.waitText('Builder Kim', 8000);
-await fillLabel(adminPage, 'Search', 'builder_it'); await adminPage.click('Apply', { exact: true, selector: 'main form button' }); await sleep(800);
+await fillLabel(adminPage, 'Search', 'builder_it'); await adminPage.click('Apply', { exact: true, selector: 'main form button' }); await adminPage.idle();
 check('admin: search by telegram finds the applicant', (await mainText(adminPage)).includes('Builder Kim'));
+await adminPage.click('Reset', { exact: true, selector: 'main form button' }); await adminPage.waitText('Builder Kim', 8000);
+// question filter: DEVELOPER matches the new-shape row and, through the legacy column, the old one; RESEARCHER only the new one
+await select(adminPage, 'Question', 'Areas of interest'); await select(adminPage, 'Option', 'Developer');
+adminPage.reset();
+await adminPage.click('Apply', { exact: true, selector: 'main form button' }); await adminPage.waitForRequest(/questionId=interest_areas&optionId=DEVELOPER/); await adminPage.idle();
+check('admin: question filter sends questionId + optionId and finds both the new and the legacy application', adminPage.requests.some((r) => /questionId=interest_areas&optionId=DEVELOPER/.test(r.url) && r.status === 200) && (await mainText(adminPage)).includes('Builder Kim') && (await mainText(adminPage)).includes('Core Legacy'));
+await select(adminPage, 'Option', 'Researcher'); await adminPage.click('Apply', { exact: true, selector: 'main form button' }); await adminPage.idle(); await sleep(500);
+check('admin: the Researcher option finds only the new-shape application', (await mainText(adminPage)).includes('Builder Kim') && !(await mainText(adminPage)).includes('Core Legacy'));
+await adminPage.click('Reset', { exact: true, selector: 'main form button' }); await adminPage.waitText('Core Legacy', 8000);
+// the legacy application is still readable in the review dialog (synthesized answers, including the dropped activity question)
+await rowButton(adminPage, 'Core Legacy', 'Review'); await adminPage.waitFor(`!!document.querySelector('dialog[open]')`, 5000);
+check('review dialog: a legacy application shows its web3 experience, interests and current activity', await adminPage.eval(`(()=>{const t=document.querySelector('dialog[open]').innerText; return t.includes('Web3 experience') && t.includes('Over 3 years') && t.includes('Current activity') && t.includes('Student') && t.includes('I applied with the old form.')})()`));
+await dialogButton(adminPage, 'Cancel');
 // review with confirm
 await rowButton(adminPage, 'Builder Kim', 'Review'); await adminPage.waitFor(`!!document.querySelector('dialog[open]')`, 5000);
-check('review dialog shows the answers and says the note is internal', await adminPage.eval(`(()=>{const t=document.querySelector('dialog[open]').innerText; return t.includes('UX research') && /note is for operators only/i.test(t) && t.includes('Accepting does not make the applicant a member')})()`));
+check('review dialog shows the answers and says the note is internal', await adminPage.eval(`(()=>{const t=document.querySelector('dialog[open]').innerText; return t.includes('UX research') && t.includes('GitHub URL') && t.includes('https://github.com/builder-it') && /note is for operators only/i.test(t) && t.includes('Accepting does not make the applicant a member')})()`));
 check('review dialog: confirm is disabled until a decision is chosen', await adminPage.eval(`[...document.querySelector('dialog[open]').querySelectorAll('button')].find(b=>b.innerText.trim()==='Choose a decision').disabled`));
 await adminPage.eval(`[...document.querySelector('dialog[open]').querySelectorAll('input[type=radio]')].find(i=>i.closest('label').innerText.trim()==='Accept').click()`);
 await adminPage.fill('dialog[open] textarea', 'SECRET INTERNAL NOTE strong portfolio');
 // Flow 6 may already have made BUILDER a member: the rule is that accepting changes nothing, so compare before and after.
 const memberBefore = sql(`select is_member from "user" where id='${ids.BUILDER}'`);
 adminPage.reset();
-await dialogButton(adminPage, 'Accept application'); await sleep(1000); await adminPage.idle();
+await dialogButton(adminPage, 'Accept application'); await adminPage.waitForMutation(); await adminPage.idle();
 check('admin: POST /admin/cohort-applications/:id/review', mutations(adminPage).some((m) => /^POST \/admin\/cohort-applications\/.+\/review 201$/.test(m)), mutations(adminPage));
 check('DB: ACCEPTED with the internal note, reviewer set', sql(`select status||'|'||review_note||'|'||(reviewed_by is not null) from cohort_application where user_id='${ids.BUILDER}' and cohort_id='${cohortId}'`) === 'ACCEPTED|SECRET INTERNAL NOTE strong portfolio|true');
 check('DB: audit row records the decision change', sql(`select after_data->>'status' from audit_log where action='COHORT_APPLICATION_ACCEPTED' order by created_at desc limit 1`) === 'ACCEPTED');
@@ -151,12 +220,16 @@ clean(await report(adminPage, 'admin reviewed'));
 
 // CSV export (UI click + API content check)
 adminPage.reset();
-await adminPage.click('Export CSV', { exact: true }); await sleep(1200); await adminPage.idle();
+await adminPage.click('Export CSV', { exact: true }); await adminPage.waitForRequest(/\/admin\/cohorts\/.+\/applications\.csv/); await adminPage.idle();
 check('admin: Export CSV requests the CSV with the session', adminPage.requests.some((r) => /\/admin\/cohorts\/.+\/applications\.csv/.test(r.url) && r.status === 200), adminPage.requests.map((r) => `${r.status} ${r.url}`).filter((u) => /csv/.test(u)));
 const csv = await fetch(`${API}/admin/cohorts/${cohortId}/applications.csv`, { headers: { authorization: `Bearer ${adminToken}` } });
 const csvBytes = Buffer.from(await csv.arrayBuffer());
 const csvText = csvBytes.toString('utf8');
 check('CSV: UTF-8 text/csv with BOM, header row and the applicant', (csv.headers.get('content-type') || '').includes('text/csv') && csvText.startsWith('﻿"id"') && csvText.includes('"Builder Kim"') && csvText.includes('builder_it'), csvText.slice(0, 120));
+const csvHeader = csvText.split('\r\n')[0];
+check('CSV: one column per current question (ko label), then other_answers', csvHeader.includes('"intro","관심 분야","GitHub 주소","other_answers"') && !csvHeader.includes('Web3'), csvHeader);
+check('CSV: the legacy application keeps its web3 and current-activity answers in other_answers', csvText.includes('Web3 경력: 3년 이상') && csvText.includes('현재 활동 유형: 학생'), csvText.slice(-600));
+check('CSV: the new application has the interest areas incl. the other detail and the GitHub answer', csvText.includes('기타 (UX research)') && csvText.includes('https://github.com/builder-it'), csvText.slice(-600));
 
 // ---- applicant sees the result, never the note
 await bp.goto('/en/recruit'); await bp.waitText('Accepted', 8000);
@@ -168,13 +241,13 @@ clean(await report(bp, 'applicant sees result'));
 await bp.goto('/en/home'); await bp.waitText('Accepted', 8000);
 check('home: shows the accepted status', (await mainText(bp)).includes('Accepted'));
 
-// ---- an unfinished sign-up is sent to the step it owes from every page except the hub (/recruit included); the API says PROFILE_REQUIRED
+// ---- an unfinished sign-up is sent to the step it owes from every page except the hub and /recruit (exempt since QA 2 FE-2: the page itself can open); the API says PROFILE_REQUIRED
 {
   const p = await b.newPage(await b.newContext());
   await signIn(p, INCOMPLETE);
   await p.waitFor(`location.pathname.endsWith('/signup/profile')`, 8000);
-  await p.goto('/en/recruit'); await p.waitFor(`location.pathname.endsWith('/signup/profile')`, 10000);
-  check('unfinished user: /recruit sends them to the onboarding step they owe, no form', (await p.url()).endsWith('/en/signup/profile') && !(await p.eval(`!!document.querySelector('#cohort-intro')`)), await p.url());
+  await p.goto('/en/recruit'); await new Promise((r) => setTimeout(r, 3000));
+  check('unfinished user: /recruit stays open (no forced redirect to the owed onboarding step)', new URL(await p.url()).pathname === '/en/recruit', await p.url());
   const [st, body] = await apiAs(tokenFor(INCOMPLETE), 'POST', `/cohorts/${cohortId}/applications`, { displayName: 'x', telegram: '@abcde', twitter: '@abc', web3Experience: 'LT_1Y', activityType: 'STUDENT', interestAreas: ['DEVELOPER'], intro: 'hi' });
   check('unfinished user: BE answers 409 PROFILE_REQUIRED', st === 409 && body.includes('PROFILE_REQUIRED'), [st, body]);
   clean(await report(p, 'unfinished /recruit'));
@@ -182,6 +255,24 @@ check('home: shows the accepted status', (await mainText(bp)).includes('Accepted
   const heroLinks = await p.eval(`[...document.querySelectorAll('main section:first-of-type a')].map(a=>a.innerText.trim()+' -> '+new URL(a.href).pathname)`);
   check('unfinished user: the hub is open to them (no forced step) and its CTA continues the sign-up', new URL(await p.url()).pathname === '/en' && heroLinks.includes('Continue sign-up -> /en/signup/profile'), [await p.url(), heroLinks]);
   clean(await report(p, 'unfinished hub'));
+  await p.close();
+}
+
+// ---- an unfinished sign-up that started on /recruit comes back to /recruit after the profile step, without the get-started menu (QA 2 FE-2)
+{
+  const p = await b.newPage(await b.newContext());
+  await signInWithReturn(p, INCOMPLETE2, '/recruit');
+  await p.waitFor(`location.pathname.endsWith('/signup/profile')`, 8000);
+  await p.waitFor(`!!document.querySelector('#nickname')`);
+  await p.fill('#nickname', 'it12return'); await sleep(1300);
+  await p.click('Dev'); await p.fill('#bio', 'Came from the recruitment page');
+  await p.click('css:form button[type=submit]');
+  const back = await p.waitFor(`location.pathname==='/en/recruit'`, 15000);
+  const seenMenu = await p.eval(`document.body.innerText.includes('Get started')`);
+  check('unfinished sign-up from /recruit: lands back on /recruit after the profile step, not on the get-started menu', back && new URL(await p.url()).pathname === '/en/recruit', await p.url());
+  await p.waitFor(`!!document.querySelector('form')`, 10000);
+  check('unfinished sign-up from /recruit: the application form is there, no get-started menu', await p.eval(`!!document.querySelector('main form')`) && !seenMenu, { seenMenu });
+  clean(await report(p, 'returned to /recruit'));
   await p.close();
 }
 
@@ -197,7 +288,7 @@ check('home: shows the accepted status', (await mainText(bp)).includes('Accepted
   check('finished user: /en is served as the hub (no redirect, even with an old ninja_home cookie)', new URL(await p.url()).pathname === '/en' && redirects === 0, [await p.url(), redirects]);
   const logo = await p.eval(`document.querySelector('header a[aria-label="Ninja Labs home"]').getAttribute('href')`);
   check('finished user: the logo points at the hub', logo === '/en', logo);
-  await p.goto('/en/about'); await sleep(500);
+  await p.goto('/en/about'); await p.waitFor(`/past activities/i.test(document.body.innerText)`, 8000);
   const about = await p.text();
   check('finished user: /about shows the community sections and stays put', (await p.url()).endsWith('/en/about') && /past activities/i.test(about));
   clean(await report(p, '/about (finished)'));
@@ -208,29 +299,33 @@ check('home: shows the accepted status', (await mainText(bp)).includes('Accepted
 // ---- withdraw and reapply (admin acts as an applicant), then close the cohort
 {
   const p = await b.newPage(adminCtx);
-  const [st] = await apiAs(adminToken, 'POST', `/cohorts/${cohortId}/applications`, { displayName: 'Ops Admin', telegram: '@ops_admin', twitter: '@ops_admin', web3Experience: 'GT_3Y', activityType: 'BIZDEV', interestAreas: ['BIZDEV'], intro: 'ops' });
+  const [st] = await apiAs(adminToken, 'POST', `/cohorts/${cohortId}/applications`, { displayName: 'Ops Admin', telegram: '@ops_admin', twitter: '@ops_admin', intro: 'ops', answers: [{ questionId: 'interest_areas', choices: ['BIZDEV'] }, { questionId: GITHUB_ID, text: 'https://github.com/ops' }] });
   check('admin as applicant: POST 201', st === 201, st);
   await p.goto('/en/account'); if (!(await p.waitText('Under review', 10000))) throw new Error('account page text: ' + (await mainText(p)).slice(0, 400));
   await p.click('Withdraw', { exact: true, selector: 'main button' }); await p.waitFor(`!!document.querySelector('dialog[open]')`, 5000);
-  await dialogButton(p, 'Withdraw application'); await sleep(1000); await p.idle();
+  const sinceWithdraw = p.requests.length;
+  await dialogButton(p, 'Withdraw application'); await p.waitForMutation({ since: sinceWithdraw }); await p.idle();
   check('DB: the admin application is WITHDRAWN', sql(`select status from cohort_application where user_id='${ids.ADMIN}' and cohort_id='${cohortId}'`) === 'WITHDRAWN');
-  const [st2, body2] = await apiAs(adminToken, 'POST', `/cohorts/${cohortId}/applications`, { displayName: 'Ops Admin', telegram: '@ops_admin', twitter: '@ops_admin', web3Experience: 'GT_3Y', activityType: 'BIZDEV', interestAreas: ['BIZDEV'], intro: 'ops again' });
+  const [st2, body2] = await apiAs(adminToken, 'POST', `/cohorts/${cohortId}/applications`, { displayName: 'Ops Admin', telegram: '@ops_admin', twitter: '@ops_admin', intro: 'ops again', answers: [{ questionId: 'interest_areas', choices: ['BIZDEV'] }, { questionId: GITHUB_ID, text: 'https://github.com/ops' }] });
   check('reapply reopens the same row (same id, SUBMITTED)', st2 === 201 && sql(`select count(*) from cohort_application where user_id='${ids.ADMIN}' and cohort_id='${cohortId}'`) === '1' && sql(`select status from cohort_application where user_id='${ids.ADMIN}' and cohort_id='${cohortId}'`) === 'SUBMITTED', [st2, body2.slice(0, 80)]);
   await p.goto('/en/admin/recruitment'); await p.waitText(NAME, 8000);
   const del = await p.eval(`(()=>{const r=[...document.querySelectorAll('tr')].find(r=>r.innerText.includes(${JSON.stringify(NAME)})); return [...r.querySelectorAll('button')].find(b=>b.innerText.trim()==='Delete').disabled})()`);
   check('admin: a cohort with applications cannot be deleted (button disabled)', del === true);
   const [stDel, bodyDel] = await apiAs(adminToken, 'DELETE', `/admin/cohorts/${cohortId}`);
   check('BE agrees: DELETE is 409 COHORT_HAS_APPLICATIONS', stDel === 409 && bodyDel.includes('COHORT_HAS_APPLICATIONS'), [stDel, bodyDel]);
-  await rowButton(p, NAME, 'Close'); await dialogButton(p, 'Close recruitment'); await sleep(900); await p.idle();
+  await rowButton(p, NAME, 'Close'); const sinceClose = p.requests.length;
+  await dialogButton(p, 'Close recruitment'); await p.waitForMutation({ since: sinceClose }); await p.idle();
   check('DB: cohort CLOSED, audit COHORT_CLOSED', sql(`select status from cohort where id='${cohortId}'`) === 'CLOSED' && sql(`select count(*) from audit_log where entity_id='${cohortId}' and action='COHORT_CLOSED'`) === '1');
   clean(await report(p, 'admin closed cohort'));
   await p.close();
 }
 {
   const p = await b.newPage(builderCtx);
-  await p.goto('/en/recruit'); await p.waitText('No cohort is recruiting right now', 8000);
-  check('after closing: /recruit says no cohort is recruiting, no form', !(await p.eval(`!!document.querySelector('form')`)));
-  await p.goto('/en/about'); await sleep(800);
+  await p.goto('/en/recruit'); await p.waitText("We're not recruiting right now.", 8000);
+  check('after closing: /recruit says we are not recruiting, no form', !(await p.eval(`!!document.querySelector('form')`)));
+  const exits = await p.eval(`[...document.querySelectorAll('main a')].map(a=>a.innerText.trim()+' -> '+new URL(a.href).pathname+new URL(a.href).search)`);
+  check('after closing: both exits are offered (notices and past activities)', exits.includes('See the notices -> /en/notices') && exits.includes('See past activities -> /en/notices?category=events'), exits);
+  await p.goto('/en/about'); await p.waitFor(`/past activities/i.test(document.body.innerText)`, 8000);
   check('after closing: the recruitment banner is gone', !(await p.text()).includes('is recruiting members'));
   clean(await report(p, 'closed /recruit'));
   await p.close();

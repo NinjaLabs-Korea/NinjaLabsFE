@@ -6,10 +6,10 @@
  * 새 카테고리·역할·토큰을 추가할 때는 이 파일만 고친다.
  */
 import { formatUnits, parseUnits } from "viem";
+import { PAYOUT_SUMMARY_STATUSES } from "@/lib/payout-status";
 import type { BountyCategory, Member, Notice, PayoutStatus, Reward } from "@/lib/types";
 
 // ── 지급 상태 ─────────────────────────────────────────────
-const PAYOUT_STATUSES: readonly PayoutStatus[] = ["PAID", "PARTIALLY_PAID", "PENDING", "NONE"];
 
 /**
  * BE `payoutStatus` / `payment_status` → FE value. Missing (an older BE) → undefined so the caller can derive it; any value
@@ -17,18 +17,37 @@ const PAYOUT_STATUSES: readonly PayoutStatus[] = ["PAID", "PARTIALLY_PAID", "PEN
  */
 export function toPayoutStatus(value: unknown): PayoutStatus | undefined {
   if (value === undefined || value === null) return undefined;
-  return PAYOUT_STATUSES.find((status) => status === value) ?? "PENDING";
+  return PAYOUT_SUMMARY_STATUSES.find((status) => status === value) ?? "PENDING";
 }
 
 // ── 날짜 ──────────────────────────────────────────────────
 /**
- * Locale-independent `YYYY-MM-DD` (UTC) for machine-stable date strings; display dates use the active locale instead.
- * Missing or unparseable input yields `""` so one bad row never fails a whole list.
+ * The community's home zone. Date-only labels (notice "published" day, milestone dates) are cut in KST rather than UTC:
+ * lists and details are server rendered, so the viewer's zone is unknown at render time, and a notice published at
+ * 2026-10-31 01:30 KST must read the 31st, not the 30th. Bounty deadlines keep their own LocalDateTime handling.
+ */
+export const HOME_TIME_ZONE = "Asia/Seoul";
+const PLAIN_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const homeZoneIsoFormat = new Intl.DateTimeFormat("en-CA", { timeZone: HOME_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" });
+
+/**
+ * Locale-independent `YYYY-MM-DD` of the day in the home zone (KST) for machine-stable date strings; display dates use
+ * the active locale instead. A value that is already a plain `YYYY-MM-DD` (DATE columns such as `event_date`) is
+ * returned unchanged, never shifted. Missing or unparseable input yields `""` so one bad row never fails a whole list.
  */
 export function formatIsoDate(value: string | null | undefined): string {
   if (!value) return "";
+  if (PLAIN_DATE.test(value)) return value;
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
+  return Number.isNaN(date.getTime()) ? "" : homeZoneIsoFormat.format(date);
+}
+
+/** Locale-aware display date for the home-zone (KST) day; same input rules as `formatIsoDate`. */
+export function formatHomeZoneDate(value: string | null | undefined, locale: string, options: Intl.DateTimeFormatOptions): string {
+  if (!value) return "";
+  // Plain dates are anchored at UTC noon so no zone can move the day.
+  const date = new Date(PLAIN_DATE.test(value) ? `${value}T12:00:00Z` : value);
+  return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat(locale, { ...options, timeZone: PLAIN_DATE.test(value) ? "UTC" : HOME_TIME_ZONE }).format(date);
 }
 
 /**

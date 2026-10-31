@@ -15,7 +15,6 @@ import type { AuthSnapshot, ClientUser } from "@/lib/contracts/auth";
 
 /** The opt-in personal dashboard for users who finished onboarding (`app/[locale]/home`), the public community overview (`/about`). */
 export const HOME_PATH = "/home";
-export const ABOUT_PATH = "/about";
 
 /** The onboarding step a signed-in user still owes, or null when onboarding is finished (or there is no user). */
 export function getOnboardingPath(user: ClientUser | null): string | null {

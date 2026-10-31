@@ -16,8 +16,10 @@ type BountyFiltersProps = {
 const categoryOrder: BountyCategory[] = ["Dev", "Design", "Content", "Other"];
 const statusFilters: Exclude<StatusFilter, "All">[] = ["Active", "Closed"];
 // Filter values stay in English (matched against data); only the displayed labels are localized.
-const statusLabelKeys = { Active: "status.active", Closed: "status.closed" } as const;
-const chipButtonClass = "max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const statusLabelKeys = { Active: "status.active", Closed: "filters.statusClosed" } as const;
+/** Delay before filter changes are written to the URL (exported so tests advance by the constant, not a magic sleep). */
+export const BOUNTY_FILTER_URL_DEBOUNCE_MS = 300;
+const chipButtonClass = "motion-control motion-press max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export function BountyFilters({ bounties }: BountyFiltersProps) {
   const t = useTranslations("bounties");
@@ -50,7 +52,7 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
       } catch {
         // History writes blocked: the filters still work, they just are not remembered.
       }
-    }, 300);
+    }, BOUNTY_FILTER_URL_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [restored, category, status, query]);
   const resetFilters = () => {
@@ -136,7 +138,7 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
         <label className="block sm:w-80">
           <span className="sr-only">{t("filters.search")}</span>
           <input
-            className="h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("filters.search")}
             type="search"
@@ -145,11 +147,15 @@ export function BountyFilters({ bounties }: BountyFiltersProps) {
         </label>
       </div>
       {visibleBounties.length > 0 ? (
-        <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <>
+        <p className="mt-6 text-sm text-ink-muted" role="status">{t("filters.resultCount", { count: visibleBounties.length })}</p>
+        {/* Keyed by the chip selection (not the search text) so a chip click fades the new results in instead of swapping them in one frame. */}
+        <div className="mt-3 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 animate-fade-in motion-reduce:animate-none" key={`${category}|${status}`}>
           {visibleBounties.map((bounty) => (
             <BountyCard bounty={bounty} key={bounty.slug} showSummary titleAs="h2" />
           ))}
         </div>
+        </>
       ) : (
         <div className="mt-8 rounded-tile border border-dashed border-border-dashed bg-surface-subtle p-10 text-center">
           <p className="text-sm font-semibold text-ink">{t("filters.emptyTitle")}</p>

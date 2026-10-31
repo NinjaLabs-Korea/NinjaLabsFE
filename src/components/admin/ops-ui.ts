@@ -2,12 +2,18 @@
 import type { useFormatter } from "next-intl";
 import { isIsoDateTime } from "@/lib/admin-bounty-form";
 import { baseUnitsToHuman } from "@/lib/api/codecs";
+import { shortAddress } from "@/lib/format";
 
-export const opsButton = "rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60";
-export const opsPrimaryButton = "rounded-control bg-primary px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-soft hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60";
-export const opsDangerButton = "rounded-control border border-danger px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-danger hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60";
-export const opsInput = "mt-2 h-[46px] w-full rounded-control border border-border px-[17px] text-sm font-normal text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
-export const opsTextarea = "mt-2 min-h-[96px] w-full rounded-control border border-border px-[17px] py-3 text-sm font-normal text-ink outline-none placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+const opsButtonBase = "rounded-control px-3 py-2 max-sm:py-2.5 text-sm font-semibold hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60 motion-control motion-press";
+export const opsButton = `${opsButtonBase} border border-primary-outline text-primary-strong`;
+export const opsPrimaryButton = `${opsButtonBase} bg-primary text-primary-soft`;
+export const opsDangerButton = `${opsButtonBase} border border-danger text-danger`;
+// One input recipe for every admin form field (text, textarea, datetime): focus ring, placeholder, and the red border while `aria-invalid`.
+const opsField = "mt-2 w-full rounded-control border border-border px-[17px] text-sm font-normal text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
+export const opsInput = `h-[46px] ${opsField}`;
+export const opsTextarea = `min-h-[96px] py-3 ${opsField}`;
+/** The long-form body field (notice markdown). */
+export const opsTextareaTall = `min-h-[144px] py-3 ${opsField}`;
 export const opsCell = "px-5 py-4 align-top text-sm text-ink-secondary";
 export const opsPanel = "mt-6 rounded-card border border-border bg-surface p-[21px] shadow-card";
 export const opsPanelEyebrow = "text-xs font-bold uppercase tracking-[0.96px] text-primary";
@@ -23,7 +29,7 @@ export function opsAmount(base: string | null | undefined, symbol: string): stri
 /** `0x1234…abcd` for long hashes/addresses (the full value goes in `title`). */
 export function opsShort(value: string | null | undefined): string {
   if (!value) return "–";
-  return value.length > 14 ? `${value.slice(0, 8)}…${value.slice(-4)}` : value;
+  return shortAddress(value, { head: 8 });
 }
 
 /**

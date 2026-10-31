@@ -40,13 +40,35 @@ describe("responsive layout contract", () => {
     expect(css).toMatch(/body\s*\{[^}]*overflow-wrap:\s*break-word/);
   });
 
-  // The header (3 nav links + locale + Browse + user menu) does not fit 768px in English: it switches at lg, and the
+  // The header (6 nav links + locale + Browse + user menu) does not fit 768px in English: it switches at xl, and the
   // mobile menu, the desktop nav, the user menu and the footer columns must all agree on that breakpoint.
-  it("switches the header between the mobile menu and the desktop nav at the same breakpoint", () => {
+  it("switches the header between the mobile menu and the desktop nav at one shared breakpoint", async () => {
     const read = (path: string) => readFileSync(join(srcDir, path), "utf8");
-    expect(read("components/layout/Header.tsx")).toContain("hidden gap-7 lg:flex");
-    expect(read("components/layout/MobileMenu.tsx")).toContain("relative lg:hidden");
-    expect(read("components/layout/AuthArea.tsx")).toContain("lg:inline-block");
-    expect(read("components/layout/AuthArea.tsx")).toContain("hidden lg:block");
+    const constants = await import("@/components/layout/nav-breakpoint");
+    const prefixes = Object.values(constants).map((value) => {
+      const match = value.match(/\b(sm|md|lg|xl|2xl):/);
+      expect(match, value).not.toBeNull();
+      return match![1];
+    });
+    expect(new Set(prefixes).size).toBe(1);
+    for (const file of ["Header", "MobileMenu", "AuthArea"]) {
+      const source = read(`components/layout/${file}.tsx`);
+      expect(source, file).toContain('from "@/components/layout/nav-breakpoint"');
+      expect(source, file).not.toMatch(/\b(sm|md|lg|xl|2xl):(flex|block|inline-block|hidden)\b/);
+    }
+  });
+
+  // Touch targets: 44px on phones. Source-level pin; the rendered height is measured in integration flow 14.
+  it("keeps the phone tap targets of the mobile menu, notice chips, recruit chips and footer legal links at 44px", () => {
+    const read = (path: string) => readFileSync(join(srcDir, path), "utf8");
+    expect(read("components/layout/NavLinks.tsx")).toContain("rounded-control px-3 py-3 text-sm");
+    expect(read("components/notices/NoticeFilters.tsx")).not.toContain("max-sm:min-h-10");
+    expect(read("components/notices/NoticeFilters.tsx")).toContain("max-sm:min-h-11");
+    expect(read("components/recruit/ChoiceChip.tsx")).toContain("max-sm:min-h-11");
+    expect(read("components/layout/useMenuButton.ts")).toContain("min-h-11");
+    const authArea = read("components/layout/AuthArea.tsx");
+    expect(authArea.match(/min-h-11/g)?.length).toBeGreaterThanOrEqual(2);
+    const footer = read("components/layout/Footer.tsx");
+    for (const href of ["/privacy", "/terms"]) expect(footer).toMatch(new RegExp(`max-sm:min-h-11[^"]*" href="${href}"`));
   });
 });

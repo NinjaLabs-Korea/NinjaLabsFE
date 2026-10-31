@@ -11,6 +11,7 @@ import {
   errorCopyKey,
   knownCode,
   listedCode,
+  normalizedCode,
   type ErrorCopySurface,
 } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
@@ -123,5 +124,36 @@ describe("profile save error rules (ProfileForm.saveErrorKey)", () => {
     ["429 from the throttler", new ApiHttpError(429, "ThrottlerException: Too Many Requests"), "TOO_MANY_REQUESTS"],
   ])("maps %s", (_label, error, key) => {
     expect(saveErrorKey(error)).toBe(key);
+  });
+});
+
+describe("normalizedCode (the one status -> code rule)", () => {
+  it.each([
+    ["a non-HTTP failure", new TypeError("Failed to fetch"), "NETWORK_ERROR"],
+    ["401 without a catalog code", new ApiHttpError(401, "Unauthorized"), "UNAUTHORIZED"],
+    ["429 with the throttler body", new ApiHttpError(429, "ThrottlerException: Too Many Requests"), "TOO_MANY_REQUESTS"],
+    ["500 with a BE code", new ApiHttpError(500, "DATABASE_UNAVAILABLE"), "DATABASE_UNAVAILABLE"],
+    ["an unknown code", new ApiHttpError(409, "SOMETHING_NEW"), "SOMETHING_NEW"],
+  ])("%s", (_label, error, expected) => {
+    expect(normalizedCode(error)).toBe(expected);
+  });
+});
+
+describe("agent register / rotate copy", () => {
+  const register = messagesAt(ERROR_COPY.agentRegister.messages) as Record<string, string>;
+  const rotate = messagesAt(ERROR_COPY.agentRotate.messages) as Record<string, string>;
+
+  it("has specific copy for outage, bad address, profile and verify-step codes", () => {
+    for (const code of ["DATABASE_UNAVAILABLE", "INVALID_AGENT_WALLET_ADDRESS", "PROFILE_REQUIRED", "AGENT_ALREADY_VERIFIED", "AGENT_NOT_FOUND"] as const) {
+      expect(ERROR_COPY.agentRegister.codes).toContain(code);
+      expect(typeof register[code]).toBe("string");
+    }
+    expect(ERROR_COPY.agentRotate.codes).toContain("DATABASE_UNAVAILABLE");
+    expect(typeof rotate.DATABASE_UNAVAILABLE).toBe("string");
+  });
+
+  it("keeps the wallet-signature hint out of the generic fallback", () => {
+    expect(register.generic).not.toMatch(/signature/i);
+    expect(register.signature).toMatch(/signature/i);
   });
 });

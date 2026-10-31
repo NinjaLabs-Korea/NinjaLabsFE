@@ -1,7 +1,8 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useId, useRef, useState } from "react";
+import { useId, useState } from "react";
+import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { SignedOutPanel } from "@/components/account/SignedOutPanel";
 import {
   useAccountSettingsApi,
@@ -19,11 +20,15 @@ import { stashFlash } from "@/lib/flash";
 import { hardNavigate } from "@/lib/hard-navigate";
 import { normalizeNickname } from "@/lib/nickname";
 import type { WalletConfig } from "@/lib/runtime/config";
+import { PageLoading } from "@/components/ui/PageLoading";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const secondaryButtonClass = `rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong ${focusClass}`;
 const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
+
+/** Shared by the loading and signed-out branches so the footer stays put between them. */
+const PAGE_MIN_HEIGHT = "min-h-dvh";
 
 /** Same rule as the BE (`DELETE /users/me`): trimmed, NFC-normalized, case-insensitive. */
 export function confirmationMatches(nickname: string, typed: string): boolean {
@@ -47,62 +52,70 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
   const inputId = useId();
   const errorId = useId();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingProfile, setEditingProfile] = useState(false);
+  // The id of the user the profile editor was opened for (null: closed). The editor shows only while it matches the
+  // signed-in user, so another tab switching accounts closes it instead of saving A's form into B.
+  const [editingProfileFor, setEditingProfileFor] = useState<string | null>(null);
   // The last signed-in user: while the profile editor is open and the session ends from outside, the page keeps showing it
   // (with the typed values) instead of swapping in the sign-in prompt.
   const [lastUser, setLastUser] = useState<ClientUser | null>(null);
   if (authSnapshot.status === "signed-in" && lastUser !== authSnapshot.user) setLastUser(authSnapshot.user);
   const [typed, setTyped] = useState("");
-  const [busy, setBusy] = useState(false);
+  const { busy, run: runDelete } = useSingleFlight();
   const [error, setError] = useState<KnownError | "generic" | null>(null);
-  // Synchronous guard: a second click lands before the `busy` state update.
-  const pendingRef = useRef(false);
 
   // Only a session ended from outside (refresh rejected, another tab) says "expired"; the user's own Sign out or this
   // page's account deletion shows the plain "sign in" gate.
-  const heldForEdit = authSnapshot.status === "signed-out" && authSnapshot.reason === "session-ended" && editingProfile && lastUser !== null;
+  const heldForEdit = authSnapshot.status === "signed-out" && authSnapshot.reason === "session-ended" && editingProfileFor !== null && lastUser !== null;
   if (authSnapshot.status === "signed-out" && !heldForEdit) {
-    return <SignedOutPanel message={authSnapshot.reason === "session-ended" ? tAccount("sessionExpired") : t("signedOutMessage")} returnTo="/account" />;
+    // Same min-h-dvh wrapper as the loading placeholder below: loading -> signed-out must not shorten the page under the footer.
+    return (
+      <div className={PAGE_MIN_HEIGHT}>
+        <SignedOutPanel message={authSnapshot.reason === "session-ended" ? tAccount("sessionExpired") : t("signedOutMessage")} returnTo="/account" />
+      </div>
+    );
   }
 
   if (authSnapshot.status === "loading") {
-    return <p className="text-sm text-ink-muted" role="status">{tAccount("loading")}</p>;
+    // min-h-dvh: the signed-in settings are several screens tall, so a short placeholder would let the footer jump.
+    return <div className={PAGE_MIN_HEIGHT}><PageLoading label={tAccount("loading")} /></div>;
   }
 
   const user = authSnapshot.status === "signed-in" ? authSnapshot.user : lastUser;
   if (!user) return null;
+  const editingProfile = editingProfileFor === user.id;
   const nickname = user.handle;
   const matches = confirmationMatches(nickname, typed);
 
   const closeDialog = () => {
-    if (pendingRef.current) return;
+    if (busy) return;
     setDialogOpen(false);
     setTyped("");
     setError(null);
   };
 
-  const deleteAccount = async () => {
-    if (pendingRef.current || !matches) return;
-    pendingRef.current = true;
-    setBusy(true);
-    setError(null);
-    try {
-      await settingsApi.withdrawAccount(typed.trim());
-    } catch (caught) {
-      setError(knownCode(caught, deleteErrors.codes) ?? deleteErrors.fallback);
-      pendingRef.current = false;
-      setBusy(false);
-      return;
-    }
-    // The BE already revoked every session; signOut clears the cookie (POST /api/auth/logout) and the local state.
-    try {
-      await signOut();
-    } finally {
-      // Written after signOut and without the live event: the next step is a full page load, and the mounted
-      // FlashToast would take (and lose) an event-delivered flash before the reload.
-      stashFlash("accountDeleted");
-      hardNavigate(`/${locale}`);
-    }
+  const deleteAccount = () => {
+    if (!matches) return Promise.resolve();
+    return runDelete(async () => {
+      setError(null);
+      try {
+        await settingsApi.withdrawAccount(typed.trim());
+      } catch (caught) {
+        setError(knownCode(caught, deleteErrors.codes) ?? deleteErrors.fallback);
+        return;
+      }
+      // The BE already revoked every session; signOut clears the cookie (POST /api/auth/logout) and the local state.
+      try {
+        await signOut();
+      } finally {
+        // Written after signOut and without the live event: the next step is a full page load, and the mounted
+        // FlashToast would take (and lose) an event-delivered flash before the reload.
+        stashFlash("accountDeleted");
+        hardNavigate(`/${locale}`);
+      }
+      // hardNavigate returns before the page unloads: keep the flight open so the dialog stays disabled and
+      // cannot send a second DELETE /users/me while the full page load is pending.
+      await new Promise<never>(() => undefined);
+    });
   };
 
   return (
@@ -111,33 +124,33 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
         <h2 className="font-display text-xl font-bold text-ink" id={`${inputId}-profile`}>{t("profileHeading")}</h2>
         <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-[160px_1fr]">
           <dt className="text-ink-muted">{t("nicknameLabel")}</dt>
-          <dd className="font-semibold text-ink">{nickname}</dd>
+          <dd className="min-w-0 font-semibold text-ink [overflow-wrap:anywhere]">{nickname}</dd>
           {user.bio ? (
             <>
               <dt className="text-ink-muted">{t("bioLabel")}</dt>
-              <dd className="min-w-0 whitespace-pre-wrap break-words text-ink-secondary">{user.bio}</dd>
+              <dd className="min-w-0 whitespace-pre-wrap break-words text-ink-secondary [overflow-wrap:anywhere]">{user.bio}</dd>
             </>
           ) : null}
           {user.tags && user.tags.length > 0 ? (
             <>
               <dt className="text-ink-muted">{t("tagsLabel")}</dt>
-              <dd className="font-semibold text-ink">{user.tags.map((tag) => tTags(tag.toLowerCase())).join(", ")}</dd>
+              <dd className="min-w-0 font-semibold text-ink">{user.tags.map((tag) => tTags(tag.toLowerCase())).join(", ")}</dd>
             </>
           ) : null}
           {user.walletAddress ? (
             <>
               <dt className="text-ink-muted">{t("walletLabel")}</dt>
-              <dd className="break-all font-semibold text-ink">{user.walletAddress}</dd>
+              <dd className="min-w-0 break-all font-semibold text-ink [overflow-wrap:anywhere]">{user.walletAddress}</dd>
             </>
           ) : null}
         </dl>
         {editingProfile ? (
           <div className="mt-2 border-t border-border pt-4">
-            <ProfileForm mode="edit" onSaved={() => setEditingProfile(false)} />
-            <button className={`mt-3 ${secondaryButtonClass}`} onClick={() => setEditingProfile(false)} type="button">{t("cancelEdit")}</button>
+            <ProfileForm key={user.id} mode="edit" onSaved={() => setEditingProfileFor(null)} />
+            <button className={`mt-3 ${secondaryButtonClass}`} onClick={() => setEditingProfileFor(null)} type="button">{t("cancelEdit")}</button>
           </div>
         ) : (
-          <button className={`mt-5 ${secondaryButtonClass}`} onClick={() => setEditingProfile(true)} type="button">{t("editProfile")}</button>
+          <button className={`mt-5 ${secondaryButtonClass}`} onClick={() => setEditingProfileFor(user.id)} type="button">{t("editProfile")}</button>
         )}
       </section>
 
@@ -163,7 +176,8 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
 
       <ConfirmDialog
         calloutText={t("deleteDialog.callout")}
-        confirmDisabled={!matches || busy}
+        confirmDisabled={!matches}
+        pending={busy}
         confirmLabel={busy ? t("deleteDialog.deleting") : t("deleteDialog.confirm")}
         description={t("deleteDialog.description")}
         destructive

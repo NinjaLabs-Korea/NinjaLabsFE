@@ -8,7 +8,8 @@ import { opsButton, opsCell, opsDateTime, opsInput, opsPrimaryButton, opsShort }
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
-import { AUDIT_ENTITY_TYPE_MAX, auditActorKind, isAuditUuid, type AdminAuditLog, type AdminAuditLogFilter, type AdminAuditLogPage } from "@/lib/admin-audit";
+import { AUDIT_ENTITY_TYPE_MAX } from "@/lib/input-limits";
+import { auditActorKind, isAuditUuid, type AdminAuditLog, type AdminAuditLogFilter, type AdminAuditLogPage } from "@/lib/admin-audit";
 
 const columns = ["time", "actor", "action", "entity"] as const;
 

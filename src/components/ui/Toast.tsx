@@ -49,7 +49,7 @@ export function Toast({
     <div
       // Danger toasts interrupt; the others are announced by the host's persistent aria-live region.
       role={variant === "danger" ? "alert" : undefined}
-      className={`flex w-[340px] max-w-full items-start gap-3 rounded-tile border border-border border-l-[3px] bg-surface px-4 py-3.5 shadow-frame ${styles.accent}`}
+      className={`flex w-full sm:w-[340px] max-w-full items-start gap-3 rounded-tile border border-border border-l-[3px] bg-surface px-4 py-3.5 shadow-frame animate-toast-in motion-reduce:animate-none ${styles.accent}`}
     >
       <span
         aria-hidden="true"
@@ -63,7 +63,7 @@ export function Toast({
         {actionLabel && onAction ? (
           <button
             type="button"
-            className="mt-1.5 text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="mt-1.5 -my-1 py-2 text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             onClick={onAction}
           >
             {actionLabel}
@@ -73,7 +73,7 @@ export function Toast({
       <button
         type="button"
         aria-label={t("dismiss")}
-        className="text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="-m-2 grid size-10 shrink-0 place-items-center rounded-control text-ink-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         onClick={onDismiss}
       >
         ✕

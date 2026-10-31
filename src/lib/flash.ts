@@ -4,10 +4,12 @@
  * page and clears it. `key` is a message key under `common.flash` (`<key>.title` / `<key>.description`).
  * Storage access is best-effort: a blocked sessionStorage still delivers the flash to the current tab via the event.
  */
+import { readStorage, removeStorage, writeStorage } from "@/lib/safe-storage";
+
 export const FLASH_STORAGE_KEY = "ninja.flash";
 export const FLASH_EVENT = "ninja:flash";
 
-export const flashKeys = ["accountDeleted", "signInRequired", "signOutFailed", "profileSaved"] as const;
+export const flashKeys = ["accountDeleted", "signInRequired", "signOutFailed", "profileSaved", "applicationWithdrawn"] as const;
 export type FlashKey = (typeof flashKeys)[number];
 
 /** Flashes that report a failure (rendered as a danger toast); the rest are neutral confirmations. */
@@ -17,11 +19,8 @@ const isFlashKey = (value: unknown): value is FlashKey => flashKeys.includes(val
 
 export function pushFlash(key: FlashKey): void {
   if (typeof window === "undefined") return;
-  try {
-    window.sessionStorage.setItem(FLASH_STORAGE_KEY, key);
-  } catch {
-    // storage blocked: the event below still reaches this tab's FlashToast
-  }
+  // storage blocked: the event below still reaches this tab's FlashToast
+  writeStorage("session", FLASH_STORAGE_KEY, key);
   window.dispatchEvent(new CustomEvent<FlashKey>(FLASH_EVENT, { detail: key }));
 }
 
@@ -32,21 +31,14 @@ export function pushFlash(key: FlashKey): void {
  */
 export function stashFlash(key: FlashKey): void {
   if (typeof window === "undefined") return;
-  try {
-    window.sessionStorage.setItem(FLASH_STORAGE_KEY, key);
-  } catch {
-    // storage blocked: the flash is lost, the navigation still happens
-  }
+  // storage blocked: the flash is lost, the navigation still happens
+  writeStorage("session", FLASH_STORAGE_KEY, key);
 }
 
 /** Reads and clears the pending flash (unknown values are dropped). */
 export function takeFlash(): FlashKey | null {
   if (typeof window === "undefined") return null;
-  try {
-    const value = window.sessionStorage.getItem(FLASH_STORAGE_KEY);
-    window.sessionStorage.removeItem(FLASH_STORAGE_KEY);
-    return isFlashKey(value) ? value : null;
-  } catch {
-    return null;
-  }
+  const value = readStorage("session", FLASH_STORAGE_KEY);
+  removeStorage("session", FLASH_STORAGE_KEY);
+  return isFlashKey(value) ? value : null;
 }
