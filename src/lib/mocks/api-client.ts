@@ -24,8 +24,6 @@ function createSequence() {
   return (prefix: string) => `${prefix}-${++sequence}`;
 }
 
-export { MockApiError };
-
 /** mock 모드에서 bountyId는 slug다. 지원형 바운티는 상세 화면과 같은 applicationTitle을 쓴다. */
 function toPreviewApplication(id: string, bountyId: string, message: string): AccountApplication {
   const bounty = getBounty(bountyId);

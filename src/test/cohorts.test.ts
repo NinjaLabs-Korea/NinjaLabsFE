@@ -10,6 +10,7 @@ import {
   localized,
   normalizeHandle,
   resolveCohortApplyView,
+  activeCohortApplication,
   validateAnswers,
   validateCohortDraft,
   validateQuestionInputs,
@@ -314,6 +315,22 @@ describe("resolveCohortApplyView", () => {
     expect(resolveCohortApplyView(cohort(), [application({ status: "ACCEPTED" })]).kind).toBe("accepted");
     expect(resolveCohortApplyView(cohort(), [application({ status: "REJECTED" })]).kind).toBe("rejected");
     expect(resolveCohortApplyView(cohort({ id: "c2" }), [application()])).toEqual({ kind: "form", reapply: false });
+  });
+});
+
+describe("activeCohortApplication (\"have I applied to this cohort\", one rule for hub CTA, banner, home and /recruit)", () => {
+  it("finds my application to that cohort unless I withdrew it", () => {
+    const live = application();
+    expect(activeCohortApplication([live], live.cohortId)).toBe(live);
+    expect(activeCohortApplication([application({ status: "ACCEPTED" })], live.cohortId)?.status).toBe("ACCEPTED");
+    expect(activeCohortApplication([application({ status: "WITHDRAWN" })], live.cohortId)).toBeUndefined();
+    expect(activeCohortApplication([live], "another-cohort")).toBeUndefined();
+  });
+
+  it("treats a missing or still-loading list as not applied", () => {
+    expect(activeCohortApplication(undefined, "c1")).toBeUndefined();
+    expect(activeCohortApplication(null, "c1")).toBeUndefined();
+    expect(activeCohortApplication([], "c1")).toBeUndefined();
   });
 });
 

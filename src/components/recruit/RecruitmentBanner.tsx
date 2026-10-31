@@ -2,13 +2,13 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
-import { useAccountQuery } from "@/components/account/useAccountQuery";
+import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { useAuthSnapshot, useCohortApi } from "@/components/auth/FoundationProvider";
-import { cohortAcceptingHint, lastCurrentCohort, useCurrentCohort } from "@/components/recruit/useCurrentCohort";
+import { cohortAcceptingHint, lastCurrentCohort, useCurrentCohort } from "@/components/hooks/useCurrentCohort";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { isFinishedUser } from "@/lib/auth-route";
-import type { PublicCohort } from "@/lib/cohorts";
+import { activeCohortApplication, type PublicCohort } from "@/lib/cohorts";
 
 /**
  * "{name} 멤버 모집 중": shown only while the open cohort accepts applications (no cohort, a closed window, a failed read: nothing).
@@ -91,7 +91,7 @@ function AppliedAwareCta({ cohort }: { cohort: PublicCohort }) {
   const hero = useTranslations("recruit.heroCta");
   const mine = useAccountQuery(useCohortApi().getMyCohortApplications, { reuseLast: true });
   if (mine.loading) return <CtaPlaceholder />;
-  const applied = (mine.data ?? []).some((item) => item.cohortId === cohort.id && item.status !== "WITHDRAWN");
+  const applied = activeCohortApplication(mine.data, cohort.id) !== undefined;
   if (!applied) return <ApplyCta />;
   return (
     <Link className={CTA_CLASS} href="/recruit">

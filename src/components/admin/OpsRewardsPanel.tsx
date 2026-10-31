@@ -3,9 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AdminTable } from "@/components/admin/AdminTable";
-import type { OpsDateFormatter, OpsRunner } from "@/components/admin/BountyOperations";
 import { OpsFormModal } from "@/components/admin/OpsFormModal";
-import { opsAmount, opsCell, opsInput, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPrimaryButton, opsShort } from "@/components/admin/ops-ui";
+import { opsAmount, opsCell, opsInput, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPrimaryButton, opsRewardVariant, opsShort, type OpsDateFormatter, type OpsRunner } from "@/components/admin/ops-ui";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { rewardIntegerDigitsMax } from "@/lib/admin-bounty-form";
@@ -14,7 +13,6 @@ import { isTxHash, type AdminOperations, type OpsReward } from "@/lib/admin-oper
 import { operatorAmountFromBaseUnits, operatorAmountToBaseUnits, tokenDecimalsFor } from "@/lib/api/codecs";
 
 const columns = ["token", "status", "posted", "deposited", "allocated", "depositTx", "action"] as const;
-const rewardVariant = (status: string) => (status === "DEPOSIT_PENDING" ? "warning" : status === "PAID" ? "neutral" : status === "FUNDED" || status === "PARTIALLY_PAID" ? "success" : "danger");
 
 type DepositForm = { txHash: string; amount: string; errors: { txHash?: string; amount?: string } };
 
@@ -68,7 +66,7 @@ export function OpsRewardsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
             {ops.rewards.map((reward) => (
               <tr className="border-t border-border" key={reward.id}>
                 <td className={`${opsCell} font-semibold text-ink`}>{reward.symbol}<p className="mt-1 text-xs font-normal text-ink-muted" title={reward.custodyAddress === PENDING_MULTISIG_SETUP ? undefined : (reward.custodyAddress ?? undefined)}>{reward.custodyAddress === PENDING_MULTISIG_SETUP ? <span className="font-semibold text-warning">{t("rewards.multisigNotConfigured")}</span> : t("rewards.custody", { address: opsShort(reward.custodyAddress) })}</p></td>
-                <td className={opsCell}><Badge variant={rewardVariant(reward.status)}>{t(`rewardStatuses.${reward.status}`)}</Badge></td>
+                <td className={opsCell}><Badge variant={opsRewardVariant(reward.status)}>{t(`rewardStatuses.${reward.status}`)}</Badge></td>
                 <td className={opsCell}>{opsAmount(reward.amount, reward.symbol)}</td>
                 <td className={opsCell}>{opsAmount(reward.depositedAmount, reward.symbol)}<p className="mt-1 text-xs text-ink-muted">{formatDate(reward.depositedAt)}</p></td>
                 <td className={opsCell}>{reward.cap ? t("rewards.allocatedOf", { allocated: opsAmount(reward.allocated, reward.symbol), cap: opsAmount(reward.cap, reward.symbol) }) : "–"}</td>

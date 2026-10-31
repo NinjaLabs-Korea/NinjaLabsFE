@@ -8,20 +8,13 @@ import { OpsLifecyclePanel } from "@/components/admin/OpsLifecyclePanel";
 import { OpsPayoutsPanel } from "@/components/admin/OpsPayoutsPanel";
 import { OpsRewardsPanel } from "@/components/admin/OpsRewardsPanel";
 import { OpsSubmissionsPanel } from "@/components/admin/OpsSubmissionsPanel";
-import { opsButton, opsDateTime } from "@/components/admin/ops-ui";
+import { opsBountyStatusVariant, opsButton, opsDateTime, type OpsDateFormatter, type OpsRunner } from "@/components/admin/ops-ui";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { useKeyedSingleFlight } from "@/components/ui/useSingleFlight";
 import { ApiHttpError } from "@/lib/api/http";
 import { opsErrorCode, type AdminOperations } from "@/lib/admin-operations";
-
-/** Runs one operations write: ignores a second click while the same key is in flight, toasts the outcome, re-reads the bounty. */
-export type OpsRunner = (key: string, action: () => Promise<void>, success: { title: string; description?: string }, context?: "transition" | "other") => Promise<boolean>;
-export type OpsDateFormatter = (value: string | null | undefined) => string;
-
-const statusVariant = (status: string) =>
-  status === "OPEN" ? "success" : status === "COMPLETED" ? "neutral" : status === "CANCELLED" ? "danger" : status === "DRAFT" ? "neutral" : "warning";
 
 /** Per-bounty operations view: lifecycle, rewards, applications, submissions and payouts, all from GET /admin/bounties/:id/operations. */
 export function BountyOperations({ bountyId, onStatusChange }: { bountyId: string; onStatusChange?: () => void }) {
@@ -108,7 +101,7 @@ export function BountyOperations({ bountyId, onStatusChange }: { bountyId: strin
             <p className="mt-2 text-sm text-ink-muted">{t("bountyMeta", { deadline: formatDate(ops.bounty.submissionDeadline), maxWinners: ops.bounty.maxWinners })}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={statusVariant(ops.bounty.status)}>{t(`bountyStatuses.${ops.bounty.status}`)}</Badge>
+            <Badge variant={opsBountyStatusVariant(ops.bounty.status)}>{t(`bountyStatuses.${ops.bounty.status}`)}</Badge>
             <button className={opsButton} onClick={() => void load()} type="button">{t("refresh")}</button>
           </div>
         </div>

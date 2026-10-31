@@ -1,6 +1,6 @@
 import type { AuthAdapter, AuthSnapshot, ClientUser } from "@/lib/contracts/auth";
 
-export class MockSignInPreviewError extends Error {
+class MockSignInPreviewError extends Error {
   constructor() {
     super("Mock Google sign-in failed. No request was made.");
     this.name = "MockSignInPreviewError";

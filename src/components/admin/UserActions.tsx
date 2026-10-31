@@ -5,8 +5,7 @@ import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
 import { DISPLAY_ORDER_MAX } from "@/lib/admin-helpers";
-
-type MemberRole = "Core" | "Dev" | "Design" | "Ops";
+import { MEMBER_ROLES, type MemberRole } from "@/lib/member-roles";
 
 type UserActionsProps = {
   user: {
@@ -20,7 +19,6 @@ type UserActionsProps = {
   onRemove: () => void;
 };
 
-const roles: MemberRole[] = ["Core", "Dev", "Design", "Ops"];
 const focusClass = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
@@ -86,7 +84,7 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
         <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink" id={assignTitleId}>{t("actions.assignTitle")}</h2>
         <p className="mt-2 text-sm text-ink-muted">{t.rich("actions.assignDescription", { nickname: user.nickname, b: (chunks) => <b>{chunks}</b> })}</p>
         <div className="mt-4 flex flex-wrap gap-2" aria-label={t("actions.roleGroupLabel")} role="group">
-          {roles.map((item) => (
+          {MEMBER_ROLES.map((item) => (
             <button
               aria-pressed={role === item}
               className={`h-6 rounded-full px-2.5 text-xs font-semibold max-sm:h-10 max-sm:px-4 ${role === item ? "bg-primary text-primary-soft" : "bg-primary-soft text-primary-strong"} ${focusClass}`}

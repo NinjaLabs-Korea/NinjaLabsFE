@@ -7,7 +7,9 @@
  */
 import { formatUnits, parseUnits } from "viem";
 import { PAYOUT_SUMMARY_STATUSES } from "@/lib/payout-status";
-import type { BountyCategory, Member, Notice, PayoutStatus, Reward } from "@/lib/types";
+import type { BountyCategory } from "@/lib/bounty-categories";
+import type { MemberRole } from "@/lib/member-roles";
+import type { Notice, PayoutStatus, Reward } from "@/lib/types";
 
 // ── 지급 상태 ─────────────────────────────────────────────
 
@@ -26,7 +28,7 @@ export function toPayoutStatus(value: unknown): PayoutStatus | undefined {
  * lists and details are server rendered, so the viewer's zone is unknown at render time, and a notice published at
  * 2026-10-31 01:30 KST must read the 31st, not the 30th. Bounty deadlines keep their own LocalDateTime handling.
  */
-export const HOME_TIME_ZONE = "Asia/Seoul";
+const HOME_TIME_ZONE = "Asia/Seoul";
 const PLAIN_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const homeZoneIsoFormat = new Intl.DateTimeFormat("en-CA", { timeZone: HOME_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" });
 
@@ -118,20 +120,20 @@ export const MEMBER_ROLE_LABELS = {
   DEV: "Dev",
   DESIGN: "Design",
   OPS: "Ops",
-} as const satisfies Record<string, Member["role"]>;
+} as const satisfies Record<string, MemberRole>;
 
 export type MemberRoleCode = keyof typeof MEMBER_ROLE_LABELS;
 
 const MEMBER_ROLE_CODES = Object.fromEntries(
   Object.entries(MEMBER_ROLE_LABELS).map(([code, label]) => [label, code]),
-) as Record<Member["role"], MemberRoleCode>;
+) as Record<MemberRole, MemberRoleCode>;
 
-export function toMemberRoleLabel(code: string): Member["role"] | undefined {
+export function toMemberRoleLabel(code: string): MemberRole | undefined {
   return Object.hasOwn(MEMBER_ROLE_LABELS, code) ? MEMBER_ROLE_LABELS[code as MemberRoleCode] : undefined;
 }
 
 export function toMemberRoleCode(label: string): MemberRoleCode | undefined {
-  return Object.hasOwn(MEMBER_ROLE_CODES, label) ? MEMBER_ROLE_CODES[label as Member["role"]] : undefined;
+  return Object.hasOwn(MEMBER_ROLE_CODES, label) ? MEMBER_ROLE_CODES[label as MemberRole] : undefined;
 }
 
 // ── 공지 카테고리 ──────────────────────────────────────────

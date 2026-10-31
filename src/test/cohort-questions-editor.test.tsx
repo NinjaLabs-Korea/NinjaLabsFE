@@ -171,3 +171,18 @@ describe("CohortQuestionsEditor", () => {
     expect(screen.queryByRole("heading", { name: /application questions/ })).toBeNull();
   });
 });
+
+describe("CohortQuestionsEditor new-question type", () => {
+  it("picks the type with the admin select (no native <select> left in the console) and adds a question of that type", async () => {
+    await openEditor();
+    expect(document.querySelector("select")).toBeNull();
+    const picker = screen.getByRole("combobox", { name: "New question type" });
+    expect(picker.textContent).toContain("Short answer");
+    fireEvent.click(picker);
+    fireEvent.mouseDown(screen.getByRole("option", { name: "Choose several" }));
+    expect(picker.textContent).toContain("Choose several");
+    fireEvent.click(screen.getByRole("button", { name: "Add question" }));
+    const added = screen.getAllByRole("heading", { name: /^Question \d+$/ }).length;
+    expect(within(questionItem(added)).getAllByText(/Choose several/).length).toBeGreaterThan(0);
+  });
+});

@@ -40,3 +40,29 @@ export function opsDateTime(format: ReturnType<typeof useFormatter>, value: stri
   if (!value || !isIsoDateTime(value)) return "–";
   return format.dateTime(new Date(value), { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone, timeZoneName: "short" });
 }
+
+// ── Shared by BountyOperations and its panels ─────────────────────────────
+// The panel props and status badge colors live here, a leaf module, so the panels no longer import types back from
+// `BountyOperations` (which imports the panels).
+
+/** Runs one operations write: ignores a second click while the same key is in flight, toasts the outcome, re-reads the bounty. */
+export type OpsRunner = (key: string, action: () => Promise<void>, success: { title: string; description?: string }, context?: "transition" | "other") => Promise<boolean>;
+export type OpsDateFormatter = (value: string | null | undefined) => string;
+
+type OpsBadgeVariant = "success" | "neutral" | "danger" | "warning" | "primary-soft";
+
+/** Badge color of a BE bounty status in the operations header. */
+export const opsBountyStatusVariant = (status: string): OpsBadgeVariant =>
+  status === "OPEN" ? "success" : status === "COMPLETED" ? "neutral" : status === "CANCELLED" ? "danger" : status === "DRAFT" ? "neutral" : "warning";
+/** Badge color of a BE application status. */
+export const opsApplicationVariant = (status: string): OpsBadgeVariant =>
+  status === "APPROVED" ? "success" : status === "REJECTED" ? "danger" : status === "PENDING" ? "warning" : "neutral";
+/** Badge color of a BE submission status. */
+export const opsSubmissionVariant = (status: string): OpsBadgeVariant =>
+  status === "APPROVED" ? "success" : status === "REJECTED" ? "danger" : status === "WITHDRAWN" ? "neutral" : status === "REVISION_REQUESTED" ? "warning" : status === "IN_REVIEW" ? "primary-soft" : "warning";
+/** Badge color of a BE reward status. */
+export const opsRewardVariant = (status: string): OpsBadgeVariant =>
+  status === "DEPOSIT_PENDING" ? "warning" : status === "PAID" ? "neutral" : status === "FUNDED" || status === "PARTIALLY_PAID" ? "success" : "danger";
+/** Badge color of a BE payout status. */
+export const opsPayoutVariant = (status: string): OpsBadgeVariant =>
+  status === "PAID" ? "success" : status === "FAILED" || status === "CANCELLED" ? "danger" : status === "APPROVED" ? "primary-soft" : "warning";

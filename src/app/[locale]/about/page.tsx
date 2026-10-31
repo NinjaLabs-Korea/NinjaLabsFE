@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { InitialCohortProvider } from "@/components/recruit/useCurrentCohort";
+import { InitialCohortProvider } from "@/components/hooks/useCurrentCohort";
 import { CommunitySections } from "@/components/community/CommunitySections";
 import { localeMetadata } from "@/i18n/alternates";
 import { getRuntimeCurrentCohort } from "@/lib/cohorts-public";

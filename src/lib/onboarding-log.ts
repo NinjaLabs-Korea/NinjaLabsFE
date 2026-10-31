@@ -18,7 +18,7 @@ export function getOnboardingTraceId(): string | undefined {
 }
 
 /** Opt-in at build time with NEXT_PUBLIC_ONBOARDING_DEBUG=true; silent otherwise (including production). */
-export function isOnboardingDebugEnabled(): boolean {
+function isOnboardingDebugEnabled(): boolean {
   return process.env.NEXT_PUBLIC_ONBOARDING_DEBUG === "true";
 }
 

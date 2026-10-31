@@ -1,6 +1,7 @@
-export type Reward = { amount: number; currency: 'INJ' | 'USDC' };
+import type { BountyCategory } from './bounty-categories';
+import type { MemberRole } from './member-roles';
 
-export type BountyCategory = 'Dev' | 'Design' | 'Content' | 'Other';
+export type Reward = { amount: number; currency: 'INJ' | 'USDC' };
 
 export type Bounty = {
   slug: string;
@@ -65,7 +66,7 @@ export type Member = {
   slug: string;
   name: string;
   initials: string;
-  role: 'Core' | 'Dev' | 'Design' | 'Ops';
+  role: MemberRole;
   title: string;
   bio: string;
   photo?: string;

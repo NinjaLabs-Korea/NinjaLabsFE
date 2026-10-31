@@ -7,7 +7,8 @@ import { RequiredMark } from "@/components/ui/RequiredMark";
 import { answerTextLimit, isChoiceType, localized, type CohortAnswerError, type CohortDraftAnswer, type CohortQuestion } from "@/lib/cohorts";
 import { COHORT_OTHER_DETAIL_MAX } from "@/lib/input-limits";
 
-export const inputClass =
+// The cohort form's field recipe (padded, also used for textareas). Bounty fields use `bounties/BountyActionPanels bountyInputClass`.
+export const questionInputClass =
   "mt-2 w-full rounded-control border border-border bg-surface px-4 py-3 text-sm text-ink-secondary placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
 export const labelClass = "text-sm font-semibold text-ink";
 export const hintClass = "mt-1 text-xs text-ink-muted";
@@ -51,7 +52,7 @@ export function QuestionField({ question, value, error, onChange, onBlur }: Ques
     const shared = {
       "aria-describedby": describedBy(groupError !== undefined, help || long ? hintId : undefined),
       "aria-invalid": groupError ? true : undefined,
-      className: long ? `${inputClass} min-h-[160px]` : inputClass,
+      className: long ? `${questionInputClass} min-h-[160px]` : questionInputClass,
       id,
       maxLength: answerTextLimit(question.type),
       onBlur,
@@ -117,7 +118,7 @@ export function QuestionField({ question, value, error, onChange, onBlur }: Ques
           <input
             aria-describedby={detailError ? `${detailId}-error` : undefined}
             aria-invalid={detailError ? true : undefined}
-            className={inputClass}
+            className={questionInputClass}
             id={detailId}
             maxLength={COHORT_OTHER_DETAIL_MAX}
             onChange={(event) => onChange({ ...value, other: event.target.value })}

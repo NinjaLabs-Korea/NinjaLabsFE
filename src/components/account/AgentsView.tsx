@@ -3,7 +3,7 @@
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { SignedOutPanel } from "@/components/account/SignedOutPanel";
-import { useAccountQuery } from "@/components/account/useAccountQuery";
+import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { ApiKeyReveal } from "@/components/agents/ApiKeyReveal";
 import {
   useAuthSnapshot,
@@ -23,6 +23,8 @@ import { PageLoading } from "@/components/ui/PageLoading";
 
 const focusClass =
   "hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+// Row-action size (px-4 py-2) shared with the other owner pages' inline buttons; the bounty panels' larger outline CTA
+// (`bounties/BountyActionPanels`, px-5 py-3) is a different size on purpose.
 const outlineButtonClass = `rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong disabled:opacity-60 ${focusClass}`;
 const dangerButtonClass = `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-danger disabled:opacity-60 ${focusClass}`;
 

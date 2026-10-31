@@ -26,7 +26,6 @@ import { createApiApiClient } from "@/lib/api/api-client";
 import { createApiAuthAdapter } from "@/lib/api/auth-adapter";
 import { clearSessionHint, setMemberHint, setSessionHint } from "@/lib/foundation/session-hint";
 
-export type { FoundationConfig } from "@/lib/runtime/config";
 import type { FoundationConfig } from "@/lib/runtime/config";
 
 type FoundationContextValue = {

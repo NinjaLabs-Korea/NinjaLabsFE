@@ -7,7 +7,7 @@ import { HomeActivity } from "@/components/home/HomeActivity";
 import { HomeGate } from "@/components/home/HomeGate";
 import { HomeProfileCard } from "@/components/home/HomeProfileCard";
 import { HomeQuickLinks } from "@/components/home/HomeQuickLinks";
-import { InitialCohortProvider } from "@/components/recruit/useCurrentCohort";
+import { InitialCohortProvider } from "@/components/hooks/useCurrentCohort";
 import { HomeRecruitment } from "@/components/home/HomeRecruitment";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { localeAlternates } from "@/i18n/alternates";

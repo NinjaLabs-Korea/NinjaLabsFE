@@ -68,8 +68,3 @@ export const COHORT_APPLICATION_SEARCH_MAX = 320;
  * BE가 정규화한 뒤 핸들 정규식으로 검증한다.
  */
 export const COHORT_HANDLE_INPUT_MAX = 80;
-
-/**
- * 닉네임 길이는 `nickname.ts`가 정의한다(검증 규칙과 한 파일). 입력칸이 이 모듈에서 한도를 모두 찾도록 다시 내보낸다.
- */
-export { NICKNAME_MAX, NICKNAME_MIN } from "@/lib/nickname";

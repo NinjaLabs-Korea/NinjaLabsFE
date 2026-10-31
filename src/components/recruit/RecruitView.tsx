@@ -2,13 +2,13 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState, type ReactNode } from "react";
-import { useAccountQuery } from "@/components/account/useAccountQuery";
+import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { useAuthSnapshot, useCohortApi, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { MyCohortApplications } from "@/components/account/MyCohortApplications";
 import { CohortApplicationCard } from "@/components/recruit/CohortApplicationCard";
 import { CohortApplicationForm } from "@/components/recruit/CohortApplicationForm";
 import { RecruitNotice } from "@/components/recruit/RecruitNotice";
-import { useCurrentCohort } from "@/components/recruit/useCurrentCohort";
+import { useCurrentCohort } from "@/components/hooks/useCurrentCohort";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { getOnboardingPath } from "@/lib/auth-route";

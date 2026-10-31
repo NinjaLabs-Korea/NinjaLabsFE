@@ -1,12 +1,13 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useAccountQuery } from "@/components/account/useAccountQuery";
+import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { useCohortApi } from "@/components/auth/FoundationProvider";
 import { CohortApplicationCard } from "@/components/recruit/CohortApplicationCard";
-import { cohortAcceptingHint, lastCurrentCohort, useCurrentCohort } from "@/components/recruit/useCurrentCohort";
+import { cohortAcceptingHint, lastCurrentCohort, useCurrentCohort } from "@/components/hooks/useCurrentCohort";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
+import { activeCohortApplication } from "@/lib/cohorts";
 
 const SECTION_CLASS = "mx-auto max-w-content px-gutter pt-16";
 /**
@@ -65,7 +66,7 @@ export function HomeRecruitment() {
   }
   const cohort = current.cohort;
   const applications = mine.data ?? [];
-  const forCohort = cohort ? applications.find((item) => item.cohortId === cohort.id && item.status !== "WITHDRAWN") : undefined;
+  const forCohort = cohort ? activeCohortApplication(applications, cohort.id) : undefined;
   const latest = forCohort ?? applications.find((item) => item.status !== "WITHDRAWN");
   const invite = Boolean(cohort?.acceptingApplications) && !forCohort;
   if (!invite && !latest) return null;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createMockApiClient, MockApiError } from "@/lib/mocks/api-client";
+import { createMockApiClient } from "@/lib/mocks/api-client";
+import { MockApiError } from "@/lib/mocks/mock-error";
 import { getAdminBounties } from "@/lib/admin";
 import { bountyHasOpenFunds, lifecycleFor } from "@/lib/mocks/admin-operations";
 import type { OpsPayout, OpsReward } from "@/lib/admin-operations";

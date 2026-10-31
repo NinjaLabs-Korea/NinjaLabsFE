@@ -41,7 +41,7 @@ describe("text color tokens meet WCAG AA", () => {
 });
 
 describe("motion tokens", () => {
-  it.each(["--motion-fast", "--motion-base", "--motion-slow", "--ease-out-soft", "--animate-fade-in", "--animate-pop-in", "--animate-toast-in", "--animate-nav-progress"])("defines %s", (name) => {
+  it.each(["--motion-fast", "--motion-base", "--motion-slow", "--ease-out-soft", "--animate-fade-in", "--animate-page-in", "--animate-pop-in", "--animate-toast-in", "--animate-nav-progress"])("defines %s", (name) => {
     expect(css).toContain(`${name}:`);
   });
   it.each(["motion-control", "motion-press", "spinner"])("defines the @utility %s", (name) => {

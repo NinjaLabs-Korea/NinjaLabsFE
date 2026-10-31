@@ -5,11 +5,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { MemberCard } from "@/components/cards/MemberCard";
 import { Badge } from "@/components/ui/Badge";
+import { MEMBER_ROLES, type MemberRole } from "@/lib/member-roles";
 import type { Member } from "@/lib/types";
 
 type MemberFiltersProps = { members: Member[] };
-type RoleFilter = "All" | Member["role"];
-const roles: Member["role"][] = ["Core", "Dev", "Design", "Ops"];
+type RoleFilter = "All" | MemberRole;
 
 export function MemberFilters({ members }: MemberFiltersProps) {
   const t = useTranslations("members");
@@ -30,7 +30,7 @@ export function MemberFilters({ members }: MemberFiltersProps) {
   useEffect(() => {
     const syncFromUrl = () => {
       const value = new URLSearchParams(window.location.search).get("role")?.toLowerCase();
-      setRole(roles.find((item) => item.toLowerCase() === value) ?? "All");
+      setRole(MEMBER_ROLES.find((item) => item.toLowerCase() === value) ?? "All");
     };
     syncFromUrl();
     window.addEventListener("popstate", syncFromUrl);
@@ -43,7 +43,7 @@ export function MemberFilters({ members }: MemberFiltersProps) {
     <>
       <div className="flex flex-wrap gap-2" aria-label={t("filters.ariaLabel")} role="group">
         <button aria-pressed={role === "All"} className="motion-control motion-press max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={() => select("All")} type="button"><Badge variant={role === "All" ? "selected" : "primary-soft"}>{t("filters.all")}</Badge></button>
-        {roles.map((item) => <button aria-pressed={role === item} className="motion-control motion-press max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => select(item)} type="button"><Badge variant={role === item ? "selected" : "primary-soft"}>{t(`roles.${item.toLowerCase()}`)}</Badge></button>)}
+        {MEMBER_ROLES.map((item) => <button aria-pressed={role === item} className="motion-control motion-press max-sm:inline-flex max-sm:min-h-10 max-sm:items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" key={item} onClick={() => select(item)} type="button"><Badge variant={role === item ? "selected" : "primary-soft"}>{t(`roles.${item.toLowerCase()}`)}</Badge></button>)}
       </div>
       {visibleMembers.length > 0 ? (
         <>

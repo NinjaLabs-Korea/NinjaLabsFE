@@ -5,9 +5,9 @@ import { settle } from "@/lib/api/public";
 import type { Member, Notice } from "@/lib/types";
 
 /** How many cards each community section shows. */
-export const COMMUNITY_EVENT_LIMIT = 3;
-export const COMMUNITY_UPCOMING_LIMIT = 3;
-export const COMMUNITY_MEMBER_LIMIT = 4;
+const COMMUNITY_EVENT_LIMIT = 3;
+const COMMUNITY_UPCOMING_LIMIT = 3;
+const COMMUNITY_MEMBER_LIMIT = 4;
 export const COMMUNITY_HIGHLIGHT_LIMIT = 3;
 
 export type CommunityData = {

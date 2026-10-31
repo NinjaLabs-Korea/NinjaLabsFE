@@ -7,7 +7,6 @@ import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH
 
 /** Mock fixture slugs used by demo affordances (Figma 05 / 05-Empty). */
 export const PROFILE_FILLED_EXAMPLE_ID = "jaemin";
-export const PROFILE_EMPTY_ID = "sora";
 
 const members: Member[] = [
   { slug: "jinyoung", name: "Jinyoung Park", initials: "JP", role: "Core", title: "Product lead", bio: "Sets bounty quality standards and coordinates sponsor review loops.", isMember: true, links: { profile: "/members/jinyoung", posts: "/notices" } },

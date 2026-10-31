@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useId } from "react";
-import { useAccountQuery } from "@/components/account/useAccountQuery";
+import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { useCohortApi } from "@/components/auth/FoundationProvider";
 import { CohortApplicationCard } from "@/components/recruit/CohortApplicationCard";
 import { Link } from "@/i18n/navigation";

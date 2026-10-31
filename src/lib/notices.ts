@@ -94,7 +94,7 @@ function toNotice(row: NoticeRow): Notice {
 }
 
 /** Mock `sort=eventDate`: dated notices newest event first, undated ones after them in their usual (publish) order. */
-export function sortByEventDate(list: readonly Notice[]): Notice[] {
+function sortByEventDate(list: readonly Notice[]): Notice[] {
   const dated = list.filter((notice) => notice.eventDate).sort((a, b) => (b.eventDate ?? "").localeCompare(a.eventDate ?? ""));
   return [...dated, ...list.filter((notice) => !notice.eventDate)];
 }

@@ -116,7 +116,7 @@ function isPrivateIpv4([a, b, c]: number[]): boolean {
 }
 
 /** BE `isPublicHostname`: `new URL().hostname`을 본다 (WHATWG가 `2130706433`, `0x7f.1`을 점-십진수로 정규화). IPv6는 2000::/3만 허용. */
-export function isPublicHostname(rawHostname: string): boolean {
+function isPublicHostname(rawHostname: string): boolean {
   const host = rawHostname.toLowerCase().replace(/\.$/, "");
   if (!host) return false;
   if (host.startsWith("[")) return /^\[[23]/.test(host);
