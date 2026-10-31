@@ -40,7 +40,7 @@ export default async function AgentRegisterPage({ params }: AgentRegisterPagePro
   // Figma 17 footnote links to the owned-agents area of the profile; outside mock mode the signed-in user's own agents page is the real destination.
   const agentsProfileHref = await loadFromRuntime({ mock: () => `/members/${PROFILE_FILLED_EXAMPLE_ID}#agents`, api: async () => "/agents" });
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
+    <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <Link
         className="inline-flex min-h-11 items-center text-sm font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         href="/agents"

@@ -3,10 +3,18 @@
 // `NinjaLabsBE/src/cohorts/{cohort-status,cohort-fields}.ts`; keep the lists below in step with it.
 import {
   COHORT_DISPLAY_NAME_MAX,
+  COHORT_HELP_MAX,
   COHORT_INTRO_MAX,
+  COHORT_LONG_TEXT_MAX,
+  COHORT_OPTIONS_MAX,
+  COHORT_OPTIONS_MIN,
+  COHORT_OPTION_LABEL_MAX,
   COHORT_OTHER_DETAIL_MAX,
+  COHORT_QUESTIONS_MAX,
+  COHORT_QUESTION_LABEL_MAX,
+  COHORT_SHORT_TEXT_MAX,
 } from "./input-limits";
-import { hasVisibleText } from "./visible-text";
+import { hasVisibleText, isPlainDisplayText } from "./visible-text";
 
 export const COHORT_STATUSES = ["DRAFT", "OPEN", "CLOSED"] as const;
 export type CohortStatus = (typeof COHORT_STATUSES)[number];
@@ -18,18 +26,57 @@ export type CohortApplicationStatus = (typeof COHORT_APPLICATION_STATUSES)[numbe
 export const COHORT_REVIEW_DECISIONS = ["ACCEPTED", "REJECTED"] as const;
 export type CohortReviewDecision = (typeof COHORT_REVIEW_DECISIONS)[number];
 
-/** Options, in the order of the Tally form. The code is the message key under `recruit.form.<field>.options`. */
-export const WEB3_EXPERIENCES = ["LT_1Y", "Y1_3", "GT_3Y"] as const;
-export type Web3Experience = (typeof WEB3_EXPERIENCES)[number];
+// ── Configurable questions (BE `src/cohorts/cohort-questions.ts`; docs/api-contract.md "기수 모집") ──
 
-export const ACTIVITY_TYPES = ["DEVELOPER", "CONTENT_CREATOR", "KOL", "COMMUNITY_MARKETING", "RESEARCHER", "BIZDEV", "STUDENT", "OTHER"] as const;
-export type ActivityType = (typeof ACTIVITY_TYPES)[number];
+/** Display text: `text[locale] ?? text.ko` (an empty `en`/`zh` is stored as `null`). */
+export type LocalizedText = { ko: string; en: string | null; zh: string | null };
 
-/** The interest areas are the activity types without STUDENT. */
-export const INTEREST_AREAS = ["DEVELOPER", "CONTENT_CREATOR", "KOL", "COMMUNITY_MARKETING", "RESEARCHER", "BIZDEV", "OTHER"] as const;
-export type InterestArea = (typeof INTEREST_AREAS)[number];
+export const COHORT_QUESTION_TYPES = ["SHORT_TEXT", "LONG_TEXT", "SINGLE_CHOICE", "MULTI_CHOICE"] as const;
+export type CohortQuestionType = (typeof COHORT_QUESTION_TYPES)[number];
 
-const OTHER = "OTHER";
+export const isChoiceType = (type: CohortQuestionType): boolean => type === "SINGLE_CHOICE" || type === "MULTI_CHOICE";
+
+export type CohortQuestionOption = { id: string; label: LocalizedText; withDetail: boolean };
+
+export type CohortQuestion = {
+  id: string;
+  type: CohortQuestionType;
+  label: LocalizedText;
+  help: LocalizedText | null;
+  required: boolean;
+  /** `null` for the two text types. */
+  options: CohortQuestionOption[] | null;
+};
+
+/** One stored answer: a snapshot the server copied from the question at write time (labels included), so old answers stay readable after the form changes. */
+export type ApplicationAnswer = {
+  questionId: string;
+  type: CohortQuestionType;
+  label: LocalizedText;
+  text: string | null;
+  choices: { id: string; label: LocalizedText }[] | null;
+  other: string | null;
+};
+
+/** One answer in the apply/update body. */
+export type AnswerInput = { questionId: string; text?: string; choices?: string[]; other?: string | null };
+
+/** The viewer's language first, Korean as the fallback every question has. */
+export function localized(text: LocalizedText, locale: string): string {
+  const value = locale === "en" ? text.en : locale === "zh" ? text.zh : null;
+  return value && value.trim() ? value : text.ko;
+}
+
+/** `PUT /admin/cohorts/:id/questions` element: an omitted `id` is a new question/option. */
+export type LocalizedTextInput = { ko: string; en?: string | null; zh?: string | null };
+export type CohortQuestionInput = {
+  id?: string;
+  type: CohortQuestionType;
+  label: LocalizedTextInput;
+  help: LocalizedTextInput | null;
+  required: boolean;
+  options: { id?: string; label: LocalizedTextInput; withDetail: boolean }[] | null;
+};
 
 export const isCohortStatus = (value: unknown): value is CohortStatus => COHORT_STATUSES.includes(value as CohortStatus);
 export const isCohortApplicationStatus = (value: unknown): value is CohortApplicationStatus => COHORT_APPLICATION_STATUSES.includes(value as CohortApplicationStatus);
@@ -42,23 +89,25 @@ export type PublicCohort = {
   opensAt: string | null;
   closesAt: string | null;
   acceptingApplications: boolean;
+  questions: CohortQuestion[];
 };
 
-/** The applicant-form fields, exactly the Tally questions. */
-export type CohortApplicationValues = {
+/** The four fixed fields every application carries (the review flow, search and contact depend on them). */
+export type CohortFixedValues = {
   displayName: string;
   telegram: string;
   twitter: string;
-  web3Experience: Web3Experience;
-  activityType: ActivityType;
-  activityTypeOther: string | null;
-  interestAreas: InterestArea[];
-  interestOther: string | null;
   intro: string;
 };
 
+/** The apply/update request body. */
+export type CohortApplicationValues = CohortFixedValues & { answers: AnswerInput[] };
+
+/** The answers of an application as read back (the BE synthesizes them for applications sent before the questions were configurable). */
+export type CohortApplicationRead = CohortFixedValues & { answers: ApplicationAnswer[] };
+
 /** `GET /cohorts/applications/me` row: no review note, no reviewer (the BE never sends them to the applicant). */
-export type MyCohortApplication = CohortApplicationValues & {
+export type MyCohortApplication = CohortApplicationRead & {
   id: string;
   cohortId: string;
   cohort: { id: string; name: string; status: CohortStatus; acceptingApplications: boolean };
@@ -86,6 +135,7 @@ export type AdminCohort = {
   applicationCounts: AdminCohortCounts;
   /** Next states the BE allows from here (`OPEN` can still answer 409 `COHORT_ALREADY_OPEN`). */
   allowedTransitions: Array<Exclude<CohortStatus, "DRAFT">>;
+  questions: CohortQuestion[];
   createdAt: string;
   updatedAt: string;
 };
@@ -98,7 +148,7 @@ export type AdminCohortInput = {
   closesAt: string | null;
 };
 
-export type AdminCohortApplication = CohortApplicationValues & {
+export type AdminCohortApplication = CohortApplicationRead & {
   id: string;
   cohortId: string;
   status: CohortApplicationStatus;
@@ -111,8 +161,9 @@ export type AdminCohortApplication = CohortApplicationValues & {
 
 export type AdminCohortApplicationFilter = {
   status?: CohortApplicationStatus;
-  activityType?: ActivityType;
-  interestArea?: InterestArea;
+  /** Both or neither: the BE applies the choice filter only when the pair is complete. */
+  questionId?: string;
+  optionId?: string;
   q?: string;
 };
 
@@ -127,8 +178,10 @@ export type AdminCohortApplicationPage = {
 export function cohortApplicationQuery(filter: AdminCohortApplicationFilter, page?: number): string {
   const params = new URLSearchParams();
   if (filter.status) params.set("status", filter.status);
-  if (filter.activityType) params.set("activityType", filter.activityType);
-  if (filter.interestArea) params.set("interestArea", filter.interestArea);
+  if (filter.questionId && filter.optionId) {
+    params.set("questionId", filter.questionId);
+    params.set("optionId", filter.optionId);
+  }
   if (filter.q?.trim()) params.set("q", filter.q.trim());
   if (page !== undefined) params.set("page", String(page));
   const query = params.toString();
@@ -171,32 +224,35 @@ export function normalizeHandle(raw: string, kind: "telegram" | "twitter"): stri
 /** Code points, like the BE `MaxChars` (Postgres length). */
 const length = (value: string) => [...value].length;
 
-export type CohortFieldError = "required" | "tooLong" | "invalid";
-export type CohortFormErrors = Partial<Record<keyof CohortApplicationValues, CohortFieldError>>;
+/** Bidi embeddings, overrides and isolates: the BE `HasNoBidiOverride` (long text may hold line breaks but not these). */
+const BIDI_OVERRIDE = /[‪-‮⁦-⁩]/u;
 
-/** An empty form: nothing chosen yet (the select fields start empty, so the type of those two is widened here). */
-export type CohortFormDraft = Omit<CohortApplicationValues, "web3Experience" | "activityType"> & {
-  web3Experience: Web3Experience | "";
-  activityType: ActivityType | "";
-};
+export type CohortFieldError = "required" | "tooLong" | "invalid";
+export type CohortFixedField = keyof CohortFixedValues;
+export type CohortFormErrors = Partial<Record<CohortFixedField, CohortFieldError>>;
+
+/** What can be wrong with one answer; `otherRequired` is the "detail" box of an option that asks for one. */
+export type CohortAnswerError = CohortFieldError | "otherRequired";
+/** Per question id (an id that is not a current question is flagged `invalid`). */
+export type CohortAnswerErrors = Record<string, CohortAnswerError>;
+
+/** The form's state for one question: free text, the chosen option ids and the detail text. */
+export type CohortDraftAnswer = { text: string; choices: string[]; other: string };
+export const emptyDraftAnswer: CohortDraftAnswer = { text: "", choices: [], other: "" };
+
+/** An empty form: nothing typed or chosen yet. */
+export type CohortFormDraft = CohortFixedValues & { answers: Record<string, CohortDraftAnswer> };
 
 export const emptyCohortDraft: CohortFormDraft = {
   displayName: "",
   telegram: "",
   twitter: "",
-  web3Experience: "",
-  activityType: "",
-  activityTypeOther: null,
-  interestAreas: [],
-  interestOther: null,
   intro: "",
+  answers: {},
 };
 
-/**
- * Pre-submit check, the mirror of the BE rules (`cohort-fields.ts`): required fields, handle shapes after normalization,
- * the "other" detail when "other" is picked, 60/1000 character limits. The BE stays the judge (a 400 maps to field hints).
- */
-export function validateCohortDraft(draft: CohortFormDraft): CohortFormErrors {
+/** Pre-submit check of the four fixed fields (the mirror of the BE `cohort-fields.ts` rules). The BE stays the judge. */
+export function validateCohortDraft(draft: CohortFixedValues): CohortFormErrors {
   const errors: CohortFormErrors = {};
   const name = draft.displayName.trim();
   if (!name || !hasVisibleText(name)) errors.displayName = "required";
@@ -210,43 +266,181 @@ export function validateCohortDraft(draft: CohortFormDraft): CohortFormErrors {
   if (!twitter) errors.twitter = "required";
   else if (!TWITTER_HANDLE.test(twitter)) errors.twitter = "invalid";
 
-  if (!draft.web3Experience) errors.web3Experience = "required";
-  if (!draft.activityType) errors.activityType = "required";
-  if (draft.activityType === OTHER) {
-    const other = draft.activityTypeOther?.trim() ?? "";
-    if (!other) errors.activityTypeOther = "required";
-    else if (length(other) > COHORT_OTHER_DETAIL_MAX) errors.activityTypeOther = "tooLong";
-  }
-  if (draft.interestAreas.length === 0) errors.interestAreas = "required";
-  if (draft.interestAreas.includes(OTHER)) {
-    const other = draft.interestOther?.trim() ?? "";
-    if (!other) errors.interestOther = "required";
-    else if (length(other) > COHORT_OTHER_DETAIL_MAX) errors.interestOther = "tooLong";
-  }
   const intro = draft.intro.trim();
   if (!intro || !hasVisibleText(intro)) errors.intro = "required";
   else if (length(intro) > COHORT_INTRO_MAX) errors.intro = "tooLong";
   return errors;
 }
 
-/** The request body for a draft that passed `validateCohortDraft`: trimmed, handles normalized, unused "other" details dropped. */
-export function draftToValues(draft: CohortFormDraft): CohortApplicationValues | null {
-  if (!draft.web3Experience || !draft.activityType) return null;
+/**
+ * Mirror of the BE `validateAnswers(questions, input)`: every id is a current question (no duplicates), text questions take only
+ * `text`, choice questions only `choices` (+ `other`); blank text / empty choices are "unanswered" and only an error when the question
+ * is required; limits 200 / 2000 / 60 code points; the detail text is needed exactly when a chosen option asks for it.
+ * Returns one error per question id (empty object = valid).
+ */
+export function validateAnswers(questions: readonly CohortQuestion[], answers: readonly AnswerInput[]): CohortAnswerErrors {
+  const errors: CohortAnswerErrors = {};
+  const byId = new Map(questions.map((question) => [question.id, question]));
+  const seen = new Set<string>();
+  const given = new Map<string, AnswerInput>();
+  for (const answer of answers) {
+    if (!byId.has(answer.questionId) || seen.has(answer.questionId)) errors[answer.questionId] = "invalid";
+    seen.add(answer.questionId);
+    given.set(answer.questionId, answer);
+  }
+  for (const question of questions) {
+    if (errors[question.id]) continue;
+    const error = answerError(question, given.get(question.id));
+    if (error) errors[question.id] = error;
+  }
+  return errors;
+}
+
+function answerError(question: CohortQuestion, answer: AnswerInput | undefined): CohortAnswerError | null {
+  const missing = question.required ? "required" : null;
+  if (!isChoiceType(question.type)) {
+    if (answer?.choices !== undefined || (answer?.other !== undefined && answer.other !== null)) return "invalid";
+    const text = answer?.text?.trim() ?? "";
+    if (!text || !hasVisibleText(text)) return missing;
+    if (question.type === "SHORT_TEXT") {
+      if (length(text) > COHORT_SHORT_TEXT_MAX) return "tooLong";
+      return isPlainDisplayText(text) ? null : "invalid";
+    }
+    if (length(text) > COHORT_LONG_TEXT_MAX) return "tooLong";
+    return BIDI_OVERRIDE.test(text) ? "invalid" : null;
+  }
+  if (answer?.text !== undefined) return "invalid";
+  const choices = answer?.choices ?? [];
+  if (choices.length === 0) return missing;
+  if (new Set(choices).size !== choices.length) return "invalid";
+  const options = question.options ?? [];
+  if (choices.some((id) => !options.some((option) => option.id === id))) return "invalid";
+  if (question.type === "SINGLE_CHOICE" && choices.length !== 1) return "invalid";
+  if (options.some((option) => option.withDetail && choices.includes(option.id))) {
+    const other = answer?.other?.trim() ?? "";
+    if (!other || !hasVisibleText(other)) return "otherRequired";
+    if (length(other) > COHORT_OTHER_DETAIL_MAX) return "tooLong";
+    return isPlainDisplayText(other) ? null : "invalid";
+  }
+  return null;
+}
+
+/** Whether the question is a text type with a hard length limit, and which one. */
+export const answerTextLimit = (type: CohortQuestionType): number => (type === "SHORT_TEXT" ? COHORT_SHORT_TEXT_MAX : COHORT_LONG_TEXT_MAX);
+
+/**
+ * The request body for a draft, in question order: trimmed text, handles normalized. Unanswered questions are left out; choices of an
+ * option that no longer exists and an unused "other" detail are dropped (the BE drops the detail too).
+ */
+export function draftToValues(draft: CohortFormDraft, questions: readonly CohortQuestion[]): CohortApplicationValues {
+  const answers: AnswerInput[] = [];
+  for (const question of questions) {
+    const value = draft.answers[question.id];
+    if (!value) continue;
+    if (!isChoiceType(question.type)) {
+      const text = value.text.trim();
+      if (text) answers.push({ questionId: question.id, text });
+      continue;
+    }
+    const options = question.options ?? [];
+    const choices = options.filter((option) => value.choices.includes(option.id));
+    if (choices.length === 0) continue;
+    const asksDetail = choices.some((option) => option.withDetail);
+    const other = value.other.trim();
+    answers.push({ questionId: question.id, choices: choices.map((option) => option.id), ...(asksDetail ? { other: other || null } : {}) });
+  }
   return {
     displayName: draft.displayName.trim(),
     telegram: normalizeHandle(draft.telegram, "telegram"),
     twitter: normalizeHandle(draft.twitter, "twitter"),
-    web3Experience: draft.web3Experience,
-    activityType: draft.activityType,
-    activityTypeOther: draft.activityType === OTHER ? draft.activityTypeOther?.trim() || null : null,
-    interestAreas: INTEREST_AREAS.filter((area) => draft.interestAreas.includes(area)),
-    interestOther: draft.interestAreas.includes(OTHER) ? draft.interestOther?.trim() || null : null,
     intro: draft.intro.trim(),
+    answers,
   };
 }
 
-export function valuesToDraft(values: CohortApplicationValues): CohortFormDraft {
-  return { ...values, interestAreas: [...values.interestAreas] };
+/**
+ * An application's saved answers back into form state, keyed by question id. Nothing is filtered here: the form only renders the
+ * cohort's current questions and `draftToValues` only sends answers to those (and to options that still exist), so an answer whose
+ * question is gone is neither shown nor sent again, and the questions may arrive after the form mounted.
+ */
+export function applicationToDraft(application: CohortApplicationRead): CohortFormDraft {
+  const answers: Record<string, CohortDraftAnswer> = {};
+  for (const answer of application.answers) {
+    answers[answer.questionId] = { text: answer.text ?? "", choices: (answer.choices ?? []).map((choice) => choice.id), other: answer.other ?? "" };
+  }
+  return { displayName: application.displayName, telegram: application.telegram, twitter: application.twitter, intro: application.intro, answers };
+}
+
+/**
+ * Index of the chosen option the "other" detail belongs to, or -1 when there is no detail. A snapshot does not say which option asked
+ * for it, so the cohort's current question decides (the chosen option that has `withDetail`). Only an answer whose question is gone
+ * falls back to a guess: the option whose id mentions "other" (the default question's `OTHER`), else the last one.
+ */
+export function detailChoiceIndex(answer: ApplicationAnswer, question?: CohortQuestion | null): number {
+  const choices = answer.choices ?? [];
+  if (!answer.other || choices.length === 0) return -1;
+  const asked = question?.options ? choices.findIndex((choice) => question.options?.some((option) => option.id === choice.id && option.withDetail)) : -1;
+  if (asked !== -1) return asked;
+  const named = choices.findIndex((choice) => /other/i.test(choice.id));
+  return named === -1 ? choices.length - 1 : named;
+}
+
+/** One answer for display in the viewer's language: text as typed, choices joined by ", ", the "other" detail after the option that asked for it (`detailChoiceIndex`). */
+export function answerDisplay(answer: ApplicationAnswer, locale: string, question?: CohortQuestion | null): string {
+  if (answer.text !== null && answer.text !== undefined) return answer.text;
+  const detailAt = detailChoiceIndex(answer, question);
+  return (answer.choices ?? []).map((choice, index) => (index === detailAt ? `${localized(choice.label, locale)} (${answer.other})` : localized(choice.label, locale))).join(", ");
+}
+
+// ── Question editor (admin) ───────────────────────────────────────────
+
+/** What is wrong with the question list the operator is about to save; `index`/`optionIndex` point into the list (`-1` = the list itself). */
+export type QuestionIssueCode =
+  | "tooManyQuestions"
+  | "labelRequired" | "labelTooLong" | "labelInvalid"
+  | "helpKoRequired" | "helpTooLong" | "helpInvalid"
+  | "optionsCount" | "withDetailMax"
+  | "optionLabelRequired" | "optionLabelTooLong" | "optionLabelInvalid";
+export type QuestionIssue = { code: QuestionIssueCode; index: number; optionIndex?: number };
+
+function labelIssue(text: LocalizedTextInput, max: number, required: QuestionIssueCode, tooLong: QuestionIssueCode, invalid: QuestionIssueCode): QuestionIssueCode | null {
+  const ko = text.ko.trim();
+  if (!ko || !hasVisibleText(ko)) return required;
+  for (const value of [ko, text.en?.trim() ?? "", text.zh?.trim() ?? ""]) {
+    if (length(value) > max) return tooLong;
+    if (value && !isPlainDisplayText(value)) return invalid;
+  }
+  return null;
+}
+
+/**
+ * Mirror of the BE rules for `PUT /admin/cohorts/:id/questions` that need no stored list (0..30 questions, label 1..200, help up to 500,
+ * choice questions 2..20 options with a label up to 60, at most one `withDetail`). Unknown/duplicate ids stay the BE's call
+ * (400 `COHORT_QUESTIONS_INVALID`).
+ */
+export function validateQuestionInputs(questions: readonly CohortQuestionInput[]): QuestionIssue[] {
+  const issues: QuestionIssue[] = [];
+  if (questions.length > COHORT_QUESTIONS_MAX) issues.push({ code: "tooManyQuestions", index: -1 });
+  questions.forEach((question, index) => {
+    const label = labelIssue(question.label, COHORT_QUESTION_LABEL_MAX, "labelRequired", "labelTooLong", "labelInvalid");
+    if (label) issues.push({ code: label, index });
+    if (question.help) {
+      if (!question.help.ko.trim()) issues.push({ code: "helpKoRequired", index });
+      for (const value of [question.help.ko, question.help.en ?? "", question.help.zh ?? ""]) {
+        if (length(value.trim()) > COHORT_HELP_MAX) issues.push({ code: "helpTooLong", index });
+        else if (BIDI_OVERRIDE.test(value)) issues.push({ code: "helpInvalid", index });
+      }
+    }
+    if (!isChoiceType(question.type)) return;
+    const options = question.options ?? [];
+    if (options.length < COHORT_OPTIONS_MIN || options.length > COHORT_OPTIONS_MAX) issues.push({ code: "optionsCount", index });
+    if (options.filter((option) => option.withDetail).length > 1) issues.push({ code: "withDetailMax", index });
+    options.forEach((option, optionIndex) => {
+      const issue = labelIssue(option.label, COHORT_OPTION_LABEL_MAX, "optionLabelRequired", "optionLabelTooLong", "optionLabelInvalid");
+      if (issue) issues.push({ code: issue, index, optionIndex });
+    });
+  });
+  return issues;
 }
 
 /**

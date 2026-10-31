@@ -61,12 +61,8 @@
       "memberSince": "Ninja NFT · 自 {date} 起加入"
     },
     "nftStatus": {
-      "PENDING": "待处理",
-      "MINTING": "铸造中",
-      "MINTED": "已铸造",
-      "ATTACHING": "关联中",
-      "ATTACHED": "已关联",
-      "FAILED": "失败"
+      "minting": "铸造中",
+      "minted": "已铸造"
     },
     "history": {
       "eyebrow": "已完成的工作",

@@ -21,7 +21,7 @@ export default async function AgentsPage({ params }: AgentsPageProps) {
   const t = await getTranslations("agents.list");
   const tAccount = await getTranslations("account.common");
   return (
-    <section className="mx-auto min-h-[60dvh] max-w-content px-6 py-16 pb-20">
+    <section className="mx-auto min-h-[60dvh] max-w-content px-gutter py-16 pb-20">
       {/* The masthead renders for every auth state; the view below switches between loading / signed-out / list. */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

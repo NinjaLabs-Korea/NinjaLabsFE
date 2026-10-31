@@ -229,7 +229,7 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
               const application = toApplication(row);
               const submission = submissionsByRow.get(submissionKey(row.bounty_id, row.agent));
               if (!submission || application.status !== "approved") return application;
-              // REJECTED is final (also a forfeited award: approved work, no payout) - not another "Submitted" step.
+              // REJECTED is final (also a reward-not-paid case: approved work, no payout) - not another "Submitted" step.
               if (submission.status === "REJECTED") {
                 return {
                   ...application,

@@ -1,25 +1,29 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState, type FocusEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuthSnapshot, useCohortApi } from "@/components/auth/FoundationProvider";
+import { QuestionField, hintClass, inputClass, labelClass } from "@/components/recruit/QuestionField";
+import { useCurrentCohort } from "@/components/recruit/useCurrentCohort";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import { focusFirstInvalid } from "@/lib/form-focus";
-import { ChoiceChip } from "@/components/recruit/ChoiceChip";
 import { clearCohortDraft, readCohortDraft, writeCohortDraft } from "@/lib/cohort-application-draft";
 import { ERROR_COPY } from "@/lib/api/error-copy";
-import { cohortApplyErrorKey, cohortFieldErrorsFromBe, isStaleCohortError, type CohortApplyErrorKey } from "@/lib/cohort-errors";
+import { cohortApplyErrorKey, cohortFieldErrorsFromBe, isQuestionsChangedError, isStaleCohortError, type CohortApplyErrorKey } from "@/lib/cohort-errors";
 import {
-  ACTIVITY_TYPES,
-  INTEREST_AREAS,
-  WEB3_EXPERIENCES,
+  applicationToDraft,
   draftToValues,
   emptyCohortDraft,
+  emptyDraftAnswer,
+  validateAnswers,
   validateCohortDraft,
-  valuesToDraft,
+  type CohortAnswerErrors,
+  type CohortDraftAnswer,
   type CohortFieldError,
+  type CohortFixedField,
   type CohortFormDraft,
   type CohortFormErrors,
+  type CohortQuestion,
   type MyCohortApplication,
 } from "@/lib/cohorts";
 import {
@@ -28,20 +32,15 @@ import {
   COHORT_INTRO_MAX,
   COHORT_INTRO_RECOMMENDED_MAX,
   COHORT_INTRO_RECOMMENDED_MIN,
-  COHORT_OTHER_DETAIL_MAX,
 } from "@/lib/input-limits";
 
-const inputClass =
-  "mt-2 w-full rounded-control border border-border bg-surface px-4 py-3 text-sm text-ink-secondary placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
-const labelClass = "text-sm font-semibold text-ink";
-const hintClass = "mt-1 text-xs text-ink-muted";
-
-/** Message key under `recruit.form.errors`: the choice groups ask to pick, the two handles say what shape they take. */
-function errorMessageKey(field: keyof CohortFormErrors, kind: CohortFieldError): string {
-  if (kind === "required") return field === "web3Experience" || field === "activityType" || field === "interestAreas" ? "requiredChoice" : "required";
+/** Message key under `recruit.form.errors`: the two handles say what shape they take. */
+function errorMessageKey(field: CohortFixedField, kind: CohortFieldError): string {
   if (kind === "invalid") return field === "telegram" ? "telegramInvalid" : field === "twitter" ? "twitterInvalid" : "invalid";
   return kind;
 }
+
+const NO_QUESTIONS: readonly CohortQuestion[] = [];
 
 type CohortApplicationFormProps = {
   cohortId: string;
@@ -54,8 +53,8 @@ type CohortApplicationFormProps = {
 };
 
 /**
- * The cohort application form: the Tally questions, in the same order and with the same options. Validation mirrors the BE
- * (`lib/cohorts.ts validateCohortDraft`); the BE stays the judge and its 400 hints mark the same fields.
+ * The cohort application form: the four fixed fields, then the questions the operator configured for this cohort, in order.
+ * Validation mirrors the BE (`lib/cohorts.ts validateCohortDraft` / `validateAnswers`); the BE stays the judge and its 400 hints mark the same fields.
  */
 export function CohortApplicationForm({ cohortId, application, onSaved, onCancel, onStale }: CohortApplicationFormProps) {
   const t = useTranslations("recruit.form");
@@ -65,21 +64,33 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
   const [submitFailed, setSubmitFailed] = useState(false);
   const tSaveErrors = useTranslations(ERROR_COPY.cohortApply.messages);
   const api = useCohortApi();
+  const current = useCurrentCohort();
+  // The form is only shown for the current cohort, so its questions are the page's own read of it; a stale-form answer from the BE re-reads it (`current.reload`).
+  const questions = current.cohort?.questions ?? NO_QUESTIONS;
   const editing = application !== undefined;
   const auth = useAuthSnapshot();
   const userId = auth.status === "signed-in" ? auth.user.id : null;
   // Only a NEW application keeps a per-tab draft (an edit starts from the saved values). `sent` stops late writes after success.
   const draftScope = !editing && userId ? userId : null;
   const [draft, setDraft] = useState<CohortFormDraft>(() =>
-    application ? valuesToDraft(application) : ((draftScope && typeof window !== "undefined" ? readCohortDraft(draftScope, cohortId) : null) ?? emptyCohortDraft));
+    application ? applicationToDraft(application) : ((draftScope && typeof window !== "undefined" ? readCohortDraft(draftScope, cohortId, questions) : null) ?? emptyCohortDraft));
   // The session can resolve after the first render (locale remount): restore the stored draft once the scope becomes known, never over typed input.
   const [restoredScope, setRestoredScope] = useState(draftScope);
   if (draftScope && draftScope !== restoredScope) {
     setRestoredScope(draftScope);
-    const stored = typeof window !== "undefined" ? readCohortDraft(draftScope, cohortId) : null;
+    const stored = typeof window !== "undefined" ? readCohortDraft(draftScope, cohortId, questions) : null;
     if (stored && draft === emptyCohortDraft) setDraft(stored);
   }
+  // Answers of a stored draft can only be matched to questions once the cohort is read: restore them then, never over what was typed meanwhile.
+  const questionsKnown = current.status === "ready";
+  const [answersRestored, setAnswersRestored] = useState(questionsKnown);
+  if (questionsKnown && !answersRestored) {
+    setAnswersRestored(true);
+    const stored = draftScope && typeof window !== "undefined" ? readCohortDraft(draftScope, cohortId, questions) : null;
+    if (stored) setDraft((previous) => ({ ...previous, answers: { ...stored.answers, ...previous.answers } }));
+  }
   const [errors, setErrors] = useState<CohortFormErrors>({});
+  const [answerErrors, setAnswerErrors] = useState<CohortAnswerErrors>({});
   const [state, setState] = useState<"idle" | "pending" | "error">("idle");
   const [saveError, setSaveError] = useState<CohortApplyErrorKey>("generic");
   // Synchronous in-flight guard: several submit events can land in one tick before React re-renders the disabled button.
@@ -88,31 +99,40 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
   const sent = useRef(false);
   useEffect(() => {
     // The untouched initial object is never written, so an empty form cannot overwrite a stored draft.
-    if (!draftScope || sent.current || draft === emptyCohortDraft) return;
+    // Not before the questions are known: a draft written without them would erase the stored answers.
+    if (!draftScope || sent.current || draft === emptyCohortDraft || !questionsKnown) return;
     writeCohortDraft(draftScope, cohortId, draft);
-  }, [draft, draftScope, cohortId]);
+  }, [draft, draftScope, cohortId, questionsKnown]);
 
-  const update = <K extends keyof CohortFormDraft>(key: K, value: CohortFormDraft[K]) => {
-    setDraft((current) => ({ ...current, [key]: value }));
-    setErrors((current) => ({ ...current, [key]: undefined }));
+  const update = <K extends CohortFixedField>(key: K, value: CohortFormDraft[K]) => {
+    setDraft((previous) => ({ ...previous, [key]: value }));
+    setErrors((previous) => ({ ...previous, [key]: undefined }));
   };
+  const updateAnswer = (questionId: string, next: CohortDraftAnswer) => {
+    setDraft((previous) => ({ ...previous, answers: { ...previous.answers, [questionId]: next } }));
+    setAnswerErrors(({ [questionId]: _cleared, ...rest }) => (void _cleared, rest));
+  };
+
+  const answerProblems = (from: CohortFormDraft) => validateAnswers(questions, draftToValues(from, questions).answers);
 
   /** Shows a field's problem once the user leaves it (a pristine form shows nothing; submit validates everything). */
-  const blurField = (field: keyof CohortFormErrors) => setErrors((current) => ({ ...current, [field]: validateCohortDraft(draft)[field] }));
-  const blurGroup = (field: keyof CohortFormErrors) => (event: FocusEvent<HTMLFieldSetElement>) => {
-    if (!event.currentTarget.contains(event.relatedTarget)) blurField(field);
-  };
-
-  const toggleInterest = (area: (typeof INTEREST_AREAS)[number]) =>
-    update("interestAreas", draft.interestAreas.includes(area) ? draft.interestAreas.filter((item) => item !== area) : [...draft.interestAreas, area]);
+  const blurField = (field: CohortFixedField) => setErrors((previous) => ({ ...previous, [field]: validateCohortDraft(draft)[field] }));
+  const blurAnswer = (questionId: string) =>
+    setAnswerErrors(({ [questionId]: _old, ...rest }) => {
+      void _old;
+      const next = answerProblems(draft)[questionId];
+      return next ? { ...rest, [questionId]: next } : rest;
+    });
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (inFlight.current) return;
     const nextErrors = validateCohortDraft(draft);
+    const values = draftToValues(draft, questions);
+    const nextAnswerErrors = validateAnswers(questions, values.answers);
     setErrors(nextErrors);
-    const values = draftToValues(draft);
-    if (Object.keys(nextErrors).length > 0 || !values) {
+    setAnswerErrors(nextAnswerErrors);
+    if (Object.keys(nextErrors).length > 0 || Object.keys(nextAnswerErrors).length > 0) {
       setState("idle");
       setSubmitFailed(true);
       focusFirstInvalid(formRef.current);
@@ -129,27 +149,29 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
       setErrors(cohortFieldErrorsFromBe(error));
       setSaveError(cohortApplyErrorKey(error));
       setState("error");
+      // The operator changed the questions while this was being filled in: read them again, keep what was typed (the draft stays in storage and state).
+      if (isQuestionsChangedError(error)) current.reload();
       if (isStaleCohortError(error)) onStale?.();
     } finally {
       inFlight.current = false;
     }
   };
 
-  const fieldError = (field: keyof CohortFormErrors, id: string) => {
+  const fieldError = (field: CohortFixedField, id: string) => {
     const kind: CohortFieldError | undefined = errors[field];
     return kind ? (
       <p className="mt-2 text-xs text-danger" id={id} role="alert">
-        {t(`errors.${errorMessageKey(field, kind)}`, { max: field === "intro" ? COHORT_INTRO_MAX : field === "displayName" ? COHORT_DISPLAY_NAME_MAX : COHORT_OTHER_DETAIL_MAX })}
+        {t(`errors.${errorMessageKey(field, kind)}`, { max: field === "intro" ? COHORT_INTRO_MAX : COHORT_DISPLAY_NAME_MAX })}
       </p>
     ) : null;
   };
-  const described = (field: keyof CohortFormErrors, id: string, hintId?: string) =>
+  const described = (field: CohortFixedField, id: string, hintId?: string) =>
     ({
       "aria-invalid": errors[field] ? true : undefined,
       "aria-describedby": [errors[field] ? id : null, hintId ?? null].filter(Boolean).join(" ") || undefined,
     }) as const;
 
-  const invalidCount = Object.values(errors).filter(Boolean).length;
+  const invalidCount = Object.values(errors).filter(Boolean).length + Object.keys(answerErrors).length;
   if (invalidCount === 0 && submitFailed) setSubmitFailed(false);
   const introLength = [...draft.intro.trim()].length;
 
@@ -183,7 +205,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
             autoComplete="off"
             className={inputClass}
             id="cohort-telegram"
-          onBlur={() => blurField("telegram")}
+            onBlur={() => blurField("telegram")}
             maxLength={COHORT_HANDLE_INPUT_MAX}
             onChange={(event) => update("telegram", event.target.value)}
             placeholder={t("telegram.placeholder")}
@@ -202,7 +224,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
             autoComplete="off"
             className={inputClass}
             id="cohort-twitter"
-          onBlur={() => blurField("twitter")}
+            onBlur={() => blurField("twitter")}
             maxLength={COHORT_HANDLE_INPUT_MAX}
             onChange={(event) => update("twitter", event.target.value)}
             placeholder={t("twitter.placeholder")}
@@ -214,98 +236,6 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
           <p className={hintClass} id="cohort-twitter-hint">{t("twitter.hint")}</p>
         </div>
       </div>
-
-      <fieldset aria-required="true" role="radiogroup" tabIndex={-1} {...described("web3Experience", "cohort-web3Experience-error")} onBlur={blurGroup("web3Experience")}>
-        <legend className={labelClass}>{t("web3Experience.label")}<RequiredMark /></legend>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {WEB3_EXPERIENCES.map((option) => (
-            <ChoiceChip
-              checked={draft.web3Experience === option}
-              describedBy={errors.web3Experience ? "cohort-web3Experience-error" : undefined}
-              key={option}
-              label={t(`web3Experience.options.${option}`)}
-              name="web3Experience"
-              onChange={() => update("web3Experience", option)}
-              type="radio"
-              value={option}
-            />
-          ))}
-        </div>
-        {fieldError("web3Experience", "cohort-web3Experience-error")}
-      </fieldset>
-
-      <fieldset aria-required="true" role="radiogroup" tabIndex={-1} {...described("activityType", "cohort-activityType-error")} onBlur={blurGroup("activityType")}>
-        <legend className={labelClass}>{t("activityType.label")}<RequiredMark /></legend>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {ACTIVITY_TYPES.map((option) => (
-            <ChoiceChip
-              checked={draft.activityType === option}
-              describedBy={errors.activityType ? "cohort-activityType-error" : undefined}
-              key={option}
-              label={t(`activityType.options.${option}`)}
-              name="activityType"
-              onChange={() => update("activityType", option)}
-              type="radio"
-              value={option}
-            />
-          ))}
-        </div>
-        {fieldError("activityType", "cohort-activityType-error")}
-        {draft.activityType === "OTHER" ? (
-          <div className="mt-3">
-            <label className={labelClass} htmlFor="cohort-activityTypeOther">{t("activityType.otherLabel")}</label><RequiredMark />
-            <input
-              {...described("activityTypeOther", "cohort-activityTypeOther-error")}
-              className={inputClass}
-              id="cohort-activityTypeOther"
-          onBlur={() => blurField("activityTypeOther")}
-              maxLength={COHORT_OTHER_DETAIL_MAX}
-              onChange={(event) => update("activityTypeOther", event.target.value)}
-              placeholder={t("activityType.otherPlaceholder")}
-              required
-              value={draft.activityTypeOther ?? ""}
-            />
-            {fieldError("activityTypeOther", "cohort-activityTypeOther-error")}
-          </div>
-        ) : null}
-      </fieldset>
-
-      <fieldset tabIndex={-1} {...described("interestAreas", "cohort-interestAreas-error")} onBlur={blurGroup("interestAreas")}>
-        <legend className={labelClass}>{t("interestAreas.label")}<RequiredMark /></legend>
-        <p className={hintClass}>{t("interestAreas.hint")}</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {INTEREST_AREAS.map((option) => (
-            <ChoiceChip
-              checked={draft.interestAreas.includes(option)}
-              describedBy={errors.interestAreas ? "cohort-interestAreas-error" : undefined}
-              key={option}
-              label={t(`interestAreas.options.${option}`)}
-              name="interestAreas"
-              onChange={() => toggleInterest(option)}
-              type="checkbox"
-              value={option}
-            />
-          ))}
-        </div>
-        {fieldError("interestAreas", "cohort-interestAreas-error")}
-        {draft.interestAreas.includes("OTHER") ? (
-          <div className="mt-3">
-            <label className={labelClass} htmlFor="cohort-interestOther">{t("interestAreas.otherLabel")}</label><RequiredMark />
-            <input
-              {...described("interestOther", "cohort-interestOther-error")}
-              className={inputClass}
-              id="cohort-interestOther"
-          onBlur={() => blurField("interestOther")}
-              maxLength={COHORT_OTHER_DETAIL_MAX}
-              onChange={(event) => update("interestOther", event.target.value)}
-              placeholder={t("interestAreas.otherPlaceholder")}
-              required
-              value={draft.interestOther ?? ""}
-            />
-            {fieldError("interestOther", "cohort-interestOther-error")}
-          </div>
-        ) : null}
-      </fieldset>
 
       <div>
         <label className={labelClass} htmlFor="cohort-intro">{t("intro.label")}</label><RequiredMark />
@@ -327,6 +257,17 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
           <span aria-live="off">{t("intro.counter", { count: introLength, limit: COHORT_INTRO_MAX })}</span>
         </p>
       </div>
+
+      {questions.map((question) => (
+        <QuestionField
+          error={answerErrors[question.id]}
+          key={question.id}
+          onBlur={() => blurAnswer(question.id)}
+          onChange={(next) => updateAnswer(question.id, next)}
+          question={question}
+          value={draft.answers[question.id] ?? emptyDraftAnswer}
+        />
+      ))}
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <button

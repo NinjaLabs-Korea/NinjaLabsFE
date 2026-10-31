@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { decodeDetailId, validateDetailId } from "@/lib/detail-id";
-import { getRuntimeProfile, payoutBadge } from "@/lib/members";
+import { getRuntimeProfile, payoutBadge, publicNftStatusKey } from "@/lib/members";
 import { localeMetadata } from "@/i18n/alternates";
 
 type MemberProfilePageProps = PageProps<"/[locale]/members/[id]">;
@@ -46,7 +46,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
   const completionNfts = profile.nfts.filter((nft) => nft.type === "completion");
 
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
+    <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-1 flex-col gap-5 rounded-card border border-border bg-surface p-[21px] shadow-card sm:flex-row sm:items-center sm:gap-6">
           <div className="flex size-24 shrink-0 items-center justify-center rounded-full bg-primary-soft-border font-display text-[30px] text-primary">{profile.initials}</div>
@@ -82,13 +82,16 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
             </div>
             {completionNfts.length ? (
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {completionNfts.map((nft) => (
+                {completionNfts.map((nft) => {
+                  const statusKey = publicNftStatusKey(nft.status);
+                  return (
                   <div key={nft.id} className={`relative flex aspect-square flex-col overflow-hidden p-3 ${nftTileClass}`} title={[nft.tokenId ? t("portfolio.token", { id: nft.tokenId }) : null, nft.mintTxHash ? t("portfolio.tx", { hash: nft.mintTxHash }) : null].filter(Boolean).join(" · ") || undefined}>
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,var(--color-on-inverse)_0%,transparent_60%)] opacity-35" />
-                    {nft.status !== "ATTACHED" ? <span className="relative text-xs text-on-inverse/70">{t(`nftStatus.${nft.status}`)}</span> : null}
+                    {statusKey ? <span className="relative text-xs text-on-inverse/70">{t(`nftStatus.${statusKey}`)}</span> : null}
                     <span className="relative mt-auto break-words text-xs font-semibold [text-shadow:var(--shadow-tile-text)]">{nft.title || t("portfolio.untitledNft")}</span>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="mt-5 flex min-h-72 flex-col items-center justify-center rounded-card border border-dashed border-on-inverse/25 bg-on-inverse/5 p-6 text-center">

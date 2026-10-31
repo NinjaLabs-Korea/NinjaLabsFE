@@ -29,7 +29,7 @@ export async function LegalDocument({ document }: { document: "privacy" | "terms
   const updated = format.dateTime(new Date(`${LEGAL_LAST_UPDATED}T00:00:00Z`), { year: "numeric", month: "long", day: "numeric" });
 
   return (
-    <article className="mx-auto max-w-[768px] px-6 py-16 pb-20">
+    <article className="mx-auto max-w-[768px] px-gutter py-16 pb-20">
       <h1 className="font-display text-4xl -tracking-[0.36px] text-ink">{t(`${document}.title`)}</h1>
       <p className="mt-3 text-sm text-ink-muted">{t("lastUpdated", { date: updated })}</p>
       <p className="mt-6 text-base leading-7 text-ink-secondary">{t(`${document}.intro`)}</p>

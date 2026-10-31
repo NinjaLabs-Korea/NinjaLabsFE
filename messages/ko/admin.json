@@ -753,7 +753,7 @@
       "PAYOUT_CANCELLED_MANUAL": "지급 수동 취소",
       "REWARD_DEPOSIT_CONFIRMED": "보상 입금 확인",
       "REWARD_REFUNDED": "보상 환불 기록",
-      "SUBMISSION_AWARD_FORFEITED": "수상 몰수",
+      "SUBMISSION_AWARD_FORFEITED": "보상 미지급 처리",
       "USER_MEMBER_GRANTED": "멤버 역할 지정",
       "USER_MEMBER_REVOKED": "멤버 역할 해제",
       "USER_NICKNAME_CHANGED": "닉네임 변경",
@@ -777,7 +777,8 @@
       "COHORT_APPLICATION_UPDATED": "기수 지원서 수정",
       "COHORT_APPLICATION_WITHDRAWN": "기수 지원서 철회",
       "COHORT_APPLICATION_REAPPLIED": "기수 재지원",
-      "COHORT_APPLICATION_ACCEPTED": "기수 지원서 합격"
+      "COHORT_APPLICATION_ACCEPTED": "기수 지원서 합격",
+      "COHORT_QUESTIONS_UPDATED": "지원서 질문 수정"
     },
     "empty": "조건에 맞는 감사 로그가 없습니다.",
     "pagination": "감사 로그 페이지",
@@ -878,13 +879,13 @@
       "filters": {
         "label": "지원서 필터",
         "status": "상태",
-        "activityType": "활동 유형",
-        "interestArea": "참여 분야",
         "search": "검색",
         "searchPlaceholder": "이름, Telegram, X, 닉네임, 이메일",
         "all": "전체",
         "apply": "적용",
-        "reset": "초기화"
+        "reset": "초기화",
+        "question": "질문",
+        "option": "선택지"
       },
       "statuses": {
         "SUBMITTED": "대기",
@@ -899,9 +900,7 @@
       "columns": {
         "applicant": "지원자",
         "contact": "연락처",
-        "experience": "Web3 경력",
-        "activity": "활동 유형",
-        "interests": "참여 분야",
+        "intro": "자기소개",
         "status": "상태",
         "applied": "지원일",
         "action": "작업"
@@ -970,7 +969,80 @@
       "ADMIN_ONLY": "이 계정에는 더 이상 관리자 권한이 없습니다.",
       "UNAUTHORIZED": "세션이 만료되었습니다. 다시 로그인하세요.",
       "TOO_MANY_REQUESTS": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
-      "generic": "요청을 처리하지 못했습니다. 다시 시도해 주세요."
+      "generic": "요청을 처리하지 못했습니다. 다시 시도해 주세요.",
+      "COHORT_QUESTIONS_INVALID": "질문 설정을 저장하지 못했어요. 선택지 수와 문구를 확인해 주세요."
+    },
+    "questions": {
+      "action": "질문 설정",
+      "eyebrow": "지원서 질문",
+      "heading": "{name} 지원서 질문",
+      "intro": "이름, Telegram, X, 자기소개는 모든 지원서에서 항상 받아요. 아래는 이 기수에서 더 묻고 싶은 질문이에요.",
+      "note": "이미 받은 지원서의 답변은 바뀌지 않아요.",
+      "empty": "추가 질문이 없어요. 질문을 추가해 주세요.",
+      "add": "질문 추가",
+      "addType": "새 질문 유형",
+      "close": "닫기",
+      "dirty": "저장하지 않은 변경이 있어요.",
+      "types": {
+        "SHORT_TEXT": "짧은 답변",
+        "LONG_TEXT": "긴 답변",
+        "SINGLE_CHOICE": "하나 선택",
+        "MULTI_CHOICE": "여러 개 선택"
+      },
+      "question": "질문 {number}",
+      "moveUp": "질문 {number} 위로",
+      "moveDown": "질문 {number} 아래로",
+      "remove": "질문 {number} 삭제",
+      "labelKo": "질문 (한국어)",
+      "labelEn": "질문 (영어, 선택)",
+      "labelZh": "질문 (중국어, 선택)",
+      "translationHint": "비워 두면 한국어로 표시해요.",
+      "helpKo": "도움말 (한국어, 선택)",
+      "helpEn": "도움말 (영어, 선택)",
+      "helpZh": "도움말 (중국어, 선택)",
+      "required": "필수 질문",
+      "options": "선택지",
+      "optionKo": "선택지 {number} (한국어)",
+      "optionEn": "선택지 {number} (영어, 선택)",
+      "optionZh": "선택지 {number} (중국어, 선택)",
+      "addOption": "선택지 추가",
+      "removeOption": "선택지 {number} 삭제",
+      "moveOptionUp": "선택지 {number} 위로",
+      "moveOptionDown": "선택지 {number} 아래로",
+      "withDetail": "상세 입력 받기",
+      "withDetailHint": "고르면 지원자가 내용을 한 줄 더 적어요. 질문당 하나만 둘 수 있어요.",
+      "limits": "질문은 최대 {questions}개, 선택지는 질문마다 {min}~{max}개예요.",
+      "save": "질문 저장",
+      "saving": "저장하는 중…",
+      "savedTitle": "지원서 질문을 저장했어요",
+      "savedDescription": "{name}",
+      "removeDialog": {
+        "eyebrow": "질문 삭제",
+        "title": "이 질문을 삭제할까요?",
+        "description": "저장하면 이후 지원자에게 이 질문이 보이지 않아요. 이미 받은 답변은 그대로 남아요.",
+        "confirm": "질문 삭제"
+      },
+      "discardDialog": {
+        "eyebrow": "질문 설정",
+        "title": "저장하지 않은 변경을 버릴까요?",
+        "description": "저장하지 않은 질문 변경이 사라져요.",
+        "confirm": "버리기"
+      },
+      "errors": {
+        "tooManyQuestions": "질문은 최대 {max}개까지 둘 수 있어요.",
+        "labelRequired": "질문을 한국어로 적어 주세요.",
+        "labelTooLong": "질문이 너무 길어요. 최대 {max}자예요.",
+        "labelInvalid": "질문에 줄바꿈이나 보이지 않는 문자를 넣을 수 없어요.",
+        "helpKoRequired": "한국어 도움말도 함께 적어 주세요.",
+        "helpTooLong": "도움말이 너무 길어요. 최대 {max}자예요.",
+        "helpInvalid": "도움말에 넣을 수 없는 문자가 있어요.",
+        "optionsCount": "선택지는 {min}~{max}개여야 해요.",
+        "withDetailMax": "상세 입력은 질문당 하나만 둘 수 있어요.",
+        "optionLabelRequired": "선택지를 한국어로 적어 주세요.",
+        "optionLabelTooLong": "선택지가 너무 길어요. 최대 {max}자예요.",
+        "optionLabelInvalid": "선택지에 줄바꿈이나 보이지 않는 문자를 넣을 수 없어요."
+      },
+      "fix": "표시된 항목을 고쳐 주세요."
     }
   }
 }

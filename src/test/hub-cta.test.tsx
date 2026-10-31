@@ -17,7 +17,7 @@ vi.mock("@/i18n/navigation", () => ({
 vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({ useAuthSnapshot: () => state.auth, useCohortApi: () => cohortApi }));
 
-const cohort: PublicCohort = { id: "c1", name: "2nd cohort", description: "", opensAt: null, closesAt: null, acceptingApplications: true };
+const cohort: PublicCohort = { id: "c1", name: "2nd cohort", description: "", opensAt: null, closesAt: null, acceptingApplications: true, questions: [] };
 const unfinished = signedInWith({ onboardingCompleted: false, onboardingStep: 3 });
 const finished = signedInWith({ onboardingCompleted: true, profileSlug: "pelican" });
 const mine = (status: string, cohortId = "c1") => [{ id: "a1", cohortId, status }] as never;

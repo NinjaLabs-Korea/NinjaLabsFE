@@ -37,7 +37,7 @@ export default async function BountyApplyPage({ params }: BountyApplyPageProps) 
   const hasOpenBounty = Boolean(applicationBounty || directBounty);
 
   return (
-    <div className="mx-auto max-w-content px-6 py-16 pb-20">
+    <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <section>
         <div className="max-w-[62rem]">
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("eyebrow")}</p>

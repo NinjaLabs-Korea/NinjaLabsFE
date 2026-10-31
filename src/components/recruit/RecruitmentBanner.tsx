@@ -28,7 +28,7 @@ export function RecruitmentBanner() {
     const last = lastCurrentCohort(api);
     const expect = last === undefined ? hint === true : Boolean(last?.acceptingApplications);
     return expect ? (
-      <section aria-hidden="true" className="mx-auto max-w-content px-6 pb-16">
+      <section aria-hidden="true" className="mx-auto max-w-content px-gutter pb-16">
         <div className="invisible flex flex-col gap-5 rounded-card border border-primary-soft-border bg-primary-soft p-5 shadow-card sm:p-[21px] md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <Badge variant="selected">{t("badge")}</Badge>
@@ -42,7 +42,7 @@ export function RecruitmentBanner() {
   }
   if (status !== "ready" || !cohort?.acceptingApplications) return null;
   return (
-    <section aria-label={t("label")} className="mx-auto max-w-content px-6 pb-16">
+    <section aria-label={t("label")} className="mx-auto max-w-content px-gutter pb-16">
       <div className="flex flex-col gap-5 rounded-card border border-primary-soft-border bg-primary-soft p-5 shadow-card sm:p-[21px] md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <Badge variant="selected">{t("badge")}</Badge>

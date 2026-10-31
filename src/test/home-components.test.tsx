@@ -68,6 +68,12 @@ describe("HomeProfileCard", () => {
     renderWithIntl(<HomeProfileCard />);
     expect(screen.getByText("No Ninja NFT yet")).toBeTruthy();
   });
+
+  it("folds a FAILED mint into the in-progress badge (operators handle it in /admin/nft-jobs)", () => {
+    state.auth = signedInWith({ handle: "ninja", walletAddress: "inj1abcdefghij9k4d", nftStatus: "FAILED", onboardingCompleted: true });
+    renderWithIntl(<HomeProfileCard />);
+    expect(screen.getByText("Ninja NFT minting")).toBeTruthy();
+  });
 });
 
 describe("HomeActivity", () => {
@@ -87,7 +93,7 @@ describe("HomeActivity", () => {
       note: "", status: "notAccepted", agent: null, reviewComment: "forfeited: wallet never linked", reviewNote: null, paymentStatus: "NONE",
     }] });
     renderWithIntl(<HomeActivity />);
-    expect(await screen.findByText("Award forfeited")).toBeTruthy();
+    expect(await screen.findByText("Reward not paid")).toBeTruthy();
     expect(screen.queryByText("Submission not accepted")).toBeNull();
   });
 
@@ -112,7 +118,7 @@ describe("HomeRecruitment", () => {
     expect(Object.keys(ko.recruit)).toEqual(["details"]);
   });
 
-  const values = { displayName: "Me", telegram: "@me_builds", twitter: "@me_x", web3Experience: "GT_3Y" as const, activityType: "DEVELOPER" as const, activityTypeOther: null, interestAreas: ["DEVELOPER" as const], interestOther: null, intro: "hi" };
+  const values = { displayName: "Me", telegram: "@me_builds", twitter: "@me_x", intro: "hi", answers: [{ questionId: "web3_experience", choices: ["GT_3Y"] }, { questionId: "interest_areas", choices: ["DEVELOPER"] }] };
 
   it("invites a member who has not applied while a cohort accepts applications", async () => {
     renderWithIntl(<HomeRecruitment />);

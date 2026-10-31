@@ -6,6 +6,7 @@ import path from 'node:path';
 import { Browser, report } from '../lib/cdp.mjs';
 import { state } from '../lib/state.mjs';
 import { sql, ids, check, clean, done, sleep, signIn, apiAs, tokenFor } from '../lib/harness.mjs';
+import { answersFor, configureAllTypeQuestions } from '../lib/cohort-questions.mjs';
 
 const SHOTS = path.join(state.logDir, 'shots');
 fs.mkdirSync(SHOTS, { recursive: true });
@@ -30,8 +31,11 @@ sql(`update notice set event_date='2026-06-18' where title='Injective hackathon'
   const [, nowOpen] = await apiAs(adminToken, 'GET', '/admin/cohorts');
   open = JSON.parse(nowOpen).find((c) => c.status === 'OPEN');
   check('setup: a cohort is open', !!open, open?.name);
-  await apiAs(tokenFor(ids.BUILDER), 'POST', `/cohorts/${open.id}/applications`, { displayName: '김닌자 (긴 이름을 가진 지원자의 이름입니다)', telegram: '@ninja_builder', twitter: '@ninja_builder', web3Experience: 'Y1_3', activityType: 'OTHER', activityTypeOther: '프로덕트 디자이너 겸 커뮤니티 운영', interestAreas: ['DEVELOPER', 'KOL', 'OTHER'], interestOther: '온체인 데이터 시각화', intro: 'Injective 위에서 대시보드를 만들고 새로운 빌더들이 빠르게 첫 작업을 낼 수 있도록 돕고 싶습니다. '.repeat(3) });
-  await apiAs(tokenFor(ids.ADMIN, true), 'POST', `/cohorts/${open.id}/applications`, { displayName: 'Ops', telegram: '@ops_admin', twitter: '@ops_admin', web3Experience: 'GT_3Y', activityType: 'BIZDEV', interestAreas: ['BIZDEV'], intro: 'ops' });
+  // one question of every type, long wording: the form, the editor and the review dialog are measured with it
+  const questions = await configureAllTypeQuestions(adminToken, open.id);
+  check('setup: the cohort asks one question of every type', questions.map((q) => q.type).join() === 'SHORT_TEXT,LONG_TEXT,SINGLE_CHOICE,MULTI_CHOICE', questions.map((q) => q.type));
+  await apiAs(tokenFor(ids.BUILDER), 'POST', `/cohorts/${open.id}/applications`, { displayName: '김닌자 (긴 이름을 가진 지원자의 이름입니다)', telegram: '@ninja_builder', twitter: '@ninja_builder', intro: 'Injective 위에서 대시보드를 만들고 새로운 빌더들이 빠르게 첫 작업을 낼 수 있도록 돕고 싶습니다. '.repeat(3), answers: answersFor(questions) });
+  await apiAs(tokenFor(ids.ADMIN, true), 'POST', `/cohorts/${open.id}/applications`, { displayName: 'Ops', telegram: '@ops_admin', twitter: '@ops_admin', intro: 'ops', answers: answersFor(questions) });
 }
 
 /** Returns the layout problems of the current page: overflow beyond the viewport and text squeezed to a few characters per line. */
@@ -150,6 +154,16 @@ async function screen(p, name, who, url, { waitText, prepare, label = name } = {
       await sleep(600);
       const inside = await page.eval(`(()=>{const d=document.querySelector('dialog[open]'); if(!d) return 'NO_DIALOG'; const r=d.getBoundingClientRect(); return r.left>=-1 && r.right<=innerWidth+1 && r.top>=-1 ? 'OK' : 'CLIPPED '+Math.round(r.left)+','+Math.round(r.right)+','+Math.round(r.top)})()`);
       check(`review dialog stays inside the viewport (${width}px)`, inside === 'OK', inside);
+    },
+  });
+  // the question editor with one question of every type (the first cohort row, then its "질문 설정" button)
+  await screen(p, 'admin-recruitment-questions', 'admin', '/ko/admin/recruitment', {
+    waitText: '접수 기간',
+    prepare: async (page, width) => {
+      await page.eval(`[...document.querySelectorAll('main tbody tr')].map(r=>[...r.querySelectorAll('button')].find(b=>b.innerText.trim()==='질문 설정')).find(Boolean)?.click()`);
+      await sleep(900);
+      const editor = await page.eval(`(()=>{const s=document.querySelector('section[aria-labelledby^="questions-"]'); if(!s) return 'NO_EDITOR'; return s.querySelectorAll('ol > li').length})()`);
+      check(`question editor lists the four questions (${width}px)`, editor >= 4, editor);
     },
   });
   await screen(p, 'admin-notices', 'admin', '/ko/admin/notices', { waitText: '행사 날짜' });

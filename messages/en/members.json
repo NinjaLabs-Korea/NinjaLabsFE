@@ -61,12 +61,8 @@
       "memberSince": "Ninja NFT · member since {date}"
     },
     "nftStatus": {
-      "PENDING": "PENDING",
-      "MINTING": "MINTING",
-      "MINTED": "MINTED",
-      "ATTACHING": "ATTACHING",
-      "ATTACHED": "ATTACHED",
-      "FAILED": "FAILED"
+      "minting": "Minting",
+      "minted": "Minted"
     },
     "history": {
       "eyebrow": "Completed work",

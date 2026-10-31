@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import { getMockFixtureSnapshot, createMockFixtures } from "@/lib/mocks/fixtures";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
-import type { CohortApplicationValues } from "@/lib/cohorts";
+import type { CohortApplicationValues, CohortQuestionInput } from "@/lib/cohorts";
 
 const owner = (): AuthSnapshot => ({ status: "signed-in", user: getMockFixtureSnapshot(createMockFixtures("default")).account.user });
 const stranger: AuthSnapshot = { status: "signed-in", user: { id: "someone-else", handle: "x", initials: "X", profileSlug: "x" } };
 const values: CohortApplicationValues = {
-  displayName: "Me", telegram: "@me_builds", twitter: "@me_builds", web3Experience: "GT_3Y", activityType: "DEVELOPER",
-  activityTypeOther: null, interestAreas: ["DEVELOPER"], interestOther: null, intro: "hi",
+  displayName: "Me", telegram: "@me_builds", twitter: "@me_builds", intro: "hi",
+  answers: [{ questionId: "web3_experience", choices: ["GT_3Y"] }, { questionId: "interest_areas", choices: ["DEVELOPER"] }],
 };
 const mine = async (api: ReturnType<typeof createMockApiClient>) => {
   const result = await api.getMyCohortApplications(owner());
@@ -43,7 +43,9 @@ describe("mock cohort recruitment (BE twin)", () => {
 
   it("requires the detail of 'other' (400) and refuses unknown, draft and closed cohorts", async () => {
     const api = createMockApiClient();
-    expect(await code(api.applyToCohort("cohort-2", { ...values, activityType: "OTHER" }))).toBe("400 COHORT_OTHER_DETAIL_REQUIRED");
+    expect(await code(api.applyToCohort("cohort-2", { ...values, answers: [values.answers[0], { questionId: "interest_areas", choices: ["OTHER"] }] }))).toBe("400 COHORT_OTHER_DETAIL_REQUIRED");
+    expect(await code(api.applyToCohort("cohort-2", { ...values, answers: values.answers.slice(1) }))).toBe("400 COHORT_ANSWERS_INVALID");
+    expect(await code(api.applyToCohort("cohort-2", { ...values, answers: [...values.answers, { questionId: "ghost", text: "x" }] }))).toBe("400 COHORT_ANSWERS_INVALID");
     expect(await code(api.applyToCohort("nope", values))).toBe("404 COHORT_NOT_FOUND");
     const draft = await api.saveAdminCohort(null, { name: "draft", description: null, opensAt: null, closesAt: null });
     expect(await code(api.applyToCohort(draft.id, values))).toBe("404 COHORT_NOT_FOUND");
@@ -99,13 +101,15 @@ describe("mock cohort recruitment (BE twin)", () => {
     const all = await api.getAdminCohortApplications("cohort-2", {}, 1);
     expect(all).toMatchObject({ page: 1, pageSize: 30, total: 4 });
     expect((await api.getAdminCohortApplications("cohort-2", { status: "ACCEPTED" }, 1)).items.map((row) => row.displayName)).toEqual(["Joon"]);
-    expect((await api.getAdminCohortApplications("cohort-2", { activityType: "STUDENT" }, 1)).total).toBe(1);
-    expect((await api.getAdminCohortApplications("cohort-2", { interestArea: "KOL" }, 1)).total).toBe(1);
+    expect((await api.getAdminCohortApplications("cohort-2", { questionId: "web3_experience", optionId: "LT_1Y" }, 1)).items.map((row) => row.displayName)).toEqual(["Sora"]);
+    expect((await api.getAdminCohortApplications("cohort-2", { questionId: "interest_areas", optionId: "KOL" }, 1)).total).toBe(1);
+    expect((await api.getAdminCohortApplications("cohort-2", { questionId: "interest_areas" }, 1)).total).toBe(4);
     expect((await api.getAdminCohortApplications("cohort-2", { q: "MINA" }, 1)).items.map((row) => row.displayName)).toEqual(["Mina"]);
     expect((await api.getAdminCohortApplications("cohort-2", {}, 2)).items).toEqual([]);
     const csv = await api.exportAdminCohortApplications("cohort-2", { status: "REJECTED" });
     expect(csv.startsWith("﻿\"id\",\"applied_at\"")).toBe(true);
     expect(csv.split("\r\n").filter(Boolean)).toHaveLength(2);
+    expect(csv.split("\r\n")[0]).toBe('\uFEFF"id","applied_at","status","display_name","nickname","email","telegram","twitter","intro","Web3 경력","참여하고 싶은 분야","other_answers","review_note","reviewed_at"');
     expect(await code(api.getAdminCohortApplications("nope", {}, 1))).toBe("404 COHORT_NOT_FOUND");
   });
 
@@ -114,5 +118,62 @@ describe("mock cohort recruitment (BE twin)", () => {
     await api.applyToCohort("cohort-2", { ...values, displayName: "=HYPERLINK(\"x\")" });
     const csv = await api.exportAdminCohortApplications("cohort-2", { q: "HYPERLINK" });
     expect(csv).toContain("\"'=HYPERLINK(\"\"x\"\")\"");
+  });
+});
+
+describe("mock cohort questions (BE twin of CONTRACT A)", () => {
+  const input = (overrides: Partial<CohortQuestionInput> = {}): CohortQuestionInput => ({ type: "SHORT_TEXT", label: { ko: "질문" }, help: null, required: false, options: null, ...overrides });
+
+  it("starts every cohort with the two default questions, public and admin alike", async () => {
+    const api = createMockApiClient();
+    expect((await api.getCurrentCohort())?.questions.map((question) => question.id)).toEqual(["web3_experience", "interest_areas"]);
+    const draft = await api.saveAdminCohort(null, { name: "new", description: null, opensAt: null, closesAt: null });
+    expect(draft.questions.map((question) => question.id)).toEqual(["web3_experience", "interest_areas"]);
+  });
+
+  it("PUT replaces the list: ids kept for known questions and options, generated for new ones, order is the array order", async () => {
+    const api = createMockApiClient();
+    const [experience] = (await api.getAdminCohorts()).find((cohort) => cohort.id === "cohort-2")!.questions;
+    const saved = await api.saveAdminCohortQuestions("cohort-2", [
+      input({ type: "LONG_TEXT", label: { ko: "왜 지원했나요?", en: "Why?" }, required: true }),
+      input({ id: experience.id, type: "SINGLE_CHOICE", label: { ko: "경력" }, options: [{ id: "LT_1Y", label: { ko: "짧음" }, withDetail: false }, { label: { ko: "새 선택지" }, withDetail: true }] }),
+    ]);
+    expect(saved.questions[0]).toMatchObject({ type: "LONG_TEXT", required: true, label: { ko: "왜 지원했나요?", en: "Why?", zh: null }, options: null });
+    expect(saved.questions[0].id).toMatch(/^q_[0-9a-f]{12}$/);
+    expect(saved.questions[1].id).toBe("web3_experience");
+    expect(saved.questions[1].options?.[0].id).toBe("LT_1Y");
+    expect(saved.questions[1].options?.[1].id).toMatch(/^o_[0-9a-f]{8}$/);
+    expect((await api.getCurrentCohort())?.questions).toHaveLength(2);
+  });
+
+  it("refuses unknown and duplicate ids and broken shapes with COHORT_QUESTIONS_INVALID, and an unknown cohort with 404", async () => {
+    const api = createMockApiClient();
+    expect(await code(api.saveAdminCohortQuestions("cohort-2", [input({ id: "ghost" })]))).toBe("400 COHORT_QUESTIONS_INVALID");
+    expect(await code(api.saveAdminCohortQuestions("cohort-2", [input({ id: "web3_experience", type: "SINGLE_CHOICE", options: [{ id: "nope", label: { ko: "a" }, withDetail: false }, { label: { ko: "b" }, withDetail: false }] })]))).toBe("400 COHORT_QUESTIONS_INVALID");
+    expect(await code(api.saveAdminCohortQuestions("cohort-2", [input({ id: "interest_areas", type: "MULTI_CHOICE", options: [] }), input()]))).toBe("400 COHORT_QUESTIONS_INVALID");
+    const twice = { id: "web3_experience", type: "SHORT_TEXT" as const, label: { ko: "a" }, help: null, required: false, options: null };
+    expect(await code(api.saveAdminCohortQuestions("cohort-2", [twice, twice]))).toBe("400 COHORT_QUESTIONS_INVALID");
+    expect(await code(api.saveAdminCohortQuestions("nope", []))).toBe("404 COHORT_NOT_FOUND");
+  });
+
+  it("snapshots answers, so editing the questions never changes an application already received", async () => {
+    const api = createMockApiClient();
+    const created = await api.applyToCohort("cohort-2", values);
+    expect(created.answers.map((answer) => [answer.questionId, answer.choices?.map((choice) => choice.label.ko)])).toEqual([["web3_experience", ["3년 이상"]], ["interest_areas", ["개발자"]]]);
+    await api.saveAdminCohortQuestions("cohort-2", [input({ id: "web3_experience", type: "SINGLE_CHOICE", label: { ko: "바뀐 질문" }, options: [{ id: "GT_3Y", label: { ko: "바뀐 선택지" }, withDetail: false }, { label: { ko: "또" }, withDetail: false }] })]);
+    const [row] = await mine(api);
+    expect(row.answers[0].label.ko).toBe("Web3 경력");
+    expect(row.answers[0].choices?.[0].label.ko).toBe("3년 이상");
+    // The old application can no longer be edited with the old answers: the form changed.
+    expect(await code(api.updateCohortApplication(created.id, values))).toBe("400 COHORT_ANSWERS_INVALID");
+  });
+
+  it("exports one CSV column per current question and puts answers to removed questions into other_answers", async () => {
+    const api = createMockApiClient();
+    await api.saveAdminCohortQuestions("cohort-2", [input({ id: "web3_experience", type: "SINGLE_CHOICE", label: { ko: "Web3 경력" }, options: [{ id: "LT_1Y", label: { ko: "a" }, withDetail: false }, { id: "Y1_3", label: { ko: "b" }, withDetail: false }] }), input({ label: { ko: "새 질문" } })]);
+    const [header, ...rows] = (await api.exportAdminCohortApplications("cohort-2", { q: "mina" })).split("\r\n").filter(Boolean);
+    expect(header).toContain('"Web3 경력","새 질문","other_answers"');
+    expect(rows[0]).toContain('"1~3년"');
+    expect(rows[0]).toContain('"참여하고 싶은 분야: 개발자;리서처"');
   });
 });

@@ -25,7 +25,7 @@ export default async function AdminBountiesPage({ params }: PageProps<"/[locale]
   const bounties = await loadFromRuntime({ mock: getAdminBounties, api: async () => [] });
 
   return (
-    <section className="mx-auto max-w-content px-6 py-16 pb-20">
+    <section className="mx-auto max-w-content px-gutter py-16 pb-20">
       <BountyManager bounties={bounties} tabs={<div className="mt-6"><AdminTabs active="bounties" /></div>}>
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{tCommon("eyebrow")}</p>

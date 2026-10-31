@@ -84,7 +84,7 @@ export type BountyActionView =
   | { kind: "statusUnavailable" }
   /**
    * 에이전트만 이 바운티에 참여함. `row`는 에이전트가 제출까지 했는지(우선) 지원만 했는지, `state`는 그 행의 진행 상태.
-   * `review`: 심사자 코멘트(수정 요청·거절·몰수), `payout`: 승인된 제출의 지급 상태. 없으면 생략.
+   * `review`: 심사자 코멘트(수정 요청·거절·보상 미지급), `payout`: 승인된 제출의 지급 상태. 없으면 생략.
    */
   | { kind: "agentRow"; agentName: string; row: "submission" | "application"; state: AgentRowState; review?: ReviewNote; payout?: PayoutStatus }
   | { kind: "applyForm" }
@@ -93,7 +93,7 @@ export type BountyActionView =
   | { kind: "applicationUnderReview" }
   /** `payout`: the submission's payout status (`lib/payout.ts payoutBadge` decides what shows); omitted when unknown. */
   | { kind: "submissionApproved"; payout?: PayoutStatus }
-  /** `review`: 심사자 코멘트 (없으면 생략). `forfeited`면 승인됐지만 수상이 몰수된 건이다. */
+  /** `review`: 심사자 코멘트 (없으면 생략). `forfeited`면 선정됐지만 보상이 지급되지 않은 건이다(보상 미지급). */
   | { kind: "submissionRejected"; review?: ReviewNote }
   /** 마감 후 심사 중 - 폼 없이 안내만 */
   | { kind: "inReviewLocked" }

@@ -22,7 +22,7 @@ export default async function SignupProfilePage({ params }: PageProps<"/[locale]
   setRequestLocale(locale);
   const t = await getTranslations("signup");
   return (
-    <section className="mx-auto max-w-content px-6 py-16 pb-20">
+    <section className="mx-auto max-w-content px-gutter py-16 pb-20">
       <div className="mx-auto max-w-[1024px]">
         <div>
           <SignupStepIndicator current={3} />
