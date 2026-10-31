@@ -158,6 +158,26 @@ async function assertPortsFree() {
     });
   }
 }
+/**
+ * The public list pages are ISR (`● revalidate 30s` in the build table): `next build` prerendered them while the BE was not up yet
+ * (so with the "unavailable" state) and before the seed existed. Wait until that build-time copy is past its revalidate window,
+ * request each ISR page once (Next answers STALE and regenerates in the background), then wait for a fresh HIT, so every flow
+ * sees the seeded data. The same thing happens in production after a deploy: the first visitor gets the build-time page.
+ */
+async function refreshIsrPages(feBuild, builtAt) {
+  const manifest = JSON.parse(fs.readFileSync(path.join(feBuild, '.next/prerender-manifest.json'), 'utf8'));
+  const isr = Object.entries(manifest.routes).filter(([, route]) => typeof route.initialRevalidateSeconds === 'number');
+  if (!isr.length) return;
+  const window = Math.max(...isr.map(([, route]) => route.initialRevalidateSeconds)) * 1000;
+  const wait = builtAt + window + 1000 - Date.now();
+  log(`refreshing ${isr.length} ISR pages after the seed${wait > 0 ? ` (waiting ${Math.ceil(wait / 1000)}s for the build-time copies to go stale)` : ''}`);
+  if (wait > 0) await sleep(wait);
+  await Promise.all(isr.map(([route]) => fetch(`${FE_ORIGIN}${route}`).then((r) => r.arrayBuffer())));
+  for (const [route] of isr) {
+    await waitFor(`ISR ${route}`, async () => (await fetch(`${FE_ORIGIN}${route}`)).headers.get('x-nextjs-cache') === 'HIT');
+  }
+}
+
 async function waitFor(label, probe, ms = 60_000) {
   const start = Date.now();
   while (Date.now() - start < ms) {
@@ -234,6 +254,7 @@ async function main() {
   pgStarted = true;
   sqlOn('postgres')('create database ninja');
   await builds;
+  const builtAt = Date.now();
   log('builds done; migrating');
   await run('migrate', process.execPath, ['scripts/migrate.js'], { cwd: beBuild, env: beEnv });
 
@@ -252,6 +273,7 @@ async function main() {
     `--user-data-dir=${path.join(TMP, 'chrome')}`, '--no-first-run', '--no-default-browser-check', ...(env.NINJA_IT_CHROME_FLAGS ?? '').split(/\s+/).filter(Boolean), 'about:blank'], { env: baseEnv() });
   await waitFor('FE /en', async () => (await fetch(`${FE_ORIGIN}/en`)).status === 200);
   await waitFor('Chrome CDP', async () => (await fetch(`http://127.0.0.1:${P.cdp}/json/version`)).ok);
+  await refreshIsrPages(feBuild, builtAt);
 
   const statePath = path.join(TMP, 'state.json');
   fs.writeFileSync(statePath, JSON.stringify({

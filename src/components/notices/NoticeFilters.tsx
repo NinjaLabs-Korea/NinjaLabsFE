@@ -1,21 +1,21 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 
 import { NoticeRow } from "@/components/cards/NoticeRow";
 import { Badge } from "@/components/ui/Badge";
 import { noticeCategoryFromQuery, noticeCategoryKeys } from "@/lib/notice-categories";
 import type { Notice } from "@/lib/types";
 
-type NoticeFiltersProps = { notices: Notice[]; /** Pre-selected chip (the `?category=` link from the community pages); ignored when no notice has it. */ initialCategory?: Notice["category"] };
+type NoticeFiltersProps = { notices: Notice[] };
 type CategoryFilter = "All" | Notice["category"];
 // Canonical chip order; only categories present in the feed are offered (08 draws All / Ninja Labs / Injective ecosystem / Events).
 const categoryOrder: Notice["category"][] = ["Ninja Labs", "Injective ecosystem", "Events", "Recruitment", "Other"];
 
-export function NoticeFilters({ notices, initialCategory }: NoticeFiltersProps) {
+export function NoticeFilters({ notices }: NoticeFiltersProps) {
   const t = useTranslations("notices");
-  const [category, setCategory] = useState<CategoryFilter>(() => (initialCategory && notices.some((notice) => notice.category === initialCategory) ? initialCategory : "All"));
+  const [category, setCategory] = useState<CategoryFilter>("All");
   // The chip lives in the URL (`?category=events`, same key as the community links) so Back from a notice lands on the same filter.
   // Native replaceState on purpose: Next syncs it with the router, and a filter click must not add a history entry.
   const select = useCallback((next: CategoryFilter) => {
@@ -29,13 +29,15 @@ export function NoticeFilters({ notices, initialCategory }: NoticeFiltersProps) 
       // History unavailable (sandboxed frame, Safari write limit): the in-memory filter still works.
     }
   }, []);
-  useEffect(() => {
+  // The page is static (ISR), so the server always renders "All"; the chip from `?category=` (the community pages' "past activities"
+  // links, Back from a notice) is applied here. A layout effect runs before the browser paints, so a client navigation never shows the
+  // unfiltered list first; on a hard load it applies at hydration.
+  useLayoutEffect(() => {
     const syncFromUrl = () => {
       const fromUrl = noticeCategoryFromQuery(new URLSearchParams(window.location.search).get("category") ?? undefined);
       setCategory(fromUrl && notices.some((notice) => notice.category === fromUrl) ? fromUrl : "All");
     };
-    // Back from a notice restores this component from the router cache with the cached (category-less) props,
-    // so the URL is the source of truth: read it once on mount, then again on every popstate.
+    // The URL is the source of truth: read it once on mount, then again on every popstate.
     syncFromUrl();
     window.addEventListener("popstate", syncFromUrl);
     return () => window.removeEventListener("popstate", syncFromUrl);

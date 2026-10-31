@@ -41,10 +41,13 @@ type PublicFetchOptions = {
 export const PUBLIC_LIST_REVALIDATE_SECONDS = 30;
 
 /**
- * Public list resources that go through the Data Cache. Each one is tagged `public:<resource>` so an admin write can expire it at once
- * (`lib/admin-revalidate.ts`). Members and highlights (`/members`, `/hall-of-fame`) are fetched uncached and need no tag.
+ * Public list resources that go through the Data Cache. Each one is tagged `public:<resource>` (the first path segment, so
+ * `/hall-of-fame/stats` is `public:hall-of-fame`) so an admin write can expire it at once (`lib/admin-revalidate.ts`).
+ * Every list a public page reads must be here: ONE uncached (`no-store`) fetch makes the whole route dynamic, so the page is
+ * rendered in the function region on every view instead of served from the CDN (ISR). `public-routes-static.test.ts` and the
+ * `next build` route table (`●` for `/[locale]`, `/bounties`, `/members`, `/notices`, `/about`, `/hall-of-fame`, `/home`) guard it.
  */
-export const PUBLIC_LIST_RESOURCES = ["notices", "bounties"] as const;
+export const PUBLIC_LIST_RESOURCES = ["notices", "bounties", "members", "hall-of-fame"] as const;
 export type PublicListResource = (typeof PUBLIC_LIST_RESOURCES)[number];
 export const publicListTag = (resource: PublicListResource): string => `public:${resource}`;
 

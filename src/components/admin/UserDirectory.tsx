@@ -6,7 +6,7 @@ import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { UserActions } from "@/components/admin/UserActions";
 import { Badge } from "@/components/ui/Badge";
-import { type AdminUser, adminErrorDescription } from "@/lib/admin-helpers";
+import { type AdminUser, adminErrorDescription, expirePublicLists } from "@/lib/admin-helpers";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 
 const columns = [
@@ -113,6 +113,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
     // Called from the toast's Undo action, which does not await it: a rejection must become a toast, not an unhandled error.
     try {
       await api.setAdminMember(user.slug, { isMember: user.isMember, ...(user.memberRole ? { role: user.memberRole } : {}), ...(user.memberDisplayOrder !== null ? { displayOrder: user.memberDisplayOrder } : {}) });
+      expirePublicLists(["members"]);
     } catch (error) {
       pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: adminErrorDescription(error, tCommon, t("toast.removeFailedDescription")) });
       return;
@@ -137,6 +138,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   async function handleRemove(user: AdminUser) {
     try {
       await api.setAdminMember(user.slug, { isMember: false });
+      expirePublicLists(["members"]);
     } catch (error) {
       pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: adminErrorDescription(error, tCommon, t("toast.removeFailedDescription")) });
       return;
@@ -162,6 +164,7 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   ) {
     try {
       await api.setAdminMember(user.slug, { isMember: true, role, ...(displayOrder !== null ? { displayOrder } : {}) });
+      expirePublicLists(["members"]);
     } catch (error) {
       pushAdminToast({ variant: "danger", title: t("toast.updateFailedTitle"), description: adminErrorDescription(error, tCommon, t("toast.assignFailedDescription")) });
       return;

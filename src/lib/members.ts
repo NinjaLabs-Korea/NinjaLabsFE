@@ -3,7 +3,7 @@ import type { Completion, Member, PayoutStatus, Profile, Reward } from "./types"
 import { nicknameInitials } from "./nickname";
 import { onboardingLog } from "./onboarding-log";
 import { cache } from "react";
-import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH } from "./api/public";
+import { fetchPublicJson, isPublicNotFound, loadFromRuntime, PUBLIC_DETAIL_FETCH, PUBLIC_LIST_REVALIDATE_SECONDS } from "./api/public";
 
 /** Mock fixture slugs used by demo affordances (Figma 05 / 05-Empty). */
 export const PROFILE_FILLED_EXAMPLE_ID = "jaemin";
@@ -58,7 +58,7 @@ export function getRuntimeMembers(): Promise<Member[]> {
 }
 
 async function fetchMembers(): Promise<Member[]> {
-  const rows = await fetchPublicJson<MemberRow[]>("/members");
+  const rows = await fetchPublicJson<MemberRow[]>("/members", { revalidateSeconds: PUBLIC_LIST_REVALIDATE_SECONDS });
   return rows.map((row) => ({
     slug: row.nickname,
     name: row.nickname,

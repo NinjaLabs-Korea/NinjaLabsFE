@@ -232,11 +232,24 @@ export type ApiHttp = {
 };
 
 /**
+ * A session this tab just obtained (refresh or login exchange). `user` is the raw `user` field of the BE answer when it
+ * had one: the `GET /auth/me` payload for this session (BE 2026-10-31). It is unvalidated here; `lib/api/me.ts readMe`
+ * checks it with `parseMeResponse` and falls back to `GET /auth/me` when it is missing or malformed.
+ */
+export type SessionStarted = { ok: true; user?: unknown };
+
+/** The optional `user` of a refresh/exchange body, as a spreadable `{ user }` (nothing when the BE sent none). */
+export function carriedUser(body: unknown): { user?: unknown } {
+  return body && typeof body === "object" && "user" in body && body.user !== undefined ? { user: body.user } : {};
+}
+
+/**
  * refresh 결과. `rejected`(401/403)만 세션을 끝낸다; `unavailable`은 쿠키를 유지하고 다음 401에서 재시도한다;
  * `signed-out`은 refresh 도중 로그아웃되어 새 토큰을 버린 경우; `no-session`은 이 탭이 이미 세션 종료를 안 경우다.
+ * 성공(`ok: true`)이면 BE가 실어 보낸 `user`(= `/auth/me` 응답)를 그대로 들고 온다(`SessionStarted`).
  */
 export type RefreshResult =
-  | { ok: true }
+  | SessionStarted
   | { ok: false; reason: "no-session" | "rejected" | "signed-out" }
   | { ok: false; reason: "unavailable"; status: number };
 
@@ -339,8 +352,9 @@ export function createApiHttp(apiUrl: string, options: ApiHttpOptions = {}): Api
       accessToken = token;
       cookieState = "present";
       writeRefreshCookieHint(true);
-      onboardingLog("http.refresh.succeeded", { status: res.status });
-      return { ok: true };
+      const carried = carriedUser(body);
+      onboardingLog("http.refresh.succeeded", { status: res.status, carriesUser: "user" in carried });
+      return { ok: true, ...carried };
     } catch {
       onboardingLog("http.refresh.failed", { status: 0, reason: "NETWORK_ERROR" });
       return { ok: false, reason: "unavailable", status: 0 };

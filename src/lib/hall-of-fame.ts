@@ -1,6 +1,6 @@
 import { formatUnits } from "viem";
 import { formatHomeZoneDate, safeHttpUrl, toHighlightTypeLabel, type HighlightTypeLabel } from "@/lib/api/codecs";
-import { fetchPublicJson, loadFromRuntime } from "@/lib/api/public";
+import { fetchPublicJson, loadFromRuntime, PUBLIC_LIST_REVALIDATE_SECONDS } from "@/lib/api/public";
 import { formatTokenAmount } from "@/lib/format";
 
 // Stat labels are UI copy: `labelKey` resolves under messages `hallOfFame.stats`.
@@ -133,9 +133,12 @@ function mockHallOfFame(locale: string): RuntimeHallOfFame {
 }
 
 async function fetchHallOfFame(locale: string): Promise<RuntimeHallOfFame> {
+  // Cached lists (see `PUBLIC_LIST_RESOURCES`): an uncached read here made the hub, `/about`, `/bounties` (hero stats), `/home` and
+  // `/hall-of-fame` dynamic. Admin highlight writes expire `public:hall-of-fame`; the stats are already cached 60s by the BE.
+  const cached = { revalidateSeconds: PUBLIC_LIST_REVALIDATE_SECONDS };
   const [rows, stats] = await Promise.all([
-    fetchPublicJson<HighlightRow[]>("/hall-of-fame"),
-    fetchPublicJson<StatsRow>("/hall-of-fame/stats"),
+    fetchPublicJson<HighlightRow[]>("/hall-of-fame", cached),
+    fetchPublicJson<StatsRow>("/hall-of-fame/stats", cached),
   ]);
   const category = (type: string): HighlightTypeLabel => toHighlightTypeLabel(type) ?? "Other";
   return {
