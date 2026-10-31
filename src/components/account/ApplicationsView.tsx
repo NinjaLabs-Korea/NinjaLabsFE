@@ -52,7 +52,7 @@ export function isClosedForSubmit(application: Pick<AccountApplication, "bountyS
 
 /**
  * The status words of a row (badge text). Single source for the My applications page and the home activity list, so a
- * forfeited award reads the same everywhere. `t` is `useTranslations("account.applications")`.
+ * reward-not-paid case reads the same everywhere. `t` is `useTranslations("account.applications")`.
  */
 export function applicationStatusLabel(
   t: (key: string, values?: Record<string, string>) => string,
@@ -73,7 +73,7 @@ export function applicationStatusLabel(
   return t(`steps.${status}`);
 }
 
-/** Final state of an approved application whose submission was rejected; a forfeited award names the reason. */
+/** Final state of an approved application whose submission was rejected; a reward-not-paid case names the reason. */
 function NotAcceptedNote({ application }: { application: AccountApplication }) {
   const t = useTranslations("account.applications");
   const review = parseReviewComment(application.reviewComment);

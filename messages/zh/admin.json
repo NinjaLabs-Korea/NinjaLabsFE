@@ -753,7 +753,7 @@
       "PAYOUT_CANCELLED_MANUAL": "手动取消发放",
       "REWARD_DEPOSIT_CONFIRMED": "奖励存款已确认",
       "REWARD_REFUNDED": "已记录奖励退款",
-      "SUBMISSION_AWARD_FORFEITED": "奖项已没收",
+      "SUBMISSION_AWARD_FORFEITED": "奖励标记为未发放",
       "USER_MEMBER_GRANTED": "已分配成员角色",
       "USER_MEMBER_REVOKED": "已移除成员角色",
       "USER_NICKNAME_CHANGED": "昵称已修改",
@@ -777,7 +777,8 @@
       "COHORT_APPLICATION_UPDATED": "期次申请已更新",
       "COHORT_APPLICATION_WITHDRAWN": "期次申请已撤回",
       "COHORT_APPLICATION_REAPPLIED": "期次重新申请",
-      "COHORT_APPLICATION_ACCEPTED": "期次申请已通过"
+      "COHORT_APPLICATION_ACCEPTED": "期次申请已通过",
+      "COHORT_QUESTIONS_UPDATED": "报名问题已修改"
     },
     "empty": "没有符合条件的审计日志。",
     "pagination": "审计日志分页",
@@ -878,13 +879,13 @@
       "filters": {
         "label": "筛选申请",
         "status": "状态",
-        "activityType": "活动类型",
-        "interestArea": "参与领域",
         "search": "搜索",
         "searchPlaceholder": "姓名、Telegram、X、昵称、邮箱",
         "all": "全部",
         "apply": "应用",
-        "reset": "重置"
+        "reset": "重置",
+        "question": "问题",
+        "option": "选项"
       },
       "statuses": {
         "SUBMITTED": "待审",
@@ -899,9 +900,7 @@
       "columns": {
         "applicant": "申请人",
         "contact": "联系方式",
-        "experience": "Web3 经验",
-        "activity": "活动类型",
-        "interests": "参与领域",
+        "intro": "自我介绍",
         "status": "状态",
         "applied": "申请时间",
         "action": "操作"
@@ -970,7 +969,80 @@
       "ADMIN_ONLY": "此账户不再拥有管理员权限。",
       "UNAUTHORIZED": "登录已过期，请重新登录。",
       "TOO_MANY_REQUESTS": "请求过多，请稍后再试。",
-      "generic": "请求失败，请重试。"
+      "generic": "请求失败，请重试。",
+      "COHORT_QUESTIONS_INVALID": "无法保存问题设置。请检查选项数量和文字。"
+    },
+    "questions": {
+      "action": "问题设置",
+      "eyebrow": "报名问题",
+      "heading": "{name} 报名问题",
+      "intro": "姓名、Telegram、X 和自我介绍始终会收集。下面是这一期额外提出的问题。",
+      "note": "已收到的报名答案不会改变。",
+      "empty": "还没有额外问题。请在下方添加。",
+      "add": "添加问题",
+      "addType": "新问题类型",
+      "close": "关闭",
+      "dirty": "有尚未保存的修改。",
+      "types": {
+        "SHORT_TEXT": "简短回答",
+        "LONG_TEXT": "详细回答",
+        "SINGLE_CHOICE": "单选",
+        "MULTI_CHOICE": "多选"
+      },
+      "question": "问题 {number}",
+      "moveUp": "将问题 {number} 上移",
+      "moveDown": "将问题 {number} 下移",
+      "remove": "删除问题 {number}",
+      "labelKo": "问题（韩语）",
+      "labelEn": "问题（英语，可选）",
+      "labelZh": "问题（中文，可选）",
+      "translationHint": "留空则显示韩语。",
+      "helpKo": "提示（韩语，可选）",
+      "helpEn": "提示（英语，可选）",
+      "helpZh": "提示（中文，可选）",
+      "required": "必答问题",
+      "options": "选项",
+      "optionKo": "选项 {number}（韩语）",
+      "optionEn": "选项 {number}（英语，可选）",
+      "optionZh": "选项 {number}（中文，可选）",
+      "addOption": "添加选项",
+      "removeOption": "删除选项 {number}",
+      "moveOptionUp": "将选项 {number} 上移",
+      "moveOptionDown": "将选项 {number} 下移",
+      "withDetail": "需要补充说明",
+      "withDetailHint": "选中后，申请人需再填写一行内容。每个问题只能有一个。",
+      "limits": "最多 {questions} 个问题，每个选择题 {min} 至 {max} 个选项。",
+      "save": "保存问题",
+      "saving": "正在保存…",
+      "savedTitle": "已保存报名问题",
+      "savedDescription": "{name}",
+      "removeDialog": {
+        "eyebrow": "删除问题",
+        "title": "要删除这个问题吗？",
+        "description": "保存后，新的申请人将看不到该问题。已收到的答案保持不变。",
+        "confirm": "删除问题"
+      },
+      "discardDialog": {
+        "eyebrow": "问题设置",
+        "title": "要放弃未保存的修改吗？",
+        "description": "未保存的问题修改将丢失。",
+        "confirm": "放弃"
+      },
+      "errors": {
+        "tooManyQuestions": "最多 {max} 个问题。",
+        "labelRequired": "请用韩语填写问题。",
+        "labelTooLong": "问题太长，最多 {max} 个字符。",
+        "labelInvalid": "问题中不能包含换行或不可见字符。",
+        "helpKoRequired": "请同时填写韩语提示。",
+        "helpTooLong": "提示太长，最多 {max} 个字符。",
+        "helpInvalid": "提示中包含不允许的字符。",
+        "optionsCount": "选择题需要 {min} 至 {max} 个选项。",
+        "withDetailMax": "每个问题只能有一个选项需要补充说明。",
+        "optionLabelRequired": "请用韩语填写选项。",
+        "optionLabelTooLong": "选项太长，最多 {max} 个字符。",
+        "optionLabelInvalid": "选项中不能包含换行或不可见字符。"
+      },
+      "fix": "请修改标出的内容。"
     }
   }
 }

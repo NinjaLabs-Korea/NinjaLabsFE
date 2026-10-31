@@ -17,7 +17,6 @@
     "nft": {
       "minted": "已发放 Ninja NFT",
       "pending": "Ninja NFT 发放中",
-      "failed": "Ninja NFT 需要处理",
       "none": "暂无 Ninja NFT"
     },
     "viewProfile": "查看我的资料",

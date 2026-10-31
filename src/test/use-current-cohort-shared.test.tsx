@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cohortAcceptingHint, useCurrentCohort } from "@/components/recruit/useCurrentCohort";
 import type { PublicCohort } from "@/lib/cohorts";
 
-const cohort: PublicCohort = { id: "c1", name: "2nd", description: "", opensAt: null, closesAt: null, acceptingApplications: true };
+const cohort: PublicCohort = { id: "c1", name: "2nd", description: "", opensAt: null, closesAt: null, acceptingApplications: true, questions: [] };
 let api: { getCurrentCohort: ReturnType<typeof vi.fn> };
 vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({ useCohortApi: () => api }));

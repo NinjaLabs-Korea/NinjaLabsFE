@@ -13,7 +13,7 @@ vi.mock("@/i18n/navigation", () => ({ Link: ({ children, href, ...props }: Compo
 vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({ useAuthSnapshot: () => state.auth, useCohortApi: () => api }));
 
-const cohort: PublicCohort = { id: "c1", name: "2nd", description: "", opensAt: null, closesAt: null, acceptingApplications: true };
+const cohort: PublicCohort = { id: "c1", name: "2nd", description: "", opensAt: null, closesAt: null, acceptingApplications: true, questions: [] };
 const finished = signedInWith({ onboardingCompleted: true, profileSlug: "p" });
 const mine = (status: string) => ({ status: "available", data: [{ id: "a", cohortId: "c1", status }] });
 

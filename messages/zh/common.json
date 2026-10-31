@@ -89,6 +89,8 @@
       "CHALLENGE_EXPIRED": "验证请求已过期或已被使用。请再次点击“验证钱包”并签署新消息。",
       "INVALID_SIGNATURE": "签名与该钱包不匹配。请使用已连接的地址签名后重试。",
       "WALLET_ALREADY_LINKED": "该钱包或此账户已有其他关联。如需更改，请联系 Ninja Labs 团队。",
+      "WALLET_LINKED_TO_OTHER_ACCOUNT": "该钱包已被其他账户使用。请连接其他钱包。",
+      "ACCOUNT_ALREADY_HAS_WALLET": "此账户已连接钱包。如需更换，请联系 Ninja Labs 团队。",
       "AGENT_WALLET_IS_OWNER_WALLET": "此地址已被你的某个代理用作钱包。请为账户连接另一个个人钱包。",
       "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"

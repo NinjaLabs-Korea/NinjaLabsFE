@@ -1,5 +1,5 @@
 import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toPayoutStatus, toRewards, type RewardRow } from "./api/codecs";
-import type { Completion, Member, PayoutStatus, Profile, ProfileNft, Reward } from "./types";
+import type { Completion, Member, PayoutStatus, Profile, Reward } from "./types";
 import { nicknameInitials } from "./nickname";
 import { onboardingLog } from "./onboarding-log";
 import { cache } from "react";
@@ -184,17 +184,17 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
   };
 }
 
-export type ParentNftState = "minted" | "pending" | "none";
+/** Label key under `members.nftStatus` for a public NFT tile; `null` = no label (fully attached). */
+export type PublicNftStatusKey = "minting" | "minted";
 
 /**
- * Where the member's parent Ninja NFT stands, from the public profile's NFT list. Only a parent that is on chain
- * (MINTED, or further along) counts as minted; PENDING/MINTING is in progress; no parent row or FAILED is "not minted".
+ * Visitors only need "in progress" vs "done". PENDING, MINTING, ATTACHING, FAILED and any status the BE adds later all read as
+ * "minting"; a FAILED mint is handled by operators in /admin/nft-jobs, not shown to visitors. ATTACHED is the normal tile: no label.
  */
-export function parentNftState(nfts: readonly Pick<ProfileNft, "type" | "status">[]): ParentNftState {
-  const parents = nfts.filter((nft) => nft.type === "parent");
-  if (parents.some((nft) => nft.status === "MINTED" || nft.status === "ATTACHING" || nft.status === "ATTACHED")) return "minted";
-  if (parents.some((nft) => nft.status === "PENDING" || nft.status === "MINTING")) return "pending";
-  return "none";
+export function publicNftStatusKey(status: string): PublicNftStatusKey | null {
+  if (status === "ATTACHED") return null;
+  if (status === "MINTED") return "minted";
+  return "minting";
 }
 
 /**

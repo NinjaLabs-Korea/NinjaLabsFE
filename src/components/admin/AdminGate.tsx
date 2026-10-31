@@ -26,7 +26,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
     // the session ends or comes back and the typed values survive both transitions.
     return (
       <div className={ADMIN_MIN_HEIGHT}>
-        <div className="mx-auto max-w-content px-6 pt-6" role="alert">
+        <div className="mx-auto max-w-content px-gutter pt-6" role="alert">
           <div className="flex flex-wrap items-center gap-3 rounded-control border border-danger-soft bg-danger-soft px-4 py-3 text-sm text-danger">
             <p>{t("sessionExpired")}</p>
             <Link className="font-semibold underline" href={signInHref("/admin")} rel="noopener" target="_blank">{t("signInAgain")}</Link>
@@ -39,12 +39,12 @@ export function AdminGate({ children }: { children: ReactNode }) {
 
   if (auth.status !== "signed-in") {
     if (auth.status === "loading") {
-      return <div className={ADMIN_MIN_HEIGHT}><div className="mx-auto max-w-content px-6 py-20"><PageLoading label={t("checking")} /></div></div>;
+      return <div className={ADMIN_MIN_HEIGHT}><div className="mx-auto max-w-content px-gutter py-20"><PageLoading label={t("checking")} /></div></div>;
     }
-    return <div className={ADMIN_MIN_HEIGHT}><div className="mx-auto max-w-content px-6 py-20"><h1 className="font-display text-4xl text-ink">{t("signInRequired")}</h1><Link className="mt-5 inline-flex rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href="/signup">{t("signIn")}</Link></div></div>;
+    return <div className={ADMIN_MIN_HEIGHT}><div className="mx-auto max-w-content px-gutter py-20"><h1 className="font-display text-4xl text-ink">{t("signInRequired")}</h1><Link className="mt-5 inline-flex rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href="/signup">{t("signIn")}</Link></div></div>;
   }
   if (!auth.user.isAdmin) {
-    return <div className={ADMIN_MIN_HEIGHT}><div className="mx-auto max-w-content px-6 py-20"><h1 className="font-display text-4xl text-ink">{t("accessOnly")}</h1><p className="mt-3 text-ink-muted">{t("noPermission")}</p></div></div>;
+    return <div className={ADMIN_MIN_HEIGHT}><div className="mx-auto max-w-content px-gutter py-20"><h1 className="font-display text-4xl text-ink">{t("accessOnly")}</h1><p className="mt-3 text-ink-muted">{t("noPermission")}</p></div></div>;
   }
   return <div className={ADMIN_MIN_HEIGHT}>{null}{children}</div>;
 }

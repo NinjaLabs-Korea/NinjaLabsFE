@@ -15,6 +15,7 @@ import { state } from '../lib/state.mjs';
 import { denseProbe } from '../lib/layout-audit.mjs';
 import { findMockCopy } from '../lib/no-mock-copy.mjs';
 import { ids, seed, check, done, sleep, signIn, apiAs, tokenFor } from '../lib/harness.mjs';
+import { answersFor, configureAllTypeQuestions } from '../lib/cohort-questions.mjs';
 
 const SHOTS = path.join(state.logDir, 'shots');
 fs.mkdirSync(SHOTS, { recursive: true });
@@ -46,7 +47,9 @@ let longBounty = null, longNotice = null;
   const [, nowOpen] = await apiAs(adminToken, 'GET', '/admin/cohorts');
   open = JSON.parse(nowOpen).find((c) => c.status === 'OPEN');
   check('setup: a cohort is open', !!open, open?.name);
-  await apiAs(adminToken, 'POST', `/cohorts/${open.id}/applications`, { displayName: 'Ops 운영자 (긴 이름을 가진 지원자의 이름입니다)', telegram: '@ops_admin', twitter: '@ops_admin', web3Experience: 'GT_3Y', activityType: 'BIZDEV', interestAreas: ['BIZDEV', 'DEVELOPER'], intro: 'Injective 위에서 대시보드를 만들고 싶습니다. '.repeat(4) });
+  // one question of every type, long wording: the application form and the question editor are swept with it
+  const questions = await configureAllTypeQuestions(adminToken, open.id);
+  await apiAs(adminToken, 'POST', `/cohorts/${open.id}/applications`, { displayName: 'Ops 운영자 (긴 이름을 가진 지원자의 이름입니다)', telegram: '@ops_admin', twitter: '@ops_admin', intro: 'Injective 위에서 대시보드를 만들고 싶습니다. '.repeat(4), answers: answersFor(questions) });
   const [bs, bBody] = await apiAs(adminToken, 'POST', '/admin/bounties', {
     title: 'Build an Injective cross-chain analytics dashboard with extremely-long-unbroken-token-that-keeps-going 인젝티브 위에서 동작하는 긴 제목의 바운티',
     sponsorName: 'A Very Long Sponsor Name Foundation Korea', summary: 'A long summary line that should wrap nicely in cards at every width without being cut off by the container. '.repeat(2),
@@ -83,6 +86,8 @@ for (const route of concrete) {
   if (FULL && !isAdminRoute(route) && (route === '/' || route === '/home' || route === '/account')) states.push('admin');
   for (const st of states) {
     jobs.push({ route, st });
+    // the question editor open under the cohort list (the form of /recruit is already on screen for the builder, who has not applied)
+    if (route === '/admin/recruitment') jobs.push({ route, st, editor: true });
     // header menus open (mobile drawer below lg, account dropdown): they are closed <details> otherwise and not measured
     if (['/', '/home', '/bounties', '/notices'].includes(route) && st !== 'admin') for (const menu of [0, 1]) jobs.push({ route, st, menu: menu + 1 });
   }
@@ -116,14 +121,22 @@ let shotNo = 0;
 const PROBE = `(${denseProbe})()`;
 const slug = (s) => s.replace(/[^a-zA-Z0-9]+/g, '_').slice(0, 40);
 
-async function sweepPage(p, locale, st, route, menu) {
+const EDITOR_BUTTON = ['Questions', '질문 설정', '问题设置'];
+
+async function sweepPage(p, locale, st, route, menu, editor) {
   const url = `/${locale}${route === '/' ? '' : route}`;
   await p.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
   await p.goto(url);
   await p.waitFor(`document.querySelector('main, body > div') !== null && document.body.innerText.trim().length > 0`, 5000);
   if (API_MODE && !menu) { const hits = findMockCopy(await p.text()); if (hits.length) mockCopy.set(`${locale}:${st}:${url}`, hits); } // once per route at 1440px
   if (menu) await p.eval(`[...document.querySelectorAll('header details')].forEach((d, i) => { d.open = i === ${menu - 1}; })`);
-  const stName = menu ? `${st}+menu${menu}` : st;
+  if (editor) {
+    await p.waitFor(`!!document.querySelector('main tbody tr button')`, 8000);
+    const opened = await p.eval(`(()=>{const b=[...document.querySelectorAll('main tbody tr button')].find(b=>${JSON.stringify(EDITOR_BUTTON)}.includes(b.innerText.trim())); if(!b) return false; b.click(); return true})()`);
+    await sleep(800);
+    check(`question editor opened ${locale} ${url}`, opened && (await p.eval(`!!document.querySelector('section[aria-labelledby^="questions-"]')`)), opened);
+  }
+  const stName = (menu ? `${st}+menu${menu}` : st) + (editor ? '+editor' : '');
   for (const width of WIDTHS) {
     await p.send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false });
     await sleep(90);
@@ -162,8 +175,8 @@ async function worker(locale) {
     if (st === 'admin') await signIn(p, ids.ADMIN);
     pages[st] = p;
   }
-  for (const { route, st, menu } of jobs) {
-    try { await sweepPage(pages[st], locale, st, route, menu); } catch (e) { check(`sweep ${locale} ${st} ${route} completed`, false, String(e).slice(0, 200)); }
+  for (const { route, st, menu, editor } of jobs) {
+    try { await sweepPage(pages[st], locale, st, route, menu, editor); } catch (e) { check(`sweep ${locale} ${st} ${route} completed`, false, String(e).slice(0, 200)); }
   }
   for (const p of Object.values(pages)) await p.close();
 }

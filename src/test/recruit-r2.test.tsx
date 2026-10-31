@@ -25,10 +25,10 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
     useAccountApi: () => api,
   }));
 
-const cohort = (over: Partial<PublicCohort>): PublicCohort => ({ id: "c2", name: "Second", description: "", opensAt: null, closesAt: null, acceptingApplications: true, ...over });
+const cohort = (over: Partial<PublicCohort>): PublicCohort => ({ id: "c2", name: "Second", description: "", opensAt: null, closesAt: null, acceptingApplications: true, questions: [], ...over });
 const application = (over: Partial<Mine>) => ({
-  id: "a1", cohortId: "c1", cohort: { id: "c1", name: over.cohortName ?? "First", status: "CLOSED", acceptingApplications: false }, reviewedAt: null, editable: false, withdrawable: false, status: "ACCEPTED", displayName: "Kim", telegram: "kim", twitter: "kim", web3Experience: "LT_1Y",
-  activityType: "DEVELOPER", activityTypeOther: null, interestAreas: ["DEVELOPER"], interestOther: null, intro: "hi", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z", ...over, cohortName: undefined,
+  id: "a1", cohortId: "c1", cohort: { id: "c1", name: over.cohortName ?? "First", status: "CLOSED", acceptingApplications: false }, reviewedAt: null, editable: false, withdrawable: false, status: "ACCEPTED", displayName: "Kim", telegram: "kim", twitter: "kim", answers: [],
+  intro: "hi", createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z", ...over, cohortName: undefined,
 });
 const available = (data: unknown[]) => async () => ({ status: "available", data });
 
