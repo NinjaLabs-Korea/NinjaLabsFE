@@ -43,7 +43,7 @@ describe("landing and sitemap with a partially unavailable API", () => {
     expect(await getRuntimeOpenBounties("en")).toEqual([]);
   });
 
-  it("passes the hall of fame stats, including the rewards paid total, through to the bounty hero", async () => {
+  it("passes the hall of fame stats, including the rewards paid total, through to the bounty masthead", async () => {
     const stats = [
       { value: "3", labelKey: "bountiesCompleted" },
       { value: "12,500 USDC · 300 INJ", labelKey: "rewardsPaid" },
@@ -53,7 +53,7 @@ describe("landing and sitemap with a partially unavailable API", () => {
     expect(hero.stats).toEqual(stats);
   });
 
-  it("hides the bounty hero stats while every value is zero and brings them back once one is above zero", async () => {
+  it("hides the bounty masthead stats while every value is zero and brings them back once one is above zero", async () => {
     const zeros = [{ value: "0", labelKey: "bountiesCompleted" }, { value: "0", labelKey: "buildersRewarded" }];
     sources.hall.mockResolvedValue({ stats: zeros, highlights: [], milestones: [], partners: [] });
     expect((await getBountyMastheadData("en")).stats).toEqual([]);
