@@ -324,6 +324,16 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
     withdrawAccount: async (confirmNickname) => {
       await http.fetchJson("/users/me", { method: "DELETE", body: { confirmNickname } });
     },
+
+    uploadAvatar: async (file) => {
+      const form = new FormData();
+      form.set("file", file);
+      return http.fetchForm<{ avatarUrl: string }>("/users/me/avatar", form);
+    },
+
+    removeAvatar: async () => {
+      await http.fetchJson("/users/me/avatar", { method: "DELETE" });
+    },
     ...createCohortApi(http),
     ...createAdminApi(http),
     ...createAdminCohortApi(http),

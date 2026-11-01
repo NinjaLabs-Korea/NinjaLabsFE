@@ -136,6 +136,13 @@ export type AccountSettingsApi = {
    * 400 `CONFIRM_NICKNAME_MISMATCH` / 409 `WITHDRAWAL_BLOCKED_OPEN_PAYOUTS`(지급 진행 중) / 409 `WITHDRAWAL_BLOCKED_PENDING_REWARDS`(승인됐지만 지급 요청 전인 보상) / 404 `USER_NOT_FOUND` / 503 `DATABASE_UNAVAILABLE`.
    */
   withdrawAccount: (confirmNickname: string) => Promise<void>;
+  /**
+   * `POST /users/me/avatar` multipart `file` - 본인 프로필 사진 등록·교체(JPEG/PNG/WebP, 2 MiB). `avatarUrl`은 `/media/<uuid>`.
+   * 400 `MEDIA_FILE_REQUIRED` / `MEDIA_FILE_TOO_LARGE` / `MEDIA_FILE_TYPE_UNSUPPORTED`, 404 `USER_NOT_FOUND`. 호출자는 이어서 auth `refresh()`로 헤더·`/home`을 갱신한다.
+   */
+  uploadAvatar: (file: File) => Promise<{ avatarUrl: string }>;
+  /** `DELETE /users/me/avatar` - 본인 프로필 사진 삭제(사진이 없어도 성공, 멱등). 404 `USER_NOT_FOUND`. */
+  removeAvatar: () => Promise<void>;
 };
 
 /** 운영자 콘솔 (AdminGuard 보호 엔드포인트) */

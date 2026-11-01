@@ -125,6 +125,30 @@
       "linkedNote": "연결된 지갑은 계정에 고정되어 여기서 바꾸거나 해제할 수 없어요. 바꿔야 한다면 운영진에게 문의해 주세요.",
       "body": "가입할 때 ‘나중에 연결하기’를 선택했다면 여기서 연결할 수 있어요. 지갑을 연결하면 Ninja NFT가 발급돼요.",
       "unavailable": "이 환경에서는 지갑 연결을 사용할 수 없어요."
+    },
+    "avatar": {
+      "label": "프로필 사진",
+      "hint": "JPG, PNG, WebP 사진을 2MB까지 올릴 수 있어요. 헤더, 내 활동, 공개 프로필, 멤버 카드에 보여요.",
+      "previewNote": "미리보기예요. 저장하면 반영돼요.",
+      "choose": "사진 올리기",
+      "change": "사진 바꾸기",
+      "remove": "사진 삭제",
+      "save": "사진 저장",
+      "saving": "올리는 중…",
+      "cancel": "취소",
+      "removing": "삭제 중…",
+      "saved": "프로필 사진을 저장했어요.",
+      "removed": "프로필 사진을 삭제했어요.",
+      "removeFailed": "사진을 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.",
+      "mockNote": "미리보기 모드라서 새로고침하면 사진이 남지 않아요.",
+      "errors": {
+        "MEDIA_FILE_REQUIRED": "올릴 사진을 골라 주세요.",
+        "MEDIA_FILE_TOO_LARGE": "사진이 2MB보다 커요. 더 작은 사진을 골라 주세요.",
+        "MEDIA_FILE_TYPE_UNSUPPORTED": "JPG, PNG, WebP 사진만 올릴 수 있어요.",
+        "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없어요. 잠시 후 다시 시도해 주세요.",
+        "TOO_MANY_REQUESTS": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.",
+        "generic": "사진을 저장하지 못했어요. 잠시 후 다시 시도해 주세요."
+      }
     }
   }
 }

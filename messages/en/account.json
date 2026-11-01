@@ -125,6 +125,30 @@
       "linkedNote": "A linked wallet is fixed to your account and can’t be changed or unlinked here. Contact the operators if you need a different one.",
       "body": "If you chose “Connect later” while signing up, connect your wallet here. Connecting a wallet issues your Ninja NFT.",
       "unavailable": "Wallet connection is not available in this environment."
+    },
+    "avatar": {
+      "label": "Profile photo",
+      "hint": "JPG, PNG or WebP, up to 2 MB. It shows in the header, on My activity, your public profile and member cards.",
+      "previewNote": "This is a preview. Save to use it.",
+      "choose": "Upload photo",
+      "change": "Change photo",
+      "remove": "Remove photo",
+      "save": "Save photo",
+      "saving": "Uploading…",
+      "cancel": "Cancel",
+      "removing": "Removing…",
+      "saved": "Profile photo saved.",
+      "removed": "Profile photo removed.",
+      "removeFailed": "Couldn't remove the photo. Please try again in a moment.",
+      "mockNote": "Preview mode: the photo is not kept after a reload.",
+      "errors": {
+        "MEDIA_FILE_REQUIRED": "Choose a photo to upload.",
+        "MEDIA_FILE_TOO_LARGE": "The photo is larger than 2 MB. Choose a smaller one.",
+        "MEDIA_FILE_TYPE_UNSUPPORTED": "Only JPG, PNG and WebP photos can be uploaded.",
+        "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+        "TOO_MANY_REQUESTS": "Too many requests. Please try again in a moment.",
+        "generic": "Couldn't save the photo. Please try again in a moment."
+      }
     }
   }
 }

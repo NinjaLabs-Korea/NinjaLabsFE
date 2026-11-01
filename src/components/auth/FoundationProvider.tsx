@@ -164,7 +164,7 @@ export function FoundationProvider({
       if (snapshot.status === "signed-in") {
         setSessionHint();
         setMemberHint(snapshot.user.onboardingCompleted === true);
-        setChipHint({ initials: snapshot.user.initials, handle: snapshot.user.handle });
+        setChipHint({ initials: snapshot.user.initials, handle: snapshot.user.handle, avatarUrl: snapshot.user.avatarUrl });
       } else if (snapshot.status === "signed-out" && snapshot.reason !== "unavailable") {
         clearSessionHint();
         setMemberHint(false);

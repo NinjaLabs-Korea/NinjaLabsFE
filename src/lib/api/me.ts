@@ -1,5 +1,6 @@
 import type { ClientUser } from "@/lib/contracts/auth";
 import { ApiHttpError, type ApiHttp } from "@/lib/api/http";
+import { toAvatarUrl } from "@/lib/avatar";
 import { nicknameInitials } from "@/lib/nickname";
 import { onboardingLog } from "@/lib/onboarding-log";
 
@@ -14,6 +15,8 @@ export type MeResponse = {
   onboardingCompleted: boolean;
   isAdmin: boolean;
   isMember: boolean;
+  /** Profile photo `/media/<uuid>` or null (BE 0022). Absent on an older BE: read as no photo. */
+  avatarUrl?: string | null;
   wallet: { address: string; verifiedAt: string | null } | null;
   nft: { status: string; tokenId: string | null } | null;
 };
@@ -40,12 +43,15 @@ export function parseMeResponse(value: unknown): MeResponse | null {
     isBoolean(value.onboardingCompleted) &&
     isBoolean(value.isAdmin) &&
     isBoolean(value.isMember) &&
+    // optional: an older BE has no avatarUrl at all, and that `user` must still skip the `/auth/me` round trip
+    (value.avatarUrl === undefined || value.avatarUrl === null || isString(value.avatarUrl)) &&
     (wallet === null || (isRecord(wallet) && isString(wallet.address) && (wallet.verifiedAt === null || isString(wallet.verifiedAt)))) &&
     (nft === null || (isRecord(nft) && isString(nft.status) && (nft.tokenId === null || isString(nft.tokenId))));
   return ok ? (value as MeResponse) : null;
 }
 
 export function toClientUser(me: MeResponse): ClientUser {
+  const avatarUrl = toAvatarUrl(me.avatarUrl);
   return {
     id: me.id,
     handle: me.nickname,
@@ -58,6 +64,7 @@ export function toClientUser(me: MeResponse): ClientUser {
     tags: me.tags,
     nftStatus: me.nft?.status ?? null,
     ...(me.wallet ? { walletAddress: me.wallet.address } : {}),
+    ...(avatarUrl ? { avatarUrl } : {}),
   };
 }
 

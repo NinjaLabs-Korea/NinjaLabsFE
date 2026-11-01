@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useAuthActions, useAuthSnapshot } from "@/components/auth/FoundationProvider";
 import { NAV_DESKTOP_ONLY_BLOCK, NAV_DESKTOP_ONLY_FLEX, NAV_DESKTOP_ONLY_INLINE } from "@/components/layout/nav-breakpoint";
 import { getAccountNavigationItems, userChipAvatarSizeClass, UserChipContent, userChipBoxClass, UserMenu } from "@/components/layout/UserMenu";
+import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
 import { useChipHint, useMemberHint, useSessionHint } from "@/lib/foundation/session-hint";
 
@@ -48,7 +49,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
           // Non-interactive stand-in for the user menu trigger: same box and content, no menu, no fade.
           <div aria-hidden="true" className={NAV_DESKTOP_ONLY_BLOCK} data-testid="user-chip-hint">
             <span className={`${userChipBoxClass} border-border bg-surface`}>
-              <UserChipContent handle={chipHint.handle} initials={chipHint.initials} />
+              <UserChipContent avatarUrl={chipHint.avatarUrl} handle={chipHint.handle} initials={chipHint.initials} />
             </span>
           </div>
         ) : restoring ? (
@@ -83,9 +84,7 @@ export function AuthArea({ variant }: AuthAreaProps) {
   return (
     <div className="mt-1 border-t border-border pt-2">
       <div className="flex items-center gap-2 px-3 py-2">
-        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary-soft-border font-display text-[13px] font-bold text-primary-strong">
-          {user.initials}
-        </span>
+        <Avatar avatarUrl={user.avatarUrl} initials={user.initials} sizeClass="size-8" sizes="32px" textClass="text-[13px] font-bold" />
         <span className="min-w-0 break-words text-sm font-semibold text-ink">{user.handle}</span>
       </div>
       <nav aria-label={tMenu("accountNavigation")} className="space-y-1 px-1 pb-1">
