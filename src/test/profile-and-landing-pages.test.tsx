@@ -3,7 +3,7 @@ import { screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { createFormatter, createTranslator } from "next-intl";
 import { describe, expect, it, vi } from "vitest";
-import type { BountyHero as BountyHeroData } from "@/lib/landing";
+import type { BountyMastheadData } from "@/lib/landing";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import type { Profile } from "@/lib/types";
 import { enMessages, renderWithIntl } from "@/test/intl";
@@ -96,15 +96,10 @@ describe("Intro (/) hero", () => {
 });
 
 describe("bounty masthead (top of /bounties)", () => {
-  const hero = (overrides: Partial<BountyHeroData> = {}): BountyHeroData => ({
-    stats: [],
-    portfolio: { handle: "ninja.inj", memberSince: 2026, completed: [], totalCompleted: 0 },
-    statsUnavailable: false,
-    ...overrides,
-  });
+  const masthead = (overrides: Partial<BountyMastheadData> = {}): BountyMastheadData => ({ stats: [], ...overrides });
 
   it("is the light list masthead: one h1, the one-line pitch and the how-it-works link, with no hub hero pieces", async () => {
-    const view = renderWithIntl(await BountyMasthead({ hero: hero(), locale: "en" }));
+    const view = renderWithIntl(await BountyMasthead({ masthead: masthead(), locale: "en" }));
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Bounties");
     expect(screen.getByText("Marketplace")).toBeTruthy();
@@ -119,14 +114,14 @@ describe("bounty masthead (top of /bounties)", () => {
   });
 
   it("shows no stat block and no completed line while there is nothing to count", async () => {
-    const view = renderWithIntl(await BountyMasthead({ hero: hero(), locale: "en" }));
+    const view = renderWithIntl(await BountyMasthead({ masthead: masthead(), locale: "en" }));
     expect(view.container.querySelector("dl")).toBeNull();
     expect(screen.queryByText(/bounties? completed/)).toBeNull();
   });
 
   it("groups stat counts by locale like the Hall of Fame cards and leaves the paid total as is", async () => {
     renderWithIntl(await BountyMasthead({
-      hero: hero({ stats: [{ value: "1234", labelKey: "bountiesCompleted" }, { value: "12,500 USDC · 300 INJ", labelKey: "rewardsPaid" }], portfolio: { handle: "ninja.inj", memberSince: 2026, completed: [], totalCompleted: 1234 } }),
+      masthead: masthead({ stats: [{ value: "1234", labelKey: "bountiesCompleted" }, { value: "12,500 USDC · 300 INJ", labelKey: "rewardsPaid" }] }),
       locale: "en",
     }));
     expect(screen.getByText("1,234", { selector: "dd" })).toBeTruthy();
