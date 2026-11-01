@@ -3,13 +3,13 @@
 import { useLocale, useTranslations } from "next-intl";
 import { type FocusEvent } from "react";
 import { ChoiceChip } from "@/components/recruit/ChoiceChip";
+import { roomyField } from "@/components/ui/field-classes";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import { answerTextLimit, isChoiceType, localized, type CohortAnswerError, type CohortDraftAnswer, type CohortQuestion } from "@/lib/cohorts";
 import { COHORT_OTHER_DETAIL_MAX } from "@/lib/input-limits";
 
-// The cohort form's field recipe (padded, also used for textareas). Bounty fields use `bounties/BountyActionPanels bountyInputClass`.
-export const questionInputClass =
-  "mt-2 w-full rounded-control border border-border bg-surface px-4 py-3 text-sm text-ink-secondary placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
+// The cohort form's field recipe is the shared padded one (`ui/field-classes`, also used for textareas).
+export const questionInputClass = roomyField;
 export const labelClass = "text-sm font-semibold text-ink";
 export const hintClass = "mt-1 text-xs text-ink-muted";
 

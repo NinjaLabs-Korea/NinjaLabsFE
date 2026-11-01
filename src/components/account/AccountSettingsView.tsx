@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useId, useState } from "react";
+import { roomyField } from "@/components/ui/field-classes";
 import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { SignedOutPanel } from "@/components/account/SignedOutPanel";
 import {
@@ -197,7 +198,7 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
           aria-invalid={error === "CONFIRM_NICKNAME_MISMATCH" ? true : undefined}
           autoCapitalize="off"
           autoComplete="off"
-          className="mt-2 w-full rounded-control border border-border bg-surface px-4 py-3 text-sm text-ink-secondary placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className={roomyField}
           disabled={busy}
           id={inputId}
           onChange={(event) => {
