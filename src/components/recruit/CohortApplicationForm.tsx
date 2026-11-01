@@ -6,6 +6,7 @@ import { useAuthSnapshot, useCohortApi } from "@/components/auth/FoundationProvi
 import { QuestionField, hintClass, labelClass, questionInputClass } from "@/components/recruit/QuestionField";
 import { useCurrentCohort } from "@/components/hooks/useCurrentCohort";
 import { RequiredMark } from "@/components/ui/RequiredMark";
+import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { focusFirstInvalid } from "@/lib/form-focus";
 import { clearCohortDraft, readCohortDraft, writeCohortDraft } from "@/lib/cohort-application-draft";
 import { ERROR_COPY } from "@/lib/api/error-copy";
@@ -91,10 +92,13 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
   }
   const [errors, setErrors] = useState<CohortFormErrors>({});
   const [answerErrors, setAnswerErrors] = useState<CohortAnswerErrors>({});
-  const [state, setState] = useState<"idle" | "pending" | "error">("idle");
+  // `saved` keeps the button disabled after a successful send (the parent swaps the view); the flight itself ends when the request settles.
+  const [saved, setSaved] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [saveError, setSaveError] = useState<CohortApplyErrorKey>("generic");
   // Synchronous in-flight guard: several submit events can land in one tick before React re-renders the disabled button.
-  const inFlight = useRef(false);
+  const { busy, run } = useSingleFlight();
+  const pending = busy || saved;
 
   const sent = useRef(false);
   useEffect(() => {
@@ -126,35 +130,35 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (inFlight.current) return;
+    if (busy) return;
     const nextErrors = validateCohortDraft(draft);
     const values = draftToValues(draft, questions);
     const nextAnswerErrors = validateAnswers(questions, values.answers);
     setErrors(nextErrors);
     setAnswerErrors(nextAnswerErrors);
     if (Object.keys(nextErrors).length > 0 || Object.keys(nextAnswerErrors).length > 0) {
-      setState("idle");
+      setFailed(false);
       setSubmitFailed(true);
       focusFirstInvalid(formRef.current);
       return;
     }
-    inFlight.current = true;
-    setState("pending");
-    try {
-      const saved = application ? await api.updateCohortApplication(application.id, values) : await api.applyToCohort(cohortId, values);
-      sent.current = true;
-      if (draftScope) clearCohortDraft(draftScope, cohortId);
-      onSaved(saved);
-    } catch (error) {
-      setErrors(cohortFieldErrorsFromBe(error));
-      setSaveError(cohortApplyErrorKey(error));
-      setState("error");
-      // The operator changed the questions while this was being filled in: read them again, keep what was typed (the draft stays in storage and state).
-      if (isQuestionsChangedError(error)) current.reload();
-      if (isStaleCohortError(error)) onStale?.();
-    } finally {
-      inFlight.current = false;
-    }
+    await run(async () => {
+      setFailed(false);
+      try {
+        const result = application ? await api.updateCohortApplication(application.id, values) : await api.applyToCohort(cohortId, values);
+        sent.current = true;
+        setSaved(true);
+        if (draftScope) clearCohortDraft(draftScope, cohortId);
+        onSaved(result);
+      } catch (error) {
+        setErrors(cohortFieldErrorsFromBe(error));
+        setSaveError(cohortApplyErrorKey(error));
+        setFailed(true);
+        // The operator changed the questions while this was being filled in: read them again, keep what was typed (the draft stays in storage and state).
+        if (isQuestionsChangedError(error)) current.reload();
+        if (isStaleCohortError(error)) onStale?.();
+      }
+    });
   };
 
   const fieldError = (field: CohortFixedField, id: string) => {
@@ -272,15 +276,15 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
           className="block w-full rounded-control bg-primary px-5 py-3 text-center text-base font-semibold text-on-inverse hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[200px]"
-          disabled={state === "pending"}
+          disabled={pending}
           type="submit"
         >
-          {state === "pending" ? (editing ? t("updating") : t("submitting")) : editing ? t("update") : t("submit")}
+          {pending ? (editing ? t("updating") : t("submitting")) : editing ? t("update") : t("submit")}
         </button>
         {onCancel ? (
           <button
             className="block w-full rounded-control border border-primary-outline px-5 py-3 text-center text-base font-semibold text-primary-strong hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 sm:w-auto"
-            disabled={state === "pending"}
+            disabled={pending}
             onClick={onCancel}
             type="button"
           >
@@ -291,7 +295,7 @@ export function CohortApplicationForm({ cohortId, application, onSaved, onCancel
       {submitFailed && invalidCount > 0 ? (
         <p className="text-sm text-danger" role="status">{tForm("invalidSummary", { count: invalidCount })}</p>
       ) : null}
-      {state === "error" ? (
+      {failed ? (
         <p className="text-sm text-danger" role="alert">
           {tSaveErrors(saveError)}
         </p>
