@@ -22,6 +22,22 @@ export function getAccountNavigationItems(user: Pick<ClientUser, "profileSlug">)
 export const userChipBoxClass = "flex items-center gap-2.5 rounded-full border py-1 pl-1 pr-3";
 export const userChipAvatarSizeClass = "size-8";
 
+/**
+ * Inside of the trigger chip: avatar initials, nickname, caret. The real trigger and the non-interactive hint chip
+ * (`AuthArea`, painted from `useChipHint` while the session restores) both render it, so they look identical.
+ */
+export function UserChipContent({ initials, handle, open = false }: { initials: string; handle: string; open?: boolean }) {
+  return (
+    <>
+      <span className={`grid ${userChipAvatarSizeClass} place-items-center rounded-full bg-primary-soft-border font-display text-[13px] font-bold text-primary-strong`}>
+        {initials}
+      </span>
+      <span className="max-w-[9rem] truncate text-sm font-semibold text-ink">{handle}</span>
+      <span aria-hidden="true" className={`text-xs text-ink-muted motion-control motion-reduce:transition-none${open ? " rotate-180" : ""}`}>▾</span>
+    </>
+  );
+}
+
 export function UserMenu() {
   const t = useTranslations("common.userMenu");
   const snapshot = useAuthSnapshot();
@@ -42,11 +58,7 @@ export function UserMenu() {
         {...menu.buttonProps()}
         className={`${userChipBoxClass} bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary${menu.open ? " border-primary-outline" : " border-border"}`}
       >
-        <span className={`grid ${userChipAvatarSizeClass} place-items-center rounded-full bg-primary-soft-border font-display text-[13px] font-bold text-primary-strong`}>
-          {user.initials}
-        </span>
-        <span className="max-w-[9rem] truncate text-sm font-semibold text-ink">{user.handle}</span>
-        <span aria-hidden="true" className={`text-xs text-ink-muted motion-control motion-reduce:transition-none${menu.open ? " rotate-180" : ""}`}>▾</span>
+        <UserChipContent handle={user.handle} initials={user.initials} open={menu.open} />
       </button>
 
       {menu.open ? (

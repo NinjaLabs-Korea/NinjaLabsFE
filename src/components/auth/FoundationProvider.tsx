@@ -24,7 +24,7 @@ import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
 import { registerTabFoundationReset } from "@/lib/tab-foundation-reset";
 import { createApiApiClient } from "@/lib/api/api-client";
 import { createApiAuthAdapter } from "@/lib/api/auth-adapter";
-import { clearSessionHint, setMemberHint, setSessionHint } from "@/lib/foundation/session-hint";
+import { clearSessionHint, setChipHint, setMemberHint, setSessionHint } from "@/lib/foundation/session-hint";
 
 import type { FoundationConfig } from "@/lib/runtime/config";
 
@@ -164,9 +164,11 @@ export function FoundationProvider({
       if (snapshot.status === "signed-in") {
         setSessionHint();
         setMemberHint(snapshot.user.onboardingCompleted === true);
+        setChipHint({ initials: snapshot.user.initials, handle: snapshot.user.handle });
       } else if (snapshot.status === "signed-out" && snapshot.reason !== "unavailable") {
         clearSessionHint();
         setMemberHint(false);
+        setChipHint(null);
       }
     };
     sync();

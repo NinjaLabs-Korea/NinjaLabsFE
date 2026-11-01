@@ -1,11 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAuthActions, useAuthSnapshot } from "@/components/auth/FoundationProvider";
 import { NAV_DESKTOP_ONLY_BLOCK, NAV_DESKTOP_ONLY_FLEX, NAV_DESKTOP_ONLY_INLINE } from "@/components/layout/nav-breakpoint";
-import { getAccountNavigationItems, userChipAvatarSizeClass, userChipBoxClass, UserMenu } from "@/components/layout/UserMenu";
+import { getAccountNavigationItems, userChipAvatarSizeClass, UserChipContent, userChipBoxClass, UserMenu } from "@/components/layout/UserMenu";
 import { Link } from "@/i18n/navigation";
-import { useMemberHint, useSessionHint } from "@/lib/foundation/session-hint";
+import { useChipHint, useMemberHint, useSessionHint } from "@/lib/foundation/session-hint";
 
 type AuthAreaProps = {
   variant: "desktop" | "mobile";
@@ -21,7 +22,13 @@ export function AuthArea({ variant }: AuthAreaProps) {
   // Reserve the user chip box when this tab had a session (locale remount) or the browser's last session was a member
   // (reload, new tab), so the chip replaces a same-size box instead of shifting the header.
   const hadSession = tabHadSession || likelyMember;
+  const chipHint = useChipHint();
   const user = snapshot.status === "signed-in" ? snapshot.user : null;
+  const restoring = snapshot.status === "loading" || (snapshot.status === "signed-out" && snapshot.reason === "unavailable");
+  // A returning user's chip is painted from the display hint while the session restores. Once it was shown, the real
+  // chip must replace it without replaying the fade (same size, same text), so the header does not blink.
+  const [hintChipShown, setHintChipShown] = useState(false);
+  if (restoring && chipHint && !hintChipShown) setHintChipShown(true);
 
   if (variant === "desktop") {
     return (
@@ -34,10 +41,17 @@ export function AuthArea({ variant }: AuthAreaProps) {
           {t("browse")}
         </Link>
         {user ? (
-          <div className={`animate-fade-in motion-reduce:animate-none ${NAV_DESKTOP_ONLY_BLOCK}`}>
+          <div className={`${hintChipShown ? "" : "animate-fade-in motion-reduce:animate-none "}${NAV_DESKTOP_ONLY_BLOCK}`}>
             <UserMenu />
           </div>
-        ) : snapshot.status === "loading" || (snapshot.status === "signed-out" && snapshot.reason === "unavailable") ? (
+        ) : restoring && chipHint ? (
+          // Non-interactive stand-in for the user menu trigger: same box and content, no menu, no fade.
+          <div aria-hidden="true" className={NAV_DESKTOP_ONLY_BLOCK} data-testid="user-chip-hint">
+            <span className={`${userChipBoxClass} border-border bg-surface`}>
+              <UserChipContent handle={chipHint.handle} initials={chipHint.initials} />
+            </span>
+          </div>
+        ) : restoring ? (
           // Session still being restored (or it could not be checked and the cookie is kept): keep the box, hide the
           // label, so a signed-in visitor never sees "Get started". This tab already had a signed-in session (locale
           // switch remount): reserve the user chip's box instead (same box classes as the trigger, 10rem wide) so nothing shifts.
