@@ -101,6 +101,19 @@ export const ERROR_COPY = {
     ],
     fallback: "generic",
   },
+  /** 내 정보 → 프로필 사진 올리기·삭제 (`POST`/`DELETE /users/me/avatar`) - `account/AvatarSettings.tsx`. 형식·크기는 FE가 먼저 같은 규칙(`lib/avatar.ts`)으로 막는다 */
+  avatarUpload: {
+    messages: "account.settings.avatar.errors",
+    codes: [
+      "MEDIA_FILE_REQUIRED",
+      "MEDIA_FILE_TOO_LARGE",
+      "MEDIA_FILE_TYPE_UNSUPPORTED",
+      "DATABASE_UNAVAILABLE",
+      // 올리기·삭제는 10회/분 한도다
+      "TOO_MANY_REQUESTS",
+    ],
+    fallback: "generic",
+  },
   /** 내 지원 현황 → 지원 철회 - `account/ApplicationsView.tsx` (이 코드면 목록도 새로고침한다) */
   applicationWithdraw: {
     messages: "account.applications.withdrawErrors",

@@ -1,8 +1,8 @@
 "use server";
 
 import { updateTag } from "next/cache";
-import { PUBLIC_FETCH_TIMEOUT_MS, PUBLIC_LIST_RESOURCES, publicListTag, type PublicListResource } from "@/lib/api/public";
-import { loadRuntimeConfig } from "@/lib/runtime/config";
+import { PUBLIC_LIST_RESOURCES, publicListTag, type PublicListResource } from "@/lib/api/public";
+import { bearerMe } from "@/lib/bearer-me";
 
 /**
  * After an admin write, expire the cached public lists at once (`updateTag`: immediate expiry, not stale-while-revalidate), so
@@ -13,17 +13,9 @@ import { loadRuntimeConfig } from "@/lib/runtime/config";
  */
 export async function refreshPublicLists(resources: readonly PublicListResource[], accessToken: string | null): Promise<boolean> {
   try {
-    if (!accessToken || typeof accessToken !== "string" || !Array.isArray(resources)) return false;
-    const config = loadRuntimeConfig();
-    if (config.runtimeMode !== "api" || !config.apiUrl) return false;
-    const response = await fetch(`${config.apiUrl.replace(/\/$/, "")}/auth/me`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      cache: "no-store",
-      signal: AbortSignal.timeout(PUBLIC_FETCH_TIMEOUT_MS),
-    });
-    if (!response.ok) return false;
-    const me = (await response.json()) as { isAdmin?: unknown };
-    if (me.isAdmin !== true) return false;
+    if (!Array.isArray(resources)) return false;
+    const me = await bearerMe(accessToken);
+    if (me?.isAdmin !== true) return false;
     const allowed = new Set<string>(PUBLIC_LIST_RESOURCES);
     for (const resource of new Set(resources)) if (allowed.has(resource)) updateTag(publicListTag(resource));
     return true;

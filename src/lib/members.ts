@@ -1,5 +1,6 @@
 import { formatUtcDate, toCategoryLabel, toMemberRoleLabel, toPayoutStatus, toRewards, type RewardRow } from "./api/codecs";
 import type { Completion, Member, PayoutStatus, Profile, Reward } from "./types";
+import { toAvatarUrl } from "./avatar";
 import { nicknameInitials } from "./nickname";
 import { onboardingLog } from "./onboarding-log";
 import { cache } from "react";
@@ -50,6 +51,8 @@ type MemberRow = {
   bio: string;
   member_role: "CORE" | "DEV" | "DESIGN" | "OPS";
   links: Array<{ type: string; url: string }>;
+  /** Profile photo `/media/<uuid>` or null (absent on an older BE) */
+  avatar_url?: string | null;
 };
 
 export function getRuntimeMembers(): Promise<Member[]> {
@@ -62,6 +65,7 @@ async function fetchMembers(): Promise<Member[]> {
     slug: row.nickname,
     name: row.nickname,
     initials: nicknameInitials(row.nickname),
+    ...avatarField(row.avatar_url),
     role: toMemberRoleLabel(row.member_role) ?? "Core",
     // Empty title/bio fall back to localized defaults in MemberCard.
     title: "",
@@ -77,6 +81,8 @@ type PublicProfileResponse = {
   /** Official team member flag and role (absent on an older BE) */
   is_member?: boolean;
   member_role?: string | null;
+  /** Profile photo `/media/<uuid>` or null (absent on an older BE) */
+  avatar_url?: string | null;
   created_at: string;
   tags: string[];
   completedBounties: Array<{
@@ -132,6 +138,12 @@ export function toCompletionReward(row: Pick<PublicProfileResponse["completedBou
 
 export { payoutBadge } from "./payout";
 
+/** `{ avatarUrl }` only for a real `/media/<uuid>` path, so a missing or unexpected value keeps the initials */
+function avatarField(value: unknown): { avatarUrl?: string } {
+  const avatarUrl = toAvatarUrl(value);
+  return avatarUrl ? { avatarUrl } : {};
+}
+
 function teamRoleField(code: string): { teamRole?: Member["role"] } {
   const teamRole = toMemberRoleLabel(code);
   return teamRole ? { teamRole } : {};
@@ -154,6 +166,7 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
     slug: data.nickname,
     handle: data.nickname,
     initials: nicknameInitials(data.nickname),
+    ...avatarField(data.avatar_url),
     bio: data.bio,
     ...(data.is_member && data.member_role ? teamRoleField(data.member_role) : {}),
     skills: data.tags.flatMap((tag) => {

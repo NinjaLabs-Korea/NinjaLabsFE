@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useAuthSnapshot } from "@/components/auth/FoundationProvider";
+import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { ownerNftBadgeKey } from "@/lib/nft-status";
@@ -23,7 +24,7 @@ export function HomeProfileCard() {
     <section className="mx-auto max-w-content px-gutter pt-16">
       <div className="flex flex-col gap-6 rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 items-center gap-4">
-          <span aria-hidden="true" className="grid size-14 shrink-0 place-items-center rounded-full bg-primary-soft-border font-display text-lg font-bold text-primary-strong">{user.initials}</span>
+          <Avatar avatarUrl={user.avatarUrl} initials={user.initials} sizeClass="size-14" sizes="56px" textClass="text-lg font-bold" />
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("greeting.eyebrow")}</p>
             <h1 className="break-words font-display text-2xl text-ink sm:text-4xl">{t("greeting.title", { name: user.handle })}</h1>

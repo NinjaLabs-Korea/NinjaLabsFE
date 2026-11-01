@@ -150,6 +150,10 @@ with a `next/image` `object-contain` logo in an `h-12` box; linked tiles add `tr
 
 **Focus after a destructive confirm:** when the confirmed action removes or disables the button that opened the `ui/ConfirmDialog`, pass `returnFocusTo` so focus lands on the affected card's heading (`tabIndex={-1}` + focus ring) instead of `<body>`; cancelling still returns focus to the opener.
 
+**Member avatar:** always `ui/Avatar` - a `rounded-full bg-primary-soft-border` circle with the profile photo (`object-cover`, `next/image` `sizes` = the rendered width) or the nickname initials in `font-display` (`text-primary-strong` in the header chip and on `/home`, `text-primary` on member surfaces). Sizes in use: header chip and mobile menu `size-8`, hub member tile `size-12`, `/home` `size-14`, `/account` `size-20`, member card and public profile `size-24`. Decorative (`aria-hidden`, `alt=""`): the nickname always sits next to it as text. A photo that fails to load shows the initials. Never draw a second avatar markup.
+
+**Profile photo picker (`/account`):** inside the profile card, the `size-20` avatar beside a semibold label, a `text-sm text-ink-muted` hint (types, 2 MB, where it shows) and secondary-outline buttons ("Upload photo" / "Change photo", plus a text danger "Remove photo" when a photo exists). Picking a file swaps the hint for a preview note and the buttons for a primary "Save photo" and an outline "Cancel"; progress and success go to a `text-sm` `role="status"` line, failures to the inline `role="alert"` recipe above.
+
 **Admin persistence disclosure:** API-mode Create/Save forms state that changes are saved immediately. Destructive actions require confirmation and failures surface a danger toast.
 
 ## Community and recruitment patterns (FE-designed, no Figma node)

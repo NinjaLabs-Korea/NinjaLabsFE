@@ -10,6 +10,7 @@ import {
   useAuthSnapshot,
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
+import { AvatarSettings } from "@/components/account/AvatarSettings";
 import { MyCohortApplications } from "@/components/account/MyCohortApplications";
 import { WalletSettings } from "@/components/account/WalletSettings";
 import { ProfileForm } from "@/components/signup/ProfileForm";
@@ -122,6 +123,7 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
     <div className="space-y-8">
       <section aria-labelledby={`${inputId}-profile`} className="rounded-card border border-border bg-surface p-6 shadow-card">
         <h2 className="font-display text-xl font-bold text-ink" id={`${inputId}-profile`}>{t("profileHeading")}</h2>
+        <AvatarSettings user={user} />
         <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-[160px_1fr]">
           <dt className="text-ink-muted">{t("nicknameLabel")}</dt>
           <dd className="min-w-0 font-semibold text-ink [overflow-wrap:anywhere]">{nickname}</dd>
