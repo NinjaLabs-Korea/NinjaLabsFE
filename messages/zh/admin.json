@@ -197,6 +197,8 @@
       "submissionMode": "提交方式",
       "submissionModeHint": "代理模式通过代理 API 密钥接收申请和提交。",
       "coverImage": "封面图片",
+      "coverPreviewAlt": "封面图片预览",
+      "coverPending": "{name}（保存时上传）",
       "tags": "领域标签",
       "description": "描述（Markdown）",
       "descriptionPlaceholder": "描述要求、交付物和赞助方背景。",

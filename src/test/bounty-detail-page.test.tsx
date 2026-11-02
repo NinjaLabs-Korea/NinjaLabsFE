@@ -49,6 +49,17 @@ describe("bounty detail agent panel", () => {
     expect(screen.getByTestId("agent-panel")).toBeTruthy();
   });
 
+  it("shows the card's cover image on the detail page, and nothing when the bounty has no cover", async () => {
+    data.bounty = { ...bounty("direct"), coverImage: "/media/33a9017e-fb51-4c38-b071-abd70b08404d" };
+    const { unmount } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
+    expect(screen.getByTestId("bounty-detail-cover").querySelector("img")?.getAttribute("src")).toContain("33a9017e-fb51-4c38-b071-abd70b08404d");
+    unmount();
+
+    data.bounty = bounty("direct");
+    renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
+    expect(screen.queryByTestId("bounty-detail-cover")).toBeNull();
+  });
+
   it("uses plain reward and completion copy, one footnote and no auth/visibility chips", async () => {
     for (const mode of ["direct", "agent"] as const) {
       data.bounty = bounty(mode);

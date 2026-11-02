@@ -43,6 +43,9 @@ const adminApi = {
   getAdminBounties: vi.fn(),
 };
 
+const expirePublicLists = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/admin-helpers", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/admin-helpers")>()), expirePublicLists }));
+
 vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({ useAdminApi: () => adminApi }));
 
@@ -53,6 +56,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   for (const fn of Object.values(adminApi)) fn.mockClear();
+  expirePublicLists.mockClear();
   adminApi.getAdminOperations.mockImplementation(async () => operations());
 });
 
@@ -72,6 +76,17 @@ describe("BountyOperations", () => {
     expect(screen.getByText("Every approved winner needs a payout recorded as paid, and no payout may still be open.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Reopen bounty" }));
     await waitFor(() => expect(adminApi.transitionAdminBounty).toHaveBeenCalledWith("b1", "OPEN"));
+  });
+
+  it("expires the cached public lists after a successful action so an opened bounty shows at once, and not after a failed one", async () => {
+    await renderOps();
+    adminApi.transitionAdminBounty.mockRejectedValueOnce(new ApiHttpError(400, "INVALID_TRANSITION"));
+    fireEvent.click(screen.getByRole("button", { name: "Reopen bounty" }));
+    await waitFor(() => expect(adminApi.transitionAdminBounty).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(adminApi.getAdminOperations).toHaveBeenCalledTimes(2));
+    expect(expirePublicLists).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Reopen bounty" }));
+    await waitFor(() => expect(expirePublicLists).toHaveBeenCalledWith(["bounties", "hall-of-fame", "members"]));
   });
 
   it("keeps the newest read when an older overlapping read answers last", async () => {

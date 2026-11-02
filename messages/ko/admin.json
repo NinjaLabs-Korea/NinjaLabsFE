@@ -197,6 +197,8 @@
       "submissionMode": "제출 방식",
       "submissionModeHint": "에이전트 방식은 에이전트 API 키를 통해 신청과 제출을 받습니다.",
       "coverImage": "커버 이미지",
+      "coverPreviewAlt": "커버 이미지 미리보기",
+      "coverPending": "{name} (저장할 때 올라갑니다)",
       "tags": "분야 태그",
       "description": "설명 (마크다운)",
       "descriptionPlaceholder": "요구 사항, 산출물, 스폰서 배경을 설명하세요.",

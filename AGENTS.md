@@ -157,7 +157,7 @@ public/
   - `ui/useSingleFlight` - `useSingleFlight()` -> `{ busy, run(fn) }`, `useKeyedSingleFlight()` -> `{ busy, isBusy(key), run(key, fn) }`: submit guard (ref + state); `run` returns `undefined` without calling `fn` while one is in flight, and the flight lasts until `fn` settles (put the reload inside `fn`)
   - `ui/SectionHeader` - eyebrow + heading (`level` 1|2|3, `size` 'lg'|'xl') + optional action link
   - `ui/StepIndicator` - 4-step sign-up progress (`current` 1–4); wraps below 768
-  - `cards/CoverImage` - client cover `<img>` for cards (also the thumbnail preview in `admin/PostManager`): swaps to the no-cover gradient when the image fails to load
+  - `cards/CoverImage` - client cover `<img>` for cards (also the thumbnail preview in `admin/PostManager` and the cover on `/bounties/[id]`, same aspect ratio as the card): swaps to the no-cover gradient when the image fails to load
   - `cards/BountyCard` - cover (gradient fallback) + Badge + title + optional summary (`showSummary`) + RewardPill + deadline·sponsor
   - `cards/NewsCard` - vertical notice preview (Landing); consumes `NoticePreview`
   - `cards/NoticeRow` - horizontal thumb + content row (Notices list)
