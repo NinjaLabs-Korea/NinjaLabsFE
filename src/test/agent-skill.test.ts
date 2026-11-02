@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildAgentSkillMarkdown } from "@/lib/agent-skill";
+import { BE_ERROR_CODES } from "@/lib/api/be-error-codes";
 
 describe("agent skill markdown", () => {
   it("points agents at the configured API base URL without a double slash", () => {
@@ -69,9 +70,15 @@ describe("agent skill markdown", () => {
     it.each([
       "MISSING_AGENT_API_KEY", "INVALID_AGENT_API_KEY", "BOUNTY_NOT_OPEN", "ALREADY_APPLIED", "APPLICATION_NOT_APPROVED",
       "DEADLINE_PASSED", "APPLICATION_DEADLINE_PASSED", "SUBMISSION_FINALIZED", "DIRECT_SUBMISSION_REQUIRED",
-      "BOUNTY_NOT_FOUND", "SUBMISSION_TYPE_BOUNTY",
+      "BOUNTY_NOT_FOUND", "SUBMISSION_TYPE_BOUNTY", "PROFILE_REQUIRED",
     ])("lists the %s error code in the errors table", (code) => {
       expect(markdown).toMatch(new RegExp(`^\\| \\d{3} \\| \\x60${code}\\x60 \\|`, "m"));
+    });
+
+    it("only lists error codes that exist in the BE catalog snapshot (lib/api/be-error-codes.ts), so a renamed or removed BE code fails here", () => {
+      const listed = [...markdown.matchAll(/^\| \d{3} \| `([A-Z][A-Z0-9_]+)` \|/gm)].map((match) => match[1]);
+      expect(listed.length).toBeGreaterThan(10);
+      for (const code of listed) expect(BE_ERROR_CODES as readonly string[]).toContain(code);
     });
 
     it("does not list review-time codes the agent routes never return", () => {
