@@ -1,85 +1,111 @@
 # NinjaLabsFE
 
-Ninja Labs frontend - a builder community & bounty marketplace for the Injective ecosystem. Every completed bounty mints an on-chain NFT that builds a portfolio the builder owns.
+Frontend for Ninja Labs, a builder community and bounty marketplace for the Injective ecosystem. Builders join the community, take on bounties, and every completed bounty mints an on-chain NFT that becomes a portfolio they own. The backend is [NinjaLabsBE](https://github.com/NinjaLabs-Korea/NinjaLabsBE).
 
-Ported from the team Figma file with explicit mock and API runtime modes. Mock mode is local/test-only; production API mode integrates NinjaLabsBE authentication, onboarding, wallets, agents, bounties, applications/submissions, members, notices, Hall of Fame, and admin management. See [`docs/auth-api-contract.md`](docs/auth-api-contract.md).
+Production: https://ninjalabs-korea-platform.vercel.app
 
-## Stack
+| | |
+|---|---|
+| Stack | Next.js 16 (App Router, Turbopack) · React 19 · TypeScript 5.9 · Tailwind CSS 4 (`@theme` tokens, no `tailwind.config.js`) |
+| Wallet | wagmi 3 + viem, injected wallets only (no WalletConnect for now) |
+| i18n | `en` / `ko` / `zh` with next-intl, every URL is locale-prefixed |
+| Runtime | Node 24 (`.nvmrc`) · **npm only**, all dependencies exact-pinned |
+| Branches | `develop` = integration (Vercel preview) · `main` = production (Vercel) |
 
-- Next.js 16 (App Router, Turbopack) · React 19 · TypeScript 5.9
-- Tailwind CSS 4 (CSS-first `@theme` tokens - no `tailwind.config.js`, no other CSS)
-- Node ≥ 24 (`.nvmrc`) · **npm only** (`package-lock.json` is the single lockfile; deps exact-pinned)
-
-## Getting started
+## Quick start
 
 ```bash
 nvm use
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev      # http://localhost:3000
 ```
 
-- `npm run test:unit` - focused foundation unit tests
-- `npm run build` - production build (all routes statically generated)
-- `npm run lint` - ESLint
-- Browser-check the local mock SPA, API authentication/onboarding, wallet verification, agent registration, masked agent-key display, and mobile account disclosure after relevant changes.
-- Using an AI agent? `.mcp.json` preconfigures the Figma remote MCP; `AGENTS.md` §Team agent workflow holds the lane ownership map and session rules.
+The default `.env.example` runs in **mock mode**: every page renders from local fixtures and no backend is needed. Good for UI work.
 
-## Layout
+To run against a real backend, start NinjaLabsBE locally (see its README; it listens on `http://localhost:4000` and already allows `http://localhost:3000`), then set in `.env.local`:
 
-```
-src/app/          routes (public: /, /bounties, /notices, /members, /hall-of-fame, /signup/*,
-                  /agents/register · admin: /admin/*) + 404/error/loading states
-src/components/   layout (shell and mobile account disclosure) · auth (FoundationProvider/runtime auth) ·
-                  wallet (connection + verification) · signup (profile/completion persistence) · account · ui · cards · admin
-src/lib/          typed contracts, local/test fixtures, and backend API adapters
-public/figma/     assets exported from Figma
-docs/figma/       screen recon, frozen design contracts (screen-matrix.md), design-gaps.md
+```bash
+NINJA_RUNTIME_MODE=api
+NINJA_API_BASE_URL=http://localhost:4000
 ```
 
-**Read `AGENTS.md` before contributing** - it holds the binding conventions (token-only styling, component inventory, Figma node ↔ route mapping, data rules) for humans and AI agents alike. Visual consistency across the Landing / Bounties / Admin owner areas is governed by [`docs/design.md`](docs/design.md) (token semantics + shared UI recipes).
+Do not point a local FE at the production backend: production CORS deliberately rejects `localhost`.
 
-## Remaining work - by owner area
+### Environment variables
 
-Roles are split into **Landing / Bounties / Admin**. Gaps below are distilled from
-[`docs/figma/design-gaps.md`](docs/figma/design-gaps.md) (status + evidence live there); items marked *(blocked)* need design/backend/assets before FE can proceed.
+All of these are documented inline in [`.env.example`](.env.example). None of them are secrets.
 
-### Landing (`/`, `/notices`, `/members`, `/hall-of-fame`, `/signup/*`)
+| Variable | What it does |
+|---|---|
+| `NINJA_DEPLOYMENT_TIER` | `local`, `test`, `staging` or `production` |
+| `NINJA_RUNTIME_MODE` | `mock` (local/test only) or `api` |
+| `NINJA_MOCK_SEED` | Fixture scenario for mock mode |
+| `NINJA_APP_ORIGIN` | Exact browser origin of this app |
+| `NINJA_API_BASE_URL` | Backend base URL (api mode). `/api/auth/*` and `/media/*` are proxied here |
+| `NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID`, `NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL` | Wallet network. Chain ID and RPC host must be the same network (`1776` mainnet, `1439` testnet) |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Optional Cloudflare Turnstile on sign-in. Deploy this **before** the backend secret |
+| `NEXT_PUBLIC_ONBOARDING_DEBUG` | Optional auth/onboarding console logs |
 
-- Public landing, members/profiles, notices, and Hall of Fame data come from the backend in API mode.
-- Real-time nickname availability feedback remains open; submit-time validation and backend conflict handling are implemented.
-- Pagination / load-more on notices list *(blocked on design)* - fixed 4-row set, no paging affordance drawn.
-- Admin-uploaded notice and Hall of Fame images persist through the backend; missing records still use gradient/initials fallbacks. Member photos and the partner wall remain asset/content work.
+## Commands
 
-### Bounties (`/bounties*`, `/applications`, `/agents`, `/agents/register`)
+| Command | What it does |
+|---|---|
+| `npm run dev` | Dev server on `localhost:3000` |
+| `npm run lint` | ESLint |
+| `npx next typegen && npx tsc --noEmit` | Type check (run `typegen` first or route `PageProps` types are missing) |
+| `npm run test:unit` | Vitest unit and guard tests (includes en/ko/zh message parity) |
+| `npm run build` | Production build. Must pass before any work is done |
+| `npm run test:integration` | Real-browser harness against a real backend and Postgres ([integration/README.md](integration/README.md)) |
 
-- Apply/Submit, Agent Sign & Register, `/applications`, and `/agents` use authenticated backend APIs in production.
-- Pagination / load-more on bounty list *(blocked on design)* - fixed 9-card set.
-- Bounty submission mode (`direct` or agent API) and admin-uploaded cover images are backend-owned in production; records without a cover use the design-native gradient fallback.
+CI runs lint, type check, unit tests, build and a blocking `npm audit` on every PR. The integration harness runs nightly and on demand, not on every PR; run it locally before merging changes to auth, the data layer, routing, or a whole user flow.
 
-### Admin (`/admin/*`)
+## Pages
 
-- Data and mutations are protected by backend AdminGuard; non-admin requests cannot read or change admin records.
-- Users, bounties, Hall of Fame, notices, and their uploaded images persist through the admin API in production.
-- Table pagination *(blocked on design)* - users/bounties recons explicitly leave it unspecified.
-- General column sorting *(blocked on design)* - only HoF display-order re-sort is shipped.
+| Area | Routes |
+|---|---|
+| Community (public) | `/` hub · `/about` · `/members`, `/members/[id]` · `/hall-of-fame` · `/notices`, `/notices/[id]` · `/recruit` (cohort application) |
+| Bounties | `/bounties`, `/bounties/[id]`, `/bounties/apply` · `/applications` (my applications) |
+| Agents | `/agents` · `/agents/register` · `/skill.md` (agent-readable guide) |
+| Account | `/signup` → `/signup/wallet` → `/signup/profile` → `/signup/get-started` · `/auth/callback` · `/home` (my activity) · `/account` |
+| Admin (`is_admin` only) | `/admin` · `users` · `bounties` · `operations` (deposits, reviews, payouts) · `nft-jobs` · `hall-of-fame` · `notices` · `recruitment` · `audit` |
+| Legal | `/privacy` · `/terms` |
 
-### Cross-cutting (whoever touches it first coordinates)
+Every route lives under `src/app/[locale]/`. Admin access is enforced by the backend's `AdminGuard`; the FE only hides what a non-admin cannot use.
 
-- Production content must be created through an `is_admin` account; an empty database intentionally renders empty public collections rather than fixture data.
+## Code layout
 
-## Design source
+```
+src/app/[locale]/   routes (one folder per page above) + error, loading and 404 states
+src/components/     ui/ primitives · layout/ header, footer, shell · cards/ · hooks/ shared client hooks
+                    feature folders: auth, wallet, signup, account, bounties, agents, members, notices,
+                    community, home, recruit, admin, legal
+src/lib/            pure logic, no React: api/ (http client, codecs, error copy), contracts/ (typed API shapes),
+                    single-source rules (bounty-status.ts, bounty-categories.ts, input-limits.ts, ...), mocks/
+src/i18n/           next-intl routing, navigation, message loading
+messages/<locale>/  one JSON file per namespace, identical keys across en/ko/zh
+integration/        real-browser regression harness (flows 1-17)
+docs/               design rules, auth/API contract, Figma recon
+```
 
-Figma file `DKvXU0AY4O9UalcHWXQCcI`, canvas “Screens (원본 분리)”. Design data is pulled via the Figma remote MCP; unresolved design gaps are tracked in `docs/figma/design-gaps.md` and the FigJam board linked there.
+## Before you contribute
 
-### OAuth callback deployment
+**Read [`AGENTS.md`](AGENTS.md) first.** It is the binding rulebook for humans and AI agents: pinned stack, git flow, token-only styling, the component inventory (reuse before you build), Figma node ↔ route mapping, i18n rules, and the definition of done.
 
-Login creates a tab-local verifier and sends only its S256 challenge to the backend.
-The backend redirects to `/auth/callback#loginCode=...` (the locale proxy forwards it to
-`/<locale>/auth/callback` and the browser keeps the fragment); the frontend removes that
-fragment before POSTing the code and verifier to `/auth/exchange`. Access and refresh
-tokens arrive only in the response body. Failed or expired callbacks show a retry link.
+| Document | What is in it |
+|---|---|
+| [`AGENTS.md`](AGENTS.md) | Conventions, component inventory, Figma mapping, definition of done |
+| [`docs/design.md`](docs/design.md) | Design token meanings and shared UI recipes |
+| [`docs/auth-api-contract.md`](docs/auth-api-contract.md) | Login, session cookie and API contract with the backend |
+| [`integration/README.md`](integration/README.md) | How to run the browser harness and what each flow checks |
+| [`docs/figma/`](docs/figma/) | Screen recon, frozen screen matrix, known design gaps |
 
-Deploy this frontend first, apply NinjaLabsBE migration `0013_oauth_login_codes.sql`,
-then deploy the backend. The frontend temporarily supports clearing legacy token
-fragments from the old backend. Existing token storage and refresh rotation remain unchanged.
+### Branches and releases
+
+- Work on `<type>/<slug>` branches off `develop` and open the PR against `develop`. Commits follow Conventional Commits.
+- Releases are a PR from `develop` to `main`, merged with a **merge commit** (no squash or rebase). Merging to `main` deploys production on Vercel.
+- If a change needs a new backend route or field, the backend ships first (its `main` merge is a production deploy). See the backend's `docs/runbook.md`.
+
+### Design source
+
+Figma file [`assDqL6bnfovzvql7XlcH1`](https://www.figma.com/design/assDqL6bnfovzvql7XlcH1/ninjalabs-design?node-id=31-3) (node `31-3`, screens 01-21). The older file `DKvXU0AY4O9UalcHWXQCcI` is only referenced by `docs/figma/recon/*`. Intentional differences from the design are listed in [`docs/figma/design-gaps.md`](docs/figma/design-gaps.md).
