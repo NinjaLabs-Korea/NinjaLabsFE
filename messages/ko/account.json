@@ -18,7 +18,7 @@
       "description": "바운티 지원 내역과 검토 상태를 확인하세요."
     },
     "unavailableTitle": "지원 내역을 일시적으로 불러올 수 없어요.",
-    "signedOutMessage": "로그인하고 지원 내역을 확인하세요",
+    "signedOutMessage": "로그인하고 지원 내역을 확인해 주세요",
     "emptyTitle": "아직 지원한 바운티가 없어요.",
     "emptyBody": "마음에 드는 바운티를 찾아 첫 지원을 해 보세요.",
     "browseBounties": "바운티 둘러보기",
@@ -83,7 +83,7 @@
     },
     "heading": "계정 설정",
     "intro": "프로필과 지갑을 확인하고 계정을 관리해요.",
-    "signedOutMessage": "계정을 관리하려면 로그인하세요",
+    "signedOutMessage": "계정을 관리하려면 로그인해 주세요",
     "profileHeading": "프로필",
     "nicknameLabel": "닉네임",
     "walletLabel": "지갑",
@@ -107,7 +107,7 @@
       "deleting": "삭제 중…"
     },
     "deleteErrors": {
-      "CONFIRM_NICKNAME_MISMATCH": "닉네임이 일치하지 않아요. 표시된 그대로 입력하세요.",
+      "CONFIRM_NICKNAME_MISMATCH": "닉네임이 일치하지 않아요. 표시된 그대로 입력해 주세요.",
       "WITHDRAWAL_BLOCKED_OPEN_PAYOUTS": "진행 중인 지급이 있어요. 지급이 완료되거나 취소된 뒤에 계정을 삭제할 수 있어요.",
       "WITHDRAWAL_BLOCKED_PENDING_REWARDS": "승인되었지만 아직 지급 요청되지 않은 보상이 남아 있어 지금은 계정을 삭제할 수 없어요(삭제하면 보상을 받을 수 없게 돼요). Ninja Labs 운영자에게 연락해 지급을 마친 뒤 다시 시도해 주세요.",
       "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없어요. 잠시 후 다시 시도해 주세요.",

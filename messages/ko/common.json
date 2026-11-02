@@ -91,7 +91,7 @@
       "WALLET_ALREADY_LINKED": "이 지갑이나 이 계정에는 이미 다른 연결이 있어요. 바꾸려면 운영진에게 문의해 주세요.",
       "WALLET_LINKED_TO_OTHER_ACCOUNT": "다른 계정에서 쓰는 지갑이에요. 다른 지갑을 연결해 주세요.",
       "ACCOUNT_ALREADY_HAS_WALLET": "이미 지갑이 연결돼 있어요. 바꾸려면 운영진에게 문의해 주세요.",
-      "AGENT_WALLET_IS_OWNER_WALLET": "이 주소는 이미 내 에이전트의 지갑으로 쓰이고 있어요. 계정에는 다른 개인 지갑을 연결하세요.",
+      "AGENT_WALLET_IS_OWNER_WALLET": "이 주소는 이미 내 에이전트의 지갑으로 쓰이고 있어요. 계정에는 다른 개인 지갑을 연결해 주세요.",
       "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없어요. 잠시 후 다시 시도해 주세요.",
       "TOO_MANY_REQUESTS": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요."
     },

@@ -714,7 +714,8 @@
       "time": "时间",
       "actor": "操作者",
       "action": "操作",
-      "entity": "对象"
+      "entity": "对象",
+      "changes": "变更"
     },
     "actors": {
       "script": "运维脚本",
@@ -729,6 +730,10 @@
       "AGENT_REVOKED": "代理已撤销",
       "APPLICATION_APPROVED": "申请已通过",
       "APPLICATION_REAPPLIED": "撤回后重新申请",
+      "APPLICATION_SUBMITTED": "提交赏金申请",
+      "APPLICATION_WITHDRAWN": "撤回赏金申请",
+      "SUBMISSION_SUBMITTED": "提交作品",
+      "SUBMISSION_RESUBMITTED": "重新提交作品",
       "BOUNTY_CREATED": "赏金任务已创建",
       "BOUNTY_UPDATED": "赏金任务已更新",
       "BOUNTY_CANCELLED": "赏金任务已取消",
@@ -758,7 +763,6 @@
       "USER_MEMBER_REVOKED": "已移除成员角色",
       "USER_NICKNAME_CHANGED": "昵称已修改",
       "USER_WITHDRAWN": "账户已删除",
-      "SYSTEM": "系统",
       "APPLICATION_REJECTED": "申请已拒绝",
       "BOUNTY_FUNDING_PENDING": "赏金转为待入金",
       "BOUNTY_OPEN": "赏金已开放",
@@ -778,7 +782,9 @@
       "COHORT_APPLICATION_WITHDRAWN": "期次申请已撤回",
       "COHORT_APPLICATION_REAPPLIED": "期次重新申请",
       "COHORT_APPLICATION_ACCEPTED": "期次申请已通过",
-      "COHORT_QUESTIONS_UPDATED": "报名问题已修改"
+      "COHORT_QUESTIONS_UPDATED": "报名问题已修改",
+      "USER_AVATAR_UPDATED": "头像已更换",
+      "USER_AVATAR_REMOVED": "头像已删除"
     },
     "empty": "没有符合条件的审计日志。",
     "pagination": "审计日志分页",
@@ -789,6 +795,14 @@
     "toast": {
       "loadFailedTitle": "审计日志不可用",
       "loadFailedDescription": "无法加载审计日志。"
+    },
+    "changes": {
+      "summary": "查看变更（{count}）",
+      "before": "变更前",
+      "after": "变更后",
+      "empty": "（空）",
+      "hidden": "[已隐藏]",
+      "none": "无变更记录"
     }
   },
   "recruitment": {

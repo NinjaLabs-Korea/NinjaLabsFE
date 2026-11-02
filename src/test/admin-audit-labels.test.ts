@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { existsSync } from "node:fs";
 import { KNOWN_AUDIT_ACTIONS } from "@/lib/admin-audit";
+import { BE_AUDIT_ACTIONS, BE_SCRIPT_AUDIT_ACTIONS } from "@/lib/api/be-audit-actions";
 
 const locales = ["en", "ko", "zh"] as const;
 const actionsOf = (locale: string): Record<string, unknown> =>
@@ -23,5 +25,24 @@ describe("audit action labels", () => {
       "COHORT_APPLICATION_SUBMITTED", "COHORT_APPLICATION_UPDATED", "COHORT_APPLICATION_WITHDRAWN", "COHORT_APPLICATION_REAPPLIED",
       "COHORT_APPLICATION_ACCEPTED", "COHORT_APPLICATION_REJECTED",
     ]) expect(KNOWN_AUDIT_ACTIONS).toContain(code);
+  });
+});
+
+describe("BE audit action snapshot (lib/api/be-audit-actions.ts)", () => {
+  it("is duplicate-free UPPER_SNAKE and the labels cover exactly server + script actions", () => {
+    const all = [...BE_AUDIT_ACTIONS, ...BE_SCRIPT_AUDIT_ACTIONS];
+    expect(new Set(all).size).toBe(all.length);
+    for (const action of all) expect(action).toMatch(/^[A-Z][A-Z0-9_]*$/);
+    expect([...KNOWN_AUDIT_ACTIONS].sort()).toEqual([...all].sort());
+  });
+
+  // Opt-in against a BE checkout: AUDIT_ACTIONS_BE_FILE=<BE>/src/audit/audit-actions.ts npm run test:unit
+  const beFile = process.env.AUDIT_ACTIONS_BE_FILE;
+  it.skipIf(!beFile || !existsSync(beFile))("matches the BE audit-actions.ts when AUDIT_ACTIONS_BE_FILE points at it", () => {
+    const source = readFileSync(beFile as string, "utf8");
+    const keys = (block: string) => [...block.matchAll(/^\s+([A-Z][A-Z0-9_]*): '/gm)].map((m) => m[1]);
+    const [server, script] = source.split("export const SCRIPT_AUDIT_ACTIONS");
+    expect(keys(server)).toEqual([...BE_AUDIT_ACTIONS]);
+    expect(keys(script)).toEqual([...BE_SCRIPT_AUDIT_ACTIONS]);
   });
 });
