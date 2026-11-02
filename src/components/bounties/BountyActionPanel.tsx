@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import { useAccountQuery } from "@/components/hooks/useAccountQuery";
 import { useAccountApi, useAuthSnapshot, useBountyApi } from "@/components/auth/FoundationProvider";
 import { CheckingPanel, Field, errorText, useFieldErrors, BountySignedOutPanel, StatusPanel, headingClass, bountyInputClass, outlineLinkClass, panelClass, submitButtonClass } from "@/components/bounties/BountyActionPanels";
+import { compactTextarea } from "@/components/ui/field-classes";
 import { useSingleFlight } from "@/components/ui/useSingleFlight";
 import { Link } from "@/i18n/navigation";
 import { APPLICATION_MESSAGE_MAX, COMMIT_SHA_MAX, SUBMISSION_DESCRIPTION_MAX } from "@/lib/input-limits";
@@ -18,7 +19,7 @@ import type { ApiResult } from "@/lib/contracts/api";
 import type { ClosedReason } from "@/lib/bounty-status";
 import type { Bounty } from "@/lib/types";
 
-const textareaClass = "w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
+const textareaClass = compactTextarea;
 
 // A direct-submission bounty has no applications. `getApplications` also joins /submissions/me, so asking it anyway would
 // cost two extra authenticated requests on every detail view (the BE rate-limits per IP); this stub keeps the hook order.

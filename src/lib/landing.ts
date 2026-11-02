@@ -5,24 +5,14 @@ import { getRuntimeNotices } from './notices';
 import { emptyHallOfFame, getRuntimeHallOfFame, visibleStats, type HallStatKey } from './hall-of-fame';
 
 // Two surfaces read this module. The signed-in home (`/home`) takes `getRuntimeLanding` (open bounties + latest notices). The
-// light masthead at the top of `/bounties` (`bounties/BountyMasthead`) takes `getBountyHero` for its stat tiles; its copy is
+// light masthead at the top of `/bounties` (`bounties/BountyMasthead`) takes `getBountyMastheadData` for its stat tiles; its copy is
 // messages `bounties.list`, the stat `labelKey` resolves under `hallOfFame.stats`. The Intro (`/`) is community copy
 // (`landing.hero`) and has no data fixture; its bounty preview takes `getRuntimeOpenBounties`.
 
-export type BountyHero = {
+/** The `/bounties` masthead data: the Hall of Fame stat tiles, already filtered to the ones worth showing. */
+export type BountyMastheadData = {
   stats: Array<{ value: string; labelKey: HallStatKey }>;
-  portfolio: {
-    handle: string;
-    memberSince: number;
-    completed: string[];
-    totalCompleted: number;
-  };
-  /** The Hall of Fame stats read failed: the masthead hides the stats and the "N completed" line instead of showing zeros. */
-  statsUnavailable: boolean;
 };
-
-/** Showcase fixture of the NFT portfolio card; the completed titles and the count are filled from live data. */
-const showcase = { handle: 'ninja.inj', memberSince: 2026 } as const;
 
 export type RuntimeLanding = {
   bounties: Bounty[];
@@ -55,19 +45,10 @@ export async function getRuntimeOpenBounties(locale: string): Promise<Bounty[]> 
 }
 
 /**
- * The `/bounties` masthead data: stats (hidden while every value is zero, shown on their own once one is above zero) and the portfolio
- * card, derived from the bounty list the page already loaded plus the Hall of Fame stats. A failed stats read hides them
- * instead of throwing.
+ * The `/bounties` masthead stats (hidden while every value is zero, shown on their own once one is above zero). A failed Hall of Fame
+ * read hides them instead of throwing.
  */
-export async function getBountyHero(locale: string, bounties: Bounty[]): Promise<BountyHero> {
+export async function getBountyMastheadData(locale: string): Promise<BountyMastheadData> {
   const hall = await settle(getRuntimeHallOfFame(locale), emptyHallOfFame);
-  return {
-    stats: visibleStats(hall.value.stats).map(({ value, labelKey }) => ({ value, labelKey })),
-    portfolio: {
-      ...showcase,
-      completed: bounties.filter((bounty) => bounty.closedReason === "completed").slice(0, 5).map((bounty) => bounty.title),
-      totalCompleted: Number(hall.value.stats[0]?.value ?? 0),
-    },
-    statsUnavailable: hall.unavailable,
-  };
+  return { stats: visibleStats(hall.value.stats).map(({ value, labelKey }) => ({ value, labelKey })) };
 }

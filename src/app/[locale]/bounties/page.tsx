@@ -5,7 +5,7 @@ import { BountyFilters } from "@/components/bounties/BountyFilters";
 import { BountyMasthead } from "@/components/bounties/BountyMasthead";
 import { settle } from "@/lib/api/public";
 import { getRuntimeBounties } from "@/lib/bounties";
-import { getBountyHero } from "@/lib/landing";
+import { getBountyMastheadData } from "@/lib/landing";
 import { localeMetadata } from "@/i18n/alternates";
 
 type BountiesPageProps = {
@@ -24,10 +24,10 @@ export default async function BountiesPage({ params }: BountiesPageProps) {
   const t = await getTranslations("bounties.list");
   const tBounties = await getTranslations("bounties");
   const { value: bounties, unavailable } = await settle(getRuntimeBounties(locale), []);
-  const hero = await getBountyHero(locale, bounties);
+  const masthead = await getBountyMastheadData(locale);
   return (
     <div className="mx-auto max-w-content px-gutter py-16 pb-20">
-      <BountyMasthead hero={hero} locale={locale} />
+      <BountyMasthead masthead={masthead} locale={locale} />
 
       <section className="mt-8" aria-label={t("resultsLabel")}>
         {unavailable ? (

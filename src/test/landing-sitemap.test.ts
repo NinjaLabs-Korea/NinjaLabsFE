@@ -18,7 +18,7 @@ vi.mock("@/lib/hall-of-fame", async (importOriginal) => ({
 vi.mock("@/lib/members", () => ({ getRuntimeMembers: () => sources.members() }));
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api", origin: "https://ninja.test" }) }));
 
-const { getBountyHero, getRuntimeLanding, getRuntimeOpenBounties } = await import("@/lib/landing");
+const { getBountyMastheadData, getRuntimeLanding, getRuntimeOpenBounties } = await import("@/lib/landing");
 const { default: sitemap } = await import("@/app/sitemap");
 
 const bounty = { slug: "b1", title: "B1", status: "active" };
@@ -43,34 +43,28 @@ describe("landing and sitemap with a partially unavailable API", () => {
     expect(await getRuntimeOpenBounties("en")).toEqual([]);
   });
 
-  it("passes the hall of fame stats, including the rewards paid total, through to the bounty hero", async () => {
+  it("passes the hall of fame stats, including the rewards paid total, through to the bounty masthead", async () => {
     const stats = [
       { value: "3", labelKey: "bountiesCompleted" },
       { value: "12,500 USDC · 300 INJ", labelKey: "rewardsPaid" },
     ];
     sources.hall.mockResolvedValue({ stats, highlights: [], milestones: [], partners: [] });
-    const hero = await getBountyHero("en", []);
+    const hero = await getBountyMastheadData("en");
     expect(hero.stats).toEqual(stats);
-    expect(hero.portfolio.totalCompleted).toBe(3);
-    expect(hero.statsUnavailable).toBe(false);
   });
 
-  it("hides the bounty hero stats while every value is zero and brings them back once one is above zero", async () => {
+  it("hides the bounty masthead stats while every value is zero and brings them back once one is above zero", async () => {
     const zeros = [{ value: "0", labelKey: "bountiesCompleted" }, { value: "0", labelKey: "buildersRewarded" }];
     sources.hall.mockResolvedValue({ stats: zeros, highlights: [], milestones: [], partners: [] });
-    expect((await getBountyHero("en", [])).stats).toEqual([]);
+    expect((await getBountyMastheadData("en")).stats).toEqual([]);
     const some = [{ value: "0", labelKey: "bountiesCompleted" }, { value: "1", labelKey: "buildersRewarded" }];
     sources.hall.mockResolvedValue({ stats: some, highlights: [], milestones: [], partners: [] });
-    expect((await getBountyHero("en", [])).stats).toEqual(some);
+    expect((await getBountyMastheadData("en")).stats).toEqual(some);
   });
 
-  it("flags a failed stats read instead of throwing, and shows only completed bounties as finished work", async () => {
-    const done = { slug: "done", title: "Done", status: "closed", closedReason: "completed" };
+  it("hides the stats on a failed stats read instead of throwing", async () => {
     sources.hall.mockRejectedValue(new Error("down"));
-    const hero = await getBountyHero("en", [done, { slug: "cancelled", title: "Cancelled", status: "closed" }, bounty] as never);
-    expect(hero.statsUnavailable).toBe(true);
-    expect(hero.stats).toEqual([]);
-    expect(hero.portfolio.completed).toEqual(["Done"]);
+    expect(await getBountyMastheadData("en")).toEqual({ stats: [] });
   });
 
   it("lists static routes and the sources that loaded", async () => {

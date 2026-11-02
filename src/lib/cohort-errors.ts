@@ -1,6 +1,6 @@
 import { ERROR_COPY, knownCode, listedCode, normalizedCode, type ErrorCopyKey } from "@/lib/api/error-copy";
 import type { BeErrorCode } from "@/lib/api/be-error-codes";
-import { ApiHttpError } from "@/lib/api/http";
+import { formErrorKey } from "@/lib/api/form-error-key";
 import type { CohortFormErrors } from "@/lib/cohorts";
 import { validationFieldsFromError } from "@/lib/api/validation";
 
@@ -10,18 +10,8 @@ export type CohortApplyErrorKey = ErrorCopyKey<typeof ERROR_COPY.cohortApply> | 
 /** The answers no longer fit the cohort's current questions (the operator edited the form while the applicant typed). */
 export const isQuestionsChangedError = (error: unknown): boolean => knownCode(error, ["COHORT_ANSWERS_INVALID"] as const satisfies readonly BeErrorCode[]) !== null;
 
-/**
- * Failed apply/update -> message key. Order is the rule: not an HTTP answer -> `network`; 401 -> `session`; a BE code with its
- * own copy; 400/422 (class-validator, no catalog code) -> `invalid`; anything else -> `generic`.
- */
-export function cohortApplyErrorKey(error: unknown): CohortApplyErrorKey {
-  if (!(error instanceof ApiHttpError)) return "network";
-  if (error.status === 401) return "session";
-  const code = knownCode(error, ERROR_COPY.cohortApply.codes);
-  if (code) return code;
-  if (error.status === 400 || error.status === 422) return "invalid";
-  return ERROR_COPY.cohortApply.fallback;
-}
+/** Failed apply/update -> message key: the shared member-form ladder (`formErrorKey`) over the cohort apply codes. */
+export const cohortApplyErrorKey = (error: unknown): CohortApplyErrorKey => formErrorKey(error, ERROR_COPY.cohortApply);
 
 /** Codes that mean the page's picture of the cohort or the application is stale: the caller re-reads both. */
 const STALE_COHORT_ERROR_CODES = [
