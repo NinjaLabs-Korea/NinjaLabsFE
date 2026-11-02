@@ -176,9 +176,13 @@ describe("BountyManager flows", () => {
     renderBounties();
     await waitFor(() => expect(within(row("Build an iAsset price widget")).getByRole("button", { name: "Edit" })).toBeTruthy());
     fireEvent.click(within(row("Build an iAsset price widget")).getByRole("button", { name: "Edit" }));
+    URL.createObjectURL = vi.fn(() => "blob:cover-preview");
+    URL.revokeObjectURL = vi.fn();
     const file = new File(["x"], "cover.png", { type: "image/png" });
     fireEvent.change(screen.getByLabelText("Cover image"), { target: { files: [file] } });
-    expect(screen.getByText("cover.png")).toBeTruthy();
+    // The picked file is previewed before the save uploads it, and the label says it is not stored yet.
+    expect(screen.getByText("cover.png (uploaded when you save)")).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Cover image preview" }).getAttribute("src")).toBe("blob:cover-preview");
     fireEvent.submit(screen.getByRole("button", { name: "Save" }).closest("form") as HTMLFormElement);
     await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
     expect(upload).toHaveBeenCalledWith(file);
