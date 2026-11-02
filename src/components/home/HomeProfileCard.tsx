@@ -2,22 +2,16 @@
 
 import { useTranslations } from "next-intl";
 import { useAuthSnapshot } from "@/components/auth/FoundationProvider";
+import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
+import { ownerNftBadgeKey } from "@/lib/nft-status";
 
 /** `inj1ab…9k4d`: the same shape as `shortWalletAddress` in the wallet module, which is not imported here so the home does not load wagmi. */
 const shortAddress = (address: string) => (address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : address);
 
-// BE parent-NFT statuses -> `home.profile.nft.<key>` and the badge color. Anything else reads as "pending" (never claims a mint).
-const nftStates = {
-  MINTED: { key: "minted", variant: "success" },
-  ATTACHING: { key: "minted", variant: "success" },
-  ATTACHED: { key: "minted", variant: "success" },
-  PENDING: { key: "pending", variant: "warning" },
-  MINTING: { key: "pending", variant: "warning" },
-  // FAILED reads as pending here too: operators handle a failed mint in /admin/nft-jobs, the owner is not shown an error.
-  FAILED: { key: "pending", variant: "warning" },
-} as const;
+// `ownerNftBadgeKey` (lib/nft-status.ts) -> `home.profile.nft.<key>`; minted is the success badge, everything else warning.
+const nftBadgeVariant = { minted: "success", pending: "warning" } as const;
 
 /** Greeting plus the profile summary: nickname, wallet and Ninja NFT status, and the way to the public profile and the settings. */
 export function HomeProfileCard() {
@@ -25,12 +19,12 @@ export function HomeProfileCard() {
   const snapshot = useAuthSnapshot();
   if (snapshot.status !== "signed-in") return null;
   const { user } = snapshot;
-  const nft = user.nftStatus ? (nftStates[user.nftStatus as keyof typeof nftStates] ?? nftStates.PENDING) : null;
+  const nftKey = user.nftStatus ? ownerNftBadgeKey(user.nftStatus) : null;
   return (
     <section className="mx-auto max-w-content px-gutter pt-16">
       <div className="flex flex-col gap-6 rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 items-center gap-4">
-          <span aria-hidden="true" className="grid size-14 shrink-0 place-items-center rounded-full bg-primary-soft-border font-display text-lg font-bold text-primary-strong">{user.initials}</span>
+          <Avatar avatarUrl={user.avatarUrl} initials={user.initials} sizeClass="size-14" sizes="56px" textClass="text-lg font-bold" />
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("greeting.eyebrow")}</p>
             <h1 className="break-words font-display text-2xl text-ink sm:text-4xl">{t("greeting.title", { name: user.handle })}</h1>
@@ -42,7 +36,7 @@ export function HomeProfileCard() {
                   <Badge variant="warning">{t("profile.walletMissing")}</Badge>
                 </Link>
               )}
-              {nft ? <Badge variant={nft.variant}>{t(`profile.nft.${nft.key}`)}</Badge> : <Badge variant="neutral">{t("profile.nft.none")}</Badge>}
+              {nftKey ? <Badge variant={nftBadgeVariant[nftKey]}>{t(`profile.nft.${nftKey}`)}</Badge> : <Badge variant="neutral">{t("profile.nft.none")}</Badge>}
             </div>
           </div>
         </div>

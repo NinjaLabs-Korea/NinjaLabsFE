@@ -12,12 +12,6 @@
     "unavailable": "出了点问题 | Ninja Labs",
     "detailTitle": "{title} | Ninja Labs"
   },
-  "hero": {
-    "eyebrow": "基于 Injective 构建",
-    "title": "完成赏金任务，收集成果证明。",
-    "titleHighlight": "拥有你的履历。",
-    "description": "承接赞助方发布的任务并提交成果，每完成一个赏金都会留下链上记录。"
-  },
   "categories": {
     "Dev": "开发",
     "Design": "设计",
@@ -32,6 +26,7 @@
   "list": {
     "eyebrow": "市场",
     "heading": "赏金",
+    "description": "承接赞助方发布的任务并提交成果，每完成一个赏金都会留下链上记录。",
     "howApplying": "参与方式 →",
     "resultsLabel": "赏金筛选与结果",
     "unavailable": "暂时无法加载赏金。"

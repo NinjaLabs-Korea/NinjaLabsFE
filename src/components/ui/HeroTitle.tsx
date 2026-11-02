@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 /** CJK / fullwidth punctuation already carries its own spacing, so no ASCII space follows it (e.g. zh `，`). */
 const ENDS_WITH_FULLWIDTH_PUNCTUATION = /[\u3000-\u303F\uFF00-\uFFEF]$/;
 
-/** The hero `<h1>`: the first part in `on-inverse`, the highlight in the glow gradient. Shared by the Intro and the bounty hero. */
+/** The hero `<h1>`: the first part in `on-inverse`, the highlight in the glow gradient. Used only by the hub hero (`community/CommunityHero`). */
 export function HeroTitle({ children, highlight }: { children: ReactNode; highlight: ReactNode }) {
   const gap = typeof children === "string" && ENDS_WITH_FULLWIDTH_PUNCTUATION.test(children.trimEnd()) ? "" : " ";
   return (

@@ -69,7 +69,8 @@ export type Member = {
   role: MemberRole;
   title: string;
   bio: string;
-  photo?: string;
+  /** Profile photo (`/media/<uuid>`); absent = initials. */
+  avatarUrl?: string;
   isMember: boolean;
   links: Partial<Record<'profile' | 'posts' | 'agents' | 'bounties' | 'notices', string>>;
 };
@@ -120,6 +121,8 @@ export type Profile = {
   slug: string;
   handle: string;
   initials: string;
+  /** Profile photo (`/media/<uuid>`); absent = initials. */
+  avatarUrl?: string;
   bio: string;
   skills: BountyCategory[];
   /** Official team role (public profile `is_member` + `member_role`); absent for ordinary builders. */

@@ -41,7 +41,7 @@ jobs:
         include:
           - { name: auth-apply, flows: '1 2 3 4 5 7 8' }
           - { name: admin-payout, flows: '6 9 10 11' }
-          - { name: community, flows: '12 13' }
+          - { name: community, flows: '12 13 16' }
           - { name: layout, flows: '14 15' }
     steps:
       - uses: actions/checkout@v5

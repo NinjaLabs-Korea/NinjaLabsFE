@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 
 import { CommunitySectionState } from "@/components/community/CommunitySectionState";
+import { Avatar } from "@/components/ui/Avatar";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import type { Member } from "@/lib/types";
@@ -25,7 +26,7 @@ export function MembersPreviewSection({ members, unavailable }: { members: Membe
                 className="flex h-full min-w-0 items-center gap-4 rounded-card border border-border bg-surface p-5 shadow-card hover:shadow-frame focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 href={member.links.profile ?? `/members/${member.slug}`}
               >
-                <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-full bg-primary-soft-border font-display text-base font-bold text-primary">{member.initials}</span>
+                <Avatar avatarUrl={member.avatarUrl} initials={member.initials} sizeClass="size-12" sizes="48px" textClass="text-base font-bold" toneClass="text-primary" />
                 <span className="min-w-0">
                   <span className="block break-words font-display text-base font-bold text-ink">{member.name}</span>
                   <span className="block text-sm font-semibold text-primary">{tMembers(`roles.${member.role.toLowerCase()}`)}</span>

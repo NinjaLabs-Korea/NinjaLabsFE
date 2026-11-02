@@ -1,4 +1,5 @@
 import { newestFirst } from "@/lib/account-order";
+import { avatarFileProblem } from "@/lib/avatar";
 import type { AdminApi, ApiClient } from "@/lib/contracts/api";
 import type { AccountAgent, AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
@@ -222,6 +223,13 @@ export function createMockApiClient(seed = "default"): ApiClient {
         throw new MockApiError(400, "CONFIRM_NICKNAME_MISMATCH");
       }
     },
+    // Same checks as the BE before "storing"; the preview session has no BE, so the photo is not kept after a reload.
+    uploadAvatar: async (file) => {
+      const problem = avatarFileProblem(file);
+      if (problem) throw new MockApiError(400, problem);
+      return { avatarUrl: URL.createObjectURL(file) };
+    },
+    removeAvatar: async () => undefined,
     ...cohorts.applicantApi,
     ...createMockAdminApi(nextId),
     ...cohorts.adminApi,

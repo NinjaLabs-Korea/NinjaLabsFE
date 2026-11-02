@@ -30,6 +30,8 @@ export const FE_ERROR_CODES = [
   "UNAUTHORIZED",
   "TOO_MANY_REQUESTS",
   "TRANSITION_BLOCKED",
+  // 옛 BE 호환: BE #57이 카탈로그에서 지웠다(지금은 던지지 않음). 옛 BE 응답이 오면 walletVerify가 계속 문구를 보여 준다.
+  "WALLET_ALREADY_LINKED",
 ] as const;
 export type FeErrorCode = (typeof FE_ERROR_CODES)[number];
 
@@ -99,6 +101,19 @@ export const ERROR_COPY = {
     ],
     fallback: "generic",
   },
+  /** 내 정보 → 프로필 사진 올리기·삭제 (`POST`/`DELETE /users/me/avatar`) - `account/AvatarSettings.tsx`. 형식·크기는 FE가 먼저 같은 규칙(`lib/avatar.ts`)으로 막는다 */
+  avatarUpload: {
+    messages: "account.settings.avatar.errors",
+    codes: [
+      "MEDIA_FILE_REQUIRED",
+      "MEDIA_FILE_TOO_LARGE",
+      "MEDIA_FILE_TYPE_UNSUPPORTED",
+      "DATABASE_UNAVAILABLE",
+      // 올리기·삭제는 10회/분 한도다
+      "TOO_MANY_REQUESTS",
+    ],
+    fallback: "generic",
+  },
   /** 내 지원 현황 → 지원 철회 - `account/ApplicationsView.tsx` (이 코드면 목록도 새로고침한다) */
   applicationWithdraw: {
     messages: "account.applications.withdrawErrors",
@@ -116,7 +131,7 @@ export const ERROR_COPY = {
     messages: "agents.form.registerErrors",
     codes: [
       "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED", "AGENT_WALLET_IS_OWNER_WALLET", "INVALID_AGENT_WALLET_ADDRESS", "PROFILE_REQUIRED",
-      "AGENT_ALREADY_VERIFIED", "AGENT_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS",
+      "AGENT_ALREADY_VERIFIED", "AGENT_NOT_PENDING", "AGENT_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS",
     ],
     fallback: "generic",
   },

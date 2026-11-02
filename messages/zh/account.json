@@ -125,6 +125,30 @@
       "linkedNote": "已连接的钱包与账户绑定，无法在此更换或解绑。如需更换请联系运营团队。",
       "body": "如果注册时选择了“稍后连接”，可以在这里连接钱包。连接钱包后会发放你的 Ninja NFT。",
       "unavailable": "当前环境无法使用钱包连接。"
+    },
+    "avatar": {
+      "label": "头像",
+      "hint": "支持 JPG、PNG、WebP，最大 2 MB。会显示在页眉、我的活动、公开资料和成员卡片上。",
+      "previewNote": "这是预览，保存后生效。",
+      "choose": "上传照片",
+      "change": "更换照片",
+      "remove": "删除照片",
+      "save": "保存照片",
+      "saving": "上传中…",
+      "cancel": "取消",
+      "removing": "删除中…",
+      "saved": "头像已保存。",
+      "removed": "头像已删除。",
+      "removeFailed": "无法删除照片，请稍后再试。",
+      "mockNote": "预览模式：刷新后照片不会保留。",
+      "errors": {
+        "MEDIA_FILE_REQUIRED": "请选择要上传的照片。",
+        "MEDIA_FILE_TOO_LARGE": "照片超过 2 MB，请选择更小的照片。",
+        "MEDIA_FILE_TYPE_UNSUPPORTED": "只能上传 JPG、PNG 和 WebP 照片。",
+        "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后再试。",
+        "TOO_MANY_REQUESTS": "请求过多，请稍后再试。",
+        "generic": "无法保存照片，请稍后再试。"
+      }
     }
   }
 }

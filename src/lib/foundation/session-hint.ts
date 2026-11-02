@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { hasRefreshCookieHint } from "@/lib/api/http";
+import { toAvatarUrl } from "@/lib/avatar";
 import { readStorage, removeStorage, writeStorage } from "@/lib/safe-storage";
 
 // Not the same as `lib/api/http.ts` REFRESH_COOKIE_HINT_KEY: that one is a localStorage hint that a refresh cookie may exist;
@@ -66,4 +67,60 @@ export function setMemberHint(member: boolean): void {
 
 export function useMemberHint(): boolean {
   return useSyncExternalStore(subscribe, getMemberHint, getServerSnapshot);
+}
+
+/**
+ * Browser-scoped display hint for the header user chip (localStorage `ninja.session.chip`, JSON `{ initials, handle, avatarUrl? }`).
+ * All values are already public (nickname, avatar letters and the public `/media/<uuid>` photo path); no id, email or token.
+ * `avatarUrl` is kept only in the `/media/<uuid>` shape (`toAvatarUrl`), so a reload paints the photo at hydration too. `AuthArea` paints the chip from it at
+ * hydration so a reload does not wait for the session restore. Read only together with the refresh-cookie hint, never trusted
+ * for access, cleared by every confirmed sign-out. The parsed object is cached per raw string so the `useSyncExternalStore`
+ * snapshot stays referentially stable.
+ */
+const CHIP_KEY = "ninja.session.chip";
+const CHIP_MAX_INITIALS = 8;
+const CHIP_MAX_HANDLE = 100;
+
+export type ChipHint = { initials: string; handle: string; avatarUrl?: string };
+
+let chipCache: { raw: string | null; value: ChipHint | null } = { raw: null, value: null };
+
+function parseChipHint(raw: string): ChipHint | null {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null) return null;
+    const { initials, handle, avatarUrl: rawAvatarUrl } = parsed as Record<string, unknown>;
+    if (typeof initials !== "string" || typeof handle !== "string") return null;
+    if (initials.length === 0 || initials.length > CHIP_MAX_INITIALS) return null;
+    if (handle.length === 0 || handle.length > CHIP_MAX_HANDLE) return null;
+    // An unexpected photo value drops only the photo (initials still show), never the whole hint.
+    const avatarUrl = toAvatarUrl(rawAvatarUrl);
+    return avatarUrl ? { initials, handle, avatarUrl } : { initials, handle };
+  } catch {
+    return null;
+  }
+}
+
+export function getChipHint(): ChipHint | null {
+  if (!hasRefreshCookieHint()) return null;
+  const raw = readStorage("local", CHIP_KEY);
+  if (raw === null) return null;
+  if (chipCache.raw !== raw) chipCache = { raw, value: parseChipHint(raw) };
+  return chipCache.value;
+}
+
+export function setChipHint(chip: ChipHint | null): void {
+  const avatarUrl = chip ? toAvatarUrl(chip.avatarUrl) : undefined;
+  const next = chip && chip.initials && chip.handle
+    ? JSON.stringify(avatarUrl ? { initials: chip.initials, handle: chip.handle, avatarUrl } : { initials: chip.initials, handle: chip.handle })
+    : null;
+  if (readStorage("local", CHIP_KEY) === next) return;
+  const changed = next === null ? removeStorage("local", CHIP_KEY) : writeStorage("local", CHIP_KEY, next);
+  if (changed) notify();
+}
+
+const getServerChipSnapshot = (): ChipHint | null => null;
+
+export function useChipHint(): ChipHint | null {
+  return useSyncExternalStore(subscribe, getChipHint, getServerChipSnapshot);
 }

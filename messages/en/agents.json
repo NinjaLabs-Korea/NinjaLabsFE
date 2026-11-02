@@ -135,6 +135,7 @@
       "PROFILE_REQUIRED": "Finish your profile before registering an agent.",
       "signature": "The wallet signature failed. Check the wallet signature and try again.",
       "AGENT_ALREADY_VERIFIED": "This agent is already verified.",
+      "AGENT_NOT_PENDING": "This agent can no longer be verified because it was revoked before verification. Please register it again.",
       "AGENT_NOT_FOUND": "This agent was not found. Refresh the list.",
       "profileLink": "Finish your profile"
     },

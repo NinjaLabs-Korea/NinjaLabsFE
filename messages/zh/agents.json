@@ -135,6 +135,7 @@
       "PROFILE_REQUIRED": "注册代理前请先完善个人资料。",
       "signature": "钱包签名失败。请检查钱包签名后重试。",
       "AGENT_ALREADY_VERIFIED": "该代理已验证。",
+      "AGENT_NOT_PENDING": "该代理在验证前已被撤销，无法再验证。请重新注册。",
       "AGENT_NOT_FOUND": "找不到该代理，请刷新列表。",
       "profileLink": "完善个人资料"
     },

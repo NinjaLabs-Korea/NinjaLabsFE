@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useAuthActions, useAuthSnapshot, useFoundationMode } from "@/components/auth/FoundationProvider";
 import { menuItemClass, menuPanelClass, useMenuButton } from "@/components/layout/useMenuButton";
+import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
 import { shortAddress } from "@/lib/format";
 import type { ClientUser } from "@/lib/contracts/auth";
@@ -21,6 +22,20 @@ export function getAccountNavigationItems(user: Pick<ClientUser, "profileSlug">)
 /** Box of the trigger chip (without colors); `AuthArea` reserves the same box while the session is restored. */
 export const userChipBoxClass = "flex items-center gap-2.5 rounded-full border py-1 pl-1 pr-3";
 export const userChipAvatarSizeClass = "size-8";
+
+/**
+ * Inside of the trigger chip: avatar (photo or initials), nickname, caret. The real trigger and the non-interactive hint chip
+ * (`AuthArea`, painted from `useChipHint` while the session restores) both render it, so they look identical.
+ */
+export function UserChipContent({ initials, handle, avatarUrl, open = false }: { initials: string; handle: string; avatarUrl?: string; open?: boolean }) {
+  return (
+    <>
+      <Avatar avatarUrl={avatarUrl} initials={initials} sizeClass={userChipAvatarSizeClass} sizes="32px" textClass="text-[13px] font-bold" />
+      <span className="max-w-[9rem] truncate text-sm font-semibold text-ink">{handle}</span>
+      <span aria-hidden="true" className={`text-xs text-ink-muted motion-control motion-reduce:transition-none${open ? " rotate-180" : ""}`}>▾</span>
+    </>
+  );
+}
 
 export function UserMenu() {
   const t = useTranslations("common.userMenu");
@@ -42,11 +57,7 @@ export function UserMenu() {
         {...menu.buttonProps()}
         className={`${userChipBoxClass} bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary${menu.open ? " border-primary-outline" : " border-border"}`}
       >
-        <span className={`grid ${userChipAvatarSizeClass} place-items-center rounded-full bg-primary-soft-border font-display text-[13px] font-bold text-primary-strong`}>
-          {user.initials}
-        </span>
-        <span className="max-w-[9rem] truncate text-sm font-semibold text-ink">{user.handle}</span>
-        <span aria-hidden="true" className={`text-xs text-ink-muted motion-control motion-reduce:transition-none${menu.open ? " rotate-180" : ""}`}>▾</span>
+        <UserChipContent avatarUrl={user.avatarUrl} handle={user.handle} initials={user.initials} open={menu.open} />
       </button>
 
       {menu.open ? (

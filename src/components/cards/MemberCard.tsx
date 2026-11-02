@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 
+import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
 import type { Member } from "@/lib/types";
 
@@ -18,7 +19,7 @@ export function MemberCard({ member }: MemberCardProps) {
   return (
     <article className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
       <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-primary-soft-border to-surface-subtle">
-        <span aria-hidden="true" className="flex size-24 items-center justify-center rounded-full bg-primary-soft-border font-display text-2xl text-primary">{member.initials}</span>
+        <Avatar avatarUrl={member.avatarUrl} initials={member.initials} sizeClass="size-24" sizes="96px" textClass="text-2xl" toneClass="text-primary" />
       </div>
       <div className="p-5">
         <h2 className="break-words font-display text-xl font-bold text-ink">{member.name}</h2>

@@ -5,8 +5,8 @@ import { getRuntimeNotices } from './notices';
 import { emptyHallOfFame, getRuntimeHallOfFame, visibleStats, type HallStatKey } from './hall-of-fame';
 
 // Two surfaces read this module. The signed-in home (`/home`) takes `getRuntimeLanding` (open bounties + latest notices). The
-// bounty hero at the top of `/bounties` (headline, CTAs, NFT portfolio showcase, stats) takes `getBountyHero`; its copy is
-// messages `bounties.hero`, the stat `labelKey` resolves under `hallOfFame.stats`. The Intro (`/`) is community copy
+// light masthead at the top of `/bounties` (`bounties/BountyMasthead`) takes `getBountyHero` for its stat tiles; its copy is
+// messages `bounties.list`, the stat `labelKey` resolves under `hallOfFame.stats`. The Intro (`/`) is community copy
 // (`landing.hero`) and has no data fixture; its bounty preview takes `getRuntimeOpenBounties`.
 
 export type BountyHero = {
@@ -17,7 +17,7 @@ export type BountyHero = {
     completed: string[];
     totalCompleted: number;
   };
-  /** The Hall of Fame stats read failed: the hero hides the stats and the "N completed" line instead of showing zeros. */
+  /** The Hall of Fame stats read failed: the masthead hides the stats and the "N completed" line instead of showing zeros. */
   statsUnavailable: boolean;
 };
 
@@ -55,7 +55,7 @@ export async function getRuntimeOpenBounties(locale: string): Promise<Bounty[]> 
 }
 
 /**
- * The bounty hero data: stats (hidden while every value is zero, shown on their own once one is above zero) and the portfolio
+ * The `/bounties` masthead data: stats (hidden while every value is zero, shown on their own once one is above zero) and the portfolio
  * card, derived from the bounty list the page already loaded plus the Hall of Fame stats. A failed stats read hides them
  * instead of throwing.
  */

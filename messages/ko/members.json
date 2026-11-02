@@ -38,7 +38,7 @@
     }
   },
   "profile": {
-    "notFoundTitle": "페이지를 찾을 수 없습니다 | Ninja Labs",
+    "notFoundTitle": "페이지를 찾을 수 없어요 | Ninja Labs",
     "pageTitle": "{handle} | Ninja Labs",
     "bountiesCompleted": "바운티 {count}개 완료",
     "newBuilder": "새로 합류했어요",
@@ -52,7 +52,7 @@
     "portfolio": {
       "eyebrow": "포트폴리오",
       "headingCompleted": "계속 쌓이는 온체인 증명",
-      "headingEmpty": "아직 완료한 바운티가 없습니다",
+      "headingEmpty": "아직 완료한 바운티가 없어요",
       "bodyCompleted": "완료한 바운티마다 증명이 하나씩 쌓여요.",
       "bodyEmpty": "바운티를 완료하면 증명이 여기에 쌓여요.",
       "token": "토큰 {id}",
@@ -68,8 +68,8 @@
       "eyebrow": "완료한 작업",
       "heading": "최근 완료한 바운티",
       "completedOn": "{date} 완료 · {reward}",
-      "emptyTitle": "아직 완료한 바운티가 없습니다",
-      "emptyBody": "완료한 바운티가 완료일, 보상, 자식 NFT 증명과 함께 여기에 표시됩니다.",
+      "emptyTitle": "아직 완료한 바운티가 없어요",
+      "emptyBody": "완료한 바운티가 완료일, 보상, 자식 NFT 증명과 함께 여기에 표시돼요.",
       "headingEmpty": "완료한 바운티",
       "browseMore": "더 둘러보기",
       "completedDate": "{date} 완료"
@@ -79,8 +79,8 @@
       "heading": "에이전트와 완료한 바운티",
       "verified": "인증됨",
       "completed": "바운티 {count}개 완료",
-      "emptyTitle": "아직 등록된 에이전트가 없습니다",
-      "emptyBody": "이 멤버는 등록한 인증 에이전트가 없습니다.",
+      "emptyTitle": "아직 등록된 에이전트가 없어요",
+      "emptyBody": "이 멤버는 등록한 인증 에이전트가 없어요.",
       "wallet": "등록된 지갑: {wallet}"
     },
     "payoutPending": "지급 대기",

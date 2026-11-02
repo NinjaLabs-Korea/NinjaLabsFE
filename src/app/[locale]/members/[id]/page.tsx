@@ -4,10 +4,12 @@ import { notFound } from "next/navigation";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Badge } from "@/components/ui/Badge";
+import { Avatar } from "@/components/ui/Avatar";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { decodeDetailId, validateDetailId } from "@/lib/detail-id";
-import { getRuntimeProfile, payoutBadge, publicNftStatusKey } from "@/lib/members";
+import { getRuntimeProfile, payoutBadge } from "@/lib/members";
+import { publicNftStatusKey } from "@/lib/nft-status";
 import { localeMetadata } from "@/i18n/alternates";
 
 type MemberProfilePageProps = PageProps<"/[locale]/members/[id]">;
@@ -49,7 +51,7 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
     <div className="mx-auto max-w-content px-gutter py-16 pb-20">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start">
         <div className="flex min-w-0 flex-1 flex-col gap-5 rounded-card border border-border bg-surface p-[21px] shadow-card sm:flex-row sm:items-center sm:gap-6">
-          <div className="flex size-24 shrink-0 items-center justify-center rounded-full bg-primary-soft-border font-display text-[30px] text-primary">{profile.initials}</div>
+          <Avatar avatarUrl={profile.avatarUrl} initials={profile.initials} priority sizeClass="size-24" sizes="96px" textClass="text-[30px]" toneClass="text-primary" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               {profile.skills.map((skill) => <Badge key={skill}>{t(`categories.${skill.toLowerCase()}`)}</Badge>)}

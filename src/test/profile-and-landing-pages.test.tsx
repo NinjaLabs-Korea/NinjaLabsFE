@@ -37,7 +37,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
 
 const { default: MemberProfilePage } = await import("@/app/[locale]/members/[id]/page");
 const { CommunityHero } = await import("@/components/community/CommunityHero");
-const { BountyHero } = await import("@/components/bounties/BountyHero");
+const { BountyMasthead } = await import("@/components/bounties/BountyMasthead");
 
 describe("member profile page", () => {
   it("lets a 42-character agent wallet and a long agent name wrap on a narrow screen", async () => {
@@ -95,7 +95,7 @@ describe("Intro (/) hero", () => {
   });
 });
 
-describe("bounty hero (top of /bounties)", () => {
+describe("bounty masthead (top of /bounties)", () => {
   const hero = (overrides: Partial<BountyHeroData> = {}): BountyHeroData => ({
     stats: [],
     portfolio: { handle: "ninja.inj", memberSince: 2026, completed: [], totalCompleted: 0 },
@@ -103,28 +103,34 @@ describe("bounty hero (top of /bounties)", () => {
     ...overrides,
   });
 
-  it("carries the headline, the one-line pitch and the how-it-works link, with no sign-up CTA or mock portfolio card", async () => {
-    renderWithIntl(await BountyHero({ hero: hero(), locale: "en" }));
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Complete bounties. Collect proof. Own your track record.");
+  it("is the light list masthead: one h1, the one-line pitch and the how-it-works link, with no hub hero pieces", async () => {
+    const view = renderWithIntl(await BountyMasthead({ hero: hero(), locale: "en" }));
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Bounties");
+    expect(screen.getByText("Marketplace")).toBeTruthy();
     expect(screen.getByText("Pick up tasks posted by sponsors and submit your work. Every completed bounty adds an on-chain record.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "How it works →" }).getAttribute("href")).toBe("/bounties/apply");
     expect(screen.queryByRole("link", { name: "Get Started" })).toBeNull();
     expect(screen.queryByText("ninja.inj")).toBeNull();
-    expect(screen.queryByText("+ next")).toBeNull();
+    // The dark gradient surface and the Injective inverse badge are the hub's; none of it here.
+    expect(view.container.innerHTML).not.toContain("hero-from");
+    expect(view.container.innerHTML).not.toContain("on-inverse");
+    expect(view.container.querySelector("img")).toBeNull();
   });
 
   it("shows no stat block and no completed line while there is nothing to count", async () => {
-    const view = renderWithIntl(await BountyHero({ hero: hero(), locale: "en" }));
+    const view = renderWithIntl(await BountyMasthead({ hero: hero(), locale: "en" }));
     expect(view.container.querySelector("dl")).toBeNull();
     expect(screen.queryByText(/bounties? completed/)).toBeNull();
   });
 
   it("groups stat counts by locale like the Hall of Fame cards and leaves the paid total as is", async () => {
-    renderWithIntl(await BountyHero({
+    renderWithIntl(await BountyMasthead({
       hero: hero({ stats: [{ value: "1234", labelKey: "bountiesCompleted" }, { value: "12,500 USDC · 300 INJ", labelKey: "rewardsPaid" }], portfolio: { handle: "ninja.inj", memberSince: 2026, completed: [], totalCompleted: 1234 } }),
       locale: "en",
     }));
-    expect(screen.getByText("1,234", { selector: "dt" })).toBeTruthy();
-    expect(screen.getByText("12,500 USDC · 300 INJ", { selector: "dt" })).toBeTruthy();
+    expect(screen.getByText("1,234", { selector: "dd" })).toBeTruthy();
+    expect(screen.getByText("12,500 USDC · 300 INJ", { selector: "dd" })).toBeTruthy();
+    expect(screen.getByText("Bounties completed", { selector: "dt" })).toBeTruthy();
   });
 });
