@@ -714,7 +714,8 @@
       "time": "Time",
       "actor": "Actor",
       "action": "Action",
-      "entity": "Entity"
+      "entity": "Entity",
+      "changes": "Changes"
     },
     "actors": {
       "script": "Ops script",
@@ -758,7 +759,6 @@
       "USER_MEMBER_REVOKED": "Member role removed",
       "USER_NICKNAME_CHANGED": "Nickname changed",
       "USER_WITHDRAWN": "Account deleted",
-      "SYSTEM": "System",
       "APPLICATION_REJECTED": "Application rejected",
       "BOUNTY_FUNDING_PENDING": "Bounty marked funding pending",
       "BOUNTY_OPEN": "Bounty opened",
@@ -778,7 +778,9 @@
       "COHORT_APPLICATION_WITHDRAWN": "Cohort application withdrawn",
       "COHORT_APPLICATION_REAPPLIED": "Cohort re-applied after withdrawal",
       "COHORT_APPLICATION_ACCEPTED": "Cohort application accepted",
-      "COHORT_QUESTIONS_UPDATED": "Application questions updated"
+      "COHORT_QUESTIONS_UPDATED": "Application questions updated",
+      "USER_AVATAR_UPDATED": "Profile photo changed",
+      "USER_AVATAR_REMOVED": "Profile photo removed"
     },
     "empty": "No audit log entries match.",
     "pagination": "Audit log pages",
@@ -789,6 +791,14 @@
     "toast": {
       "loadFailedTitle": "Audit log unavailable",
       "loadFailedDescription": "Could not load the audit log."
+    },
+    "changes": {
+      "summary": "Show changes ({count})",
+      "before": "Before",
+      "after": "After",
+      "empty": "(empty)",
+      "hidden": "[hidden]",
+      "none": "No changes recorded"
     }
   },
   "recruitment": {

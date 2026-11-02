@@ -714,7 +714,8 @@
       "time": "시각",
       "actor": "수행자",
       "action": "작업",
-      "entity": "대상"
+      "entity": "대상",
+      "changes": "변경 내용"
     },
     "actors": {
       "script": "운영 스크립트",
@@ -758,7 +759,6 @@
       "USER_MEMBER_REVOKED": "멤버 역할 해제",
       "USER_NICKNAME_CHANGED": "닉네임 변경",
       "USER_WITHDRAWN": "계정 탈퇴",
-      "SYSTEM": "시스템",
       "APPLICATION_REJECTED": "지원 반려",
       "BOUNTY_FUNDING_PENDING": "바운티 입금 대기로 전환",
       "BOUNTY_OPEN": "바운티 공개",
@@ -778,7 +778,9 @@
       "COHORT_APPLICATION_WITHDRAWN": "기수 지원서 철회",
       "COHORT_APPLICATION_REAPPLIED": "기수 재지원",
       "COHORT_APPLICATION_ACCEPTED": "기수 지원서 합격",
-      "COHORT_QUESTIONS_UPDATED": "지원서 질문 수정"
+      "COHORT_QUESTIONS_UPDATED": "지원서 질문 수정",
+      "USER_AVATAR_UPDATED": "프로필 사진 변경",
+      "USER_AVATAR_REMOVED": "프로필 사진 삭제"
     },
     "empty": "조건에 맞는 감사 로그가 없습니다.",
     "pagination": "감사 로그 페이지",
@@ -789,6 +791,14 @@
     "toast": {
       "loadFailedTitle": "감사 로그를 사용할 수 없음",
       "loadFailedDescription": "감사 로그를 불러오지 못했습니다."
+    },
+    "changes": {
+      "summary": "변경 내용 보기 ({count})",
+      "before": "이전",
+      "after": "이후",
+      "empty": "(비어 있음)",
+      "hidden": "[숨김]",
+      "none": "기록된 변경 없음"
     }
   },
   "recruitment": {

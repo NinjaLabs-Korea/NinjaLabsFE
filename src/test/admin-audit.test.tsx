@@ -3,7 +3,7 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import { UserDirectory } from "@/components/admin/UserDirectory";
-import { auditActorKind, isAuditUuid, type AdminAuditLog } from "@/lib/admin-audit";
+import { auditActorKind, auditChanges, hasAuditData, isAuditUuid, type AdminAuditLog } from "@/lib/admin-audit";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import { renderWithIntl } from "@/test/intl";
 
@@ -193,5 +193,48 @@ describe("UserDirectory load more", () => {
     renderWithIntl(<UserDirectory users={[]} />);
     await waitFor(() => expect(screen.getAllByText("nick1").length).toBeGreaterThan(0));
     expect(screen.queryByRole("button", { name: "Load more" })).toBeNull();
+  });
+});
+
+describe("audit change details", () => {
+  it("lists only the fields that differ, masks secret-looking keys and truncates long values", () => {
+    expect(auditChanges({ status: "SUBMITTED", note: "same" }, { status: "ACCEPTED", note: "same" })).toEqual([{ key: "status", before: "SUBMITTED", after: "ACCEPTED", hidden: false }]);
+    expect(auditChanges({ avatarMediaId: "a" }, { avatarMediaId: null })).toEqual([{ key: "avatarMediaId", before: "a", after: null, hidden: false }]);
+    expect(auditChanges(null, { n: 1, nested: { x: 1 } }).map((c) => [c.key, c.after])).toEqual([["n", "1"], ["nested", '{"x":1}']]);
+    expect(auditChanges("bare", undefined)).toEqual([{ key: "value", before: "bare", after: null, hidden: false }]);
+    expect(auditChanges({ apiKey: "sk-1" }, { apiKey: "sk-2" })).toEqual([{ key: "apiKey", before: null, after: null, hidden: true }]);
+    expect(auditChanges({ a: "x".repeat(400) }, {})[0].before).toHaveLength(301);
+    expect(auditChanges({}, {})).toEqual([]);
+  });
+
+  it("treats null, undefined and empty objects as no data", () => {
+    expect(hasAuditData({})).toBe(false);
+    expect(hasAuditData({ beforeData: null, afterData: {} })).toBe(false);
+    expect(hasAuditData({ afterData: { status: "X" } })).toBe(true);
+  });
+
+  it("shows the nickname or agent name, and a collapsed changes disclosure that opens to before/after", async () => {
+    adminApi.getAdminAuditLogs.mockResolvedValue({
+      items: [
+        log(1, { actorNickname: "Pelican", action: "COHORT_APPLICATION_ACCEPTED", entityType: "cohort_application", beforeData: { status: "SUBMITTED" }, afterData: { status: "ACCEPTED" } }),
+        log(2, { actorUserId: null, actorAgentId: "bbbbbbbb-0000-4000-8000-000000000000", actorAgentName: "review-bot", action: "APPLICATION_REAPPLIED" }),
+        log(3, { beforeData: { token: "secret-value" }, afterData: { token: "other" } }),
+      ],
+      page: 1, pageSize: 30, total: 3,
+    });
+    render();
+    const rows = await screen.findAllByRole("row");
+    expect(within(rows[1]).getByText("Pelican")).toBeTruthy();
+    expect(within(rows[1]).getByText("Cohort application accepted")).toBeTruthy();
+    const details = within(rows[1]).getByText("Show changes (1)").closest("details") as HTMLDetailsElement;
+    expect(details.open).toBe(false);
+    expect(within(rows[1]).getByText("status")).toBeTruthy();
+    expect(within(rows[1]).getByText("SUBMITTED")).toBeTruthy();
+    expect(within(rows[1]).getByText("ACCEPTED")).toBeTruthy();
+    expect(within(rows[2]).getByText("review-bot")).toBeTruthy();
+    expect(within(rows[2]).queryByText(/Show changes/)).toBeNull();
+    expect(within(rows[3]).getByText("[hidden]")).toBeTruthy();
+    expect(screen.queryByText(/secret-value/)).toBeNull();
+    expect(screen.queryByText("other")).toBeNull();
   });
 });
