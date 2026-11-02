@@ -9,9 +9,34 @@ import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { AUDIT_ENTITY_TYPE_MAX } from "@/lib/input-limits";
-import { auditActorKind, isAuditUuid, type AdminAuditLog, type AdminAuditLogFilter, type AdminAuditLogPage } from "@/lib/admin-audit";
+import { auditActorKind, auditChanges, hasAuditData, isAuditUuid, type AdminAuditLog, type AdminAuditLogFilter, type AdminAuditLogPage } from "@/lib/admin-audit";
 
-const columns = ["time", "actor", "action", "entity"] as const;
+const columns = ["time", "actor", "action", "entity", "changes"] as const;
+
+/** Collapsed by default; opened it lists only the fields that differ between `before_data` and `after_data` (secret-looking keys are masked). */
+function ChangeDetails({ log }: { log: AdminAuditLog }) {
+  const t = useTranslations("admin.audit.changes");
+  const changes = auditChanges(log.beforeData, log.afterData);
+  if (changes.length === 0) return <span className="text-ink-muted">{t("none")}</span>;
+  return (
+    <details>
+      <summary className="cursor-pointer rounded-control text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">{t("summary", { count: changes.length })}</summary>
+      <dl className="mt-2 grid max-w-[22rem] gap-2">
+        {changes.map((change) => (
+          <div className="rounded-control border border-border p-2" key={change.key}>
+            <dt className="font-mono text-xs font-semibold text-ink [overflow-wrap:anywhere]">{change.key}</dt>
+            {change.hidden ? <dd className="mt-1 text-xs text-ink-muted">{t("hidden")}</dd> : (
+              <>
+                <dd className="mt-1 text-xs [overflow-wrap:anywhere]"><span className="text-ink-muted">{t("before")}: </span><span className="font-mono">{change.before ?? t("empty")}</span></dd>
+                <dd className="mt-1 text-xs [overflow-wrap:anywhere]"><span className="text-ink-muted">{t("after")}: </span><span className="font-mono text-ink">{change.after ?? t("empty")}</span></dd>
+              </>
+            )}
+          </div>
+        ))}
+      </dl>
+    </details>
+  );
+}
 
 /** Read-only audit-log table (GET /admin/audit-logs): filter by entity type / UUID, newest first, 30 per page. */
 export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: ReactNode }) {
@@ -85,7 +110,7 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
     // The nickname reads at a glance; the id stays in the tooltip (and the short id is the fallback for an account without one).
     const userLabel = log.actorNickname ? <span className="text-sm font-semibold text-ink" title={log.actorUserId ?? undefined}>{log.actorNickname}</span> : <span className="font-mono text-xs" title={log.actorUserId ?? undefined}>{opsShort(log.actorUserId)}</span>;
     if (kind === "user") return userLabel;
-    if (kind === "agent") return <span className="flex items-center gap-2"><Badge variant="neutral">{t("actors.agent")}</Badge><span className="font-mono text-xs" title={log.actorAgentId ?? undefined}>{opsShort(log.actorAgentId)}</span></span>;
+    if (kind === "agent") return <span className="flex items-center gap-2"><Badge variant="neutral">{t("actors.agent")}</Badge>{log.actorAgentName ? <span className="text-sm font-semibold text-ink" title={log.actorAgentId ?? undefined}>{log.actorAgentName}</span> : <span className="font-mono text-xs" title={log.actorAgentId ?? undefined}>{opsShort(log.actorAgentId)}</span>}</span>;
     if (kind === "script") return <span className="flex items-center gap-2"><Badge variant="neutral">{t("actors.script")}</Badge>{log.actorUserId ? userLabel : null}</span>;
     return <Badge variant="neutral">{t("actors.unknown")}</Badge>;
   };
@@ -121,7 +146,7 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
         ) : !data ? (
           <p className="rounded-card border border-border bg-surface p-[21px] text-sm text-ink-muted shadow-card" role="status">{failed ? t("toast.loadFailedDescription") : tOps("loading")}</p>
         ) : (
-          <AdminTable columns={columns.map((id) => ({ id, label: t(`columns.${id}`) }))} minWidthClass="min-w-[820px]" scrollFocusable scrollLabel={t("title")}>
+          <AdminTable columns={columns.map((id) => ({ id, label: t(`columns.${id}`) }))} minWidthClass="min-w-[1020px]" scrollFocusable scrollLabel={t("title")}>
             {data.items.map((log) => (
               <tr className="border-t border-border" key={log.id}>
                 <td className={opsCell}>{opsDateTime(format, log.createdAt, timeZone)}</td>
@@ -131,6 +156,7 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
                   <p className="font-mono text-xs text-ink-muted">{log.action}</p>
                 </td>
                 <td className={opsCell}>{log.entityType}<p className="mt-1 font-mono text-xs text-ink-muted" title={log.entityId ?? undefined}>{log.entityId ?? "–"}</p></td>
+                <td className={opsCell}>{hasAuditData(log) ? <ChangeDetails log={log} /> : "–"}</td>
               </tr>
             ))}
           </AdminTable>

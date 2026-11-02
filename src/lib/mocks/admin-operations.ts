@@ -178,6 +178,8 @@ function seedAuditLogs(): AdminAuditLog[] {
     log(3, { actorUserId: null, action: "PAYOUT_CORRECTED_MANUAL" }),
     log(4, { actorUserId: null, action: "ADMIN_GRANTED", entityType: "user", entityId: "22222222-2222-4222-8222-222222222222" }),
     log(5, { action: "PAYOUT_REQUESTED" }),
+    log(6, { action: "COHORT_APPLICATION_ACCEPTED", entityType: "cohort_application", actorNickname: "Pelican", beforeData: { status: "SUBMITTED" }, afterData: { status: "ACCEPTED" } }),
+    log(7, { actorUserId: null, actorAgentId: "33333333-3333-4333-8333-333333333333", actorAgentName: "review-bot", action: "APPLICATION_REAPPLIED", entityType: "bounty_application" }),
   ];
 }
 
