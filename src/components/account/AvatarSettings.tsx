@@ -103,6 +103,7 @@ export function AvatarSettings({ user }: { user: ClientUser }) {
         <input
           accept={AVATAR_ACCEPTED_TYPES.join(",")}
           aria-describedby={hintId}
+          aria-label={t("label")}
           className="sr-only"
           disabled={busy}
           onChange={(event) => {

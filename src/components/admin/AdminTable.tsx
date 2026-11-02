@@ -15,6 +15,10 @@ type AdminTableProps = {
   minWidthClass: string;
   /** When set, each header gets the id `${idPrefix}-${column.id}` so a cell can point at it with `aria-labelledby`. */
   idPrefix?: string;
+  /** A table with no focusable content (read-only, e.g. the audit log): the scroll box itself takes focus so keyboard users can scroll it. */
+  scrollFocusable?: boolean;
+  /** Names the scroll box when `scrollFocusable` (a focusable region needs a name). */
+  scrollLabel?: string;
   children: ReactNode;
 };
 
@@ -41,9 +45,14 @@ export function AdminLongText({ labelledBy, children }: { labelledBy: string; ch
  * button-styled links in a cell, and column headers, never wrap (a Korean "수정" is 2 characters: wrapping it gives one
  * syllable per line); the action column keeps a min width that fits two buttons side by side.
  */
-export function AdminTable({ columns, minWidthClass, idPrefix, children }: AdminTableProps) {
+export function AdminTable({ columns, minWidthClass, idPrefix, scrollFocusable, scrollLabel, children }: AdminTableProps) {
   return (
-    <div className="overflow-x-auto rounded-card border border-border bg-surface shadow-card">
+    <div
+      aria-label={scrollFocusable ? scrollLabel : undefined}
+      className={`overflow-x-auto rounded-card border border-border bg-surface shadow-card${scrollFocusable ? " focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" : ""}`}
+      role={scrollFocusable ? "region" : undefined}
+      tabIndex={scrollFocusable ? 0 : undefined}
+    >
       <table className={`w-full ${minWidthClass} [&_td_button]:whitespace-nowrap [&_td_a.rounded-control]:whitespace-nowrap`}>
         <thead>
           <tr className="bg-primary-soft">
