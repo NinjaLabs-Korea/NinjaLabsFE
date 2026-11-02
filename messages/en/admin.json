@@ -197,6 +197,8 @@
       "submissionMode": "Submission mode",
       "submissionModeHint": "Agent mode accepts applications and submissions through the agent API key.",
       "coverImage": "Cover image",
+      "coverPreviewAlt": "Cover image preview",
+      "coverPending": "{name} (uploaded when you save)",
       "tags": "Field tags",
       "description": "Description (markdown)",
       "descriptionPlaceholder": "Describe requirements, deliverables, and sponsor context.",

@@ -14,7 +14,11 @@ import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
 import { useKeyedSingleFlight } from "@/components/ui/useSingleFlight";
 import { ApiHttpError } from "@/lib/api/http";
+import { expirePublicLists } from "@/lib/admin-helpers";
 import { opsErrorCode, type AdminOperations } from "@/lib/admin-operations";
+
+/** Public lists an operations action can change (`lib/api/public.ts` tags). */
+const OPS_PUBLIC_LISTS = ["bounties", "hall-of-fame", "members"] as const;
 
 /** Per-bounty operations view: lifecycle, rewards, applications, submissions and payouts, all from GET /admin/bounties/:id/operations. */
 export function BountyOperations({ bountyId, onStatusChange }: { bountyId: string; onStatusChange?: () => void }) {
@@ -67,6 +71,9 @@ export function BountyOperations({ bountyId, onStatusChange }: { bountyId: strin
     (await runKeyed(key, async () => {
       try {
         await action();
+        // Opening, closing or completing a bounty and settling its rewards change what the public pages show (the bounty list,
+        // Hall of Fame and member win counts): expire their cached copies now instead of up to 30s later.
+        expirePublicLists(OPS_PUBLIC_LISTS);
         pushAdminToast({ variant: "success", title: success.title, description: success.description ?? "" });
         return true;
       } catch (error) {

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Badge } from "@/components/ui/Badge";
+import { CoverImage } from "@/components/cards/CoverImage";
 import { BountyAgentPanel } from "@/components/agents/BountyAgentPanel";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import { LocalDateTime } from "@/components/bounties/LocalDateTime";
@@ -106,6 +107,12 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="min-w-0 space-y-6 lg:col-span-2">
+          {/* The same cover the list card shows (same aspect ratio), so opening a card does not lose its picture. */}
+          {bounty.coverImage ? (
+            <div className="relative aspect-[368.67/207.37] overflow-hidden rounded-card border border-border bg-surface shadow-card" data-testid="bounty-detail-cover">
+              <CoverImage sizes="(max-width: 1024px) 100vw, 760px" src={bounty.coverImage} />
+            </div>
+          ) : null}
           <article className="rounded-card border border-border bg-surface p-[21px] shadow-card [overflow-wrap:anywhere]">
             <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("detail.description")}</p>
             <h2 className="mt-2 font-display text-2xl -tracking-[0.24px] text-ink">{applicationRequired ? t("detail.descriptionHeadingApply") : t("detail.descriptionHeading")}</h2>

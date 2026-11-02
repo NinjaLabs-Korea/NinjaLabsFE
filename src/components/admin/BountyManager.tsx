@@ -1,7 +1,8 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useCallback, useRef, useState, type FormEvent, type ReactNode } from "react";
+import Image from "next/image";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { AdminListStatus } from "@/components/admin/AdminListStatus";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
@@ -23,6 +24,7 @@ import { isDeadlinePassed } from "@/lib/bounty-status";
 import { opsErrorCode } from "@/lib/admin-operations";
 import { useBrowserTimeZone } from "@/components/admin/useBrowserTimeZone";
 import { Link } from "@/i18n/navigation";
+import { imageProps } from "@/lib/image";
 
 /** An OPEN bounty still reads Active in the BE until someone transitions it; past its deadline it no longer accepts submissions. */
 const isPastDeadline = (iso: string) => isIsoDateTime(iso) && isDeadlinePassed(iso);
@@ -51,7 +53,8 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
   const timeZone = useBrowserTimeZone();
   const [mode, setMode] = useState<Mode>({ kind: "create" });
   const [form, setForm] = useState<BountyFormValues>(emptyBountyForm);
-  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [cover, setCover] = useState<{ file: File; previewUrl: string } | null>(null);
+  const coverFile = cover?.file ?? null;
   const [errors, setErrors] = useState<BountyFormErrors>({});
   const [originalDeadline, setOriginalDeadline] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
@@ -69,9 +72,14 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
 
   /** Forgets the picked file, including the native input's own selection (it would keep showing the name, and picking the same file again fires no change). */
   const clearCoverFile = () => {
-    setCoverFile(null);
+    setCover(null);
     if (coverInputRef.current) coverInputRef.current.value = "";
   };
+
+  // The picked file's preview is a blob URL: release it when it is replaced, cleared or the form unmounts.
+  useEffect(() => () => {
+    if (cover) URL.revokeObjectURL(cover.previewUrl);
+  }, [cover]);
 
   /** Clears the stored cover and any picked file; the save then sends `coverImageUrl: null` so the BE drops it. */
   const removeCover = () => {
@@ -277,9 +285,15 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
             </div>
             <div className="text-sm font-semibold text-ink">
               <label className="block">{t("form.coverImage")}
-                <input accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-sm font-normal text-ink-secondary file:mr-3 file:rounded-control file:border file:border-primary-outline file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-strong" onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)} ref={coverInputRef} type="file" />
+                <input accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-sm font-normal text-ink-secondary file:mr-3 file:rounded-control file:border file:border-primary-outline file:bg-surface file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary-strong" onChange={(event) => { const file = event.target.files?.[0]; setCover(file ? { file, previewUrl: URL.createObjectURL(file) } : null); }} ref={coverInputRef} type="file" />
               </label>
-              <span className="mt-2 block text-xs font-normal text-ink-muted">{coverFile?.name ?? form.coverImage ?? tCommon("fileHint")}</span>
+              {cover?.previewUrl ?? form.coverImage ? (
+                // What the public card will show: the picked file before it is uploaded on save, otherwise the stored cover.
+                <span className="relative mt-2 block aspect-video w-full max-w-xs overflow-hidden rounded-control border border-border bg-surface-subtle">
+                  <Image {...imageProps((cover?.previewUrl ?? form.coverImage) as string)} alt={t("form.coverPreviewAlt")} className="object-cover" fill sizes="320px" />
+                </span>
+              ) : null}
+              <span className="mt-2 block text-xs font-normal text-ink-muted">{coverFile ? t("form.coverPending", { name: coverFile.name }) : form.coverImage ?? tCommon("fileHint")}</span>
               {form.coverImage || coverFile ? <button className="mt-2 text-xs font-semibold text-danger hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" onClick={removeCover} type="button">{tCommon("removeImage")}</button> : null}
             </div>
             <div>
