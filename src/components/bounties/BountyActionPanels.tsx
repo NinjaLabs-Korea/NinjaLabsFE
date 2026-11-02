@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useState, type FocusEvent, type ReactNode, type Ref } from "react";
 import { Badge } from "@/components/ui/Badge";
+import { compactField, compactTextarea } from "@/components/ui/field-classes";
 import { PageLoading } from "@/components/ui/PageLoading";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Link } from "@/i18n/navigation";
@@ -20,7 +21,7 @@ const outlineButtonClass = "inline-flex rounded-control border border-primary-ou
 export const outlineLinkClass = `mt-4 ${outlineButtonClass}`;
 // Bounty apply/submit fields: one-line 46px inputs, the height of the admin fields. Not the cohort form's `questionInputClass`
 // (`recruit/QuestionField`: taller padded fields that also serve as textareas); the two forms look different on purpose.
-export const bountyInputClass = "h-[46px] w-full rounded-control border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-[invalid]:border-danger";
+export const bountyInputClass = compactField;
 // Headings that receive focus after a successful apply/submit (tabIndex={-1}); the ring matches the focus recipe.
 export const headingClass = "font-display text-2xl -tracking-[0.24px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
@@ -84,7 +85,7 @@ export function BountySignedOutPanel({ applicationRequired, bountyId }: { applic
             <input aria-label={t("portfolioUrl")} className={bountyInputClass} placeholder="https://" type="url" />
             <input aria-label={t("availability")} className={bountyInputClass} placeholder={t("availability")} type="text" />
           </div>
-          <textarea aria-label={t("applyMessage")} className="min-h-28 w-full rounded-control border border-border bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-placeholder focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" placeholder={t("applyMessage")} />
+          <textarea aria-label={t("applyMessage")} className={`${compactTextarea} min-h-28`} placeholder={t("applyMessage")} />
           <div className="flex flex-wrap gap-3">
             <Link className="rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse" href={signIn}>{t("apply")}</Link>
             <span className="rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong opacity-60">{t("submitDisabled")}</span>

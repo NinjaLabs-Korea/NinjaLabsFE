@@ -61,6 +61,15 @@ describe("AuditLogViewer", () => {
     expect(screen.queryByRole("navigation", { name: "Audit log pages" })).toBeNull();
   });
 
+  it("makes the horizontally scrolling table keyboard reachable (a read-only table has no focusable content of its own)", async () => {
+    adminApi.getAdminAuditLogs.mockResolvedValue({ items: [log(1)], page: 1, pageSize: 30, total: 1 });
+    render();
+    const region = await screen.findByRole("region", { name: /audit/i });
+    expect(region.getAttribute("tabindex")).toBe("0");
+    expect(region.className).toContain("overflow-x-auto");
+    expect(within(region).getByRole("table")).toBeTruthy();
+  });
+
   it("shows the operator id next to the Ops script badge for a script action that has an actor", async () => {
     adminApi.getAdminAuditLogs.mockResolvedValue({ items: [log(1, { action: "SUBMISSION_AWARD_FORFEITED", entityType: "bounty_submission" })], page: 1, pageSize: 30, total: 1 });
     render();

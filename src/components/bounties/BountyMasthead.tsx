@@ -3,14 +3,14 @@ import { getTranslations } from "next-intl/server";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { formatStatValue } from "@/lib/hall-of-fame";
-import type { BountyHero as BountyHeroData } from "@/lib/landing";
+import type { BountyMastheadData } from "@/lib/landing";
 
 /**
  * The light list-page masthead at the top of `/bounties` (same family as `/members`, `/notices`, `/hall-of-fame`): the
  * "Marketplace" eyebrow, the page `<h1>`, a one-line pitch, the how-it-works link and, once one is above zero, the Hall of
  * Fame stats as small light tiles. The dark gradient hero belongs to the hub (`/`) only, so this page reads as a work list.
  */
-export async function BountyMasthead({ hero, locale }: { hero: BountyHeroData; locale: string }) {
+export async function BountyMasthead({ masthead, locale }: { masthead: BountyMastheadData; locale: string }) {
   const t = await getTranslations("bounties.list");
   const tStats = await getTranslations("hallOfFame.stats");
   return (
@@ -25,9 +25,9 @@ export async function BountyMasthead({ hero, locale }: { hero: BountyHeroData; l
           {t("howApplying")}
         </Link>
       </div>
-      {hero.stats.length > 0 ? (
+      {masthead.stats.length > 0 ? (
         <dl className="flex flex-wrap gap-3 lg:shrink-0 lg:flex-nowrap">
-          {hero.stats.map((stat) => (
+          {masthead.stats.map((stat) => (
             // Label first in the DOM (term, then value); the value is drawn on top.
             <div className="flex min-w-[8.5rem] flex-col-reverse rounded-tile border border-border bg-surface px-4 py-3 shadow-card" key={stat.labelKey}>
               <dt className="mt-0.5 text-xs text-ink-muted">{tStats(stat.labelKey)}</dt>

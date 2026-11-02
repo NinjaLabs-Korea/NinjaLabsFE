@@ -121,7 +121,7 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
         ) : !data ? (
           <p className="rounded-card border border-border bg-surface p-[21px] text-sm text-ink-muted shadow-card" role="status">{failed ? t("toast.loadFailedDescription") : tOps("loading")}</p>
         ) : (
-          <AdminTable columns={columns.map((id) => ({ id, label: t(`columns.${id}`) }))} minWidthClass="min-w-[820px]">
+          <AdminTable columns={columns.map((id) => ({ id, label: t(`columns.${id}`) }))} minWidthClass="min-w-[820px]" scrollFocusable scrollLabel={t("title")}>
             {data.items.map((log) => (
               <tr className="border-t border-border" key={log.id}>
                 <td className={opsCell}>{opsDateTime(format, log.createdAt, timeZone)}</td>

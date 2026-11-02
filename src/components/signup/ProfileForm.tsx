@@ -4,9 +4,10 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuthActions, useAuthSnapshot, useOnboardingApi, useFoundationMode } from "@/components/auth/FoundationProvider";
-import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
-import { ApiHttpError } from "@/lib/api/http";
+import { ERROR_COPY } from "@/lib/api/error-copy";
+import { formErrorKey } from "@/lib/api/form-error-key";
 import { validationFieldsFromError } from "@/lib/api/validation";
+import { roomyField } from "@/components/ui/field-classes";
 import { RequiredMark } from "@/components/ui/RequiredMark";
 import { focusFirstInvalid } from "@/lib/form-focus";
 import { Badge } from "@/components/ui/Badge";
@@ -42,18 +43,10 @@ type FieldErrors = Partial<Record<"nickname" | "tags" | "bio", string>>;
 type NicknameCheck = { nickname: string; available: boolean | null };
 
 /**
- * 저장 실패 원인 → messages `signup.profile.form.saveErrors.<key>`. 순서가 규칙이다:
- * 네트워크 → 401 세션 만료 → 전용 문구가 있는 BE 코드 → 코드 없는 409(닉네임 충돌로 간주) → 400/422 입력 오류 → 그 외.
+ * 저장 실패 원인 → messages `signup.profile.form.saveErrors.<key>`. 공용 폼 사다리(`formErrorKey`: 네트워크 → 401 세션 만료 →
+ * 전용 문구가 있는 BE 코드 → 400/422 입력 오류 → 그 외)에, 코드 없는 409는 닉네임 충돌로 간주한다는 이 폼의 규칙만 얹는다.
  */
-export function saveErrorKey(error: unknown): SaveErrorKey {
-  if (!(error instanceof ApiHttpError)) return "network";
-  if (error.status === 401) return "session";
-  const code = knownCode(error, ERROR_COPY.profileSave.codes);
-  if (code) return code;
-  if (error.status === 409) return "NICKNAME_TAKEN";
-  if (error.status === 400 || error.status === 422) return "invalid";
-  return ERROR_COPY.profileSave.fallback;
-}
+export const saveErrorKey = (error: unknown): SaveErrorKey => formErrorKey(error, ERROR_COPY.profileSave, { 409: "NICKNAME_TAKEN" });
 
 type ProfileFormProps = {
   /**
@@ -289,7 +282,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         </label>
         <RequiredMark />
         <input
-          className="mt-2 w-full rounded-control border border-border bg-surface px-4 py-3 text-sm text-ink-secondary placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className={roomyField}
           id="nickname"
           maxLength={NICKNAME_MAX}
           minLength={NICKNAME_MIN}
@@ -337,7 +330,7 @@ export function ProfileForm({ mode: formMode = "onboarding", onSaved }: ProfileF
         </label>
         <RequiredMark />
         <textarea
-          className="mt-2 min-h-[120px] w-full rounded-control border border-border bg-surface px-4 py-3 text-sm text-ink-secondary placeholder:text-ink-placeholder focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className={`${roomyField} min-h-[120px]`}
           id="bio"
           maxLength={PROFILE_BIO_MAX}
           name="bio"

@@ -68,6 +68,12 @@ describe("MemberCard", () => {
 });
 
 describe("account/AvatarSettings", () => {
+  it("gives the visually hidden file input an accessible name (axe: form elements must have labels)", () => {
+    renderWithIntl(<AvatarSettings user={user()} />);
+    expect(fileInput().getAttribute("aria-label")).toBe("Profile photo");
+    expect(screen.getByLabelText("Profile photo")).toBe(fileInput());
+  });
+
   it("rejects a wrong type or a too-large file before any request", () => {
     renderWithIntl(<AvatarSettings user={user()} />);
     fireEvent.change(fileInput(), { target: { files: [png(100, "image/gif")] } });
