@@ -786,7 +786,8 @@
       "COHORT_APPLICATION_ACCEPTED": "期次申请已通过",
       "COHORT_QUESTIONS_UPDATED": "报名问题已修改",
       "USER_AVATAR_UPDATED": "头像已更换",
-      "USER_AVATAR_REMOVED": "头像已删除"
+      "USER_AVATAR_REMOVED": "头像已删除",
+      "WALLET_REPLACED": "钱包已更换"
     },
     "empty": "没有符合条件的审计日志。",
     "pagination": "审计日志分页",

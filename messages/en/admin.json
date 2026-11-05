@@ -786,7 +786,8 @@
       "COHORT_APPLICATION_ACCEPTED": "Cohort application accepted",
       "COHORT_QUESTIONS_UPDATED": "Application questions updated",
       "USER_AVATAR_UPDATED": "Profile photo changed",
-      "USER_AVATAR_REMOVED": "Profile photo removed"
+      "USER_AVATAR_REMOVED": "Profile photo removed",
+      "WALLET_REPLACED": "Wallet replaced"
     },
     "empty": "No audit log entries match.",
     "pagination": "Audit log pages",

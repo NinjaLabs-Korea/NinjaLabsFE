@@ -1,11 +1,15 @@
 // @vitest-environment jsdom
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render as renderComponent, screen, waitFor, within } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { NextIntlClientProvider } from "next-intl";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
 import { UserDirectory } from "@/components/admin/UserDirectory";
 import { auditActorKind, auditChanges, hasAuditData, isAuditUuid, type AdminAuditLog } from "@/lib/admin-audit";
 import { createMockApiClient } from "@/lib/mocks/api-client";
-import { renderWithIntl } from "@/test/intl";
+import { enMessages, renderWithIntl } from "@/test/intl";
+import enAdmin from "../../messages/en/admin.json";
+import koAdmin from "../../messages/ko/admin.json";
+import zhAdmin from "../../messages/zh/admin.json";
 
 const UUID = "11111111-1111-4111-8111-111111111111";
 const log = (n: number, overrides: Partial<AdminAuditLog> = {}): AdminAuditLog => ({
@@ -88,6 +92,27 @@ describe("AuditLogViewer", () => {
     // Unknown action: the raw code only; no nickname: the short id.
     expect(within(rows[2]).getByText("SOME_FUTURE_ACTION")).toBeTruthy();
     expect(within(rows[2]).getByText("aaaaaaaa…0000")).toBeTruthy();
+  });
+
+  it.each([
+    ["en", enAdmin, "Wallet replaced"],
+    ["ko", koAdmin, "지갑 교체"],
+    ["zh", zhAdmin, "钱包已更换"],
+  ] as const)("renders the WALLET_REPLACED label in %s and retains the raw audit code", async (locale, messages, label) => {
+    adminApi.getAdminAuditLogs.mockResolvedValue({
+      items: [log(1, { action: "WALLET_REPLACED", entityType: "user", actorNickname: "walletowner" })],
+      page: 1, pageSize: 30, total: 1,
+    });
+    renderComponent(
+      <NextIntlClientProvider locale={locale} messages={{ ...enMessages, admin: messages }} timeZone="UTC">
+        <AuditLogViewer tabs={null}><h1>Audit</h1></AuditLogViewer>
+      </NextIntlClientProvider>,
+    );
+    const rows = await screen.findAllByRole("row");
+    expect(rows).toHaveLength(2);
+    expect(within(rows[1]).getByText(label)).toBeTruthy();
+    expect(within(rows[1]).getByText("WALLET_REPLACED")).toBeTruthy();
+    expect(within(rows[1]).getByText("walletowner")).toBeTruthy();
   });
 
   it("pages with previous / next", async () => {
