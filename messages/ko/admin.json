@@ -786,7 +786,8 @@
       "COHORT_APPLICATION_ACCEPTED": "기수 지원서 합격",
       "COHORT_QUESTIONS_UPDATED": "지원서 질문 수정",
       "USER_AVATAR_UPDATED": "프로필 사진 변경",
-      "USER_AVATAR_REMOVED": "프로필 사진 삭제"
+      "USER_AVATAR_REMOVED": "프로필 사진 삭제",
+      "WALLET_REPLACED": "지갑 교체"
     },
     "empty": "조건에 맞는 감사 로그가 없습니다.",
     "pagination": "감사 로그 페이지",
