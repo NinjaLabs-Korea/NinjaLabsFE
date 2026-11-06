@@ -31,7 +31,7 @@
     "unavailableNote": "在配置受支持的 Injective EVM 链之前，无法连接钱包。",
     "badgeApi": "免 Gas 验证",
     "badgeMock": "仅连接预览",
-    "noteApi": "确认完成后会发放 Ninja NFT。",
+    "noteApi": "签名验证后，Ninja NFT 铸造会加入队列。请在我的动态中查看发放状态。",
     "noteMock": "模拟模式不会签名、关联账户或调用后端。",
     "connectLater": "稍后连接",
     "optionalNote": "钱包验证为可选项。你可以先继续，稍后再连接。",
@@ -148,7 +148,7 @@
       }
     },
     "skip": "暂时跳过",
-    "savedNote": "注册已完成。钱包和个人资料可随时在账户设置中修改。",
+    "savedNote": "注册已完成。可在账户设置中编辑个人资料或首次连接钱包。如需更换已绑定的钱包，请联系运营方。",
     "completeError": {
       "message": "未能完成保存引导进度，请重试。",
       "retry": "重试"

@@ -22,6 +22,7 @@ type BountyDetailPageProps = {
 
 // Keys under bounties.detail.completionSteps / afterApprovalSteps / bounties.apply.statuses.
 const completionStepKeys = ["transfer", "mint", "attach"] as const;
+const unspecifiedRewardStepKeys = ["review", "record"] as const;
 const afterApprovalStepKeys = ["approve", "unlock", "reward"] as const;
 const applyStatuses = [
   { key: "open", variant: "primary-soft" },
@@ -70,13 +71,16 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   const submissionMode = bounty.submissionMode ?? "direct";
   const deliverables = bounty.deliverables ?? [];
   const rewards = bounty.rewards ?? [bounty.reward];
+  // An absent/zero reward is unspecified, not a promise of payment or NFT issuance.
+  const specifiedRewards = rewards.filter((reward) => !isRewardUnset(reward));
+  const hasSpecifiedReward = specifiedRewards.length > 0;
   const isClosedDeadline = bounty.deadline === "Closed";
   // Application-required bounties lead with the short summary; the full markdown follows unless it is only that summary again.
   const fullDescription = applicationRequired && bounty.applicationDescription
     ? (bounty.descriptionMarkdown !== bounty.summary ? bounty.descriptionMarkdown : undefined)
     : (bounty.descriptionMarkdown ?? bounty.summary);
-  const stepKeys = applicationRequired ? afterApprovalStepKeys : completionStepKeys;
-  const stepNamespace = applicationRequired ? "detail.afterApprovalSteps" : "detail.completionSteps";
+  const stepKeys = applicationRequired ? afterApprovalStepKeys : hasSpecifiedReward ? completionStepKeys : unspecifiedRewardStepKeys;
+  const stepNamespace = applicationRequired ? "detail.afterApprovalSteps" : hasSpecifiedReward ? "detail.completionSteps" : "detail.unspecifiedRewardSteps";
 
   return (
     <div className="mx-auto max-w-content px-gutter py-16 pb-20">
@@ -177,16 +181,18 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
           <section className="rounded-card border border-primary-soft-border bg-primary-soft p-[21px]">
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("detail.rewardInfo")}</p>
-              {rewards.map((reward) => <SponsorPaysPill key={reward.currency} label={t("detail.sponsorPays", { reward: isRewardUnset(reward) ? tReward("tbd") : `${formatRewardAmount(reward.amount, format.number)} ${reward.currency}` })} reward={reward} />)}
+              {hasSpecifiedReward
+                ? specifiedRewards.map((reward) => <SponsorPaysPill key={reward.currency} label={t("detail.sponsorPays", { reward: `${formatRewardAmount(reward.amount, format.number)} ${reward.currency}` })} reward={reward} />)
+                : <Badge variant="neutral">{tReward("tbd")}</Badge>}
             </div>
-            <ol className="mt-4 space-y-3">
+            {hasSpecifiedReward ? <ol className="mt-4 space-y-3">
               {(["flow", "token"] as const).map((note, index) => (
                 <li className="flex gap-3 text-sm text-ink-secondary" key={note}>
                   <span className="shrink-0 text-xs font-bold leading-5 text-primary">{index + 1}</span>
-                  {applicationRequired ? t(`detail.rewardNotesApply.${note}`, { currency: rewards[0].currency }) : t(`detail.rewardNotes.${note}`)}
+                  {applicationRequired ? t(`detail.rewardNotesApply.${note}`, { currency: specifiedRewards[0].currency }) : t(`detail.rewardNotes.${note}`)}
                 </li>
               ))}
-            </ol>
+            </ol> : <p className="mt-4 text-sm text-ink-secondary">{t("detail.rewardUnspecified")}</p>}
           </section>
           <section className="rounded-card border border-border bg-surface p-[21px] shadow-card">
             <h2 className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{applicationRequired ? t("detail.afterApproval") : t("detail.completionHeading")}</h2>
@@ -194,7 +200,9 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               {stepKeys.map((step, index) => (
                 <li className="flex gap-3 text-sm text-ink-secondary" key={step}>
                   <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-xs font-bold text-success">{index + 1}</span>
-                  {t(`${stepNamespace}.${step}`)}
+                  {applicationRequired && !hasSpecifiedReward && step === "reward"
+                    ? t("detail.unspecifiedRewardSteps.record")
+                    : t(`${stepNamespace}.${step}`)}
                 </li>
               ))}
             </ol>
