@@ -51,14 +51,14 @@
     },
     "portfolio": {
       "eyebrow": "作品集",
-      "headingCompleted": "持续增长的链上证明",
+      "headingCompleted": "已完成的工作与 NFT 记录",
       "headingEmpty": "暂无已完成的赏金",
-      "bodyCompleted": "每完成一个赏金，就会在这里新增一条证明。",
-      "bodyEmpty": "完成赏金后，证明会显示在这里。",
+      "bodyCompleted": "已完成的工作列于下方。NFT 记录根据实际发放状态显示。",
+      "bodyEmpty": "有已完成的工作和已发放的 NFT 记录时，会在这里显示。",
       "token": "代币 {id}",
       "tx": "交易 {hash}",
       "untitledNft": "赏金 NFT",
-      "memberSince": "Ninja NFT · 自 {date} 起加入"
+      "memberSince": "自 {date} 起加入"
     },
     "nftStatus": {
       "minting": "铸造中",
