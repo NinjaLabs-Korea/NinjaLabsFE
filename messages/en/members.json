@@ -51,14 +51,14 @@
     },
     "portfolio": {
       "eyebrow": "Portfolio",
-      "headingCompleted": "On-chain proof that keeps growing",
+      "headingCompleted": "Completed work and NFT records",
       "headingEmpty": "No completed bounties yet",
-      "bodyCompleted": "Each completed bounty adds a proof here.",
-      "bodyEmpty": "Complete a bounty and its proof shows up here.",
+      "bodyCompleted": "Completed work is listed below. NFT records appear here when available.",
+      "bodyEmpty": "Completed work and available NFT records will appear here.",
       "token": "Token {id}",
       "tx": "Tx {hash}",
       "untitledNft": "Bounty NFT",
-      "memberSince": "Ninja NFT · member since {date}"
+      "memberSince": "Member since {date}"
     },
     "nftStatus": {
       "minting": "Minting",

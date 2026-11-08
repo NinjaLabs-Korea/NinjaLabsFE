@@ -51,14 +51,14 @@
     },
     "portfolio": {
       "eyebrow": "포트폴리오",
-      "headingCompleted": "계속 쌓이는 온체인 증명",
+      "headingCompleted": "완료한 작업과 NFT 기록",
       "headingEmpty": "아직 완료한 바운티가 없어요",
-      "bodyCompleted": "완료한 바운티마다 증명이 하나씩 쌓여요.",
-      "bodyEmpty": "바운티를 완료하면 증명이 여기에 쌓여요.",
+      "bodyCompleted": "아래에서 완료한 작업을 확인할 수 있어요. NFT 기록은 실제 발급 상태에 따라 표시돼요.",
+      "bodyEmpty": "완료한 작업과 발급된 NFT 기록이 있으면 여기에 표시돼요.",
       "token": "토큰 {id}",
       "tx": "Tx {hash}",
       "untitledNft": "바운티 NFT",
-      "memberSince": "Ninja NFT · {date}부터 멤버"
+      "memberSince": "{date}부터 멤버"
     },
     "nftStatus": {
       "minting": "발행 중",

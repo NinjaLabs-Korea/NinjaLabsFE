@@ -153,3 +153,11 @@ These screens have no Figma node and no designer. Every one is composed from exi
 | `/account` wallet and profile editor | The wallet card reuses `WalletConnectButton` (same challenge / sign / verify as signup step 2); a linked wallet is read-only because the BE has no unlink. The profile editor is the signup `ProfileForm` in `mode="edit"`. |
 | Admin `/admin/recruitment` | The shared admin table (`AdminTable`, responsive rules), `AdminSelect` filters, `ConfirmDialog` for open / close / delete / review, the audit-log style pager. Review is a dialog with the answers, a decision (radio) and an internal note. |
 | Notice event date | `notices.eventDate` text ("Event date 2026.06.18", `text-primary` semibold) under the title in `NoticeRow`, in the detail meta line and instead of the publish date in event `NewsCard`s. Admin form: a native `type="date"` input next to the status select. |
+
+### QA status-copy corrections (2026-11-06, `fix/qa-status-copy`)
+
+| Item | Decision |
+|---|---|
+| Public profile (Figma 05 `31:246`) | Membership dates no longer carry a static "Ninja NFT" prefix. Completed work and NFT records are described separately; a profile without an NFT must not appear to own one. Existing layout and actual NFT status tiles are unchanged. |
+| Signup completion / wallet settings | Profile editing, first-wallet connection and linked-wallet replacement are distinguished. The current wallet-settings UI directs replacement requests to operators. Signature verification queues minting; it is not proof of issuance. No wallet capability or API was added. |
+| Bounty detail (Figma 15 `19:1739`) | Missing, empty or zero-valued reward lists show the existing neutral "Reward TBD" badge and non-promissory review guidance, not a sponsor payment/NFT promise. A specified reward keeps its currency and explains separate operator payout handling; NFT issuance is a later state. Existing cards, typography and Badge variants only. |

@@ -31,7 +31,7 @@
     "unavailableNote": "Wallet connection is unavailable until a supported Injective EVM chain is configured.",
     "badgeApi": "Gas-free verification",
     "badgeMock": "Connection-only preview",
-    "noteApi": "Your Ninja NFT is issued once it is confirmed.",
+    "noteApi": "After your signature is verified, Ninja NFT minting is queued. Check its issuance status on My activity.",
     "noteMock": "Mock mode does not sign, link an account, or call the backend.",
     "connectLater": "Connect later",
     "optionalNote": "Wallet verification is optional. You can continue now and connect one later.",
@@ -148,7 +148,7 @@
       }
     },
     "skip": "Skip for now",
-    "savedNote": "Sign-up is done. You can change your wallet and profile any time in account settings.",
+    "savedNote": "Sign-up is done. Edit your profile or connect your first wallet in account settings. To replace a linked wallet, contact the operators.",
     "completeError": {
       "message": "We couldn't finish saving your onboarding. Please try again.",
       "retry": "Retry"

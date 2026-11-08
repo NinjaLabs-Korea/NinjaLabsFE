@@ -59,4 +59,12 @@ describe("member profile bio and team badge", () => {
     expect(screen.getByText("New here")).toBeTruthy();
     expect(screen.queryByText(/Team ·/)).toBeNull();
   });
+
+  it("labels membership by join date, not by an NFT the member does not own", async () => {
+    data.profile = base;
+    await render();
+    expect(screen.getByText("Member since May 2026")).toBeTruthy();
+    expect(screen.queryByText(/Ninja NFT ·/)).toBeNull();
+    expect(screen.queryByText("Minted")).toBeNull();
+  });
 });
