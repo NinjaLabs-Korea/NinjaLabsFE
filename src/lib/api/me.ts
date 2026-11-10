@@ -17,8 +17,10 @@ export type MeResponse = {
   isMember: boolean;
   /** Profile photo `/media/<uuid>` or null (BE 0022). Absent on an older BE: read as no photo. */
   avatarUrl?: string | null;
-  wallet: { address: string; verifiedAt: string | null } | null;
-  nft: { status: string; tokenId: string | null } | null;
+  /** Optional: BE #69+ (Google-only plan) drops wallet/nft; absent, null and an object are all valid. */
+  wallet?: { address: string; verifiedAt: string | null } | null;
+  /** Optional, same as `wallet`. */
+  nft?: { status: string; tokenId: string | null } | null;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
@@ -45,8 +47,8 @@ export function parseMeResponse(value: unknown): MeResponse | null {
     isBoolean(value.isMember) &&
     // optional: an older BE has no avatarUrl at all, and that `user` must still skip the `/auth/me` round trip
     (value.avatarUrl === undefined || value.avatarUrl === null || isString(value.avatarUrl)) &&
-    (wallet === null || (isRecord(wallet) && isString(wallet.address) && (wallet.verifiedAt === null || isString(wallet.verifiedAt)))) &&
-    (nft === null || (isRecord(nft) && isString(nft.status) && (nft.tokenId === null || isString(nft.tokenId))));
+    (wallet === undefined || wallet === null || (isRecord(wallet) && isString(wallet.address) && (wallet.verifiedAt === null || isString(wallet.verifiedAt)))) &&
+    (nft === undefined || nft === null || (isRecord(nft) && isString(nft.status) && (nft.tokenId === null || isString(nft.tokenId))));
   return ok ? (value as MeResponse) : null;
 }
 

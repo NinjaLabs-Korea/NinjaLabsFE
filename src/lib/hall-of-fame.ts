@@ -50,7 +50,8 @@ type HighlightRow = {
 type StatsRow = {
   completedBounties: number;
   builders: number;
-  completionNfts: number;
+  /** Optional: the BE is dropping NFTs (Google-only plan); absent hides the tile. */
+  completionNfts?: number;
   sponsors: number;
   /** Optional so an older BE without the field still renders (the stat is just hidden). */
   paidTotals?: PaidTotalRow[];
@@ -146,7 +147,7 @@ async function fetchHallOfFame(locale: string): Promise<RuntimeHallOfFame> {
       [
         { value: String(stats.completedBounties), labelKey: "bountiesCompleted" },
         { value: String(stats.builders), labelKey: "buildersRewarded" },
-        { value: String(stats.completionNfts), labelKey: "completionNfts" },
+        ...(typeof stats.completionNfts === "number" ? [{ value: String(stats.completionNfts), labelKey: "completionNfts" as const }] : []),
       ],
       stats.paidTotals,
       locale,

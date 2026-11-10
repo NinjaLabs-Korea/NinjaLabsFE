@@ -194,6 +194,8 @@
     "browseOther": "浏览其他赏金",
     "submissionApprovedHeading": "提交已通过",
     "submissionApprovedBody": "赞助方已批准您在此赏金中的工作。",
+    "payoutAddressBody": "请填写收款地址以领取奖励。",
+    "payoutAddressCta": "填写收款地址",
     "submissionRejectedHeading": "提交未被采纳",
     "submissionRejectedBody": "赞助方审核后未采纳您的工作。此结果为最终结果。",
     "submissionForfeitedHeading": "奖励未发放",

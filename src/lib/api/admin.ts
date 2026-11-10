@@ -16,12 +16,14 @@ type OperationsResponse = {
   lifecycle: { blockerDetails?: Record<string, Array<{ code: string; count?: number }>>; allowedTransitions?: string[] };
   applications: Array<ActorColumns & { id: string; status: string; message: string; portfolio_url: string | null; review_note: string | null; applied_at: string; reviewed_at: string | null }>;
   submissions: Array<ActorColumns & {
-    id: string; status: string; current_revision_no: number; submitted_at: string; reviewed_at: string | null; recipient_wallet_address: string | null; review_comment: string | null;
+    id: string; status: string; current_revision_no: number; submitted_at: string; reviewed_at: string | null; payout_address?: string | null; payout_address_evm?: string | null; email?: string | null;
+    /** Deprecated alias of `payout_address` (BE #69 keeps it for the old FE; read only when the new field is missing). */
+    recipient_wallet_address?: string | null; review_comment: string | null;
     revisions: Array<{ revision_no: number; submission_url: string; description: string; repository_url: string | null; commit_sha: string | null; created_at: string }>;
     reviews: Array<{ revision_no: number | null; decision: string; comment: string | null; created_at: string }>;
   }>;
-  rewards: Array<{ id: string; status: string; display_symbol: string; amount: string; deposited_amount: string | null; deposited_at: string | null; deposit_tx_hash: string | null; custody_address: string | null; cap: string | null; allocated_amount: string | null }>;
-  payouts: Array<{ id: string; bounty_reward_id: string; submission_id: string; status: string; amount: string; display_symbol: string; payout_tx_hash: string | null; recipient_address: string; requested_by: string; requested_by_nickname: string | null; requested_at: string; approved_by_nickname: string | null; approved_at: string | null; paid_at: string | null; requested_by_me: boolean }>;
+  rewards: Array<{ id: string; status: string; token_type?: string; display_symbol: string; amount: string; deposited_amount: string | null; deposited_at: string | null; deposit_tx_hash: string | null; custody_address: string | null; cap: string | null; allocated_amount: string | null }>;
+  payouts: Array<{ id: string; bounty_reward_id: string; submission_id: string; status: string; amount: string; display_symbol: string; payout_tx_hash: string | null; recipient_address: string; recipient_address_evm?: string | null; requested_by: string; requested_by_nickname: string | null; requested_at: string; approved_by_nickname: string | null; approved_at: string | null; paid_at: string | null; requested_by_me: boolean }>;
   policy?: { payoutSelfApprovalAllowed?: boolean };
 };
 type AuditRow = { id: string; actor_user_id: string | null; actor_agent_id: string | null; actor_nickname?: string | null; actor_agent_name?: string | null; action: string; entity_type: string; entity_id: string | null; created_at: string; before_data?: unknown; after_data?: unknown };
@@ -43,17 +45,17 @@ export function toAdminOperations(body: OperationsResponse): AdminOperations {
     })),
     submissions: body.submissions.map((row) => ({
       ...actorFrom(row), id: row.id, status: row.status, currentRevisionNo: Number(row.current_revision_no) || 1,
-      submittedAt: row.submitted_at, reviewedAt: row.reviewed_at, recipientWalletAddress: row.recipient_wallet_address, reviewComment: row.review_comment,
+      submittedAt: row.submitted_at, reviewedAt: row.reviewed_at, payoutAddress: row.payout_address ?? row.recipient_wallet_address ?? null, payoutAddressEvm: row.payout_address_evm ?? null, email: row.email ?? null, reviewComment: row.review_comment,
       revisions: row.revisions.map((rev) => ({ revisionNo: rev.revision_no, submissionUrl: rev.submission_url, description: rev.description, repositoryUrl: rev.repository_url, commitSha: rev.commit_sha, createdAt: rev.created_at })),
       reviews: row.reviews.map((review) => ({ revisionNo: review.revision_no, decision: review.decision, comment: review.comment, createdAt: review.created_at })),
     })),
     rewards: body.rewards.map((row) => ({
-      id: row.id, status: row.status, symbol: row.display_symbol, amount: row.amount, depositedAmount: row.deposited_amount,
+      id: row.id, status: row.status, symbol: row.display_symbol, ...(row.token_type ? { tokenType: row.token_type } : {}), amount: row.amount, depositedAmount: row.deposited_amount,
       depositedAt: row.deposited_at, depositTxHash: row.deposit_tx_hash, custodyAddress: row.custody_address, cap: row.cap, allocated: row.allocated_amount ?? "0",
     })),
     payouts: body.payouts.map((row) => ({
       id: row.id, rewardId: row.bounty_reward_id, submissionId: row.submission_id, status: row.status, amount: row.amount, symbol: row.display_symbol,
-      txHash: row.payout_tx_hash, recipientAddress: row.recipient_address, requestedBy: row.requested_by, requestedByNickname: row.requested_by_nickname,
+      txHash: row.payout_tx_hash, recipientAddress: row.recipient_address, recipientAddressEvm: row.recipient_address_evm ?? null, requestedBy: row.requested_by, requestedByNickname: row.requested_by_nickname,
       requestedAt: row.requested_at, approvedByNickname: row.approved_by_nickname, approvedAt: row.approved_at, paidAt: row.paid_at, requestedByMe: row.requested_by_me === true,
     })),
     policy: { payoutSelfApprovalAllowed: body.policy?.payoutSelfApprovalAllowed === true },
