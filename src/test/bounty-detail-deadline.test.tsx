@@ -22,7 +22,6 @@ vi.mock("next-intl/server", () => ({
   },
   getFormatter: async () => createFormatter({ locale: current.locale, timeZone: "UTC" }),
 }));
-vi.mock("@/components/agents/BountyAgentPanel", () => ({ BountyAgentPanel: () => <aside /> }));
 vi.mock("@/components/bounties/BountyActionPanel", () => ({ BountyActionPanel: () => <section /> }));
 
 const data = vi.hoisted(() => ({ bounty: undefined as Bounty | undefined }));

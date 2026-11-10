@@ -83,8 +83,6 @@ export type AdminUser = {
   nickname: string;
   email: string;
   joinedAt: string;
-  walletAddress: string | null;
-  walletStatus: "linked" | null;
   isMember: boolean;
   memberRole: MemberRole | null;
   memberDisplayOrder: number | null;

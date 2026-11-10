@@ -54,11 +54,11 @@ describe("UserDirectory", () => {
     await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(fixtureUsers().length + 1));
   });
 
-  it("renders wallet/member/role columns with dashes for missing values", async () => {
+  it("renders member/role columns with dashes for missing values", async () => {
     renderDirectory();
     await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(fixtureUsers().length + 1));
-    expect(cells("sora")).toEqual(["sora", "sora@example.com", "2026-07-01", "-", "-", "-", "Assign"]);
-    expect(cells("jinyoung")).toEqual(["jinyoung", "jinyoung@example.com", "2026-05-03", "Linked", "Yes", "Core", "Remove"]);
+    expect(cells("sora")).toEqual(["sora", "sora@example.com", "2026-07-01", "-", "-", "Assign"]);
+    expect(cells("jinyoung")).toEqual(["jinyoung", "jinyoung@example.com", "2026-05-03", "Yes", "Core", "Remove"]);
   });
 
   it("filters by nickname or email case-insensitively and offers a reset from the empty state", () => {
@@ -167,7 +167,7 @@ describe("UserDirectory", () => {
     fireEvent.change(within(dialog).getByLabelText("Display order"), { target: { value: "5" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Confirm" }));
 
-    await waitFor(() => expect(cells("sora").slice(4, 7)).toEqual(["Yes", "Ops", "Remove"]));
+    await waitFor(() => expect(cells("sora").slice(3, 6)).toEqual(["Yes", "Ops", "Remove"]));
     expect(setMember).toHaveBeenCalledWith("sora", { isMember: true, role: "Ops", displayOrder: 5 });
     expect(dialog.hasAttribute("open")).toBe(false);
     expect(screen.getByText("sora is now visible in the public member directory.")).toBeTruthy();
@@ -194,11 +194,11 @@ describe("UserDirectory", () => {
 
     fireEvent.click(within(row("juho")).getByRole("button", { name: "Remove" }));
     fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Remove member" }));
-    await waitFor(() => expect(cells("juho").slice(4, 7)).toEqual(["-", "-", "Assign"]));
+    await waitFor(() => expect(cells("juho").slice(3, 6)).toEqual(["-", "-", "Assign"]));
     expect(setMember).toHaveBeenLastCalledWith("juho", { isMember: false });
 
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
-    await waitFor(() => expect(cells("juho").slice(4, 7)).toEqual(["Yes", "Dev", "Remove"]));
+    await waitFor(() => expect(cells("juho").slice(3, 6)).toEqual(["Yes", "Dev", "Remove"]));
     // Undo puts back the exact role and display order the member had.
     expect(setMember).toHaveBeenLastCalledWith("juho", { isMember: true, role: "Dev", displayOrder: 2 });
     expect(screen.getByText("juho was restored.")).toBeTruthy();
@@ -212,12 +212,12 @@ describe("UserDirectory", () => {
     fireEvent.click(within(row("sora")).getByRole("button", { name: "Assign" }));
     fireEvent.click(within(screen.getByRole("dialog", { name: "Assign member role" })).getByRole("button", { name: "Confirm" }));
     expect(await screen.findByText("A field contains characters that cannot be saved (for example a NUL byte). Remove them and try again.")).toBeTruthy();
-    expect(cells("sora")[4]).toBe("-");
+    expect(cells("sora")[3]).toBe("-");
 
     fireEvent.click(within(row("mina")).getByRole("button", { name: "Remove" }));
     fireEvent.click(within(screen.getByRole("alertdialog", { name: "Remove mina from members?" })).getByRole("button", { name: "Remove member" }));
     expect(await screen.findByText("The member assignment was not changed.")).toBeTruthy();
-    expect(cells("mina")[4]).toBe("Yes");
+    expect(cells("mina")[3]).toBe("Yes");
     expect(screen.getAllByText("Update failed")).toHaveLength(2);
   });
 
@@ -226,14 +226,14 @@ describe("UserDirectory", () => {
     renderDirectory();
     fireEvent.click(within(row("juho")).getByRole("button", { name: "Remove" }));
     fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Remove member" }));
-    await waitFor(() => expect(cells("juho")[4]).toBe("-"));
+    await waitFor(() => expect(cells("juho")[3]).toBe("-"));
 
     setMember.mockRejectedValueOnce(new ApiHttpError(500, "INTERNAL"));
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
     const alert = await screen.findByRole("alert");
     expect(alert.textContent).toContain("Update failed");
     expect(alert.textContent).toContain("The member assignment was not changed.");
-    expect(cells("juho").slice(4, 7)).toEqual(["-", "-", "Assign"]);
+    expect(cells("juho").slice(3, 6)).toEqual(["-", "-", "Assign"]);
     expect(screen.queryByText("juho was restored.")).toBeNull();
   });
 

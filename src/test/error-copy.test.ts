@@ -50,6 +50,11 @@ describe("BE error code snapshot (lib/api/be-error-codes.ts)", () => {
     expect(ERROR_COPY.adminOperations.codes as readonly string[]).toContain("DEPOSIT_BELOW_REWARD_AMOUNT");
   });
 
+  it("maps AGENT_SUBMISSION_REQUIRED (legacy AGENT-mode bounty rejects the human form) to bounty action copy", () => {
+    expect(BE_ERROR_CODES as readonly string[]).toContain("AGENT_SUBMISSION_REQUIRED");
+    expect(errorCopyKey(new ApiHttpError(400, "AGENT_SUBMISSION_REQUIRED"), ERROR_COPY.bountyAction)).toBe("AGENT_SUBMISSION_REQUIRED");
+  });
+
   it("keeps FE-made codes separate from BE codes", () => {
     for (const code of FE_ERROR_CODES) expect(BE_ERROR_CODES as readonly string[], code).not.toContain(code);
   });

@@ -81,6 +81,16 @@ describe("POST/PATCH /admin/bounties body", () => {
     });
   });
 
+  it("PATCH omits submissionMode so a stored AGENT value is not rewritten (create sends DIRECT)", async () => {
+    const { http, fetchJson } = createHttp([bountyRow({ submission_mode: "AGENT" })]);
+    const api = createAdminApi(http);
+    await api.saveAdminBounty(bounty, true);
+    await api.saveAdminBounty(bounty, false);
+    expect(calls(fetchJson)[0][1]?.body).toMatchObject({ submissionMode: "DIRECT" });
+    expect(calls(fetchJson)[1][1]?.method).toBe("PATCH");
+    expect(calls(fetchJson)[1][1]?.body).not.toHaveProperty("submissionMode");
+  });
+
   it("creates a USDC reward as ERC20 without a denom (the BE resolves the contract)", async () => {
     const { http, fetchJson } = createHttp();
     await createAdminApi(http).saveAdminBounty({ ...bounty, reward: { amount: 250.5, currency: "USDC" } }, true);
@@ -138,18 +148,18 @@ describe("POST/PATCH /admin/bounties body", () => {
 });
 
 describe("admin users and members", () => {
-  it("maps users with member role labels and wallet link state, and encodes the search query", async () => {
+  it("maps users with member role labels, ignores a legacy wallet_address key, and encodes the search query", async () => {
     const { http, fetchJson } = createHttp([
-      { id: "u1", email: "a@x", nickname: "alpha", is_member: true, member_role: "CORE", member_display_order: 2, created_at: "2026-07-01T14:59:59.999Z", wallet_address: "0xabc" },
-      { id: "u2", email: "b@x", nickname: "beta", is_member: false, member_role: null, member_display_order: null, created_at: "not a date", wallet_address: null },
-      { id: "u3", email: "c@x", nickname: "gamma", is_member: true, member_role: "INTERN", member_display_order: 1, created_at: "2026-07-01T15:00:00.000Z", wallet_address: null },
+      { id: "u1", email: "a@x", nickname: "alpha", is_member: true, member_role: "CORE", member_display_order: 2, created_at: "2026-07-01T14:59:59.999Z" },
+      { id: "u2", email: "b@x", nickname: "beta", is_member: false, member_role: null, member_display_order: null, created_at: "not a date" },
+      { id: "u3", email: "c@x", nickname: "gamma", is_member: true, member_role: "INTERN", member_display_order: 1, created_at: "2026-07-01T15:00:00.000Z" },
     ]);
     const users = await createAdminApi(http).getAdminUsers("a&b c");
     expect(calls(fetchJson)[0][0]).toBe("/admin/users?q=a%26b%20c");
     expect(users).toEqual([
-      { slug: "u1", nickname: "alpha", email: "a@x", joinedAt: "2026-07-01", walletAddress: "0xabc", walletStatus: "linked", isMember: true, memberRole: "Core", memberDisplayOrder: 2 },
-      { slug: "u2", nickname: "beta", email: "b@x", joinedAt: "", walletAddress: null, walletStatus: null, isMember: false, memberRole: null, memberDisplayOrder: null },
-      { slug: "u3", nickname: "gamma", email: "c@x", joinedAt: "2026-07-02", walletAddress: null, walletStatus: null, isMember: true, memberRole: null, memberDisplayOrder: 1 },
+      { slug: "u1", nickname: "alpha", email: "a@x", joinedAt: "2026-07-01", isMember: true, memberRole: "Core", memberDisplayOrder: 2 },
+      { slug: "u2", nickname: "beta", email: "b@x", joinedAt: "", isMember: false, memberRole: null, memberDisplayOrder: null },
+      { slug: "u3", nickname: "gamma", email: "c@x", joinedAt: "2026-07-02", isMember: true, memberRole: null, memberDisplayOrder: 1 },
     ]);
   });
 

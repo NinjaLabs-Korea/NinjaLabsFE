@@ -38,7 +38,7 @@ describe("GET /applications/me + /submissions/me join", () => {
         application({ id: "withdrawn", status: "WITHDRAWN", bounty_id: "b-withdrawn" }),
         application({ id: "approved", status: "APPROVED", bounty_id: "b-approved" }),
         application({ id: "submitted", status: "APPROVED", bounty_id: "b-shared" }),
-        // An old BE row may still carry an `agent` key: it is ignored (no second participant row, no agent field).
+        // An old BE row made by an agent (non-null `agent`) is excluded: it would collide with the owner's row on bounty_id.
         application({ id: "legacy-agent", status: "PENDING", bounty_id: "b-legacy", agent: { id: "ag1", name: "Bot" } }),
         application({ id: "pending-with-sub", status: "PENDING", bounty_id: "b-early" }),
       ],
@@ -57,11 +57,28 @@ describe("GET /applications/me + /submissions/me join", () => {
       ["approved", "approved"],
       // The IN_REVIEW submission makes the approved application's row "submitted".
       ["submitted", "submitted"],
-      ["legacy-agent", "open"],
       // A submission never promotes an application the sponsor has not approved.
       ["pending-with-sub", "open"],
     ]);
     expect(rows.every((row) => !("agent" in row))).toBe(true);
+  });
+
+  it("uses only the owner's row when an agent row for the same bounty comes first", async () => {
+    const { http } = createHttp({
+      "/applications/me": [
+        application({ id: "agent-app", status: "REJECTED", bounty_id: "b-dup", agent: { id: "ag1" } }),
+        application({ id: "own-app", status: "APPROVED", bounty_id: "b-dup", agent: null }),
+        application({ id: "agent-only", status: "PENDING", bounty_id: "b-agent-only", agent: { id: "ag1" } }),
+      ],
+      "/submissions/me": [
+        { id: "agent-sub", status: "REJECTED", bounty_id: "b-dup", agent: { id: "ag1" } },
+        { id: "own-sub", status: "IN_REVIEW", bounty_id: "b-dup" },
+        { id: "agent-sub-only", status: "SUBMITTED", bounty_id: "b-agent-only", agent: { id: "ag1" } },
+      ],
+    });
+    const result = await createApiApiClient(http).getApplications(signedIn);
+    const rows = result.status === "available" ? result.data : [];
+    expect(rows.map((row) => [row.id, row.status])).toEqual([["own-app", "submitted"]]);
   });
 
   it("maps the row fields and falls back to Other for an unknown category code", async () => {
@@ -86,6 +103,19 @@ describe("GET /applications/me + /submissions/me join", () => {
 });
 
 describe("GET /submissions/me content fields", () => {
+  it("drops agent-made rows so only the owner's submission remains for a bounty", async () => {
+    const { http } = createHttp({
+      "/submissions/me": [
+        { id: "agent-sub", status: "APPROVED", bounty_id: "b-dup", agent: { id: "ag1" } },
+        { id: "own-sub", status: "IN_REVIEW", bounty_id: "b-dup" },
+        { id: "agent-only", status: "SUBMITTED", bounty_id: "b-agent-only", agent: { id: "ag1" } },
+      ],
+    });
+    const result = await createApiApiClient(http).getSubmissions(signedIn);
+    const rows = result.status === "available" ? result.data : [];
+    expect(rows.map((row) => [row.bountySlug, row.status])).toEqual([["b-dup", "in_review"]]);
+  });
+
   it("maps submission_url, repository_url, commit_sha and description, and omits null or absent ones", async () => {
     const { http } = createHttp({
       "/submissions/me": [
@@ -201,7 +231,7 @@ describe("GET /submissions/me mapping", () => {
     ["REJECTED", "rejected"],
     ["SOMETHING_NEW", "submitted"],
   ])("%s -> %s", async (status, expected) => {
-    const { http } = createHttp({ "/submissions/me": [{ status, bounty_id: "b1", agent: { id: "ag", name: "Bot" } }] });
+    const { http } = createHttp({ "/submissions/me": [{ status, bounty_id: "b1", agent: null }] });
     expect(await createApiApiClient(http).getSubmissions(signedIn)).toEqual({
       status: "available",
       data: [{ bountySlug: "b1", status: expected, paymentStatus: "NONE", reviewComment: null }],

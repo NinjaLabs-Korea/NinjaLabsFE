@@ -70,7 +70,7 @@ describe("isNonceRoute", () => {
       }
     }
     expect(excluded.test("/")).toBe(true);
-    expect(excluded.test("/skill.md")).toBe(true);
+    expect(excluded.test("/sitemap.xml")).toBe(true);
   });
 
   it("agrees with the header source for case variants (Next matches it case-insensitively)", () => {

@@ -11,6 +11,8 @@ import { toCategoryLabel, toPayoutStatus, type CategoryCode } from "@/lib/api/co
 /** BE GET /applications/me 행 */
 type ApplicationRow = {
   id: string;
+  /** Legacy agent-created rows carry a non-null `agent`. Read only to exclude them (agents are removed). */
+  readonly agent?: unknown;
   status: "PENDING" | "APPROVED" | "REJECTED" | "WITHDRAWN";
   message: string;
   applied_at: string;
@@ -28,6 +30,8 @@ type ApplicationRow = {
 
 type SubmissionRow = {
   id?: string;
+  /** Legacy agent-created rows carry a non-null `agent`. Read only to exclude them (agents are removed). */
+  readonly agent?: unknown;
   bounty_title?: string;
   category?: string;
   submitted_at?: string;
@@ -144,6 +148,9 @@ function toApplication(row: ApplicationRow): AccountApplication {
   };
 }
 
+/** Agent rows are excluded: they collide with the owner's row on bounty_id (agents are removed, legacy data only). */
+const isOwnerRow = (row: { readonly agent?: unknown }): boolean => row.agent == null;
+
 const unavailable = <T>(error: unknown): ApiResult<T> => ({ status: "unavailable", reason: unavailableReason(error) });
 
 /** api 모드 실제 클라이언트: BE 계약(docs/api-contract.md)에 연결 */
@@ -174,10 +181,13 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
     getApplications: async (auth) => {
       if (auth.status !== "signed-in") return { status: "available", data: [] };
       try {
-        const [rows, submissions] = await Promise.all([
+        const [allRows, allSubmissions] = await Promise.all([
           sharedGet<ApplicationRow[]>("/applications/me"),
           sharedGet<SubmissionRow[]>("/submissions/me"),
         ]);
+        // 에이전트 행은 소유자 행과 bounty_id가 충돌하므로 제외
+        const rows = allRows.filter(isOwnerRow);
+        const submissions = allSubmissions.filter(isOwnerRow);
         // One participant row per bounty: match each application to its own submission.
         const submissionsByRow = new Map(submissions.map((submission) => [submission.bounty_id, submission]));
         // Submissions that belong to an application row are joined below; the rest (direct bounties) are listed on their own.
@@ -219,7 +229,8 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
       if (auth.status !== "signed-in") return { status: "available", data: [] };
       try {
         const rows = await sharedGet<SubmissionRow[]>("/submissions/me");
-        return { status: "available", data: rows.map(toSubmission) };
+        // 에이전트 행은 소유자 행과 bounty_id가 충돌하므로 제외
+        return { status: "available", data: rows.filter(isOwnerRow).map(toSubmission) };
       } catch (error) {
         return unavailable<readonly AccountSubmission[]>(error);
       }

@@ -1,6 +1,6 @@
 name: Integration (real browser)
 
-# All 15 flows of the FE (api mode) against a real NinjaLabsBE, a private Postgres and headless Chrome.
+# All 16 flows (1-4, 6-17; flow 5 was removed with agents) of the FE (api mode) against a real NinjaLabsBE, a private Postgres and headless Chrome.
 # Not a required check: meant for manual runs and a nightly sanity pass. See integration/README.md.
 #
 # The flows are split over parallel jobs (a matrix), each with its own full stack (Postgres, BE, FE, Chrome), so one job
@@ -34,7 +34,8 @@ jobs:
   integration:
     name: flows ${{ matrix.flows }}
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    # Flow 17 (QA sweep) has its own 40 minute budget in run-all.mjs, so it gets a job of its own with headroom.
+    timeout-minutes: 55
     strategy:
       fail-fast: false
       matrix:
@@ -43,6 +44,7 @@ jobs:
           - { name: admin-payout, flows: '6 9 10 11' }
           - { name: community, flows: '12 13 16' }
           - { name: layout, flows: '14 15' }
+          - { name: qa-sweep, flows: '17' }
     steps:
       - uses: actions/checkout@v5
       # Both repos are public, so no token is needed to check out the BE.

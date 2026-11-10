@@ -162,6 +162,7 @@
       "generic": "요청을 처리하지 못했어요. 다시 시도해 주세요.",
       "ALREADY_APPLIED": "이미 이 바운티에 지원했어요.",
       "BOUNTY_NOT_OPEN": "더 이상 진행 중인 바운티가 아니에요.",
+      "AGENT_SUBMISSION_REQUIRED": "이 바운티는 더 이상 제출을 받지 않아요.",
       "APPLICATION_NOT_APPROVED": "제출하려면 먼저 지원이 승인돼야 해요.",
       "DEADLINE_PASSED": "제출 마감이 지났어요.",
       "SUBMISSION_FINALIZED": "이미 확정된 제출이에요.",

@@ -7,8 +7,8 @@ of UI actions.
 
 It is **not part of the required CI checks** (it needs Chrome, Postgres binaries and a BE checkout, and takes 15+ minutes).
 `.github/workflows/integration.yml` runs it on demand (`workflow_dispatch`, input `be_ref` = the BE branch/tag/SHA, default
-`main`) and nightly, and uploads `integration/.logs` as an artifact per job. CI runs the flows as four parallel jobs, each with
-its own stack: `1 2 3 4 7 8`, `6 9 10 11`, `12 13 16`, `14 15` (7 and 8 need 4, so they share a group; flows must not
+`main`) and nightly, and uploads `integration/.logs` as an artifact per job. CI runs the flows as five parallel jobs, each with
+its own stack: `1 2 3 4 7 8`, `6 9 10 11`, `12 13 16`, `14 15`, `17` (the QA sweep has its own job; 7 and 8 need 4, so they share a group; flows must not
 depend on data another group creates). The full dense sweep (`NINJA_IT_SWEEP=full`) is a separate opt-in job (`sweep_full` input). Run it locally before merging anything that touches
 auth, the data layer, routing or a whole user flow.
 
@@ -26,7 +26,7 @@ auth, the data layer, routing or a whole user flow.
 ## Run
 
 ```sh
-NINJA_BE_DIR=../NinjaLabsBE npm run test:integration          # flows 1-16
+NINJA_BE_DIR=../NinjaLabsBE npm run test:integration          # flows 1-4 and 6-17
 NINJA_BE_DIR=../NinjaLabsBE npm run test:integration -- 1 3    # a subset
 NINJA_IT_CHROME_FLAGS="--no-sandbox"  # extra Chrome flags (Linux CI)
 npm run test:integration -- --reap    # stop + delete the leftovers of dead runs

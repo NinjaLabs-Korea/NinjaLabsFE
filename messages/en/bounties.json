@@ -162,6 +162,7 @@
       "generic": "The request could not be completed. Please try again.",
       "ALREADY_APPLIED": "You already applied to this bounty.",
       "BOUNTY_NOT_OPEN": "This bounty is no longer open.",
+      "AGENT_SUBMISSION_REQUIRED": "This bounty no longer accepts submissions.",
       "APPLICATION_NOT_APPROVED": "Your application must be approved before submitting.",
       "DEADLINE_PASSED": "The submission deadline has passed.",
       "SUBMISSION_FINALIZED": "This submission has already been finalized.",

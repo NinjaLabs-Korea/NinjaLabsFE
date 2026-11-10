@@ -605,7 +605,7 @@ describe("api client application mapping", () => {
       { id: "a2", status: "REJECTED", message: "", applied_at: "", reviewed_at: null, review_note: "  Portfolio too thin  ", bounty_id: "b2", bounty_title: "B2", category: "DEV" },
       { id: "a3", status: "WITHDRAWN", message: "", applied_at: "", reviewed_at: null, bounty_id: "b3", bounty_title: "B3", category: "DEV" },
       { id: "a4", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b4", bounty_title: "B4", category: "DEV" },
-      // An old BE row may still carry an `agent` key (agents are gone): it is ignored, the row maps like any other.
+      // An old agent-made row (non-null `agent`, agents are gone) is excluded from the participant rows, with its submission below.
       { id: "a5", status: "PENDING", message: "", applied_at: "", reviewed_at: null, bounty_id: "b5", bounty_title: "B5", category: "DEV", agent: { id: "agent-1", name: "scout" } },
       { id: "a6", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b6", bounty_title: "B6", category: "DEV" },
       // Approved applications whose submission was finally rejected (b8 forfeited, b9 plain, b10 plain without comment).
@@ -625,13 +625,12 @@ describe("api client application mapping", () => {
   const http = { fetchJson: async (path: string) => rows[path] } as unknown as ApiHttp;
   const client = createApiApiClient(http);
 
-  it("keeps rejected applications, drops withdrawn ones, ignores a legacy agent key, and maps submissions", async () => {
+  it("keeps rejected applications, drops withdrawn ones, drops legacy agent-made rows, and maps submissions", async () => {
     const applications = await client.getApplications(signedIn);
     expect(applications.status === "available" && applications.data.map((item) => [item.bountySlug, item.status])).toEqual([
       ["b1", "open"],
       ["b2", "rejected"],
       ["b4", "revisionRequested"],
-      ["b5", "open"],
       ["b6", "completed"],
       ["b8", "notAccepted"],
       ["b9", "notAccepted"],
@@ -639,11 +638,11 @@ describe("api client application mapping", () => {
     ]);
     // The operator's application note ("shown to the applicant") is trimmed and travels with the row; no note → null.
     expect(applications.status === "available" && applications.data.map((item) => item.reviewNote)).toEqual([
-      null, "Portfolio too thin", null, null, null, null, null, null,
+      null, "Portfolio too thin", null, null, null, null, null,
     ]);
     // The reviewer comment travels with the final state; other states carry none.
     expect(applications.status === "available" && applications.data.map((item) => item.reviewComment)).toEqual([
-      null, null, null, null, null, "forfeited: winner wallet never connected", "Not production ready", null,
+      null, null, null, null, "forfeited: winner wallet never connected", "Not production ready", null,
     ]);
     await expect(client.getSubmissions(signedIn)).resolves.toEqual({
       status: "available",
@@ -652,7 +651,6 @@ describe("api client application mapping", () => {
         { bountySlug: "b9", status: "rejected", paymentStatus: "NONE", reviewComment: "Not production ready" },
         { bountySlug: "b10", status: "rejected", paymentStatus: "NONE", reviewComment: null },
         { bountySlug: "b4", status: "revision_requested", paymentStatus: "NONE", reviewComment: null },
-        { bountySlug: "b5", status: "submitted", paymentStatus: "NONE", reviewComment: null },
         { bountySlug: "b6", status: "approved", paymentStatus: "PARTIALLY_PAID", reviewComment: null },
       ],
     });

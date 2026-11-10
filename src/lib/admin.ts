@@ -12,15 +12,15 @@ const adminUserSlugs = ["jaemin", "sora", "jinyoung", "juho", "mina", "ara"] as 
 
 const userOverlays: Record<
   (typeof adminUserSlugs)[number],
-  Pick<AdminUser, "email" | "joinedAt" | "walletAddress" | "walletStatus">
+  Pick<AdminUser, "email" | "joinedAt">
 > = {
   // joinedAt: the same `YYYY-MM-DD` the api adapter derives with formatIsoDate(created_at).
-  jaemin: { email: "jaemin@example.com", joinedAt: "2026-05-01", walletAddress: "inj1...9k4d", walletStatus: "linked" },
-  sora: { email: "sora@example.com", joinedAt: "2026-07-01", walletAddress: null, walletStatus: null },
-  jinyoung: { email: "jinyoung@example.com", joinedAt: "2026-05-03", walletAddress: "inj1...2p8m", walletStatus: "linked" },
-  juho: { email: "juho@example.com", joinedAt: "2026-05-12", walletAddress: "inj1...7n3q", walletStatus: "linked" },
-  mina: { email: "mina@example.com", joinedAt: "2026-06-04", walletAddress: "inj1...5w6r", walletStatus: "linked" },
-  ara: { email: "ara@example.com", joinedAt: "2026-06-20", walletAddress: "inj1...8c1v", walletStatus: "linked" },
+  jaemin: { email: "jaemin@example.com", joinedAt: "2026-05-01" },
+  sora: { email: "sora@example.com", joinedAt: "2026-07-01" },
+  jinyoung: { email: "jinyoung@example.com", joinedAt: "2026-05-03" },
+  juho: { email: "juho@example.com", joinedAt: "2026-05-12" },
+  mina: { email: "mina@example.com", joinedAt: "2026-06-04" },
+  ara: { email: "ara@example.com", joinedAt: "2026-06-20" },
 };
 
 // deadline: ISO like the BE `submission_deadline`, so the form/table code paths are identical in mock and api mode.

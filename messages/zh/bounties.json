@@ -162,6 +162,7 @@
       "generic": "请求未能完成，请重试。",
       "ALREADY_APPLIED": "你已申请过此赏金。",
       "BOUNTY_NOT_OPEN": "此赏金已不再开放。",
+      "AGENT_SUBMISSION_REQUIRED": "此赏金已不再接受提交。",
       "APPLICATION_NOT_APPROVED": "你的申请需获批准后才能提交。",
       "DEADLINE_PASSED": "提交已截止。",
       "SUBMISSION_FINALIZED": "此提交已最终确定。",

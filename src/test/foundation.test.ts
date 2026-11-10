@@ -37,6 +37,7 @@ describe("runtime configuration", () => {
   it("has no wallet configuration: the old wallet env vars are not read and the config carries no wallet key", () => {
     const config = readRuntimeConfig({
       ...validMockEnvironment,
+      // Removed env vars, set on purpose: they must not be read.
       NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1",
       NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "mailto:wallet@ninjalabs.example",
     } as never);

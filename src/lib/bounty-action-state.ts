@@ -90,6 +90,8 @@ export function rowForBounty<T extends { bountySlug: string }>(rows: readonly T[
   return rows?.find((row) => row.bountySlug === bountyId);
 }
 
+// submission_mode is ignored on purpose (agents are removed): a legacy AGENT-mode bounty shows the human form and the BE rejects it
+// with AGENT_SUBMISSION_REQUIRED, which has its own error copy (error-copy.ts bountyAction).
 export function deriveActionView(input: BountyActionInput): BountyActionView {
   const { applicationRequired, applicationClosed = false, status, auth, applications, submissions, applied, submitted } = input;
   const acceptingNew = status === "active";

@@ -110,6 +110,7 @@ export function AuditLogViewer({ children, tabs }: { children: ReactNode; tabs: 
     // The nickname reads at a glance; the id stays in the tooltip (and the short id is the fallback for an account without one).
     const userLabel = log.actorNickname ? <span className="text-sm font-semibold text-ink" title={log.actorUserId ?? undefined}>{log.actorNickname}</span> : <span className="font-mono text-xs" title={log.actorUserId ?? undefined}>{opsShort(log.actorUserId)}</span>;
     if (kind === "user") return userLabel;
+    // Legacy audit rows only: agents were removed, but old rows keep their agent actor, so the badge stays.
     if (kind === "agent") return <span className="flex items-center gap-2"><Badge variant="neutral">{t("actors.agent")}</Badge>{log.actorAgentName ? <span className="text-sm font-semibold text-ink" title={log.actorAgentId ?? undefined}>{log.actorAgentName}</span> : <span className="font-mono text-xs" title={log.actorAgentId ?? undefined}>{opsShort(log.actorAgentId)}</span>}</span>;
     if (kind === "script") return <span className="flex items-center gap-2"><Badge variant="neutral">{t("actors.script")}</Badge>{log.actorUserId ? userLabel : null}</span>;
     return <Badge variant="neutral">{t("actors.unknown")}</Badge>;

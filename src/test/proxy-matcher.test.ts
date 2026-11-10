@@ -11,6 +11,7 @@ const runsProxy = (pathname: string) => matcher.test(pathname);
 
 describe("proxy matcher", () => {
   it("locale-redirects app paths, including dotted member handles", () => {
+    // "/skill.md" stays here on purpose: its route was deleted (agents removed), so it is locale-redirected and then 404s like any unknown path.
     for (const pathname of ["/", "/bounties", "/members/ninja.inj", "/members/first.last", "/ko/members/ninja.inj", "/notices/v1.2-release", "/skill.md", "/skill.md.html", "/apiary", "/members/api"]) {
       expect(runsProxy(pathname), pathname).toBe(true);
     }
