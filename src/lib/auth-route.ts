@@ -5,7 +5,7 @@ import type { AuthSnapshot, ClientUser } from "@/lib/contracts/auth";
  * this instead of re-deriving it: a page that asks a signed-in user to log in again is a bug.
  *
  * - signed out: `/signup` (step 1)
- * - signed in, onboarding unfinished: the step they owe (wallet, profile, complete)
+ * - signed in, onboarding unfinished: the step they owe (profile, then get-started)
  * - signed in, onboarding finished: nothing to start; they belong on the site (the hub, or where they came from)
  *
  * Product decision: the community hub (`/`) is the PRIMARY service and is reachable by everyone, signed in or not, in
@@ -19,10 +19,10 @@ export const HOME_PATH = "/home";
 /** The onboarding step a signed-in user still owes, or null when onboarding is finished (or there is no user). */
 export function getOnboardingPath(user: ClientUser | null): string | null {
   if (!user || user.onboardingCompleted) return null;
-  const step = user.onboardingStep ?? 2;
-  if (step <= 2) return "/signup/wallet";
-  if (step === 3) return "/signup/profile";
-  return "/signup/get-started";
+  // Google-only signup: login (1) -> profile (2) -> get-started (3). The BE still stores 2 = legacy wallet step, 3 = profile
+  // owed, 4 = profile saved; everything below 4 means the profile is still owed.
+  const step = user.onboardingStep ?? 3;
+  return step >= 4 ? "/signup/get-started" : "/signup/profile";
 }
 
 export type StartTarget =
@@ -90,14 +90,14 @@ export function returnPathFromReferrer(referrer: string, origin: string, stripLo
   return `${path}${url.search}`;
 }
 
-export type SignupStep = 1 | 2 | 3 | 4;
+export type SignupStep = 1 | 2 | 3;
 
 export type SignupAccess =
   /** Session still being restored: show a neutral checking state, neither the step nor a redirect. */
   | { kind: "wait" }
   /** The step may render. */
   | { kind: "show" }
-  /** Signed out on step 2-4: back to step 1, with a message saying why. */
+  /** Signed out on step 2-3: back to step 1, with a message saying why. */
   | { kind: "sign-in-first"; href: "/signup" }
   /** Signed in with an unfinished onboarding on step 1: straight to the step they owe. */
   | { kind: "resume"; href: string }
@@ -106,8 +106,8 @@ export type SignupAccess =
 
 /**
  * What a `/signup*` page does for the current session. Step 1 (the login) exists for signed-out visitors only; steps
- * 2-4 exist for signed-in users who still owe onboarding; a finished user has no business on any of them. Signed-out
- * visitors on step 2-4 are sent to step 1, never shown a broken page.
+ * 2-3 exist for signed-in users who still owe onboarding; a finished user has no business on any of them. Signed-out
+ * visitors on step 2-3 are sent to step 1, never shown a broken page.
  */
 export function resolveSignupAccess(snapshot: AuthSnapshot, step: SignupStep): SignupAccess {
   const target = resolveStartTarget(snapshot);

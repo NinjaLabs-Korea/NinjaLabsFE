@@ -149,22 +149,14 @@ describe("UserMenu", () => {
     expect(screen.queryByRole("menu")).toBeNull();
   });
 
-  it("shows a shortened wallet visually but announces the full address", () => {
-    renderWithIntl(<UserMenu />);
-    fireEvent.click(trigger());
-    const menu = screen.getByRole("menu");
-    expect(within(menu).getByText("0x1234…5678").getAttribute("aria-hidden")).toBe("true");
-    expect(within(menu).getByText(`Wallet address: ${user.walletAddress}`).className).toContain("sr-only");
-    expect(within(menu).queryByText("Session preview")).toBeNull();
-  });
-
-  it("keeps a short wallet as-is and labels the mock session", () => {
+  it("shows no wallet address and labels the mock session", () => {
     state.auth = signedInAs({ ...user, walletAddress: "inj1…9k4d" });
     state.mode = "mock";
     renderWithIntl(<UserMenu />);
     fireEvent.click(trigger());
     const menu = screen.getByRole("menu");
-    expect(within(menu).getByText("inj1…9k4d")).toBeTruthy();
+    expect(within(menu).queryByText("inj1…9k4d")).toBeNull();
+    expect(within(menu).queryByText(/Wallet address/)).toBeNull();
     expect(within(menu).getByText("Session preview")).toBeTruthy();
   });
 });

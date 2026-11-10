@@ -12,15 +12,13 @@
     "title": "{name}님, 안녕하세요"
   },
   "profile": {
-    "walletConnected": "지갑 {address}",
-    "walletMissing": "지갑 미연결",
     "nft": {
       "minted": "Ninja NFT 발급됨",
       "pending": "Ninja NFT 발급 중",
       "none": "Ninja NFT 없음"
     },
     "viewProfile": "내 프로필 보기",
-    "editProfile": "프로필·지갑 설정"
+    "editProfile": "프로필 설정"
   },
   "activity": {
     "eyebrow": "지원·제출",

@@ -94,7 +94,7 @@ describe("CompleteOnboarding", () => {
     try {
       state.auth = signedInAs({ ...user, onboardingStep: 2, onboardingCompleted: false });
       renderWithIntl(<CompleteOnboarding />);
-      await waitFor(() => expect(replace).toHaveBeenCalledWith("/en/signup/wallet"));
+      await waitFor(() => expect(replace).toHaveBeenCalledWith("/en/signup/profile"));
       expect(completeOnboarding).not.toHaveBeenCalled();
 
       replace.mockClear();

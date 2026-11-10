@@ -57,7 +57,6 @@
     "accountSettings": "Account settings",
     "signOut": "Sign out",
     "sessionPreview": "Session preview",
-    "walletAddress": "Wallet address: {wallet}",
     "myActivity": "My activity"
   },
   "googleLogin": {
@@ -108,9 +107,8 @@
   },
   "stepIndicator": {
     "login": "1. Login",
-    "wallet": "2. Wallet (optional)",
-    "profile": "3. Profile",
-    "getStarted": "4. Get Started"
+    "profile": "2. Profile",
+    "getStarted": "3. Get Started"
   },
   "confirmDialog": {
     "cancel": "Cancel"
@@ -142,7 +140,7 @@
     },
     "signInRequired": {
       "title": "Sign in to continue",
-      "description": "Signing up starts with Google sign-in. Sign in first, then connect a wallet and set up your profile."
+      "description": "Signing up starts with Google sign-in. Sign in first, then set up your profile."
     },
     "signOutFailed": {
       "title": "Sign out did not complete",

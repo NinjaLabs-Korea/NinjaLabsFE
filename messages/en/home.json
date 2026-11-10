@@ -12,15 +12,13 @@
     "title": "Welcome back, {name}"
   },
   "profile": {
-    "walletConnected": "Wallet {address}",
-    "walletMissing": "Wallet not connected",
     "nft": {
       "minted": "Ninja NFT issued",
       "pending": "Ninja NFT minting",
       "none": "No Ninja NFT yet"
     },
     "viewProfile": "View my profile",
-    "editProfile": "Profile and wallet settings"
+    "editProfile": "Edit profile"
   },
   "activity": {
     "eyebrow": "Applications and submissions",

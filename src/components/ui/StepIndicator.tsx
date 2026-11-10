@@ -1,13 +1,13 @@
 import { useTranslations } from "next-intl";
 
 type StepIndicatorProps = {
-  current: 1 | 2 | 3 | 4;
+  current: 1 | 2 | 3;
   /** The visitor is already signed in: step 1 reads as done even when it is the page being shown. */
   loginDone?: boolean;
 };
 
 // Message keys under `common.stepIndicator`, in step order.
-const steps = ["login", "wallet", "profile", "getStarted"] as const;
+const steps = ["login", "profile", "getStarted"] as const;
 
 export function StepIndicator({ current, loginDone = false }: StepIndicatorProps) {
   const t = useTranslations("common.stepIndicator");

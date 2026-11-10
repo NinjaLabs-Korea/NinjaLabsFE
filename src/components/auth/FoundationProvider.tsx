@@ -18,7 +18,6 @@ import type {
   BountyApi,
   CohortApi,
   OnboardingApi,
-  WalletApi,
 } from "@/lib/contracts/api";
 import type { AuthAdapter, AuthSnapshot } from "@/lib/contracts/auth";
 import { registerTabFoundationReset } from "@/lib/tab-foundation-reset";
@@ -209,7 +208,6 @@ export function useAuthActions(): Pick<AuthAdapter, "signIn" | "signOut" | "refr
 export const useAccountApi = (): AccountApi => useFoundationContext().apiClient;
 export const useBountyApi = (): BountyApi => useFoundationContext().apiClient;
 export const useAgentApi = (): AgentApi => useFoundationContext().apiClient;
-export const useWalletApi = (): WalletApi => useFoundationContext().apiClient;
 export const useOnboardingApi = (): OnboardingApi => useFoundationContext().apiClient;
 export const useAccountSettingsApi = (): AccountSettingsApi => useFoundationContext().apiClient;
 export const useAdminApi = (): AdminApi => useFoundationContext().apiClient;

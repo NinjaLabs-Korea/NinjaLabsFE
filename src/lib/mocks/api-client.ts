@@ -212,8 +212,6 @@ export function createMockApiClient(seed = "default"): ApiClient {
       updateAgent(agentId, (agent) => ({ ...agent, status: "REVOKED", verified: false, keyStatus: agent.keyStatus ? "REVOKED" : null }));
       return { agentId, status: "REVOKED" };
     },
-    createWalletChallenge: async (address) => ({ message: `Preview challenge for ${address}` }),
-    verifyWallet: async () => undefined,
     checkNickname: async () => ({ available: true }),
     completeProfile: async () => undefined,
     completeOnboarding: async () => undefined,

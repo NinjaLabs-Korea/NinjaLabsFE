@@ -82,11 +82,10 @@
       "description": "管理你的 Ninja Labs 账户。"
     },
     "heading": "账户设置",
-    "intro": "查看个人资料和钱包，并管理你的账户。",
+    "intro": "查看个人资料，并管理你的账户。",
     "signedOutMessage": "登录后即可管理你的账户",
     "profileHeading": "个人资料",
     "nicknameLabel": "昵称",
-    "walletLabel": "钱包",
     "dangerEyebrow": "危险操作",
     "deleteHeading": "删除账户",
     "deleteBody": "删除账户后无法恢复。使用同一个 Google 账户重新注册会创建一个与之前活动无关的新账户。",
@@ -118,14 +117,6 @@
     "tagsLabel": "领域标签",
     "editProfile": "编辑资料",
     "cancelEdit": "取消编辑",
-    "wallet": {
-      "heading": "钱包",
-      "connected": "已连接",
-      "notConnected": "未连接",
-      "linkedNote": "已连接的钱包与账户绑定，无法在此更换或解绑。如需更换请联系运营团队。",
-      "body": "如果注册时选择了“稍后连接”，可在这里首次连接钱包。签名验证后，Ninja NFT 铸造会加入队列。请在我的动态中查看发放状态。",
-      "unavailable": "当前环境无法使用钱包连接。"
-    },
     "avatar": {
       "label": "头像",
       "hint": "支持 JPG、PNG、WebP，最大 2 MB。会显示在页眉、我的活动、公开资料和成员卡片上。",

@@ -39,7 +39,6 @@ export const localeRoutePatterns = [
   "/signup",
   "/signup/get-started",
   "/signup/profile",
-  "/signup/wallet",
   "/terms",
 ] as const;
 

@@ -57,7 +57,6 @@
     "accountSettings": "账户设置",
     "signOut": "退出登录",
     "sessionPreview": "会话预览",
-    "walletAddress": "钱包地址：{wallet}",
     "myActivity": "我的活动"
   },
   "googleLogin": {
@@ -108,9 +107,8 @@
   },
   "stepIndicator": {
     "login": "1. 登录",
-    "wallet": "2. 钱包（可选）",
-    "profile": "3. 个人资料",
-    "getStarted": "4. 开始使用"
+    "profile": "2. 个人资料",
+    "getStarted": "3. 开始使用"
   },
   "confirmDialog": {
     "cancel": "取消"
@@ -142,7 +140,7 @@
     },
     "signInRequired": {
       "title": "请先登录",
-      "description": "注册从 Google 登录开始。请先登录，再连接钱包并设置个人资料。"
+      "description": "注册从 Google 登录开始。请先登录，再设置个人资料。"
     },
     "signOutFailed": {
       "title": "退出登录未完成",

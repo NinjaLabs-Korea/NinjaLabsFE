@@ -1,4 +1,4 @@
-// Flow 2: step-3 user is redirected to /signup/profile, live nickname check, save completes onboarding (DB).
+// Flow 2: step-3 user is redirected to /signup/profile (the legacy step-2 user too: flow 3), live nickname check, save completes onboarding (DB).
 // Also: a hard page load restores the session in one round trip when the BE's refresh carries `user` (BE 2026-10-31).
 import { Browser, report } from '../lib/cdp.mjs'; import { sql, ids, check, clean, done, sleep, signIn, loginCode, API } from '../lib/harness.mjs';
 import { ORIGIN } from '../lib/state.mjs';

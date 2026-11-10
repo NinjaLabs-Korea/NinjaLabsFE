@@ -34,7 +34,7 @@ describe("the dashboard routing rule (lib/auth-route.ts)", () => {
   it.each([
     ["loading", loading, undefined, { kind: "wait" }],
     ["signed out", signedOut, undefined, { kind: "intro", href: "/" }],
-    ["wallet step", signedInWith({ onboardingCompleted: false, onboardingStep: 2 }), undefined, { kind: "resume", href: "/signup/wallet" }],
+    ["legacy wallet step (BE step 2) goes to profile", signedInWith({ onboardingCompleted: false, onboardingStep: 2 }), undefined, { kind: "resume", href: "/signup/profile" }],
     ["profile step", unfinished, undefined, { kind: "resume", href: "/signup/profile" }],
     ["finished", finished, undefined, { kind: "show" }],
     ["mock preview user without onboarding fields", signedIn, { preview: true }, { kind: "show" }],

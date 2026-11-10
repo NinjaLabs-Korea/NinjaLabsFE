@@ -50,7 +50,7 @@ export const saveErrorKey = (error: unknown): SaveErrorKey => formErrorKey(error
 
 type ProfileFormProps = {
   /**
-   * `onboarding` (default): signup step 3, saves and continues to step 4. `edit`: the account page, prefilled from the signed-in
+   * `onboarding` (default): signup step 2, saves and continues to step 3. `edit`: the account page, prefilled from the signed-in
    * user; saving re-reads the session and calls `onSaved` instead of navigating. Same fields, same rules, same BE endpoint.
    */
   mode?: "onboarding" | "edit";

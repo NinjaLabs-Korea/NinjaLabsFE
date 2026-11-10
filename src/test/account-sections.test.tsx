@@ -1,22 +1,20 @@
 // @vitest-environment jsdom
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps } from "react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { AccountSettingsView } from "@/components/account/AccountSettingsView";
 import { MyCohortApplications } from "@/components/account/MyCohortApplications";
-import { WalletSettings } from "@/components/account/WalletSettings";
 import { ProfileForm } from "@/components/signup/ProfileForm";
 import type { ApiClient } from "@/lib/contracts/api";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import { createMockApiClient } from "@/lib/mocks/api-client";
 import { previewUser } from "@/lib/mocks/fixtures";
 import { renderWithIntl } from "@/test/intl";
-import { signedInAs, signedInWith, signedOut } from "@/test/support/auth";
+import { signedInAs, signedInWith } from "@/test/support/auth";
 
 const state: { auth: AuthSnapshot } = { auth: signedInAs(previewUser) };
 let api: ApiClient;
 const refresh = vi.fn(async () => state.auth);
-const verifyHandlers = vi.hoisted(() => ({ onVerified: undefined as (() => void) | undefined }));
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ children, href, ...props }: ComponentProps<"a">) => <a href={href} {...props}>{children}</a>,
@@ -31,13 +29,6 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
     useOnboardingApi: () => api,
     useAccountSettingsApi: () => api,
   }));
-vi.mock("@/components/wallet/WalletProvider", () => ({ WalletProvider: ({ children, chainId }: { children: ReactNode; chainId: number }) => <div data-testid="wallet-provider" data-chain={chainId}>{children}</div> }));
-vi.mock("@/components/wallet/WalletConnectButton", () => ({
-  WalletConnectButton: ({ onVerified, chainId }: { onVerified?: () => void; chainId: number }) => {
-    verifyHandlers.onVerified = onVerified;
-    return <button data-chain={chainId} type="button">Connect wallet</button>;
-  },
-}));
 
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute("open", ""); };
@@ -47,44 +38,6 @@ beforeEach(() => {
   api = createMockApiClient();
   state.auth = signedInAs(previewUser);
   refresh.mockClear();
-  verifyHandlers.onVerified = undefined;
-});
-
-describe("WalletSettings", () => {
-  const noWallet = signedInWith({ id: "u1", handle: "ninja", walletAddress: undefined });
-
-  it("lets someone who connected later link a wallet here, and re-reads the session when it is verified", async () => {
-    state.auth = noWallet;
-    renderWithIntl(<WalletSettings wallet={{ chainId: 1439, rpcUrl: "https://rpc.example" }} />);
-    expect(screen.getByText("Not connected")).toBeTruthy();
-    // The wagmi stack loads on demand: nothing of it is mounted until Connect is pressed.
-    expect(screen.queryByTestId("wallet-provider")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Connect wallet" }));
-    expect((await screen.findByTestId("wallet-provider")).getAttribute("data-chain")).toBe("1439");
-    await screen.findByRole("button", { name: "Connect wallet" });
-    expect(screen.getByRole("button", { name: "Connect wallet" })).toBeTruthy();
-    verifyHandlers.onVerified?.();
-    expect(refresh).toHaveBeenCalledTimes(1);
-  });
-
-  it("shows a linked wallet read-only: there is no unlink in the BE, so no disconnect control", () => {
-    state.auth = signedInWith({ id: "u1", walletAddress: "inj1abcdef" });
-    renderWithIntl(<WalletSettings wallet={{ chainId: 1439 }} />);
-    expect(screen.getByText("inj1abcdef")).toBeTruthy();
-    expect(screen.getByText("Connected")).toBeTruthy();
-    expect(screen.getByText(/can.t be changed or unlinked/)).toBeTruthy();
-    expect(screen.queryByRole("button")).toBeNull();
-  });
-
-  it("explains when wallet connection is unavailable in this environment, and renders nothing signed out", () => {
-    state.auth = noWallet;
-    const view = renderWithIntl(<WalletSettings wallet={null} />);
-    expect(screen.getByText(/not available in this environment/)).toBeTruthy();
-    view.unmount();
-    state.auth = signedOut;
-    const empty = renderWithIntl(<WalletSettings wallet={null} />);
-    expect(empty.container.textContent).toBe("");
-  });
 });
 
 describe("ProfileForm in edit mode (account page)", () => {
@@ -128,11 +81,11 @@ describe("ProfileForm in edit mode (account page)", () => {
 });
 
 describe("AccountSettingsView sections", () => {
-  it("lets a long unbroken nickname, bio and wallet address wrap inside the card", () => {
+  it("lets a long unbroken nickname and bio wrap inside the card", () => {
     const long = "W".repeat(50);
-    state.auth = signedInWith({ id: previewUser.id, handle: long, bio: long, tags: [], walletAddress: `inj1${long}` });
-    renderWithIntl(<AccountSettingsView wallet={null} />);
-    for (const text of [long, `inj1${long}`]) {
+    state.auth = signedInWith({ id: previewUser.id, handle: long, bio: long, tags: [] });
+    renderWithIntl(<AccountSettingsView />);
+    for (const text of [long]) {
       const dd = screen.getAllByText(text).find((node) => node.tagName === "DD");
       expect(dd?.className).toContain("min-w-0");
       expect(dd?.className).toContain("[overflow-wrap:anywhere]");
@@ -140,8 +93,8 @@ describe("AccountSettingsView sections", () => {
   });
 
   it("shows bio and tags, opens the editor on demand and closes it after a save", async () => {
-    state.auth = signedInWith({ id: previewUser.id, handle: "ninja", bio: "Builder", tags: ["DEV"], walletAddress: "inj1abc" });
-    renderWithIntl(<AccountSettingsView wallet={{ chainId: 1439 }} />);
+    state.auth = signedInWith({ id: previewUser.id, handle: "ninja", bio: "Builder", tags: ["DEV"] });
+    renderWithIntl(<AccountSettingsView />);
     expect(screen.getByText("Builder")).toBeTruthy();
     expect(screen.getByText("Dev")).toBeTruthy();
     expect(screen.queryByLabelText("Nickname")).toBeNull();
@@ -157,11 +110,11 @@ describe("AccountSettingsView sections", () => {
 
   it("keeps the open profile editor and its typed bio when the session ends, and says so", () => {
     state.auth = signedInWith({ id: previewUser.id, handle: "ninja", bio: "Builder", tags: ["DEV"] });
-    const view = renderWithIntl(<AccountSettingsView wallet={{ chainId: 1439 }} />);
+    const view = renderWithIntl(<AccountSettingsView />);
     fireEvent.click(screen.getByRole("button", { name: "Edit profile" }));
     fireEvent.change(screen.getByLabelText("Bio"), { target: { value: "A long new bio" } });
     state.auth = { status: "signed-out", user: null, reason: "session-ended" };
-    view.rerender(<AccountSettingsView wallet={{ chainId: 1439 }} />);
+    view.rerender(<AccountSettingsView />);
     expect((screen.getByLabelText("Bio") as HTMLTextAreaElement).value).toBe("A long new bio");
     expect(screen.getByText("Your session has ended. Sign in again to continue.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Sign in again in a new tab, then save here" }).getAttribute("target")).toBe("_blank");
@@ -169,20 +122,20 @@ describe("AccountSettingsView sections", () => {
 
   it("shows the sign-in prompt when the session ends while no editor is open", () => {
     state.auth = signedInWith({ id: previewUser.id, handle: "ninja" });
-    const view = renderWithIntl(<AccountSettingsView wallet={{ chainId: 1439 }} />);
+    const view = renderWithIntl(<AccountSettingsView />);
     state.auth = { status: "signed-out", user: null, reason: "session-ended" };
-    view.rerender(<AccountSettingsView wallet={{ chainId: 1439 }} />);
+    view.rerender(<AccountSettingsView />);
     expect(screen.getByText("Your session has expired. Sign in again to continue.")).toBeTruthy();
     expect(screen.queryByLabelText("Bio")).toBeNull();
   });
 
-  it("puts the wallet card and the cohort applications between the profile and the danger zone", () => {
+  it("puts the cohort applications between the profile and the danger zone, with no wallet card", () => {
     state.auth = signedInWith({ id: previewUser.id, handle: "ninja" });
-    renderWithIntl(<AccountSettingsView wallet={{ chainId: 1439 }} />);
+    renderWithIntl(<AccountSettingsView />);
     const headings = screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
-    expect(headings.indexOf("Wallet")).toBeGreaterThan(headings.indexOf("Profile"));
-    expect(headings.indexOf("Cohort applications")).toBeGreaterThan(headings.indexOf("Wallet"));
-    expect(document.getElementById("wallet")).toBeTruthy();
+    expect(headings).not.toContain("Wallet");
+    expect(headings.indexOf("Cohort applications")).toBeGreaterThan(headings.indexOf("Profile"));
+    expect(document.getElementById("wallet")).toBeNull();
   });
 });
 

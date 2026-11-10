@@ -14,20 +14,19 @@ const SIGNUP_LOGIN_WITH_TURNSTILE_HEIGHT = "min-h-[18.9rem]";
 
 /**
  * Height the "checking" placeholder reserves per step, measured against the resolved screen at 1280 wide, so the footer does
- * not move when the session resolves. Step 1 is the sign-in card body. Steps 2-4 are full screens, so they reserve the viewport:
- * whoever is sent away from them (a finished user on step 4, a signed-out visitor) leaves from a page whose footer was never in view.
+ * not move when the session resolves. Step 1 is the sign-in card body. Steps 2-3 are full screens, so they reserve the viewport:
+ * whoever is sent away from them (a finished user on step 3, a signed-out visitor) leaves from a page whose footer was never in view.
  */
 export const SIGNUP_PLACEHOLDER_HEIGHT: Record<SignupStep, string> = {
   1: "min-h-[12.125rem]",
   2: "min-h-dvh",
   3: "min-h-dvh",
-  4: "min-h-dvh",
 };
 
 /**
- * Every signup page (`step` 1-4) renders through this gate, which follows `lib/auth-route.ts resolveSignupAccess`:
- * the login (step 1) only for signed-out visitors, steps 2-4 only for a signed-in user who still owes onboarding, and
- * a redirect for everyone else (never a flash of the wrong step). Mock mode keeps steps 2-4 previewable signed out.
+ * Every signup page (`step` 1-3) renders through this gate, which follows `lib/auth-route.ts resolveSignupAccess`:
+ * the login (step 1) only for signed-out visitors, steps 2-3 only for a signed-in user who still owes onboarding, and
+ * a redirect for everyone else (never a flash of the wrong step). Mock mode keeps steps 2-3 previewable signed out.
  * Once a step has rendered it stays: finishing onboarding on the last step must not bounce the user off the page
  * that celebrates it, and a session that ends mid-step must not wipe what the user typed.
  */
@@ -45,7 +44,7 @@ export function SignupGate({ children, step, withTurnstile = false }: { children
   // the form the user is typing into stays, and says why it cannot save (ProfileForm shows the session message).
   // A deliberate sign-out (no `session-ended` reason) is not such a session: the step is left like any other gated page.
   const deliberateSignOut = snapshot.status === "signed-out" && snapshot.reason !== "session-ended";
-  // Only steps 2-4 are kept: the step-1 sign-in card was rendered for a signed-out visitor, so once another tab signs
+  // Only steps 2-3 are kept: the step-1 sign-in card was rendered for a signed-out visitor, so once another tab signs
   // in it follows the normal signed-in rule (owed step, else where they came from, else the hub).
   if (shown && step > 1 && !deliberateSignOut && (access.kind === "leave" || access.kind === "sign-in-first")) access = { kind: "show" };
 
