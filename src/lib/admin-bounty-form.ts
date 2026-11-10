@@ -202,8 +202,8 @@ const APPLICATION_DEADLINE_TOLERANCE_MS = 60_000;
 export type BountyFormErrors = Partial<Record<keyof BountyFormValues, BountyFormError>>;
 
 /**
- * 보상 금액 입력이 BE에 보낼 수 있는 값인가: 일반 십진 표기(`1,5`·`0x10` 같은 입력은 값이 달라지거나 비어 버리므로 거부)이고 양수이며, 토큰 자릿수보다 긴 소수가 아니며(viem `parseUnits`는 초과 자릿수를 오류 없이
- * 반올림해 입력과 다른 금액을 보낸다), 최소 단위로 환산해도 0이 아니다(BE `TOKEN_AMOUNT`는 양의 정수). 지수 표기(`1e3`)는 거부한다: 보상은 생성 뒤 수정할 수 없고, `5e`·`1e18` 같은 오타가 엉뚱한 금액으로 저장된다.
+ * 보상 금액 입력이 BE에 보낼 수 있는 값인가: 일반 십진 표기(`1,5`·`0x10` 같은 입력은 값이 달라지거나 비어 버리므로 거부)이고 양수이며, 토큰 자릿수보다 긴 소수가 아니며(예전 viem `parseUnits`는 초과 자릿수를 오류 없이
+ * 반올림해 입력과 다른 금액을 보냈다. `lib/token-units.ts parseUnits`는 던진다), 최소 단위로 환산해도 0이 아니다(BE `TOKEN_AMOUNT`는 양의 정수). 지수 표기(`1e3`)는 거부한다: 보상은 생성 뒤 수정할 수 없고, `5e`·`1e18` 같은 오타가 엉뚱한 금액으로 저장된다.
  */
 function isRewardAmountValid(raw: string, currency: BountyFormValues["currency"]): boolean {
   const text = raw.trim();

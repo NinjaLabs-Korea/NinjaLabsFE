@@ -203,8 +203,6 @@ export const ERROR_COPY = {
       "INVALID_TX_HASH",
       "INVALID_TOKEN_AMOUNT",
       "TX_HASH_ALREADY_USED",
-      // 레거시: BE #69가 지웠지만 옛 BE 응답이 올 수 있어 문구를 남긴다 (FE-5에서 제거)
-      "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND",
       "APPROVED_SUBMISSION_NOT_FOUND",
       // 409: 수상자가 아직 지급 주소를 입력하지 않았다
       "PAYOUT_ADDRESS_NOT_SET",

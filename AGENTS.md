@@ -17,7 +17,7 @@ Pages are ported 1:1 from the Figma design file below. Read this whole file befo
 
 - Next.js 16.4.2 (App Router, Turbopack) / React 19.2.4 / TypeScript 5.9.3; `eslint-config-next` is pinned to the same version as `next`.
   - 2026-10-24 owner decision: bumped from 16.2.10 to clear critical Next.js advisories (RCE in the Image Optimization API, `next/og` ImageResponse and `use cache`; all fixed by <=16.4.1). 16.4.2 was the newest 16.x release at least 7 days old on that date.
-- Wallet stack removed (Google-only signup, 2026-11): no wagmi, no injected connector, no WalletConnect, no wallet RPC in the CSP. viem 2.57.7 stays only for `lib/api/codecs.ts` / `lib/hall-of-fame.ts` token-unit maths (FE-5 replaces it with a bigint helper). Winners type a payout address on `/applications` instead (`account/PayoutAddressForm`).
+- Wallet stack removed (Google-only signup, 2026-11): no wagmi, no injected connector, no WalletConnect, no wallet RPC in the CSP. No viem either: token-unit maths (`formatUnits`/`parseUnits`, no rounding, excess decimals throw) lives in `lib/token-units.ts`. Winners type a payout address on `/applications` instead (`account/PayoutAddressForm`).
 - Tailwind CSS 4.3.3 (v4 - CSS-first config, **no** `tailwind.config.js`)
 - Node >= 24 (`.nvmrc`), npm 11 only. **Never** use bun/pnpm/yarn here; `package-lock.json` is the single lockfile.
 - All deps are exact-pinned; `.npmrc` has `save-exact=true`. Never introduce `^`/`~` ranges.

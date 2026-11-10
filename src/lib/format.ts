@@ -5,7 +5,7 @@ const MAX_FRACTION_DIGITS = 6;
 /**
  * `0x1234…abcd` for long addresses and hashes. A value no longer than `keepWhole` is returned as is (default `head + tail + 2`,
  * i.e. when the ellipsis would not make it shorter); pass `keepWhole: 0` to always shorten. Pure string work: safe to import
- * where viem must not load.
+ * where no wallet/chain library may load.
  */
 export function shortAddress(value: string, { head = 6, tail = 4, keepWhole = head + tail + 2 }: { head?: number; tail?: number; keepWhole?: number } = {}): string {
   return value.length > keepWhole ? `${value.slice(0, head)}…${value.slice(-tail)}` : value;
@@ -36,7 +36,7 @@ export function formatTokenAmount(amount: number | string, locale: string, maxim
 
 /**
  * Date and time pinned to UTC with the zone label (`Jan 25, 2027, 4:23 PM UTC`), for timestamps that must read the same on
- * every machine, such as an Agent API key's expiry. Explicit fields on purpose: `dateStyle`/`timeStyle` cannot be combined
+ * every machine, such as admin timestamps. Explicit fields on purpose: `dateStyle`/`timeStyle` cannot be combined
  * with `timeZoneName` (Intl throws, next-intl's `onError` then falls back to `String(date)` and logs FORMATTING_ERROR).
  */
 export function formatUtcDateTime(format: Pick<ReturnType<typeof useFormatter>, "dateTime">, value: string | Date): string {

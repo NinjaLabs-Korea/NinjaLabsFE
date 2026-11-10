@@ -35,7 +35,7 @@ Rules of engagement (binding, same as `AGENTS.md`):
 | `warning` / `warning-soft` | `text-warning` on `bg-warning-soft` | Pending, caution states |
 | `inverse-surface` `#0B1322` | `bg-inverse-surface` | Footer, dark hero panels |
 | `on-inverse` (+`-secondary`, `-muted`) | `text-on-inverse*` | Text on dark surfaces and solid-primary buttons |
-| `hero-from/via/to`, `glow`, `accent-soft`, `nft-deep` | gradient stops | Hero + NFT gradient surfaces only |
+| `hero-from/via/to`, `glow`, `accent-soft` | gradient stops | Hero gradient surfaces only |
 
 Status colors always pair `*-soft` fill with the saturated `*` text - same contract as `ui/Badge`.
 
@@ -71,7 +71,7 @@ Never mix: a button is always `rounded-control`, a card always `rounded-card`.
 
 ## Shadows & container
 
-- `shadow-card` - resting cards. `hover:shadow-frame` - card hover lift (see BountyCard). `shadow-frame` - floating frames/modals. `shadow-nft` - NFT tiles only. `shadow-tile-text` - text legibility on gradient tiles.
+- `shadow-card` - resting cards. `hover:shadow-frame` - card hover lift (see BountyCard). `shadow-frame` - floating frames/modals. `shadow-tile-text` - text legibility on gradient tiles.
 - Page shell (every route's top-level wrapper): `mx-auto max-w-content px-6 py-16 pb-20` (error/404 pages use `py-24 text-center`). Do not introduce other max-widths or paddings for page shells.
 
 ## Recipes (copy verbatim)

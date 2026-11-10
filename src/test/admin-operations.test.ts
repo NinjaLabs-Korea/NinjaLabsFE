@@ -70,17 +70,21 @@ describe("operations API mapping (lib/api/admin.ts)", () => {
     expect(ops.payouts[0]).toMatchObject({ recipientAddress: "inj1abc", recipientAddressEvm: "0xabc" });
   });
 
-  it("an older BE falls back to recipient_wallet_address for the address and sends no email / evm form", () => {
-    const { payout_address, payout_address_evm, email, ...legacy } = operationsBody.submissions[0];
-    void payout_address; void payout_address_evm; void email;
-    const ops = toAdminOperations({ ...operationsBody, submissions: [{ ...legacy, recipient_wallet_address: "inj1legacy" }] } as never);
-    expect(ops.submissions[0]).toMatchObject({ payoutAddress: "inj1legacy", payoutAddressEvm: null, email: null });
-    expect(ops.payouts[0].recipientAddressEvm).toBeNull();
+  it("a winner without an address maps to null (payout request answers PAYOUT_ADDRESS_NOT_SET)", () => {
+    const ops = toAdminOperations({ ...operationsBody, submissions: [{ ...operationsBody.submissions[0], payout_address: null, payout_address_evm: null, email: null }] } as never);
+    expect(ops.submissions[0]).toMatchObject({ payoutAddress: null, payoutAddressEvm: null, email: null });
   });
 
-  it("a winner without an address maps to null (payout request answers PAYOUT_ADDRESS_NOT_SET)", () => {
-    const ops = toAdminOperations({ ...operationsBody, submissions: [{ ...operationsBody.submissions[0], payout_address: null, payout_address_evm: null, email: null, recipient_wallet_address: null }] } as never);
-    expect(ops.submissions[0]).toMatchObject({ payoutAddress: null, payoutAddressEvm: null, email: null });
+  it("an older BE that omits the optional payout fields maps them to null, not undefined", () => {
+    const submission: Record<string, unknown> = { ...operationsBody.submissions[0] };
+    for (const key of ["payout_address", "payout_address_evm", "email"]) delete submission[key];
+    const payout: Record<string, unknown> = { ...operationsBody.payouts[0] };
+    delete payout.recipient_address_evm;
+    const ops = toAdminOperations({ ...operationsBody, submissions: [submission], payouts: [payout] } as never);
+    expect(ops.submissions[0].payoutAddress).toBeNull();
+    expect(ops.submissions[0].payoutAddressEvm).toBeNull();
+    expect(ops.submissions[0].email).toBeNull();
+    expect(ops.payouts[0].recipientAddressEvm).toBeNull();
   });
 
   it("an older BE without blockerDetails/allowedTransitions/policy degrades to no buttons and the two-person rule", () => {

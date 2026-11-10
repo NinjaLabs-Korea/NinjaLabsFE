@@ -29,11 +29,6 @@ export function evmHexAddress(address: string): string | null {
   return `0x${bytes.map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 
-export function isSameWalletAddress(a: string, b: string): boolean {
-  const left = evmHexAddress(a);
-  return left !== null && left === evmHexAddress(b);
-}
-
 /**
  * Client-side pre-check for the payout address input (BE `PUT /submissions/:id/payout-address` is authoritative: it also
  * verifies the bech32 checksum and rejects the zero address). Accepts a 20-byte `0x` address or a 20-byte `inj1` account

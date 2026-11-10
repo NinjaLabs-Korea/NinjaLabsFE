@@ -617,7 +617,6 @@
       "INVALID_TX_HASH": "올바른 거래 해시가 아닙니다.",
       "INVALID_TOKEN_AMOUNT": "금액은 최소 단위의 양의 정수여야 합니다.",
       "TX_HASH_ALREADY_USED": "이미 기록된 트랜잭션 해시예요(입금, 지급 또는 환불).",
-      "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND": "승인된 제출물이 아니거나 소유자에게 연결된 기본 지갑이 없습니다.",
       "APPROVED_SUBMISSION_NOT_FOUND": "지급 대상 제출물이 더 이상 승인 상태가 아닙니다.",
       "PAYOUT_ADDRESS_NOT_SET": "수상자가 아직 지급 주소를 입력하지 않았습니다. 입력을 요청한 뒤 다시 시도해 주세요.",
       "PAYOUT_ALREADY_REQUESTED": "이 제출물과 보상에 대한 지급이 이미 있습니다.",

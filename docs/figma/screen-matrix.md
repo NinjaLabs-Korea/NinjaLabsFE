@@ -61,7 +61,7 @@ Per-node detail lives in the recon files; this matrix is the frozen contract sou
   --color-on-inverse-muted: #566180;       /* copyright */
   /* hero/nft gradient stops */
   --color-hero-from: #0C1528; --color-hero-via: #1D2B60; --color-hero-to: #4D3DFF;
-  --color-glow: #7B6CFF; --color-accent-soft: #9A90FF; --color-nft-deep: #2E22AB;
+  --color-glow: #7B6CFF; --color-accent-soft: #9A90FF;
   /* type scale (paired leading) */
   --text-xs: 0.75rem;   --text-xs--line-height: 1.125rem;   /* 12/18 */
   --text-sm: 0.875rem;  --text-sm--line-height: 1.25rem;    /* 14/20 */
@@ -81,8 +81,7 @@ Per-node detail lives in the recon files; this matrix is the frozen contract sou
   /* shadows */
   --shadow-card: 0 1px 2px rgba(17,26,46,.06), 0 1px 3px rgba(17,26,46,.05);
   --shadow-frame: 0 14px 36px rgba(33,24,125,.12);
-  --shadow-nft: 0 10px 28px rgba(77,61,255,.28);
-  --shadow-tile-text: 0 1px 4px rgba(0,0,0,.30); /* NFT tile-title legibility (01-landing) */
+  --shadow-tile-text: 0 1px 4px rgba(0,0,0,.30); /* tile-title legibility over images (01-landing) */
   /* container */
   --container-content: 75rem; /* 1200 */
 }

@@ -22,9 +22,13 @@ describe("reward base units", () => {
     [{ amount: 1.5, currency: "INJ" }, "1500000000000000000"],
     [{ amount: 250, currency: "USDC" }, "250000000"],
     [{ amount: 0.000001, currency: "USDC" }, "1"],
-    [{ amount: 1234.5678901, currency: "USDC" }, "1234567890"],
   ] as const)("%o -> %s", (reward, expected) => {
     expect(rewardToBaseUnits(reward)).toBe(expected);
+  });
+
+  // viem rounded an amount with more decimals than the token has (1234.5678901 USDC -> 1234567890, not what was typed); token-units throws.
+  it("refuses an amount with more decimals than the token has instead of rounding it", () => {
+    expect(() => rewardToBaseUnits({ amount: 1234.5678901, currency: "USDC" })).toThrow(/decimal places/);
   });
 
   // `String(1e-7)` is "1e-7": a valid amount the admin form accepts must still convert instead of throwing.

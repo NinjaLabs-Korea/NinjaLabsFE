@@ -617,7 +617,6 @@
       "INVALID_TX_HASH": "交易哈希无效。",
       "INVALID_TOKEN_AMOUNT": "金额必须是以最小单位表示的正整数。",
       "TX_HASH_ALREADY_USED": "该交易哈希已被记录（作为存入、支付或退款）。",
-      "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND": "该提交未通过，或其所有者没有绑定的主钱包。",
       "APPROVED_SUBMISSION_NOT_FOUND": "付款对应的提交已不再是通过状态。",
       "PAYOUT_ADDRESS_NOT_SET": "获奖者尚未填写收款地址。请让其填写后再试。",
       "PAYOUT_ALREADY_REQUESTED": "该提交和奖励的付款已存在。",
