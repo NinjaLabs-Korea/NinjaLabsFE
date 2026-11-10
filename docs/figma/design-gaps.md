@@ -123,7 +123,7 @@ Figma only draws 1440px frames. Every route was checked at 390px and 768px (no h
 
 | Item | Decision |
 |---|---|
-| Profile portfolio intro (Figma 05-Empty) | Figma 05-Empty always says the Ninja NFT "is already minted". The FE now prints that copy only when the profile's NFT list holds a parent that is MINTED (or ATTACHING/ATTACHED); a PENDING/MINTING parent reads "is being minted", and no parent (or FAILED) reads "is not minted yet" (`members.profile.portfolio.bodyEmptyPending` / `bodyEmptyNotMinted`). Same typography and slot; the mock `sora` profile carries a MINTED parent so the demo still matches the frame. |
+| Profile portfolio intro (Figma 05-Empty) | Figma 05-Empty shows Ninja NFT mint copy; removed 2026-11 (Google-only plan). The portfolio card keeps the mascot placeholder and the plain empty copy. |
 
 
 ### Reward-not-paid cases and reviewer comments (2026-10-25, `r5/fe-forfeit-ux`)
@@ -149,7 +149,7 @@ These screens have no Figma node and no designer. Every one is composed from exi
 |---|---|
 | Intro `/` community sections (Figma 01 `19:3`) | Figma 01 draws hero, bounty preview, news and (later) achievements. The page keeps the hero and bounty preview and adds About (role tiles), recruitment banner, past activities, news, recent achievements and a member preview, all through the shared `community/CommunitySections` (also `/about`). Section headers are `ui/SectionHeader`; cards are `NewsCard` (activities show the event date instead of the publish date), the Hall of Fame stat tile pattern and a compact member tile. |
 | `/bounties` masthead (Figma 14 `19:1480`) | Back to Figma 14's light masthead (2026-11-01, user feedback that `/bounties` looked like the hub): "Marketplace" eyebrow, `<h1>` "Bounties", the 18px pitch and the how-it-works outline link on the page background (`bounties/BountyMasthead`, `ui/SectionHeader` level 1). The dark gradient hero (FE #56) is the hub's only. The Hall of Fame numbers stay as an FE addition, as small light tiles next to the heading (hidden while all zero); Figma's "Public" badge is not drawn. |
-| Signed-in home `/home` | New. Greeting + profile card (initials circle, `Badge` for wallet and NFT status), my applications as the `/applications` status badges, the recruitment strip (`primary-soft` panel like the signup notes), open bounties and news with `BountyCard` / `NewsCard`, quick-link tiles. `noindex`. |
+| Signed-in home `/home` | New. Greeting + profile card (initials circle, `Badge` for the account status), my applications as the `/applications` status badges, the recruitment strip (`primary-soft` panel like the signup notes), open bounties and news with `BountyCard` / `NewsCard`, quick-link tiles. `noindex`. |
 | Recruitment `/recruit` | New. Cohort info card, `community/AboutSection`, then the form. Form fields use the signup form look (`rounded-control` inputs, labels above, `text-xs` hints); single and multi choices are `Badge` pills (`recruit/ChoiceChip`: a native radio / checkbox visually replaced by `Badge` selected / primary-soft, 40px touch height on phones). States without a form use the dashed `rounded-tile` notice. |
 | Application status card (`recruit/CohortApplicationCard`) | `Badge` warning (under review), success (accepted), neutral (not selected / withdrawn); the applicant never sees the reviewer's note. Withdraw uses the destructive `ConfirmDialog`. |
 | [removed in FE #107] `/account` wallet and profile editor | The wallet card reuses `WalletConnectButton` (same challenge / sign / verify as signup step 2); a linked wallet is read-only because the BE has no unlink. The profile editor is the signup `ProfileForm` in `mode="edit"`. |
@@ -160,6 +160,6 @@ These screens have no Figma node and no designer. Every one is composed from exi
 
 | Item | Decision |
 |---|---|
-| Public profile (Figma 05 `31:246`) | Membership dates no longer carry a static "Ninja NFT" prefix. Completed work and NFT records are described separately; a profile without an NFT must not appear to own one. Existing layout and actual NFT status tiles are unchanged. |
+| Public profile (Figma 05 `31:246`) | Membership dates no longer carry a static "Ninja NFT" prefix. Completed work is listed on its own; NFT tiles were removed 2026-11 (Google-only plan). Existing layout is otherwise unchanged. |
 | Signup completion / wallet settings | Profile editing, first-wallet connection and linked-wallet replacement are distinguished. The current wallet-settings UI directs replacement requests to operators. Signature verification queues minting; it is not proof of issuance. No wallet capability or API was added. |
-| Bounty detail (Figma 15 `19:1739`) | Missing, empty or zero-valued reward lists show the existing neutral "Reward TBD" badge and non-promissory review guidance, not a sponsor payment/NFT promise. A specified reward keeps its currency and explains separate operator payout handling; NFT issuance is a later state. Existing cards, typography and Badge variants only. |
+| Bounty detail (Figma 15 `19:1739`) | Missing, empty or zero-valued reward lists show the existing neutral "Reward TBD" badge and non-promissory review guidance, not a sponsor payment promise. A specified reward keeps its currency and explains separate operator payout handling. Existing cards, typography and Badge variants only. |

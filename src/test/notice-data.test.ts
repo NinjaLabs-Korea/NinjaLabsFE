@@ -96,3 +96,12 @@ describe("notice event date and event-date sort", () => {
     expect(notices.map((notice) => notice.slug)).toEqual(["new", "old", "undated"]);
   });
 });
+
+describe("mock notices", () => {
+  it("do not mention the removed NFT feature", async () => {
+    const { notices } = await import("@/lib/notices");
+    for (const n of notices) {
+      expect(JSON.stringify([n.slug, n.title, n.excerpt, n.bodyMarkdown])).not.toMatch(/nft/i);
+    }
+  });
+});

@@ -14,7 +14,7 @@
           "Google sign-in: your Google account identifier and email address. We never receive your password.",
           "Profile: nickname, bio, interest tags and anything else you enter.",
           "Wallet: the Injective wallet address you prove you own by signing a message.",
-          "Activity: bounty applications and submissions (links, repository URLs, descriptions), agents you register, reward payouts and NFT minting records.",
+          "Activity: bounty applications and submissions (links, repository URLs, descriptions) and reward payout records.",
           "Access data: IP address, browser information (User-Agent) and time of your login sessions. Staying signed in uses a sign-in cookie that scripts on the page cannot read; the short-lived access token is held only in your browser's memory."
         ]
       },
@@ -22,7 +22,7 @@
         "heading": "2. How we use it",
         "items": [
           "To identify you, keep you signed in and prevent abuse",
-          "To run bounty applications, submissions and reviews, pay rewards and mint completion NFTs",
+          "To run bounty applications, submissions and reviews and pay rewards",
           "To provide community features such as public profiles and the Hall of Fame",
           "To send service notices, answer inquiries and respond to security incidents"
         ]
@@ -30,8 +30,8 @@
       {
         "heading": "3. Public information and blockchain records",
         "paragraphs": [
-          "Your profile (nickname, bio, tags, completed bounties, Ninja NFTs, and the name and wallet address of each active agent you registered) is public. Your email address is not.",
-          "Reward payouts and NFT minting are recorded on the Injective blockchain, where wallet addresses and transactions are visible to anyone. By their nature we cannot change or delete blockchain records."
+          "Your profile (nickname, bio, tags and completed bounties) is public. Your email address is not.",
+          "The payout address you enter is used only to send your reward. If a payout is made on a blockchain, the transaction is visible to anyone, and by their nature we cannot change or delete blockchain records."
         ]
       },
       {
@@ -96,15 +96,14 @@
       {
         "heading": "1. The Service",
         "paragraphs": [
-          "The Service is a builder community and bounty marketplace for the Injective ecosystem. You can apply to or submit work for sponsors' bounties and, once approved, receive rewards and completion NFTs."
+          "The Service is a builder community and bounty marketplace for the Injective ecosystem. You can apply to or submit work for sponsors' bounties and, once approved, receive rewards."
         ]
       },
       {
         "heading": "2. Accounts and wallets",
         "items": [
           "You sign up with a Google account and are responsible for keeping your account information accurate.",
-          "You are solely responsible for your connected wallet and its private keys or recovery phrase. We cannot access your wallet or recover your assets.",
-          "Agent API keys are shown once when issued; you are responsible for anything done with a leaked key."
+          "You are solely responsible for your connected wallet and its private keys or recovery phrase. We cannot access your wallet or recover your assets."
         ]
       },
       {
@@ -140,7 +139,7 @@
       {
         "heading": "7. Public records",
         "paragraphs": [
-          "Your profile, completed bounties and the reward payouts and NFT mints recorded on the blockchain are public, and blockchain records cannot be deleted. See the Privacy Policy for details."
+          "Your profile and completed bounties are public, and reward payouts recorded on a blockchain cannot be deleted. See the Privacy Policy for details."
         ]
       },
       {
