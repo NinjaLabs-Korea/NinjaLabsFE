@@ -19,14 +19,13 @@ const privatePages = {
   home: () => import("@/app/[locale]/home/page"),
   applications: () => import("@/app/[locale]/applications/page"),
   agents: () => import("@/app/[locale]/agents/page"),
-  "signup/wallet": () => import("@/app/[locale]/signup/wallet/page"),
   "signup/profile": () => import("@/app/[locale]/signup/profile/page"),
   "signup/get-started": () => import("@/app/[locale]/signup/get-started/page"),
 };
 
 describe("owner-private pages", () => {
   beforeAll(() => {
-    // signup/wallet composes the runtime config at module load.
+    // Some of these pages compose the runtime config at module load.
     vi.stubEnv("NINJA_DEPLOYMENT_TIER", "test");
     vi.stubEnv("NINJA_RUNTIME_MODE", "mock");
     vi.stubEnv("NINJA_MOCK_SEED", "default");

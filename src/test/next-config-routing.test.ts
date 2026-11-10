@@ -46,13 +46,23 @@ describe("rewrites", () => {
 });
 
 describe("redirects", () => {
-  it("permanently redirects the id-less og:image URL of every locale and nothing else", async () => {
+  it("permanently redirects the id-less og:image URL of every locale", async () => {
     const config = await loadConfig(apiEnv);
     const redirects = await config.redirects!();
-    expect(redirects).toEqual([{ source: "/:locale(en|ko|zh)/opengraph-image", destination: "/:locale/opengraph-image/social", permanent: true }]);
-    const pattern = new RegExp(`^${redirects[0].source.replace(":locale", "")}$`);
+    const og = redirects.find((rule) => rule.destination === "/:locale/opengraph-image/social")!;
+    expect(og).toEqual({ source: "/:locale(en|ko|zh)/opengraph-image", destination: "/:locale/opengraph-image/social", permanent: true });
+    const pattern = new RegExp(`^${og.source.replace(":locale", "")}$`);
     expect(["/en/opengraph-image", "/ko/opengraph-image", "/zh/opengraph-image"].every((path) => pattern.test(path))).toBe(true);
     expect(["/fr/opengraph-image", "/en/opengraph-image/social", "/opengraph-image"].some((path) => pattern.test(path))).toBe(false);
+  });
+
+  it("temporarily sends the removed wallet signup step (with and without a locale) to the profile step", async () => {
+    const redirects = await (await loadConfig(apiEnv)).redirects!();
+    expect(redirects.filter((rule) => rule.destination.endsWith("/signup/profile"))).toEqual([
+      { source: "/:locale(en|ko|zh)/signup/wallet", destination: "/:locale/signup/profile", permanent: false },
+      { source: "/signup/wallet", destination: "/signup/profile", permanent: false },
+    ]);
+    expect(redirects).toHaveLength(3);
   });
 });
 

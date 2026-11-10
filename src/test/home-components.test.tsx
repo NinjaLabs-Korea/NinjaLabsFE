@@ -48,20 +48,20 @@ afterEach(() => {
 });
 
 describe("HomeProfileCard", () => {
-  it("greets by nickname with wallet and NFT status and links to the public profile and the settings", () => {
+  it("greets by nickname with NFT status, links to the public profile and the settings, and shows no wallet", () => {
     state.auth = signedInWith({ handle: "ninja", profileSlug: "ninja", initials: "NI", walletAddress: "inj1abcdefghij9k4d", nftStatus: "MINTED", onboardingCompleted: true });
     renderWithIntl(<HomeProfileCard />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Welcome back, ninja");
-    expect(screen.getByText("Wallet inj1ab…9k4d")).toBeTruthy();
+    expect(screen.queryByText(/Wallet/)).toBeNull();
     expect(screen.getByText("Ninja NFT issued")).toBeTruthy();
     expect(screen.getByRole("link", { name: "View my profile" }).getAttribute("href")).toBe("/members/ninja");
-    expect(screen.getByRole("link", { name: "Profile and wallet settings" }).getAttribute("href")).toBe("/account");
+    expect(screen.getByRole("link", { name: "Edit profile" }).getAttribute("href")).toBe("/account");
   });
 
-  it("sends someone without a wallet to the wallet card, and never claims a mint that did not happen", () => {
-    state.auth = signedInWith({ handle: "ninja", walletAddress: undefined, nftStatus: "MINTING", onboardingCompleted: true });
+  it("never claims a mint that did not happen", () => {
+    state.auth = signedInWith({ handle: "ninja", nftStatus: "MINTING", onboardingCompleted: true });
     const view = renderWithIntl(<HomeProfileCard />);
-    expect(screen.getByRole("link", { name: "Wallet not connected" }).getAttribute("href")).toBe("/account#wallet");
+    expect(screen.queryByRole("link", { name: /Wallet/ })).toBeNull();
     expect(screen.getByText("Ninja NFT minting")).toBeTruthy();
     view.unmount();
     state.auth = signedInWith({ handle: "ninja", nftStatus: null, onboardingCompleted: true });

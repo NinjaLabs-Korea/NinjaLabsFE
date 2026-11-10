@@ -139,6 +139,26 @@ describe("public profile payout status", () => {
   });
 });
 
+describe("public profile without agents / nfts (BE dropping them)", () => {
+  it.each([["both keys missing", {}], ["empty arrays", { agents: [], nfts: [] }]])("reads %s as no agents and no NFTs", async (_label, extra) => {
+    fetchPublicJson.mockResolvedValueOnce({ nickname: "ninja.inj", bio: "", created_at: "2026-05-31T23:30:00Z", tags: [], completedBounties: [], ...extra });
+    const profile = await getRuntimeProfile("ninja.inj", "en");
+    expect(profile?.nfts).toEqual([]);
+    expect(profile?.agents).toEqual([]);
+  });
+
+  it("still reads agents/nfts from an older BE that sends them", async () => {
+    fetchPublicJson.mockResolvedValueOnce({
+      nickname: "ninja.inj", bio: "", created_at: "2026-05-31T23:30:00Z", tags: [], completedBounties: [],
+      agents: [{ name: "bot", status: "ACTIVE", wallet_address: "inj1x", completed_bounties: [] }],
+      nfts: [{ id: "n1", nft_type: "NINJA_PARENT", status: "MINTED", contract_address: "inj1c", token_id: "1", mint_tx_hash: null, bounty_title: null }],
+    });
+    const profile = await getRuntimeProfile("ninja.inj", "en");
+    expect(profile?.agents).toHaveLength(1);
+    expect(profile?.nfts).toHaveLength(1);
+  });
+});
+
 describe("hall of fame milestone dates", () => {
   it("formats published_at in the home zone (KST) and keeps an empty date for unpublished rows", async () => {
     fetchPublicJson.mockImplementation(async (path: string) =>

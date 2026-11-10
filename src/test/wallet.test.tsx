@@ -1,23 +1,16 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { type ReactNode } from "react";
-import { hydrateRoot } from "react-dom/client";
-import { renderToString } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Config } from "wagmi";
-import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { WalletProvider } from "@/components/wallet/WalletProvider";
 import { addEthereumChainParameterFor, switchChainErrorKind } from "@/components/wallet/useWalletConnection";
-import { FoundationProvider, useAuthSnapshot } from "@/components/auth/FoundationProvider";
-import { IntlWrapper, renderWithIntl } from "@/test/intl";
+import { FoundationProvider } from "@/components/auth/FoundationProvider";
+import { renderWithIntl } from "@/test/intl";
 
 // Mock-mode FoundationProvider imports its client lazily; warm the module graph so synchronous tests do not leave that
 // import resolving after the jsdom environment is torn down.
 await import("@/lib/mocks/api-client");
-
-vi.mock("@/i18n/navigation", () => ({
-  useRouter: () => ({ push: vi.fn() }),
-}));
 
 const wagmi = vi.hoisted(() => ({
   account: {
@@ -90,7 +83,7 @@ vi.mock("@tanstack/react-query", () => ({
   },
 }));
 
-const injectedConnector = { type: "injected" };
+
 const previewUser = {
   id: "demo-user",
   handle: "demo",
@@ -98,37 +91,10 @@ const previewUser = {
   profileSlug: "demo",
 };
 
-/** Exposes the provider's own auth snapshot next to the button (the adapter the button actually runs against). */
-function AuthProbe() {
-  // A plain span: <output> has an implicit "status" role and would collide with the button's own status line.
-  return <span data-testid="auth-status">{useAuthSnapshot().status}</span>;
-}
-
-function renderWalletButton() {
-  return renderWithIntl(
-    <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
-      <WalletConnectButton chainId={1439} />
-      <AuthProbe />
-    </FoundationProvider>,
-  );
-}
-
 /** The latest Config the provider handed to WagmiProvider (built by wagmi's real createConfig). */
 function providedConfig(): Config {
   expect(wagmi.providerConfig).toHaveBeenCalled();
   return wagmi.providerConfig.mock.lastCall?.[0] as Config;
-}
-
-function setInjectedWallet(available: boolean) {
-  if (available) {
-    Object.defineProperty(window, "ethereum", {
-      configurable: true,
-      value: {},
-    });
-    return;
-  }
-
-  Reflect.deleteProperty(window, "ethereum");
 }
 
 describe("WalletProvider", () => {
@@ -184,191 +150,9 @@ describe("WalletProvider", () => {
     expect(config.connectors.map((connector) => connector.type)).toEqual(["injected"]);
   });
 
-  it("hydrates without a mismatch: server HTML equals the client's first render", async () => {
-    wagmi.connectors = [injectedConnector];
-    const tree = (
-      <IntlWrapper>
-        <FoundationProvider config={{ mode: "mock", previewUser, mockSeed: "default" }}>
-          <WalletProvider chainId={1439} rpcUrl="https://rpc.ninjalabs.example">
-            <WalletConnectButton chainId={1439} />
-          </WalletProvider>
-        </FoundationProvider>
-      </IntlWrapper>
-    );
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    // The browser has an extension, but the server cannot see it: both the server HTML and the hydrating render use the
-    // server snapshot (no injected wallet), so they agree; the post-hydration render then offers the connect button.
-    setInjectedWallet(true);
-    vi.stubGlobal("window", undefined);
-    let html: string;
-    try {
-      html = renderToString(tree);
-    } finally {
-      vi.unstubAllGlobals();
-    }
-    expect(html).toContain("Wallet unavailable");
-
-    const container = document.createElement("div");
-    container.innerHTML = html;
-    document.body.append(container);
-    const recoverable = vi.fn();
-    try {
-      await act(async () => {
-        hydrateRoot(container, tree, { onRecoverableError: recoverable });
-      });
-      expect(recoverable).not.toHaveBeenCalled();
-      expect(consoleError.mock.calls.flat().map(String).join("\n")).not.toMatch(/hydrat|did not match/i);
-      await waitFor(() => expect(container.textContent).toContain("Connect wallet"));
-    } finally {
-      consoleError.mockRestore();
-      container.remove();
-      setInjectedWallet(false);
-    }
-  });
 });
 
-describe("WalletConnectButton", () => {
-  beforeEach(() => {
-    wagmi.account = { address: undefined, chainId: undefined, isConnected: false };
-    wagmi.connectors = [injectedConnector];
-    wagmi.connectError = null;
-    wagmi.switchError = null;
-    wagmi.isConnecting = false;
-    wagmi.isSwitching = false;
-    wagmi.connect.mockReset();
-    wagmi.disconnect.mockReset();
-    wagmi.switchChain.mockReset();
-    setInjectedWallet(false);
-  });
-
-  it("connects through the injected connector without changing the provider's auth state", async () => {
-    setInjectedWallet(true);
-
-    renderWalletButton();
-    // The mock foundation loads lazily: wait until the provider's real adapter reports signed-out.
-    expect(await screen.findByText("signed-out")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Connect wallet" }));
-
-    expect(wagmi.connect).toHaveBeenCalledWith({ connector: injectedConnector });
-    await waitFor(() => expect(wagmi.connect).toHaveBeenCalledOnce());
-    expect(screen.getByTestId("auth-status").textContent).toBe("signed-out");
-  });
-
-  it("shows the no-extension state when no injected wallet is available (no WalletConnect fallback)", () => {
-    renderWalletButton();
-
-    expect(
-      (screen.getByRole("button", { name: "Wallet unavailable" }) as HTMLButtonElement).disabled,
-    ).toBe(true);
-    expect(screen.queryByRole("button", { name: "Connect wallet" })).toBeNull();
-    expect(wagmi.connect).not.toHaveBeenCalled();
-  });
-
-  it("picks up a wallet the extension injects after the first render (ethereum#initialized)", () => {
-    renderWalletButton();
-    expect(screen.getByRole("button", { name: "Wallet unavailable" })).toBeTruthy();
-
-    act(() => {
-      setInjectedWallet(true);
-      window.dispatchEvent(new Event("ethereum#initialized"));
-    });
-
-    expect((screen.getByRole("button", { name: "Connect wallet" }) as HTMLButtonElement).disabled).toBe(false);
-  });
-
-  it("masks the connected address and disconnects on click", () => {
-    wagmi.account = {
-      address: "0x1234567890abcdef1234567890abcdef1234cdef",
-      chainId: 1439,
-      isConnected: true,
-    };
-
-    renderWalletButton();
-    const button = screen.getByRole("button", {
-      name: "Disconnect wallet 0x1234…cdef",
-    });
-    fireEvent.click(button);
-
-    expect(button.textContent).toBe("0x1234…cdef");
-    expect(wagmi.disconnect).toHaveBeenCalledOnce();
-  });
-
-  it("offers a chain switch instead of disconnecting on the wrong network", () => {
-    wagmi.account = {
-      address: "0x1234567890abcdef1234567890abcdef1234cdef",
-      chainId: 1,
-      isConnected: true,
-    };
-
-    renderWalletButton();
-    fireEvent.click(
-      screen.getByRole("button", { name: "Switch to Injective EVM" }),
-    );
-
-    // addEthereumChainParameter lets wagmi add the chain (wallet_addEthereumChain) when the wallet answers 4902.
-    expect(wagmi.switchChain).toHaveBeenCalledWith({
-      chainId: 1439,
-      addEthereumChainParameter: {
-        chainName: "Injective EVM Testnet",
-        nativeCurrency: { name: "Injective", symbol: "INJ", decimals: 18 },
-        rpcUrls: ["https://rpc.ninjalabs.example"],
-        blockExplorerUrls: ["https://testnet.blockscout.injective.network"],
-      },
-    });
-    expect(screen.getByRole("status").textContent).toBe(
-      "Your wallet is connected to an unsupported network.",
-    );
-    expect(screen.queryByRole("alert")).toBeNull();
-  });
-
-  it("distinguishes a user-rejected chain switch from other switch failures", () => {
-    wagmi.account = {
-      address: "0x1234567890abcdef1234567890abcdef1234cdef",
-      chainId: 1,
-      isConnected: true,
-    };
-    // wagmi's injected connector: the provider's 4001 answer is wrapped in viem's UserRejectedRequestError (itself code 4001).
-    wagmi.switchError = Object.assign(new Error("User rejected the request."), {
-      name: "UserRejectedRequestError",
-      code: 4001,
-      cause: Object.assign(new Error("User rejected the request."), { code: 4001 }),
-    });
-    renderWalletButton();
-    expect(screen.getByRole("alert").textContent).toBe(
-      "You declined the network switch. Approve it in your wallet to continue.",
-    );
-
-    cleanup();
-    wagmi.switchError = Object.assign(new Error("boom"), { name: "SwitchChainError" });
-    renderWalletButton();
-    expect(screen.getByRole("alert").textContent).toBe(
-      "The network could not be switched. Add Injective EVM to your wallet and try again.",
-    );
-  });
-
-  it("never requests a chain switch when no RPC URL is configured (mock mode) and shows manual guidance instead", () => {
-    wagmi.account = {
-      address: "0x1234567890abcdef1234567890abcdef1234cdef",
-      chainId: 1,
-      isConnected: true,
-    };
-    const configuredChains = wagmi.config.chains;
-    wagmi.config = { chains: [{ id: 1439, rpcUrls: { default: { http: [] } } }] };
-    try {
-      renderWalletButton();
-      const button = screen.getByRole("button", { name: "Switch to Injective EVM" }) as HTMLButtonElement;
-      expect(button.disabled).toBe(true);
-      fireEvent.click(button);
-      // Without an RPC URL the wallet could not add the chain, so wagmi is not asked to switch at all (canSwitch === false).
-      expect(wagmi.switchChain).not.toHaveBeenCalled();
-      expect(screen.getByRole("status").textContent).toBe(
-        "Automatic network switching is not configured here. Switch your wallet to Injective EVM manually, then try again.",
-      );
-    } finally {
-      wagmi.config = { chains: configuredChains };
-    }
-  });
-
+describe("useWalletConnection helpers", () => {
   it("builds mainnet chain-add parameters and classifies switch errors", () => {
     expect(addEthereumChainParameterFor(1776, ["https://evm.injective.network"])).toEqual({
       chainName: "Injective EVM",
@@ -395,32 +179,5 @@ describe("WalletConnectButton", () => {
     expect(switchChainErrorKind(Object.assign(new Error("switch failed"), { name: "SwitchChainError", cause: wrapped({ code: 4001 }) }))).toBe("rejected");
     expect(switchChainErrorKind(Object.assign(new Error("switch failed"), { name: "SwitchChainError", cause: wrapped(new Error("after add")) }))).toBe("rejected");
     expect(switchChainErrorKind(Object.assign(new Error("switch failed"), { name: "SwitchChainError", cause: { code: -32603 } }))).toBe("failed");
-  });
-
-  it("shows a stable connector error message", () => {
-    setInjectedWallet(true);
-    wagmi.connectError = new Error("Connector rejected request");
-
-    renderWalletButton();
-
-    expect(screen.getByRole("alert").textContent).toBe(
-      "Unable to connect your wallet. Try again.",
-    );
-  });
-
-  it("reports an unavailable state when no compatible connector exists", () => {
-    setInjectedWallet(true);
-    wagmi.connectors = [];
-
-    renderWalletButton();
-
-    expect(
-      (screen.getByRole("button", { name: "Wallet unavailable" }) as HTMLButtonElement)
-        .disabled,
-    ).toBe(true);
-    expect(screen.getByRole("status").textContent).toBe(
-      "Install or unlock a compatible browser wallet to connect.",
-    );
-    expect(wagmi.connect).not.toHaveBeenCalled();
   });
 });

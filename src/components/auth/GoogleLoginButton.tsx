@@ -69,8 +69,8 @@ export function GoogleLoginButton({ turnstileSiteKey }: GoogleLoginButtonProps =
       setLoginState("idle");
 
       if (!simulateFailure && isMock) {
-        onboardingLog("onboarding.mock.redirect", { targetPath: "/signup/wallet" });
-        router.push("/signup/wallet");
+        onboardingLog("onboarding.mock.redirect", { targetPath: "/signup/profile" });
+        router.push("/signup/profile");
       }
     } catch (error) {
       onboardingLog("oauth.button.failed", onboardingErrorDetails(error));

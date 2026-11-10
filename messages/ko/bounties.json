@@ -111,24 +111,29 @@
     "descriptionHeading": "요구 사항, 제출 가이드, 평가 기준",
     "descriptionHeadingApply": "요구 사항, 지원 가이드, 평가 기준",
     "rewardInfo": "보상 정보",
+    "rewardUnspecified": "명시된 보상이 없어요. 승인만으로 보상 지급이나 NFT 발급이 보장되지는 않아요.",
+    "unspecifiedRewardSteps": {
+      "review": "스폰서가 제출한 작업을 검토해요.",
+      "record": "승인하면 심사 결과가 기록돼요. 보상과 NFT 조건은 바운티 안내를 확인해 주세요."
+    },
     "rewardNotes": {
-      "flow": "예치 → 검토 → 지급 순서로 진행돼요.",
+      "flow": "예치와 검토 후 운영진이 지급을 별도로 처리해요.",
       "token": "원래 토큰 그대로 지급돼요. 필요하면 직접 스왑해 주세요."
     },
     "rewardNotesApply": {
-      "flow": "예치 → 지원서 검토 → 승인 → 제출 → 지급 순서로 진행돼요.",
+      "flow": "예치 → 지원서 검토 → 승인 → 제출 후 운영진이 지급을 별도로 처리해요.",
       "token": "보상은 {currency}로 지급돼요. 필요하면 직접 스왑해 주세요."
     },
-    "completionHeading": "승인되면",
+    "completionHeading": "최종 심사 이후",
     "completionSteps": {
-      "transfer": "보상이 내 지갑으로 전송돼요.",
-      "mint": "완료 증명 NFT가 발행돼요.",
-      "attach": "내 Ninja NFT 포트폴리오에 자동으로 추가돼요."
+      "transfer": "지급 승인 후 운영진이 보상을 별도로 전송해요.",
+      "mint": "지급이 기록되면 완료 증명 NFT 발급이 대기열에 추가될 수 있어요.",
+      "attach": "발급된 NFT는 내 Ninja NFT 포트폴리오에서 확인할 수 있어요."
     },
     "afterApprovalSteps": {
       "approve": "스폰서가 지원서를 승인해요.",
       "unlock": "완료한 작업을 제출할 수 있는 제출 필드가 열려요.",
-      "reward": "최종 승인 후 보상이 전송되고 완료 증명 NFT가 발행돼요."
+      "reward": "최종 승인 후 지급은 별도로 처리돼요. NFT는 발급 상태를 확인해 주세요."
     },
     "statusFlowEyebrow": "지원형 진행 순서",
     "footnote": "누구나 볼 수 있어요. 지원과 제출은 로그인 후 가능해요."
@@ -189,6 +194,8 @@
     "browseOther": "다른 바운티 둘러보기",
     "submissionApprovedHeading": "제출물이 승인됐어요",
     "submissionApprovedBody": "스폰서가 이 바운티의 작업물을 승인했어요.",
+    "payoutAddressBody": "보상을 받으려면 지급 주소를 입력해 주세요.",
+    "payoutAddressCta": "지급 주소 입력하기",
     "submissionRejectedHeading": "제출물이 채택되지 않았어요",
     "submissionRejectedBody": "스폰서가 작업물을 검토한 뒤 채택하지 않았어요. 이 결과는 최종이에요.",
     "submissionForfeitedHeading": "보상 미지급",

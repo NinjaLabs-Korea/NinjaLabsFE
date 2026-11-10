@@ -66,11 +66,39 @@ describe("bounty detail agent panel", () => {
       const { container, unmount } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
       const text = container.textContent ?? "";
       expect(text).not.toMatch(/release|child/i);
-      expect(text).toContain("A completion NFT is minted.");
+      expect(text).toContain("After payout is recorded, completion NFT minting can be queued.");
       expect(text.match(/swap/gi)).toHaveLength(1);
       expect(text.match(/Anyone can view\./g)).toHaveLength(1);
       expect(text).not.toMatch(/Public view|Actions require login/);
       unmount();
     }
+  });
+
+  it.each([
+    ["direct", false], ["agent", false], ["direct", true], ["agent", true],
+  ] as const)("does not promise a payout or NFT without a specified reward (%s, application=%s)", async (mode, applicationRequired) => {
+    data.bounty = { ...bounty(mode), applicationRequired, reward: { amount: 0, currency: "INJ" }, rewards: [] };
+    const { container } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
+    const text = container.textContent ?? "";
+    expect(text).toContain("Reward TBD");
+    expect(text).toContain("No reward has been specified. Approval alone does not guarantee a payout or NFT issuance.");
+    expect(text).not.toMatch(/Sponsor pays:|Your reward is sent|A completion NFT is minted|Reward is sent in|original token/);
+    expect(text).toContain(applicationRequired ? "Submit field unlocks for completed work." : "The sponsor reviews your submission.");
+  });
+
+  it("keeps the unset legacy reward fallback out of payout copy", async () => {
+    data.bounty = { ...bounty("direct"), reward: { amount: 0, currency: "INJ" } };
+    const { container } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
+    expect(container.textContent).toContain("No reward has been specified.");
+    expect(container.textContent).not.toContain("Sponsor pays:");
+  });
+
+  it("uses only specified rewards, including their currency, in application payout guidance", async () => {
+    data.bounty = { ...bounty("direct"), applicationRequired: true, rewards: [{ amount: 0, currency: "INJ" }, { amount: 10, currency: "USDC" }] };
+    const { container } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
+    expect(container.textContent).toContain("Sponsor pays: 10 USDC");
+    expect(container.textContent).toContain("Reward is sent in USDC");
+    expect(container.textContent).not.toContain("Sponsor pays: Reward TBD");
+    expect(container.textContent).not.toContain("Reward is sent in INJ");
   });
 });

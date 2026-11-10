@@ -72,6 +72,33 @@
       "generic": "We couldn’t withdraw this application. Please try again shortly.",
       "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
     },
+    "payout": {
+      "title": "Payout address",
+      "intro": "Enter the Injective address that should receive your reward. Both 0x and inj1 addresses work.",
+      "introSaved": "Your reward goes to the saved address. You can change it until a payout is requested.",
+      "warningNote": "The address must be able to receive on the Injective network directly. Do not use an exchange deposit address that needs a memo (tag).",
+      "label": "Payout address",
+      "placeholder": "0x… or inj1…",
+      "save": "Save address",
+      "saveChange": "Change address",
+      "saving": "Saving…",
+      "saved": "Payout address saved.",
+      "savedAt": "Saved {date}",
+      "injLabel": "inj1 format",
+      "evmLabel": "0x format",
+      "lockedNote": "A payout was already requested, so the address can’t be changed. If it must change,",
+      "contact": "contact the team",
+      "invalidFormat": "Enter a 42-character address starting with 0x, or an address starting with inj1."
+    },
+    "payoutErrors": {
+      "INVALID_INJECTIVE_ADDRESS": "That address format is not valid. Check it character by character.",
+      "PAYOUT_ADDRESS_LOCKED": "A payout was already requested, so the address can’t be changed. Please contact the team.",
+      "SUBMISSION_NOT_APPROVED": "You can only enter a payout address for an approved submission.",
+      "SUBMISSION_NOT_FOUND": "We couldn’t find this submission. Refresh and try again.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "generic": "We couldn’t save the payout address. Please try again shortly.",
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
+    },
     "payoutPaid": "Paid",
     "payoutPartial": "Partially paid",
     "payoutPending": "Payout pending"
@@ -82,11 +109,10 @@
       "description": "Manage your Ninja Labs account."
     },
     "heading": "Account settings",
-    "intro": "Check your profile and wallet, and manage your account.",
+    "intro": "Check your profile and manage your account.",
     "signedOutMessage": "Sign in to manage your account",
     "profileHeading": "Profile",
     "nicknameLabel": "Nickname",
-    "walletLabel": "Wallet",
     "dangerEyebrow": "Danger zone",
     "deleteHeading": "Delete account",
     "deleteBody": "Deleting your account cannot be undone. Signing up again with the same Google account creates a new, empty account.",
@@ -118,14 +144,6 @@
     "tagsLabel": "Field tags",
     "editProfile": "Edit profile",
     "cancelEdit": "Cancel editing",
-    "wallet": {
-      "heading": "Wallet",
-      "connected": "Connected",
-      "notConnected": "Not connected",
-      "linkedNote": "A linked wallet is fixed to your account and can’t be changed or unlinked here. Contact the operators if you need a different one.",
-      "body": "If you chose “Connect later” while signing up, connect your wallet here. Connecting a wallet issues your Ninja NFT.",
-      "unavailable": "Wallet connection is not available in this environment."
-    },
     "avatar": {
       "label": "Profile photo",
       "hint": "JPG, PNG or WebP, up to 2 MB. It shows in the header, on My activity, your public profile and member cards.",

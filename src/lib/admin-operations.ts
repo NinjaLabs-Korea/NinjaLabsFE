@@ -52,8 +52,12 @@ export type OpsSubmission = OpsActor & {
   currentRevisionNo: number;
   submittedAt: string;
   reviewedAt: string | null;
-  /** Owner's active primary wallet; null → a payout request answers APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND. */
-  recipientWalletAddress: string | null;
+  /** Lowercase `inj1` payout address the winner entered; null → a payout request answers 409 PAYOUT_ADDRESS_NOT_SET. */
+  payoutAddress: string | null;
+  /** Same 20 bytes as EIP-55 `0x` (the form an ERC20 reward is sent to); null with `payoutAddress`. */
+  payoutAddressEvm: string | null;
+  /** The owner's email, only for an APPROVED submission whose owner has not withdrawn (for contacting winners); otherwise null. */
+  email: string | null;
   reviewComment: string | null;
   /** Newest first - `revisions[0]` is the revision under review. */
   revisions: OpsRevision[];
@@ -65,6 +69,8 @@ export type OpsReward = {
   id: string;
   status: "DEPOSIT_PENDING" | "FUNDED" | "PARTIALLY_PAID" | "PAID" | "REFUND_PENDING" | "REFUNDED" | "CANCELLED" | (string & {});
   symbol: string;
+  /** BE `token_type`: NATIVE / CW20 (sent to the `inj1` address) or ERC20 (sent to the `0x` address). Absent on a fixture = NATIVE. */
+  tokenType?: "NATIVE" | "CW20" | "ERC20" | (string & {});
   amount: string;
   depositedAmount: string | null;
   depositedAt: string | null;
@@ -84,7 +90,10 @@ export type OpsPayout = {
   amount: string;
   symbol: string;
   txHash: string | null;
+  /** Address snapshot taken at request time (lowercase `inj1`; pre-0029 payouts show their wallet's address). */
   recipientAddress: string;
+  /** Same account as EIP-55 `0x`; null when the BE did not send it. */
+  recipientAddressEvm?: string | null;
   requestedBy: string;
   requestedByNickname: string | null;
   requestedAt: string;
@@ -136,6 +145,12 @@ export const isRewardFunded = (reward: Pick<OpsReward, "status">): boolean => PA
 export function payoutApprovalMode(payout: Pick<OpsPayout, "requestedByMe">, policy: AdminOperations["policy"]): "self-blocked" | "self-allowed" | "normal" {
   if (!payout.requestedByMe) return "normal";
   return policy.payoutSelfApprovalAllowed ? "self-allowed" : "self-blocked";
+}
+
+/** The payout address form to show for a reward: `0x` for an ERC20 token (USDC on Injective EVM), `inj1` for NATIVE/CW20. */
+export function payoutAddressFor(reward: Pick<OpsReward, "tokenType"> | undefined, row: Pick<OpsSubmission, "payoutAddress" | "payoutAddressEvm">): { primary: string | null; evm: boolean } {
+  if (reward?.tokenType === "ERC20") return { primary: row.payoutAddressEvm ?? null, evm: true };
+  return { primary: row.payoutAddress ?? null, evm: false };
 }
 
 /** Approved submissions that still have no payout on `rewardId` (BE PAYOUT_ALREADY_REQUESTED otherwise). */

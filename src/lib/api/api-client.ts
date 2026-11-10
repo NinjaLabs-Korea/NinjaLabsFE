@@ -1,5 +1,5 @@
 import { newestFirst } from "@/lib/account-order";
-import type { Account, AccountAgent, AccountAgentRef, AccountApplication, AccountSubmission, ApplicationStatus, BountyStatusCode, SubmissionStatus } from "@/lib/contracts/account";
+import type { Account, AccountAgent, AccountAgentRef, AccountApplication, AccountSubmission, ApplicationStatus, BountyStatusCode, PayoutAddressFields, SubmissionStatus } from "@/lib/contracts/account";
 import type { ApiClient, ApiResult } from "@/lib/contracts/api";
 import type { ApiHttp } from "@/lib/api/http";
 import { unavailableReason } from "@/lib/api/unavailable";
@@ -66,7 +66,23 @@ type SubmissionRow = {
   bounty_status?: BountyStatusCode;
   submission_deadline?: string;
   has_review?: boolean;
+  /** BE #69 payout address (`inj1` lowercase / EIP-55 `0x`); an older BE omits all four. */
+  payout_address?: string | null;
+  payout_address_evm?: string | null;
+  payout_address_updated_at?: string | null;
+  payout_address_editable?: boolean;
 };
+
+/** The payout address fields of a submission row; every key is left out when the BE predates them (then no form is offered). */
+function payoutFields(row: SubmissionRow): PayoutAddressFields {
+  return {
+    ...(row.id ? { submissionId: row.id } : {}),
+    ...(row.payout_address !== undefined ? { payoutAddress: row.payout_address } : {}),
+    ...(row.payout_address_evm !== undefined ? { payoutAddressEvm: row.payout_address_evm } : {}),
+    ...(row.payout_address_updated_at !== undefined ? { payoutAddressUpdatedAt: row.payout_address_updated_at } : {}),
+    ...(typeof row.payout_address_editable === "boolean" ? { payoutAddressEditable: row.payout_address_editable } : {}),
+  };
+}
 
 /** A REJECTED submission that no reviewer ever looked at because the sponsor cancelled the bounty. Unknown (fields absent) = false. */
 function closedByCancellation(row: SubmissionRow): boolean {
@@ -93,6 +109,7 @@ function toSubmission(row: SubmissionRow): AccountSubmission {
     agent: toAgentRef(row.agent),
     paymentStatus: toPayoutStatus(row.payment_status) ?? "NONE",
     reviewComment: row.review_comment?.trim() || null,
+    ...payoutFields(row),
     ...(closedByCancellation(row) ? { closedByCancellation: true } : {}),
     ...(row.submission_url ? { submissionUrl: row.submission_url } : {}),
     ...(row.repository_url ? { repositoryUrl: row.repository_url } : {}),
@@ -126,6 +143,7 @@ function submissionToRow(row: SubmissionRow): AccountApplication {
     reviewComment: submission.reviewComment,
     reviewNote: null,
     paymentStatus: submission.paymentStatus,
+    ...payoutFields(row),
     ...(submission.closedByCancellation ? { closedByCancellation: true } : {}),
     ...(row.bounty_status ? { bountyStatus: row.bounty_status } : {}),
     ...(row.submission_deadline ? { submissionDeadline: row.submission_deadline } : {}),
@@ -231,7 +249,7 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
                 return { ...application, status: "revisionRequested" as const, reviewComment: submission.review_comment?.trim() || null };
               }
               if (submission.status === "APPROVED") {
-                return { ...application, status: "completed" as const, paymentStatus: toSubmission(submission).paymentStatus };
+                return { ...application, status: "completed" as const, paymentStatus: toSubmission(submission).paymentStatus, ...payoutFields(submission) };
               }
               return { ...application, status: "submitted" as const };
             }), ...standalone]),
@@ -270,6 +288,9 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
     withdrawApplication: (applicationId) =>
       http.fetchJson(`/applications/${encodeURIComponent(applicationId)}/withdraw`, { method: "POST" }),
 
+    setPayoutAddress: (submissionId, address) =>
+      http.fetchJson(`/submissions/${encodeURIComponent(submissionId)}/payout-address`, { method: "PUT", body: { address: address.trim() } }),
+
     submitBounty: (bountyId, input) =>
       http.fetchJson(`/bounties/${encodeURIComponent(bountyId)}/submissions`, {
         method: "POST",
@@ -293,19 +314,6 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
 
     revokeAgent: (agentId) =>
       http.fetchJson(`/agents/${encodeURIComponent(agentId)}/revoke`, { method: "POST" }),
-
-    createWalletChallenge: (address) =>
-      http.fetchJson<{ message: string }>("/wallets/challenge", {
-        method: "POST",
-        body: { address },
-      }),
-
-    verifyWallet: async (address, signature, publicKey) => {
-      await http.fetchJson("/wallets/verify", {
-        method: "POST",
-        body: { address, signature, ...(publicKey ? { publicKey } : {}) },
-      });
-    },
 
     checkNickname: (nickname) =>
       http.fetchJson<{ available: boolean }>(`/users/check-nickname?nickname=${encodeURIComponent(nickname)}`),

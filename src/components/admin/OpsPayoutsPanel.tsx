@@ -15,6 +15,7 @@ import {
   isRewardFunded,
   isTxHash,
   payoutApprovalMode,
+  payoutAddressFor,
   payoutCandidates,
   rewardHeadroom,
   type AdminOperations,
@@ -37,7 +38,7 @@ const getNarrow = () => (typeof window.matchMedia === "function" ? window.matchM
 const getNarrowServer = () => false;
 
 type Dialog =
-  | { kind: "request"; reward: OpsReward; submissionId: string; amount: string; error?: string; walletError?: string }
+  | { kind: "request"; reward: OpsReward; submissionId: string; amount: string; error?: string; addressError?: string }
   | { kind: "approve"; payout: OpsPayout }
   | { kind: "paid"; payout: OpsPayout; txHash: string; error?: string };
 
@@ -60,7 +61,7 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
   const openRequest = (reward: OpsReward) => {
     const candidates = payoutCandidates(ops, reward.id);
     const headroom = rewardHeadroom(reward);
-    setDialog({ kind: "request", reward, submissionId: (candidates.find((item) => item.recipientWalletAddress) ?? { id: "" }).id, amount: headroom && headroom !== "0" ? operatorAmountFromBaseUnits(headroom, reward.symbol) : "" });
+    setDialog({ kind: "request", reward, submissionId: (candidates.find((item) => item.payoutAddress) ?? { id: "" }).id, amount: headroom && headroom !== "0" ? operatorAmountFromBaseUnits(headroom, reward.symbol) : "" });
   };
 
   const liveReward = dialog?.kind === "request" ? ops.rewards.find((item) => item.id === dialog.reward.id) : undefined;
@@ -72,12 +73,12 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
       const reward = liveReward ?? dialog.reward;
       const amount = operatorAmountToBaseUnits(dialog.amount, reward.symbol);
       const headroom = rewardHeadroom(reward);
-      // Validate the amount and the recipient wallet independently so both errors show at once (the BE answers 404
-      // APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND without an active primary wallet - say so before the round trip).
-      const walletError = ops.submissions.find((item) => item.id === dialog.submissionId)?.recipientWalletAddress ? undefined : t("submissions.noWallet");
+      // Validate the amount and the payout address independently so both errors show at once (the BE answers 409
+      // PAYOUT_ADDRESS_NOT_SET until the winner entered one - say so before the round trip).
+      const addressError = ops.submissions.find((item) => item.id === dialog.submissionId)?.payoutAddress ? undefined : t("submissions.noPayoutAddress");
       const amountError = !amount ? t(tokenDecimalsFor(dialog.reward.symbol) === null ? "form.amountInvalidBaseUnits" : "form.amountInvalid", { symbol: dialog.reward.symbol })
         : headroom !== null && BigInt(amount) > BigInt(headroom) ? t("payouts.amountOverHeadroom", { amount: opsAmount(headroom, dialog.reward.symbol) }) : undefined;
-      if (walletError || amountError || !amount) return setDialog({ ...dialog, error: amountError, walletError });
+      if (addressError || amountError || !amount) return setDialog({ ...dialog, error: amountError, addressError });
       const ok = await run(`request:${dialog.reward.id}`, () => api.requestAdminPayout({ rewardId: dialog.reward.id, submissionId: dialog.submissionId, amount }), {
         title: t("toast.payoutRequestedTitle"),
         description: t("toast.payoutRequestedDescription", { amount: opsAmount(amount, dialog.reward.symbol), name: submissionName(dialog.submissionId) }),
@@ -119,12 +120,20 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
       </div>
     );
   };
-  const recipientCell = (payout: OpsPayout) => (
-    <>
-      <p className="font-semibold text-ink [overflow-wrap:anywhere]">{submissionName(payout.submissionId)}</p>
-      <p className="mt-1 font-mono text-xs text-ink-muted" title={payout.recipientAddress}>{opsShort(payout.recipientAddress)}</p>
-    </>
-  );
+  // The address an ERC20 reward was sent to is the 0x form, every other token's is inj1: show the one that matters, the other in the tooltip.
+  const payoutRecipient = (payout: OpsPayout): { shown: string; other: string | null } => {
+    const evm = ops.rewards.find((reward) => reward.id === payout.rewardId)?.tokenType === "ERC20" ? payout.recipientAddressEvm ?? null : null;
+    return evm ? { shown: evm, other: payout.recipientAddress } : { shown: payout.recipientAddress, other: payout.recipientAddressEvm ?? null };
+  };
+  const recipientCell = (payout: OpsPayout) => {
+    const { shown, other } = payoutRecipient(payout);
+    return (
+      <>
+        <p className="font-semibold text-ink [overflow-wrap:anywhere]">{submissionName(payout.submissionId)}</p>
+        <p className="mt-1 font-mono text-xs text-ink-muted" title={other ? `${shown} / ${other}` : shown}>{opsShort(shown)}</p>
+      </>
+    );
+  };
   const statusBadge = (payout: OpsPayout) => <Badge variant={opsPayoutVariant(payout.status)}>{t(`payoutStatuses.${payout.status}`)}</Badge>;
   const requestedCell = (payout: OpsPayout) => <>{payout.requestedByMe ? t("payouts.byYou") : payout.requestedByNickname ?? "–"}<p className="mt-1 text-xs text-ink-muted">{formatDate(payout.requestedAt)}</p></>;
   const approvedCell = (payout: OpsPayout) => <>{payout.approvedByNickname ?? "–"}<p className="mt-1 text-xs text-ink-muted">{payout.approvedAt ? formatDate(payout.approvedAt) : ""}</p></>;
@@ -199,8 +208,8 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
         callout={approveMode === "self-allowed" ? { tone: "warning", text: t("payouts.selfAllowedCallout") } : undefined}
         description={
           dialog?.kind === "request" ? t("payouts.requestDescription", { amount: opsAmount(rewardHeadroom(liveReward ?? dialog.reward), dialog.reward.symbol) })
-            : dialog?.kind === "approve" ? t("payouts.approveDescription", { amount: opsAmount(dialog.payout.amount, dialog.payout.symbol), address: dialog.payout.recipientAddress })
-              : dialog?.kind === "paid" ? t("payouts.paidDescription", { amount: opsAmount(dialog.payout.amount, dialog.payout.symbol), address: dialog.payout.recipientAddress })
+            : dialog?.kind === "approve" ? t("payouts.approveDescription", { amount: opsAmount(dialog.payout.amount, dialog.payout.symbol), address: payoutRecipient(dialog.payout).shown })
+              : dialog?.kind === "paid" ? t("payouts.paidDescription", { amount: opsAmount(dialog.payout.amount, dialog.payout.symbol), address: payoutRecipient(dialog.payout).shown })
                 : undefined
         }
         eyebrow={t("payouts.eyebrow")}
@@ -214,8 +223,14 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
           <>
             <div>
               <p className="text-sm font-semibold text-ink">{t("payouts.submission")}</p>
-              <div className="mt-2 w-full max-w-full min-w-0"><AdminSelect formatOption={(id) => (id === "" ? t("payouts.submission") : ops.submissions.find((item) => item.id === id)?.recipientWalletAddress ? submissionName(id) : `${submissionName(id)} - ${t("submissions.noWallet")}`)} label={t("payouts.submission")} onChange={(submissionId) => setDialog({ ...dialog, submissionId, walletError: undefined })} options={payoutCandidates(ops, dialog.reward.id).map((item) => item.id)} value={dialog.submissionId} /></div>
-              {dialog.walletError ? <p className="mt-1 text-xs font-normal text-danger" id="ops-payout-wallet-error" role="alert">{dialog.walletError}</p> : null}
+              <div className="mt-2 w-full max-w-full min-w-0"><AdminSelect formatOption={(id) => (id === "" ? t("payouts.submission") : ops.submissions.find((item) => item.id === id)?.payoutAddress ? submissionName(id) : `${submissionName(id)} - ${t("submissions.noPayoutAddress")}`)} label={t("payouts.submission")} onChange={(submissionId) => setDialog({ ...dialog, submissionId, addressError: undefined })} options={payoutCandidates(ops, dialog.reward.id).map((item) => item.id)} value={dialog.submissionId} /></div>
+              {dialog.addressError ? <p className="mt-1 text-xs font-normal text-danger" id="ops-payout-address-error" role="alert">{dialog.addressError}</p> : null}
+              {(() => {
+                // The address the payout will be sent to, in the form the reward token needs (0x for ERC20, inj1 otherwise).
+                const chosen = ops.submissions.find((item) => item.id === dialog.submissionId);
+                const { primary, evm } = chosen ? payoutAddressFor(liveReward ?? dialog.reward, chosen) : { primary: null, evm: false };
+                return primary ? <p className="mt-2 text-xs font-normal text-ink-muted">{t("payouts.recipientAddress")} ({evm ? "0x" : "inj1"}): <span className="font-mono text-ink [overflow-wrap:anywhere]">{primary}</span></p> : null;
+              })()}
             </div>
             <label className="block text-sm font-semibold text-ink">{t("payouts.amount", { symbol: dialog.reward.symbol })}
               <input aria-describedby={dialog.error ? "ops-payout-error" : "ops-payout-hint"} aria-invalid={dialog.error ? true : undefined} className={opsInput} inputMode="decimal" onChange={(event) => setDialog({ ...dialog, amount: event.target.value, error: undefined })} type="text" value={dialog.amount} />

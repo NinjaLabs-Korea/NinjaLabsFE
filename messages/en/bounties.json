@@ -111,24 +111,29 @@
     "descriptionHeading": "Requirements, submission guide, evaluation criteria",
     "descriptionHeadingApply": "Requirements, application guide, evaluation criteria",
     "rewardInfo": "Reward info",
+    "rewardUnspecified": "No reward has been specified. Approval alone does not guarantee a payout or NFT issuance.",
+    "unspecifiedRewardSteps": {
+      "review": "The sponsor reviews your submission.",
+      "record": "Approval records the review result. Check the bounty terms for any reward or NFT conditions."
+    },
     "rewardNotes": {
-      "flow": "Deposit, review, then payout.",
+      "flow": "Deposit, review, then separate payout processing by the operators.",
       "token": "Sent in the original token; the builder swaps if needed."
     },
     "rewardNotesApply": {
-      "flow": "Deposit, application review, approval, submission, then payout.",
+      "flow": "Deposit, application review, approval, submission, then separate payout processing by the operators.",
       "token": "Reward is sent in {currency}; the builder swaps if needed."
     },
-    "completionHeading": "When approved",
+    "completionHeading": "After final review",
     "completionSteps": {
-      "transfer": "Your reward is sent to your wallet.",
-      "mint": "A completion NFT is minted.",
-      "attach": "It is added to your Ninja NFT portfolio."
+      "transfer": "After payout approval, an operator sends your reward separately.",
+      "mint": "After payout is recorded, completion NFT minting can be queued.",
+      "attach": "Issued NFTs appear in your Ninja NFT portfolio."
     },
     "afterApprovalSteps": {
       "approve": "Sponsor approves the application.",
       "unlock": "Submit field unlocks for completed work.",
-      "reward": "After final approval, the reward is sent and a completion NFT is minted."
+      "reward": "Final approval is followed by separate payout processing. Check NFT status after issuance."
     },
     "statusFlowEyebrow": "Application bounty steps",
     "footnote": "Anyone can view. Sign in to apply or submit."
@@ -189,6 +194,8 @@
     "browseOther": "Browse other bounties",
     "submissionApprovedHeading": "Submission approved",
     "submissionApprovedBody": "The sponsor approved your work for this bounty.",
+    "payoutAddressBody": "Enter a payout address to receive your reward.",
+    "payoutAddressCta": "Enter payout address",
     "submissionRejectedHeading": "Submission not accepted",
     "submissionRejectedBody": "The sponsor reviewed your work and did not accept it. This submission is final.",
     "submissionForfeitedHeading": "Reward not paid",

@@ -1,7 +1,8 @@
 import { newestFirst } from "@/lib/account-order";
 import { avatarFileProblem } from "@/lib/avatar";
 import type { AdminApi, ApiClient } from "@/lib/contracts/api";
-import type { AccountAgent, AccountApplication, AccountSubmission } from "@/lib/contracts/account";
+import type { AccountAgent, AccountApplication, AccountSubmission, PayoutAddressFields } from "@/lib/contracts/account";
+import { evmHexAddress, isPayoutAddressShape } from "@/lib/injective-address";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
 import { MockApiError } from "@/lib/mocks/mock-error";
@@ -76,7 +77,51 @@ function fixtureSubmissions(applications: readonly AccountApplication[]): Accoun
       agent: application.agent,
       paymentStatus: application.status === "completed" ? application.paymentStatus : "NONE" as const,
       reviewComment: application.reviewComment,
+      ...payoutFieldsOf(application),
     }));
+}
+
+/** The payout address fields a mock application row and its submission share. */
+function payoutFieldsOf(row: PayoutAddressFields): PayoutAddressFields {
+  const { submissionId, payoutAddress, payoutAddressEvm, payoutAddressUpdatedAt, payoutAddressEditable } = row;
+  return {
+    ...(submissionId !== undefined ? { submissionId } : {}),
+    ...(payoutAddress !== undefined ? { payoutAddress } : {}),
+    ...(payoutAddressEvm !== undefined ? { payoutAddressEvm } : {}),
+    ...(payoutAddressUpdatedAt !== undefined ? { payoutAddressUpdatedAt } : {}),
+    ...(payoutAddressEditable !== undefined ? { payoutAddressEditable } : {}),
+  };
+}
+
+const BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+function bech32Polymod(values: readonly number[]): number {
+  const generators = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3];
+  let chk = 1;
+  for (const value of values) {
+    const top = chk >>> 25;
+    chk = ((chk & 0x1ffffff) << 5) ^ value;
+    generators.forEach((generator, index) => { if ((top >>> index) & 1) chk ^= generator; });
+  }
+  return chk >>> 0;
+}
+/** Lowercase `inj1` bech32 of a 20-byte `0x` address, so the mock answers both forms like the BE does. */
+function injFromEvmHex(hex: string): string {
+  const bytes = hex.slice(2).match(/../g)!.map((byte) => parseInt(byte, 16));
+  const data: number[] = [];
+  let acc = 0;
+  let bits = 0;
+  for (const byte of bytes) {
+    acc = (acc << 8) | byte;
+    bits += 8;
+    while (bits >= 5) { bits -= 5; data.push((acc >> bits) & 31); }
+    acc &= (1 << bits) - 1;
+  }
+  if (bits > 0) data.push((acc << (5 - bits)) & 31);
+  const hrp = [..."inj"].map((char) => char.charCodeAt(0));
+  const expanded = [...hrp.map((code) => code >> 5), 0, ...hrp.map((code) => code & 31)];
+  const mod = bech32Polymod([...expanded, ...data, 0, 0, 0, 0, 0, 0]) ^ 1;
+  const checksum = Array.from({ length: 6 }, (_, index) => (mod >>> (5 * (5 - index))) & 31);
+  return `inj1${[...data, ...checksum].map((value) => BECH32_CHARSET[value]).join("")}`;
 }
 
 /**
@@ -140,6 +185,21 @@ export function createMockApiClient(seed = "default"): ApiClient {
       }
       applications = applications.filter((application) => application.id !== applicationId);
       return { id: applicationId, status: "WITHDRAWN" };
+    },
+    setPayoutAddress: async (submissionId, address) => {
+      // Like the BE: format first (400), then the submission (404 unknown, 409 not approved, 409 locked). Both forms come back.
+      const value = address.trim();
+      const hex = isPayoutAddressShape(value) ? evmHexAddress(value) : null;
+      if (!hex) throw new MockApiError(400, "INVALID_INJECTIVE_ADDRESS");
+      const application = applications.find((item) => item.submissionId === submissionId);
+      if (!application) throw new MockApiError(404, "SUBMISSION_NOT_FOUND");
+      if (application.status !== "completed") throw new MockApiError(409, "SUBMISSION_NOT_APPROVED");
+      if (application.payoutAddressEditable !== true) throw new MockApiError(409, "PAYOUT_ADDRESS_LOCKED");
+      const updatedAt = new Date().toISOString();
+      const saved = { payoutAddress: injFromEvmHex(hex), payoutAddressEvm: hex, payoutAddressUpdatedAt: updatedAt };
+      applications = applications.map((item) => (item === application ? { ...item, ...saved } : item));
+      submissions = submissions.map((item) => (item.submissionId === submissionId ? { ...item, ...saved } : item));
+      return { submissionId, payoutAddress: saved.payoutAddress, payoutAddressEvm: saved.payoutAddressEvm, updatedAt };
     },
     submitBounty: async (bountyId, input) => {
       const revisionNo = (revisions.get(bountyId) ?? 0) + 1;
@@ -212,8 +272,6 @@ export function createMockApiClient(seed = "default"): ApiClient {
       updateAgent(agentId, (agent) => ({ ...agent, status: "REVOKED", verified: false, keyStatus: agent.keyStatus ? "REVOKED" : null }));
       return { agentId, status: "REVOKED" };
     },
-    createWalletChallenge: async (address) => ({ message: `Preview challenge for ${address}` }),
-    verifyWallet: async () => undefined,
     checkNickname: async () => ({ available: true }),
     completeProfile: async () => undefined,
     completeOnboarding: async () => undefined,

@@ -2,7 +2,7 @@
  * BE 감사 action 카탈로그의 그대로 복사본(snapshot)이다. 손으로 action을 지어내지 말 것.
  *
  * 원본: NinjaLabsBE `src/audit/audit-actions.ts` (`AUDIT_ACTIONS`와 `SCRIPT_AUDIT_ACTIONS`의 키, 같은 순서).
- * 스냅샷 기준: BE `main` @ `16e7dd5` + BE #66(`fix/audit-gaps`, 지원·제출 action 4개) · 서버 55개 + 운영 스크립트 7개.
+ * 스냅샷 기준: BE `main` @ `438948e` + BE #69 `PAYOUT_ADDRESS_SET` · 서버 57개 + 운영 스크립트 7개.
  *
  * ## 어디를 고치나
  * - BE가 action을 추가/삭제했을 때: 이 두 배열을 BE 파일과 같게 맞추고 위 기준 커밋을 갱신한 뒤, `messages/<locale>/admin.json`의
@@ -27,6 +27,7 @@ export const BE_AUDIT_ACTIONS = [
   "APPLICATION_WITHDRAWN",
   "SUBMISSION_SUBMITTED",
   "SUBMISSION_RESUBMITTED",
+  "PAYOUT_ADDRESS_SET",
   "SUBMISSION_START_REVIEW",
   "SUBMISSION_REQUEST_REVISION",
   "SUBMISSION_APPROVE",
@@ -65,6 +66,7 @@ export const BE_AUDIT_ACTIONS = [
   "USER_MEMBER_REVOKED",
   "USER_AVATAR_UPDATED",
   "USER_AVATAR_REMOVED",
+  "WALLET_REPLACED",
   "NFT_JOB_RETRIED",
 ] as const;
 

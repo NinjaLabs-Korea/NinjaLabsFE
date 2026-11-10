@@ -29,7 +29,7 @@ describe("shouldRedirectToOnboarding and /recruit", () => {
   it("leaves /recruit alone for an unfinished sign-up, still redirects other pages", () => {
     expect(shouldRedirectToOnboarding(step2, "/en/recruit")).toBeNull();
     expect(shouldRedirectToOnboarding(step2, "/en/recruit/apply")).toBeNull();
-    expect(shouldRedirectToOnboarding(step2, "/en/bounties")).toBe("/en/signup/wallet");
+    expect(shouldRedirectToOnboarding(step2, "/en/bounties")).toBe("/en/signup/profile");
   });
 });
 

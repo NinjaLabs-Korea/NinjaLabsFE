@@ -97,22 +97,22 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   await p.close();
 }
 
-// ---- signed in, onboarding unfinished (wallet step)
+// ---- signed in, onboarding unfinished (legacy BE step 2: goes to the profile step)
 {
   const p = await b.newPage(await b.newContext());
   await signIn(p, ids.N2);
-  await p.waitFor(`location.pathname.endsWith('/signup/wallet')`, 8000);
-  await p.goto('/en/signup'); await p.waitFor(`location.pathname.endsWith('/signup/wallet')`, 8000);
-  check('step-2 user: /en/signup goes to their step, not the login', (await p.url()).endsWith('/en/signup/wallet'), await p.url());
+  await p.waitFor(`location.pathname.endsWith('/signup/profile')`, 8000);
+  await p.goto('/en/signup'); await p.waitFor(`location.pathname.endsWith('/signup/profile')`, 8000);
+  check('step-2 user: /en/signup goes to their step, not the login', (await p.url()).endsWith('/en/signup/profile'), await p.url());
   check('step-2 user: never shown the login', !(await p.text()).includes(LOGIN));
   const stepper = await p.eval(`[...document.querySelectorAll('main ol li')].map(li=>li.innerText.trim()+(li.dataset.done?'(done)':'')+(li.getAttribute('aria-current')?'(current)':''))`);
-  check('step-2 user: stepper shows Login done and Wallet current', stepper[0] === '1. Login(done)' && stepper[1] === '2. Wallet (optional)(current)', stepper);
+  check('step-2 user: stepper shows Login done and Profile current', stepper[0] === '1. Login(done)' && stepper[1] === '2. Profile(current)', stepper);
   check('step-2 user: the Login step is not a link', await p.eval(`!document.querySelector('main ol li a, main ol li button')`));
   clean(await report(p, 'step-2 signup', {}));
   // the hub is open to an unfinished sign-up too: its CTA continues the owed step
   await p.goto('/en'); await p.waitForSelector('main section:first-of-type a');
   const hero = await heroCta(p);
-  check('step-2 user: hero CTA continues sign-up at the wallet step', hero.some((l) => l === 'Continue sign-up -> /en/signup/wallet'), hero);
+  check('step-2 user: hero CTA continues sign-up at the profile step', hero.some((l) => l === 'Continue sign-up -> /en/signup/profile'), hero);
   check('step-2 user: no Get Started anywhere', !hero.some((l) => l.startsWith('Get Started')) && !(await headerGetStarted(p)), hero);
   clean(await report(p, 'step-2 landing', {}));
   await p.close();

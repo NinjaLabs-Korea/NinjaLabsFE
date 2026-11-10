@@ -9,11 +9,12 @@ import { OpsFormModal } from "@/components/admin/OpsFormModal";
 import { opsButton, opsCell, opsDangerButton, opsPanel, opsPanelEyebrow, opsPanelTitle, opsPrimaryButton, opsShort, opsSubmissionVariant, opsTextarea, type OpsDateFormatter, type OpsRunner } from "@/components/admin/ops-ui";
 import { useAdminApi } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
-import { submissionCommentRequired, submissionDecisionsFor, type AdminOperations, type OpsSubmission, type SubmissionDecision } from "@/lib/admin-operations";
+import { CopyButton } from "@/components/ui/CopyButton";
+import { payoutAddressFor, submissionCommentRequired, submissionDecisionsFor, type AdminOperations, type OpsSubmission, type SubmissionDecision } from "@/lib/admin-operations";
 import { OPS_NOTE_MAX } from "@/lib/input-limits";
 import { safeHttpUrl } from "@/lib/api/codecs";
 
-const columns = ["submitter", "work", "status", "wallet", "action"] as const;
+const columns = ["submitter", "work", "status", "payoutAddress", "action"] as const;
 const decisionButton: Record<SubmissionDecision, string> = { START_REVIEW: opsButton, REQUEST_REVISION: opsButton, APPROVE: opsPrimaryButton, REJECT: opsDangerButton };
 
 /**
@@ -29,6 +30,8 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
   // The dialog describes the revision and status it was opened on. When a re-read shows either moved (a resubmission, another admin's decision),
   // keeping it open would resend a stale revisionNo that the BE refuses with SUBMISSION_REVISION_CHANGED every time: close it instead.
   const live = target ? ops.submissions.find((item) => item.id === target.submission.id) : undefined;
+  // The form of the winner's address an operator sends to depends on the reward token: 0x for ERC20 (USDC), inj1 for INJ/CW20.
+  const erc20Reward = ops.rewards.find((reward) => reward.tokenType === "ERC20");
   const targetCurrent = target !== null && live !== undefined && live.currentRevisionNo === target.revisionNo && submissionDecisionsFor(live.status, ops.bounty.status).includes(target.decision);
 
   const submit = async () => {
@@ -61,7 +64,15 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
               const decisions = submissionDecisionsFor(submission.status, ops.bounty.status);
               return (
                 <tr className="border-t border-border" key={submission.id}>
-                  <td className={`${opsCell} ${adminLongTextCell}`}><OpsActorCell actor={submission} /><p className="mt-1 text-xs text-ink-muted">{formatDate(submission.submittedAt)}</p></td>
+                  <td className={`${opsCell} ${adminLongTextCell}`}><OpsActorCell actor={submission} /><p className="mt-1 text-xs text-ink-muted">{formatDate(submission.submittedAt)}</p>
+                    {submission.email ? (
+                      <p className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                        <span className="sr-only">{t("submissions.email")}: </span>
+                        <span className="select-all font-mono text-ink [overflow-wrap:anywhere]">{submission.email}</span>
+                        <CopyButton ariaLabel={t("submissions.copyEmail", { name: submission.nickname ?? "–" })} className={opsButton} copiedLabel={t("submissions.copied")} failedLabel={t("submissions.copyFailed")} label={t("submissions.copy")} value={submission.email} />
+                      </p>
+                    ) : null}
+                  </td>
                   <td className={`${opsCell} max-w-[360px] ${adminLongTextCell}`}>
                     <p className="text-xs font-semibold text-ink">{t("submissions.revision", { revision: submission.currentRevisionNo })}</p>
                     {latest ? <div className="mt-1"><AdminLongText labelledBy="ops-submissions-col-work">{latest.description}</AdminLongText></div> : null}
@@ -82,12 +93,23 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
                     ) : null}
                   </td>
                   <td className={opsCell}><Badge variant={opsSubmissionVariant(submission.status)}>{t(`submissionStatuses.${submission.status}`)}</Badge></td>
-                  <td className={`${opsCell} text-xs`} title={submission.recipientWalletAddress ?? undefined}>
-                    {submission.recipientWalletAddress
-                      ? <span className="font-mono">{opsShort(submission.recipientWalletAddress)}</span>
-                      // A missing wallet only blocks a payout: warn on an approved submission of a bounty that pays something, a dash elsewhere.
+                  <td className={`${opsCell} text-xs`}>
+                    {submission.payoutAddress
+                      ? (() => {
+                        const { primary } = payoutAddressFor(erc20Reward, submission);
+                        const inj = submission.payoutAddress;
+                        const evm = submission.payoutAddressEvm;
+                        return (
+                          <div className="space-y-1">
+                            <p className={erc20Reward ? "text-ink-muted" : "font-semibold text-ink"} title={`${t("submissions.addressInj")}: ${inj}`}><span className="font-sans">inj1 </span><span className="font-mono">{opsShort(inj)}</span></p>
+                            {evm ? <p className={erc20Reward ? "font-semibold text-ink" : "text-ink-muted"} title={`${t("submissions.addressEvm")}: ${evm}`}><span className="font-sans">0x </span><span className="font-mono">{opsShort(evm)}</span></p> : null}
+                            {primary ? <CopyButton ariaLabel={t("submissions.copyAddress", { name: submission.nickname ?? "–" })} className={opsButton} copiedLabel={t("submissions.copied")} failedLabel={t("submissions.copyFailed")} label={t("submissions.copy")} value={primary} /> : null}
+                          </div>
+                        );
+                      })()
+                      // A missing address only blocks a payout: warn on an approved submission of a bounty that pays something, a dash elsewhere.
                       : submission.status === "APPROVED" && ops.rewards.length > 0
-                        ? <span className="text-danger">{t("submissions.noWallet")}</span>
+                        ? <span className="text-danger">{t("submissions.noPayoutAddress")}</span>
                         : <span className="text-ink-muted">–</span>}
                   </td>
                   <td className={opsCell}>

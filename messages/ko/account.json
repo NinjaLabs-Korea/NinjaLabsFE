@@ -72,6 +72,33 @@
       "generic": "지원을 철회하지 못했어요. 잠시 후 다시 시도해 주세요.",
       "TOO_MANY_REQUESTS": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요."
     },
+    "payout": {
+      "title": "지급 주소",
+      "intro": "보상을 받을 Injective 주소를 입력해 주세요. 0x 주소와 inj1 주소 모두 쓸 수 있어요.",
+      "introSaved": "저장된 주소로 보상을 보내요. 지급이 요청되기 전에는 바꿀 수 있어요.",
+      "warningNote": "Injective 네트워크에서 직접 받을 수 있는 주소여야 해요. 메모(태그)가 필요한 거래소 입금 주소는 쓰지 말아 주세요.",
+      "label": "지급 주소",
+      "placeholder": "0x… 또는 inj1…",
+      "save": "주소 저장",
+      "saveChange": "주소 변경",
+      "saving": "저장 중…",
+      "saved": "지급 주소를 저장했어요.",
+      "savedAt": "{date} 저장",
+      "injLabel": "inj1 형식",
+      "evmLabel": "0x 형식",
+      "lockedNote": "지급이 이미 요청돼 주소를 바꿀 수 없어요. 바꿔야 한다면",
+      "contact": "운영진에게 문의해 주세요",
+      "invalidFormat": "0x로 시작하는 42자 주소나 inj1로 시작하는 주소를 입력해 주세요."
+    },
+    "payoutErrors": {
+      "INVALID_INJECTIVE_ADDRESS": "주소 형식이 올바르지 않아요. 글자를 하나씩 다시 확인해 주세요.",
+      "PAYOUT_ADDRESS_LOCKED": "지급이 이미 요청돼 주소를 바꿀 수 없어요. 운영진에게 문의해 주세요.",
+      "SUBMISSION_NOT_APPROVED": "승인된 제출물에만 주소를 입력할 수 있어요.",
+      "SUBMISSION_NOT_FOUND": "제출물을 찾을 수 없어요. 새로고침한 뒤 다시 시도해 주세요.",
+      "DATABASE_UNAVAILABLE": "서비스를 잠시 사용할 수 없어요. 잠시 후 다시 시도해 주세요.",
+      "generic": "지급 주소를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.",
+      "TOO_MANY_REQUESTS": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요."
+    },
     "payoutPaid": "지급 완료",
     "payoutPartial": "일부 지급",
     "payoutPending": "지급 대기"
@@ -82,11 +109,10 @@
       "description": "Ninja Labs 계정을 관리하세요."
     },
     "heading": "계정 설정",
-    "intro": "프로필과 지갑을 확인하고 계정을 관리해요.",
+    "intro": "프로필을 확인하고 계정을 관리해요.",
     "signedOutMessage": "계정을 관리하려면 로그인해 주세요",
     "profileHeading": "프로필",
     "nicknameLabel": "닉네임",
-    "walletLabel": "지갑",
     "dangerEyebrow": "위험 구역",
     "deleteHeading": "계정 삭제",
     "deleteBody": "계정 삭제는 되돌릴 수 없어요. 같은 Google 계정으로 다시 가입하면 이전 활동과 연결되지 않은 새 계정이 만들어져요.",
@@ -118,14 +144,6 @@
     "tagsLabel": "분야 태그",
     "editProfile": "프로필 수정",
     "cancelEdit": "수정 취소",
-    "wallet": {
-      "heading": "지갑",
-      "connected": "연결됨",
-      "notConnected": "미연결",
-      "linkedNote": "연결된 지갑은 계정에 고정되어 여기서 바꾸거나 해제할 수 없어요. 바꿔야 한다면 운영진에게 문의해 주세요.",
-      "body": "가입할 때 ‘나중에 연결하기’를 선택했다면 여기서 연결할 수 있어요. 지갑을 연결하면 Ninja NFT가 발급돼요.",
-      "unavailable": "이 환경에서는 지갑 연결을 사용할 수 없어요."
-    },
     "avatar": {
       "label": "프로필 사진",
       "hint": "JPG, PNG, WebP 사진을 2MB까지 올릴 수 있어요. 헤더, 내 활동, 공개 프로필, 멤버 카드에 보여요.",

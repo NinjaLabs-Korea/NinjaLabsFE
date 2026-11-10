@@ -20,7 +20,21 @@ export type SubmissionStatus =
 /** Agent that made an application/submission on the owner's behalf; null when the owner acted directly. */
 export type AccountAgentRef = { id: string; name: string };
 
-export type AccountSubmission = {
+/**
+ * Payout address fields of `GET /submissions/me` (BE #69). All absent on an older BE (then the payout form is not offered).
+ * `payoutAddress` is the lowercase `inj1` form, `payoutAddressEvm` the same 20 bytes as EIP-55 `0x`; both null until entered.
+ */
+export type PayoutAddressFields = {
+  /** The submission the address belongs to (`PUT /submissions/:id/payout-address`). */
+  submissionId?: string;
+  payoutAddress?: string | null;
+  payoutAddressEvm?: string | null;
+  payoutAddressUpdatedAt?: string | null;
+  /** True while the BE still accepts a change: own APPROVED submission with no payout row yet. False = locked. */
+  payoutAddressEditable?: boolean;
+};
+
+export type AccountSubmission = PayoutAddressFields & {
   bountySlug: string;
   status: SubmissionStatus;
   agent: AccountAgentRef | null;
@@ -43,7 +57,7 @@ export type AccountSubmission = {
   description?: string;
 };
 
-export type AccountApplication = {
+export type AccountApplication = PayoutAddressFields & {
   id: string;
   /**
    * Where the row comes from. `application` = an apply-type bounty application (possibly joined with its submission).

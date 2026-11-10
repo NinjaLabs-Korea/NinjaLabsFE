@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApiAuthAdapter } from "@/lib/api/auth-adapter";
 import { AUTH_CHANNEL_NAME } from "@/lib/api/auth-events";
 import { createApiHttp, getAccessToken, REFRESH_COOKIE_HINT_KEY, resetSessionState } from "@/lib/api/http";
-import { parseMeResponse, readMe, type MeResponse } from "@/lib/api/me";
+import { parseMeResponse, readMe, toClientUser, type MeResponse } from "@/lib/api/me";
 import { createLoginChallenge } from "@/lib/api/oauth";
 import { FakeBroadcastChannel } from "./fake-broadcast-channel";
 
@@ -70,6 +70,24 @@ describe("parseMeResponse (codec for the carried user)", () => {
     expect(parseMeResponse({ ...FULL_ME, wallet: null, nft: null, tags: [] })).not.toBeNull();
   });
 
+  // BE #69+ (Google-only plan) stops sending wallet/nft: a missing key, null and an object are all the same valid `user`.
+  it.each<[string, Record<string, unknown>]>([
+    ["wallet and nft keys missing", (() => { const { wallet, nft, ...rest } = FULL_ME; void wallet; void nft; return rest; })()],
+    ["wallet missing, nft an object", { ...FULL_ME, wallet: undefined }],
+    ["nft missing, wallet an object", { ...FULL_ME, nft: undefined }],
+    ["wallet null and nft null", { ...FULL_ME, wallet: null, nft: null }],
+  ])("accepts %s", (_label, value) => {
+    expect(parseMeResponse(value)).not.toBeNull();
+  });
+
+  it("maps a user without wallet/nft to a client user with no wallet address and no NFT status", () => {
+    const { wallet, nft, ...rest } = FULL_ME;
+    void wallet; void nft;
+    const user = toClientUser(rest);
+    expect(user.nftStatus).toBeNull();
+    expect("walletAddress" in user).toBe(false);
+  });
+
   it.each<[string, unknown]>([
     ["undefined (older BE)", undefined],
     ["null", null],
@@ -88,7 +106,6 @@ describe("parseMeResponse (codec for the carried user)", () => {
     ["tags that are not strings", { ...FULL_ME, tags: [1] }],
     ["missing tags", { ...FULL_ME, tags: undefined }],
     ["a wallet without an address", { ...FULL_ME, wallet: { verifiedAt: null } }],
-    ["a missing wallet field", { ...FULL_ME, wallet: undefined }],
     ["an NFT without a status", { ...FULL_ME, nft: { tokenId: null } }],
     ["an NFT tokenId that is a number", { ...FULL_ME, nft: { status: "MINTED", tokenId: 7 } }],
   ])("rejects %s", (_label, value) => {

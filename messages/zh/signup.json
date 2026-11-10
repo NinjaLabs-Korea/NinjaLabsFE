@@ -8,57 +8,10 @@
     },
     "api": {
       "title": "开始使用",
-      "description": "只需一个 Google 账号，无需钱包。",
+      "description": "只需一个 Google 账号。",
       "disclosure": "首次登录会自动创建账号，已有账号则直接继续。我们只会获取你的 Google 邮箱，不会获取密码。"
     },
     "eyebrow": "登录"
-  },
-  "wallet": {
-    "linked": {
-      "badge": "钱包已连接",
-      "note": "此钱包已与您的账户绑定，无需再次验证。",
-      "continue": "继续"
-    },
-    "metadata": {
-      "title": "连接钱包 | Ninja Labs",
-      "descriptionApi": "连接并验证 Injective 钱包。",
-      "descriptionMock": "预览 Injective 钱包连接。"
-    },
-    "title": "连接你的钱包",
-    "introApi": "连接钱包，只需签名一次即可确认这是你的钱包，不收取任何费用。",
-    "introMock": "在此本地会话预览中连接 Injective EVM 钱包。",
-    "unavailableButton": "钱包不可用",
-    "unavailableNote": "在配置受支持的 Injective EVM 链之前，无法连接钱包。",
-    "badgeApi": "免 Gas 验证",
-    "badgeMock": "仅连接预览",
-    "noteApi": "确认完成后会发放 Ninja NFT。",
-    "noteMock": "模拟模式不会签名、关联账户或调用后端。",
-    "connectLater": "稍后连接",
-    "optionalNote": "钱包验证为可选项。你可以先继续，稍后再连接。",
-    "steps": {
-      "connection": {
-        "term": "连接",
-        "detail": "MetaMask 或其他 EVM 钱包"
-      },
-      "signing": {
-        "term": "签名",
-        "detail": "用钱包签名确认所有权"
-      },
-      "gas": {
-        "term": "Gas 费",
-        "detail": "无交易，无 Gas 费"
-      },
-      "accountLinking": {
-        "term": "账户关联",
-        "detail": "验证后的钱包将保存到你的账户"
-      },
-      "nft": {
-        "term": "NFT",
-        "detail": "Ninja NFT 铸造已加入队列"
-      }
-    },
-    "eyebrow": "钱包",
-    "moreDetails": "查看详情"
   },
   "profile": {
     "metadata": {
@@ -148,7 +101,7 @@
       }
     },
     "skip": "暂时跳过",
-    "savedNote": "注册已完成。钱包和个人资料可随时在账户设置中修改。",
+    "savedNote": "注册已完成。可在账户设置中编辑个人资料。",
     "completeError": {
       "message": "未能完成保存引导进度，请重试。",
       "retry": "重试"

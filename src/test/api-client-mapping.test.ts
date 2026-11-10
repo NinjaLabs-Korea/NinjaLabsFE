@@ -337,17 +337,13 @@ describe("write requests: method, path encoding and body", () => {
     ]);
   });
 
-  it("omits an empty agent description and an absent wallet public key instead of sending empty values", async () => {
+  it("omits an empty agent description instead of sending an empty value", async () => {
     const { http, fetchJson } = createHttp();
     const client = createApiApiClient(http);
     await client.registerAgent({ name: "Bot", description: "", walletAddress: "0xabc" });
     await client.registerAgent({ name: "Bot", description: "Does things", walletAddress: "0xabc" });
-    await client.verifyWallet("0xabc", "0xsig");
-    await client.verifyWallet("0xabc", "0xsig", "0xpub");
     expect(call(fetchJson, 0)).toEqual(["/agents", { method: "POST", body: { name: "Bot", walletAddress: "0xabc" } }]);
     expect(call(fetchJson, 1)).toEqual(["/agents", { method: "POST", body: { name: "Bot", description: "Does things", walletAddress: "0xabc" } }]);
-    expect(call(fetchJson, 2)).toEqual(["/wallets/verify", { method: "POST", body: { address: "0xabc", signature: "0xsig" } }]);
-    expect(call(fetchJson, 3)).toEqual(["/wallets/verify", { method: "POST", body: { address: "0xabc", signature: "0xsig", publicKey: "0xpub" } }]);
   });
 
   it("encodes the nickname query and posts the onboarding steps", async () => {
@@ -356,11 +352,9 @@ describe("write requests: method, path encoding and body", () => {
     await expect(client.checkNickname("닌자&x=1")).resolves.toEqual({ available: true });
     await expect(client.completeProfile({ nickname: "ninja", bio: "b", tags: ["DEV"] })).resolves.toBeUndefined();
     await expect(client.completeOnboarding()).resolves.toBeUndefined();
-    await client.createWalletChallenge("0xabc");
     expect(fetchJson.mock.calls.slice(1)).toEqual([
       ["/users/me/profile", { method: "POST", body: { nickname: "ninja", bio: "b", tags: ["DEV"] } }],
       ["/users/me/complete-onboarding", { method: "POST" }],
-      ["/wallets/challenge", { method: "POST", body: { address: "0xabc" } }],
     ]);
   });
 

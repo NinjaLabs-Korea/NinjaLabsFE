@@ -59,7 +59,7 @@ describe("loading and resolved branches share the min-height wrapper", () => {
   });
 
   it("SignupGate: the placeholder reserves the step's height and a finished user leaves from it without seeing the content", () => {
-    for (const step of [1, 2, 3, 4] as const) {
+    for (const step of [1, 2, 3] as const) {
       state.auth = loading;
       const view = renderWithIntl(<SignupGate step={step}><p>step content</p></SignupGate>);
       expect(screen.queryByText("step content")).toBeNull();
@@ -71,7 +71,7 @@ describe("loading and resolved branches share the min-height wrapper", () => {
     expect(withKey.getByTestId("signup-gate-placeholder").className).not.toBe(SIGNUP_PLACEHOLDER_HEIGHT[1]);
     withKey.unmount();
     state.auth = signedInWith({ onboardingCompleted: true });
-    const finished = renderWithIntl(<SignupGate step={4}><p>step content</p></SignupGate>);
+    const finished = renderWithIntl(<SignupGate step={3}><p>step content</p></SignupGate>);
     expect(screen.queryByText("step content")).toBeNull();
     expect(finished.getByTestId("signup-gate-placeholder")).toBeTruthy();
   });
