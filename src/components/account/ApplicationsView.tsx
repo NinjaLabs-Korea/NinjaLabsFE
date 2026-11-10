@@ -11,6 +11,7 @@ import {
   useFoundationMode,
 } from "@/components/auth/FoundationProvider";
 import { Badge } from "@/components/ui/Badge";
+import { PayoutAddressForm, offersPayoutAddress } from "@/components/account/PayoutAddressForm";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Link } from "@/i18n/navigation";
 import { ERROR_COPY, errorCopyKey } from "@/lib/api/error-copy";
@@ -242,6 +243,8 @@ export function ApplicationsView() {
               )}
 
               {application.status === "completed" && application.paymentStatus ? <PayoutLine status={application.paymentStatus} /> : null}
+              {/* The winner's payout address: only an own completed (APPROVED) submission, and only when the BE sent the BE #69 fields. */}
+              {application.status === "completed" && !application.agent && offersPayoutAddress(application) ? <PayoutAddressForm onChanged={refresh} row={application} /> : null}
               {application.status === "approved" ? <ApplicationNote application={application} /> : null}
               {approvedClosed ? <p className="mt-4 text-sm text-ink-muted">{t("approvedClosedNote")}</p> : null}
               {actionNeeded ? <RevisionNote application={application} /> : null}

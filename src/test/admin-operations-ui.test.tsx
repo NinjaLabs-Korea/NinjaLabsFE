@@ -17,8 +17,8 @@ function operations(overrides: Partial<AdminOperations> = {}): AdminOperations {
     lifecycle: { blockers: { COMPLETED: [{ code: "UNRESOLVED_SUBMISSIONS", count: 1 }, { code: "UNPAID_WINNERS" }], OPEN: [] }, allowedTransitions: ["COMPLETED", "OPEN"] },
     applications: [{ id: "a1", status: "PENDING", kind: "USER", userId: "u1", nickname: "mina", agentId: null, agentName: null, message: "pick me", portfolioUrl: null, reviewNote: null, appliedAt: "2026-10-01T00:00:00Z", reviewedAt: null }],
     submissions: [
-      { id: "s1", status: "RESUBMITTED", kind: "USER", userId: "u2", nickname: "juho", agentId: null, agentName: null, currentRevisionNo: 3, submittedAt: "2026-10-02T00:00:00Z", reviewedAt: null, recipientWalletAddress: "inj1juho", reviewComment: null, revisions: [{ revisionNo: 3, submissionUrl: "https://x.test/v3", description: "third", repositoryUrl: null, commitSha: null, createdAt: "2026-10-03T00:00:00Z" }], reviews: [] },
-      { id: "s2", status: "APPROVED", kind: "AGENT", userId: "u3", nickname: "ara", agentId: "ag", agentName: "alpha-bot", currentRevisionNo: 1, submittedAt: "2026-10-02T00:00:00Z", reviewedAt: null, recipientWalletAddress: "inj1ara", reviewComment: "ok", revisions: [], reviews: [] },
+      { id: "s1", status: "RESUBMITTED", kind: "USER", userId: "u2", nickname: "juho", agentId: null, agentName: null, currentRevisionNo: 3, submittedAt: "2026-10-02T00:00:00Z", reviewedAt: null, payoutAddress: "inj1juho", payoutAddressEvm: null, email: null, reviewComment: null, revisions: [{ revisionNo: 3, submissionUrl: "https://x.test/v3", description: "third", repositoryUrl: null, commitSha: null, createdAt: "2026-10-03T00:00:00Z" }], reviews: [] },
+      { id: "s2", status: "APPROVED", kind: "AGENT", userId: "u3", nickname: "ara", agentId: "ag", agentName: "alpha-bot", currentRevisionNo: 1, submittedAt: "2026-10-02T00:00:00Z", reviewedAt: null, payoutAddress: "inj1ara", payoutAddressEvm: null, email: null, reviewComment: "ok", revisions: [], reviews: [] },
     ],
     rewards: [{ id: "r1", status: "FUNDED", symbol: "INJ", amount: "5000000000000000000", depositedAmount: "5000000000000000000", depositedAt: null, depositTxHash: null, custodyAddress: "inj1ms", cap: "5000000000000000000", allocated: "2000000000000000000" }],
     payouts: [
@@ -309,41 +309,94 @@ describe("payout request after a re-read", () => {
   });
 });
 
-describe("payout request without a recipient wallet", () => {
-  it("explains the missing wallet instead of sending a request the BE answers with 404", async () => {
+describe("payout request without a payout address", () => {
+  it("explains the missing payout address instead of sending a request the BE answers with 409 PAYOUT_ADDRESS_NOT_SET", async () => {
     const base = operations();
     adminApi.getAdminOperations.mockImplementation(async () => operations({
       payouts: [], rewards: [{ ...base.rewards[0], allocated: "0" }],
-      submissions: [base.submissions[0], { ...base.submissions[1], recipientWalletAddress: null }],
+      submissions: [base.submissions[0], { ...base.submissions[1], payoutAddress: null, payoutAddressEvm: null, email: null }],
     }));
     await renderOps();
     fireEvent.click(screen.getByRole("button", { name: "Request payout" }));
     fireEvent.submit(within(dialog()).getByRole("button", { name: "Request payout" }).closest("form")!);
-    expect(within(dialog()).getByRole("alert").textContent).toContain("No linked wallet");
+    expect(within(dialog()).getByRole("alert").textContent).toContain("No payout address");
     expect(adminApi.requestAdminPayout).not.toHaveBeenCalled();
   });
 });
 
-describe("payout wallet cell in the submissions table", () => {
-  const noWallet = (status: string) => ({ ...operations().submissions[0], id: "sw", status, recipientWalletAddress: null, nickname: "nowallet" });
-  const walletCell = (name: string) => within(screen.getByText(name, { selector: "td *" }).closest("tr") as HTMLElement).getAllByRole("cell")[3];
+describe("payout address cell in the submissions table", () => {
+  const noAddress = (status: string) => ({ ...operations().submissions[0], id: "sw", status, payoutAddress: null, payoutAddressEvm: null, email: null, nickname: "noaddress" });
+  const addressCell = (name: string) => within(screen.getByText(name, { selector: "td *" }).closest("tr") as HTMLElement).getAllByRole("cell")[3];
 
-  it("warns about a missing wallet only on an approved submission of a bounty that pays", async () => {
-    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [noWallet("APPROVED")] }));
+  it("warns about a missing payout address only on an approved submission of a bounty that pays", async () => {
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [noAddress("APPROVED")] }));
     await renderOps();
-    expect(walletCell("nowallet").textContent).toContain("No linked wallet");
+    expect(addressCell("noaddress").textContent).toContain("No payout address");
   });
 
-  it.each(["SUBMITTED", "REJECTED"])("shows a dash for a %s submission without a wallet", async (status) => {
-    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [noWallet(status)] }));
+  it.each(["SUBMITTED", "REJECTED"])("shows a dash for a %s submission without a payout address", async (status) => {
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [noAddress(status)] }));
     await renderOps();
-    expect(walletCell("nowallet").textContent).toBe("–");
+    expect(addressCell("noaddress").textContent).toBe("–");
   });
 
   it("shows a dash on a bounty with no reward even when approved", async () => {
-    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [noWallet("APPROVED")], rewards: [] }));
+    adminApi.getAdminOperations.mockImplementation(async () => operations({ submissions: [noAddress("APPROVED")], rewards: [] }));
     await renderOps();
-    expect(walletCell("nowallet").textContent).toBe("–");
+    expect(addressCell("noaddress").textContent).toBe("–");
+  });
+});
+
+describe("winner email and payout address in the submissions table", () => {
+  const withWinner = (overrides: object = {}, reward: object = {}) => operations({
+    submissions: [{ ...operations().submissions[1], kind: "USER" as const, agentId: null, agentName: null, nickname: "ara", email: "ara@example.test", payoutAddress: "inj1" + "q".repeat(38), payoutAddressEvm: "0x" + "ab".repeat(20), ...overrides }],
+    rewards: [{ ...operations().rewards[0], ...reward }],
+    payouts: [],
+  });
+  const rowOf = (name: string) => within(screen.getByText(name, { selector: "td *" }).closest("tr") as HTMLElement);
+
+  beforeEach(() => {
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: vi.fn(async () => undefined) } });
+  });
+
+  it("shows the winner's email with a copy button that puts it on the clipboard", async () => {
+    adminApi.getAdminOperations.mockImplementation(async () => withWinner());
+    await renderOps();
+    expect(rowOf("ara").getByText("ara@example.test")).toBeTruthy();
+    fireEvent.click(rowOf("ara").getByRole("button", { name: "Copy email of ara" }));
+    await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith("ara@example.test"));
+    await waitFor(() => expect(rowOf("ara").getAllByText("Copied").length).toBeGreaterThan(0));
+  });
+
+  it("shows no email line when the BE sends none (not approved, or withdrawn)", async () => {
+    adminApi.getAdminOperations.mockImplementation(async () => withWinner({ email: null }));
+    await renderOps();
+    expect(rowOf("ara").queryByRole("button", { name: /Copy email/ })).toBeNull();
+  });
+
+  it("emphasizes the inj1 form for an INJ reward and the 0x form for an ERC20 reward, and copies that one", async () => {
+    adminApi.getAdminOperations.mockImplementation(async () => withWinner());
+    await renderOps();
+    const inj = rowOf("ara").getByTitle(/^inj1 /);
+    expect(inj.className).toContain("font-semibold");
+    fireEvent.click(rowOf("ara").getByRole("button", { name: "Copy payout address of ara" }));
+    await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith("inj1" + "q".repeat(38)));
+  });
+
+  it("emphasizes and copies the 0x form when the reward is an ERC20 token", async () => {
+    adminApi.getAdminOperations.mockImplementation(async () => withWinner({}, { symbol: "USDC", tokenType: "ERC20" }));
+    await renderOps();
+    const evm = rowOf("ara").getByTitle(/^0x /);
+    expect(evm.className).toContain("font-semibold");
+    fireEvent.click(rowOf("ara").getByRole("button", { name: "Copy payout address of ara" }));
+    await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith("0x" + "ab".repeat(20)));
+  });
+
+  it("the payout request dialog shows the 0x form for an ERC20 reward", async () => {
+    adminApi.getAdminOperations.mockImplementation(async () => withWinner({}, { symbol: "USDC", tokenType: "ERC20" }));
+    await renderOps();
+    fireEvent.click(screen.getByRole("button", { name: "Request payout" }));
+    expect(within(dialog()).getByText("0x" + "ab".repeat(20))).toBeTruthy();
   });
 });
 

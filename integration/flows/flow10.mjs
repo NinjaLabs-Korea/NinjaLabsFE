@@ -1,5 +1,5 @@
 // Flow 10: payout policy + re-apply.
-// A) payout policy through the BE API with two admins: DELETE of a funded bounty -> 409 BOUNTY_HAS_OPEN_FUNDS; admin 1
+// A) payout policy through the BE API with two admins (the winner enters a payout address first): DELETE of a funded bounty -> 409 BOUNTY_HAS_OPEN_FUNDS; admin 1
 //    requests a payout and cannot approve it (403 PAYOUT_SELF_APPROVAL); admin 2 approves (APPROVED, approved_by) ; DELETE
 //    still 409 while the payout is open. DB rows asserted.
 // B) re-apply: builder applies from the FE bounty page, withdraws (API - the FE has no withdraw control), re-applies from the
@@ -16,9 +16,7 @@ const body = (t) => { try { return JSON.parse(t); } catch { return t; } };
   const [d1, d1b] = await apiAs(A1, 'DELETE', `/admin/bounties/${seed.B1}`);
   check('A: DELETE funded bounty -> 409 BOUNTY_HAS_OPEN_FUNDS', d1 === 409 && body(d1b).message === 'BOUNTY_HAS_OPEN_FUNDS', [d1, d1b]);
   check('DB: bounty not deleted', sql(`select (deleted_at is null)::text from bounty where id='${seed.B1}'`) === 'true');
-  // winner needs a primary wallet and an APPROVED submission
-  if (sql(`select count(*) from wallet where user_id='${ids.BUILDER}' and disconnected_at is null`) === '0')
-    sql(`insert into wallet (user_id, chain, address, is_primary, verified_at) values ('${ids.BUILDER}','INJECTIVE','inj1builderwallet000000000000000000000000000',true,now())`);
+  // winner needs an APPROVED submission and a payout address they entered themselves (BE #69, replaces the wallet link)
   const subOf = () => sql(`select id from bounty_submission where bounty_id='${seed.B1}' and submitter_user_id='${ids.BUILDER}'`);
   let SUB = subOf();
   // Flow 4 makes this submission from the FE; in CI flow 10 runs in another matrix job without it, so seed it through the API.
@@ -36,9 +34,23 @@ const body = (t) => { try { return JSON.parse(t); } catch { return t; } };
   let [rv, rvb] = await apiAs(A1, 'POST', `/admin/submissions/${SUB}/review`, { decision: 'APPROVE' });
   if (rv >= 400) { await apiAs(A1, 'POST', `/admin/submissions/${SUB}/review`, { decision: 'START_REVIEW' }); [rv, rvb] = await apiAs(A1, 'POST', `/admin/submissions/${SUB}/review`, { decision: 'APPROVE' }); }
   check('A: submission approved', rv < 300 && sql(`select status from bounty_submission where id='${SUB}'`) === 'APPROVED', [rv, rvb]);
+  // Until the winner enters an address the payout request is refused (only checked on a fresh row: a re-run may already have one).
+  if (sql(`select payout_address is null from bounty_submission where id='${SUB}'`) === 't') {
+    const [nq, nqb] = await apiAs(A1, 'POST', '/admin/payouts', { rewardId: RW, submissionId: SUB, amount: '100000000000000000000' });
+    check('A: payout request before the winner entered an address -> 409 PAYOUT_ADDRESS_NOT_SET', nq === 409 && body(nqb).message === 'PAYOUT_ADDRESS_NOT_SET', [nq, nqb]);
+  }
+  // The winner enters a 0x address (lowercase, no EIP-55 checksum needed); the BE stores the inj1 form of the same 20 bytes.
+  const EVM = '0x00000000000000000000000000000000000000ab';
+  const INJ = 'inj1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq9tnlugte';
+  const [pa, pab] = await apiAs(BT, 'PUT', `/submissions/${SUB}/payout-address`, { address: EVM });
+  check('A: winner PUT /submissions/:id/payout-address -> 200 with both forms', pa === 200 && body(pab).payoutAddress === INJ && body(pab).payoutAddressEvm.toLowerCase() === EVM, [pa, pab]);
+  check('DB: bounty_submission.payout_address is the inj1 form', sql(`select payout_address from bounty_submission where id='${SUB}'`) === INJ);
   const [rq, rqb] = await apiAs(A1, 'POST', '/admin/payouts', { rewardId: RW, submissionId: SUB, amount: '100000000000000000000' });
   const PO = body(rqb).id;
   check('A: admin 1 requests the payout -> 201', rq === 201 && !!PO, [rq, rqb]);
+  check('DB: payout.recipient_address is the address snapshot', sql(`select recipient_address from payout where id='${PO}'`) === INJ);
+  const [lk, lkb] = await apiAs(BT, 'PUT', `/submissions/${SUB}/payout-address`, { address: EVM });
+  check('A: changing the address after the payout was requested -> 409 PAYOUT_ADDRESS_LOCKED', lk === 409 && body(lkb).message === 'PAYOUT_ADDRESS_LOCKED', [lk, lkb]);
   const [s1, s1b] = await apiAs(A1, 'POST', `/admin/payouts/${PO}/approve`);
   check('A: admin 1 approving own request -> 403 PAYOUT_SELF_APPROVAL', s1 === 403 && body(s1b).message === 'PAYOUT_SELF_APPROVAL', [s1, s1b]);
   check('DB: payout still REQUESTED, approved_by null', sql(`select status||' '||coalesce(approved_by::text,'null') from payout where id='${PO}'`) === 'REQUESTED null');

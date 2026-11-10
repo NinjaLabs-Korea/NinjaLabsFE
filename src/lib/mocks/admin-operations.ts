@@ -44,7 +44,7 @@ function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string)
   const amount = bounty.reward.amount > 0 ? rewardToBaseUnits(bounty.reward) : null;
   const funded = status !== "DRAFT" && status !== "FUNDING_PENDING";
   const rewards: AdminOperations["rewards"] = amount ? [{
-    id: nextId("preview-reward"), status: funded ? "FUNDED" : "DEPOSIT_PENDING", symbol, amount,
+    id: nextId("preview-reward"), status: funded ? "FUNDED" : "DEPOSIT_PENDING", symbol, tokenType: symbol === "USDC" ? "ERC20" : "NATIVE", amount,
     depositedAmount: funded ? amount : null, depositedAt: funded ? iso(-10) : null,
     depositTxHash: funded ? `0x${"ab".repeat(32)}` : null, custodyAddress: "inj1previewmultisig", cap: funded ? amount : null, allocated: "0",
   }] : [];
@@ -56,7 +56,7 @@ function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string)
   const submissions: AdminOperations["submissions"] = live ? [
     {
       id: nextId("preview-sub"), status: "RESUBMITTED", kind: "USER", userId: "juho", nickname: "juho", agentId: null, agentName: null,
-      currentRevisionNo: 2, submittedAt: iso(-4), reviewedAt: null, recipientWalletAddress: "inj1...7n3q", reviewComment: null,
+      currentRevisionNo: 2, submittedAt: iso(-4), reviewedAt: null, payoutAddress: "inj1...7n3q", payoutAddressEvm: "0x0000...7n3q", email: null, reviewComment: null,
       revisions: [
         { revisionNo: 2, submissionUrl: "https://example.test/juho/v2", description: "Addressed the copy feedback.", repositoryUrl: "https://github.com/example/juho", commitSha: "c0ffee2", createdAt: iso(-1) },
         { revisionNo: 1, submissionUrl: "https://example.test/juho/v1", description: "First cut.", repositoryUrl: "https://github.com/example/juho", commitSha: "c0ffee1", createdAt: iso(-4) },
@@ -65,7 +65,7 @@ function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string)
     },
     {
       id: nextId("preview-sub"), status: "APPROVED", kind: "AGENT", userId: "ara", nickname: "ara", agentId: "preview-agent-alpha", agentName: "alpha-bot",
-      currentRevisionNo: 1, submittedAt: iso(-5), reviewedAt: iso(-2), recipientWalletAddress: "inj1...8c1v", reviewComment: "Great work",
+      currentRevisionNo: 1, submittedAt: iso(-5), reviewedAt: iso(-2), payoutAddress: "inj1...8c1v", payoutAddressEvm: "0x0000...8c1v", email: "ara@example.test", reviewComment: "Great work",
       revisions: [{ revisionNo: 1, submissionUrl: "https://example.test/alpha", description: "Automated benchmark run.", repositoryUrl: null, commitSha: null, createdAt: iso(-5) }],
       reviews: [{ revisionNo: 1, decision: "APPROVE", comment: "Great work", createdAt: iso(-2) }],
     },
@@ -261,13 +261,15 @@ export function createMockOperationsApi(options: {
       const { ops, row: reward } = find((o) => o.rewards, rewardId, "REWARD_NOT_FOUND");
       if (!isBountyInProgress(ops.bounty.status)) fail(400, "BOUNTY_REVIEW_CLOSED");
       if (!isRewardFunded(reward)) fail(400, "REWARD_NOT_FUNDED");
-      const submission = ops.submissions.find((s) => s.id === submissionId && s.status === "APPROVED" && s.recipientWalletAddress);
-      if (!submission) return fail(404, "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND");
+      const submission = ops.submissions.find((s) => s.id === submissionId && s.status === "APPROVED");
+      if (!submission) return fail(404, "APPROVED_SUBMISSION_NOT_FOUND");
       if (ops.payouts.some((p) => p.rewardId === rewardId && p.submissionId === submissionId)) fail(409, "PAYOUT_ALREADY_REQUESTED");
+      const payoutAddress = submission.payoutAddress;
+      if (!payoutAddress) return fail(409, "PAYOUT_ADDRESS_NOT_SET");
       if (allocated(ops, rewardId) + BigInt(amount) > BigInt(reward.cap ?? "0")) fail(400, "PAYOUT_EXCEEDS_AVAILABLE_REWARD");
       ops.payouts.unshift({
         id: options.nextId("preview-payout"), rewardId, submissionId, status: "REQUESTED", amount, symbol: reward.symbol, txHash: null,
-        recipientAddress: submission.recipientWalletAddress!, requestedBy: MOCK_ADMIN_ID, requestedByNickname: "you", requestedAt: new Date().toISOString(),
+        recipientAddress: payoutAddress, recipientAddressEvm: submission.payoutAddressEvm, requestedBy: MOCK_ADMIN_ID, requestedByNickname: "you", requestedAt: new Date().toISOString(),
         approvedByNickname: null, approvedAt: null, paidAt: null, requestedByMe: true,
       });
       reward.allocated = allocated(ops, rewardId).toString();

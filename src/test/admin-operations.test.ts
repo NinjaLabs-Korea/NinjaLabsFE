@@ -32,7 +32,7 @@ const operationsBody = {
   applications: [{ id: "a1", status: "APPROVED", message: "hi", portfolio_url: null, review_note: "welcome", applied_at: "2026-10-01T00:00:00Z", reviewed_at: "2026-10-02T00:00:00Z", actor_name: "juho", actor_kind: "USER", user_id: "u1", nickname: "juho", agent_id: null, agent_name: null }],
   submissions: [{
     id: "s1", status: "APPROVED", submission_url: "https://x.test/v2", description: "v2", repository_url: null, commit_sha: null, current_revision_no: 2, submitted_at: "2026-10-03T00:00:00Z",
-    last_resubmitted_at: null, reviewed_at: null, actor_name: "bot", actor_kind: "AGENT", user_id: "u2", nickname: "ara", agent_id: "ag1", agent_name: "bot", recipient_wallet_address: "inj1abc", review_comment: "ok",
+    last_resubmitted_at: null, reviewed_at: null, actor_name: "bot", actor_kind: "AGENT", user_id: "u2", nickname: "ara", agent_id: "ag1", agent_name: "bot", payout_address: "inj1abc", payout_address_evm: "0xabc", email: "ara@example.test", review_comment: "ok",
     revisions: [{ revision_no: 2, submission_url: "https://x.test/v2", description: "v2", repository_url: null, commit_sha: "c2", created_at: "2026-10-04T00:00:00Z" }],
     reviews: [{ revision_no: 2, decision: "APPROVE", comment: "ok", created_at: "2026-10-05T00:00:00Z" }],
   }],
@@ -54,10 +54,30 @@ describe("operations API mapping (lib/api/admin.ts)", () => {
     expect(ops.bounty).toEqual({ id: "b1", title: "Widget", status: "IN_REVIEW", submissionDeadline: "2026-11-01T00:00:00.000Z", maxWinners: 2, applicationRequired: true });
     expect(ops.lifecycle).toEqual({ blockers: operationsBody.lifecycle.blockerDetails, allowedTransitions: ["COMPLETED", "OPEN"] });
     expect(ops.applications[0]).toMatchObject({ id: "a1", kind: "USER", userId: "u1", nickname: "juho", reviewNote: "welcome" });
-    expect(ops.submissions[0]).toMatchObject({ id: "s1", kind: "AGENT", agentName: "bot", nickname: "ara", currentRevisionNo: 2, recipientWalletAddress: "inj1abc", revisions: [{ revisionNo: 2, commitSha: "c2" }], reviews: [{ revisionNo: 2, decision: "APPROVE" }] });
+    expect(ops.submissions[0]).toMatchObject({ id: "s1", kind: "AGENT", agentName: "bot", nickname: "ara", currentRevisionNo: 2, payoutAddress: "inj1abc", payoutAddressEvm: "0xabc", email: "ara@example.test", revisions: [{ revisionNo: 2, commitSha: "c2" }], reviews: [{ revisionNo: 2, decision: "APPROVE" }] });
     expect(ops.rewards[0]).toMatchObject({ id: "r1", symbol: "INJ", amount: "5000000000000000000", cap: "5000000000000000000", allocated: "2000000000000000000", depositTxHash: `0x${HASH}` });
     expect(ops.payouts[0]).toMatchObject({ id: "p1", rewardId: "r1", submissionId: "s1", requestedByMe: true, requestedByNickname: "ops" });
     expect(ops.policy).toEqual({ payoutSelfApprovalAllowed: false });
+  });
+
+  it("reads the BE #69 fields: token type, payout address in both forms, winner email, payout recipient in both forms", () => {
+    const body = { ...operationsBody, payouts: [{ ...operationsBody.payouts[0], recipient_address_evm: "0xabc" }] };
+    const ops = toAdminOperations(body as never);
+    expect(ops.rewards[0].tokenType).toBe("NATIVE");
+    expect(ops.payouts[0]).toMatchObject({ recipientAddress: "inj1abc", recipientAddressEvm: "0xabc" });
+  });
+
+  it("an older BE falls back to recipient_wallet_address for the address and sends no email / evm form", () => {
+    const { payout_address, payout_address_evm, email, ...legacy } = operationsBody.submissions[0];
+    void payout_address; void payout_address_evm; void email;
+    const ops = toAdminOperations({ ...operationsBody, submissions: [{ ...legacy, recipient_wallet_address: "inj1legacy" }] } as never);
+    expect(ops.submissions[0]).toMatchObject({ payoutAddress: "inj1legacy", payoutAddressEvm: null, email: null });
+    expect(ops.payouts[0].recipientAddressEvm).toBeNull();
+  });
+
+  it("a winner without an address maps to null (payout request answers PAYOUT_ADDRESS_NOT_SET)", () => {
+    const ops = toAdminOperations({ ...operationsBody, submissions: [{ ...operationsBody.submissions[0], payout_address: null, payout_address_evm: null, email: null, recipient_wallet_address: null }] } as never);
+    expect(ops.submissions[0]).toMatchObject({ payoutAddress: null, payoutAddressEvm: null, email: null });
   });
 
   it("an older BE without blockerDetails/allowedTransitions/policy degrades to no buttons and the two-person rule", () => {

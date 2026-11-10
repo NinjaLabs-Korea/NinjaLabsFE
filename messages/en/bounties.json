@@ -194,6 +194,8 @@
     "browseOther": "Browse other bounties",
     "submissionApprovedHeading": "Submission approved",
     "submissionApprovedBody": "The sponsor approved your work for this bounty.",
+    "payoutAddressBody": "Enter a payout address to receive your reward.",
+    "payoutAddressCta": "Enter payout address",
     "submissionRejectedHeading": "Submission not accepted",
     "submissionRejectedBody": "The sponsor reviewed your work and did not accept it. This submission is final.",
     "submissionForfeitedHeading": "Reward not paid",

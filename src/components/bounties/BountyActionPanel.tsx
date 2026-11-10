@@ -263,7 +263,17 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       return <StatusPanel title={t("underReviewHeading")} body={t("underReviewBody")} feedback={feedback?.kind === "success" ? feedback.text : null} headingRef={headingRef} link={{ href: "/applications", label: t("viewApplications") }} />;
     case "submissionApproved": {
       const payout = view.payout ? payoutBadge(view.payout, { showPaid: true }) : null;
-      return <StatusPanel title={t("submissionApprovedHeading")} body={t("submissionApprovedBody")} tone="success" badge={payout ? { variant: payout.variant, label: t(payout.key) } : null} />;
+      // The reward goes to the address the winner enters on /applications (BE #69); once everything is paid there is nothing left to enter.
+      const needsAddress = view.payout !== "PAID";
+      return (
+        <StatusPanel
+          title={t("submissionApprovedHeading")}
+          body={t("submissionApprovedBody")}
+          tone="success"
+          badge={payout ? { variant: payout.variant, label: t(payout.key) } : null}
+          {...(needsAddress ? { note: t("payoutAddressBody"), link: { href: "/applications", label: t("payoutAddressCta") } } : {})}
+        />
+      );
     }
     case "submissionRejected": {
       const link = { href: "/bounties", label: t("browseOther") };

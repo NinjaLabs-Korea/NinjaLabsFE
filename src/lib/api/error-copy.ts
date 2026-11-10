@@ -120,6 +120,15 @@ export const ERROR_COPY = {
     codes: ["APPLICATION_NOT_FOUND_OR_NOT_PENDING", "TOO_MANY_REQUESTS"],
     fallback: "generic",
   },
+  /**
+   * 내 지원 현황 → 지급 주소 입력·수정 (`PUT /submissions/:id/payout-address`, BE #69) - `account/PayoutAddressForm.tsx`.
+   * 404/409 세 코드는 카드가 낡았다는 뜻이라 목록도 새로고침한다. 형식은 FE가 먼저 같은 모양으로 막지만 체크섬·0 주소는 BE만 안다.
+   */
+  payoutAddress: {
+    messages: "account.applications.payoutErrors",
+    codes: ["INVALID_INJECTIVE_ADDRESS", "PAYOUT_ADDRESS_LOCKED", "SUBMISSION_NOT_APPROVED", "SUBMISSION_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS"],
+    fallback: "generic",
+  },
   /** 내 에이전트 → API 키 회전 - `account/AgentsView.tsx` */
   agentRotate: {
     messages: "agents.list.rotateErrors",
@@ -234,8 +243,11 @@ export const ERROR_COPY = {
       "INVALID_TX_HASH",
       "INVALID_TOKEN_AMOUNT",
       "TX_HASH_ALREADY_USED",
+      // 레거시: BE #69가 지웠지만 옛 BE 응답이 올 수 있어 문구를 남긴다 (FE-5에서 제거)
       "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND",
       "APPROVED_SUBMISSION_NOT_FOUND",
+      // 409: 수상자가 아직 지급 주소를 입력하지 않았다
+      "PAYOUT_ADDRESS_NOT_SET",
       "PAYOUT_ALREADY_REQUESTED",
       "PAYOUT_EXCEEDS_AVAILABLE_REWARD",
       "PAYOUT_NOT_FOUND_OR_WRONG_STATUS",
