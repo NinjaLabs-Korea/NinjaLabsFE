@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Real-browser integration run: builds the BE (from $NINJA_BE_DIR) and this FE checkout into a temp dir, starts a private
-// Postgres, BE, FE, two TLS proxies and headless Chrome on configurable ports, seeds, runs flows 1-15 in order, and always
+// Postgres, BE, FE, two TLS proxies and headless Chrome on configurable ports, seeds, runs the flows (1-4, 6-17; flow 5, agents, is gone) in order, and always
 // tears everything down. Never writes into either checkout (FE logs go to integration/.logs, which is git-ignored).
 //
 //   NINJA_BE_DIR=/path/to/NinjaLabsBE npm run test:integration            # all flows
@@ -21,7 +21,7 @@ import { alive, reapStale, reapDir, writePids, TMP_PREFIX } from './lib/reaper.m
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FE_DIR = path.resolve(HERE, '..');
 // Flow 10 runs last: it leaves an open payout on the funded bounty B1.
-const ALL_FLOWS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17'];
+const ALL_FLOWS = ['1', '2', '3', '4', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17'];
 const FLOW_TIMEOUT_MS = 6 * 60_000;
 /** Flows 12 (recruitment lifecycle across four sessions) and 13 (every community screen at three widths, screenshots included) get a longer budget. */
 const flowTimeoutMs = (script) => (/flow17\.mjs$/.test(script) ? 40 * 60_000 : /flow14\.mjs$/.test(script) ? 75 * 60_000 : /flow13\.mjs$/.test(script) ? 20 * 60_000 : /flow12\.mjs$/.test(script) ? 12 * 60_000 : FLOW_TIMEOUT_MS);
@@ -228,7 +228,6 @@ async function main() {
   };
   const feEnv = {
     ...baseEnv(), NINJA_DEPLOYMENT_TIER: 'test', NINJA_RUNTIME_MODE: 'api', NINJA_APP_ORIGIN: FE_ORIGIN, NINJA_API_BASE_URL: API_ORIGIN,
-    NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: '1439', NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: 'https://k8s.testnet.json-rpc.injective.network/',
     NODE_TLS_REJECT_UNAUTHORIZED: '0', NODE_EXTRA_CA_CERTS: path.join(tls, 'cert.pem'), NEXT_TELEMETRY_DISABLED: '1',
   };
 
@@ -281,7 +280,7 @@ async function main() {
     jwtSecret, logDir: LOGS, ...seeded,
   }, null, 2));
 
-  // Flows run strictly in order: 7 and 8 rely on 4's application/submission and 5's agents.
+  // Flows run strictly in order: 7 and 8 rely on 4's application/submission.
   const results = [];
   for (const f of flows) {
     const file = path.join(LOGS, `flow${f}.log`);
@@ -318,7 +317,6 @@ function dumpDb(sql) {
     `select 'bounty', title, category, status from bounty order by created_at`,
     `select 'notice', title, status, published_at is not null from notice order by created_at`,
     `select 'highlight', title, coalesce(link_url,'NULL') from platform_highlight order by created_at`,
-    `select 'agent', name, status from agent order by created_at`,
     `select 'application', b.title, a.status from bounty_application a join bounty b on b.id=a.bounty_id order by b.created_at, a.status`,
     `select 'sessions', count(*), count(*) filter (where revoked_at is null) from auth_session`,
   ];

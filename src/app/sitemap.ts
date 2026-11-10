@@ -47,7 +47,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       };
     }),
     { url: url("/signup"), changeFrequency: "monthly", priority: 0.5 },
-    { url: url("/agents/register"), changeFrequency: "monthly", priority: 0.5 },
     { url: url("/privacy"), changeFrequency: "yearly", priority: 0.3 },
     { url: url("/terms"), changeFrequency: "yearly", priority: 0.3 },
   ];

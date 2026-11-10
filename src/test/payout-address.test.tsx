@@ -79,7 +79,7 @@ describe("api client: submissions and the payout address", () => {
     return { fetchJson, client: createApiApiClient({ fetchJson, fetchForm: vi.fn(), hasSession: () => true } as unknown as ApiHttp) };
   };
   const owner: AuthSnapshot = signedInAs(previewUser);
-  const approvedRow = { id: "s1", status: "APPROVED", bounty_id: "b1", bounty_title: "T", category: "DEV", agent: null, submitted_at: "2026-07-01T00:00:00Z", description: "d" };
+  const approvedRow = { id: "s1", status: "APPROVED", bounty_id: "b1", bounty_title: "T", category: "DEV", submitted_at: "2026-07-01T00:00:00Z", description: "d" };
 
   it("PUTs the trimmed address to /submissions/:id/payout-address", async () => {
     const { client, fetchJson } = fakeHttp({});
@@ -103,7 +103,7 @@ describe("api client: submissions and the payout address", () => {
 
   it("joins the fields onto an approved application row", async () => {
     const { client } = fakeHttp({
-      "/applications/me": [{ id: "a1", status: "APPROVED", message: "m", applied_at: "2026-06-01T00:00:00Z", reviewed_at: null, bounty_id: "b1", bounty_title: "T", category: "DEV", agent: null }],
+      "/applications/me": [{ id: "a1", status: "APPROVED", message: "m", applied_at: "2026-06-01T00:00:00Z", reviewed_at: null, bounty_id: "b1", bounty_title: "T", category: "DEV" }],
       "/submissions/me": [{ ...approvedRow, payout_address: null, payout_address_evm: null, payout_address_updated_at: null, payout_address_editable: true }],
     });
     const rows = await client.getApplications(owner);
@@ -157,7 +157,7 @@ describe("mock client: setPayoutAddress", () => {
 
 const row = (overrides: Partial<AccountApplication> = {}): AccountApplication => ({
   id: "app-1", source: "application", bountySlug: "b1", bountyTitle: "Bounty one", category: "Design", appliedAt: "2026-07-12T09:00:00.000Z", note: "note",
-  status: "completed", agent: null, reviewComment: null, reviewNote: null, paymentStatus: "PENDING",
+  status: "completed", reviewComment: null, reviewNote: null, paymentStatus: "PENDING",
   submissionId: "s1", payoutAddress: null, payoutAddressEvm: null, payoutAddressUpdatedAt: null, payoutAddressEditable: true,
   ...overrides,
 });
@@ -183,10 +183,10 @@ describe("PayoutAddressForm in ApplicationsView", () => {
     expect((screen.getByRole("button", { name: "Save address" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it("is not offered for a row without the BE #69 fields, a non-approved row, or an agent's submission", async () => {
+  it("is not offered for a row without the BE #69 fields, or a non-approved row", async () => {
     const { payoutAddressEditable, ...legacy } = row();
     void payoutAddressEditable;
-    serve([legacy, row({ id: "app-2", bountyTitle: "Two", status: "submitted" }), row({ id: "app-3", bountyTitle: "Three", agent: { id: "ag", name: "bot" } })]);
+    serve([legacy, row({ id: "app-2", bountyTitle: "Two", status: "submitted" })]);
     renderWithIntl(<ApplicationsView />);
     await screen.findByText("Bounty one");
     expect(screen.queryByRole("region", { name: "Payout address" })).toBeNull();

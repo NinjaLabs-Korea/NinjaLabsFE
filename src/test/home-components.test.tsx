@@ -49,7 +49,7 @@ afterEach(() => {
 
 describe("HomeProfileCard", () => {
   it("greets by nickname with NFT status, links to the public profile and the settings, and shows no wallet", () => {
-    state.auth = signedInWith({ handle: "ninja", profileSlug: "ninja", initials: "NI", walletAddress: "inj1abcdefghij9k4d", nftStatus: "MINTED", onboardingCompleted: true });
+    state.auth = signedInWith({ handle: "ninja", profileSlug: "ninja", initials: "NI", nftStatus: "MINTED", onboardingCompleted: true });
     renderWithIntl(<HomeProfileCard />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Welcome back, ninja");
     expect(screen.queryByText(/Wallet/)).toBeNull();
@@ -70,7 +70,7 @@ describe("HomeProfileCard", () => {
   });
 
   it("folds a FAILED mint into the in-progress badge (operators handle it in /admin/nft-jobs)", () => {
-    state.auth = signedInWith({ handle: "ninja", walletAddress: "inj1abcdefghij9k4d", nftStatus: "FAILED", onboardingCompleted: true });
+    state.auth = signedInWith({ handle: "ninja", nftStatus: "FAILED", onboardingCompleted: true });
     renderWithIntl(<HomeProfileCard />);
     expect(screen.getByText("Ninja NFT minting")).toBeTruthy();
   });
@@ -90,7 +90,7 @@ describe("HomeActivity", () => {
   it("labels an award-forfeited row like the My applications page does", async () => {
     api.getApplications = async () => ({ status: "available", data: [{
       id: "f1", source: "submission", bountySlug: "b1", bountyTitle: "Forfeited lookalike", category: "Dev", appliedAt: "2026-10-26T00:00:00.000Z",
-      note: "", status: "notAccepted", agent: null, reviewComment: "forfeited: wallet never linked", reviewNote: null, paymentStatus: "NONE",
+      note: "", status: "notAccepted", reviewComment: "forfeited: wallet never linked", reviewNote: null, paymentStatus: "NONE",
     }] });
     renderWithIntl(<HomeActivity />);
     expect(await screen.findByText("Reward not paid")).toBeTruthy();
@@ -162,7 +162,7 @@ describe("HomeRecruitment", () => {
 describe("HomeQuickLinks", () => {
   it("links only to the personal places the header lacks", () => {
     renderWithIntl(<HomeQuickLinks />);
-    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/applications", "/agents"]);
+    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/applications"]);
   });
 });
 

@@ -19,7 +19,6 @@ vi.mock("next-intl/server", () => ({
   getFormatter: async () => createFormatter({ locale: "en", timeZone: "UTC" }),
 }));
 // Client islands read the auth/account context; the page test only cares which of them it mounts.
-vi.mock("@/components/agents/BountyAgentPanel", () => ({ BountyAgentPanel: () => <aside data-testid="agent-panel" /> }));
 vi.mock("@/components/bounties/BountyActionPanel", () => ({ BountyActionPanel: () => <section data-testid="action-panel" /> }));
 
 const data = vi.hoisted(() => ({ bounty: undefined as Bounty | undefined }));
@@ -31,53 +30,46 @@ vi.mock("@/lib/bounties", async (importOriginal) => ({
 
 const { default: BountyDetailPage } = await import("@/app/[locale]/bounties/[id]/page");
 
-const bounty = (submissionMode: "direct" | "agent"): Bounty => ({
+const bounty = (): Bounty => ({
   slug: "b1", title: "T", summary: "S", category: "Dev", status: "active", reward: { amount: 5, currency: "INJ" },
-  sponsor: "Ninja Labs", deadline: "Open", daysLeft: 3, coverImage: "", submissionMode,
+  sponsor: "Ninja Labs", deadline: "Open", daysLeft: 3, coverImage: "",
 });
 
-describe("bounty detail agent panel", () => {
-  it("is offered only on agent-mode bounties: a DIRECT bounty refuses agent keys (DIRECT_SUBMISSION_REQUIRED)", async () => {
-    data.bounty = bounty("direct");
-    const { unmount } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
+describe("bounty detail page", () => {
+  it("mounts the action panel and no agent panel", async () => {
+    data.bounty = bounty();
+    renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
     expect(screen.getByTestId("action-panel")).toBeTruthy();
     expect(screen.queryByTestId("agent-panel")).toBeNull();
-    unmount();
-
-    data.bounty = bounty("agent");
-    renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
-    expect(screen.getByTestId("agent-panel")).toBeTruthy();
+    expect(screen.getByText("Direct submission")).toBeTruthy();
   });
 
   it("shows the card's cover image on the detail page, and nothing when the bounty has no cover", async () => {
-    data.bounty = { ...bounty("direct"), coverImage: "/media/33a9017e-fb51-4c38-b071-abd70b08404d" };
+    data.bounty = { ...bounty(), coverImage: "/media/33a9017e-fb51-4c38-b071-abd70b08404d" };
     const { unmount } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
     expect(screen.getByTestId("bounty-detail-cover").querySelector("img")?.getAttribute("src")).toContain("33a9017e-fb51-4c38-b071-abd70b08404d");
     unmount();
 
-    data.bounty = bounty("direct");
+    data.bounty = bounty();
     renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
     expect(screen.queryByTestId("bounty-detail-cover")).toBeNull();
   });
 
   it("uses plain reward and completion copy, one footnote and no auth/visibility chips", async () => {
-    for (const mode of ["direct", "agent"] as const) {
-      data.bounty = bounty(mode);
-      const { container, unmount } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
-      const text = container.textContent ?? "";
-      expect(text).not.toMatch(/release|child/i);
-      expect(text).toContain("After payout is recorded, completion NFT minting can be queued.");
-      expect(text.match(/swap/gi)).toHaveLength(1);
-      expect(text.match(/Anyone can view\./g)).toHaveLength(1);
-      expect(text).not.toMatch(/Public view|Actions require login/);
-      unmount();
-    }
+    data.bounty = bounty();
+    const { container } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
+    const text = container.textContent ?? "";
+    expect(text).not.toMatch(/release|child/i);
+    expect(text).toContain("After payout is recorded, completion NFT minting can be queued.");
+    expect(text.match(/swap/gi)).toHaveLength(1);
+    expect(text.match(/Anyone can view\./g)).toHaveLength(1);
+    expect(text).not.toMatch(/Public view|Actions require login/);
   });
 
   it.each([
-    ["direct", false], ["agent", false], ["direct", true], ["agent", true],
-  ] as const)("does not promise a payout or NFT without a specified reward (%s, application=%s)", async (mode, applicationRequired) => {
-    data.bounty = { ...bounty(mode), applicationRequired, reward: { amount: 0, currency: "INJ" }, rewards: [] };
+    false, true,
+  ] as const)("does not promise a payout or NFT without a specified reward (application=%s)", async (applicationRequired) => {
+    data.bounty = { ...bounty(), applicationRequired, reward: { amount: 0, currency: "INJ" }, rewards: [] };
     const { container } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
     const text = container.textContent ?? "";
     expect(text).toContain("Reward TBD");
@@ -87,14 +79,14 @@ describe("bounty detail agent panel", () => {
   });
 
   it("keeps the unset legacy reward fallback out of payout copy", async () => {
-    data.bounty = { ...bounty("direct"), reward: { amount: 0, currency: "INJ" } };
+    data.bounty = { ...bounty(), reward: { amount: 0, currency: "INJ" } };
     const { container } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
     expect(container.textContent).toContain("No reward has been specified.");
     expect(container.textContent).not.toContain("Sponsor pays:");
   });
 
   it("uses only specified rewards, including their currency, in application payout guidance", async () => {
-    data.bounty = { ...bounty("direct"), applicationRequired: true, rewards: [{ amount: 0, currency: "INJ" }, { amount: 10, currency: "USDC" }] };
+    data.bounty = { ...bounty(), applicationRequired: true, rewards: [{ amount: 0, currency: "INJ" }, { amount: 10, currency: "USDC" }] };
     const { container } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
     expect(container.textContent).toContain("Sponsor pays: 10 USDC");
     expect(container.textContent).toContain("Reward is sent in USDC");

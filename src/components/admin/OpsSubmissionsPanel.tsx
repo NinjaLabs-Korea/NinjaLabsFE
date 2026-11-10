@@ -43,7 +43,7 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
     }
     const ok = await run(`submission:${submission.id}`, () => api.reviewAdminSubmission(submission.id, { decision, revisionNo, comment }), {
       title: t(`toast.submission.${decision}`),
-      description: submission.agentName ?? submission.nickname ?? "",
+      description: submission.nickname ?? "",
     });
     if (ok) setTarget(null);
   };
@@ -129,7 +129,7 @@ export function OpsSubmissionsPanel({ ops, busy, run, formatDate }: { ops: Admin
       )}
       <OpsFormModal
         busy={target ? busy.has(`submission:${target.submission.id}`) : false}
-        description={target ? t("submissions.modalDescription", { name: target.submission.agentName ?? target.submission.nickname ?? "–", revision: target.revisionNo }) : undefined}
+        description={target ? t("submissions.modalDescription", { name: target.submission.nickname ?? "–", revision: target.revisionNo }) : undefined}
         eyebrow={t("submissions.eyebrow")}
         onCancel={() => setTarget(null)}
         onSubmit={() => void submit()}

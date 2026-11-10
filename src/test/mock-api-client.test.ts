@@ -13,36 +13,10 @@ const available = <T>(result: { status: string; data?: T }): T => {
 describe("mock api client parity", () => {
   it("throws ApiHttpError-shaped errors so component code branches the same way as in api mode", async () => {
     const client = createMockApiClient();
-    const error = await client.rotateAgentKey("missing").catch((caught: unknown) => caught);
+    const error = await client.setPayoutAddress("missing", "not-an-address").catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(MockApiError);
     expect(error).toBeInstanceOf(ApiHttpError);
-    expect([(error as ApiHttpError).status, (error as ApiHttpError).code]).toEqual([404, "AGENT_NOT_FOUND"]);
-  });
-
-  it("registers an agent as pending, verifies it to ACTIVE with a one-time key, and lists it", async () => {
-    const client = createMockApiClient();
-    const registration = await client.registerAgent({ name: "fresh-agent", walletAddress: "0xA9e1000000000000000000000000000000000001" });
-    expect(registration.status).toBe("PENDING_VERIFICATION");
-
-    let agents = available(await client.getAgents(owner));
-    expect(agents.find((agent) => agent.id === registration.agentId)).toMatchObject({
-      name: "fresh-agent", walletAddress: "0xA9e1000000000000000000000000000000000001", status: "PENDING_VERIFICATION", verified: false, apiKeyMasked: "-", keyStatus: null,
-    });
-
-    const verification = await client.verifyAgent(registration.agentId, "0xsig");
-    expect(verification).toMatchObject({ agentId: registration.agentId, status: "ACTIVE" });
-    expect(verification.apiKey).toMatch(/^nl_preview_/);
-    agents = available(await client.getAgents(owner));
-    const verified = agents.find((agent) => agent.id === registration.agentId);
-    expect(verified).toMatchObject({ status: "ACTIVE", verified: true, keyStatus: "ACTIVE", keyExpiresAt: verification.expiresAt });
-    // The list only carries the masked key, never the revealed one.
-    expect(verified?.apiKeyMasked).toMatch(/^nl_live_····…/);
-    expect(JSON.stringify(agents)).not.toContain(verification.apiKey);
-
-    // An ACTIVE wallet cannot be registered twice (BE 409); a fresh client starts from the fixtures again.
-    await expect(client.registerAgent({ name: "dup", walletAddress: "0xa9e1000000000000000000000000000000000001" })).rejects.toMatchObject({ status: 409, code: "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED" });
-    await expect(client.verifyAgent("missing", "0xsig")).rejects.toMatchObject({ status: 404, code: "AGENT_NOT_FOUND" });
-    expect(available(await createMockApiClient().getAgents(owner)).some((agent) => agent.id === registration.agentId)).toBe(false);
+    expect([(error as ApiHttpError).status, (error as ApiHttpError).code]).toEqual([400, "INVALID_INJECTIVE_ADDRESS"]);
   });
 
   it("records a submission so getSubmissions and the application join reflect it", async () => {
@@ -52,7 +26,7 @@ describe("mock api client parity", () => {
 
     const first = await client.submitBounty("wallet-onboarding-states", { submissionUrl: "https://x.test", description: "Done" });
     expect(first).toMatchObject({ revisionNo: 1, status: "SUBMITTED" });
-    expect(available(await client.getSubmissions(owner))).toContainEqual({ bountySlug: "wallet-onboarding-states", status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null, submissionUrl: "https://x.test", description: "Done" });
+    expect(available(await client.getSubmissions(owner))).toContainEqual({ bountySlug: "wallet-onboarding-states", status: "submitted", paymentStatus: "NONE", reviewComment: null, submissionUrl: "https://x.test", description: "Done" });
     // The approved fixture application on that bounty moves to "submitted", like the api client's join.
     expect(available(await client.getApplications(owner)).find((application) => application.bountySlug === "wallet-onboarding-states")?.status).toBe("submitted");
 
@@ -68,16 +42,13 @@ describe("mock api client parity", () => {
     for (const status of statuses) expect(["open", "approved", "submitted", "completed", "rejected", "notAccepted", "revisionRequested"]).toContain(status);
   });
 
-  it("keeps agent-made rows on the same bounty when the owner applies directly", async () => {
+  it("replaces the owner's own row when applying to the same bounty again", async () => {
     const client = createMockApiClient();
-    const before = available(await client.getApplications(owner)).filter((application) => application.bountySlug === "neptune-api-docs");
-    expect(before.map((application) => application.agent?.name)).toEqual(["market-scout-agent"]);
     await client.applyToBounty("neptune-api-docs", { message: "Direct application" });
-    const after = available(await client.getApplications(owner)).filter((application) => application.bountySlug === "neptune-api-docs");
-    expect(after.map((application) => application.agent?.name ?? null).sort()).toEqual([null, "market-scout-agent"].sort());
-    // Applying again replaces only the owner's own row.
     await client.applyToBounty("neptune-api-docs", { message: "Second direct application" });
-    expect(available(await client.getApplications(owner)).filter((application) => application.bountySlug === "neptune-api-docs")).toHaveLength(2);
+    const rows = available(await client.getApplications(owner)).filter((application) => application.bountySlug === "neptune-api-docs");
+    expect(rows).toHaveLength(1);
+    expect(rows[0].note).toBe("Second direct application");
   });
 });
 

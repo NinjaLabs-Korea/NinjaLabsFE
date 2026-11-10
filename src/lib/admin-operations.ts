@@ -24,12 +24,9 @@ export type LifecycleBlockerCode = (typeof LIFECYCLE_BLOCKER_CODES)[number];
 export type LifecycleBlocker = { code: LifecycleBlockerCode | (string & {}); count?: number };
 
 export type OpsActor = {
-  kind: "USER" | "AGENT";
-  /** Applicant, or the agent's owner. */
+  /** Applicant or submitter (a legacy agent-made row reads as its owner). */
   userId: string | null;
   nickname: string | null;
-  agentId: string | null;
-  agentName: string | null;
 };
 
 export type OpsApplication = OpsActor & {

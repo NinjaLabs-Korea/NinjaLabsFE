@@ -136,31 +136,6 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
           </div>
         )}
       </section>
-
-      <section id="agents">
-        <SectionHeader eyebrow={t("agents.eyebrow")} heading={t("agents.heading")} />
-        {profile.agents.length ? (
-          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-            {profile.agents.map((agent) => (
-              <article key={agent.wallet} className="rounded-card border border-dashed border-border-dashed bg-surface p-6">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="min-w-0 break-words font-display text-xl font-bold text-ink">{agent.name}</h3>
-                  {agent.verified ? <Badge variant="success">{t("agents.verified")}</Badge> : null}
-                </div>
-                <p className="mt-3 break-all text-sm text-ink-muted">{t("agents.wallet", { wallet: agent.wallet })}</p>
-                <p className="mt-3 text-base font-semibold text-ink">{t("agents.completed", { count: agent.completedBounties })}</p>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-card border border-dashed border-border-dashed bg-surface p-6">
-            <div>
-              <h3 className="font-display text-xl font-bold text-ink">{t("agents.emptyTitle")}</h3>
-              <p className="mt-1 text-sm text-ink-muted">{t("agents.emptyBody")}</p>
-            </div>
-          </div>
-        )}
-      </section>
     </div>
   );
 }

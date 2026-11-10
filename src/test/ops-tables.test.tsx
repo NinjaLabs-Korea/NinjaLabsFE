@@ -10,10 +10,10 @@ function operations(overrides: Partial<AdminOperations> = {}): AdminOperations {
   return {
     bounty: { id: "b1", title: "Widget", status: "IN_REVIEW", submissionDeadline: "2099-01-01T00:00:00.000Z", maxWinners: 2, applicationRequired: true },
     lifecycle: { blockers: { COMPLETED: [{ code: "UNRESOLVED_SUBMISSIONS", count: 1 }, { code: "UNPAID_WINNERS" }], OPEN: [] }, allowedTransitions: ["COMPLETED", "OPEN"] },
-    applications: [{ id: "a1", status: "PENDING", kind: "USER", userId: "u1", nickname: "mina", agentId: null, agentName: null, message: "pick me", portfolioUrl: null, reviewNote: null, appliedAt: "2026-10-01T00:00:00Z", reviewedAt: null }],
+    applications: [{ id: "a1", status: "PENDING", userId: "u1", nickname: "mina", message: "pick me", portfolioUrl: null, reviewNote: null, appliedAt: "2026-10-01T00:00:00Z", reviewedAt: null }],
     submissions: [
-      { id: "s1", status: "RESUBMITTED", kind: "USER", userId: "u2", nickname: "juho", agentId: null, agentName: null, currentRevisionNo: 3, submittedAt: "2026-10-02T00:00:00Z", reviewedAt: null, payoutAddress: "inj1juho", payoutAddressEvm: null, email: null, reviewComment: null, revisions: [{ revisionNo: 3, submissionUrl: "https://x.test/v3", description: "third", repositoryUrl: null, commitSha: null, createdAt: "2026-10-03T00:00:00Z" }], reviews: [] },
-      { id: "s2", status: "APPROVED", kind: "AGENT", userId: "u3", nickname: "ara", agentId: "ag", agentName: "alpha-bot", currentRevisionNo: 1, submittedAt: "2026-10-02T00:00:00Z", reviewedAt: null, payoutAddress: "inj1ara", payoutAddressEvm: null, email: null, reviewComment: "ok", revisions: [], reviews: [] },
+      { id: "s1", status: "RESUBMITTED", userId: "u2", nickname: "juho", currentRevisionNo: 3, submittedAt: "2026-10-02T00:00:00Z", reviewedAt: null, payoutAddress: "inj1juho", payoutAddressEvm: null, email: null, reviewComment: null, revisions: [{ revisionNo: 3, submissionUrl: "https://x.test/v3", description: "third", repositoryUrl: null, commitSha: null, createdAt: "2026-10-03T00:00:00Z" }], reviews: [] },
+      { id: "s2", status: "APPROVED", userId: "u3", nickname: "ara", currentRevisionNo: 1, submittedAt: "2026-10-02T00:00:00Z", reviewedAt: null, payoutAddress: "inj1ara", payoutAddressEvm: null, email: null, reviewComment: "ok", revisions: [], reviews: [] },
     ],
     rewards: [{ id: "r1", status: "FUNDED", symbol: "INJ", amount: "5000000000000000000", depositedAmount: "5000000000000000000", depositedAt: null, depositTxHash: null, custodyAddress: "inj1ms", cap: "5000000000000000000", allocated: "2000000000000000000" }],
     payouts: [
@@ -89,7 +89,7 @@ describe("ops payouts: phone layout", () => {
     expect(region.queryByRole("table")).toBeNull();
     const cards = region.getAllByRole("listitem").filter((li) => li.hasAttribute("data-payout-card"));
     expect(cards).toHaveLength(2);
-    expect(within(cards[0]).getByText("alpha-bot")).toBeTruthy();
+    expect(within(cards[0]).getByText("ara")).toBeTruthy();
     expect(within(cards[0]).getByText("2 INJ")).toBeTruthy();
     expect(within(cards[0]).getByRole("button", { name: "Approve" })).toBeTruthy();
     expect(within(cards[1]).getByRole("button", { name: "Mark paid" })).toBeTruthy();

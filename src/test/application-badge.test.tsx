@@ -34,7 +34,7 @@ const t = (key: string, values?: Record<string, string>) => (values ? `${key}(${
 
 const row = (status: ApplicationStatus, overrides: Partial<AccountApplication> = {}): AccountApplication => ({
   id: `app-${status}-${overrides.bountyStatus ?? "none"}`, bountySlug: `b-${status}`, bountyTitle: `Bounty ${status} ${overrides.bountyStatus ?? ""}`.trim(),
-  category: "Dev", appliedAt: "2026-10-20T00:00:00.000Z", note: "", status, agent: null, reviewComment: null, reviewNote: null, paymentStatus: "NONE",
+  category: "Dev", appliedAt: "2026-10-20T00:00:00.000Z", note: "", status, reviewComment: null, reviewNote: null, paymentStatus: "NONE",
   ...overrides,
 });
 

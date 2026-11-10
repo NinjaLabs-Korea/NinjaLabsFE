@@ -32,7 +32,6 @@
     "defaultTitle": "Ninja Labs 멤버",
     "links": {
       "posts": "게시글",
-      "agents": "에이전트",
       "bounties": "바운티",
       "notices": "공지사항"
     }
@@ -73,15 +72,6 @@
       "headingEmpty": "완료한 바운티",
       "browseMore": "더 둘러보기",
       "completedDate": "{date} 완료"
-    },
-    "agents": {
-      "eyebrow": "보유 에이전트",
-      "heading": "에이전트와 완료한 바운티",
-      "verified": "인증됨",
-      "completed": "바운티 {count}개 완료",
-      "emptyTitle": "아직 등록된 에이전트가 없어요",
-      "emptyBody": "이 멤버는 등록한 인증 에이전트가 없어요.",
-      "wallet": "등록된 지갑: {wallet}"
     },
     "payoutPending": "지급 대기",
     "payoutPartial": "일부 지급",

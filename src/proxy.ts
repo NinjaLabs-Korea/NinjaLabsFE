@@ -10,7 +10,7 @@ import { inLocaleMiss, NOT_FOUND_SEGMENT } from "./lib/locale-routes";
 const handleLocale = createMiddleware(routing);
 
 /**
- * Nonce routes (`lib/csp.ts NONCE_ROUTE_PATTERNS`: account, admin, agents (list + register: both can show a one-time API key), auth/callback) render per request with
+ * Nonce routes (`lib/csp.ts NONCE_ROUTE_PATTERNS`: account, admin, auth/callback) render per request with
  * a fresh nonce CSP. Next reads the nonce from the CSP header of the REQUEST (`getScriptNonceFromHeader`) and stamps it on
  * its own scripts, so the policy goes on the forwarded request (next-intl copies `request.headers` into its
  * `NextResponse.next({ request })`), with `x-nonce` for server code, and on the response for the browser.
@@ -63,12 +63,12 @@ export default async function proxy(request: NextRequest) {
 
 export const config = {
   // Skip Next internals, persisted media, the same-origin auth proxy (/api/auth/* rewrite to the BE - a locale redirect
-  // would break the cookie-mode refresh), the unprefixed /skill.md download, and real static files (by extension).
+  // would break the cookie-mode refresh), and real static files (by extension).
   // Dotted segments such as /members/ninja.inj (BE nicknames allow dots, Injective handles end in .inj) must still
   // locale-redirect, so only a known static-file extension is excluded. Keep this a literal: Next parses it at build time.
   // The extension group must equal `lib/static-extensions.ts STATIC_FILE_EXTENSIONS` (nicknames ending in one are rejected
   // because their profile URL would be skipped here); `src/test/proxy-matcher.test.ts` asserts the two are identical.
   matcher: [
-    "/((?!_next|_vercel|media|api/|skill\\.md$|.*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|txt|xml|json|js|css|map|woff|woff2|ttf)$).*)",
+    "/((?!_next|_vercel|media|api/|.*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|txt|xml|json|js|css|map|woff|woff2|ttf)$).*)",
   ],
 };

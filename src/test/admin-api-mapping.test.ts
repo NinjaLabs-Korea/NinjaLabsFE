@@ -20,7 +20,7 @@ const bountyRow = (over: Record<string, unknown> = {}) => ({
 });
 
 const bounty: AdminBounty = {
-  slug: "b1", title: "Widget", sponsor: "Injective", reward: { amount: 1.5, currency: "INJ" }, intakeEnabled: true, submissionMode: "agent",
+  slug: "b1", title: "Widget", sponsor: "Injective", reward: { amount: 1.5, currency: "INJ" }, intakeEnabled: true,
   coverImage: "/media/11111111-1111-4111-8111-111111111111", status: "draft", deadline: "2026-07-14T00:00:00.000Z", applicationDeadline: null,
   maxWinners: 1, tags: ["Design"], description: "Plain description", submissionGuide: "", requirements: "- Repo", deliverables: ["- Repo"], reviewProcess: "Review",
 };
@@ -50,9 +50,11 @@ describe("GET /admin/bounties row mapping", () => {
     const [row] = await createAdminApi(http).getAdminBounties();
     expect(row).toMatchObject({
       slug: "b1", sponsor: "Injective", reward: { amount: 250, currency: "USDC" }, rewardContractAddress: "0xusdc", rewardChainId: 1439,
-      intakeEnabled: true, submissionMode: "agent", coverImage: "/media/x", tags: ["Design"], description: "Long", submissionGuide: "- Repo",
+      intakeEnabled: true, coverImage: "/media/x", tags: ["Design"], description: "Long", submissionGuide: "- Repo",
       reviewProcess: "E", maxWinners: 1,
     });
+    // The row still says submission_mode AGENT (old data): agents are gone, so the console model has no such field.
+    expect(row).not.toHaveProperty("submissionMode");
   });
 
   it("shows 0 INJ without contract fields for a bounty without rewards, and survives odd rows", async () => {
@@ -61,7 +63,7 @@ describe("GET /admin/bounties row mapping", () => {
     expect(row.reward).toEqual({ amount: 0, currency: "INJ" });
     expect(row).not.toHaveProperty("rewardContractAddress");
     expect(row).not.toHaveProperty("rewardChainId");
-    expect(row).toMatchObject({ tags: ["Other"], submissionMode: "direct", description: "Short", maxWinners: 1 });
+    expect(row).toMatchObject({ tags: ["Other"], description: "Short", maxWinners: 1 });
   });
 });
 
@@ -73,7 +75,7 @@ describe("POST/PATCH /admin/bounties body", () => {
     expect(path).toBe("/admin/bounties");
     expect(init?.method).toBe("POST");
     expect(init?.body).toMatchObject({
-      title: "Widget", sponsorName: "Injective", category: "DESIGN", applicationRequired: true, submissionMode: "AGENT",
+      title: "Widget", sponsorName: "Injective", category: "DESIGN", applicationRequired: true, submissionMode: "DIRECT",
       coverImageUrl: bounty.coverImage, submissionDeadline: bounty.deadline, evaluationCriteria: "Review",
       reward: { tokenType: "NATIVE", tokenDenom: "inj", displaySymbol: "INJ", amount: "1500000000000000000" },
     });

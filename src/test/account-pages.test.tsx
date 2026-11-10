@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { createTranslator } from "next-intl";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -37,17 +37,15 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
     useAuthSnapshot: () => state.auth,
     useAccountApi: () => apiClient,
     useBountyApi: () => apiClient,
-    useAgentApi: () => apiClient,
     useFoundationMode: () => "mock",
   }));
 
 const { default: ApplicationsPage } = await import("@/app/[locale]/applications/page");
-const { default: AgentsPage } = await import("@/app/[locale]/agents/page");
 const params = Promise.resolve({ locale: "en" });
 
 describe("owner-private account pages", () => {
   beforeAll(() => {
-    // jsdom has no <dialog> implementation; AgentsView's ConfirmDialog only needs open/close bookkeeping here.
+    // jsdom has no <dialog> implementation; the ConfirmDialog on these pages only needs open/close bookkeeping here.
     HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute("open", ""); };
     HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) { this.removeAttribute("open"); };
   });
@@ -62,13 +60,6 @@ describe("owner-private account pages", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Applications" })).toBeTruthy();
     expect(await screen.findByRole("link", { name: "Get Started" })).toBeTruthy();
     expect(screen.getByText("Sign in to see your applications")).toBeTruthy();
-  });
-
-  it("renders the /agents h1 and register link for signed-out visitors", async () => {
-    renderWithIntl(await AgentsPage({ params }));
-    expect(screen.getByRole("heading", { level: 1, name: "My agents" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Register new agent" }).getAttribute("href")).toBe("/agents/register");
-    expect(await screen.findByRole("link", { name: "Get Started" })).toBeTruthy();
   });
 
   it("formats the ISO timestamps at render instead of printing them verbatim", async () => {
@@ -95,23 +86,11 @@ describe("owner-private account pages", () => {
     expect(screen.getByRole("link", { name: "Get Started" }).getAttribute("href")).toBe("/signup?returnTo=%2Fapplications");
     expect(screen.queryByText("Applications are temporarily unavailable.")).toBeNull();
 
+    cleanup();
     apiClient = createMockApiClient();
-    Object.assign(apiClient, { getAgents: async () => ({ status: "unavailable" as const, reason: "unauthorized" as const }) });
-    renderWithIntl(await AgentsPage({ params }));
-    expect(await screen.findByText("Your session has expired. Sign in again to continue.")).toBeTruthy();
-    expect(screen.queryByText("Agents are temporarily unavailable.")).toBeNull();
-
-    apiClient = createMockApiClient();
-    Object.assign(apiClient, { getAgents: async () => ({ status: "unavailable" as const, reason: "server-error" as const }) });
-    renderWithIntl(await AgentsPage({ params }));
-    expect(await screen.findByText("Agents are temporarily unavailable.")).toBeTruthy();
+    Object.assign(apiClient, { getApplications: async () => ({ status: "unavailable" as const, reason: "server-error" as const }) });
+    renderWithIntl(await ApplicationsPage({ params }));
+    expect(await screen.findByText("Applications are temporarily unavailable.")).toBeTruthy();
     expect(screen.getByText("We couldn’t reach the server. Please try again shortly.")).toBeTruthy();
-  });
-
-  it("formats the agent registration date at render", async () => {
-    state.auth = signedInAs(previewUser);
-    renderWithIntl(await AgentsPage({ params }));
-    expect(await screen.findByText("Jun 28, 2026")).toBeTruthy();
-    expect(screen.queryByText(/2026-06-28T/)).toBeNull();
   });
 });

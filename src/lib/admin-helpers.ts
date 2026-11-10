@@ -98,7 +98,6 @@ export type AdminBounty = {
   rewardContractAddress?: string;
   rewardChainId?: number;
   intakeEnabled: boolean;
-  submissionMode: "direct" | "agent";
   coverImage: string | null;
   /** One value per BE status (`DRAFT` ... `CANCELLED`) so the list can tell a finished bounty from a cancelled one and a closed intake from a review in progress. */
   status: "draft" | "funding" | "active" | "submissionClosed" | "reviewing" | "completed" | "cancelled";

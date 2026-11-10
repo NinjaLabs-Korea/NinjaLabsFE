@@ -20,19 +20,6 @@ export function apiOrigin(): string | null {
   }
 }
 
-/** Origin of the configured Injective JSON-RPC (`NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL`), so `connect-src` follows the env var. */
-function rpcOrigin(): string | null {
-  const value = process.env.NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL;
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    // Same protocols runtime/config.ts accepts (http only survives there for local/test tiers).
-    return url.protocol === "https:" || url.protocol === "http:" ? url.origin : null;
-  } catch {
-    return null;
-  }
-}
-
 /** Vercel preview deployments inject the Vercel toolbar (vercel.live); production and local builds never do. */
 const VERCEL_LIVE = "https://vercel.live";
 function isVercelPreview(): boolean {
@@ -57,7 +44,7 @@ const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
  * framed (frame-ancestors). Next.js emits inline bootstrap scripts and inline styles, so `'unsafe-inline'` stays on
  * every statically generated page (a nonce needs a per-request render, which would make the whole site dynamic).
  *
- * The routes that hold tokens or the one-time agent API key (`NONCE_ROUTE_PATTERNS`) are the exception: `src/proxy.ts`
+ * The routes that hold tokens (`NONCE_ROUTE_PATTERNS`) are the exception: `src/proxy.ts`
  * gives them a per-request nonce policy (`contentSecurityPolicy(mode, nonce)`) and they render dynamically
  * (`await connection()` in their layout/page). A hard load of one of those URLs is therefore script-injection hardened;
  * a client-side navigation into them from a public page keeps that document's policy.
@@ -82,7 +69,7 @@ export const CSP_HEADER_NAME: Record<CspMode, string> = {
  * `/admin` covers every admin page. Keep in sync with `src/lib/locale-routes.ts`; `src/test/csp.test.ts` checks that each
  * entry is a real route and that the dynamic layouts/pages call `connection()`.
  */
-export const NONCE_ROUTE_PATTERNS = ["/account", "/admin", "/agents", "/auth/callback"] as const;
+export const NONCE_ROUTE_PATTERNS = ["/account", "/admin", "/auth/callback"] as const;
 
 const NONCE_ROUTE_ALTERNATION = NONCE_ROUTE_PATTERNS.map((pattern) => pattern.slice(1)).join("|");
 const LOCALE_ALTERNATION = routing.locales.join("|");
@@ -111,17 +98,10 @@ export function createNonce(): string {
 
 export function contentSecurityPolicy(mode: CspMode, nonce?: string): string {
   const preview = isVercelPreview();
-  // The wallet stack is injected-only since the wagmi 3 upgrade (2026-10-24): the browser extension talks to its own
-  // RPC, and the page only reaches the configured Injective JSON-RPC through viem's http transport. RainbowKit /
-  // WalletConnect origins (relay websockets, web3modal, rainbow.me) were dropped with them; re-add them if WalletConnect
-  // returns (see AGENTS.md "Stack").
+  // Google-only signup: the page no longer talks to any wallet RPC, so connect-src is the API plus Turnstile.
   const connectSrc = [
     "'self'",
     apiOrigin(),
-    rpcOrigin(),
-    "https://*.injective.network",
-    "wss://*.injective.network",
-    "https://k8s.testnet.json-rpc.injective.network",
     TURNSTILE_ORIGIN,
     ...(preview ? [VERCEL_LIVE, "wss://ws-us3.pusher.com"] : []),
   ].filter((source): source is string => source !== null);

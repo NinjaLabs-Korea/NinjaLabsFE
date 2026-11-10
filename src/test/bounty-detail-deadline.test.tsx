@@ -37,7 +37,7 @@ const { default: BountyDetailPage } = await import("@/app/[locale]/bounties/[id]
 const base: Bounty = {
   slug: "b1", title: "T", summary: "Short summary", descriptionMarkdown: "Full **description** body", category: "Dev", status: "active",
   reward: { amount: 5, currency: "INJ" }, sponsor: "Ninja Labs", deadline: "Open", daysLeft: 3, coverImage: "",
-  deadlineDetail: "July 14, 2026 at 11:59 PM UTC", submissionGuideMarkdown: "Guide text", submissionMode: "direct",
+  deadlineDetail: "July 14, 2026 at 11:59 PM UTC", submissionGuideMarkdown: "Guide text",
 };
 const applyBounty: Bounty = {
   ...base, applicationRequired: true, applicationTitle: "T", applicationDescription: "Short summary",

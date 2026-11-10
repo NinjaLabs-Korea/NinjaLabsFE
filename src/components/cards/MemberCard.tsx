@@ -6,7 +6,7 @@ import type { Member } from "@/lib/types";
 
 type MemberCardProps = { member: Member };
 
-// `key` is a link type (posts, agents, ...) resolved under messages `members.card.links`.
+// `key` is a link type (posts, bounties, ...) resolved under messages `members.card.links`.
 const contextualLink = (member: Member) => {
   const entries = Object.entries(member.links).filter(([key]) => key !== "profile");
   const [key, href] = entries[0] ?? [];

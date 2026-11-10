@@ -20,8 +20,6 @@ export const localeRoutePatterns = [
   "/admin/operations",
   "/admin/recruitment",
   "/admin/users",
-  "/agents",
-  "/agents/register",
   "/applications",
   "/auth/callback",
   "/bounties",

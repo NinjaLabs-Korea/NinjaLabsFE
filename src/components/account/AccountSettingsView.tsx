@@ -157,7 +157,6 @@ export function AccountSettingsView() {
         <p className="mt-2 text-sm text-ink-muted">{t("deleteBody")}</p>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-ink-muted">
           <li>{t("deleteConsequences.sessions")}</li>
-          <li>{t("deleteConsequences.agents")}</li>
           <li>{t("deleteConsequences.history")}</li>
           <li>{t("deleteConsequences.rewards")}</li>
         </ul>

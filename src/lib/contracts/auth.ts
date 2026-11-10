@@ -5,7 +5,6 @@ export type ClientUser = {
   handle: string;
   initials: string;
   profileSlug: string;
-  walletAddress?: string;
   onboardingStep?: number;
   onboardingCompleted?: boolean;
   isAdmin?: boolean;

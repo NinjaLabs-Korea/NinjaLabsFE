@@ -76,7 +76,6 @@ export function getAdminBounties(): AdminBounty[] {
       reward: { ...bounty.reward },
       // Intake = 지원형 여부. API 모드의 `application_required`와 같은 값이므로 바운티 데이터에서 가져온다.
       intakeEnabled: bounty.applicationRequired ?? false,
-      submissionMode: bounty.submissionMode ?? "direct",
       coverImage: bounty.coverImage || null,
       // The public status has no draft/funding/cancelled; a finished public bounty is a completed one.
       status: overlay.status ?? (bounty.status === "closed" ? "completed" : bounty.status),

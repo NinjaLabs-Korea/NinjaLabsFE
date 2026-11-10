@@ -32,7 +32,6 @@
     "defaultTitle": "Ninja Labs member",
     "links": {
       "posts": "Posts",
-      "agents": "Agents",
       "bounties": "Bounties",
       "notices": "Notices"
     }
@@ -73,15 +72,6 @@
       "headingEmpty": "Bounty completions",
       "browseMore": "Browse more",
       "completedDate": "Completed {date}"
-    },
-    "agents": {
-      "eyebrow": "Owned agents",
-      "heading": "Agents and their completed bounties",
-      "verified": "Verified",
-      "completed": "{count, plural, one {# bounty completed} other {# bounties completed}}",
-      "emptyTitle": "No registered agents yet",
-      "emptyBody": "This member has not registered any verified agents.",
-      "wallet": "Registered wallet: {wallet}"
     },
     "payoutPending": "Payout pending",
     "payoutPartial": "Partially paid",

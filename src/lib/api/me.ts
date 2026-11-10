@@ -65,7 +65,6 @@ export function toClientUser(me: MeResponse): ClientUser {
     bio: me.bio,
     tags: me.tags,
     nftStatus: me.nft?.status ?? null,
-    ...(me.wallet ? { walletAddress: me.wallet.address } : {}),
     ...(avatarUrl ? { avatarUrl } : {}),
   };
 }

@@ -1,6 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { validateAgentRegisterForm } from "@/lib/agent-register-form";
-import { buildAgentSkillMarkdown } from "@/lib/agent-skill";
 import { isValidNickname, validateNickname } from "@/lib/nickname";
 import { hasStorableBodyText, hasVisibleText, isPlainDisplayText } from "@/lib/visible-text";
 
@@ -45,25 +43,6 @@ describe("hasVisibleText / isPlainDisplayText parity with the BE", () => {
   it("hasStorableBodyText allows line breaks and tabs, rejects NUL", () => {
     expect(hasStorableBodyText("a\nb\tc")).toBe(true);
     expect(hasStorableBodyText("a\u0000b")).toBe(false);
-  });
-});
-
-describe("agent register form text rules", () => {
-  it.each(["Evil\u202Ename", "a\tb"])("name %j gets invalidChars", (name) => {
-    expect(validateAgentRegisterForm({ name, description: "" })).toEqual({ name: "invalidChars" });
-  });
-  it.each(["\uFE0F", "\u0301\u0301"])("invisible-only name %j is required", (name) => {
-    expect(validateAgentRegisterForm({ name, description: "" })).toEqual({ name: "required" });
-  });
-  it("description with NUL is blocked, line breaks are fine", () => {
-    expect(validateAgentRegisterForm({ name: "Bot", description: "a\u0000b" })).toEqual({ description: "invalidChars" });
-    expect(validateAgentRegisterForm({ name: "Bot", description: "a\nb" })).toEqual({});
-  });
-});
-
-describe("/skill.md", () => {
-  it("lists INVALID_CHARACTER", () => {
-    expect(buildAgentSkillMarkdown("https://example.test")).toContain("INVALID_CHARACTER");
   });
 });
 

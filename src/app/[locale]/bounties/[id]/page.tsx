@@ -5,7 +5,6 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 
 import { Badge } from "@/components/ui/Badge";
 import { CoverImage } from "@/components/cards/CoverImage";
-import { BountyAgentPanel } from "@/components/agents/BountyAgentPanel";
 import { BountyActionPanel } from "@/components/bounties/BountyActionPanel";
 import { LocalDateTime } from "@/components/bounties/LocalDateTime";
 import { Markdown } from "@/components/ui/Markdown";
@@ -56,7 +55,6 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   const { locale, id } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("bounties");
-  const tAgents = await getTranslations("agents.panel");
   const tReward = await getTranslations("common.reward");
   const format = await getFormatter();
   // Shape check before the fetch (api: UUID, mock: slug); the layout already did it, this keeps the page self-contained.
@@ -68,7 +66,6 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   }
 
   const applicationRequired = Boolean(bounty.applicationRequired);
-  const submissionMode = bounty.submissionMode ?? "direct";
   const deliverables = bounty.deliverables ?? [];
   const rewards = bounty.rewards ?? [bounty.reward];
   // An absent/zero reward is unspecified, not a promise of payment or NFT issuance.
@@ -104,7 +101,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             </Badge>
             {applicationRequired
               ? <Badge variant="warning">{t("detail.applicationRequired")}</Badge>
-              : <Badge variant="neutral">{submissionMode === "agent" ? t("detail.agentSubmission") : t("detail.directSubmission")}</Badge>}
+              : <Badge variant="neutral">{t("detail.directSubmission")}</Badge>}
           </div>
         </div>
       </section>
@@ -160,7 +157,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
             ) : null}
           </article>
 
-          <BountyActionPanel bountyId={bounty.slug} applicationRequired={applicationRequired} applicationClosed={bounty.applicationClosed} closedReason={bounty.closedReason} status={bounty.status} submissionMode={submissionMode} />
+          <BountyActionPanel bountyId={bounty.slug} applicationRequired={applicationRequired} applicationClosed={bounty.applicationClosed} closedReason={bounty.closedReason} status={bounty.status} />
 
           {applicationRequired ? (
             <section className="rounded-card border border-border bg-surface p-[21px] shadow-card">
@@ -207,8 +204,6 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
               ))}
             </ol>
           </section>
-          {/* Only AGENT-mode bounties take agent requests: the BE answers DIRECT_SUBMISSION_REQUIRED to an agent key on a DIRECT bounty. */}
-          {submissionMode === "agent" ? <BountyAgentPanel returnTo={`/bounties/${bounty.slug}`} copy={applicationRequired ? tAgents("copyApply") : tAgents("copyDirect")} /> : null}
         </aside>
       </div>
 

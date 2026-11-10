@@ -36,7 +36,7 @@ describe("createNonce", () => {
 });
 
 describe("isNonceRoute", () => {
-  it.each(["/en/account", "/ko/admin", "/zh/admin/users", "/en/admin/operations", "/en/agents", "/en/agents/register", "/en/auth/callback", "/en/account/"])(
+  it.each(["/en/account", "/ko/admin", "/zh/admin/users", "/en/admin/operations", "/en/auth/callback", "/en/account/"])(
     "%s gets the nonce policy",
     (pathname) => expect(isNonceRoute(pathname)).toBe(true),
   );
@@ -64,7 +64,7 @@ describe("isNonceRoute", () => {
     // The header source excludes exactly what the proxy nonces: a path must never get both policies, or neither.
     const excluded = new RegExp(`^${NONCE_ROUTE_HEADER_SOURCE.replace("/:path", "/")}$`);
     for (const locale of routing.locales) {
-      for (const path of ["", "/account", "/admin", "/admin/users", "/agents", "/agents/register", "/auth/callback", "/bounties", "/signup"]) {
+      for (const path of ["", "/account", "/admin", "/admin/users", "/auth/callback", "/bounties", "/signup"]) {
         const url = `/${locale}${path}`;
         expect(excluded.test(url), url).toBe(!isNonceRoute(url));
       }
@@ -117,7 +117,7 @@ describe("proxy CSP selection", () => {
   }
   const cspOf = (response: Response) => response.headers.get("content-security-policy") ?? response.headers.get("content-security-policy-report-only");
 
-  it.each(["/en/account", "/ko/admin/users", "/ko/agents", "/zh/agents/register", "/en/auth/callback"])("%s: nonce CSP on the response, request header and x-nonce agree", async (pathname) => {
+  it.each(["/en/account", "/ko/admin/users", "/en/auth/callback"])("%s: nonce CSP on the response, request header and x-nonce agree", async (pathname) => {
     const response = await run(pathname);
     const csp = cspOf(response)!;
     const nonce = /'nonce-([^']+)'/.exec(csp)![1];
@@ -154,8 +154,6 @@ describe("nonce routes render per request", () => {
   const files = [
     "src/app/[locale]/account/page.tsx",
     "src/app/[locale]/admin/layout.tsx",
-    "src/app/[locale]/agents/layout.tsx",
-    "src/app/[locale]/agents/register/page.tsx",
     "src/app/[locale]/auth/callback/layout.tsx",
   ];
   it.each(files)("%s awaits connection()", (file) => {

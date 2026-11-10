@@ -8,20 +8,19 @@ import {
   bountyActionErrorCopy,
   isSessionEndedError,
   deriveActionView,
-  splitRows,
+  rowForBounty,
   type BountyActionInput,
   type BountyActionView,
 } from "@/lib/bounty-action-state";
 import type { AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import { MockApiError } from "@/lib/mocks/mock-error";
 
-type AppRow = Pick<AccountApplication, "bountySlug" | "status" | "agent">;
-type SubRow = Pick<AccountSubmission, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountSubmission, "reviewComment">>;
+type AppRow = Pick<AccountApplication, "bountySlug" | "status">;
+type SubRow = Pick<AccountSubmission, "bountySlug" | "status"> & Partial<Pick<AccountSubmission, "reviewComment">>;
 
 const BOUNTY = "bounty-1";
-const bot = { id: "agent-1", name: "Scout" };
-const app = (status: AppRow["status"], agent: AppRow["agent"] = null, bountySlug = BOUNTY): AppRow => ({ bountySlug, status, agent });
-const sub = (status: SubRow["status"], agent: SubRow["agent"] = null, bountySlug = BOUNTY, reviewComment?: string | null): SubRow => ({ bountySlug, status, agent, reviewComment });
+const app = (status: AppRow["status"], bountySlug = BOUNTY): AppRow => ({ bountySlug, status });
+const sub = (status: SubRow["status"], bountySlug = BOUNTY, reviewComment?: string | null): SubRow => ({ bountySlug, status, reviewComment });
 const loaded = <T,>(data: T[]) => ({ loading: false, unavailable: false, data });
 const loading = { loading: true, unavailable: false, data: null };
 const unavailable = { loading: false, unavailable: true, data: null };
@@ -32,7 +31,6 @@ function input(overrides: Partial<BountyActionInput> = {}): BountyActionInput {
     bountyId: BOUNTY,
     applicationRequired: false,
     status: "active",
-    submissionMode: "direct",
     auth: "signed-in",
     applications: loaded<AppRow>([]),
     submissions: loaded<SubRow>([]),
@@ -47,14 +45,9 @@ const updateSubmit: BountyActionView = { kind: "submitForm", revising: false, in
 const resubmit: BountyActionView = { kind: "submitForm", revising: true, inReview: false };
 
 const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
-  // 1. 마감 + (에이전트 바운티 | 비로그인) → 계정 상태 없이 마감 안내
+  // 1. 마감 + 비로그인 → 계정 상태 없이 마감 안내
   ["reviewing bounty, signed out", { status: "reviewing", auth: "signed-out" }, { kind: "closed", reason: "reviewing" }],
   ["closed bounty, signed out", { status: "closed", auth: "signed-out" }, { kind: "closed", reason: "closed" }],
-  ["closed agent bounty, signed in, no agent row", { status: "closed", submissionMode: "agent" }, { kind: "closed", reason: "closed" }],
-  ["reviewing agent bounty, still loading session", { status: "reviewing", submissionMode: "agent", auth: "loading" }, { kind: "closed", reason: "reviewing" }],
-  // 2. 에이전트 전용 바운티 → Agent API 안내 (로그인 여부·내 행과 무관)
-  ["agent bounty that needs an application", { submissionMode: "agent", applicationRequired: true, auth: "signed-out" }, { kind: "agentMode", endpoint: "applications" }],
-  ["agent bounty with direct submissions", { submissionMode: "agent", submissions: loaded([sub("approved")]) }, { kind: "agentMode", endpoint: "submissions" }],
   // 3. 세션
   ["session still loading", { auth: "loading" }, { kind: "checkingSession" }],
   ["session loading on a closed bounty (a revision may still be resubmittable)", { auth: "loading", status: "closed" }, { kind: "checkingSession" }],
@@ -69,33 +62,13 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["submissions unavailable", { submissions: unavailable }, { kind: "statusUnavailable" }],
   ["applications unavailable on an apply bounty", { applicationRequired: true, applications: unavailable }, { kind: "statusUnavailable" }],
   ["applications unavailable is ignored when no application is needed", { applications: unavailable }, firstSubmit],
-  // 5. 에이전트만 참여 → 폼 없이 안내 (제출 행이 지원 행보다 우선)
-  ["only an agent applied", { applicationRequired: true, applications: loaded([app("open", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "application", state: "applied" }],
-  ["only an agent submitted", { submissions: loaded([sub("submitted", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "submitted" }],
-  ["agent applied and submitted", { applications: loaded([app("submitted", bot)]), submissions: loaded([sub("in_review", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "submitted" }],
-  ["agent applied on a no-application bounty still hides the form", { applications: loaded([app("open", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "application", state: "applied" }],
-  ["agent row on a closed bounty (signed in)", { status: "closed", submissions: loaded([sub("approved", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "approved" }],
-  ["agent submission with a revision request (direct bounty)", { submissions: loaded([sub("revision_requested", bot, BOUNTY, "add a README")]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "revisionRequested", review: { forfeited: false, text: "add a README" } }],
-  ["agent submission rejected, forfeited", { submissions: loaded([sub("rejected", bot, BOUNTY, "forfeited: wallet never connected")]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "rejected", review: { forfeited: true, text: "wallet never connected" } }],
-  ["agent submission approved carries the payout status", { submissions: loaded([{ ...sub("approved", bot), paymentStatus: "PAID" as const }]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "approved", payout: "PAID" }],
-  ["agent application rejected", { applicationRequired: true, applications: loaded([app("rejected", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "application", state: "applicationRejected" }],
-  // 2. 에이전트 전용 바운티: 내 에이전트의 진행 상태가 안내보다 우선
-  ["agent bounty, my agent has a revision request", { submissionMode: "agent", submissions: loaded([sub("revision_requested", bot, BOUNTY, "fix the link")]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "revisionRequested", review: { forfeited: false, text: "fix the link" } }],
-  ["agent bounty, revision request after the bounty closed", { submissionMode: "agent", status: "closed", submissions: loaded([sub("revision_requested", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "submission", state: "revisionRequested" }],
-  ["agent bounty, my agent applied", { submissionMode: "agent", applicationRequired: true, applications: loaded([app("open", bot)]) }, { kind: "agentRow", agentName: "Scout", row: "application", state: "applied" }],
-  ["agent bounty, my agent was approved but has not submitted", { submissionMode: "agent", applicationRequired: true, applications: loaded([app("approved", bot)]) }, { kind: "agentMode", endpoint: "submissions" }],
-  ["agent bounty, status still loading", { submissionMode: "agent", submissions: loading }, { kind: "checkingStatus" }],
-  ["agent bounty, status unavailable falls back to the guide", { submissionMode: "agent", submissions: unavailable }, { kind: "agentMode", endpoint: "submissions" }],
-  ["own row beside the agent row wins", { applicationRequired: true, applications: loaded([app("open", bot), app("rejected")]) }, { kind: "applicationRejected" }],
-  ["just applied here beside an agent row", { applicationRequired: true, applied: true, applications: loaded([app("open", bot)]) }, { kind: "applicationUnderReview" }],
-  ["just submitted here beside an agent row", { submitted: true, submissions: loaded([sub("in_review", bot)]) }, updateSubmit],
   // 6. 지원 단계
   ["apply bounty, no application yet", { applicationRequired: true }, { kind: "applyForm" }],
   ["apply bounty, no application, reviewing", { applicationRequired: true, status: "reviewing" }, { kind: "closed", reason: "reviewing" }],
   ["apply bounty, no application, closed", { applicationRequired: true, status: "closed" }, { kind: "closed", reason: "closed" }],
   ["apply bounty past its application deadline, no application yet", { applicationRequired: true, applicationClosed: true }, { kind: "closed", reason: "applications" }],
   ["apply bounty past its application deadline, approved applicant still submits", { applicationRequired: true, applicationClosed: true, applications: loaded([app("approved")]) }, firstSubmit],
-  ["rows for other bounties do not count", { applicationRequired: true, applications: loaded([app("approved", null, "other")]) }, { kind: "applyForm" }],
+  ["rows for other bounties do not count", { applicationRequired: true, applications: loaded([app("approved", "other")]) }, { kind: "applyForm" }],
   ["application rejected", { applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "applicationRejected" }],
   ["application rejected with the operator's note", { applicationRequired: true, applications: loaded([{ ...app("rejected"), reviewNote: "Portfolio too thin" }]) }, { kind: "applicationRejected", note: "Portfolio too thin" }],
   ["application auto-rejected by a cancelled bounty", { status: "closed", closedReason: "cancelled", applicationRequired: true, applications: loaded([app("rejected")]) }, { kind: "closed", reason: "cancelled" }],
@@ -117,9 +90,9 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["submission approved on a closed bounty", { status: "closed", submissions: loaded([sub("approved")]) }, { kind: "submissionApproved" }],
   ["submission rejected", { submissions: loaded([sub("rejected")]) }, { kind: "submissionRejected" }],
   ["submission rejected after an approved application", { applicationRequired: true, applications: loaded([app("completed")]), submissions: loaded([sub("rejected")]) }, { kind: "submissionRejected" }],
-  ["submission rejected with a reviewer comment", { submissions: loaded([sub("rejected", null, BOUNTY, "does not meet the brief")]) }, { kind: "submissionRejected", review: { forfeited: false, text: "does not meet the brief" } }],
-  ["submission rejected, forfeited award (prefix stripped)", { submissions: loaded([sub("rejected", null, BOUNTY, "forfeited: winner wallet never connected")]) }, { kind: "submissionRejected", review: { forfeited: true, text: "winner wallet never connected" } }],
-  ["submission rejected with a blank comment", { submissions: loaded([sub("rejected", null, BOUNTY, "   ")]) }, { kind: "submissionRejected" }],
+  ["submission rejected with a reviewer comment", { submissions: loaded([sub("rejected", BOUNTY, "does not meet the brief")]) }, { kind: "submissionRejected", review: { forfeited: false, text: "does not meet the brief" } }],
+  ["submission rejected, forfeited award (prefix stripped)", { submissions: loaded([sub("rejected", BOUNTY, "forfeited: winner wallet never connected")]) }, { kind: "submissionRejected", review: { forfeited: true, text: "winner wallet never connected" } }],
+  ["submission rejected with a blank comment", { submissions: loaded([sub("rejected", BOUNTY, "   ")]) }, { kind: "submissionRejected" }],
   // 8. 진행 중이 아님
   ["reviewing, submission pending", { status: "reviewing", submissions: loaded([sub("in_review")]) }, { kind: "inReviewLocked" }],
   ["closed only by the deadline, submission resubmitted (the sponsor can still review)", { status: "closed", closedReason: "deadline", submissions: loaded([sub("resubmitted")]) }, { kind: "inReviewLocked" }],
@@ -138,7 +111,7 @@ const table: Array<[string, Partial<BountyActionInput>, BountyActionView]> = [
   ["submission in review → update form", { submissions: loaded([sub("in_review")]) }, updateSubmit],
   ["just submitted (server row not re-read yet)", { submitted: true }, updateSubmit],
   ["revision requested", { submissions: loaded([sub("revision_requested")]) }, resubmit],
-  ["revision requested with a reviewer comment", { submissions: loaded([sub("revision_requested", null, BOUNTY, "add a README")]) }, { kind: "submitForm", revising: true, inReview: false, revisionComment: "add a README" }],
+  ["revision requested with a reviewer comment", { submissions: loaded([sub("revision_requested", BOUNTY, "add a README")]) }, { kind: "submitForm", revising: true, inReview: false, revisionComment: "add a README" }],
   ["revision requested on a reviewing bounty (BE still accepts it)", { status: "reviewing", submissions: loaded([sub("revision_requested")]) }, resubmit],
   ["revision requested and just resubmitted", { submitted: true, submissions: loaded([sub("revision_requested")]) }, { kind: "submitForm", revising: true, inReview: true }],
 ];
@@ -151,19 +124,19 @@ describe("deriveActionView - which bounty action section to show", () => {
   it("covers every view kind at least once", () => {
     const kinds = new Set(table.map(([, , view]) => view.kind));
     expect([...kinds].sort()).toEqual([
-      "agentMode", "agentRow", "applicationRejected", "applicationUnderReview", "applyForm", "checkingSession", "checkingStatus",
+      "applicationRejected", "applicationUnderReview", "applyForm", "checkingSession", "checkingStatus",
       "closed", "inReviewLocked", "signedOut", "statusUnavailable", "submissionApproved", "submissionRejected", "submitForm",
     ]);
   });
 });
 
-describe("splitRows - the owner's own row and an agent row never stand in for each other", () => {
-  it("picks the first row of each kind", () => {
+describe("rowForBounty - the caller's row for one bounty", () => {
+  it("picks the row of that bounty, or undefined", () => {
     const own = app("open");
-    const agent = app("approved", bot);
-    expect(splitRows([agent, own])).toEqual({ own, agent });
-    expect(splitRows([own])).toEqual({ own, agent: undefined });
-    expect(splitRows(undefined)).toEqual({ own: undefined, agent: undefined });
+    expect(rowForBounty([app("approved", "other"), own], BOUNTY)).toBe(own);
+    expect(rowForBounty([app("approved", "other")], BOUNTY)).toBeUndefined();
+    expect(rowForBounty(undefined, BOUNTY)).toBeUndefined();
+    expect(rowForBounty(null, BOUNTY)).toBeUndefined();
   });
 });
 

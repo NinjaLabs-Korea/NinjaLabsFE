@@ -62,7 +62,15 @@ describe("redirects", () => {
       { source: "/:locale(en|ko|zh)/signup/wallet", destination: "/:locale/signup/profile", permanent: false },
       { source: "/signup/wallet", destination: "/signup/profile", permanent: false },
     ]);
-    expect(redirects).toHaveLength(3);
+    expect(redirects).toHaveLength(5);
+  });
+
+  it("temporarily sends the removed agent pages (every locale) to the bounty list", async () => {
+    const redirects = await (await loadConfig(apiEnv)).redirects!();
+    expect(redirects.filter((rule) => rule.destination === "/:locale/bounties")).toEqual([
+      { source: "/:locale(en|ko|zh)/agents", destination: "/:locale/bounties", permanent: false },
+      { source: "/:locale(en|ko|zh)/agents/register", destination: "/:locale/bounties", permanent: false },
+    ]);
   });
 });
 

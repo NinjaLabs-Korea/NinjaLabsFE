@@ -30,8 +30,6 @@ export const FE_ERROR_CODES = [
   "UNAUTHORIZED",
   "TOO_MANY_REQUESTS",
   "TRANSITION_BLOCKED",
-  // 옛 BE 호환: BE #57이 카탈로그에서 지웠다(지금은 던지지 않음). 옛 BE 응답이 오면 walletVerify가 계속 문구를 보여 준다.
-  "WALLET_ALREADY_LINKED",
 ] as const;
 export type FeErrorCode = (typeof FE_ERROR_CODES)[number];
 
@@ -50,29 +48,6 @@ export type ErrorCopySurface = {
 
 export const ERROR_COPY = {
   /**
-   * 온보딩 지갑 연결 (challenge → 서명 → verify) - `wallet/WalletConnectButton.tsx`. BE `wallets.service.ts`가 던지는 코드 전부.
-   * 서명 거절 등 지갑 쪽 실패는 `ApiHttpError`가 아니므로 `generic`이다.
-   */
-  walletVerify: {
-    messages: "common.wallet.verifyErrors",
-    codes: [
-      "INVALID_INJECTIVE_ADDRESS",
-      "CHALLENGE_NOT_FOUND",
-      "CHALLENGE_EXPIRED",
-      "INVALID_SIGNATURE",
-      // 409: 이 주소가 다른 계정에 연결됐거나, 내 계정에 이미 대표 지갑이 있다.
-      "WALLET_ALREADY_LINKED",
-      // 409: 새 BE가 원인별로 나눠 보낸다 (a: 이 주소가 다른 계정에 있다 / b: 이 계정에 이미 다른 대표 지갑이 있다).
-      "WALLET_LINKED_TO_OTHER_ACCOUNT",
-      "ACCOUNT_ALREADY_HAS_WALLET",
-      // 400: 이 주소가 내 에이전트의 지갑이다. 개인 지갑은 에이전트 지갑과 달라야 한다.
-      "AGENT_WALLET_IS_OWNER_WALLET",
-      "DATABASE_UNAVAILABLE",
-      "TOO_MANY_REQUESTS",
-    ],
-    fallback: "generic",
-  },
-  /**
    * 바운티 상세 → 직접 지원/제출 - `bounties/BountyActionPanel.tsx` (키 선택은 `lib/bounty-action-state.ts bountyActionErrorCopy`).
    * BE bounties/rewards 코드와 FE 전송 코드(REFRESH_UNAVAILABLE / UNKNOWN_ERROR). 목록 밖 BE 코드는 `unknown`(원 코드를 `{code}`로),
    * HTTP 응답이 아닌 실패는 `generic`이다.
@@ -81,7 +56,7 @@ export const ERROR_COPY = {
     messages: "bounties.action.errors",
     codes: [
       "ALREADY_APPLIED", "BOUNTY_NOT_OPEN", "APPLICATION_NOT_APPROVED", "DEADLINE_PASSED", "SUBMISSION_FINALIZED", "VALIDATION_FAILED",
-      "APPLICATION_DEADLINE_PASSED", "SUBMISSION_TYPE_BOUNTY", "AGENT_SUBMISSION_REQUIRED", "DIRECT_SUBMISSION_REQUIRED",
+      "APPLICATION_DEADLINE_PASSED", "SUBMISSION_TYPE_BOUNTY", "DIRECT_SUBMISSION_REQUIRED",
       "REFRESH_UNAVAILABLE", "UNKNOWN_ERROR", "MAX_WINNERS_REACHED", "BOUNTY_NOT_FOUND", "INVALID_CHARACTER", "REFERENCE_NOT_FOUND",
       "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS",
     ],
@@ -127,21 +102,6 @@ export const ERROR_COPY = {
   payoutAddress: {
     messages: "account.applications.payoutErrors",
     codes: ["INVALID_INJECTIVE_ADDRESS", "PAYOUT_ADDRESS_LOCKED", "SUBMISSION_NOT_APPROVED", "SUBMISSION_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS"],
-    fallback: "generic",
-  },
-  /** 내 에이전트 → API 키 회전 - `account/AgentsView.tsx` */
-  agentRotate: {
-    messages: "agents.list.rotateErrors",
-    codes: ["AGENT_NOT_ACTIVE", "AGENT_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS"],
-    fallback: "generic",
-  },
-  /** 에이전트 등록 (register → 서명 → verify) - `agents/AgentRegisterForm.tsx`. 필드 검증(VALIDATION_FAILED)은 인라인으로 따로 처리한다. */
-  agentRegister: {
-    messages: "agents.form.registerErrors",
-    codes: [
-      "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED", "AGENT_WALLET_IS_OWNER_WALLET", "INVALID_AGENT_WALLET_ADDRESS", "PROFILE_REQUIRED",
-      "AGENT_ALREADY_VERIFIED", "AGENT_NOT_PENDING", "AGENT_NOT_FOUND", "DATABASE_UNAVAILABLE", "TOO_MANY_REQUESTS",
-    ],
     fallback: "generic",
   },
   /**

@@ -14,7 +14,6 @@ export type BountyFormValues = {
   amount: string;
   currency: "INJ" | "USDC";
   intake: "OFF" | "ON";
-  submissionMode: "Direct" | "Agent";
   coverImage: string | null;
   tags: AdminBounty["tags"];
   description: string;
@@ -108,7 +107,6 @@ export const emptyBountyForm = (): BountyFormValues => ({
   amount: "",
   currency: "INJ",
   intake: "OFF",
-  submissionMode: "Direct",
   coverImage: null,
   tags: ["Dev"],
   description: "",
@@ -131,7 +129,6 @@ export function bountyToForm(bounty: AdminBounty): BountyFormValues {
     amount: bounty.reward.amount > 0 ? String(bounty.reward.amount) : "",
     currency: bounty.reward.currency,
     intake: bounty.intakeEnabled ? "ON" : "OFF",
-    submissionMode: bounty.submissionMode === "agent" ? "Agent" : "Direct",
     coverImage: bounty.coverImage,
     tags: bounty.tags,
     description: bounty.description,
@@ -169,7 +166,6 @@ export function formToBounty(
     sponsor: form.sponsor.trim(),
     reward: { amount, currency: form.currency },
     intakeEnabled: form.intake === "ON",
-    submissionMode: form.submissionMode === "Agent" ? "agent" : "direct",
     coverImage: target.coverImage,
     deadline: resolveDeadlineIso(form.deadline, form.originalSubmissionDeadline),
     applicationDeadline: form.applicationDeadline.trim() ? resolveDeadlineIso(form.applicationDeadline, form.originalApplicationDeadline ?? undefined) : null,

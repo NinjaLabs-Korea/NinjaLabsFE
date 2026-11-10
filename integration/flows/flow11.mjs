@@ -20,7 +20,7 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   check('signed out: no edge-case spec box', !/Edge case|Already signed-in user|declined or failed/i.test(t), t.slice(0, 300));
   check('signed out: no em dash on the page', !t.includes('-'));
   clean(await report(p, 'signed-out signup', {}), { signedOut: true });
-  for (const path of ['/en/account', '/en/applications', '/en/agents', '/en/admin']) {
+  for (const path of ['/en/account', '/en/applications', '/en/admin']) {
     await p.goto(path); await p.waitFor(`/sign in|get started|log in|session|Continue with Google/i.test(document.querySelector('main')?.innerText ?? '')`, 8000);
     const txt = await mainText(p);
     check(`signed out: ${path} asks to sign in (never shows account content)`, /sign in|get started|log in|session/i.test(txt) || /Continue with Google/.test(txt), txt.slice(0, 160));
@@ -32,8 +32,10 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
     check(`signed out: /signup/${step} goes to step 1 with a clear message`, (await p.url()).endsWith('/en/signup') && txt.includes('Sign in to continue') && txt.includes(LOGIN), txt.slice(0, 200));
     clean(await report(p, `signed-out signup ${step}`, {}), { signedOut: true });
   }
-  await p.goto('/en/agents/register'); await p.mainReady();
-  check('signed out: agent register asks to sign in', /Sign in before registering/i.test(await mainText(p)));
+  for (const gone of ['/en/agents', '/en/agents/register']) {
+    await p.goto(gone); await p.waitFor(`location.pathname.endsWith('/en/bounties')`, 8000);
+    check(`signed out: removed ${gone} redirects to the bounty list`, (await p.url()).endsWith('/en/bounties'), await p.url());
+  }
   await p.close();
 }
 
@@ -87,9 +89,9 @@ const headerGetStarted = (p) => p.eval(`[...document.querySelectorAll('header a'
   }
   await p.goto('/en/account'); await p.mainReady();
   const acct = await mainText(p);
-  console.log('INFO /account offers wallet/profile editing:', /edit|change|connect/i.test(acct.replace(/Delete account/gi, '')));
-  await p.goto('/en/agents/register'); await p.mainReady();
-  check('complete user: agent register shows no sign-in warning', !/Sign in before registering/i.test(await mainText(p)));
+  console.log('INFO /account offers profile editing:', /edit|change|connect/i.test(acct.replace(/Delete account/gi, '')));
+  await p.goto('/en/agents'); await p.waitFor(`location.pathname.endsWith('/en/bounties')`, 8000);
+  check('complete user: removed /agents redirects to the bounty list', (await p.url()).endsWith('/en/bounties'), await p.url());
   await p.goto('/en/admin'); await p.waitText('Admin access only', 8000);
   const adminText = await mainText(p);
   check('regular user: /admin says admin only, not sign in', /Admin access only/i.test(adminText) && !/sign-in required/i.test(adminText), adminText.slice(0, 160));

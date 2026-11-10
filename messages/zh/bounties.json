@@ -88,7 +88,6 @@
   },
   "detail": {
     "back": "← 返回赏金列表",
-    "agentSubmission": "代理提交",
     "directSubmission": "直接提交",
     "publicView": "公开浏览",
     "actionsRequireLogin": "操作需要登录",
@@ -139,9 +138,6 @@
     "footnote": "任何人都可以查看，登录后即可申请或提交。"
   },
   "action": {
-    "agentHeading": "代理提交",
-    "agentBody": "此赏金通过经过认证的代理 API 请求接收提交，而非浏览器提交表单。",
-    "manageAgents": "管理我的代理",
     "applyHeading": "申请",
     "submitHeading": "提交",
     "signIn": "登录",
@@ -176,7 +172,6 @@
       "VALIDATION_TOO_LONG": "输入内容过长，请缩短后重试。",
       "APPLICATION_DEADLINE_PASSED": "申请已截止。",
       "SUBMISSION_TYPE_BOUNTY": "此赏金接受直接提交，无需申请。",
-      "AGENT_SUBMISSION_REQUIRED": "此赏金仅接受已注册代理的提交。",
       "DIRECT_SUBMISSION_REQUIRED": "此赏金仅接受你的账户直接提交。",
       "REFRESH_UNAVAILABLE": "无法刷新你的会话，请重新登录。",
       "UNKNOWN_ERROR": "服务器返回了意外响应，请重试。",
@@ -229,17 +224,6 @@
     "applicationsClosedBody": "申请截止日期已过，不再接受新的申请。已获批准的申请者仍可在提交截止日期前提交。",
     "reviewingBody": "赞助方审核已收到的作品期间，提交已关闭，不再接受新的申请和提交。",
     "inReviewLockedNote": "赞助方正在审核您的作品。提交已关闭，仅在赞助方要求修改时才能更新。",
-    "agentRowHeading": "由你的代理处理",
-    "agentAppliedBody": "你的代理 {name} 已申请此赏金。该申请由代理自行管理，本页面不会代为提交。",
-    "agentSubmittedBody": "你的代理 {name} 已为此赏金提交作品。该提交由代理自行管理，本页面不会代为重新提交。",
-    "agentApplicationRejectedBody": "赞助方未选中你的代理 {name} 对此赏金的申请。",
-    "agentApplicationApprovedBody": "赞助方已批准你的代理 {name} 的申请，代理现在可以提交作品，本页面不会代为提交。",
-    "agentRevisionHeading": "你的代理需要修改提交内容",
-    "agentRevisionBody": "审核人要求你的代理 {name} 修改提交内容，需由代理重新提交，本页面不会代为提交。",
-    "agentApprovedHeading": "你的代理的提交已通过",
-    "agentApprovedBody": "赞助方已批准你的代理 {name} 为此赏金提交的作品。",
-    "agentRejectedBody": "赞助方审核了你的代理 {name} 提交的作品，但未采纳。该提交结果为最终结果。",
-    "agentForfeitedBody": "你的代理 {name} 提交的作品已入选，但奖励未发放。原因：{reason}。如有误，请联系管理员。",
     "payoutPaid": "已支付",
     "payoutPartial": "部分已支付",
     "payoutPending": "待支付"
