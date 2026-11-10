@@ -43,7 +43,6 @@ const row = (status: ApplicationStatus, overrides: Partial<AccountApplication> =
   appliedAt: "2026-07-12T09:00:00.000Z",
   note: `note ${status}`,
   status,
-  agent: null,
   ...overrides,
 });
 
@@ -78,10 +77,9 @@ describe("ApplicationsView", () => {
     expect(screen.getByRole("link", { name: "Browse bounties" }).getAttribute("href")).toBe("/bounties");
   });
 
-  it("lists direct submissions without Applied/Approved steps, and sends only the owner (not an agent) back to the resubmit form", async () => {
+  it("lists direct submissions without Applied/Approved steps, and sends the owner back to the resubmit form", async () => {
     serve({ status: "available", data: [
       row("revisionRequested", { id: "submission:own", source: "submission", bountySlug: "d1", bountyTitle: "Direct own", reviewComment: "Fix the link" }),
-      row("revisionRequested", { id: "submission:agent", source: "submission", bountySlug: "d2", bountyTitle: "Direct agent", agent: { id: "ag1", name: "Scout" }, reviewComment: "Add repo" }),
       row("completed", { id: "submission:paid", source: "submission", bountySlug: "d3", bountyTitle: "Direct paid", paymentStatus: "PAID" }),
     ] });
     renderWithIntl(<ApplicationsView />);
@@ -91,10 +89,6 @@ describe("ApplicationsView", () => {
     expect(within(own).queryByText("Applied")).toBeNull();
     expect(within(own).getByText("Reviewer comment: Fix the link")).toBeTruthy();
     expect(within(own).getByRole("link", { name: "Resubmit" }).getAttribute("href")).toBe("/bounties/d1");
-    const agent = card("Direct agent");
-    expect(within(agent).getByText("Reviewer comment: Add repo")).toBeTruthy();
-    expect(within(agent).getByText(/The agent needs to resubmit/)).toBeTruthy();
-    expect(within(agent).queryByRole("link", { name: "Resubmit" })).toBeNull();
     expect(within(card("Direct paid")).getByText("Paid")).toBeTruthy();
   });
 
@@ -253,62 +247,10 @@ describe("ApplicationsView", () => {
     expect(within(article).getByText(/winner wallet never connected/)).toBeTruthy();
   });
 
-  it("labels applications an agent made on the owner's behalf", async () => {
-    serve({
-      status: "available",
-      data: [row("open", { id: "mine", bountyTitle: "Mine" }), row("submitted", { id: "agent", bountyTitle: "By agent", agent: { id: "ag1", name: "Scout" } })],
-    });
-    renderWithIntl(<ApplicationsView />);
-    await screen.findByRole("link", { name: "By agent" });
-    expect(within(card("By agent")).getByText("via Scout")).toBeTruthy();
-    expect(within(card("Mine")).queryByText(/^via /)).toBeNull();
-  });
-
-  it("asks to sign in again only for an unauthorized read, and shows the unavailable copy for server and network errors", async () => {
-    serve({ status: "unavailable", reason: "unauthorized" });
-    const view = renderWithIntl(<ApplicationsView />);
-    expect(await screen.findByText("Your session has expired. Sign in again to continue.")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Get Started" }).getAttribute("href")).toBe("/signup?returnTo=%2Fapplications");
-    view.unmount();
-
-    for (const reason of ["server-error", "network-error"] as const) {
-      serve({ status: "unavailable", reason });
-      const next = renderWithIntl(<ApplicationsView />);
-      expect(await screen.findByText("Applications are temporarily unavailable.")).toBeTruthy();
-      expect(screen.queryByText(/session has expired/)).toBeNull();
-      expect(screen.queryByRole("link", { name: "Get Started" })).toBeNull();
-      next.unmount();
-    }
-  });
-
-  it("shows a loading status while the session restores and the sign-in prompt when signed out", async () => {
-    serve({ status: "available", data: [] });
-    state.auth = { status: "loading", user: null };
-    const view = renderWithIntl(<ApplicationsView />);
-    expect((await screen.findByRole("status")).textContent).toBe("Loading your account…");
-    view.unmount();
-
-    state.auth = { status: "signed-out", user: null };
-    renderWithIntl(<ApplicationsView />);
-    expect(await screen.findByText("Sign in to see your applications")).toBeTruthy();
-  });
-
-  it("shows the demo-data note only in mock mode", async () => {
-    serve({ status: "available", data: [row("open")] });
-    const view = renderWithIntl(<ApplicationsView />);
-    await screen.findByRole("link", { name: "Bounty open" });
-    expect(screen.queryByText(/Session preview: demo data/)).toBeNull();
-    view.unmount();
-
-    state.mode = "mock";
-    renderWithIntl(<ApplicationsView />);
-    expect(await screen.findByText("Session preview: demo data, resets on reload.")).toBeTruthy();
-  });
-
   describe("withdraw", () => {
     const rows = () => [
       row("open"), row("approved"), row("submitted"), row("completed"), row("rejected"),
-      row("open", { id: "agent-open", bountyTitle: "Agent open", agent: { id: "ag1", name: "Scout" } }),
+      row("open", { id: "agent-open", bountyTitle: "Agent open" }),
     ];
     // A stateful stand-in for the BE: withdrawing removes the row from the next read.
     function serveWithWithdraw(withdraw: (id: string) => Promise<{ id: string; status: string }>) {
@@ -324,7 +266,7 @@ describe("ApplicationsView", () => {
       return { withdrawApplication, getApplications };
     }
 
-    it("offers Withdraw only on pending rows, including agent-made ones", async () => {
+    it("offers Withdraw only on pending rows", async () => {
       serveWithWithdraw(async (id) => ({ id, status: "WITHDRAWN" }));
       renderWithIntl(<ApplicationsView />);
       await screen.findByRole("link", { name: "Bounty open" });

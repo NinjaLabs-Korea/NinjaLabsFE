@@ -1,7 +1,7 @@
 import { newestFirst } from "@/lib/account-order";
 import { avatarFileProblem } from "@/lib/avatar";
 import type { AdminApi, ApiClient } from "@/lib/contracts/api";
-import type { AccountAgent, AccountApplication, AccountSubmission, PayoutAddressFields } from "@/lib/contracts/account";
+import type { AccountApplication, AccountSubmission, PayoutAddressFields } from "@/lib/contracts/account";
 import { evmHexAddress, isPayoutAddressShape } from "@/lib/injective-address";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
@@ -13,14 +13,11 @@ import { getAdminBounties, getAdminHighlights, getAdminPosts, getAdminUsers } fr
 import { createMockOperationsApi } from "@/lib/mocks/admin-operations";
 import { createMockCohortApis } from "@/lib/mocks/cohorts";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-const daysFromNow = (days: number): string => new Date(Date.now() + days * DAY_MS).toISOString();
-
 function isFixtureOwner(auth: AuthSnapshot, fixtures: MockAccountFixtures): boolean {
   return auth.status === "signed-in" && auth.user.id === fixtures.account.user.id;
 }
 
-/** Generated ids for records created in this tab (`preview-agent-1`, `preview-bounty-2`, ...). */
+/** Generated ids for records created in this tab (`preview-application-1`, `preview-bounty-2`, ...). */
 function createSequence() {
   let sequence = 0;
   return (prefix: string) => `${prefix}-${++sequence}`;
@@ -39,7 +36,6 @@ function toPreviewApplication(id: string, bountyId: string, message: string): Ac
     note: message,
     // BE PENDING → FE "open" (Applied), the same first step the api client maps to.
     status: "open",
-    agent: null,
     reviewComment: null,
     reviewNote: null,
     paymentStatus: "NONE",
@@ -74,7 +70,6 @@ function fixtureSubmissions(applications: readonly AccountApplication[]): Accoun
     .map((application) => ({
       bountySlug: application.bountySlug,
       status: application.status === "completed" ? "approved" as const : application.status === "notAccepted" ? "rejected" as const : application.status === "revisionRequested" ? "revision_requested" as const : "submitted" as const,
-      agent: application.agent,
       paymentStatus: application.status === "completed" ? application.paymentStatus : "NONE" as const,
       reviewComment: application.reviewComment,
       ...payoutFieldsOf(application),
@@ -134,14 +129,6 @@ export function createMockApiClient(seed = "default"): ApiClient {
   let applications: AccountApplication[] = [...fixtureSnapshot.applications];
   let submissions: AccountSubmission[] = fixtureSubmissions(fixtureSnapshot.applications);
   const revisions = new Map<string, number>();
-  let agents: AccountAgent[] = [...fixtureSnapshot.agents];
-  const updateAgent = (agentId: string, update: (agent: AccountAgent) => AccountAgent): AccountAgent => {
-    const current = agents.find((agent) => agent.id === agentId);
-    if (!current) throw new MockApiError(404, "AGENT_NOT_FOUND");
-    const next = update(current);
-    agents = agents.map((agent) => (agent.id === agentId ? next : agent));
-    return next;
-  };
   const cohorts = createMockCohortApis({ nextId, ownerId: fixtureSnapshot.account.user.id, isOwner: (auth) => isFixtureOwner(auth, fixtureSnapshot) });
   return {
     getAccount: async (auth) => {
@@ -165,17 +152,10 @@ export function createMockApiClient(seed = "default"): ApiClient {
 
       return { status: "available", data: submissions.map((submission) => ({ ...submission })) };
     },
-    getAgents: async (auth) => {
-      if (!isFixtureOwner(auth, fixtureSnapshot)) {
-        return { status: "available", data: [] };
-      }
-
-      return { status: "available", data: agents.map((agent) => ({ ...agent })) };
-    },
     applyToBounty: async (bountyId, input) => {
       const application = toPreviewApplication(nextId("preview-application"), bountyId, input.message);
-      // Only the owner's own row on this bounty is replaced; agent-made rows (`agent !== null`) stay, like the BE lists them.
-      applications = [application, ...applications.filter((item) => item.bountySlug !== bountyId || item.agent !== null)];
+      // The owner's row on this bounty is replaced.
+      applications = [application, ...applications.filter((item) => item.bountySlug !== bountyId)];
       return { id: application.id, status: "PENDING" };
     },
     withdrawApplication: async (applicationId) => {
@@ -204,73 +184,23 @@ export function createMockApiClient(seed = "default"): ApiClient {
     submitBounty: async (bountyId, input) => {
       const revisionNo = (revisions.get(bountyId) ?? 0) + 1;
       revisions.set(bountyId, revisionNo);
-      const existing = submissions.find((submission) => submission.bountySlug === bountyId && submission.agent === null);
+      const existing = submissions.find((submission) => submission.bountySlug === bountyId);
       submissions = existing
         ? submissions.map((submission) =>
             submission === existing
               ? { ...withoutContent(submission), ...submissionContent(input), status: submission.status === "revision_requested" ? ("resubmitted" as const) : ("submitted" as const) }
               : submission,
           )
-        : [{ bountySlug: bountyId, status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null, ...submissionContent(input) }, ...submissions];
+        : [{ bountySlug: bountyId, status: "submitted", paymentStatus: "NONE", reviewComment: null, ...submissionContent(input) }, ...submissions];
       // Like the api client's /applications/me + /submissions/me join: an approved application - or one whose work came back
       // for revision (BE RESUBMITTED maps to `submitted`) - is now "submitted".
       applications = applications.map((application) =>
         application.bountySlug === bountyId &&
-        application.agent === null &&
         (application.status === "approved" || application.status === "revisionRequested")
           ? { ...application, status: "submitted" as const }
           : application,
       );
       return { id: nextId("preview-submission"), revisionNo, status: revisionNo === 1 ? "SUBMITTED" : "RESUBMITTED" };
-    },
-    registerAgent: async ({ name, walletAddress }) => {
-      const wallet = walletAddress.toLowerCase();
-      const existing = agents.find((agent) => agent.status !== "REVOKED" && agent.walletAddress.toLowerCase() === wallet);
-      // BE: an active wallet cannot be registered twice; a pending one is re-issued, a revoked one starts over.
-      if (existing && existing.status !== "PENDING_VERIFICATION") throw new MockApiError(409, "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED");
-      const agentId = nextId("preview-agent");
-      agents = [
-        ...agents.filter((agent) => agent !== existing),
-        {
-          id: agentId,
-          name,
-          walletAddress,
-          status: "PENDING_VERIFICATION",
-          verified: false,
-          completedBounties: 0,
-          apiKeyMasked: "-",
-          keyExpiresAt: null,
-          keyStatus: null,
-          registeredAt: new Date().toISOString(),
-        },
-      ];
-      return { agentId, status: "PENDING_VERIFICATION", verificationMessage: `Preview agent registration for ${walletAddress}` };
-    },
-    verifyAgent: async (agentId) => {
-      const expiresAt = daysFromNow(90);
-      // The raw key is revealed once in this response; the list only ever carries the masked form.
-      const apiKey = `nl_preview_${agentId}_key_not_for_production`;
-      updateAgent(agentId, (agent) => ({
-        ...agent,
-        status: "ACTIVE",
-        verified: true,
-        apiKeyMasked: `nl_live_····…${agentId.slice(-4).padStart(4, "0")}`,
-        keyExpiresAt: expiresAt,
-        keyStatus: "ACTIVE",
-      }));
-      return { agentId, status: "ACTIVE", apiKey, expiresAt };
-    },
-    rotateAgentKey: async (agentId) => {
-      const expiresAt = daysFromNow(90);
-      updateAgent(agentId, (agent) => {
-        if (agent.status !== "ACTIVE") throw new MockApiError(409, "AGENT_NOT_ACTIVE");
-        return { ...agent, apiKeyMasked: "nl_live_····…new1", keyExpiresAt: expiresAt, keyStatus: "ACTIVE" };
-      });
-      return { agentId, apiKey: "nl_preview_rotated_key_not_for_production", expiresAt };
-    },
-    revokeAgent: async (agentId) => {
-      updateAgent(agentId, (agent) => ({ ...agent, status: "REVOKED", verified: false, keyStatus: agent.keyStatus ? "REVOKED" : null }));
-      return { agentId, status: "REVOKED" };
     },
     checkNickname: async () => ({ available: true }),
     completeProfile: async () => undefined,

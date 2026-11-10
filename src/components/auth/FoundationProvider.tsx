@@ -13,7 +13,6 @@ import type {
   AccountSettingsApi,
   AdminApi,
   AdminCohortApi,
-  AgentApi,
   ApiClient,
   BountyApi,
   CohortApi,
@@ -207,7 +206,6 @@ export function useAuthActions(): Pick<AuthAdapter, "signIn" | "signOut" | "refr
 // 컴포넌트는 필요한 API 조각만 받는다. 구현체(mock/api)는 FoundationProvider가 고른다.
 export const useAccountApi = (): AccountApi => useFoundationContext().apiClient;
 export const useBountyApi = (): BountyApi => useFoundationContext().apiClient;
-export const useAgentApi = (): AgentApi => useFoundationContext().apiClient;
 export const useOnboardingApi = (): OnboardingApi => useFoundationContext().apiClient;
 export const useAccountSettingsApi = (): AccountSettingsApi => useFoundationContext().apiClient;
 export const useAdminApi = (): AdminApi => useFoundationContext().apiClient;

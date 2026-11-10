@@ -33,7 +33,6 @@ export type Bounty = {
   submissionGuideMarkdown?: string;
   deliverables?: string[];
   reviewProcess?: string;
-  submissionMode?: 'direct' | 'agent';
   // Figma 15v apply-variant driver
   applicationRequired?: boolean;
   /** Figma 15v renders variant-specific masthead/description copy without changing list copy. */
@@ -72,7 +71,7 @@ export type Member = {
   /** Profile photo (`/media/<uuid>`); absent = initials. */
   avatarUrl?: string;
   isMember: boolean;
-  links: Partial<Record<'profile' | 'posts' | 'agents' | 'bounties' | 'notices', string>>;
+  links: Partial<Record<'profile' | 'posts' | 'bounties' | 'notices', string>>;
 };
 
 /**
@@ -110,13 +109,6 @@ export type ProfileNft = {
   mintTxHash: string | null;
 };
 
-export type Agent = {
-  name: string;
-  wallet: string;
-  verified: boolean;
-  completedBounties: number;
-};
-
 export type Profile = {
   slug: string;
   handle: string;
@@ -130,5 +122,4 @@ export type Profile = {
   joinedAt: string;
   completions: Completion[];
   nfts: ProfileNft[];
-  agents: Agent[];
 };

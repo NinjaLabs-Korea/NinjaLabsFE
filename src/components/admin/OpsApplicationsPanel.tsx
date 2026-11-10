@@ -29,7 +29,7 @@ export function OpsApplicationsPanel({ ops, busy, run, formatDate }: { ops: Admi
     const { application, decision } = target;
     const ok = await run(`application:${application.id}`, () => api.reviewAdminApplication(application.id, { decision, note }), {
       title: decision === "APPROVED" ? t("toast.applicationApprovedTitle") : t("toast.applicationRejectedTitle"),
-      description: application.agentName ?? application.nickname ?? "",
+      description: application.nickname ?? "",
     });
     if (ok) setTarget(null);
   };
@@ -74,7 +74,7 @@ export function OpsApplicationsPanel({ ops, busy, run, formatDate }: { ops: Admi
       )}
       <OpsFormModal
         busy={target ? busy.has(`application:${target.application.id}`) : false}
-        description={target ? t("applications.modalDescription", { name: target.application.agentName ?? target.application.nickname ?? "–" }) : undefined}
+        description={target ? t("applications.modalDescription", { name: target.application.nickname ?? "–" }) : undefined}
         eyebrow={t("applications.eyebrow")}
         onCancel={() => setTarget(null)}
         onSubmit={() => void submit()}

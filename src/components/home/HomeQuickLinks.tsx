@@ -6,7 +6,6 @@ import { Link } from "@/i18n/navigation";
 // Keys under messages `home.quickLinks.items`. Only personal destinations the header lacks (the header already links bounties, hall of fame, members, about).
 const links = [
   { key: "applications", href: "/applications" },
-  { key: "agents", href: "/agents" },
 ] as const;
 
 /** Shortcuts to the places a member goes most. */

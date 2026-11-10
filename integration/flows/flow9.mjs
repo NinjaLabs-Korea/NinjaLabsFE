@@ -29,7 +29,7 @@ let cookieValue, legacyToken;
   check('DB: legacy row revoked, its successor = the cookie, live', sql(`select (revoked_at is not null)::text from auth_session where refresh_token_hash=${H(legacy.refreshToken)}`) === 'true' &&
     sql(`select count(*) from auth_session where prev_refresh_token_hash=${H(legacy.refreshToken)} and refresh_token_hash=${H(c.value)} and revoked_at is null`) === '1');
   bodies.length = 0;
-  await p.goto('/en/agents'); await p.waitText('PendingBot', 8000);
+  await p.goto('/en/applications'); await p.waitText('Build an Injective dashboard', 8000);
   check('A: next reload refreshes from the cookie only (empty body)', bodies.length === 1 && bodies[0].body === '{}', bodies);
   check('A: still signed in', await signedInHeader(p));
   cookieValue = (await rtCookie(p)).value;

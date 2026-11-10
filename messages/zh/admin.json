@@ -83,14 +83,12 @@
       "nickname": "昵称",
       "email": "邮箱",
       "joined": "加入时间",
-      "wallet": "钱包",
       "member": "成员",
       "role": "角色",
       "action": "操作"
     },
     "searchLabel": "搜索用户",
     "searchPlaceholder": "按邮箱 / 昵称搜索",
-    "walletLinked": "已连接",
     "memberYes": "是",
     "emptyTitle": "没有符合搜索条件的用户",
     "emptyBody": "请尝试其他邮箱或昵称。",
@@ -153,10 +151,6 @@
       "ON": "开启",
       "OFF": "关闭"
     },
-    "submissionModes": {
-      "Direct": "直接",
-      "Agent": "代理"
-    },
     "statuses": {
       "draft": "草稿",
       "funding": "注资中",
@@ -194,8 +188,6 @@
       "maxWinnersHint": "可被批准并发放奖励的提交数量。不能低于已批准的数量。",
       "intake": "申请接收",
       "intakeHint": "允许通过公开赏金页面提交。",
-      "submissionMode": "提交方式",
-      "submissionModeHint": "代理模式通过代理 API 密钥接收申请和提交。",
       "coverImage": "封面图片",
       "coverPreviewAlt": "封面图片预览",
       "coverPending": "{name}（保存时上传）",
@@ -417,8 +409,6 @@
       "CANCELLED": "已取消"
     },
     "actor": {
-      "agent": "代理",
-      "owner": "所有者：{nickname}",
       "unknown": "未知用户"
     },
     "blockers": {

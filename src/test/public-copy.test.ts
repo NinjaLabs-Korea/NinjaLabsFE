@@ -1,40 +1,10 @@
 import { describe, expect, it } from "vitest";
-import en from "../../messages/en/agents.json";
-import ko from "../../messages/ko/agents.json";
-import zh from "../../messages/zh/agents.json";
 import enLegal from "../../messages/en/legal.json";
 import koLegal from "../../messages/ko/legal.json";
 import zhLegal from "../../messages/zh/legal.json";
 import enCommon from "../../messages/en/common.json";
 import koCommon from "../../messages/ko/common.json";
 import zhCommon from "../../messages/zh/common.json";
-
-// The register page shows `agents.register` copy to end users. It once carried Figma design notes ("Open: define how
-// bound agents are handled when a user deletes their account") and described a public-key step the BE does not have
-// (registration takes `walletAddress` only; account deletion revokes every owned agent).
-describe.each([["en", en], ["ko", ko], ["zh", zh]] as const)("agents.register copy (%s)", (_locale, messages) => {
-  const register = messages.register as Record<string, unknown>;
-
-  it("states the account-deletion behaviour instead of an open question", () => {
-    expect(register).not.toHaveProperty("unresolved");
-    expect(register).not.toHaveProperty("unresolvedBadge");
-    expect(typeof register.withdrawal).toBe("string");
-    expect(typeof register.withdrawalBadge).toBe("string");
-  });
-
-  it("keeps developer wording out of the user-facing list and links to the pages that do the work", () => {
-    const items = Object.values(register.verificationItems as Record<string, string>).join(" ");
-    expect(items).not.toMatch(/database|1:N|데이터베이스|数据库/i);
-    expect(register).not.toHaveProperty("verificationItems.failure");
-    expect(register.profileNote as string).toContain("<link>");
-    expect(register.withdrawal as string).toContain("<link>");
-  });
-
-  it("does not ask for a public key", () => {
-    const steps = register.steps as Record<string, { heading: string }>;
-    expect(steps.publicKey.heading).not.toMatch(/public key|公钥|공개 키/i);
-  });
-});
 
 // The footer once repeated a Figma behaviour note ("Returning users skip Intro and land on main") that is not true of the
 // site: there is no intro page to skip, and the landing page always renders.
@@ -78,9 +48,9 @@ describe("user-facing messages", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("carry no edge-case spec boxes on the signup and agent register pages", () => {
+  it("carry no edge-case spec boxes on the signup pages", () => {
     for (const [file, text] of Object.entries(files)) {
-      if (/\/(signup|agents)\.json$/.test(file)) {
+      if (/\/signup\.json$/.test(file)) {
         expect(text, file).not.toMatch(/"edgeCases?"|"edgeCaseBadge"|"statusTitle"/);
       }
     }

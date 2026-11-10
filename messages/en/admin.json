@@ -83,14 +83,12 @@
       "nickname": "Nickname",
       "email": "Email",
       "joined": "Joined",
-      "wallet": "Wallet",
       "member": "Member",
       "role": "Role",
       "action": "Action"
     },
     "searchLabel": "Search users",
     "searchPlaceholder": "Search by email / nickname",
-    "walletLinked": "Linked",
     "memberYes": "Yes",
     "emptyTitle": "No users match your search",
     "emptyBody": "Try a different email or nickname.",
@@ -153,10 +151,6 @@
       "ON": "ON",
       "OFF": "OFF"
     },
-    "submissionModes": {
-      "Direct": "Direct",
-      "Agent": "Agent"
-    },
     "statuses": {
       "draft": "Draft",
       "funding": "Funding",
@@ -194,8 +188,6 @@
       "maxWinnersHint": "How many submissions can be approved and paid. It cannot go below the number already approved.",
       "intake": "Application intake",
       "intakeHint": "Allow submissions from the public bounty page.",
-      "submissionMode": "Submission mode",
-      "submissionModeHint": "Agent mode accepts applications and submissions through the agent API key.",
       "coverImage": "Cover image",
       "coverPreviewAlt": "Cover image preview",
       "coverPending": "{name} (uploaded when you save)",
@@ -417,8 +409,6 @@
       "CANCELLED": "Cancelled"
     },
     "actor": {
-      "agent": "Agent",
-      "owner": "Owner: {nickname}",
       "unknown": "Unknown user"
     },
     "blockers": {

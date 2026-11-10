@@ -7,8 +7,8 @@ of UI actions.
 
 It is **not part of the required CI checks** (it needs Chrome, Postgres binaries and a BE checkout, and takes 15+ minutes).
 `.github/workflows/integration.yml` runs it on demand (`workflow_dispatch`, input `be_ref` = the BE branch/tag/SHA, default
-`main`) and nightly, and uploads `integration/.logs` as an artifact per job. CI runs the flows as four parallel jobs, each with
-its own stack: `1 2 3 4 5 7 8`, `6 9 10 11`, `12 13 16`, `14 15` (7 and 8 need 4 and 5, so they share a group; flows must not
+`main`) and nightly, and uploads `integration/.logs` as an artifact per job. CI runs the flows as five parallel jobs, each with
+its own stack: `1 2 3 4 7 8`, `6 9 10 11`, `12 13 16`, `14 15`, `17` (the QA sweep has its own job; 7 and 8 need 4, so they share a group; flows must not
 depend on data another group creates). The full dense sweep (`NINJA_IT_SWEEP=full`) is a separate opt-in job (`sweep_full` input). Run it locally before merging anything that touches
 auth, the data layer, routing or a whole user flow.
 
@@ -26,7 +26,7 @@ auth, the data layer, routing or a whole user flow.
 ## Run
 
 ```sh
-NINJA_BE_DIR=../NinjaLabsBE npm run test:integration          # flows 1-16
+NINJA_BE_DIR=../NinjaLabsBE npm run test:integration          # flows 1-4 and 6-17
 NINJA_BE_DIR=../NinjaLabsBE npm run test:integration -- 1 3    # a subset
 NINJA_IT_CHROME_FLAGS="--no-sandbox"  # extra Chrome flags (Linux CI)
 npm run test:integration -- --reap    # stop + delete the leftovers of dead runs
@@ -107,7 +107,6 @@ failed request.
 | 2 | Onboarding | A step-3 user is redirected to `/signup/profile`; live nickname check reports taken/available via `/users/check-nickname`; save lands on get-started and the DB row has nickname, bio and step 4. |
 | 3 | Removed wallet step | `/en/signup/wallet` redirects to the signup flow: signed out ends on step 1 with a message; a legacy step-2 user lands on `/signup/profile` with the 3-step indicator (Profile current); no wallet row is written. |
 | 4 | Apply / submit | Signed-in badges on the bounty detail; apply `POST 201` and a PENDING application row; `/applications` lists it; after admin approval (API) submit `POST 201`, panel copy, SUBMITTED revision 1 row. |
-| 5 | Agents | Verified and pending agents listed; key rotation shows the full key once and its prefix matches the single ACTIVE key in the DB; after reload only the prefix remains; revoke dialog names the agent and the DB row is REVOKED; a revealed key leaves the DOM on sign-out. |
 | 6 | Admin CRUD | Member assignment reflected in the DB and `/members`; deadlines shown in the browser time zone; bounty create with single-select field chips and the typed local deadline stored exactly; past-deadline edits (with and without reward) keep deadline and reward; notice create/publish/edit keeps `published_at` and a plain-text summary; highlight create/edit clears the link to NULL; public pages show the edits. |
 | 7 | Cookie session + refresh | `ninja_rt` attributes (host-only, `Path=/api/auth`, Secure, HttpOnly, SameSite=Strict, 14 d) and no token in `document.cookie` or Web Storage; reload restores the session with exactly one refresh and rotates the DB row; an action after access expiry goes `401 → refresh 200 → retry 201` with one DB row; two tabs reloading at once (also with refresh held 1.5 s) both stay signed in with no reuse revocation. |
 | 8 | Sign-out | `POST /api/auth/logout 204`, cookie cleared, the other tab flips to signed-out without a request or reload, session revoked, the old refresh token is rejected in cookie and body mode; a refresh rejected mid-session flips the UI to signed-out in the same document and the BE clears the dead cookie. |
@@ -121,7 +120,7 @@ failed request.
 | 15 | Community-first landing | `/` opens on the Ninja Labs community hero (no bounty marketing, no NFT card), "Apply to join {cohort}" while a cohort accepts applications, section order upcoming events (when any) -> banner -> past activities -> members -> achievements -> bounty entry (always present; a single call to action when none is open); a finished user sees the same hub with "My activity"; the moved bounty hero (headline, NFT card, CTAs; My profile for a finished user) sits above the list on `/bounties`; all-zero stat blocks are hidden; titles and og:title use the new framing; no layout problems (probe `lib/layout-audit.mjs`) on `/` (also finished), `/about`, `/bounties`, `/home` at 340, 530, 700, 900 and 1100 px in ko, en and zh, signed out and finished. |
 | 16 | Profile photo | The seeded member picks a PNG on `/account` (real file input through CDP `DOM.setFileInputFiles`), sees the blob preview, saves (`POST /users/me/avatar` 201, DB `avatar_media_id` + `media_asset` row); the photo then shows in the header chip, after a reload (chip hint keeps only the `/media/<uuid>` path), on `/home`, on `/members/coreninja` through `/_next/image`, and on `/members`, whose 30s cached list was warmed with the initials first (proves the `public:members` expiry). Removing it (`DELETE` 200) clears the column, deletes the media row (old `/media` URL 404) and brings the initials back in the header, the chip hint and `/members`. |
 
-Flows depend on each other's data: 7 and 8 use 4's application and 5's agents, 9 uses 4's application and 5's agents (PendingBot), 10 uses B1's deposit, so run subsets with that in mind.
+Flows depend on each other's data: 7, 8 and 9 use 4's application, 10 uses B1's deposit, so run subsets with that in mind.
 
 ## Layout
 
@@ -135,7 +134,6 @@ integration/
   lib/jwt.mjs        HS256 access tokens with the run's secret
   lib/reaper.mjs     pids.json bookkeeping, stale-run teardown (`--reap`)
   lib/watchdog.mjs   detached: tears a run down when the harness pid dies
-  lib/agent.mjs      agent registration + EIP-191 verification with a random viem account
   lib/tls-proxy.mjs  HTTPS -> HTTP reverse proxy (cert dir passed at runtime)
   flows/flowN.mjs    the flows; each prints ASSERT lines and a final "FLOW n ... COMPLETED x/y"
 ```

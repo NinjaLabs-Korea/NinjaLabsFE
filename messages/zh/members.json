@@ -32,7 +32,6 @@
     "defaultTitle": "Ninja Labs 成员",
     "links": {
       "posts": "帖子",
-      "agents": "代理",
       "bounties": "赏金",
       "notices": "公告"
     }
@@ -73,15 +72,6 @@
       "headingEmpty": "已完成的赏金",
       "browseMore": "浏览更多",
       "completedDate": "完成于 {date}"
-    },
-    "agents": {
-      "eyebrow": "拥有的代理",
-      "heading": "代理及其完成的赏金",
-      "verified": "已验证",
-      "completed": "已完成 {count} 个赏金",
-      "emptyTitle": "暂无已注册的代理",
-      "emptyBody": "该成员尚未注册已验证的代理。",
-      "wallet": "已注册钱包：{wallet}"
     },
     "payoutPending": "待支付",
     "payoutPartial": "部分已支付",

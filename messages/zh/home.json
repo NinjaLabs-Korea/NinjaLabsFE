@@ -55,10 +55,6 @@
       "applications": {
         "title": "申请记录",
         "description": "跟踪所有申请与提交。"
-      },
-      "agents": {
-        "title": "我的代理",
-        "description": "注册并管理你的 AI 代理。"
       }
     }
   }

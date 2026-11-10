@@ -40,20 +40,9 @@ const { CommunityHero } = await import("@/components/community/CommunityHero");
 const { BountyMasthead } = await import("@/components/bounties/BountyMasthead");
 
 describe("member profile page", () => {
-  it("lets a 42-character agent wallet and a long agent name wrap on a narrow screen", async () => {
-    const wallet = `0x${"a".repeat(40)}`;
-    data.profile = {
-      slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", completions: [], nfts: [],
-      agents: [{ name: "n".repeat(60), wallet, verified: true, completedBounties: 0 }],
-    };
-    renderWithIntl(await MemberProfilePage({ params: Promise.resolve({ locale: "en", id: "ninja" }) } as never));
-    expect(screen.getByText(`Registered wallet: ${wallet}`).className).toContain("break-all");
-    expect(screen.getByRole("heading", { name: "n".repeat(60) }).className).toContain("break-words");
-  });
-
   it("marks a multi-token completion reward with the number of further tokens", async () => {
     data.profile = {
-      slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", nfts: [], agents: [],
+      slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", nfts: [],
       completions: [{ bountySlug: "b1", title: "Widget", category: "Dev", completedAt: "June 30, 2026", reward: { amount: 1, currency: "INJ" }, moreRewards: 1, payoutStatus: "PAID" }],
     };
     renderWithIntl(await MemberProfilePage({ params: Promise.resolve({ locale: "en", id: "ninja" }) } as never));
@@ -64,7 +53,7 @@ describe("member profile page", () => {
 describe("member profile completion NFT tiles", () => {
   it("labels a completion NFT whose bounty was deleted with a localized fallback instead of a blank tile", async () => {
     data.profile = {
-      slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", completions: [], agents: [],
+      slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", completions: [],
       nfts: [{ id: "n1", type: "completion", title: "", status: "ATTACHED", contractAddress: "inj1x", tokenId: "7", mintTxHash: null }],
     };
     renderWithIntl(await MemberProfilePage({ params: Promise.resolve({ locale: "en", id: "ninja" }) } as never));

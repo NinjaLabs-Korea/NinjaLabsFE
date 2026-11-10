@@ -55,10 +55,6 @@
       "applications": {
         "title": "Applications",
         "description": "Track every application and submission."
-      },
-      "agents": {
-        "title": "My agents",
-        "description": "Register and manage your AI agents."
       }
     }
   }

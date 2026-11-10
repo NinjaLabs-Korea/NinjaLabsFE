@@ -16,7 +16,6 @@ describe("input limits mirror the BE DTOs", () => {
     expect([limits.HIGHLIGHT_TITLE_MAX, limits.HIGHLIGHT_DESCRIPTION_MAX]).toEqual([200, 2000]);
     expect([limits.BOUNTY_TITLE_MAX, limits.BOUNTY_SPONSOR_MAX]).toEqual([200, 100]);
     expect(limits.BOUNTY_TEXT_MAX).toEqual({ description: 50_000, deliverables: 20_000, reviewProcess: 20_000 });
-    expect([limits.AGENT_NAME_MAX, limits.AGENT_DESCRIPTION_MAX]).toEqual([100, 1000]);
     expect(limits.AUDIT_ENTITY_TYPE_MAX).toBe(64);
     expect(limits.OPS_NOTE_MAX).toBe(2000);
     expect(limits.COHORT_APPLICATION_SEARCH_MAX).toBe(320);

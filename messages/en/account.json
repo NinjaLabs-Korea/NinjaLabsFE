@@ -26,7 +26,6 @@
     "intro": "Every bounty you applied to or submitted to is listed here.",
     "appliedAt": "Applied {date}",
     "submittedAt": "Submitted {date}",
-    "agentRevisionNote": "The reviewer asked your agent {name} to revise its submission. The agent needs to resubmit.",
     "progressLabel": "Application progress",
     "steps": {
       "open": "Applied",
@@ -38,7 +37,6 @@
     "approvedClosedStatus": "Approved: submissions closed",
     "pendingClosedStatus": "Closed: deadline passed",
     "pendingClosedNote": "The deadline passed before the sponsor reviewed this application, so it can no longer be approved.",
-    "agentApprovedStatus": "Approved: waiting for your agent {name} to submit",
     "submitWork": "Submit work",
     "resubmit": "Resubmit",
     "revisionRequestedStatus": "Revision requested",
@@ -57,7 +55,6 @@
     "forfeitedNote": "Your work was selected, but the reward was not paid. Reason: {reason}. Contact the admins if this is a mistake.",
     "reviewerComment": "Reviewer comment: {comment}",
     "sponsorNote": "Note from the reviewer: {note}",
-    "viaAgent": "via {name}",
     "withdraw": "Withdraw",
     "withdrawing": "Withdrawing…",
     "withdrawn": "Application withdrawn. You can apply again while the bounty is open.",
@@ -118,7 +115,6 @@
     "deleteBody": "Deleting your account cannot be undone. Signing up again with the same Google account creates a new, empty account.",
     "deleteConsequences": {
       "sessions": "You are signed out everywhere and your public profile disappears.",
-      "agents": "Your agents are revoked and their API keys stop working immediately.",
       "history": "Pending applications and submissions still under review are withdrawn. Completed work, payouts and NFTs stay on record under an anonymous name.",
       "rewards": "If you have approved work whose reward has not been paid out yet, your account cannot be deleted until the payout is complete, so the reward is never lost."
     },

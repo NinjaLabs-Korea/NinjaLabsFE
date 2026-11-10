@@ -54,7 +54,7 @@ export function OpsPayoutsPanel({ ops, busy, run, formatDate }: { ops: AdminOper
   const narrow = useSyncExternalStore(subscribeNarrow, getNarrow, getNarrowServer);
   const submissionName = (id: string) => {
     const submission = ops.submissions.find((item) => item.id === id);
-    return submission ? submission.agentName ?? submission.nickname ?? id : id;
+    return submission ? submission.nickname ?? id : id;
   };
   const requestable = isBountyInProgress(ops.bounty.status) ? ops.rewards.filter(isRewardFunded) : [];
 

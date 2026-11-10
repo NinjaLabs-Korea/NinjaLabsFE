@@ -226,7 +226,7 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <td className={`px-5 py-4 text-sm font-semibold text-ink ${adminLongTextCell}`}>{bounty.title}</td>
               <td className={`px-5 py-4 text-sm text-ink-secondary ${adminLongTextCell}`}>{bounty.sponsor}</td>
               <td className="px-5 py-4"><RewardPill reward={bounty.reward} />{bounty.rewardContractAddress ? <p className="mt-1 text-xs text-ink-muted" title={bounty.rewardContractAddress}>EVM {bounty.rewardChainId} · {bounty.rewardContractAddress.slice(0, 6)}…{bounty.rewardContractAddress.slice(-4)}</p> : null}</td>
-              <td className="px-5 py-4 text-sm text-ink-secondary">{t(`intake.${bounty.intakeEnabled ? "ON" : "OFF"}`)}<p className="mt-1 text-xs text-ink-muted">{t(`submissionModes.${bounty.submissionMode === "agent" ? "Agent" : "Direct"}`)}</p></td>
+              <td className="px-5 py-4 text-sm text-ink-secondary">{t(`intake.${bounty.intakeEnabled ? "ON" : "OFF"}`)}</td>
               <td className="px-5 py-4">{bounty.status === "active" && isPastDeadline(bounty.deadline) ? <Badge variant="warning">{t("statuses.pastDeadline")}</Badge> : <Badge variant={statusVariants[bounty.status]}>{t(`statuses.${bounty.status}`)}</Badge>}</td>
               <td className="px-5 py-4 text-sm text-ink-secondary">{deadlineCell(bounty.deadline)}</td>
               <td className="px-5 py-4"><div className="flex flex-wrap gap-2"><button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong" onClick={() => startEdit(bounty)} type="button">{tCommon("edit")}</button>{["draft", "funding", "active"].includes(bounty.status) ? <button className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong disabled:cursor-not-allowed disabled:opacity-60" disabled={transitionFlight.isBusy(bounty.slug)} onClick={() => transition(bounty)} type="button">{bounty.status === "active" ? t("close") : t("open")}</button> : null}<Link className="rounded-control border border-primary-outline px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href={{ pathname: "/admin/operations", query: { bounty: bounty.slug } }}>{t("operations")}</Link><button className="rounded-control border border-danger px-3 py-2 max-sm:py-2.5 text-sm font-semibold text-danger" onClick={() => setPendingDelete(bounty)} type="button">{tCommon("delete")}</button></div></td>
@@ -277,11 +277,6 @@ export function BountyManager({ bounties, children, tabs }: { bounties: AdminBou
               <p className="text-sm font-semibold text-ink">{t("form.intake")}</p>
               <div className="mt-2 w-fit"><AdminSelect formatOption={(option) => t(`intake.${option}`)} label={t("form.intake")} onChange={(value) => updateForm("intake", value as BountyFormValues["intake"])} options={["OFF", "ON"]} value={form.intake} /></div>
               <p className="mt-2 text-xs text-ink-muted">{t("form.intakeHint")}</p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-ink">{t("form.submissionMode")}</p>
-              <div className="mt-2 w-fit"><AdminSelect formatOption={(option) => t(`submissionModes.${option}`)} label={t("form.submissionMode")} onChange={(value) => updateForm("submissionMode", value as BountyFormValues["submissionMode"])} options={["Direct", "Agent"]} value={form.submissionMode} /></div>
-              <p className="mt-2 text-xs text-ink-muted">{t("form.submissionModeHint")}</p>
             </div>
             <div className="text-sm font-semibold text-ink">
               <label className="block">{t("form.coverImage")}

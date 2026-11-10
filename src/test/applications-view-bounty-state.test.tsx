@@ -42,7 +42,6 @@ const row = (status: ApplicationStatus, overrides: Partial<AccountApplication> =
   appliedAt: "2026-07-12T09:00:00.000Z",
   note: `note ${status}`,
   status,
-  agent: null,
   ...overrides,
 });
 

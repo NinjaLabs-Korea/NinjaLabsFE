@@ -65,7 +65,6 @@ describe("mobile menu panel and 44px text links", () => {
   });
   it.each([
     "src/app/[locale]/notices/[id]/page.tsx",
-    "src/app/[locale]/agents/register/page.tsx",
     "src/components/cards/MemberCard.tsx",
   ])("%s text links reserve a 44px hit area", (file) => {
     expect(read(file)).toContain("inline-flex min-h-11 items-center");

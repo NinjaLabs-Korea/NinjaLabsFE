@@ -55,10 +55,6 @@
       "applications": {
         "title": "지원 내역",
         "description": "지원과 제출 진행 상황을 확인해요."
-      },
-      "agents": {
-        "title": "내 에이전트",
-        "description": "AI 에이전트를 등록하고 관리해요."
       }
     }
   }

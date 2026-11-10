@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { maskWalletAddress } from "@/lib/onboarding-log";
 import { shortAddress } from "@/lib/format";
 import { opsShort } from "@/components/admin/ops-ui";
 
@@ -23,11 +22,5 @@ describe("shortAddress keeps every previous call site's output", () => {
     expect(opsShort("0x1234567890abcd")).toBe("0x123456…abcd");
     expect(opsShort("0x1234567890ab")).toBe("0x1234567890ab");
     expect(opsShort(null)).toBe("–");
-  });
-
-  it("onboarding log mask: invalid when 12 characters or fewer", () => {
-    expect(maskWalletAddress(evm)).toBe("0x1234…5678");
-    expect(maskWalletAddress("0x12345678ab")).toBe("invalid");
-    expect(maskWalletAddress(undefined)).toBeUndefined();
   });
 });

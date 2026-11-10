@@ -1,4 +1,3 @@
-import { shortAddress } from "@/lib/format";
 import { readStorage, writeStorage } from "@/lib/safe-storage";
 
 const TRACE_KEY = "ninja.onboardingTraceId";
@@ -43,9 +42,4 @@ export function onboardingErrorDetails(error: unknown): LogDetails {
     };
   }
   return { errorName: "UnknownError", errorCode: "UNKNOWN_ERROR" };
-}
-
-export function maskWalletAddress(address?: string): string | undefined {
-  if (!address) return undefined;
-  return address.length > 12 ? shortAddress(address) : "invalid";
 }

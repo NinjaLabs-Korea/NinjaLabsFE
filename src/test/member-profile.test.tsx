@@ -36,7 +36,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
 
 const { default: MemberProfilePage } = await import("@/app/[locale]/members/[id]/page");
 
-const base: Profile = { slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", completions: [], nfts: [], agents: [] };
+const base: Profile = { slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", completions: [], nfts: [] };
 const render = async () => renderWithIntl(await MemberProfilePage({ params: Promise.resolve({ locale: "en", id: "ninja" }) } as never));
 
 describe("member profile bio and team badge", () => {

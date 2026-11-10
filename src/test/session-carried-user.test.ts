@@ -151,7 +151,8 @@ describe("page-load session restore: one round trip when the refresh carries the
     const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
-    expect(adapter.getSnapshot().user).toMatchObject({ id: "u1", handle: "ninja", onboardingCompleted: true, walletAddress: "inj1abc", nftStatus: "MINTED" });
+    expect(adapter.getSnapshot().user).toMatchObject({ id: "u1", handle: "ninja", onboardingCompleted: true, nftStatus: "MINTED" });
+    expect(adapter.getSnapshot().user).not.toHaveProperty("walletAddress");
     expect(urls(request)).toEqual([REFRESH]);
     expect(getAccessToken()).toBe("access");
   });

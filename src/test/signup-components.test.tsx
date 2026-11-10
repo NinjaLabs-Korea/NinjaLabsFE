@@ -2,7 +2,6 @@
 import { act, cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiKeyReveal } from "@/components/agents/ApiKeyReveal";
 import { CompleteOnboarding } from "@/components/signup/CompleteOnboarding";
 import { CompleteSignupLink } from "@/components/signup/CompleteSignupLink";
 import AuthCallbackPage from "@/app/[locale]/auth/callback/page";
@@ -221,50 +220,5 @@ describe("CompleteSignupLink", () => {
     const internal = screen.getByRole("link", { name: "Bounties" });
     expect(internal.getAttribute("target")).toBeNull();
     expect(internal.hasAttribute("data-locale-link")).toBe(true);
-  });
-});
-
-describe("ApiKeyReveal", () => {
-  const originalClipboard = Object.getOwnPropertyDescriptor(navigator, "clipboard");
-  afterEach(() => {
-    if (originalClipboard) Object.defineProperty(navigator, "clipboard", originalClipboard);
-    else Reflect.deleteProperty(navigator, "clipboard");
-  });
-
-  const renderReveal = () =>
-    renderWithIntl(<ApiKeyReveal apiKey="nl_secret_123" copy="Shown once." expiresLabel="Expires Jan 1, 2027" title="New API key issued" />);
-
-  it("shows the key in a labelled read-only field and announces only that it is ready", () => {
-    renderReveal();
-    const input = screen.getByRole("textbox", { name: "New API key" }) as HTMLInputElement;
-    expect(input.value).toBe("nl_secret_123");
-    expect(input.readOnly).toBe(true);
-    const status = screen.getByRole("status");
-    expect(status.textContent).toBe("API key ready, copy it now.");
-    expect(status.textContent).not.toContain("nl_secret_123");
-    expect(screen.getByText("New API key issued")).toBeTruthy();
-    expect(screen.getByText("Expires Jan 1, 2027")).toBeTruthy();
-  });
-
-  it("copies the key and announces success", async () => {
-    const writeText = vi.fn(async () => undefined);
-    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
-    renderReveal();
-    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
-    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("API key copied to the clipboard."));
-    expect(writeText).toHaveBeenCalledWith("nl_secret_123");
-  });
-
-  it("falls back to manual-copy guidance when the clipboard is missing or rejects", async () => {
-    Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
-    const first = renderReveal();
-    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
-    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Copying is unavailable here. Select the key and copy it manually."));
-    first.unmount();
-
-    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => Promise.reject(new Error("denied")) } });
-    renderReveal();
-    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
-    await waitFor(() => expect(screen.getByRole("status").textContent).toMatch(/^Copying is unavailable/));
   });
 });

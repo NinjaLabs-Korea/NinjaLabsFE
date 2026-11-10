@@ -94,7 +94,7 @@ describe("admin notice save payload", () => {
 
 const bounty: AdminBounty = {
   slug: "b1", title: "Widget", sponsor: "Injective", reward: { amount: 5, currency: "INJ" }, intakeEnabled: false,
-  submissionMode: "direct", coverImage: null, status: "active", deadline: "2026-07-14T14:59:37.123Z", applicationDeadline: null,
+  coverImage: null, status: "active", deadline: "2026-07-14T14:59:37.123Z", applicationDeadline: null,
   maxWinners: 3, tags: ["Dev"], description: "Desc", submissionGuide: "", requirements: "- Repo\n\n  indented note", deliverables: ["- Repo", "indented note"], reviewProcess: "Review",
 };
 

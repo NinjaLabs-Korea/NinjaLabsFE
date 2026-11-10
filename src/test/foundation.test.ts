@@ -14,7 +14,6 @@ const validMockEnvironment = {
   NINJA_RUNTIME_MODE: "mock",
   NINJA_MOCK_SEED: "default",
   NINJA_APP_ORIGIN: "http://localhost:3000",
-  NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1439",
 };
 
 describe("runtime configuration", () => {
@@ -35,41 +34,15 @@ describe("runtime configuration", () => {
     ).toThrow(new RuntimeConfigError("NINJA_RUNTIME_MODE must be one of: mock, api."));
   });
 
-  it("requires a supported wallet chain ID for every configured runtime tuple and validates RPC URLs", () => {
-    expect(readRuntimeConfig(validMockEnvironment).wallet).toEqual({ chainId: 1439 });
-    expect(
-      readRuntimeConfig({
-        ...validMockEnvironment,
-        NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1776",
-        NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://rpc.ninjalabs.example",
-      }).wallet,
-    ).toEqual({ chainId: 1776, rpcUrl: "https://rpc.ninjalabs.example/" });
-    // Chain id / RPC network pairing guard: 1776 is mainnet, 1439 is testnet.
-    expect(() =>
-      readRuntimeConfig({ ...validMockEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1776", NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://k8s.testnet.json-rpc.injective.network/" }),
-    ).toThrow(new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1776 (mainnet) cannot use a testnet RPC URL."));
-    expect(() =>
-      readRuntimeConfig({ ...validMockEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1439", NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://Mainnet.evm-rpc.injective.network/" }),
-    ).toThrow(new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1439 (testnet) cannot use a mainnet RPC URL."));
-    expect(
-      readRuntimeConfig({ ...validMockEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1439", NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://k8s.testnet.json-rpc.injective.network/" }).wallet,
-    ).toEqual({ chainId: 1439, rpcUrl: "https://k8s.testnet.json-rpc.injective.network/" });
-    expect(() =>
-      readRuntimeConfig({ ...validMockEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "injective-1439" }),
-    ).toThrow(new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID must be a supported numeric chain ID."));
-    expect(() =>
-      readRuntimeConfig({ ...validMockEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1" }),
-    ).toThrow(new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID must be one of: 1439, 1776."));
-    expect(() =>
-      readRuntimeConfig({
-        ...validMockEnvironment,
-        NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "mailto:wallet@ninjalabs.example",
-      }),
-    ).toThrow(
-      new RuntimeConfigError(
-        "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL must be an absolute HTTP(S) URL without credentials.",
-      ),
-    );
+  it("has no wallet configuration: the old wallet env vars are not read and the config carries no wallet key", () => {
+    const config = readRuntimeConfig({
+      ...validMockEnvironment,
+      // Removed env vars, set on purpose: they must not be read.
+      NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1",
+      NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "mailto:wallet@ninjalabs.example",
+    } as never);
+    expect(config).not.toHaveProperty("wallet");
+    expect(toPublicRuntimeConfig(config)).not.toHaveProperty("wallet");
   });
 
   it("fails closed when the required runtime tuple is empty or partial", () => {
@@ -85,8 +58,8 @@ describe("runtime configuration", () => {
         NINJA_RUNTIME_MODE: "mock",
         NINJA_MOCK_SEED: "default",
         NINJA_APP_ORIGIN: "http://localhost:3000",
-      }).wallet,
-    ).toBeNull();
+      }),
+    ).toMatchObject({ runtimeMode: "mock" });
     expect(() =>
       readRuntimeConfig({
         ...validMockEnvironment,
@@ -99,12 +72,11 @@ describe("runtime configuration", () => {
     );
   });
 
-  it("composes root foundation mode and wallet props from the canonical configuration", () => {
+  it("composes the root foundation mode from the canonical configuration", () => {
     expect(
       composeFoundationRuntime(mockFixtureSeed.account.user, readRuntimeConfig(validMockEnvironment)),
     ).toEqual({
       foundationConfig: { mode: "mock", previewUser: mockFixtureSeed.account.user, mockSeed: "default" },
-      wallet: { chainId: 1439 },
     });
   });
 
@@ -114,8 +86,6 @@ describe("runtime configuration", () => {
       NINJA_RUNTIME_MODE: "api",
       NINJA_APP_ORIGIN: "https://test.ninjalabs.example",
       NINJA_API_BASE_URL: "https://api.ninjalabs.example/v1",
-      NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1439",
-      NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://rpc.ninjalabs.example",
     });
 
     expect(apiConfig).toMatchObject({
@@ -130,8 +100,6 @@ describe("runtime configuration", () => {
         NINJA_DEPLOYMENT_TIER: "test",
         NINJA_RUNTIME_MODE: "api",
         NINJA_APP_ORIGIN: "https://test.ninjalabs.example",
-        NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1439",
-        NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://rpc.ninjalabs.example",
       }),
     ).toThrow(new RuntimeConfigError("NINJA_API_BASE_URL is required in api mode."));
     expect(() =>
@@ -140,26 +108,6 @@ describe("runtime configuration", () => {
         NINJA_API_BASE_URL: "https://api.ninjalabs.example/v1",
       }),
     ).toThrow(new RuntimeConfigError("NINJA_API_BASE_URL is allowed only in api mode."));
-  });
-
-  it("fails fast in api mode when a wallet chain has no RPC URL, but keeps the mock-mode fallback", () => {
-    const apiEnvironment = {
-      NINJA_DEPLOYMENT_TIER: "test",
-      NINJA_RUNTIME_MODE: "api",
-      NINJA_APP_ORIGIN: "https://test.ninjalabs.example",
-      NINJA_API_BASE_URL: "https://api.ninjalabs.example/v1",
-      NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1439",
-    };
-    expect(() => readRuntimeConfig(apiEnvironment)).toThrow(
-      new RuntimeConfigError(
-        "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL is required in api mode when NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID is set.",
-      ),
-    );
-    expect(
-      readRuntimeConfig({ ...apiEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://rpc.ninjalabs.example" }).wallet,
-    ).toEqual({ chainId: 1439, rpcUrl: "https://rpc.ninjalabs.example/" });
-    expect(readRuntimeConfig({ ...apiEnvironment, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: undefined }).wallet).toBeNull();
-    expect(readRuntimeConfig(validMockEnvironment).wallet).toEqual({ chainId: 1439 });
   });
 });
 
@@ -171,7 +119,7 @@ describe("mock data isolation", () => {
     expect(secondSnapshot).toEqual(firstSnapshot);
     expect(secondSnapshot).not.toBe(firstSnapshot);
     expect(secondSnapshot.account).not.toBe(firstSnapshot.account);
-    expect(secondSnapshot.agents).not.toBe(firstSnapshot.agents);
+    expect(secondSnapshot.applications).not.toBe(firstSnapshot.applications);
     expect(secondSnapshot).toEqual(mockFixtureSeed);
   });
 
@@ -181,14 +129,7 @@ describe("mock data isolation", () => {
 
     await expect(client.getAccount(signedOut)).resolves.toEqual({ status: "available", data: null });
     await expect(client.getApplications(signedOut)).resolves.toEqual({ status: "available", data: [] });
-    await expect(client.getAgents(signedOut)).resolves.toEqual({ status: "available", data: [] });
-  });
-
-  it("keeps agent API keys masked in every fixture", () => {
-    for (const agent of mockFixtureSeed.agents) {
-      expect(agent.apiKeyMasked).toMatch(/^nl_live_····…[0-9a-f]{4}$/);
-      expect(agent.apiKeyMasked).not.toMatch(/^nl_live_[0-9a-f]{8,}$/);
-    }
+    await expect(client.getSubmissions(signedOut)).resolves.toEqual({ status: "available", data: [] });
   });
 });
 

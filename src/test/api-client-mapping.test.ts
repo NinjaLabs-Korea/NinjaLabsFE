@@ -26,12 +26,11 @@ function createHttp(routes: Routes = {}, session = true) {
 
 const application = (over: Record<string, unknown>) => ({
   id: "a1", status: "PENDING", message: "note", applied_at: "2026-07-01T00:00:00.000Z", reviewed_at: null,
-  bounty_id: "b1", bounty_title: "Widget", category: "DEV", agent: null, ...over,
+  bounty_id: "b1", bounty_title: "Widget", category: "DEV", ...over,
 });
 
 describe("GET /applications/me + /submissions/me join", () => {
-  it("maps every BE application status and joins each row to its own (owner or agent) submission", async () => {
-    const agent = { id: "ag1", name: "Bot" };
+  it("maps every BE application status and joins each row to its own submission", async () => {
     const { http } = createHttp({
       "/applications/me": [
         application({ id: "pending", status: "PENDING", bounty_id: "b-pending" }),
@@ -39,13 +38,13 @@ describe("GET /applications/me + /submissions/me join", () => {
         application({ id: "withdrawn", status: "WITHDRAWN", bounty_id: "b-withdrawn" }),
         application({ id: "approved", status: "APPROVED", bounty_id: "b-approved" }),
         application({ id: "submitted", status: "APPROVED", bounty_id: "b-shared" }),
-        application({ id: "agent-done", status: "APPROVED", bounty_id: "b-shared", agent }),
+        // An old BE row made by an agent (non-null `agent`) is excluded: it would collide with the owner's row on bounty_id.
+        application({ id: "legacy-agent", status: "PENDING", bounty_id: "b-legacy", agent: { id: "ag1", name: "Bot" } }),
         application({ id: "pending-with-sub", status: "PENDING", bounty_id: "b-early" }),
       ],
       "/submissions/me": [
-        { status: "IN_REVIEW", bounty_id: "b-shared", agent: null },
-        { status: "APPROVED", bounty_id: "b-shared", agent },
-        { status: "SUBMITTED", bounty_id: "b-early", agent: null },
+        { status: "IN_REVIEW", bounty_id: "b-shared" },
+        { status: "SUBMITTED", bounty_id: "b-early" },
       ],
     });
 
@@ -56,14 +55,30 @@ describe("GET /applications/me + /submissions/me join", () => {
       ["pending", "open"],
       ["rejected", "rejected"],
       ["approved", "approved"],
-      // The owner's own IN_REVIEW submission makes the owner's row "submitted"; the agent's APPROVED one completes only the agent row.
+      // The IN_REVIEW submission makes the approved application's row "submitted".
       ["submitted", "submitted"],
-      ["agent-done", "completed"],
       // A submission never promotes an application the sponsor has not approved.
       ["pending-with-sub", "open"],
     ]);
-    expect(rows.find((row) => row.id === "agent-done")?.agent).toEqual(agent);
-    expect(rows.find((row) => row.id === "submitted")?.agent).toBeNull();
+    expect(rows.every((row) => !("agent" in row))).toBe(true);
+  });
+
+  it("uses only the owner's row when an agent row for the same bounty comes first", async () => {
+    const { http } = createHttp({
+      "/applications/me": [
+        application({ id: "agent-app", status: "REJECTED", bounty_id: "b-dup", agent: { id: "ag1" } }),
+        application({ id: "own-app", status: "APPROVED", bounty_id: "b-dup", agent: null }),
+        application({ id: "agent-only", status: "PENDING", bounty_id: "b-agent-only", agent: { id: "ag1" } }),
+      ],
+      "/submissions/me": [
+        { id: "agent-sub", status: "REJECTED", bounty_id: "b-dup", agent: { id: "ag1" } },
+        { id: "own-sub", status: "IN_REVIEW", bounty_id: "b-dup" },
+        { id: "agent-sub-only", status: "SUBMITTED", bounty_id: "b-agent-only", agent: { id: "ag1" } },
+      ],
+    });
+    const result = await createApiApiClient(http).getApplications(signedIn);
+    const rows = result.status === "available" ? result.data : [];
+    expect(rows.map((row) => [row.id, row.status])).toEqual([["own-app", "submitted"]]);
   });
 
   it("maps the row fields and falls back to Other for an unknown category code", async () => {
@@ -74,7 +89,7 @@ describe("GET /applications/me + /submissions/me join", () => {
     const result = await createApiApiClient(http).getApplications(signedIn);
     expect(result).toEqual({
       status: "available",
-      data: [{ id: "a1", source: "application", bountySlug: "b1", bountyTitle: "T", category: "Other", appliedAt: "2026-07-02T03:04:05.000Z", note: "hello", status: "open", agent: null, reviewComment: null, reviewNote: null, paymentStatus: "NONE" }],
+      data: [{ id: "a1", source: "application", bountySlug: "b1", bountyTitle: "T", category: "Other", appliedAt: "2026-07-02T03:04:05.000Z", note: "hello", status: "open", reviewComment: null, reviewNote: null, paymentStatus: "NONE" }],
     });
   });
 
@@ -83,11 +98,24 @@ describe("GET /applications/me + /submissions/me join", () => {
     delete legacy.agent;
     const { http } = createHttp({ "/applications/me": [legacy], "/submissions/me": [{ status: "APPROVED", bounty_id: "b1" }] });
     const result = await createApiApiClient(http).getApplications(signedIn);
-    expect(result.status === "available" && result.data[0]).toMatchObject({ status: "completed", agent: null });
+    expect(result.status === "available" && result.data[0]).toMatchObject({ status: "completed" });
   });
 });
 
 describe("GET /submissions/me content fields", () => {
+  it("drops agent-made rows so only the owner's submission remains for a bounty", async () => {
+    const { http } = createHttp({
+      "/submissions/me": [
+        { id: "agent-sub", status: "APPROVED", bounty_id: "b-dup", agent: { id: "ag1" } },
+        { id: "own-sub", status: "IN_REVIEW", bounty_id: "b-dup" },
+        { id: "agent-only", status: "SUBMITTED", bounty_id: "b-agent-only", agent: { id: "ag1" } },
+      ],
+    });
+    const result = await createApiApiClient(http).getSubmissions(signedIn);
+    const rows = result.status === "available" ? result.data : [];
+    expect(rows.map((row) => [row.bountySlug, row.status])).toEqual([["b-dup", "in_review"]]);
+  });
+
   it("maps submission_url, repository_url, commit_sha and description, and omits null or absent ones", async () => {
     const { http } = createHttp({
       "/submissions/me": [
@@ -106,17 +134,16 @@ describe("GET /submissions/me content fields", () => {
 });
 
 describe("standalone submissions on /applications", () => {
-  it("lists direct and agent-mode submissions (no application behind them) with status, reviewer comment and payout", async () => {
-    const agent = { id: "ag1", name: "Scout" };
+  it("lists direct submissions (no application behind them) with status, reviewer comment and payout", async () => {
     const { http } = createHttp({
       "/applications/me": [application({ id: "with-app", status: "APPROVED", bounty_id: "b-apply" })],
       "/submissions/me": [
-        { id: "s0", status: "IN_REVIEW", bounty_id: "b-apply", agent: null },
-        { id: "s1", status: "SUBMITTED", bounty_id: "b-d1", agent: null, bounty_title: "Direct one", category: "DEV", submitted_at: "2026-10-01T00:00:00.000Z", description: "my work" },
-        { id: "s2", status: "REVISION_REQUESTED", bounty_id: "b-d2", agent: null, review_comment: " fix links " },
-        { id: "s3", status: "REJECTED", bounty_id: "b-d3", agent: null, review_comment: "forfeited: no wallet" },
-        { id: "s4", status: "APPROVED", bounty_id: "b-d4", agent: null, payment_status: "PAID" },
-        { id: "s5", status: "REVISION_REQUESTED", bounty_id: "b-agent", agent, review_comment: "add repo" },
+        { id: "s0", status: "IN_REVIEW", bounty_id: "b-apply" },
+        { id: "s1", status: "SUBMITTED", bounty_id: "b-d1", bounty_title: "Direct one", category: "DEV", submitted_at: "2026-10-01T00:00:00.000Z", description: "my work" },
+        { id: "s2", status: "REVISION_REQUESTED", bounty_id: "b-d2", review_comment: " fix links " },
+        { id: "s3", status: "REJECTED", bounty_id: "b-d3", review_comment: "forfeited: no wallet" },
+        { id: "s4", status: "APPROVED", bounty_id: "b-d4", payment_status: "PAID" },
+        { id: "s5", status: "REVISION_REQUESTED", bounty_id: "b-d5", review_comment: "add repo" },
       ],
     });
     const result = await createApiApiClient(http).getApplications(signedIn);
@@ -131,11 +158,11 @@ describe("standalone submissions on /applications", () => {
       ["submission:s4", "submission", "completed"],
       ["submission:s5", "submission", "revisionRequested"],
     ]);
-    expect(rows[0]).toMatchObject({ bountySlug: "b-d1", bountyTitle: "Direct one", appliedAt: "2026-10-01T00:00:00.000Z", note: "my work", agent: null });
+    expect(rows[0]).toMatchObject({ bountySlug: "b-d1", bountyTitle: "Direct one", appliedAt: "2026-10-01T00:00:00.000Z", note: "my work" });
     expect(rows[2].reviewComment).toBe("fix links");
     expect(rows[3].reviewComment).toBe("forfeited: no wallet");
     expect(rows[4].paymentStatus).toBe("PAID");
-    expect(rows[5].agent).toEqual(agent);
+    expect(rows[5].reviewComment).toBe("add repo");
   });
 });
 
@@ -150,11 +177,11 @@ describe("payout status join", () => {
         application({ id: "review", status: "APPROVED", bounty_id: "b-review" }),
       ],
       "/submissions/me": [
-        { status: "APPROVED", bounty_id: "b-paid", agent: null, payment_status: "PAID" },
-        { status: "APPROVED", bounty_id: "b-partial", agent: null, payment_status: "PARTIALLY_PAID" },
-        { status: "APPROVED", bounty_id: "b-old", agent: null },
-        { status: "APPROVED", bounty_id: "b-weird", agent: null, payment_status: "REFUNDED" },
-        { status: "IN_REVIEW", bounty_id: "b-review", agent: null, payment_status: "PAID" },
+        { status: "APPROVED", bounty_id: "b-paid", payment_status: "PAID" },
+        { status: "APPROVED", bounty_id: "b-partial", payment_status: "PARTIALLY_PAID" },
+        { status: "APPROVED", bounty_id: "b-old" },
+        { status: "APPROVED", bounty_id: "b-weird", payment_status: "REFUNDED" },
+        { status: "IN_REVIEW", bounty_id: "b-review", payment_status: "PAID" },
       ],
     });
     const result = await createApiApiClient(http).getApplications(signedIn);
@@ -178,9 +205,9 @@ describe("revision-requested join", () => {
         application({ id: "rev-pending", status: "PENDING", bounty_id: "b-rev3" }),
       ],
       "/submissions/me": [
-        { status: "REVISION_REQUESTED", bounty_id: "b-rev", agent: null, review_comment: "  Add tests\nand docs  " },
-        { status: "REVISION_REQUESTED", bounty_id: "b-rev2", agent: null },
-        { status: "REVISION_REQUESTED", bounty_id: "b-rev3", agent: null, review_comment: "x" },
+        { status: "REVISION_REQUESTED", bounty_id: "b-rev", review_comment: "  Add tests\nand docs  " },
+        { status: "REVISION_REQUESTED", bounty_id: "b-rev2" },
+        { status: "REVISION_REQUESTED", bounty_id: "b-rev3", review_comment: "x" },
       ],
     });
     const result = await createApiApiClient(http).getApplications(signedIn);
@@ -204,10 +231,10 @@ describe("GET /submissions/me mapping", () => {
     ["REJECTED", "rejected"],
     ["SOMETHING_NEW", "submitted"],
   ])("%s -> %s", async (status, expected) => {
-    const { http } = createHttp({ "/submissions/me": [{ status, bounty_id: "b1", agent: { id: "ag", name: "Bot" } }] });
+    const { http } = createHttp({ "/submissions/me": [{ status, bounty_id: "b1", agent: null }] });
     expect(await createApiApiClient(http).getSubmissions(signedIn)).toEqual({
       status: "available",
-      data: [{ bountySlug: "b1", status: expected, agent: { id: "ag", name: "Bot" }, paymentStatus: "NONE", reviewComment: null }],
+      data: [{ bountySlug: "b1", status: expected, paymentStatus: "NONE", reviewComment: null }],
     });
   });
 
@@ -220,41 +247,9 @@ describe("GET /submissions/me mapping", () => {
     [null, "NONE"],
     [undefined, "NONE"],
   ])("payment_status %p -> %s (unknown → PENDING, missing → NONE)", async (paymentStatus, expected) => {
-    const { http } = createHttp({ "/submissions/me": [{ status: "APPROVED", bounty_id: "b1", agent: null, payment_status: paymentStatus }] });
+    const { http } = createHttp({ "/submissions/me": [{ status: "APPROVED", bounty_id: "b1", payment_status: paymentStatus }] });
     const result = await createApiApiClient(http).getSubmissions(signedIn);
     expect(result.status === "available" ? result.data[0]?.paymentStatus : null).toBe(expected);
-  });
-});
-
-describe("GET /agents/me mapping", () => {
-  const agentRow = {
-    id: "ag1", name: "Bot", description: null, status: "ACTIVE", wallet_address: "0xabc", verified_at: "2026-07-01T00:00:00.000Z",
-    created_at: "2026-06-30T00:00:00.000Z", completed_bounties: 3, key_prefix: "nj_ab12", key_status: "ACTIVE", key_expires_at: "2026-09-28T00:00:00.000Z",
-  };
-
-  it("masks the key by its prefix and marks only ACTIVE agents verified", async () => {
-    const { http } = createHttp({
-      "/agents/me": [
-        agentRow,
-        { ...agentRow, id: "ag2", status: "PENDING_VERIFICATION", verified_at: null, completed_bounties: 0, key_prefix: null, key_status: null, key_expires_at: null },
-        { ...agentRow, id: "ag3", status: "REVOKED", key_status: "REVOKED" },
-      ],
-    });
-    const result = await createApiApiClient(http).getAgents(signedIn);
-    expect(result).toEqual({
-      status: "available",
-      data: [
-        { id: "ag1", name: "Bot", walletAddress: "0xabc", status: "ACTIVE", verified: true, completedBounties: 3, apiKeyMasked: "nj_ab12••••••••", keyExpiresAt: "2026-09-28T00:00:00.000Z", keyStatus: "ACTIVE", registeredAt: "2026-06-30T00:00:00.000Z" },
-        { id: "ag2", name: "Bot", walletAddress: "0xabc", status: "PENDING_VERIFICATION", verified: false, completedBounties: 0, apiKeyMasked: "-", keyExpiresAt: null, keyStatus: null, registeredAt: "2026-06-30T00:00:00.000Z" },
-        { id: "ag3", name: "Bot", walletAddress: "0xabc", status: "REVOKED", verified: false, completedBounties: 3, apiKeyMasked: "nj_ab12••••••••", keyExpiresAt: "2026-09-28T00:00:00.000Z", keyStatus: "REVOKED", registeredAt: "2026-06-30T00:00:00.000Z" },
-      ],
-    });
-  });
-
-  it("never exposes a raw key field even if a row carried one", async () => {
-    const { http } = createHttp({ "/agents/me": [{ ...agentRow, key_hash: "secret", api_key: "nj_raw" }] });
-    const result = await createApiApiClient(http).getAgents(signedIn);
-    expect(JSON.stringify(result)).not.toMatch(/secret|nj_raw/);
   });
 });
 
@@ -265,8 +260,7 @@ describe("account reads: signed-out and failures", () => {
     expect(await client.getAccount(signedOut)).toEqual({ status: "available", data: null });
     expect(await client.getApplications(signedOut)).toEqual({ status: "available", data: [] });
     expect(await client.getSubmissions(signedOut)).toEqual({ status: "available", data: [] });
-    expect(await client.getAgents(signedOut)).toEqual({ status: "available", data: [] });
-    expect(await client.getAgents({ status: "loading", user: null })).toEqual({ status: "available", data: [] });
+    expect(await client.getSubmissions({ status: "loading", user: null })).toEqual({ status: "available", data: [] });
     expect(fetchJson).not.toHaveBeenCalled();
   });
 
@@ -296,7 +290,7 @@ describe("account reads: signed-out and failures", () => {
     const { http } = createHttp({ "/auth/me": me });
     expect(await createApiApiClient(http).getAccount(signedIn)).toEqual({
       status: "available",
-      data: { user: { id: "u1", handle: "ninja.inj", initials: "NI", profileSlug: "ninja.inj", onboardingStep: 4, onboardingCompleted: true, isAdmin: true, bio: "", tags: [], nftStatus: null, walletAddress: "0xwallet" } },
+      data: { user: { id: "u1", handle: "ninja.inj", initials: "NI", profileSlug: "ninja.inj", onboardingStep: 4, onboardingCompleted: true, isAdmin: true, bio: "", tags: [], nftStatus: null } },
     });
     const failing = createHttp({ "/auth/me": new ApiHttpError(401, "UNAUTHORIZED") });
     expect(await createApiApiClient(failing.http).getAccount(signedIn)).toEqual({ status: "available", data: null });
@@ -305,7 +299,7 @@ describe("account reads: signed-out and failures", () => {
     expect(noSession.fetchJson).not.toHaveBeenCalled();
   });
 
-  it("leaves walletAddress off a user without a wallet and upper-cases two code units of the nickname for initials", () => {
+  it("maps a legacy wallet key to nothing and upper-cases two code units of the nickname for initials", () => {
     const user = toClientUser({ id: "u", nickname: "zed", onboardingStep: 2, onboardingCompleted: false, isAdmin: false, wallet: null } as unknown as MeResponse);
     expect(user).toEqual({ id: "u", handle: "zed", initials: "ZE", profileSlug: "zed", onboardingStep: 2, onboardingCompleted: false, isAdmin: false, nftStatus: null });
     expect(user).not.toHaveProperty("walletAddress");
@@ -318,32 +312,15 @@ describe("account reads: signed-out and failures", () => {
 });
 
 describe("write requests: method, path encoding and body", () => {
-  const call = (fetchJson: ReturnType<typeof createHttp>["fetchJson"], index = 0) => fetchJson.mock.calls[index];
-
   it("encodes ids into the path so a slash or query character cannot reach another route", async () => {
     const { http, fetchJson } = createHttp();
     const client = createApiApiClient(http);
     await client.applyToBounty("a/b?c", { message: "m", portfolioUrl: "https://x.y" });
     await client.submitBounty("../admin", { submissionUrl: "https://x.y", description: "d" });
-    await client.verifyAgent("ag 1", "0xsig");
-    await client.rotateAgentKey("ag#1");
-    await client.revokeAgent("ag%1");
     expect(fetchJson.mock.calls.map(([path, init]) => [path, init?.method, init?.body])).toEqual([
       ["/bounties/a%2Fb%3Fc/applications", "POST", { message: "m", portfolioUrl: "https://x.y" }],
       ["/bounties/..%2Fadmin/submissions", "POST", { submissionUrl: "https://x.y", description: "d" }],
-      ["/agents/ag%201/verify", "POST", { signature: "0xsig" }],
-      ["/agents/ag%231/keys/rotate", "POST", undefined],
-      ["/agents/ag%251/revoke", "POST", undefined],
     ]);
-  });
-
-  it("omits an empty agent description instead of sending an empty value", async () => {
-    const { http, fetchJson } = createHttp();
-    const client = createApiApiClient(http);
-    await client.registerAgent({ name: "Bot", description: "", walletAddress: "0xabc" });
-    await client.registerAgent({ name: "Bot", description: "Does things", walletAddress: "0xabc" });
-    expect(call(fetchJson, 0)).toEqual(["/agents", { method: "POST", body: { name: "Bot", walletAddress: "0xabc" } }]);
-    expect(call(fetchJson, 1)).toEqual(["/agents", { method: "POST", body: { name: "Bot", description: "Does things", walletAddress: "0xabc" } }]);
   });
 
   it("encodes the nickname query and posts the onboarding steps", async () => {

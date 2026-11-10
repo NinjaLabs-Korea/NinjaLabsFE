@@ -1,4 +1,4 @@
-import type { Account, AccountAgent, AccountApplication, AccountSubmission } from "@/lib/contracts/account";
+import type { Account, AccountApplication, AccountSubmission } from "@/lib/contracts/account";
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
 import type { AdminAuditLogFilter, AdminAuditLogPage } from "@/lib/admin-audit";
@@ -27,32 +27,6 @@ export type ApiUnavailable = {
   reason: "unauthorized" | "server-error" | "network-error";
 };
 
-export type AgentRegistration = {
-  agentId: string;
-  status: "PENDING_VERIFICATION";
-  verificationMessage: string;
-};
-
-export type AgentVerification = {
-  agentId: string;
-  status: "ACTIVE";
-  apiKey: string;
-  expiresAt: string;
-};
-
-/** POST /agents/:id/keys/rotate - 새 원문 키는 이 응답에서 한 번만 노출된다 */
-export type AgentKeyRotation = {
-  agentId: string;
-  apiKey: string;
-  expiresAt: string;
-};
-
-/** POST /agents/:id/revoke */
-export type AgentRevocation = {
-  agentId: string;
-  status: "REVOKED";
-};
-
 export type ApiResult<T> = ApiAvailable<T> | ApiUnavailable;
 
 /**
@@ -65,7 +39,6 @@ export type AccountApi = {
   getAccount: (auth: AuthSnapshot) => Promise<ApiResult<Account | null>>;
   getApplications: (auth: AuthSnapshot) => Promise<ApiResult<readonly AccountApplication[]>>;
   getSubmissions: (auth: AuthSnapshot) => Promise<ApiResult<readonly AccountSubmission[]>>;
-  getAgents: (auth: AuthSnapshot) => Promise<ApiResult<readonly AccountAgent[]>>;
 };
 
 /** `PUT /submissions/:id/payout-address` 200 응답 */
@@ -74,7 +47,7 @@ export type PayoutAddressResult = { submissionId: string; payoutAddress: string;
 /** 바운티 참여 (지원 / 제출) */
 export type BountyApi = {
   applyToBounty: (bountyId: string, input: { message: string; portfolioUrl?: string }) => Promise<{ id: string; status: string }>;
-  /** Withdraws one of the caller's own (or their agents') PENDING applications; the same row reopens if they re-apply. */
+  /** Withdraws one of the caller's own PENDING applications; the same row reopens if they re-apply. */
   withdrawApplication: (applicationId: string) => Promise<{ id: string; status: string }>;
   /**
    * `PUT /submissions/:id/payout-address` `{address}` (0x or inj1; the BE stores inj1 and answers both forms).
@@ -87,19 +60,6 @@ export type BountyApi = {
     repositoryUrl?: string;
     commitSha?: string;
   }) => Promise<{ id: string; revisionNo: number; status: string }>;
-};
-
-/** AI 에이전트 등록과 지갑 서명 검증 */
-export type AgentApi = {
-  registerAgent: (input: {
-    name: string;
-    description?: string;
-    walletAddress: string;
-  }) => Promise<AgentRegistration>;
-  verifyAgent: (agentId: string, signature: string) => Promise<AgentVerification>;
-  /** 404 AGENT_NOT_FOUND / 409 AGENT_NOT_ACTIVE */
-  rotateAgentKey: (agentId: string) => Promise<AgentKeyRotation>;
-  revokeAgent: (agentId: string) => Promise<AgentRevocation>;
 };
 
 /** 가입 온보딩 (프로필 저장 / 완료 처리) */
@@ -211,4 +171,4 @@ export type AdminCohortApi = {
   exportAdminCohortApplications: (cohortId: string, filter: AdminCohortApplicationFilter) => Promise<string>;
 };
 
-export type ApiClient = AccountApi & AccountSettingsApi & CohortApi & BountyApi & AgentApi & OnboardingApi & AdminApi & AdminCohortApi;
+export type ApiClient = AccountApi & AccountSettingsApi & CohortApi & BountyApi & OnboardingApi & AdminApi & AdminCohortApi;

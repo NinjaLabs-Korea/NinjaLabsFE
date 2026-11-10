@@ -1,6 +1,6 @@
 /**
  * 사용자 본문 입력의 길이 상한 - NinjaLabsBE DTO의 `@MaxLength`/`@MaxChars` 거울.
- * 폼의 `maxLength`와 에이전트 안내(`agent-skill.ts`)가 같은 값을 쓴다. BE가 바뀌면 여기만 고친다.
+ * 폼의 `maxLength`가 이 값을 쓴다. BE가 바뀌면 여기만 고친다.
  *   ApplyDto.message 4000 · SubmitDto.description 8000 · SubmitDto.commitSha 64 · CompleteProfileDto.bio 1000
  * `<input maxLength>`는 UTF-16 단위라 BE(코드 포인트)보다 같거나 엄격하다.
  */
@@ -50,9 +50,6 @@ export const BOUNTY_TEXT_MAX = { description: 50_000, deliverables: 20_000, revi
 /** BE `CreateBountyDto`/`UpdateBountyDto` `@Max(1000)` (`maxWinners`). */
 export const MAX_WINNERS_MAX = 1000;
 
-/** 에이전트 등록: `RegisterAgentDto` name @MaxChars(100), description @MaxLength(1000). */
-export const AGENT_NAME_MAX = 100;
-export const AGENT_DESCRIPTION_MAX = 1000;
 
 /** 감사 로그 조회: `AuditLogsQueryDto.entityType` @MaxLength(64). */
 export const AUDIT_ENTITY_TYPE_MAX = 64;

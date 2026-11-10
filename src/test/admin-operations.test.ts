@@ -53,8 +53,11 @@ describe("operations API mapping (lib/api/admin.ts)", () => {
     const ops = toAdminOperations(operationsBody as never);
     expect(ops.bounty).toEqual({ id: "b1", title: "Widget", status: "IN_REVIEW", submissionDeadline: "2026-11-01T00:00:00.000Z", maxWinners: 2, applicationRequired: true });
     expect(ops.lifecycle).toEqual({ blockers: operationsBody.lifecycle.blockerDetails, allowedTransitions: ["COMPLETED", "OPEN"] });
-    expect(ops.applications[0]).toMatchObject({ id: "a1", kind: "USER", userId: "u1", nickname: "juho", reviewNote: "welcome" });
-    expect(ops.submissions[0]).toMatchObject({ id: "s1", kind: "AGENT", agentName: "bot", nickname: "ara", currentRevisionNo: 2, payoutAddress: "inj1abc", payoutAddressEvm: "0xabc", email: "ara@example.test", revisions: [{ revisionNo: 2, commitSha: "c2" }], reviews: [{ revisionNo: 2, decision: "APPROVE" }] });
+    expect(ops.applications[0]).toMatchObject({ id: "a1", userId: "u1", nickname: "juho", reviewNote: "welcome" });
+    expect(ops.submissions[0]).toMatchObject({ id: "s1", userId: "u2", nickname: "ara", currentRevisionNo: 2, payoutAddress: "inj1abc", payoutAddressEvm: "0xabc", email: "ara@example.test", revisions: [{ revisionNo: 2, commitSha: "c2" }], reviews: [{ revisionNo: 2, decision: "APPROVE" }] });
+    // Old rows still carry actor_kind / agent_* columns (agents are gone): they are ignored, the owner is the actor.
+    expect(ops.submissions[0]).not.toHaveProperty("agentName");
+    expect(ops.submissions[0]).not.toHaveProperty("kind");
     expect(ops.rewards[0]).toMatchObject({ id: "r1", symbol: "INJ", amount: "5000000000000000000", cap: "5000000000000000000", allocated: "2000000000000000000", depositTxHash: `0x${HASH}` });
     expect(ops.payouts[0]).toMatchObject({ id: "p1", rewardId: "r1", submissionId: "s1", requestedByMe: true, requestedByNickname: "ops" });
     expect(ops.policy).toEqual({ payoutSelfApprovalAllowed: false });

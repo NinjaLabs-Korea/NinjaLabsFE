@@ -53,7 +53,7 @@ const twoTabs = async (label, hold) => {
   const ctx = await b.newContext(); const p1 = await b.newPage(ctx); const p2 = await b.newPage(ctx);
   await signIn(p1, BUILDER);
   const login = (await rtCookie(p1)).value;
-  await p2.goto('/en/agents'); await p2.waitText('PendingBot', 10000);
+  await p2.goto('/en/applications'); await p2.waitText('Build an Injective dashboard', 10000);
   check(`${label}: second tab signed in from the shared cookie`, await signedInHeader(p2));
   const paused = [];
   if (hold) for (const [name, p] of [['t1', p1], ['t2', p2]]) {
@@ -61,8 +61,8 @@ const twoTabs = async (label, hold) => {
     p.listeners.push((m, prm) => { if (m === 'Fetch.requestPaused') { paused.push(name); setTimeout(() => p.send('Fetch.continueRequest', { requestId: prm.requestId }).catch(() => {}), 1500); } });
   }
   p1.reset(); p2.reset();
-  await Promise.all([p1.goto('/en/applications'), p2.goto('/en/agents')]);
-  await Promise.all([p1.waitText('Build an Injective dashboard', 12000), p2.waitText('PendingBot', 12000)]);
+  await Promise.all([p1.goto('/en/applications'), p2.goto('/en/applications')]);
+  await Promise.all([p1.waitText('Build an Injective dashboard', 12000), p2.waitText('Build an Injective dashboard', 12000)]);
   await sleep(1000);
   const total = [...refreshes(p1), ...refreshes(p2)];
   const s1 = await signedInHeader(p1), s2 = await signedInHeader(p2);
@@ -73,7 +73,7 @@ const twoTabs = async (label, hold) => {
   const tail = (await rtCookie(p1)).value;
   check(`DB ${label}: the chain from the login row ends in one live row = the current cookie (no reuse revocation)`,
     sql(`with recursive ch as (select refresh_token_hash h, revoked_at from auth_session where refresh_token_hash=${H(login)} union all select a.refresh_token_hash, a.revoked_at from auth_session a join ch on a.prev_refresh_token_hash=ch.h) select count(*) filter (where revoked_at is null)||' '||bool_or(h=${H(tail)} and revoked_at is null)::text from ch`) === '1 true');
-  await Promise.all([p1.goto('/en/applications'), p2.goto('/en/agents')]); await sleep(800);
+  await Promise.all([p1.goto('/en/applications'), p2.goto('/en/applications')]); await sleep(800);
   check(`${label}: both still signed in after a second reload`, await signedInHeader(p1) && await signedInHeader(p2));
   await b.disposeContext(ctx);
 };

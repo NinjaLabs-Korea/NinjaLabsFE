@@ -13,7 +13,6 @@ const columns = [
   { id: "nickname", widthClass: "w-[157px]" },
   { id: "email", widthClass: "w-[286px]" },
   { id: "joined", widthClass: "w-[125px]" },
-  { id: "wallet", widthClass: "w-[138px]" },
   { id: "member", widthClass: "w-[140px]" },
   { id: "role", widthClass: "w-[105px]" },
   { id: "action", widthClass: "w-[199px]" },
@@ -204,9 +203,6 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
                 <td className={`px-5 py-4 text-sm font-semibold text-ink ${adminLongTextCell}`}>{user.nickname}</td>
                 <td className={`px-5 py-4 text-sm text-ink-muted ${adminLongTextCell}`}>{user.email}</td>
                 <td className="whitespace-nowrap px-5 py-4 text-sm text-ink-secondary">{user.joinedAt || "–"}</td>
-                <td className="px-5 py-4 text-sm text-ink-secondary">
-                  {user.walletStatus === "linked" ? <Badge variant="success">{t("walletLinked")}</Badge> : "-"}
-                </td>
                 <td className="px-5 py-4 text-sm text-ink-secondary">
                   {user.isMember ? <Badge variant="success">{t("memberYes")}</Badge> : "-"}
                 </td>

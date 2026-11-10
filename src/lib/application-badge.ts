@@ -18,7 +18,7 @@ const APPLICATION_STATUS_VARIANTS: Record<ApplicationStatus, ApplicationBadgeVar
   revisionRequested: "warning",
 };
 
-type BadgeRow = Pick<AccountApplication, "status" | "agent" | "reviewComment"> &
+type BadgeRow = Pick<AccountApplication, "status" | "reviewComment"> &
   Partial<Pick<AccountApplication, "closedByCancellation" | "bountyStatus" | "submissionDeadline">>;
 
 /** The bounty behind the row no longer takes submissions. False when the BE did not send the bounty fields (older BE). */
@@ -49,7 +49,7 @@ export function applicationStatusLabel(
   if (status === "approved" && closedForSubmit) return t("approvedClosedStatus");
   // The BE approves only an OPEN bounty before its submission deadline, so a pending application past either can never be approved.
   if (status === "open" && closedForSubmit) return t("pendingClosedStatus");
-  if (status === "approved") return application.agent ? t("agentApprovedStatus", { name: application.agent.name }) : t("approvedStatus");
+  if (status === "approved") return t("approvedStatus");
   if (status === "revisionRequested") return t("revisionRequestedStatus");
   if (status === "rejected") return t("rejectedStatus");
   if (status === "notAccepted" && application.closedByCancellation) return t("cancelledSubmissionStatus");

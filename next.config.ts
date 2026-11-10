@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
     remotePatterns: optimizedImagePrefixes.map((prefix) => new URL(`${prefix}**`)),
   },
   async headers() {
-    // Every route (the CSP: all but the nonce routes), including `/skill.md` (download) and the `/media/*` + `/api/auth/*` rewrites: none of these
+    // Every route (the CSP: all but the nonce routes), including the `/media/*` + `/api/auth/*` rewrites: none of these
     // headers change how a download or an image response is consumed.
     return [
       {
@@ -77,6 +77,18 @@ const nextConfig: NextConfig = {
       {
         source: "/signup/wallet",
         destination: "/signup/profile",
+        permanent: false,
+      },
+      // Agents are gone (Google-only, 2026-11): the list, the register page and their bookmarks land on the bounty list.
+      // Temporary on purpose, like the wallet redirects above.
+      {
+        source: `/:locale(${routing.locales.join("|")})/agents`,
+        destination: "/:locale/bounties",
+        permanent: false,
+      },
+      {
+        source: `/:locale(${routing.locales.join("|")})/agents/register`,
+        destination: "/:locale/bounties",
         permanent: false,
       },
     ];

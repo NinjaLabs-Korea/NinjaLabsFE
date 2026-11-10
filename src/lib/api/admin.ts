@@ -7,10 +7,11 @@ import { toAdminStatus } from "@/lib/bounty-status";
 import { markdownToPlainSummary } from "@/lib/markdown-summary";
 import { formatIsoDate, rewardFromBaseUnits, rewardToBaseUnits, toCategoryCode, toCategoryLabel, toMemberRoleCode, toMemberRoleLabel, toNoticeCategoryCode, toNoticeCategoryLabel, type CategoryCode, type MemberRoleCode } from "@/lib/api/codecs";
 
-type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: MemberRoleCode | null; member_display_order: number | null; created_at: string; wallet_address: string | null };
-type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: CategoryCode; status: string; application_required: boolean; submission_mode: "DIRECT" | "AGENT"; cover_image_url: string | null; submission_deadline: string; application_deadline: string | null; max_winners: number; rewards: Array<{ symbol: string; amount: string; tokenContractAddress?: string | null; evmChainId?: number | null }> };
+type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: MemberRoleCode | null; member_display_order: number | null; created_at: string };
+type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: CategoryCode; status: string; application_required: boolean; cover_image_url: string | null; submission_deadline: string; application_deadline: string | null; max_winners: number; rewards: Array<{ symbol: string; amount: string; tokenContractAddress?: string | null; evmChainId?: number | null }> };
 type NoticeRow = { id: string; title: string; summary?: string; body: string; category: string; status: string; published_at: string | null; thumbnail_url: string | null; external_url: string | null; event_date?: string | null };
-type ActorColumns = { actor_kind: "USER" | "AGENT"; user_id: string | null; nickname: string | null; agent_id: string | null; agent_name: string | null };
+/** The BE still sends `actor_kind`/`agent_*` for old rows; they are ignored (the owner is `user_id`/`nickname`). */
+type ActorColumns = { user_id: string | null; nickname: string | null };
 type OperationsResponse = {
   bounty: { id: string; title: string; status: string; submission_deadline: string | null; max_winners: number; application_required: boolean };
   lifecycle: { blockerDetails?: Record<string, Array<{ code: string; count?: number }>>; allowedTransitions?: string[] };
@@ -29,7 +30,7 @@ type OperationsResponse = {
 type AuditRow = { id: string; actor_user_id: string | null; actor_agent_id: string | null; actor_nickname?: string | null; actor_agent_name?: string | null; action: string; entity_type: string; entity_id: string | null; created_at: string; before_data?: unknown; after_data?: unknown };
 type NftJobRow = { id: string; nft_id: string; job_type: string; status: string; retry_count: number; last_error: string | null; scheduled_at: string | null; updated_at: string | null; nft_type: string; nft_status: string; bounty_title: string | null; owner_nickname: string | null; owner_wallet_address: string | null };
 
-const actorFrom = (row: ActorColumns): OpsActor => ({ kind: row.actor_kind === "AGENT" ? "AGENT" : "USER", userId: row.user_id, nickname: row.nickname, agentId: row.agent_id, agentName: row.agent_name });
+const actorFrom = (row: ActorColumns): OpsActor => ({ userId: row.user_id, nickname: row.nickname });
 
 /** BE operations payload → console model. Amounts stay base-unit strings; statuses stay BE codes. */
 export function toAdminOperations(body: OperationsResponse): AdminOperations {
@@ -78,7 +79,6 @@ export function createAdminApi(http: ApiHttp): AdminApi {
       return rows.map((row) => ({
         slug: row.id, nickname: row.nickname, email: row.email,
         joinedAt: formatIsoDate(row.created_at),
-        walletAddress: row.wallet_address, walletStatus: row.wallet_address ? "linked" : null,
         isMember: row.is_member,
         memberRole: row.member_role ? toMemberRoleLabel(row.member_role) ?? null : null,
         memberDisplayOrder: row.member_display_order,
@@ -98,7 +98,6 @@ export function createAdminApi(http: ApiHttp): AdminApi {
         ...(row.rewards[0]?.tokenContractAddress ? { rewardContractAddress: row.rewards[0].tokenContractAddress } : {}),
         ...(row.rewards[0]?.evmChainId ? { rewardChainId: row.rewards[0].evmChainId } : {}),
         intakeEnabled: row.application_required, status: toAdminStatus(row.status),
-        submissionMode: row.submission_mode === "AGENT" ? "agent" : "direct",
         coverImage: row.cover_image_url,
         deadline: row.submission_deadline, applicationDeadline: row.application_deadline ?? null,
         maxWinners: Number(row.max_winners) || 1,
@@ -119,7 +118,8 @@ export function createAdminApi(http: ApiHttp): AdminApi {
         evaluationCriteria: bounty.reviewProcess,
         category: toCategoryCode(bounty.tags[0] ?? "Other"),
         applicationRequired: bounty.intakeEnabled, maxWinners: bounty.maxWinners,
-        submissionMode: bounty.submissionMode === "agent" ? "AGENT" : "DIRECT",
+        // Agents are gone (Google-only): new bounties are direct-submission. PATCH omits it so a stored value (legacy AGENT) is never rewritten.
+        ...(create ? { submissionMode: "DIRECT" } : {}),
         coverImageUrl: bounty.coverImage,
         submissionDeadline: bounty.deadline,
         // Create sends it only when set; PATCH always sends it so clearing the field (null) clears the column. An unchanged value is the stored ISO, which the BE treats as "not changed".
@@ -202,6 +202,7 @@ export function createAdminApi(http: ApiHttp): AdminApi {
       return {
         page: body.page, pageSize: body.pageSize, total: body.total,
         items: body.items.map((row) => ({
+          // actor_agent_*: legacy audit rows only (agents removed); kept so old rows still show their actor.
           id: row.id, actorUserId: row.actor_user_id, actorAgentId: row.actor_agent_id, actorNickname: row.actor_nickname ?? null, actorAgentName: row.actor_agent_name ?? null, action: row.action,
           entityType: row.entity_type, entityId: row.entity_id, createdAt: row.created_at, beforeData: row.before_data ?? null, afterData: row.after_data ?? null,
         })),

@@ -37,7 +37,7 @@ const fail = (status: number, code: string): never => {
   throw new MockApiError(status, code);
 };
 
-/** Deterministic per-bounty operations seed: one pending + one approved application, a resubmitted entry, an approved agent entry with a payout requested by another admin. */
+/** Deterministic per-bounty operations seed: one pending + one approved application, a resubmitted entry, an approved entry with a payout requested by another admin. */
 function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string): AdminOperations {
   const status = fromAdminStatus(bounty.status);
   const symbol = bounty.reward.currency;
@@ -50,12 +50,12 @@ function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string)
   }] : [];
   const live = funded && status !== "COMPLETED";
   const applications: AdminOperations["applications"] = live && bounty.intakeEnabled ? [
-    { id: nextId("preview-app"), status: "PENDING", kind: "USER", userId: "mina", nickname: "mina", agentId: null, agentName: null, message: "I shipped two Helix dashboards last quarter.", portfolioUrl: "https://example.test/mina", reviewNote: null, appliedAt: iso(-3), reviewedAt: null },
-    { id: nextId("preview-app"), status: "APPROVED", kind: "USER", userId: "juho", nickname: "juho", agentId: null, agentName: null, message: "Happy to take this on.", portfolioUrl: null, reviewNote: "Welcome aboard", appliedAt: iso(-6), reviewedAt: iso(-5) },
+    { id: nextId("preview-app"), status: "PENDING", userId: "mina", nickname: "mina",  message: "I shipped two Helix dashboards last quarter.", portfolioUrl: "https://example.test/mina", reviewNote: null, appliedAt: iso(-3), reviewedAt: null },
+    { id: nextId("preview-app"), status: "APPROVED", userId: "juho", nickname: "juho",  message: "Happy to take this on.", portfolioUrl: null, reviewNote: "Welcome aboard", appliedAt: iso(-6), reviewedAt: iso(-5) },
   ] : [];
   const submissions: AdminOperations["submissions"] = live ? [
     {
-      id: nextId("preview-sub"), status: "RESUBMITTED", kind: "USER", userId: "juho", nickname: "juho", agentId: null, agentName: null,
+      id: nextId("preview-sub"), status: "RESUBMITTED", userId: "juho", nickname: "juho", 
       currentRevisionNo: 2, submittedAt: iso(-4), reviewedAt: null, payoutAddress: "inj1...7n3q", payoutAddressEvm: "0x0000...7n3q", email: null, reviewComment: null,
       revisions: [
         { revisionNo: 2, submissionUrl: "https://example.test/juho/v2", description: "Addressed the copy feedback.", repositoryUrl: "https://github.com/example/juho", commitSha: "c0ffee2", createdAt: iso(-1) },
@@ -64,9 +64,9 @@ function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string)
       reviews: [],
     },
     {
-      id: nextId("preview-sub"), status: "APPROVED", kind: "AGENT", userId: "ara", nickname: "ara", agentId: "preview-agent-alpha", agentName: "alpha-bot",
+      id: nextId("preview-sub"), status: "APPROVED", userId: "ara", nickname: "ara",
       currentRevisionNo: 1, submittedAt: iso(-5), reviewedAt: iso(-2), payoutAddress: "inj1...8c1v", payoutAddressEvm: "0x0000...8c1v", email: "ara@example.test", reviewComment: "Great work",
-      revisions: [{ revisionNo: 1, submissionUrl: "https://example.test/alpha", description: "Automated benchmark run.", repositoryUrl: null, commitSha: null, createdAt: iso(-5) }],
+      revisions: [{ revisionNo: 1, submissionUrl: "https://example.test/alpha", description: "Benchmark run.", repositoryUrl: null, commitSha: null, createdAt: iso(-5) }],
       reviews: [{ revisionNo: 1, decision: "APPROVE", comment: "Great work", createdAt: iso(-2) }],
     },
   ] : [];
@@ -115,7 +115,7 @@ export function lifecycleFor(ops: AdminOperations): AdminOperations["lifecycle"]
   const deadline = ops.bounty.submissionDeadline ? new Date(ops.bounty.submissionDeadline).getTime() : Number.NaN;
   const expired = !(deadline > Date.now());
   const pending = ops.applications.filter((a) => a.status === "PENDING").length;
-  const unsubmitted = ops.applications.filter((a) => a.status === "APPROVED" && !ops.submissions.some((s) => s.userId === a.userId && s.agentId === a.agentId)).length;
+  const unsubmitted = ops.applications.filter((a) => a.status === "APPROVED" && !ops.submissions.some((s) => s.userId === a.userId)).length;
   const unresolved = ops.submissions.filter((s) => ["SUBMITTED", "RESUBMITTED", "IN_REVIEW", "REVISION_REQUESTED"].includes(s.status)).length;
   const unfunded = ops.rewards.filter((r) => !isRewardFunded(r)).length;
   // BE OPEN_PAYOUT_STATUSES: waiting for approval or for the transfer. FAILED/CANCELLED/PAID do not count.

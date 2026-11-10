@@ -11,7 +11,7 @@ export const PROFILE_FILLED_EXAMPLE_ID = "jaemin";
 
 const members: Member[] = [
   { slug: "jinyoung", name: "Jinyoung Park", initials: "JP", role: "Core", title: "Product lead", bio: "Sets bounty quality standards and coordinates sponsor review loops.", isMember: true, links: { profile: "/members/jinyoung", posts: "/notices" } },
-  { slug: "juho", name: "Juho Kim", initials: "JK", role: "Dev", title: "Protocol engineer", bio: "Reviews CosmWasm deliverables and supports agent verification design.", isMember: true, links: { profile: "/members/juho", agents: "/members/juho" } },
+  { slug: "juho", name: "Juho Kim", initials: "JK", role: "Dev", title: "Protocol engineer", bio: "Reviews CosmWasm deliverables and supports agent verification design.", isMember: true, links: { profile: "/members/juho" } },
   { slug: "mina", name: "Mina Seo", initials: "MS", role: "Design", title: "Experience", bio: "Shapes onboarding, badge states, and public profile presentation.", isMember: true, links: { profile: "/members/mina", bounties: "/bounties" } },
   { slug: "ara", name: "Ara Choi", initials: "AR", role: "Ops", title: "Community", bio: "Publishes notices and keeps member, sponsor, and builder updates current.", isMember: true, links: { profile: "/members/ara", notices: "/notices" } },
 ];
@@ -32,13 +32,12 @@ export const profiles: Record<string, Profile> = {
       { title: "Quest copy", category: "Content", completedAt: "May 1, 2026", reward: null, payoutStatus: "NONE" },
     ],
     nfts: ["iAsset widget", "Wallet flow", "Audit report", "Docs revamp", "Hydro guide", "Helix card", "Quest copy"].map((title, index) => ({ id: `preview-nft-${index}`, type: "completion" as const, title, status: "ATTACHED" as const, contractAddress: "preview", tokenId: String(index + 1), mintTxHash: null })),
-    agents: [{ name: "market-scout-agent", wallet: "inj1...9k4d", verified: true, completedBounties: 3 }, { name: "docs-runner-agent", wallet: "inj1...x7ab", verified: true, completedBounties: 2 }],
   },
-  sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "New Injective builder exploring market data tasks, documentation bounties, and small UI components. This public profile is ready to become a portfolio as work is completed.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], nfts: [{ id: "sora-parent", type: "parent", title: "Ninja NFT", status: "MINTED", contractAddress: "preview", tokenId: "1", mintTxHash: null }], agents: [] },
-  jinyoung: { slug: "jinyoung", handle: "jinyoung.inj", initials: "JP", teamRole: "Core", bio: "Product lead building the bounty marketplace for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
-  juho: { slug: "juho", handle: "juho.inj", initials: "JK", teamRole: "Dev", bio: "Protocol engineer making on-chain proof useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], nfts: [], agents: [] },
-  mina: { slug: "mina", handle: "mina.inj", initials: "MS", teamRole: "Design", bio: "Experience designer creating clear paths from first task to lasting proof.", skills: ["Design"], joinedAt: "June 2026", completions: [], nfts: [], agents: [] },
-  ara: { slug: "ara", handle: "ara.inj", initials: "AR", teamRole: "Ops", bio: "Community operator supporting builders and the work around them.", skills: ["Content"], joinedAt: "June 2026", completions: [], nfts: [], agents: [] },
+  sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "New Injective builder exploring market data tasks, documentation bounties, and small UI components. This public profile is ready to become a portfolio as work is completed.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], nfts: [{ id: "sora-parent", type: "parent", title: "Ninja NFT", status: "MINTED", contractAddress: "preview", tokenId: "1", mintTxHash: null }], },
+  jinyoung: { slug: "jinyoung", handle: "jinyoung.inj", initials: "JP", teamRole: "Core", bio: "Product lead building the bounty marketplace for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026", completions: [], nfts: [], },
+  juho: { slug: "juho", handle: "juho.inj", initials: "JK", teamRole: "Dev", bio: "Protocol engineer making on-chain proof useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], nfts: [], },
+  mina: { slug: "mina", handle: "mina.inj", initials: "MS", teamRole: "Design", bio: "Experience designer creating clear paths from first task to lasting proof.", skills: ["Design"], joinedAt: "June 2026", completions: [], nfts: [], },
+  ara: { slug: "ara", handle: "ara.inj", initials: "AR", teamRole: "Ops", bio: "Community operator supporting builders and the work around them.", skills: ["Content"], joinedAt: "June 2026", completions: [], nfts: [], },
 };
 
 export function getMembers() { return members.filter((member) => member.isMember); }
@@ -96,13 +95,6 @@ type PublicProfileResponse = {
     postedRewards?: RewardRow[];
     /** `PayoutStatus`; typed as string because a newer BE may add values (read as PENDING) */
     payoutStatus?: string;
-  }>;
-  /** Optional: the BE is dropping agents (Google-only plan); absent is read as []. */
-  agents?: Array<{
-    name: string;
-    status: string;
-    wallet_address: string;
-    completed_bounties: unknown[];
   }>;
   /** Optional: the BE is dropping NFTs (Google-only plan); absent is read as []. */
   nfts?: Array<{
@@ -186,14 +178,6 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
       contractAddress: nft.contract_address,
       tokenId: nft.token_id,
       mintTxHash: nft.mint_tx_hash,
-    })),
-    // The BE sends every non-deleted agent of the owner; the public card only lists live ones. A pending registration
-    // (unproven wallet) or a revoked agent is not "my verified agent" and must not put its wallet on a public page.
-    agents: (data.agents ?? []).filter((agent) => agent.status === "ACTIVE").map((agent) => ({
-      name: agent.name,
-      wallet: agent.wallet_address,
-      verified: true,
-      completedBounties: agent.completed_bounties.length,
     })),
   };
 }

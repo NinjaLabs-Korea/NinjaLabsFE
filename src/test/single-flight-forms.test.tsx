@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The four forms that guard against double submits share `useSingleFlight`: one call per burst, and the guard is
+// The forms that guard against double submits share `useSingleFlight`: one call per burst, and the guard is
 // released when the request fails, so a retry reaches the API again (a missed reset would leave the button dead).
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
@@ -7,7 +7,6 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { BountyManager } from "@/components/admin/BountyManager";
 import { AccountSettingsView } from "@/components/account/AccountSettingsView";
-import { AgentRegisterForm } from "@/components/agents/AgentRegisterForm";
 import { ProfileForm } from "@/components/signup/ProfileForm";
 import { getAdminBounties } from "@/lib/admin";
 import { ApiHttpError } from "@/lib/api/http";
@@ -19,15 +18,10 @@ import { signedInAs } from "@/test/support/auth";
 
 const checkNickname = vi.fn();
 const completeProfile = vi.fn();
-const registerAgent = vi.fn();
-const verifyAgent = vi.fn();
-const signMessageAsync = vi.fn();
 const hardNavigate = vi.hoisted(() => vi.fn());
 const state: { settings: ApiClient; admin: AdminApi } = { settings: undefined as unknown as ApiClient, admin: undefined as unknown as AdminApi };
 const signedIn = signedInAs(previewUser);
-const accountApi = { getAgents: async () => ({ status: "available" as const, data: [] }) };
-const agentApi = { registerAgent, verifyAgent };
-const agentWallet = "0xA9e1000000000000000000000000000000000001";
+const accountApi = { getSubmissions: async () => ({ status: "available" as const, data: [] }) };
 
 vi.mock("@/lib/hard-navigate", () => ({ hardNavigate }));
 vi.mock("@/i18n/navigation", () => ({
@@ -42,19 +36,9 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
     useAuthSnapshot: () => signedIn,
     useAccountSettingsApi: () => state.settings,
     useAccountApi: () => accountApi,
-    useAgentApi: () => agentApi,
     useAdminApi: () => state.admin,
     useCohortApi: () => ({ getMyCohortApplications: async () => ({ status: "available", data: [] }) }),
   }));
-vi.mock("@/components/wallet/useWalletConnection", () => ({
-  shortWalletAddress: (address: string) => address,
-  useWalletConnection: () => ({
-    hasInjectedWallet: true, address: agentWallet, isConnected: true, isWrongNetwork: false, connector: { type: "injected" },
-    connect: vi.fn(), isConnecting: false, disconnect: vi.fn(), signMessageAsync, canSwitch: true,
-    switchToTargetChain: vi.fn(), isSwitching: false, switchError: null,
-  }),
-}));
-
 beforeAll(() => {
   HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute("open", ""); };
   HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) { this.removeAttribute("open"); };
@@ -62,7 +46,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  for (const mock of [checkNickname, completeProfile, registerAgent, verifyAgent, signMessageAsync, hardNavigate]) mock.mockReset();
+  for (const mock of [checkNickname, completeProfile, hardNavigate]) mock.mockReset();
   checkNickname.mockResolvedValue({ available: true });
   state.settings = createMockApiClient();
   state.admin = createMockApiClient();
@@ -108,25 +92,6 @@ describe("ProfileForm onboarding success", () => {
     } finally {
       vi.unstubAllGlobals();
     }
-  });
-});
-
-describe("AgentRegisterForm", () => {
-  it("registers once for a burst of submits and lets the user retry after a failure", async () => {
-    registerAgent.mockRejectedValueOnce(new ApiHttpError(500, "INTERNAL")).mockReturnValue(new Promise(() => undefined));
-    renderWithIntl(<AgentRegisterForm chainId={1439} />);
-    const submit = (await screen.findByRole("button", { name: "Sign & Register" })) as HTMLButtonElement;
-    await act(async () => { await Promise.resolve(); });
-    fireEvent.change(screen.getByLabelText("Agent name"), { target: { value: "fresh-agent" } });
-    await waitFor(() => expect(submit.disabled).toBe(false));
-    const form = submit.closest("form") as HTMLFormElement;
-    fireEvent.submit(form);
-    fireEvent.submit(form);
-    await waitFor(() => expect(registerAgent).toHaveBeenCalledTimes(1));
-    await screen.findByRole("alert");
-    await waitFor(() => expect(submit.disabled).toBe(false));
-    fireEvent.submit(form);
-    await waitFor(() => expect(registerAgent).toHaveBeenCalledTimes(2));
   });
 });
 
