@@ -1,7 +1,7 @@
-// Fixture-free types and pure rules for the admin operations console (`/admin/operations`, `/admin/nft-jobs`).
+// Fixture-free types and pure rules for the admin operations console (`/admin/operations`).
 // Client islands import from here; the BE mapping lives in `lib/api/admin.ts`, the in-memory twin in `lib/mocks/api-client.ts`.
 // Status values stay the BE codes verbatim (the console shows operators the real state machine); copy lives under
-// `admin.operations.*` / `admin.nftJobs.*`.
+// `admin.operations.*`.
 import { ERROR_COPY, listedCode, normalizedCode } from "./api/error-copy";
 import { PAYABLE_REWARD_STATUSES } from "./payout-status";
 import { isBountyFinished, isBountyInProgress, isDeadlinePassed, type BountyStatusCode } from "./bounty-status";
@@ -171,31 +171,9 @@ export function rewardHeadroom(reward: Pick<OpsReward, "cap" | "allocated">): st
 const TX_HASH_PATTERN = /^(0x)?[0-9a-fA-F]{64}$/;
 export const isTxHash = (value: string): boolean => TX_HASH_PATTERN.test(value.trim());
 
-// ── NFT jobs ────────────────────────────────────────────
-export const NFT_JOB_STATUSES = ["FAILED", "PENDING", "PROCESSING"] as const;
-export type NftJobStatus = (typeof NFT_JOB_STATUSES)[number];
-
-export type AdminNftJob = {
-  id: string;
-  nftId: string;
-  jobType: "MINT_PARENT" | "MINT_CHILD" | "ATTACH_CHILD" | "RETRY_MINT" | "RETRY_ATTACH" | (string & {});
-  status: NftJobStatus | (string & {});
-  retryCount: number;
-  lastError: string | null;
-  scheduledAt: string | null;
-  updatedAt: string | null;
-  nftType: "NINJA_PARENT" | "BOUNTY_COMPLETION_CHILD" | (string & {});
-  nftStatus: string;
-  bountyTitle: string | null;
-  ownerNickname: string | null;
-  ownerWalletAddress: string | null;
-};
-
-export type AdminNftJobPage = { items: AdminNftJob[]; page: number; pageSize: number; total: number };
-
 // ── errors ──────────────────────────────────────────────
 /**
- * Every BE code the operations/NFT endpoints answer with (plus the FE transport codes) - each has
+ * Every BE code the operations endpoints answer with (plus the FE transport codes) - each has
  * `admin.operations.errors.<CODE>` in all three locales; anything else renders `errors.unknown` with the raw code.
  * 코드 목록은 `lib/api/error-copy.ts`의 `ERROR_COPY.adminOperations`가 소유한다 - 추가/삭제는 거기서.
  */

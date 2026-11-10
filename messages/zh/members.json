@@ -50,25 +50,18 @@
     },
     "portfolio": {
       "eyebrow": "作品集",
-      "headingCompleted": "已完成的工作与 NFT 记录",
+      "headingCompleted": "已完成的工作",
       "headingEmpty": "暂无已完成的赏金",
-      "bodyCompleted": "已完成的工作列于下方。NFT 记录根据实际发放状态显示。",
-      "bodyEmpty": "有已完成的工作和已发放的 NFT 记录时，会在这里显示。",
-      "token": "代币 {id}",
-      "tx": "交易 {hash}",
-      "untitledNft": "赏金 NFT",
+      "bodyCompleted": "已完成的工作列于下方。",
+      "bodyEmpty": "有已完成的工作时，会在这里显示。",
       "memberSince": "自 {date} 起加入"
-    },
-    "nftStatus": {
-      "minting": "铸造中",
-      "minted": "已铸造"
     },
     "history": {
       "eyebrow": "已完成的工作",
       "heading": "最近完成的赏金",
       "completedOn": "完成于 {date} · {reward}",
       "emptyTitle": "暂无已完成的赏金",
-      "emptyBody": "已完成的赏金会连同完成日期、奖励和子 NFT 证明显示在这里。",
+      "emptyBody": "已完成的赏金会连同完成日期和奖励显示在这里。",
       "headingEmpty": "已完成的赏金",
       "browseMore": "浏览更多",
       "completedDate": "完成于 {date}"

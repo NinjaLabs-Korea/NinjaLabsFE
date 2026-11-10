@@ -110,10 +110,10 @@
     "descriptionHeading": "要求、提交指南、评审标准",
     "descriptionHeadingApply": "要求、申请指南、评审标准",
     "rewardInfo": "奖励信息",
-    "rewardUnspecified": "尚未指定奖励。审核通过本身不保证付款或 NFT 发放。",
+    "rewardUnspecified": "尚未指定奖励。审核通过本身不保证付款。",
     "unspecifiedRewardSteps": {
       "review": "赞助方审核您提交的工作。",
-      "record": "批准后记录审核结果。奖励和 NFT 条件请查看赏金说明。"
+      "record": "批准后记录审核结果。奖励条件请查看赏金说明。"
     },
     "rewardNotes": {
       "flow": "托管和审核后，由运营方另行处理付款。",
@@ -125,14 +125,12 @@
     },
     "completionHeading": "最终审核之后",
     "completionSteps": {
-      "transfer": "付款获批后，由运营方另行转账。",
-      "mint": "付款记录完成后，完成证明 NFT 铸造可加入队列。",
-      "attach": "已发放的 NFT 可在您的 Ninja NFT 作品集中查看。"
+      "transfer": "付款获批后，由运营方另行转账。"
     },
     "afterApprovalSteps": {
       "approve": "赞助方批准申请。",
       "unlock": "已完成工作的提交字段解锁。",
-      "reward": "最终批准后另行处理付款。NFT 请以发放状态为准。"
+      "reward": "最终批准后另行处理付款。"
     },
     "statusFlowEyebrow": "申请型进行顺序",
     "footnote": "任何人都可以查看，登录后即可申请或提交。"

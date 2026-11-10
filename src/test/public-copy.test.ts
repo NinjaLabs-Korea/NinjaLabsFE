@@ -25,11 +25,11 @@ describe.each([["en", enLegal], ["ko", koLegal], ["zh", zhLegal]] as const)("leg
     expect(items.some((item) => /Cloudflare/.test(item) && /Turnstile/.test(item))).toBe(true);
   });
 
-  it("discloses that registered agents (name, wallet address) and Ninja NFTs appear on the public profile", () => {
+  it("states that the public profile shows only nickname, bio, tags and completed bounties", () => {
     const paragraphs = sections.flatMap((section) => (section as { paragraphs?: string[] }).paragraphs ?? []);
-    const profile = paragraphs.find((paragraph) => /Ninja NFT/.test(paragraph)) ?? "";
-    expect(profile).toMatch(/agent|에이전트|代理/);
-    expect(profile).toMatch(/wallet|지갑|钱包/);
+    const profile = paragraphs[0] ?? "";
+    expect(profile).toMatch(/completed bounties|완료한 바운티|已完成的赏金/);
+    expect(profile).not.toMatch(/agent|에이전트|代理|NFT|wallet|지갑|钱包/);
   });
 
   it("does not claim sign-in tokens live in browser storage", () => {

@@ -91,6 +91,12 @@ const nextConfig: NextConfig = {
         destination: "/:locale/bounties",
         permanent: false,
       },
+      // NFTs are gone (Google-only, 2026-11): the NFT job console's old links land on the admin home.
+      {
+        source: `/:locale(${routing.locales.join("|")})/admin/nft-jobs`,
+        destination: "/:locale/admin",
+        permanent: false,
+      },
     ];
   },
   async rewrites() {

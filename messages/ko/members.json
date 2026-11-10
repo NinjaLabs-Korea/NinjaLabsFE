@@ -50,25 +50,18 @@
     },
     "portfolio": {
       "eyebrow": "포트폴리오",
-      "headingCompleted": "완료한 작업과 NFT 기록",
+      "headingCompleted": "완료한 작업",
       "headingEmpty": "아직 완료한 바운티가 없어요",
-      "bodyCompleted": "아래에서 완료한 작업을 확인할 수 있어요. NFT 기록은 실제 발급 상태에 따라 표시돼요.",
-      "bodyEmpty": "완료한 작업과 발급된 NFT 기록이 있으면 여기에 표시돼요.",
-      "token": "토큰 {id}",
-      "tx": "Tx {hash}",
-      "untitledNft": "바운티 NFT",
+      "bodyCompleted": "아래에서 완료한 작업을 확인할 수 있어요.",
+      "bodyEmpty": "완료한 작업이 있으면 여기에 표시돼요.",
       "memberSince": "{date}부터 멤버"
-    },
-    "nftStatus": {
-      "minting": "발행 중",
-      "minted": "발행 완료"
     },
     "history": {
       "eyebrow": "완료한 작업",
       "heading": "최근 완료한 바운티",
       "completedOn": "{date} 완료 · {reward}",
       "emptyTitle": "아직 완료한 바운티가 없어요",
-      "emptyBody": "완료한 바운티가 완료일, 보상, 자식 NFT 증명과 함께 여기에 표시돼요.",
+      "emptyBody": "완료한 바운티가 완료일, 보상과 함께 여기에 표시돼요.",
       "headingEmpty": "완료한 바운티",
       "browseMore": "더 둘러보기",
       "completedDate": "{date} 완료"

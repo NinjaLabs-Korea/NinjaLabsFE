@@ -60,7 +60,6 @@
     "hallOfFame": "名人堂",
     "notices": "公告",
     "operations": "运营",
-    "nftJobs": "NFT 任务",
     "audit": "审计日志",
     "recruitment": "成员招募",
     "ariaLabel": "管理后台菜单"
@@ -625,7 +624,6 @@
       "PAYOUT_EXCEEDS_AVAILABLE_REWARD": "金额超过了此奖励剩余可分配的额度。",
       "PAYOUT_NOT_FOUND_OR_WRONG_STATUS": "该付款已进入下一步（或已不存在）。列表已刷新。",
       "PAYOUT_SELF_APPROVAL": "你不能批准自己申请的付款。请联系另一位管理员（双人规则）。",
-      "NFT_JOB_NOT_FOUND_OR_NOT_FAILED": "该任务已不是失败状态（可能已在重试）。",
       "INVALID_TRANSITION": "当前状态不允许该流转。",
       "TRANSITION_BLOCKED": "流转被阻止。请查看下方列出的原因。",
       "VALIDATION_FAILED": "服务器拒绝了输入。请检查后重试。",
@@ -639,64 +637,6 @@
       "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
       "NOTE_BIDI_CHARS": "备注中含有不可见的方向或控制字符，请删除后重试。",
       "NOTE_RESERVED_PREFIX": "备注不能以 \"forfeited:\" 开头（系统保留）。"
-    }
-  },
-  "nftJobs": {
-    "metaTitle": "管理后台 · NFT 任务 | Ninja Labs",
-    "metaDescription": "查看 NFT 铸造与关联任务，并重试永久失败的任务。",
-    "title": "NFT 任务控制台",
-    "description": "查看 NFT 铸造与关联任务，并重试永久失败的任务。",
-    "filterLabel": "任务状态",
-    "statuses": {
-      "FAILED": "失败",
-      "PENDING": "等待中",
-      "PROCESSING": "处理中"
-    },
-    "hints": {
-      "FAILED": "5 次尝试均失败的任务。修复原因（Gas、合约、钱包）后重试，Worker 会在一分钟内处理。",
-      "PENDING": "排队中或等待下一次尝试（失败的尝试每 10 分钟重试一次）。",
-      "PROCESSING": "正在铸造。停留超过 15 分钟的任务会自动重新排队。"
-    },
-    "empty": "此状态下没有任务。",
-    "columns": {
-      "job": "任务",
-      "owner": "所有者",
-      "attempts": "失败次数",
-      "lastError": "最近错误",
-      "updated": "更新时间",
-      "action": "操作"
-    },
-    "jobTypes": {
-      "MINT_PARENT": "铸造忍者 NFT",
-      "MINT_CHILD": "铸造完成 NFT",
-      "ATTACH_CHILD": "关联完成 NFT",
-      "RETRY_MINT": "重试铸造",
-      "RETRY_ATTACH": "重试关联"
-    },
-    "nftTypes": {
-      "NINJA_PARENT": "忍者 NFT",
-      "BOUNTY_COMPLETION_CHILD": "完成 NFT"
-    },
-    "nftStatuses": {
-      "PENDING": "待处理",
-      "MINTING": "铸造中",
-      "MINTED": "已铸造",
-      "ATTACHING": "关联中",
-      "ATTACHED": "已关联",
-      "FAILED": "失败"
-    },
-    "nftLine": "{type} · NFT {status}",
-    "retry": "重试",
-    "pagination": "任务分页",
-    "previous": "上一页",
-    "next": "下一页",
-    "pageOf": "第 {page} 页，共 {pages} 页",
-    "toast": {
-      "loadFailedTitle": "NFT 任务不可用",
-      "loadFailedDescription": "无法加载 NFT 任务。",
-      "retriedTitle": "任务已重新排队",
-      "retriedDescription": "Worker 将在一分钟内重试。",
-      "retryFailedTitle": "重试失败"
     }
   },
   "audit": {

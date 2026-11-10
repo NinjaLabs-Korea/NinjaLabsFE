@@ -50,25 +50,18 @@
     },
     "portfolio": {
       "eyebrow": "Portfolio",
-      "headingCompleted": "Completed work and NFT records",
+      "headingCompleted": "Completed work",
       "headingEmpty": "No completed bounties yet",
-      "bodyCompleted": "Completed work is listed below. NFT records appear here when available.",
-      "bodyEmpty": "Completed work and available NFT records will appear here.",
-      "token": "Token {id}",
-      "tx": "Tx {hash}",
-      "untitledNft": "Bounty NFT",
+      "bodyCompleted": "Completed work is listed below.",
+      "bodyEmpty": "Completed work will appear here.",
       "memberSince": "Member since {date}"
-    },
-    "nftStatus": {
-      "minting": "Minting",
-      "minted": "Minted"
     },
     "history": {
       "eyebrow": "Completed work",
       "heading": "Recent bounty completions",
       "completedOn": "Completed {date} · {reward}",
       "emptyTitle": "No completed bounties yet",
-      "emptyBody": "Completed bounties appear here with their completion date, reward, and child NFT proof.",
+      "emptyBody": "Completed bounties appear here with their completion date and reward.",
       "headingEmpty": "Bounty completions",
       "browseMore": "Browse more",
       "completedDate": "Completed {date}"

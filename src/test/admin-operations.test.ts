@@ -99,7 +99,6 @@ describe("operations API mapping (lib/api/admin.ts)", () => {
     await api.requestAdminPayout({ rewardId: "r1", submissionId: "s1", amount: "1" });
     await api.approveAdminPayout("p1");
     await api.markAdminPayoutPaid("p1", `${HASH}\n`);
-    await api.retryAdminNftJob("j1");
     expect(calls(fetchJson)).toEqual([
       ["/admin/applications/a%201/review", { method: "POST", body: { decision: "APPROVED" } }],
       ["/admin/applications/a1/review", { method: "POST", body: { decision: "REJECTED", note: "not a fit" } }],
@@ -108,18 +107,13 @@ describe("operations API mapping (lib/api/admin.ts)", () => {
       ["/admin/payouts", { method: "POST", body: { rewardId: "r1", submissionId: "s1", amount: "1" } }],
       ["/admin/payouts/p1/approve", { method: "POST" }],
       ["/admin/payouts/p1/paid", { method: "POST", body: { txHash: HASH } }],
-      ["/admin/nft-jobs/j1/retry", { method: "POST" }],
     ]);
   });
 
-  it("reads the operations and NFT job pages from their routes", async () => {
+  it("reads the operations page from its route", async () => {
     const ops = createHttp(operationsBody);
     await createAdminApi(ops.http).getAdminOperations("b1");
     expect(calls(ops.fetchJson)[0][0]).toBe("/admin/bounties/b1/operations");
-    const jobs = createHttp({ items: [{ id: "j1", nft_id: "n1", job_type: "MINT_PARENT", status: "FAILED", retry_count: 5, last_error: "boom", scheduled_at: null, updated_at: "2026-10-01T00:00:00Z", nft_type: "NINJA_PARENT", nft_status: "FAILED", bounty_title: null, owner_nickname: "mina", owner_wallet_address: "inj1m" }], page: 2, pageSize: 30, total: 31 });
-    const page = await createAdminApi(jobs.http).getAdminNftJobs("FAILED", 2);
-    expect(calls(jobs.fetchJson)[0][0]).toBe("/admin/nft-jobs?status=FAILED&page=2");
-    expect(page).toEqual({ page: 2, pageSize: 30, total: 31, items: [{ id: "j1", nftId: "n1", jobType: "MINT_PARENT", status: "FAILED", retryCount: 5, lastError: "boom", scheduledAt: null, updatedAt: "2026-10-01T00:00:00Z", nftType: "NINJA_PARENT", nftStatus: "FAILED", bountyTitle: null, ownerNickname: "mina", ownerWalletAddress: "inj1m" }] });
   });
 });
 

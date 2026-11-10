@@ -20,7 +20,7 @@ type BountyDetailPageProps = {
 };
 
 // Keys under bounties.detail.completionSteps / afterApprovalSteps / bounties.apply.statuses.
-const completionStepKeys = ["transfer", "mint", "attach"] as const;
+const completionStepKeys = ["transfer"] as const;
 const unspecifiedRewardStepKeys = ["review", "record"] as const;
 const afterApprovalStepKeys = ["approve", "unlock", "reward"] as const;
 const applyStatuses = [
@@ -68,7 +68,7 @@ export default async function BountyDetailPage({ params }: BountyDetailPageProps
   const applicationRequired = Boolean(bounty.applicationRequired);
   const deliverables = bounty.deliverables ?? [];
   const rewards = bounty.rewards ?? [bounty.reward];
-  // An absent/zero reward is unspecified, not a promise of payment or NFT issuance.
+  // An absent/zero reward is unspecified, not a promise of payment.
   const specifiedRewards = rewards.filter((reward) => !isRewardUnset(reward));
   const hasSpecifiedReward = specifiedRewards.length > 0;
   const isClosedDeadline = bounty.deadline === "Closed";

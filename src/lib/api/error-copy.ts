@@ -180,7 +180,7 @@ export const ERROR_COPY = {
     ],
   },
   /**
-   * 운영자 바운티 운영(지원/제출/보상/지급/NFT) - `lib/admin-operations.ts opsErrorCode`. 해당 엔드포인트가 던지는 BE 코드 전부와
+   * 운영자 바운티 운영(지원/제출/보상/지급) - `lib/admin-operations.ts opsErrorCode`. 해당 엔드포인트가 던지는 BE 코드 전부와
    * FE 정규화 코드. 목록 밖은 `unknown`(원 코드를 `{code}`로 보여 준다).
    */
   adminOperations: {
@@ -212,7 +212,6 @@ export const ERROR_COPY = {
       "PAYOUT_EXCEEDS_AVAILABLE_REWARD",
       "PAYOUT_NOT_FOUND_OR_WRONG_STATUS",
       "PAYOUT_SELF_APPROVAL",
-      "NFT_JOB_NOT_FOUND_OR_NOT_FAILED",
       "INVALID_TRANSITION",
       "TRANSITION_BLOCKED",
       "VALIDATION_FAILED",

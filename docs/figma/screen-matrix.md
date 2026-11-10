@@ -7,8 +7,8 @@ Per-node detail lives in the recon files; this matrix is the frozen contract sou
 
 | nodeId | Screen | Route | Native frame (sole pixel-diff ref) | Shell | Surface | Container | Repeated components | Interactions | Responsive inference (768 / 390) | Assets |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 19:3 | 01 Landing | `/` | 1440×2156.70 | IDENTICAL | default + **inverse hero gradient** + inverse footer | 1200/24 | Badge, RewardPill, BountyCard×4, NewsCard×3, SectionHeader×2, primary/glass CTAs, stats, NFT mosaic | nav/CTA/card links | hero 2col→stack; cards 4→2→1; news 3→1 | mascot, injective-icon-white, injective-token, ninja-nft, 4 card imgs |
-| 19:244 | 05 User Profile | `/members/[id]` (jaemin) | 1440×1921.50 | IDENTICAL | default + inverse portfolio panel | 1200/24 | ProfileHero, Badge, CompletionCard×3, AgentCard×2, NFT grid 4×2 | card links | portfolio stack; completions 3→2→1 | mascot, ninjalabs-mascot.jpg, ninja-nft |
+| 19:3 | 01 Landing | `/` | 1440×2156.70 | IDENTICAL | default + **inverse hero gradient** + inverse footer | 1200/24 | Badge, RewardPill, BountyCard×4, NewsCard×3, SectionHeader×2, primary/glass CTAs, stats, NFT mosaic (Figma only, not implemented; removed 2026-11) | nav/CTA/card links | hero 2col→stack; cards 4→2→1; news 3→1 | mascot, injective-icon-white, injective-token, ninja-nft, 4 card imgs |
+| 19:244 | 05 User Profile | `/members/[id]` (jaemin) | 1440×1921.50 | IDENTICAL | default + inverse portfolio panel | 1200/24 | ProfileHero, Badge, CompletionCard×3, AgentCard×2 and NFT grid 4×2 (Figma only, not implemented; removed 2026-11) | card links | portfolio stack; completions 3→2→1 | mascot, ninjalabs-mascot.jpg, ninja-nft |
 | 19:422 | 05 Profile Empty | `/members/[id]` (sora) | 1440×2045.37 | IDENTICAL | same + explicit empty states | 1200/24 | ProfileHero variant, 3 empty panels w/ CTAs | CTA links | same | mascot, ninjalabs-mascot.jpg, ninja-nft |
 | 19:553 | 06 Hall of Fame | `/hall-of-fame` | 1440×2445.77 | IDENTICAL | default + inverse stat panel | 1200/24 | stat tiles×3, NewsCard-like highlight×3 (Milestone/Featured/Partnership), timeline×3, SectionHeader | links | stats/articles 3→1; timeline stacks | mascot, 3 event photos, partner wall |
 | 19:704 | 07 Members | `/members` | 1440×1447.54 | IDENTICAL | default | 1200/24 | MemberCard×4, role filter pills, rules tiles×4 | filter pills, links | grid 4→2→1; rules 4→2×2→1 | mascot, 3 member photos, image mark |
@@ -141,10 +141,10 @@ type Member = { slug: string; name: string; initials: string; role: 'Core'|'Dev'
 // Directory visibility rule (07 recon): /members lists only records with isMember === true;
 // unassignment (isMember → false) hides the card but the /members/[id] profile stays live.
 type Completion = { title: string; category: BountyCategory; completedAt: string;
-  reward: Reward; childNft?: { tokenId: string } };
-type Agent = { name: string; wallet: string; verified: boolean; completedBounties: number };
+  reward: Reward };
 type Profile = { slug: string; handle: string; initials: string; bio: string; skills: BountyCategory[];
-  joinedAt: string; completions: Completion[]; childNfts: { title: string }[]; agents: Agent[] };
+  joinedAt: string; completions: Completion[] };
+// NFT fields removed 2026-11; codecs still ignore nft/nfts/completionNfts. Agent type removed with the agents feature (FE #107).
 // profile state is derived: completions.length === 0 → empty variant (documented empty id: 'sora')
 ```
 
