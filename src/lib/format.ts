@@ -36,7 +36,7 @@ export function formatTokenAmount(amount: number | string, locale: string, maxim
 
 /**
  * Date and time pinned to UTC with the zone label (`Jan 25, 2027, 4:23 PM UTC`), for timestamps that must read the same on
- * every machine, such as an Agent API key's expiry. Explicit fields on purpose: `dateStyle`/`timeStyle` cannot be combined
+ * every machine, such as admin timestamps. Explicit fields on purpose: `dateStyle`/`timeStyle` cannot be combined
  * with `timeZoneName` (Intl throws, next-intl's `onError` then falls back to `String(date)` and logs FORMATTING_ERROR).
  */
 export function formatUtcDateTime(format: Pick<ReturnType<typeof useFormatter>, "dateTime">, value: string | Date): string {

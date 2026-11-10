@@ -75,6 +75,18 @@ describe("operations API mapping (lib/api/admin.ts)", () => {
     expect(ops.submissions[0]).toMatchObject({ payoutAddress: null, payoutAddressEvm: null, email: null });
   });
 
+  it("an older BE that omits the optional payout fields maps them to null, not undefined", () => {
+    const submission: Record<string, unknown> = { ...operationsBody.submissions[0] };
+    for (const key of ["payout_address", "payout_address_evm", "email"]) delete submission[key];
+    const payout: Record<string, unknown> = { ...operationsBody.payouts[0] };
+    delete payout.recipient_address_evm;
+    const ops = toAdminOperations({ ...operationsBody, submissions: [submission], payouts: [payout] } as never);
+    expect(ops.submissions[0].payoutAddress).toBeNull();
+    expect(ops.submissions[0].payoutAddressEvm).toBeNull();
+    expect(ops.submissions[0].email).toBeNull();
+    expect(ops.payouts[0].recipientAddressEvm).toBeNull();
+  });
+
   it("an older BE without blockerDetails/allowedTransitions/policy degrades to no buttons and the two-person rule", () => {
     const ops = toAdminOperations({ ...operationsBody, lifecycle: { blockers: {} }, policy: undefined } as never);
     expect(ops.lifecycle).toEqual({ blockers: {}, allowedTransitions: [] });
