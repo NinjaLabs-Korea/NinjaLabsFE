@@ -91,6 +91,11 @@ const applications: readonly AccountApplication[] = [
     reviewComment: null,
     reviewNote: null,
     paymentStatus: "PARTIALLY_PAID",
+    submissionId: "preview-submission-application-6",
+    payoutAddress: null,
+    payoutAddressEvm: null,
+    payoutAddressUpdatedAt: null,
+    payoutAddressEditable: true,
   },
 ];
 

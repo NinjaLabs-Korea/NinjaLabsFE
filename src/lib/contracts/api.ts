@@ -68,11 +68,19 @@ export type AccountApi = {
   getAgents: (auth: AuthSnapshot) => Promise<ApiResult<readonly AccountAgent[]>>;
 };
 
+/** `PUT /submissions/:id/payout-address` 200 응답 */
+export type PayoutAddressResult = { submissionId: string; payoutAddress: string; payoutAddressEvm: string; updatedAt: string };
+
 /** 바운티 참여 (지원 / 제출) */
 export type BountyApi = {
   applyToBounty: (bountyId: string, input: { message: string; portfolioUrl?: string }) => Promise<{ id: string; status: string }>;
   /** Withdraws one of the caller's own (or their agents') PENDING applications; the same row reopens if they re-apply. */
   withdrawApplication: (applicationId: string) => Promise<{ id: string; status: string }>;
+  /**
+   * `PUT /submissions/:id/payout-address` `{address}` (0x or inj1; the BE stores inj1 and answers both forms).
+   * 400 `INVALID_INJECTIVE_ADDRESS` / 404 `SUBMISSION_NOT_FOUND` / 409 `SUBMISSION_NOT_APPROVED` / 409 `PAYOUT_ADDRESS_LOCKED`.
+   */
+  setPayoutAddress: (submissionId: string, address: string) => Promise<PayoutAddressResult>;
   submitBounty: (bountyId: string, input: {
     submissionUrl: string;
     description: string;

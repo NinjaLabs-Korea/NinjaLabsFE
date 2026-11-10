@@ -17,8 +17,8 @@ function operations(): AdminOperations {
     lifecycle: { blockers: { COMPLETED: [], OPEN: [] }, allowedTransitions: [] },
     applications: [],
     submissions: [
-      { ...base, id: "s1", userId: "u1", nickname: LONG, recipientWalletAddress: null },
-      { ...base, id: "s2", userId: "u2", nickname: "mina", recipientWalletAddress: "inj1mina" },
+      { ...base, id: "s1", userId: "u1", nickname: LONG, payoutAddress: null, payoutAddressEvm: null, email: null },
+      { ...base, id: "s2", userId: "u2", nickname: "mina", payoutAddress: "inj1mina", payoutAddressEvm: null, email: null },
     ],
     rewards: [{ id: "r1", status: "FUNDED", symbol: "INJ", amount: "5000000000000000000", depositedAmount: "5000000000000000000", depositedAt: null, depositTxHash: null, custodyAddress: "inj1ms", cap: "5000000000000000000", allocated: "0" }],
     payouts: [],
@@ -45,12 +45,12 @@ async function openDialog() {
 }
 
 describe("payout request dialog", () => {
-  it("preselects the first candidate that has a wallet", async () => {
+  it("preselects the first candidate that has a payout address", async () => {
     const dialog = await openDialog();
     expect(within(dialog).getByRole("combobox").textContent).toContain("mina");
   });
 
-  it("shows the wallet and amount errors together", async () => {
+  it("shows the payout address and amount errors together", async () => {
     const dialog = await openDialog();
     fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "abc" } });
     fireEvent.click(within(dialog).getByRole("combobox"));

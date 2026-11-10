@@ -481,6 +481,19 @@ describe("BountyActionPanel", () => {
       expect(screen.getByText(label)).toBeTruthy();
     });
 
+    it("links to the payout address form on /applications until everything is paid", async () => {
+      approved("PENDING");
+      const cta = await screen.findByRole("link", { name: "Enter payout address" });
+      expect(cta.getAttribute("href")).toBe("/applications");
+      expect(screen.getByText("Enter a payout address to receive your reward.")).toBeTruthy();
+    });
+
+    it("drops the payout address link once the payout is PAID", async () => {
+      approved("PAID");
+      await screen.findByText("The sponsor approved your work for this bounty.");
+      expect(screen.queryByRole("link", { name: "Enter payout address" })).toBeNull();
+    });
+
     it("shows no payout badge for NONE", async () => {
       approved("NONE");
       await screen.findByText("The sponsor approved your work for this bounty.");

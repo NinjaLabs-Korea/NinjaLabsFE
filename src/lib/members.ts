@@ -97,13 +97,15 @@ type PublicProfileResponse = {
     /** `PayoutStatus`; typed as string because a newer BE may add values (read as PENDING) */
     payoutStatus?: string;
   }>;
-  agents: Array<{
+  /** Optional: the BE is dropping agents (Google-only plan); absent is read as []. */
+  agents?: Array<{
     name: string;
     status: string;
     wallet_address: string;
     completed_bounties: unknown[];
   }>;
-  nfts: Array<{
+  /** Optional: the BE is dropping NFTs (Google-only plan); absent is read as []. */
+  nfts?: Array<{
     id: string;
     nft_type: "NINJA_PARENT" | "BOUNTY_COMPLETION_CHILD";
     status: "PENDING" | "MINTING" | "MINTED" | "ATTACHING" | "ATTACHED" | "FAILED";
@@ -175,7 +177,7 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
     }),
     joinedAt: formatUtcDate(data.created_at, locale, { year: "numeric", month: "long" }),
     completions,
-    nfts: data.nfts.map((nft) => ({
+    nfts: (data.nfts ?? []).map((nft) => ({
       id: nft.id,
       type: nft.nft_type === "NINJA_PARENT" ? "parent" : "completion",
       // "" when the NFT's bounty was deleted: the page shows a localized fallback (a literal here would be English on every locale).
@@ -187,7 +189,7 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
     })),
     // The BE sends every non-deleted agent of the owner; the public card only lists live ones. A pending registration
     // (unproven wallet) or a revoked agent is not "my verified agent" and must not put its wallet on a public page.
-    agents: data.agents.filter((agent) => agent.status === "ACTIVE").map((agent) => ({
+    agents: (data.agents ?? []).filter((agent) => agent.status === "ACTIVE").map((agent) => ({
       name: agent.name,
       wallet: agent.wallet_address,
       verified: true,

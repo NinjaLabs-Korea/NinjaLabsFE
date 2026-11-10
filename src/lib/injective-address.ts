@@ -33,3 +33,16 @@ export function isSameWalletAddress(a: string, b: string): boolean {
   const left = evmHexAddress(a);
   return left !== null && left === evmHexAddress(b);
 }
+
+/**
+ * Client-side pre-check for the payout address input (BE `PUT /submissions/:id/payout-address` is authoritative: it also
+ * verifies the bech32 checksum and rejects the zero address). Accepts a 20-byte `0x` address or a 20-byte `inj1` account
+ * address in one case (all lower or all upper, like the BE; a mixed-case `inj1` is refused). Surrounding spaces are ignored.
+ */
+export function isPayoutAddressShape(input: string): boolean {
+  const value = input.trim();
+  if (/^0x[0-9a-fA-F]{40}$/.test(value)) return true;
+  if (!/^inj1/i.test(value)) return false;
+  if (value !== value.toLowerCase() && value !== value.toUpperCase()) return false;
+  return evmHexAddress(value) !== null;
+}

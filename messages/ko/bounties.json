@@ -194,6 +194,8 @@
     "browseOther": "다른 바운티 둘러보기",
     "submissionApprovedHeading": "제출물이 승인됐어요",
     "submissionApprovedBody": "스폰서가 이 바운티의 작업물을 승인했어요.",
+    "payoutAddressBody": "보상을 받으려면 지급 주소를 입력해 주세요.",
+    "payoutAddressCta": "지급 주소 입력하기",
     "submissionRejectedHeading": "제출물이 채택되지 않았어요",
     "submissionRejectedBody": "스폰서가 작업물을 검토한 뒤 채택하지 않았어요. 이 결과는 최종이에요.",
     "submissionForfeitedHeading": "보상 미지급",

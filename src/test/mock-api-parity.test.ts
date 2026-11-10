@@ -44,7 +44,8 @@ describe("mock and api clients implement the same contract", () => {
       if (apiResult.status !== "available" || mockResult.status !== "available") throw new Error(`${method} unavailable`);
       expect(mockResult.data.length, method).toBeGreaterThan(0);
       // The submission content fields are optional on both sides (the dedicated test below covers them).
-      const content = new Set(["submissionUrl", "repositoryUrl", "commitSha", "description"]);
+      // The BE #69 payout address fields are optional on both sides too (an older BE omits them; the mock only seeds the completed fixture).
+      const content = new Set(["submissionUrl", "repositoryUrl", "commitSha", "description", "submissionId", "payoutAddress", "payoutAddressEvm", "payoutAddressUpdatedAt", "payoutAddressEditable"]);
       const base = (row: object) => keys(row).filter((key) => !content.has(key));
       for (const row of mockResult.data) expect(base(row), method).toEqual(base(apiResult.data[0]));
     }

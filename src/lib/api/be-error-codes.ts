@@ -2,7 +2,8 @@
  * BE가 응답 `message`로 던지는 에러 코드 목록 - **BE 카탈로그의 그대로 복사본(snapshot)**이다. 손으로 코드를 지어내지 말 것.
  *
  * 원본: NinjaLabsBE `src/common/http/error-codes.ts` (`ERROR_CODES`의 키, 같은 순서·같은 묶음).
- * 스냅샷 기준: BE `main` @ `0a1c0d3` (BE #57까지, `WALLET_ALREADY_LINKED` 삭제 반영) · 106개.
+ * 스냅샷 기준: BE `main` @ `0a1c0d3` (BE #57까지, `WALLET_ALREADY_LINKED` 삭제 반영) + BE #69(지급 주소) 추가 3개 · 109개.
+ * `APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND`는 BE #69가 지웠지만 옛 BE 응답 호환용으로 FE-5까지 남긴다(스펙 대조 테스트 없음).
  * 줄 끝 주석은 "HTTP 상태 - BE 카탈로그의 한 줄 의미"이고 사용자 문구가 아니다 (사용자 문구는 `messages/<locale>/*.json`).
  *
  * ## 어디를 고치나
@@ -90,7 +91,9 @@ export const BE_ERROR_CODES = [
   // ── 제출 / 심사 (submissions) ──
   "DEADLINE_PASSED", // 400 - 제출 마감이 지났다 (수정 요청 상태의 재제출은 예외)
   "SUBMISSION_FINALIZED", // 409 - 이미 확정(승인/반려)된 제출이라 수정할 수 없다
-  "SUBMISSION_NOT_FOUND", // 404 - 제출물이 없다
+  "SUBMISSION_NOT_FOUND", // 404 - 제출물이 없다 (지급 주소 입력: 내 제출이 아니거나 바운티가 삭제됨도 같은 404)
+  "SUBMISSION_NOT_APPROVED", // 409 - 승인(APPROVED)된 제출이 아니라 지급 주소를 입력할 수 없다
+  "PAYOUT_ADDRESS_LOCKED", // 409 - 이 제출의 지급이 이미 요청돼 지급 주소를 바꿀 수 없다 (정정은 운영자 수동 경로)
   "SUBMISSION_NOT_REVIEWABLE", // 400 - 심사 가능한 상태의 제출이 아니다
   "SUBMISSION_REVISION_CHANGED", // 400 - 심사 중에 제출이 재제출돼 리비전이 바뀌었다 (새로고침 후 다시 심사)
   "REVISION_COMMENT_REQUIRED", // 400 - 수정 요청에는 코멘트가 필요하다
@@ -105,8 +108,9 @@ export const BE_ERROR_CODES = [
   "DEPOSIT_BELOW_REWARD_AMOUNT", // 400 - 입금액이 보상 게시 금액(amount)보다 적어 입금 확인을 할 수 없다
   "REWARD_NOT_FOUND_OR_NOT_PENDING", // 404 - 보상이 없거나 입금 대기(DEPOSIT_PENDING) 상태가 아니다
   "REWARD_NOT_FUNDED", // 400 - 보상이 없거나 입금 확인(FUNDED 이상)이 안 돼 지급을 요청할 수 없다
-  "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND", // 404 - 승인된 제출이 없거나 수령자의 지갑이 연결돼 있지 않다
-  "APPROVED_SUBMISSION_NOT_FOUND", // 404 - 해당 지급의 승인된 제출이 없다
+  "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND", // 404 - [레거시, BE #69에서 삭제] 승인된 제출이 없거나 수령자의 지갑이 연결돼 있지 않다
+  "APPROVED_SUBMISSION_NOT_FOUND", // 404 - 지급을 요청할 승인된 제출이 없다 (APPROVED 아님, 다른 바운티의 제출, 제출자 탈퇴)
+  "PAYOUT_ADDRESS_NOT_SET", // 409 - 수상자가 아직 지급 주소를 입력하지 않아 지급을 요청할 수 없다
   "PAYOUT_ALREADY_REQUESTED", // 409 - 같은 제출에 이미 지급 요청이 있다 (멱등)
   "PAYOUT_EXCEEDS_AVAILABLE_REWARD", // 400 - 지급액이 남은 보상 잔액을 넘는다
   "PAYOUT_NOT_FOUND_OR_WRONG_STATUS", // 404 - 지급이 없거나 현재 상태에서 허용되지 않는 처리다

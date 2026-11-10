@@ -72,6 +72,33 @@
       "generic": "无法撤回该申请，请稍后重试。",
       "TOO_MANY_REQUESTS": "请求过多。请稍后再试。"
     },
+    "payout": {
+      "title": "收款地址",
+      "intro": "请输入用于接收奖励的 Injective 地址。0x 和 inj1 地址均可。",
+      "introSaved": "奖励将发送到已保存的地址。在申请付款之前可以修改。",
+      "warningNote": "该地址必须能在 Injective 网络上直接收款。请勿使用需要备注（Memo/Tag）的交易所充值地址。",
+      "label": "收款地址",
+      "placeholder": "0x… 或 inj1…",
+      "save": "保存地址",
+      "saveChange": "修改地址",
+      "saving": "保存中…",
+      "saved": "收款地址已保存。",
+      "savedAt": "{date} 保存",
+      "injLabel": "inj1 格式",
+      "evmLabel": "0x 格式",
+      "lockedNote": "已申请付款，无法再修改地址。如确需修改，",
+      "contact": "请联系团队",
+      "invalidFormat": "请输入以 0x 开头的 42 位地址，或以 inj1 开头的地址。"
+    },
+    "payoutErrors": {
+      "INVALID_INJECTIVE_ADDRESS": "地址格式无效。请逐个字符检查。",
+      "PAYOUT_ADDRESS_LOCKED": "已申请付款，无法再修改地址。请联系团队。",
+      "SUBMISSION_NOT_APPROVED": "只有已通过的提交才能填写收款地址。",
+      "SUBMISSION_NOT_FOUND": "找不到该提交。请刷新后重试。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
+      "generic": "未能保存收款地址，请稍后重试。",
+      "TOO_MANY_REQUESTS": "请求过多，请稍后再试。"
+    },
     "payoutPaid": "已支付",
     "payoutPartial": "部分已支付",
     "payoutPending": "待支付"
