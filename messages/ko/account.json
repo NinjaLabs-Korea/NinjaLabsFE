@@ -109,11 +109,10 @@
       "description": "Ninja Labs 계정을 관리하세요."
     },
     "heading": "계정 설정",
-    "intro": "프로필과 지갑을 확인하고 계정을 관리해요.",
+    "intro": "프로필을 확인하고 계정을 관리해요.",
     "signedOutMessage": "계정을 관리하려면 로그인해 주세요",
     "profileHeading": "프로필",
     "nicknameLabel": "닉네임",
-    "walletLabel": "지갑",
     "dangerEyebrow": "위험 구역",
     "deleteHeading": "계정 삭제",
     "deleteBody": "계정 삭제는 되돌릴 수 없어요. 같은 Google 계정으로 다시 가입하면 이전 활동과 연결되지 않은 새 계정이 만들어져요.",
@@ -145,14 +144,6 @@
     "tagsLabel": "분야 태그",
     "editProfile": "프로필 수정",
     "cancelEdit": "수정 취소",
-    "wallet": {
-      "heading": "지갑",
-      "connected": "연결됨",
-      "notConnected": "미연결",
-      "linkedNote": "연결된 지갑은 계정에 고정되어 여기서 바꾸거나 해제할 수 없어요. 바꿔야 한다면 운영진에게 문의해 주세요.",
-      "body": "가입할 때 ‘나중에 연결하기’를 선택했다면 여기서 첫 지갑을 연결할 수 있어요. 서명 확인 후 Ninja NFT 발급이 대기열에 추가돼요. 발급 상태는 내 활동에서 확인해 주세요.",
-      "unavailable": "이 환경에서는 지갑 연결을 사용할 수 없어요."
-    },
     "avatar": {
       "label": "프로필 사진",
       "hint": "JPG, PNG, WebP 사진을 2MB까지 올릴 수 있어요. 헤더, 내 활동, 공개 프로필, 멤버 카드에 보여요.",

@@ -29,10 +29,10 @@ export default async function SignupGetStartedPage({ params }: PageProps<"/[loca
     <section className="mx-auto max-w-content px-gutter py-16 pb-20">
       <div className="mx-auto max-w-[896px]">
         <div>
-          <SignupStepIndicator current={4} />
+          <SignupStepIndicator current={3} />
         </div>
         <div className="mt-6">
-          <SignupGate step={4}>
+          <SignupGate step={3}>
             <CompleteOnboarding>
             <section className="rounded-card border border-border bg-surface p-5 text-center shadow-card sm:p-[21px]">
               <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("getStarted.eyebrow")}</p>

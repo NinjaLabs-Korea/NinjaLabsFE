@@ -98,9 +98,9 @@ describe("onboarding redirect", () => {
   const user = (over: Partial<ClientUser>): ClientUser => ({ id: "u", handle: "n", initials: "N", profileSlug: "n", ...over });
 
   it.each([
-    [undefined, false, "/signup/wallet"],
-    [1, false, "/signup/wallet"],
-    [2, false, "/signup/wallet"],
+    [undefined, false, "/signup/profile"],
+    [1, false, "/signup/profile"],
+    [2, false, "/signup/profile"],
     [3, false, "/signup/profile"],
     [4, false, "/signup/get-started"],
     [9, false, "/signup/get-started"],
@@ -117,6 +117,7 @@ describe("onboarding redirect", () => {
     ["/ko/bounties", "/ko/signup/profile"],
     ["/bounties", "/signup/profile"],
     ["/zh/auth/callback", "/zh/signup/profile"],
+    ["/ko/signup/get-started", null],
     ["/ko/signup/wallet", null],
     ["/signup/get-started", null],
     // Account deletion must stay reachable before onboarding is finished.

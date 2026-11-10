@@ -7,13 +7,10 @@ import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
 import { ownerNftBadgeKey } from "@/lib/nft-status";
 
-/** `inj1ab…9k4d`: the same shape as `shortWalletAddress` in the wallet module, which is not imported here so the home does not load wagmi. */
-const shortAddress = (address: string) => (address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : address);
-
 // `ownerNftBadgeKey` (lib/nft-status.ts) -> `home.profile.nft.<key>`; minted is the success badge, everything else warning.
 const nftBadgeVariant = { minted: "success", pending: "warning" } as const;
 
-/** Greeting plus the profile summary: nickname, wallet and Ninja NFT status, and the way to the public profile and the settings. */
+/** Greeting plus the profile summary: nickname and Ninja NFT status, and the way to the public profile and the settings. */
 export function HomeProfileCard() {
   const t = useTranslations("home");
   const snapshot = useAuthSnapshot();
@@ -29,13 +26,6 @@ export function HomeProfileCard() {
             <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("greeting.eyebrow")}</p>
             <h1 className="break-words font-display text-2xl text-ink sm:text-4xl">{t("greeting.title", { name: user.handle })}</h1>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              {user.walletAddress ? (
-                <Badge variant="success">{t("profile.walletConnected", { address: shortAddress(user.walletAddress) })}</Badge>
-              ) : (
-                <Link className="inline-flex min-h-11 items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" href="/account#wallet">
-                  <Badge variant="warning">{t("profile.walletMissing")}</Badge>
-                </Link>
-              )}
               {nftKey ? <Badge variant={nftBadgeVariant[nftKey]}>{t(`profile.nft.${nftKey}`)}</Badge> : <Badge variant="neutral">{t("profile.nft.none")}</Badge>}
             </div>
           </div>

@@ -66,6 +66,19 @@ const nextConfig: NextConfig = {
         destination: "/:locale/opengraph-image/social",
         permanent: true,
       },
+      // Google-only signup (2026-11): the wallet step is gone. Old links, bookmarks and the previous deploy's resume
+      // redirects land on the profile step, whose `SignupGate` then sorts the session (signed out -> /signup, finished -> leave).
+      // Temporary on purpose: the BE still sends step-2 users here until its first INSERT moves to step 3.
+      {
+        source: `/:locale(${routing.locales.join("|")})/signup/wallet`,
+        destination: "/:locale/signup/profile",
+        permanent: false,
+      },
+      {
+        source: "/signup/wallet",
+        destination: "/signup/profile",
+        permanent: false,
+      },
     ];
   },
   async rewrites() {

@@ -8,57 +8,10 @@
     },
     "api": {
       "title": "Get started",
-      "description": "All you need is a Google account. No wallet required.",
+      "description": "All you need is a Google account.",
       "disclosure": "New here? We create your account. Already a member? You pick up where you left off. We only receive your Google email, never your password."
     },
     "eyebrow": "Sign in"
-  },
-  "wallet": {
-    "linked": {
-      "badge": "Wallet connected",
-      "note": "This wallet is already linked to your account, so there is nothing to verify again.",
-      "continue": "Continue"
-    },
-    "metadata": {
-      "title": "Connect wallet | Ninja Labs",
-      "descriptionApi": "Connect and verify an Injective wallet.",
-      "descriptionMock": "Preview an Injective wallet connection."
-    },
-    "title": "Connect your wallet",
-    "introApi": "Connect your wallet and confirm it is yours with one signature. It costs no fees.",
-    "introMock": "Connect an Injective EVM wallet in this local session preview.",
-    "unavailableButton": "Wallet unavailable",
-    "unavailableNote": "Wallet connection is unavailable until a supported Injective EVM chain is configured.",
-    "badgeApi": "Gas-free verification",
-    "badgeMock": "Connection-only preview",
-    "noteApi": "After your signature is verified, Ninja NFT minting is queued. Check its issuance status on My activity.",
-    "noteMock": "Mock mode does not sign, link an account, or call the backend.",
-    "connectLater": "Connect later",
-    "optionalNote": "Wallet verification is optional. You can continue now and connect one later.",
-    "steps": {
-      "connection": {
-        "term": "Connection",
-        "detail": "MetaMask or another EVM wallet"
-      },
-      "signing": {
-        "term": "Signing",
-        "detail": "Prove ownership with a wallet signature"
-      },
-      "gas": {
-        "term": "Gas",
-        "detail": "No transaction and no gas fee"
-      },
-      "accountLinking": {
-        "term": "Account linking",
-        "detail": "Verified wallet saved to your account"
-      },
-      "nft": {
-        "term": "NFT",
-        "detail": "Your Ninja NFT mint is queued"
-      }
-    },
-    "eyebrow": "Wallet",
-    "moreDetails": "Show details"
   },
   "profile": {
     "metadata": {
@@ -148,7 +101,7 @@
       }
     },
     "skip": "Skip for now",
-    "savedNote": "Sign-up is done. Edit your profile or connect your first wallet in account settings. To replace a linked wallet, contact the operators.",
+    "savedNote": "Sign-up is done. You can edit your profile in account settings.",
     "completeError": {
       "message": "We couldn't finish saving your onboarding. Please try again.",
       "retry": "Retry"

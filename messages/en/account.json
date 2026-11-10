@@ -109,11 +109,10 @@
       "description": "Manage your Ninja Labs account."
     },
     "heading": "Account settings",
-    "intro": "Check your profile and wallet, and manage your account.",
+    "intro": "Check your profile and manage your account.",
     "signedOutMessage": "Sign in to manage your account",
     "profileHeading": "Profile",
     "nicknameLabel": "Nickname",
-    "walletLabel": "Wallet",
     "dangerEyebrow": "Danger zone",
     "deleteHeading": "Delete account",
     "deleteBody": "Deleting your account cannot be undone. Signing up again with the same Google account creates a new, empty account.",
@@ -145,14 +144,6 @@
     "tagsLabel": "Field tags",
     "editProfile": "Edit profile",
     "cancelEdit": "Cancel editing",
-    "wallet": {
-      "heading": "Wallet",
-      "connected": "Connected",
-      "notConnected": "Not connected",
-      "linkedNote": "A linked wallet is fixed to your account and can’t be changed or unlinked here. Contact the operators if you need a different one.",
-      "body": "If you chose “Connect later” while signing up, connect your first wallet here. After your signature is verified, Ninja NFT minting is queued. Check its issuance status on My activity.",
-      "unavailable": "Wallet connection is not available in this environment."
-    },
     "avatar": {
       "label": "Profile photo",
       "hint": "JPG, PNG or WebP, up to 2 MB. It shows in the header, on My activity, your public profile and member cards.",

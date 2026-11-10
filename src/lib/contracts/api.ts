@@ -57,7 +57,7 @@ export type ApiResult<T> = ApiAvailable<T> | ApiUnavailable;
 
 /**
  * FE ↔ BE 계약. 도메인별 인터페이스로 나눠, 컴포넌트는 필요한 조각만 의존한다
- * (예: 지갑 버튼은 WalletApi만). 구현체(api / mock)는 모든 조각을 구현한다.
+ * (예: 온보딩 폼은 OnboardingApi만). 구현체(api / mock)는 모든 조각을 구현한다.
  */
 
 /** 로그인 사용자의 읽기 전용 계정 데이터 */
@@ -100,12 +100,6 @@ export type AgentApi = {
   /** 404 AGENT_NOT_FOUND / 409 AGENT_NOT_ACTIVE */
   rotateAgentKey: (agentId: string) => Promise<AgentKeyRotation>;
   revokeAgent: (agentId: string) => Promise<AgentRevocation>;
-};
-
-/** 지갑 소유권 인증 (challenge → 서명 → verify) */
-export type WalletApi = {
-  createWalletChallenge: (address: string) => Promise<{ message: string }>;
-  verifyWallet: (address: string, signature: string, publicKey?: string) => Promise<void>;
 };
 
 /** 가입 온보딩 (프로필 저장 / 완료 처리) */
@@ -217,4 +211,4 @@ export type AdminCohortApi = {
   exportAdminCohortApplications: (cohortId: string, filter: AdminCohortApplicationFilter) => Promise<string>;
 };
 
-export type ApiClient = AccountApi & AccountSettingsApi & CohortApi & BountyApi & AgentApi & WalletApi & OnboardingApi & AdminApi & AdminCohortApi;
+export type ApiClient = AccountApi & AccountSettingsApi & CohortApi & BountyApi & AgentApi & OnboardingApi & AdminApi & AdminCohortApi;

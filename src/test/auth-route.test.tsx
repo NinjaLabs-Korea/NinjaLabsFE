@@ -36,9 +36,9 @@ describe("resolveStartTarget (the one rule for where a user belongs)", () => {
   it.each([
     ["loading", loading, { kind: "checking" }],
     ["signed out", signedOut, { kind: "sign-up", href: "/signup" }],
-    ["wallet step", unfinished(2), { kind: "resume", href: "/signup/wallet" }],
+    ["legacy wallet step (BE step 2) goes to profile", unfinished(2), { kind: "resume", href: "/signup/profile" }],
     ["profile step", unfinished(3), { kind: "resume", href: "/signup/profile" }],
-    ["complete step", unfinished(4), { kind: "resume", href: "/signup/get-started" }],
+    ["get-started step", unfinished(4), { kind: "resume", href: "/signup/get-started" }],
     ["finished", finished, { kind: "member", href: "/members/pelican" }],
   ])("%s", (_name, snapshot, expected) => {
     expect(resolveStartTarget(snapshot)).toEqual(expected);
@@ -63,14 +63,14 @@ describe("resolveSignupAccess", () => {
     ["loading", loading, 3, { kind: "wait" }],
     ["signed out, step 1", signedOut, 1, { kind: "show" }],
     ["signed out, step 2", signedOut, 2, { kind: "sign-in-first", href: "/signup" }],
-    ["signed out, step 4", signedOut, 4, { kind: "sign-in-first", href: "/signup" }],
-    ["owes wallet, step 1", unfinished(2), 1, { kind: "resume", href: "/signup/wallet" }],
+    ["signed out, step 3", signedOut, 3, { kind: "sign-in-first", href: "/signup" }],
+    ["owes legacy wallet step, step 1", unfinished(2), 1, { kind: "resume", href: "/signup/profile" }],
     ["owes profile, step 1", unfinished(3), 1, { kind: "resume", href: "/signup/profile" }],
     ["owes profile, step 2", unfinished(3), 2, { kind: "show" }],
     ["owes profile, step 3", unfinished(3), 3, { kind: "show" }],
     ["finished, step 1", finished, 1, { kind: "leave" }],
     ["finished, step 2", finished, 2, { kind: "leave" }],
-    ["finished, step 4", finished, 4, { kind: "leave" }],
+    ["finished, step 3", finished, 3, { kind: "leave" }],
   ] as const)("%s", (_name, snapshot, step, expected) => {
     expect(resolveSignupAccess(snapshot, step)).toEqual(expected);
   });
@@ -118,7 +118,7 @@ describe("signup pages follow the session", () => {
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/signup/profile"));
   });
 
-  it("lets a user with an unfinished onboarding see steps 2-4", () => {
+  it("lets a user with an unfinished onboarding see steps 2-3", () => {
     reset();
     state.auth = unfinished(3);
     renderWithIntl(stepTwo);
@@ -135,7 +135,7 @@ describe("signup pages follow the session", () => {
     expect(flash).toHaveBeenCalledWith("signInRequired");
   });
 
-  it("keeps steps 2-4 previewable signed out in mock mode", () => {
+  it("keeps steps 2-3 previewable signed out in mock mode", () => {
     reset();
     mode.current = "mock";
     state.auth = signedOut;
@@ -147,10 +147,10 @@ describe("signup pages follow the session", () => {
   it("does not bounce the user off the last step when onboarding completes while it is shown", () => {
     reset();
     state.auth = unfinished(4);
-    const view = renderWithIntl(<SignupGate step={4}><p>Done</p></SignupGate>);
+    const view = renderWithIntl(<SignupGate step={3}><p>Done</p></SignupGate>);
     expect(screen.getByText("Done")).toBeTruthy();
     state.auth = finished;
-    view.rerender(<SignupGate step={4}><p>Done</p></SignupGate>);
+    view.rerender(<SignupGate step={3}><p>Done</p></SignupGate>);
     expect(screen.getByText("Done")).toBeTruthy();
     expect(replace).not.toHaveBeenCalled();
   });
@@ -206,7 +206,7 @@ describe("Get started call to action", () => {
   it("continues at the owed step for an unfinished onboarding", () => {
     state.auth = unfinished(2);
     render(cta);
-    expect(screen.getByRole("link", { name: "Continue sign-up" }).getAttribute("href")).toBe("/signup/wallet");
+    expect(screen.getByRole("link", { name: "Continue sign-up" }).getAttribute("href")).toBe("/signup/profile");
     expect(screen.queryByText("Get Started")).toBeNull();
   });
 

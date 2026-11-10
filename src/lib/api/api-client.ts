@@ -315,19 +315,6 @@ export function createApiApiClient(http: ApiHttp): ApiClient {
     revokeAgent: (agentId) =>
       http.fetchJson(`/agents/${encodeURIComponent(agentId)}/revoke`, { method: "POST" }),
 
-    createWalletChallenge: (address) =>
-      http.fetchJson<{ message: string }>("/wallets/challenge", {
-        method: "POST",
-        body: { address },
-      }),
-
-    verifyWallet: async (address, signature, publicKey) => {
-      await http.fetchJson("/wallets/verify", {
-        method: "POST",
-        body: { address, signature, ...(publicKey ? { publicKey } : {}) },
-      });
-    },
-
     checkNickname: (nickname) =>
       http.fetchJson<{ available: boolean }>(`/users/check-nickname?nickname=${encodeURIComponent(nickname)}`),
 

@@ -113,7 +113,7 @@ describe("GoogleLoginButton", () => {
 
     await waitFor(() => expect(screen.getByText("signed-in")).toBeTruthy());
     expect(screen.queryByRole("alert")).toBeNull();
-    expect(routerPush).toHaveBeenCalledWith("/signup/wallet");
+    expect(routerPush).toHaveBeenCalledWith("/signup/profile");
   });
 });
 
@@ -136,7 +136,7 @@ describe("BountyApplyGuideCta", () => {
 
 describe("API onboarding routing", () => {
   it("maps incomplete users to the first unfinished signup screen", () => {
-    expect(getOnboardingPath({ ...previewUser, onboardingStep: 2 })).toBe("/signup/wallet");
+    expect(getOnboardingPath({ ...previewUser, onboardingStep: 2 })).toBe("/signup/profile");
     expect(getOnboardingPath({ ...previewUser, onboardingStep: 3 })).toBe("/signup/profile");
     expect(getOnboardingPath({ ...previewUser, onboardingStep: 4 })).toBe("/signup/get-started");
     expect(
@@ -147,7 +147,7 @@ describe("API onboarding routing", () => {
   it("recovers incomplete sessions outside signup without trapping later signup steps", () => {
     const incomplete = { ...previewUser, onboardingStep: 1 };
     expect(shouldRedirectToOnboarding(incomplete, "/members/demo-user")).toBe(
-      "/signup/wallet",
+      "/signup/profile",
     );
     expect(shouldRedirectToOnboarding(incomplete, "/signup/profile")).toBeNull();
   });

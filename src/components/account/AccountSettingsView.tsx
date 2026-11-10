@@ -13,7 +13,6 @@ import {
 } from "@/components/auth/FoundationProvider";
 import { AvatarSettings } from "@/components/account/AvatarSettings";
 import { MyCohortApplications } from "@/components/account/MyCohortApplications";
-import { WalletSettings } from "@/components/account/WalletSettings";
 import { ProfileForm } from "@/components/signup/ProfileForm";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
@@ -21,7 +20,6 @@ import type { ClientUser } from "@/lib/contracts/auth";
 import { stashFlash } from "@/lib/flash";
 import { hardNavigate } from "@/lib/hard-navigate";
 import { normalizeNickname } from "@/lib/nickname";
-import type { WalletConfig } from "@/lib/runtime/config";
 import { PageLoading } from "@/components/ui/PageLoading";
 
 const focusClass =
@@ -42,7 +40,7 @@ export function confirmationMatches(nickname: string, typed: string): boolean {
 const deleteErrors = ERROR_COPY.accountDelete;
 type KnownError = (typeof deleteErrors.codes)[number];
 
-export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain config for the wallet card (server-composed runtime config); null → no wallet connect here. */ wallet?: WalletConfig | null } = {}) {
+export function AccountSettingsView() {
   const t = useTranslations("account.settings");
   const tAccount = useTranslations("account.common");
   const tTags = useTranslations("signup.profile.form.tags");
@@ -140,12 +138,6 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
               <dd className="min-w-0 font-semibold text-ink">{user.tags.map((tag) => tTags(tag.toLowerCase())).join(", ")}</dd>
             </>
           ) : null}
-          {user.walletAddress ? (
-            <>
-              <dt className="text-ink-muted">{t("walletLabel")}</dt>
-              <dd className="min-w-0 break-all font-semibold text-ink [overflow-wrap:anywhere]">{user.walletAddress}</dd>
-            </>
-          ) : null}
         </dl>
         {editingProfile ? (
           <div className="mt-2 border-t border-border pt-4">
@@ -156,8 +148,6 @@ export function AccountSettingsView({ wallet = null }: { /** Injective EVM chain
           <button className={`mt-5 ${secondaryButtonClass}`} onClick={() => setEditingProfileFor(user.id)} type="button">{t("editProfile")}</button>
         )}
       </section>
-
-      <WalletSettings wallet={wallet} />
 
       <MyCohortApplications />
 

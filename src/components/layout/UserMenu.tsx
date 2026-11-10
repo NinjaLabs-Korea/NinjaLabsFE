@@ -5,7 +5,6 @@ import { useAuthActions, useAuthSnapshot, useFoundationMode } from "@/components
 import { menuItemClass, menuPanelClass, useMenuButton } from "@/components/layout/useMenuButton";
 import { Avatar } from "@/components/ui/Avatar";
 import { Link } from "@/i18n/navigation";
-import { shortAddress } from "@/lib/format";
 import type { ClientUser } from "@/lib/contracts/auth";
 
 // `key` is a message key under `common.userMenu`.
@@ -64,14 +63,6 @@ export function UserMenu() {
         <div aria-label={t("accountNavigation")} className={`${menuPanelClass} w-56`} {...menu.menuProps}>
           <div className="border-b border-border px-3 pt-2.5 pb-2">
             <p className="break-words text-sm font-semibold text-ink">{user.handle}</p>
-            {user.walletAddress ? (
-              <p className="whitespace-nowrap text-xs text-ink-muted" title={user.walletAddress}>
-                <span className="sr-only">{t("walletAddress", { wallet: user.walletAddress })}</span>
-                <span aria-hidden="true">
-                  {shortAddress(user.walletAddress)}
-                </span>
-              </p>
-            ) : null}
             {mode === "mock" ? <p className="text-xs text-ink-muted">{t("sessionPreview")}</p> : null}
           </div>
           <div className="pt-1.5">

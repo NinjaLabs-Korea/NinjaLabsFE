@@ -25,10 +25,10 @@ export default async function SignupProfilePage({ params }: PageProps<"/[locale]
     <section className="mx-auto max-w-content px-gutter py-16 pb-20">
       <div className="mx-auto max-w-[1024px]">
         <div>
-          <SignupStepIndicator current={3} />
+          <SignupStepIndicator current={2} />
         </div>
         <div className="mt-6">
-          <SignupGate step={3}>
+          <SignupGate step={2}>
             <section className="mx-auto max-w-[640px] rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px]">
               <div className="text-center">
                 <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("profile.eyebrow")}</p>
