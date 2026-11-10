@@ -16,19 +16,19 @@ const highlight = (type: string, title: string, image_url: string | null, link_u
   id: title, type, title, description: "", image_url, link_url, published_at: null,
 });
 
-describe("hall of fame stats without completionNfts (BE dropping NFTs)", () => {
+describe("hall of fame stats with or without completionNfts (NFTs are gone, Google-only plan)", () => {
   afterEach(() => fetchPublicJson.mockReset());
   const load = async (stats: object) => {
     fetchPublicJson.mockImplementation(async (path: string) => (path.endsWith("/stats") ? stats : []));
     return (await getRuntimeHallOfFame("en")).stats.map((stat) => stat.labelKey);
   };
 
-  it("hides the NFT tile instead of rendering 'undefined' when the BE no longer sends the count", async () => {
+  it("shows no NFT tile when the BE no longer sends the count", async () => {
     expect(await load({ completedBounties: 3, builders: 2, sponsors: 1 })).toEqual(["bountiesCompleted", "buildersRewarded"]);
   });
 
-  it("keeps the tile (even at 0) while the BE still sends it", async () => {
-    expect(await load({ completedBounties: 3, builders: 2, completionNfts: 0, sponsors: 1 })).toEqual(["bountiesCompleted", "buildersRewarded", "completionNfts"]);
+  it("ignores completionNfts from an older BE instead of rendering a tile", async () => {
+    expect(await load({ completedBounties: 3, builders: 2, completionNfts: 0, sponsors: 1 })).toEqual(["bountiesCompleted", "buildersRewarded"]);
   });
 });
 
@@ -115,7 +115,6 @@ describe("hall of fame rewards paid stat", () => {
     expect(hallOfFame.stats).toEqual([
       { value: "3", labelKey: "bountiesCompleted" },
       { value: "5", labelKey: "buildersRewarded" },
-      { value: "2", labelKey: "completionNfts" },
       { value: "12,500 USDC · 300 INJ", labelKey: "rewardsPaid" },
     ]);
   });

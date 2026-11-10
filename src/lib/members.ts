@@ -31,13 +31,12 @@ export const profiles: Record<string, Profile> = {
       { title: "Helix card", category: "Design", completedAt: "May 8, 2026", reward: null, payoutStatus: "NONE" },
       { title: "Quest copy", category: "Content", completedAt: "May 1, 2026", reward: null, payoutStatus: "NONE" },
     ],
-    nfts: ["iAsset widget", "Wallet flow", "Audit report", "Docs revamp", "Hydro guide", "Helix card", "Quest copy"].map((title, index) => ({ id: `preview-nft-${index}`, type: "completion" as const, title, status: "ATTACHED" as const, contractAddress: "preview", tokenId: String(index + 1), mintTxHash: null })),
   },
-  sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "New Injective builder exploring market data tasks, documentation bounties, and small UI components. This public profile is ready to become a portfolio as work is completed.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], nfts: [{ id: "sora-parent", type: "parent", title: "Ninja NFT", status: "MINTED", contractAddress: "preview", tokenId: "1", mintTxHash: null }], },
-  jinyoung: { slug: "jinyoung", handle: "jinyoung.inj", initials: "JP", teamRole: "Core", bio: "Product lead building the bounty marketplace for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026", completions: [], nfts: [], },
-  juho: { slug: "juho", handle: "juho.inj", initials: "JK", teamRole: "Dev", bio: "Protocol engineer making on-chain proof useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], nfts: [], },
-  mina: { slug: "mina", handle: "mina.inj", initials: "MS", teamRole: "Design", bio: "Experience designer creating clear paths from first task to lasting proof.", skills: ["Design"], joinedAt: "June 2026", completions: [], nfts: [], },
-  ara: { slug: "ara", handle: "ara.inj", initials: "AR", teamRole: "Ops", bio: "Community operator supporting builders and the work around them.", skills: ["Content"], joinedAt: "June 2026", completions: [], nfts: [], },
+  sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "New Injective builder exploring market data tasks, documentation bounties, and small UI components. This public profile is ready to become a portfolio as work is completed.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], },
+  jinyoung: { slug: "jinyoung", handle: "jinyoung.inj", initials: "JP", teamRole: "Core", bio: "Product lead building the bounty marketplace for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026", completions: [], },
+  juho: { slug: "juho", handle: "juho.inj", initials: "JK", teamRole: "Dev", bio: "Protocol engineer making on-chain proof useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], },
+  mina: { slug: "mina", handle: "mina.inj", initials: "MS", teamRole: "Design", bio: "Experience designer creating clear paths from first task to lasting proof.", skills: ["Design"], joinedAt: "June 2026", completions: [], },
+  ara: { slug: "ara", handle: "ara.inj", initials: "AR", teamRole: "Ops", bio: "Community operator supporting builders and the work around them.", skills: ["Content"], joinedAt: "June 2026", completions: [], },
 };
 
 export function getMembers() { return members.filter((member) => member.isMember); }
@@ -96,16 +95,8 @@ type PublicProfileResponse = {
     /** `PayoutStatus`; typed as string because a newer BE may add values (read as PENDING) */
     payoutStatus?: string;
   }>;
-  /** Optional: the BE is dropping NFTs (Google-only plan); absent is read as []. */
-  nfts?: Array<{
-    id: string;
-    nft_type: "NINJA_PARENT" | "BOUNTY_COMPLETION_CHILD";
-    status: "PENDING" | "MINTING" | "MINTED" | "ATTACHING" | "ATTACHED" | "FAILED";
-    contract_address: string;
-    token_id: string | null;
-    mint_tx_hash: string | null;
-    bounty_title: string | null;
-  }>;
+  /** Tolerated and ignored: an older BE still sends `nfts` (the NFT portfolio is gone, Google-only plan). */
+  nfts?: unknown;
 };
 
 /** The primary (first displayable) reward plus how many further displayable ones the row carries (multi-token bounties). */
@@ -169,16 +160,6 @@ function toProfile(data: PublicProfileResponse, locale: string): Profile {
     }),
     joinedAt: formatUtcDate(data.created_at, locale, { year: "numeric", month: "long" }),
     completions,
-    nfts: (data.nfts ?? []).map((nft) => ({
-      id: nft.id,
-      type: nft.nft_type === "NINJA_PARENT" ? "parent" : "completion",
-      // "" when the NFT's bounty was deleted: the page shows a localized fallback (a literal here would be English on every locale).
-      title: nft.bounty_title ?? "",
-      status: nft.status,
-      contractAddress: nft.contract_address,
-      tokenId: nft.token_id,
-      mintTxHash: nft.mint_tx_hash,
-    })),
   };
 }
 

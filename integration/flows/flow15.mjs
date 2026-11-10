@@ -30,7 +30,7 @@ let cohortName;
   check('setup: a cohort is open', !!open, cohortName);
 }
 const stats = await (await fetch(`${API}/hall-of-fame/stats`)).json();
-const statsAllZero = [stats.completedBounties, stats.builders, stats.completionNfts, stats.sponsors].every((v) => Number(v) === 0) && (stats.paidTotals ?? []).every((t) => /^0*$/.test(String(t.amount)));
+const statsAllZero = [stats.completedBounties, stats.builders, stats.sponsors].every((v) => Number(v) === 0) && (stats.paidTotals ?? []).every((t) => /^0*$/.test(String(t.amount)));
 console.log('hall of fame stats', JSON.stringify(stats), 'allZero', statsAllZero);
 
 // ---- signed out: the Intro
@@ -40,7 +40,7 @@ console.log('hall of fame stats', JSON.stringify(stats), 'allZero', statsAllZero
   const title = await p.eval(`document.querySelector('main h1')?.innerText`);
   check('Intro: the headline is the community one', /Learn, build, and move together/.test(title ?? ''), title);
   const text = await mainText(p);
-  check('Intro: no bounty marketing hero (headline, NFT card)', !/Complete bounties\. Collect proof/.test(text) && !text.includes('ninja.inj'), text.slice(0, 200));
+  check('Intro: no bounty marketing hero (headline)', !/Complete bounties\. Collect proof/.test(text) && !text.includes('ninja.inj'), text.slice(0, 200));
   check('Intro: eyebrow is Injective Contributor Hub', text.includes('Injective Contributor Hub'));
   const hero = await links(p, 'main section:first-of-type a');
   check('Intro: Get Started -> signup', hero.includes('Get Started -> /en/signup'), hero);

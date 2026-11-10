@@ -50,7 +50,7 @@ Created 2026-07-19 via Figma MCP (`generate_diagram`, team "Alex kim's team" - t
 
 | Item | Evidence (implementation) |
 |---|---|
-| Admin operations console + NFT job console (2026-10-24) | No Figma node exists for bounty operations (deposits, application/submission review, payouts, lifecycle) or NFT job retry. FE-designed from the existing admin recipes (`docs/design.md` "Admin operations console"): `src/components/admin/{OperationsConsole,BountyOperations,Ops*Panel,OpsFormModal,OpsActorCell,NftJobsManager}.tsx`, routes `/admin/operations`, `/admin/nft-jobs`. Needs a design pass (capture as FE frames like 22-31). |
+| Admin operations console (2026-10-24; the NFT job console was removed 2026-11) | No Figma node exists for bounty operations (deposits, application/submission review, payouts, lifecycle) or NFT job retry. FE-designed from the existing admin recipes (`docs/design.md` "Admin operations console"): `src/components/admin/{OperationsConsole,BountyOperations,Ops*Panel,OpsFormModal,OpsActorCell}.tsx`, route `/admin/operations`. Needs a design pass (capture as FE frames like 22-31). |
 | Branded 404 / error pages | `src/app/not-found.tsx`, `src/app/error.tsx`, `src/app/global-error.tsx` |
 | Filter empty states + Reset | `src/components/bounties/BountyFilters.tsx`, `src/components/notices/NoticeFilters.tsx`, `src/components/members/MemberFilters.tsx` |
 | Active nav highlight | `src/components/layout/NavLinks.tsx` |
@@ -89,7 +89,7 @@ Branch `fix/figma-pixel-audit`. Every screen in the new design file was compared
 | Members role chips | Figma 07 draws Core/Dev/Design/Ops with Core highlighted while showing all four roles' cards; FE keeps an "All" chip so the filter is functional. |
 | Bounty list chips | Figma 14 draws one row (All/Dev/Design/Content/Active/Closed) - FE now renders that single row, offering only categories present in the data, with "All" clearing both groups. |
 | Bounty detail signed-out panel | Figma 15/15v draw the Submit/Apply form with a LOGIN REQUIRED badge and "Sign in first"/"View intake rules"; FE renders that as a disabled preview that links to `/signup`. Signed-in states keep the functional form. |
-| Profile NFT tiles | Figma 05 shows title only; FE shows title and surfaces token/tx as a `title` tooltip, and only prints a status label when the NFT is not yet ATTACHED. |
+| Profile NFT tiles | Removed 2026-11 (Google-only plan); the portfolio card keeps only the mascot placeholder. |
 | Admin "+ New Post" | Now lives in the masthead row next to ADMIN ONLY (21) via a slot in `admin/PostManager`, replacing the absolute-position hack. |
 | Hall of Fame stats | Figma 06 has no "Platform aggregate" footnote; removed. Timeline renders dot-on-line + title + "date · description" (`hallOfFame.timeline.entry`). |
 | Sign-up frame badges | Still omitted (see "Sign-up status badges removed" above); the step headers now carry the Figma eyebrow/title/subtitle and the Figma footnotes are rendered under the cards. |

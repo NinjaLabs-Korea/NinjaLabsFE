@@ -290,7 +290,7 @@ describe("account reads: signed-out and failures", () => {
     const { http } = createHttp({ "/auth/me": me });
     expect(await createApiApiClient(http).getAccount(signedIn)).toEqual({
       status: "available",
-      data: { user: { id: "u1", handle: "ninja.inj", initials: "NI", profileSlug: "ninja.inj", onboardingStep: 4, onboardingCompleted: true, isAdmin: true, bio: "", tags: [], nftStatus: null } },
+      data: { user: { id: "u1", handle: "ninja.inj", initials: "NI", profileSlug: "ninja.inj", onboardingStep: 4, onboardingCompleted: true, isAdmin: true, bio: "", tags: [] } },
     });
     const failing = createHttp({ "/auth/me": new ApiHttpError(401, "UNAUTHORIZED") });
     expect(await createApiApiClient(failing.http).getAccount(signedIn)).toEqual({ status: "available", data: null });
@@ -301,7 +301,7 @@ describe("account reads: signed-out and failures", () => {
 
   it("maps a legacy wallet key to nothing and upper-cases two code units of the nickname for initials", () => {
     const user = toClientUser({ id: "u", nickname: "zed", onboardingStep: 2, onboardingCompleted: false, isAdmin: false, wallet: null } as unknown as MeResponse);
-    expect(user).toEqual({ id: "u", handle: "zed", initials: "ZE", profileSlug: "zed", onboardingStep: 2, onboardingCompleted: false, isAdmin: false, nftStatus: null });
+    expect(user).toEqual({ id: "u", handle: "zed", initials: "ZE", profileSlug: "zed", onboardingStep: 2, onboardingCompleted: false, isAdmin: false });
     expect(user).not.toHaveProperty("walletAddress");
   });
 

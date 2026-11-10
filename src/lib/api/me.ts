@@ -17,7 +17,7 @@ export type MeResponse = {
   isMember: boolean;
   /** Profile photo `/media/<uuid>` or null (BE 0022). Absent on an older BE: read as no photo. */
   avatarUrl?: string | null;
-  /** Optional: BE #69+ (Google-only plan) drops wallet/nft; absent, null and an object are all valid. */
+  /** Optional: BE #69+ (Google-only plan) drops wallet/nft; absent, null and an object are all valid (read for tolerance only, never shown). */
   wallet?: { address: string; verifiedAt: string | null } | null;
   /** Optional, same as `wallet`. */
   nft?: { status: string; tokenId: string | null } | null;
@@ -64,7 +64,6 @@ export function toClientUser(me: MeResponse): ClientUser {
     isAdmin: me.isAdmin,
     bio: me.bio,
     tags: me.tags,
-    nftStatus: me.nft?.status ?? null,
     ...(avatarUrl ? { avatarUrl } : {}),
   };
 }

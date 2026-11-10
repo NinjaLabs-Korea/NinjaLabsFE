@@ -12,11 +12,6 @@
     "title": "欢迎回来，{name}"
   },
   "profile": {
-    "nft": {
-      "minted": "已发放 Ninja NFT",
-      "pending": "Ninja NFT 发放中",
-      "none": "暂无 Ninja NFT"
-    },
     "viewProfile": "查看我的资料",
     "editProfile": "编辑资料"
   },

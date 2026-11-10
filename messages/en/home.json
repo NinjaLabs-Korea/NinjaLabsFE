@@ -12,11 +12,6 @@
     "title": "Welcome back, {name}"
   },
   "profile": {
-    "nft": {
-      "minted": "Ninja NFT issued",
-      "pending": "Ninja NFT minting",
-      "none": "No Ninja NFT yet"
-    },
     "viewProfile": "View my profile",
     "editProfile": "Edit profile"
   },

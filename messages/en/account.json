@@ -115,14 +115,14 @@
     "deleteBody": "Deleting your account cannot be undone. Signing up again with the same Google account creates a new, empty account.",
     "deleteConsequences": {
       "sessions": "You are signed out everywhere and your public profile disappears.",
-      "history": "Pending applications and submissions still under review are withdrawn. Completed work, payouts and NFTs stay on record under an anonymous name.",
+      "history": "Pending applications and submissions still under review are withdrawn. Completed work and payouts stay on record under an anonymous name.",
       "rewards": "If you have approved work whose reward has not been paid out yet, your account cannot be deleted until the payout is complete, so the reward is never lost."
     },
     "deleteAction": "Delete account",
     "deleteDialog": {
       "eyebrow": "Delete account",
       "title": "Delete your account?",
-      "description": "This permanently deletes your Ninja Labs account. On-chain NFTs stay in your wallet.",
+      "description": "This permanently deletes your Ninja Labs account.",
       "callout": "This cannot be undone.",
       "inputLabel": "Type your nickname “{nickname}” to confirm",
       "confirm": "Delete account",

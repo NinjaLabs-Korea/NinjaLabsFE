@@ -62,7 +62,14 @@ describe("redirects", () => {
       { source: "/:locale(en|ko|zh)/signup/wallet", destination: "/:locale/signup/profile", permanent: false },
       { source: "/signup/wallet", destination: "/signup/profile", permanent: false },
     ]);
-    expect(redirects).toHaveLength(5);
+    expect(redirects).toHaveLength(6);
+  });
+
+  it("temporarily sends the removed NFT job console (every locale) to the admin home", async () => {
+    const redirects = await (await loadConfig(apiEnv)).redirects!();
+    expect(redirects.filter((rule) => rule.source.endsWith("/admin/nft-jobs"))).toEqual([
+      { source: "/:locale(en|ko|zh)/admin/nft-jobs", destination: "/:locale/admin", permanent: false },
+    ]);
   });
 
   it("temporarily sends the removed agent pages (every locale) to the bounty list", async () => {

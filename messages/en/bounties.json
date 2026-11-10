@@ -110,10 +110,10 @@
     "descriptionHeading": "Requirements, submission guide, evaluation criteria",
     "descriptionHeadingApply": "Requirements, application guide, evaluation criteria",
     "rewardInfo": "Reward info",
-    "rewardUnspecified": "No reward has been specified. Approval alone does not guarantee a payout or NFT issuance.",
+    "rewardUnspecified": "No reward has been specified. Approval alone does not guarantee a payout.",
     "unspecifiedRewardSteps": {
       "review": "The sponsor reviews your submission.",
-      "record": "Approval records the review result. Check the bounty terms for any reward or NFT conditions."
+      "record": "Approval records the review result. Check the bounty terms for any reward conditions."
     },
     "rewardNotes": {
       "flow": "Deposit, review, then separate payout processing by the operators.",
@@ -125,14 +125,12 @@
     },
     "completionHeading": "After final review",
     "completionSteps": {
-      "transfer": "After payout approval, an operator sends your reward separately.",
-      "mint": "After payout is recorded, completion NFT minting can be queued.",
-      "attach": "Issued NFTs appear in your Ninja NFT portfolio."
+      "transfer": "After payout approval, an operator sends your reward separately."
     },
     "afterApprovalSteps": {
       "approve": "Sponsor approves the application.",
       "unlock": "Submit field unlocks for completed work.",
-      "reward": "Final approval is followed by separate payout processing. Check NFT status after issuance."
+      "reward": "Final approval is followed by separate payout processing."
     },
     "statusFlowEyebrow": "Application bounty steps",
     "footnote": "Anyone can view. Sign in to apply or submit."

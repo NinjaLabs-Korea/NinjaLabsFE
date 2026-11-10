@@ -10,8 +10,7 @@ export type HallStatKey =
   | "ecosystemPartners"
   | "rewardsPaid"
   | "bountiesCompleted"
-  | "buildersRewarded"
-  | "completionNfts";
+  | "buildersRewarded";
 
 /** One `GET /hall-of-fame/stats` `paidTotals` entry: PAID payouts summed per token, `amount` in base units. */
 export type PaidTotalRow = { symbol: string; tokenType: string; decimals: number | null; amount: string };
@@ -27,7 +26,7 @@ export const hallOfFame = {
     { symbol: "INJ", tokenType: "NATIVE", decimals: 18, amount: "300000000000000000000" },
   ] satisfies PaidTotalRow[],
   highlights: [
-    { category: "Milestone", title: "100th builder onboarded", body: "New sign-ups completed Google, wallet, NFT, and profile setup in one month.", href: "/notices" },
+    { category: "Milestone", title: "100th builder onboarded", body: "New sign-ups completed Google sign-in and profile setup in one month.", href: "/notices" },
     { category: "Featured bounty", title: "Helix analytics module shipped", body: "A bounty deliverable became a reusable market activity card for the DEX team.", href: "/bounties/helix-volume-analytics" },
     { category: "Partnership", title: "Hydro opens content bounties", body: "New educational tasks bring liquidity, vaults, and staking content into the board.", href: "/notices" },
   ],
@@ -50,7 +49,7 @@ type HighlightRow = {
 type StatsRow = {
   completedBounties: number;
   builders: number;
-  /** Optional: the BE is dropping NFTs (Google-only plan); absent hides the tile. */
+  /** Tolerated and ignored: an older BE still sends `completionNfts` (the NFT tile is gone, Google-only plan). */
   completionNfts?: number;
   sponsors: number;
   /** Optional so an older BE without the field still renders (the stat is just hidden). */
@@ -147,7 +146,6 @@ async function fetchHallOfFame(locale: string): Promise<RuntimeHallOfFame> {
       [
         { value: String(stats.completedBounties), labelKey: "bountiesCompleted" },
         { value: String(stats.builders), labelKey: "buildersRewarded" },
-        ...(typeof stats.completionNfts === "number" ? [{ value: String(stats.completionNfts), labelKey: "completionNfts" as const }] : []),
       ],
       stats.paidTotals,
       locale,

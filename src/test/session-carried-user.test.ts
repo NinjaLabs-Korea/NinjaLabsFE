@@ -80,11 +80,11 @@ describe("parseMeResponse (codec for the carried user)", () => {
     expect(parseMeResponse(value)).not.toBeNull();
   });
 
-  it("maps a user without wallet/nft to a client user with no wallet address and no NFT status", () => {
+  it("maps a user without wallet/nft to a client user with no wallet address", () => {
     const { wallet, nft, ...rest } = FULL_ME;
     void wallet; void nft;
     const user = toClientUser(rest);
-    expect(user.nftStatus).toBeNull();
+    expect("nftStatus" in user).toBe(false);
     expect("walletAddress" in user).toBe(false);
   });
 
@@ -151,7 +151,8 @@ describe("page-load session restore: one round trip when the refresh carries the
     const adapter = createApiAuthAdapter(API);
     adapter.initialize?.();
     await vi.waitFor(() => expect(adapter.getSnapshot().status).toBe("signed-in"));
-    expect(adapter.getSnapshot().user).toMatchObject({ id: "u1", handle: "ninja", onboardingCompleted: true, nftStatus: "MINTED" });
+    expect(adapter.getSnapshot().user).toMatchObject({ id: "u1", handle: "ninja", onboardingCompleted: true });
+    expect(adapter.getSnapshot().user).not.toHaveProperty("nftStatus");
     expect(adapter.getSnapshot().user).not.toHaveProperty("walletAddress");
     expect(urls(request)).toEqual([REFRESH]);
     expect(getAccessToken()).toBe("access");

@@ -16,7 +16,6 @@ import {
   isTxHash,
   submissionCommentRequired,
   submissionDecisionsFor,
-  type AdminNftJob,
   type AdminOperations,
   type LifecycleBlocker,
   type OpsPayout,
@@ -24,7 +23,7 @@ import {
 
 type OperationsApi = Pick<AdminApi,
   "getAdminOperations" | "reviewAdminApplication" | "reviewAdminSubmission" | "confirmAdminDeposit" | "requestAdminPayout"
-  | "approveAdminPayout" | "markAdminPayoutPaid" | "getAdminNftJobs" | "retryAdminNftJob" | "getAdminAuditLogs">;
+  | "approveAdminPayout" | "markAdminPayoutPaid" | "getAdminAuditLogs">;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const iso = (offsetDays: number) => new Date(Date.now() + offsetDays * DAY_MS).toISOString();
@@ -155,18 +154,6 @@ export function bountyHasOpenFunds(ops: Pick<AdminOperations, "rewards" | "payou
   return heldRewards || ops.payouts.some((p) => OPEN_PAYOUT_STATUSES.includes(p.status));
 }
 
-function seedNftJobs(): AdminNftJob[] {
-  const job = (id: string, overrides: Partial<AdminNftJob>): AdminNftJob => ({
-    id, nftId: `${id}-nft`, jobType: "MINT_PARENT", status: "FAILED", retryCount: 5, lastError: "node unreachable: request timed out", scheduledAt: iso(-1),
-    updatedAt: iso(-1), nftType: "NINJA_PARENT", nftStatus: "FAILED", bountyTitle: null, ownerNickname: "mina", ownerWalletAddress: "inj1...5w6r", ...overrides,
-  });
-  return [
-    job("preview-job-1", {}),
-    job("preview-job-2", { jobType: "MINT_CHILD", nftType: "BOUNTY_COMPLETION_CHILD", bountyTitle: "Design system build", ownerNickname: "juho", ownerWalletAddress: "inj1...7n3q", lastError: "mint rejected: insufficient funds for gas" }),
-    job("preview-job-3", { status: "PENDING", retryCount: 2, lastError: "account sequence mismatch", nftStatus: "PENDING", ownerNickname: "ara", ownerWalletAddress: "inj1...8c1v" }),
-  ];
-}
-
 function seedAuditLogs(): AdminAuditLog[] {
   const log = (n: number, overrides: Partial<AdminAuditLog>): AdminAuditLog => ({
     id: `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`, actorUserId: MOCK_ADMIN_ID, actorAgentId: null, action: "PAYOUT_REQUESTED",
@@ -184,7 +171,7 @@ function seedAuditLogs(): AdminAuditLog[] {
 }
 
 /**
- * In-memory twin of the operations/NFT endpoints, with the BE's status checks and error codes, so the console behaves the
+ * In-memory twin of the operations endpoints, with the BE's status checks and error codes, so the console behaves the
  * same in mock mode. `bounties` reads the manager's current list; `onStatus` writes a transition back to it.
  */
 export function createMockOperationsApi(options: {
@@ -192,7 +179,6 @@ export function createMockOperationsApi(options: {
   nextId: (prefix: string) => string;
 }): OperationsApi & { transitionOperations: (bountyId: string, to: string) => void; hasOpenFunds: (bountyId: string) => boolean } {
   const state = new Map<string, AdminOperations>();
-  let nftJobs = seedNftJobs();
   const auditLogs = seedAuditLogs();
   const opsFor = (bountyId: string): AdminOperations => {
     const cached = state.get(bountyId);
@@ -299,21 +285,11 @@ export function createMockOperationsApi(options: {
         reward.status = !open && (paid.length >= ops.bounty.maxWinners || paidAmount >= BigInt(reward.cap ?? "0")) ? "PAID" : "PARTIALLY_PAID";
       }
     },
-    getAdminNftJobs: async (status, page) => {
-      const pageSize = 30;
-      const matching = nftJobs.filter((job) => job.status === status);
-      return { items: matching.slice((page - 1) * pageSize, page * pageSize).map((job) => ({ ...job })), page, pageSize, total: matching.length };
-    },
     getAdminAuditLogs: async (filter, page) => {
       const pageSize = 30;
       if (filter.entityId && !isAuditUuid(filter.entityId)) return fail(400, "VALIDATION_FAILED");
       const matching = auditLogs.filter((log) => (!filter.entityType || log.entityType === filter.entityType) && (!filter.entityId || log.entityId === filter.entityId));
       return { items: matching.slice((page - 1) * pageSize, page * pageSize).map((log) => ({ ...log })), page, pageSize, total: matching.length };
-    },
-    retryAdminNftJob: async (jobId) => {
-      const job = nftJobs.find((item) => item.id === jobId && item.status === "FAILED");
-      if (!job) return fail(404, "NFT_JOB_NOT_FOUND_OR_NOT_FAILED");
-      nftJobs = nftJobs.map((item) => (item === job ? { ...item, status: "PENDING", retryCount: 0, nftStatus: item.jobType === "ATTACH_CHILD" ? "MINTED" : "PENDING", scheduledAt: new Date().toISOString(), updatedAt: new Date().toISOString() } : item));
     },
   };
 }

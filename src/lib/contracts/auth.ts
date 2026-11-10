@@ -13,8 +13,6 @@ export type ClientUser = {
   tags?: string[];
   /** Profile photo (`/media/<uuid>`, `lib/avatar.ts toAvatarUrl`); absent = no photo, the initials show. */
   avatarUrl?: string;
-  /** Parent Ninja NFT status (BE `nft.status`: PENDING, MINTING, MINTED, ...), or null when none exists yet. */
-  nftStatus?: string | null;
 };
 
 export type SignedOutAuthSnapshot = {

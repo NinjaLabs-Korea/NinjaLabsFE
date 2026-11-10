@@ -94,15 +94,6 @@ describe("mock operations parity (lib/mocks/admin-operations.ts)", () => {
     expect((await client.getAdminOperations(funding.slug)).rewards[0]).toMatchObject({ status: "FUNDED", cap: reward.amount, depositTxHash: `0x${HASH}` });
   });
 
-  it("lists NFT jobs by status and retries a FAILED one once", async () => {
-    const client = createMockApiClient();
-    const failed = await client.getAdminNftJobs("FAILED", 1);
-    expect(failed.total).toBe(2);
-    await client.retryAdminNftJob(failed.items[0].id);
-    expect(await codeOf(client.retryAdminNftJob(failed.items[0].id))).toEqual([404, "NFT_JOB_NOT_FOUND_OR_NOT_FAILED"]);
-    expect((await client.getAdminNftJobs("FAILED", 1)).total).toBe(1);
-    expect((await client.getAdminNftJobs("PENDING", 1)).items.map((job) => job.id)).toContain(failed.items[0].id);
-  });
 });
 
 describe("mock lifecycle blockers mirror BountyLifecycleService (UNPAID_WINNERS)", () => {

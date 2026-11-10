@@ -2,7 +2,7 @@ import type { ApiHttp } from "@/lib/api/http";
 import type { AdminApi } from "@/lib/contracts/api";
 import { deliverablesFromRequirements, type AdminBounty, type AdminHighlight, type AdminPost, type AdminUser } from "@/lib/admin-helpers";
 import type { AdminAuditLogPage } from "@/lib/admin-audit";
-import type { AdminNftJobPage, AdminOperations, OpsActor } from "@/lib/admin-operations";
+import type { AdminOperations, OpsActor } from "@/lib/admin-operations";
 import { toAdminStatus } from "@/lib/bounty-status";
 import { markdownToPlainSummary } from "@/lib/markdown-summary";
 import { formatIsoDate, rewardFromBaseUnits, rewardToBaseUnits, toCategoryCode, toCategoryLabel, toMemberRoleCode, toMemberRoleLabel, toNoticeCategoryCode, toNoticeCategoryLabel, type CategoryCode, type MemberRoleCode } from "@/lib/api/codecs";
@@ -28,7 +28,6 @@ type OperationsResponse = {
   policy?: { payoutSelfApprovalAllowed?: boolean };
 };
 type AuditRow = { id: string; actor_user_id: string | null; actor_agent_id: string | null; actor_nickname?: string | null; actor_agent_name?: string | null; action: string; entity_type: string; entity_id: string | null; created_at: string; before_data?: unknown; after_data?: unknown };
-type NftJobRow = { id: string; nft_id: string; job_type: string; status: string; retry_count: number; last_error: string | null; scheduled_at: string | null; updated_at: string | null; nft_type: string; nft_status: string; bounty_title: string | null; owner_nickname: string | null; owner_wallet_address: string | null };
 
 const actorFrom = (row: ActorColumns): OpsActor => ({ userId: row.user_id, nickname: row.nickname });
 
@@ -181,18 +180,6 @@ export function createAdminApi(http: ApiHttp): AdminApi {
     requestAdminPayout: async (input) => { await http.fetchJson("/admin/payouts", { method: "POST", body: input }); },
     approveAdminPayout: async (payoutId) => { await http.fetchJson(`/admin/payouts/${encodeURIComponent(payoutId)}/approve`, { method: "POST" }); },
     markAdminPayoutPaid: async (payoutId, txHash) => { await http.fetchJson(`/admin/payouts/${encodeURIComponent(payoutId)}/paid`, { method: "POST", body: { txHash: txHash.trim() } }); },
-    getAdminNftJobs: async (status, page): Promise<AdminNftJobPage> => {
-      const body = await http.fetchJson<{ items: NftJobRow[]; page: number; pageSize: number; total: number }>(`/admin/nft-jobs?status=${encodeURIComponent(status)}&page=${page}`);
-      return {
-        page: body.page, pageSize: body.pageSize, total: body.total,
-        items: body.items.map((row) => ({
-          id: row.id, nftId: row.nft_id, jobType: row.job_type, status: row.status, retryCount: Number(row.retry_count) || 0, lastError: row.last_error,
-          scheduledAt: row.scheduled_at, updatedAt: row.updated_at, nftType: row.nft_type, nftStatus: row.nft_status,
-          bountyTitle: row.bounty_title, ownerNickname: row.owner_nickname, ownerWalletAddress: row.owner_wallet_address,
-        })),
-      };
-    },
-    retryAdminNftJob: async (jobId) => { await http.fetchJson(`/admin/nft-jobs/${encodeURIComponent(jobId)}/retry`, { method: "POST" }); },
     getAdminAuditLogs: async (filter, page): Promise<AdminAuditLogPage> => {
       const params = new URLSearchParams();
       if (filter.entityType) params.set("entityType", filter.entityType);

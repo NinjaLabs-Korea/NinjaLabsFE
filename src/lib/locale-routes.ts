@@ -15,7 +15,6 @@ export const localeRoutePatterns = [
   "/admin/audit",
   "/admin/bounties",
   "/admin/hall-of-fame",
-  "/admin/nft-jobs",
   "/admin/notices",
   "/admin/operations",
   "/admin/recruitment",

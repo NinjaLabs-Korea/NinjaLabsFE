@@ -6,7 +6,6 @@ const tabs = [
   { active: "users", href: "/admin/users", labelKey: "users" },
   { active: "bounties", href: "/admin/bounties", labelKey: "bounties" },
   { active: "operations", href: "/admin/operations", labelKey: "operations" },
-  { active: "nft-jobs", href: "/admin/nft-jobs", labelKey: "nftJobs" },
   { active: "recruitment", href: "/admin/recruitment", labelKey: "recruitment" },
   { active: "hall-of-fame", href: "/admin/hall-of-fame", labelKey: "hallOfFame" },
   { active: "notices", href: "/admin/notices", labelKey: "notices" },

@@ -2,7 +2,7 @@ import type { Account, AccountApplication, AccountSubmission } from "@/lib/contr
 import type { AuthSnapshot } from "@/lib/contracts/auth";
 import type { AdminBounty, AdminHighlight, AdminPost, AdminUser } from "@/lib/admin";
 import type { AdminAuditLogFilter, AdminAuditLogPage } from "@/lib/admin-audit";
-import type { AdminNftJobPage, AdminOperations, NftJobStatus, SubmissionDecision } from "@/lib/admin-operations";
+import type { AdminOperations, SubmissionDecision } from "@/lib/admin-operations";
 import type {
   AdminCohort,
   AdminCohortApplication,
@@ -143,10 +143,6 @@ export type AdminApi = {
   approveAdminPayout: (payoutId: string) => Promise<void>;
   /** POST /admin/payouts/:id/paid */
   markAdminPayoutPaid: (payoutId: string, txHash: string) => Promise<void>;
-  /** GET /admin/nft-jobs?status=&page= (30/page) */
-  getAdminNftJobs: (status: NftJobStatus, page: number) => Promise<AdminNftJobPage>;
-  /** POST /admin/nft-jobs/:id/retry - 404 NFT_JOB_NOT_FOUND_OR_NOT_FAILED */
-  retryAdminNftJob: (jobId: string) => Promise<void>;
   /** GET /admin/audit-logs?entityType=&entityId=&page= (30/page, newest first) - 400 on a non-UUID entityId */
   getAdminAuditLogs: (filter: AdminAuditLogFilter, page: number) => Promise<AdminAuditLogPage>;
 };

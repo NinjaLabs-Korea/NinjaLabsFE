@@ -36,7 +36,7 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
 
 const { default: MemberProfilePage } = await import("@/app/[locale]/members/[id]/page");
 
-const base: Profile = { slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", completions: [], nfts: [] };
+const base: Profile = { slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", completions: [] };
 const render = async () => renderWithIntl(await MemberProfilePage({ params: Promise.resolve({ locale: "en", id: "ninja" }) } as never));
 
 describe("member profile bio and team badge", () => {
@@ -60,11 +60,10 @@ describe("member profile bio and team badge", () => {
     expect(screen.queryByText(/Team ·/)).toBeNull();
   });
 
-  it("labels membership by join date, not by an NFT the member does not own", async () => {
+  it("labels membership by join date, without any NFT tile", async () => {
     data.profile = base;
     await render();
     expect(screen.getByText("Member since May 2026")).toBeTruthy();
-    expect(screen.queryByText(/Ninja NFT ·/)).toBeNull();
-    expect(screen.queryByText("Minted")).toBeNull();
+    expect(screen.queryByText(/NFT/)).toBeNull();
   });
 });

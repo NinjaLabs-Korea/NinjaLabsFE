@@ -60,7 +60,7 @@ describe("bounty detail page", () => {
     const { container } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
     const text = container.textContent ?? "";
     expect(text).not.toMatch(/release|child/i);
-    expect(text).toContain("After payout is recorded, completion NFT minting can be queued.");
+    expect(text).not.toMatch(/NFT/);
     expect(text.match(/swap/gi)).toHaveLength(1);
     expect(text.match(/Anyone can view\./g)).toHaveLength(1);
     expect(text).not.toMatch(/Public view|Actions require login/);
@@ -73,8 +73,8 @@ describe("bounty detail page", () => {
     const { container } = renderWithIntl(await BountyDetailPage({ params: Promise.resolve({ locale: "en", id: "b1" }) } as never));
     const text = container.textContent ?? "";
     expect(text).toContain("Reward TBD");
-    expect(text).toContain("No reward has been specified. Approval alone does not guarantee a payout or NFT issuance.");
-    expect(text).not.toMatch(/Sponsor pays:|Your reward is sent|A completion NFT is minted|Reward is sent in|original token/);
+    expect(text).toContain("No reward has been specified. Approval alone does not guarantee a payout.");
+    expect(text).not.toMatch(/Sponsor pays:|Your reward is sent|Reward is sent in|original token/);
     expect(text).toContain(applicationRequired ? "Submit field unlocks for completed work." : "The sponsor reviews your submission.");
   });
 

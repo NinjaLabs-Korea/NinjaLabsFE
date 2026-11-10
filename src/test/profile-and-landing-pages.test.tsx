@@ -42,22 +42,11 @@ const { BountyMasthead } = await import("@/components/bounties/BountyMasthead");
 describe("member profile page", () => {
   it("marks a multi-token completion reward with the number of further tokens", async () => {
     data.profile = {
-      slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", nfts: [],
+      slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026",
       completions: [{ bountySlug: "b1", title: "Widget", category: "Dev", completedAt: "June 30, 2026", reward: { amount: 1, currency: "INJ" }, moreRewards: 1, payoutStatus: "PAID" }],
     };
     renderWithIntl(await MemberProfilePage({ params: Promise.resolve({ locale: "en", id: "ninja" }) } as never));
     expect(screen.getByText(/1 INJ \+1/)).toBeTruthy();
-  });
-});
-
-describe("member profile completion NFT tiles", () => {
-  it("labels a completion NFT whose bounty was deleted with a localized fallback instead of a blank tile", async () => {
-    data.profile = {
-      slug: "ninja", handle: "ninja", initials: "NI", bio: "Builder", skills: [], joinedAt: "May 2026", completions: [],
-      nfts: [{ id: "n1", type: "completion", title: "", status: "ATTACHED", contractAddress: "inj1x", tokenId: "7", mintTxHash: null }],
-    };
-    renderWithIntl(await MemberProfilePage({ params: Promise.resolve({ locale: "en", id: "ninja" }) } as never));
-    expect(screen.getByText("Bounty NFT")).toBeTruthy();
   });
 });
 

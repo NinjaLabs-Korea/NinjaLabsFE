@@ -60,7 +60,6 @@
     "hallOfFame": "Hall of Fame",
     "notices": "Notices",
     "operations": "Operations",
-    "nftJobs": "NFT Jobs",
     "audit": "Audit log",
     "recruitment": "Recruitment",
     "ariaLabel": "Admin sections"
@@ -625,7 +624,6 @@
       "PAYOUT_EXCEEDS_AVAILABLE_REWARD": "The amount exceeds what is left to allocate from this reward.",
       "PAYOUT_NOT_FOUND_OR_WRONG_STATUS": "This payout already moved on (or no longer exists). The list has been refreshed.",
       "PAYOUT_SELF_APPROVAL": "You requested this payout, so you cannot approve it. Ask another admin (two-person rule).",
-      "NFT_JOB_NOT_FOUND_OR_NOT_FAILED": "This job is no longer failed (it may already be retrying).",
       "INVALID_TRANSITION": "That status transition is not allowed from the current status.",
       "TRANSITION_BLOCKED": "The transition is blocked. See the blockers listed under it.",
       "VALIDATION_FAILED": "The server rejected the input. Check the fields and try again.",
@@ -639,64 +637,6 @@
       "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
       "NOTE_BIDI_CHARS": "The note contains hidden direction or control characters. Remove them and try again.",
       "NOTE_RESERVED_PREFIX": "A note cannot start with \"forfeited:\" (reserved for the system)."
-    }
-  },
-  "nftJobs": {
-    "metaTitle": "Admin · NFT Jobs | Ninja Labs",
-    "metaDescription": "Inspect NFT mint and attach jobs and retry the ones that failed permanently.",
-    "title": "NFT Job Console",
-    "description": "Inspect NFT mint and attach jobs and retry the ones that failed permanently.",
-    "filterLabel": "Job status",
-    "statuses": {
-      "FAILED": "Failed",
-      "PENDING": "Pending",
-      "PROCESSING": "Processing"
-    },
-    "hints": {
-      "FAILED": "Jobs that failed all 5 attempts. Fix the cause (gas, contract, wallet), then retry, the worker picks them up within a minute.",
-      "PENDING": "Queued or waiting for their next attempt (failed attempts retry every 10 minutes).",
-      "PROCESSING": "Being minted right now. Jobs stuck here for 15 minutes are requeued automatically."
-    },
-    "empty": "No jobs in this status.",
-    "columns": {
-      "job": "Job",
-      "owner": "Owner",
-      "attempts": "Failed attempts",
-      "lastError": "Last error",
-      "updated": "Updated",
-      "action": "Action"
-    },
-    "jobTypes": {
-      "MINT_PARENT": "Mint ninja NFT",
-      "MINT_CHILD": "Mint completion NFT",
-      "ATTACH_CHILD": "Attach completion NFT",
-      "RETRY_MINT": "Retry mint",
-      "RETRY_ATTACH": "Retry attach"
-    },
-    "nftTypes": {
-      "NINJA_PARENT": "Ninja NFT",
-      "BOUNTY_COMPLETION_CHILD": "Completion NFT"
-    },
-    "nftStatuses": {
-      "PENDING": "Pending",
-      "MINTING": "Minting",
-      "MINTED": "Minted",
-      "ATTACHING": "Attaching",
-      "ATTACHED": "Attached",
-      "FAILED": "Failed"
-    },
-    "nftLine": "{type} · NFT {status}",
-    "retry": "Retry",
-    "pagination": "Job pages",
-    "previous": "Previous",
-    "next": "Next",
-    "pageOf": "Page {page} of {pages}",
-    "toast": {
-      "loadFailedTitle": "NFT jobs unavailable",
-      "loadFailedDescription": "Could not load NFT jobs.",
-      "retriedTitle": "Job queued again",
-      "retriedDescription": "The worker will retry it within a minute.",
-      "retryFailedTitle": "Retry failed"
     }
   },
   "audit": {
