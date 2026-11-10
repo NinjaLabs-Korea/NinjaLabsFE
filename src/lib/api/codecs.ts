@@ -5,7 +5,7 @@
  * FE 도메인 타입(lib/types.ts)은 표시용 라벨과 사람 단위 금액을 쓴다.
  * 새 카테고리·역할·토큰을 추가할 때는 이 파일만 고친다.
  */
-import { formatUnits, parseUnits } from "viem";
+import { formatUnits, parseUnits } from "@/lib/token-units";
 import { PAYOUT_SUMMARY_STATUSES } from "@/lib/payout-status";
 import type { BountyCategory } from "@/lib/bounty-categories";
 import type { MemberRole } from "@/lib/member-roles";

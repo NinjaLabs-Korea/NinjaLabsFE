@@ -2,8 +2,7 @@
  * BE가 응답 `message`로 던지는 에러 코드 목록 - **BE 카탈로그의 그대로 복사본(snapshot)**이다. 손으로 코드를 지어내지 말 것.
  *
  * 원본: NinjaLabsBE `src/common/http/error-codes.ts` (`ERROR_CODES`의 키, 같은 순서·같은 묶음).
- * 스냅샷 기준: BE `main` @ `0a1c0d3` (BE #57까지, `WALLET_ALREADY_LINKED` 삭제 반영) + BE #69(지급 주소) 추가 3개 · 109개.
- * `APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND`는 BE #69가 지웠지만 옛 BE 응답 호환용으로 FE-5까지 남긴다(스펙 대조 테스트 없음).
+ * 스냅샷 기준: BE `main` @ `cffd69a` (BE #70까지, 지갑 모듈 제거와 `APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND` 삭제 반영) · 104개.
  * 줄 끝 주석은 "HTTP 상태 - BE 카탈로그의 한 줄 의미"이고 사용자 문구가 아니다 (사용자 문구는 `messages/<locale>/*.json`).
  *
  * ## 어디를 고치나
@@ -43,11 +42,7 @@ export const BE_ERROR_CODES = [
 
   // ── 지갑 ──
   "INVALID_INJECTIVE_ADDRESS", // 400 - Injective 주소(inj1… 또는 0x…) 형식이 올바르지 않다
-  "CHALLENGE_NOT_FOUND", // 400 - 발급된 지갑 challenge가 없다 (먼저 challenge 요청)
-  "CHALLENGE_EXPIRED", // 400 - challenge가 만료됐거나 이미 사용됐다
   "INVALID_SIGNATURE", // 401 - 서명 검증에 실패했다 (지갑 연결·에이전트 등록 공통)
-  "WALLET_LINKED_TO_OTHER_ACCOUNT", // 409 - 이 주소가 이미 다른 계정에 연결돼 있다
-  "ACCOUNT_ALREADY_HAS_WALLET", // 409 - 이 계정에 이미 다른 대표 지갑이 연결돼 있다
 
   // ── 에이전트 ──
   "INVALID_AGENT_WALLET_ADDRESS", // 400 - 에이전트 지갑 주소가 0x(EVM)도 inj1(계정)도 아니거나 형식이 올바르지 않다 (전부 대문자 inj1은 소문자로 접어 받는다)
@@ -108,7 +103,6 @@ export const BE_ERROR_CODES = [
   "DEPOSIT_BELOW_REWARD_AMOUNT", // 400 - 입금액이 보상 게시 금액(amount)보다 적어 입금 확인을 할 수 없다
   "REWARD_NOT_FOUND_OR_NOT_PENDING", // 404 - 보상이 없거나 입금 대기(DEPOSIT_PENDING) 상태가 아니다
   "REWARD_NOT_FUNDED", // 400 - 보상이 없거나 입금 확인(FUNDED 이상)이 안 돼 지급을 요청할 수 없다
-  "APPROVED_SUBMISSION_OR_WALLET_NOT_FOUND", // 404 - [레거시, BE #69에서 삭제] 승인된 제출이 없거나 수령자의 지갑이 연결돼 있지 않다
   "APPROVED_SUBMISSION_NOT_FOUND", // 404 - 지급을 요청할 승인된 제출이 없다 (APPROVED 아님, 다른 바운티의 제출, 제출자 탈퇴)
   "PAYOUT_ADDRESS_NOT_SET", // 409 - 수상자가 아직 지급 주소를 입력하지 않아 지급을 요청할 수 없다
   "PAYOUT_ALREADY_REQUESTED", // 409 - 같은 제출에 이미 지급 요청이 있다 (멱등)

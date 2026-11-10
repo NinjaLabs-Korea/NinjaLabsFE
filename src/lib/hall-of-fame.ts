@@ -1,4 +1,4 @@
-import { formatUnits } from "viem";
+import { formatUnits } from "@/lib/token-units";
 import { formatHomeZoneDate, safeHttpUrl, toHighlightTypeLabel, type HighlightTypeLabel } from "@/lib/api/codecs";
 import { fetchPublicJson, loadFromRuntime, PUBLIC_LIST_REVALIDATE_SECONDS } from "@/lib/api/public";
 import { formatTokenAmount } from "@/lib/format";

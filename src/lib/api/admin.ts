@@ -18,8 +18,7 @@ type OperationsResponse = {
   applications: Array<ActorColumns & { id: string; status: string; message: string; portfolio_url: string | null; review_note: string | null; applied_at: string; reviewed_at: string | null }>;
   submissions: Array<ActorColumns & {
     id: string; status: string; current_revision_no: number; submitted_at: string; reviewed_at: string | null; payout_address?: string | null; payout_address_evm?: string | null; email?: string | null;
-    /** Deprecated alias of `payout_address` (BE #69 keeps it for the old FE; read only when the new field is missing). */
-    recipient_wallet_address?: string | null; review_comment: string | null;
+    review_comment: string | null;
     revisions: Array<{ revision_no: number; submission_url: string; description: string; repository_url: string | null; commit_sha: string | null; created_at: string }>;
     reviews: Array<{ revision_no: number | null; decision: string; comment: string | null; created_at: string }>;
   }>;
@@ -45,7 +44,7 @@ export function toAdminOperations(body: OperationsResponse): AdminOperations {
     })),
     submissions: body.submissions.map((row) => ({
       ...actorFrom(row), id: row.id, status: row.status, currentRevisionNo: Number(row.current_revision_no) || 1,
-      submittedAt: row.submitted_at, reviewedAt: row.reviewed_at, payoutAddress: row.payout_address ?? row.recipient_wallet_address ?? null, payoutAddressEvm: row.payout_address_evm ?? null, email: row.email ?? null, reviewComment: row.review_comment,
+      submittedAt: row.submitted_at, reviewedAt: row.reviewed_at, payoutAddress: row.payout_address ?? null, payoutAddressEvm: row.payout_address_evm ?? null, email: row.email ?? null, reviewComment: row.review_comment,
       revisions: row.revisions.map((rev) => ({ revisionNo: rev.revision_no, submissionUrl: rev.submission_url, description: rev.description, repositoryUrl: rev.repository_url, commitSha: rev.commit_sha, createdAt: rev.created_at })),
       reviews: row.reviews.map((review) => ({ revisionNo: review.revision_no, decision: review.decision, comment: review.comment, createdAt: review.created_at })),
     })),
