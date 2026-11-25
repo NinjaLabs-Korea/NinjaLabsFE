@@ -83,6 +83,21 @@ describe("mock admin api persistence (per client, resets with a new client)", ()
     await expect(client.setAdminMember("ghost", { isMember: true })).rejects.toMatchObject({ status: 404, code: "USER_NOT_FOUND" });
   });
 
+  it("applies the BE rules for admin access: self 403, unknown 404, last admin 409, no-op unchanged", async () => {
+    const client = createMockApiClient();
+    expect((await client.getAdminUsers("jaemin"))[0]).toMatchObject({ isAdmin: true });
+    await expect(client.setAdminAccess("jaemin", false)).rejects.toMatchObject({ status: 403, code: "ADMIN_SELF_CHANGE" });
+    await expect(client.setAdminAccess("ghost", true)).rejects.toMatchObject({ status: 404, code: "USER_NOT_FOUND" });
+
+    await expect(client.setAdminAccess("sora", true)).resolves.toEqual({ isAdmin: true });
+    await expect(client.setAdminAccess("sora", true)).resolves.toEqual({ isAdmin: true });
+    expect((await client.getAdminUsers("sora"))[0]).toMatchObject({ isAdmin: true });
+    await expect(client.setAdminAccess("sora", false)).resolves.toEqual({ isAdmin: false });
+    expect((await client.getAdminUsers("sora"))[0]).toMatchObject({ isAdmin: false });
+    // Revoking someone who is not an admin is a no-op, not a last-admin error.
+    await expect(client.setAdminAccess("mina", false)).resolves.toEqual({ isAdmin: false });
+  });
+
   it("persists notice and highlight saves, honouring the publish toggle contract", async () => {
     const client = createMockApiClient();
     const [post] = await client.getAdminPosts();

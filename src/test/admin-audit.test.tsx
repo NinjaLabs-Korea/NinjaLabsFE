@@ -18,7 +18,7 @@ const log = (n: number, overrides: Partial<AdminAuditLog> = {}): AdminAuditLog =
 
 const adminApi = { getAdminAuditLogs: vi.fn(), getAdminUsers: vi.fn() };
 vi.mock("@/components/auth/FoundationProvider", async () =>
-  (await import("./support/foundation")).foundationMock({ useAdminApi: () => adminApi }));
+  (await import("./support/foundation")).foundationMock({ useAdminApi: () => adminApi, useAuthSnapshot: () => ({ status: "signed-in", user: { id: "admin-1", handle: "a", initials: "A", profileSlug: "a", isAdmin: true } }) }));
 
 const render = () => renderWithIntl(<AuditLogViewer tabs={null}><h1>Audit</h1></AuditLogViewer>);
 
@@ -42,6 +42,13 @@ describe("audit actor classification", () => {
     // scripts/record-refund.js writes REWARD_REFUNDED with no actor; scripts/forfeit-award.js writes SUBMISSION_AWARD_FORFEITED with one.
     expect(auditActorKind(log(1, { actorUserId: null, action: "REWARD_REFUNDED", entityType: "bounty_reward" }))).toBe("script");
     expect(auditActorKind(log(1, { action: "SUBMISSION_AWARD_FORFEITED", entityType: "bounty_submission" }))).toBe("script");
+  });
+
+  it("shows the acting admin for API-made ADMIN_GRANTED/REVOKED rows and the script only when there is no actor", () => {
+    for (const action of ["ADMIN_GRANTED", "ADMIN_REVOKED"]) {
+      expect(auditActorKind(log(1, { action, entityType: "user", actorUserId: "admin-1" }))).toBe("user");
+      expect(auditActorKind(log(1, { action, entityType: "user", actorUserId: null }))).toBe("script");
+    }
   });
 
   it("validates UUIDs", () => {

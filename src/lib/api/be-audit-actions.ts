@@ -66,14 +66,15 @@ export const BE_AUDIT_ACTIONS = [
   "USER_MEMBER_REVOKED",
   "USER_AVATAR_UPDATED",
   "USER_AVATAR_REMOVED",
+  // `POST /admin/users/:id/admin` (admin-access.service.ts). scripts/grant-admin.js writes the same names with no actor.
+  "ADMIN_GRANTED",
+  "ADMIN_REVOKED",
   "WALLET_REPLACED",
   "NFT_JOB_RETRIED",
 ] as const;
 
 /** 운영 스크립트(`scripts/*.js`)와 runbook 수동 SQL만 쓰는 action (BE `SCRIPT_AUDIT_ACTIONS`). */
 export const BE_SCRIPT_AUDIT_ACTIONS = [
-  "ADMIN_GRANTED",
-  "ADMIN_REVOKED",
   "NFT_JOB_REQUEUED",
   "REWARD_REFUNDED",
   "SUBMISSION_AWARD_FORFEITED",

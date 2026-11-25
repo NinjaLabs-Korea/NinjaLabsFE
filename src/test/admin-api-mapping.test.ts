@@ -163,6 +163,23 @@ describe("admin users and members", () => {
     ]);
   });
 
+  it("maps is_admin to isAdmin and leaves it unset when the BE omits the field", async () => {
+    const { http } = createHttp([
+      { id: "u1", email: "a@x", nickname: "alpha", is_member: false, member_role: null, member_display_order: null, created_at: "2026-07-01T00:00:00.000Z", is_admin: true },
+      { id: "u2", email: "b@x", nickname: "beta", is_member: false, member_role: null, member_display_order: null, created_at: "2026-07-01T00:00:00.000Z", is_admin: false },
+      { id: "u3", email: "c@x", nickname: "gamma", is_member: false, member_role: null, member_display_order: null, created_at: "2026-07-01T00:00:00.000Z" },
+    ]);
+    const users = await createAdminApi(http).getAdminUsers();
+    expect(users.map((user) => user.isAdmin)).toEqual([true, false, undefined]);
+    expect(users[2]).not.toHaveProperty("isAdmin");
+  });
+
+  it("posts { isAdmin } to /admin/users/:id/admin and returns the saved flag", async () => {
+    const { http, fetchJson } = createHttp({ id: "u/1", email: "a@x", nickname: "alpha", is_admin: true });
+    await expect(createAdminApi(http).setAdminAccess("u/1", true)).resolves.toEqual({ isAdmin: true });
+    expect(calls(fetchJson)[0]).toEqual(["/admin/users/u%2F1/admin", { method: "POST", body: { isAdmin: true } }]);
+  });
+
   it("sends member roles as BE codes and leaves the role out when removing a member", async () => {
     const { http, fetchJson } = createHttp();
     const api = createAdminApi(http);

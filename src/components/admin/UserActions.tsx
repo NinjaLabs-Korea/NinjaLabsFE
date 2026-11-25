@@ -14,18 +14,26 @@ type UserActionsProps = {
     isMember: boolean;
     memberRole: MemberRole | null;
     memberDisplayOrder: number | null;
+    isAdmin?: boolean;
   };
   onAssign: (role: MemberRole, displayOrder: number | null) => void;
   onRemove: () => void;
+  /** The signed-in admin's own row: admin access cannot be changed there (BE 403 `ADMIN_SELF_CHANGE`), so only a note shows. */
+  isSelf?: boolean;
+  /** Grant (`true`) or revoke (`false`) admin access, called after the confirm dialog. Without it (or with `user.isAdmin` unset, an older BE) no admin action is offered. */
+  onSetAdmin?: (isAdmin: boolean) => void;
+  /** A grant/revoke for this row is in flight. */
+  adminPending?: boolean;
 };
 
 const focusClass = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
-export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
+export function UserActions({ user, onAssign, onRemove, isSelf = false, onSetAdmin, adminPending = false }: UserActionsProps) {
   const t = useTranslations("admin.users");
   const tCommon = useTranslations("admin.common");
   const [assignOpen, setAssignOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const [role, setRole] = useState<MemberRole>(user.memberRole ?? "Core");
   const [displayOrder, setDisplayOrder] = useState(String(user.memberDisplayOrder ?? 1));
   const [orderInvalid, setOrderInvalid] = useState(false);
@@ -48,8 +56,17 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
     onAssign(role, trimmed ? parsedOrder : null);
   }
 
+  // Only a BE that reports `is_admin` can take the change; the signed-in admin never sees the button on their own row.
+  const adminManageable = user.isAdmin !== undefined && onSetAdmin !== undefined;
+  const revoking = user.isAdmin === true;
+
+  function handleSetAdmin() {
+    setAdminOpen(false);
+    onSetAdmin?.(!revoking);
+  }
+
   return (
-    <>
+    <div className="flex flex-wrap items-center gap-2">
       <button
         className={`rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong ${focusClass}`}
         onClick={() => {
@@ -66,6 +83,30 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
       >
         {user.isMember ? t("actions.remove") : t("actions.assign")}
       </button>
+
+      {adminManageable && !isSelf ? (
+        <button
+          className={`rounded-control border px-4 py-2 max-sm:py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${revoking ? "border-danger text-danger" : "border-primary-outline text-primary-strong"} ${focusClass}`}
+          disabled={adminPending}
+          onClick={() => setAdminOpen(true)}
+          type="button"
+        >
+          {revoking ? t("actions.revoke") : t("actions.grant")}
+        </button>
+      ) : null}
+      {adminManageable && isSelf ? <span className="text-xs text-ink-muted">{t("selfNote")}</span> : null}
+
+      <ConfirmDialog
+        calloutText={revoking ? t("actions.revokeCallout") : t("actions.grantCallout")}
+        confirmLabel={revoking ? t("actions.revokeConfirm") : t("actions.grantConfirm")}
+        description={t.rich(revoking ? "actions.revokeDescription" : "actions.grantDescription", { nickname: user.nickname, b: (chunks) => <b>{chunks}</b> })}
+        destructive={revoking}
+        eyebrow={revoking ? t("actions.revokeEyebrow") : t("actions.grantEyebrow")}
+        onCancel={() => setAdminOpen(false)}
+        onConfirm={handleSetAdmin}
+        open={adminOpen}
+        title={revoking ? t("actions.revokeTitle", { nickname: user.nickname }) : t("actions.grantTitle", { nickname: user.nickname })}
+      />
 
       <ConfirmDialog
         calloutText={t("actions.removeCallout")}
@@ -117,6 +158,6 @@ export function UserActions({ user, onAssign, onRemove }: UserActionsProps) {
           <button className={`rounded-control bg-primary px-5 py-3 text-sm leading-[21px] font-semibold text-on-inverse ${focusClass}`} onClick={handleAssign} type="button">{tCommon("confirm")}</button>
         </div>
       </Modal>
-    </>
+    </div>
   );
 }

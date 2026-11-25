@@ -5,7 +5,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { AdminToastHost } from "@/components/admin/AdminToastHost";
 import { HighlightManager } from "@/components/admin/HighlightManager";
 import { PostManager, validatePostForm } from "@/components/admin/PostManager";
-import { adminErrorDescription, adminTextFieldErrors } from "@/lib/admin-helpers";
+import { adminAccessErrorKey, adminErrorDescription, adminTextFieldErrors } from "@/lib/admin-helpers";
 import { KNOWN_AUDIT_ACTIONS } from "@/lib/admin-audit";
 import { bountyToForm, emptyBountyForm, formToBounty, validateBountyForm } from "@/lib/admin-bounty-form";
 import { MAX_WINNERS_MAX } from "@/lib/input-limits";
@@ -57,6 +57,16 @@ describe("bounty form bounds", () => {
 
 describe("admin error copy and audit labels", () => {
   const translate = (key: string) => key;
+  it("maps admin access failures to their copy key, normalizing 401/429 and falling back to generic", () => {
+    for (const [status, code] of [[403, "ADMIN_SELF_CHANGE"], [404, "USER_NOT_FOUND"], [409, "USER_NOT_ACTIVE"], [409, "PROFILE_REQUIRED"], [409, "LAST_ADMIN"]] as const) {
+      expect(adminAccessErrorKey(new ApiHttpError(status, code))).toBe(code);
+    }
+    expect(adminAccessErrorKey(new ApiHttpError(401, "INVALID_ACCESS_TOKEN"))).toBe("UNAUTHORIZED");
+    expect(adminAccessErrorKey(new ApiHttpError(429, "ThrottlerException"))).toBe("TOO_MANY_REQUESTS");
+    expect(adminAccessErrorKey(new ApiHttpError(500, "BOOM"))).toBe("generic");
+    expect(adminAccessErrorKey(new TypeError("fetch failed"))).toBe("generic");
+  });
+
   it("maps the two new BE codes", () => {
     expect(adminErrorDescription(new ApiHttpError(400, "APPLICATION_DEADLINE_AFTER_SUBMISSION_DEADLINE"), translate, "fb")).toBe("errors.APPLICATION_DEADLINE_AFTER_SUBMISSION_DEADLINE");
     expect(adminErrorDescription(new ApiHttpError(400, "REWARD_SYMBOL_DENOM_MISMATCH"), translate, "fb")).toBe("errors.REWARD_SYMBOL_DENOM_MISMATCH");

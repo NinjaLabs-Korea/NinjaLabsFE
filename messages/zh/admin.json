@@ -112,7 +112,12 @@
       "undo": "撤销",
       "assignFailedDescription": "成员角色未更改。",
       "assignedTitle": "已分配成员角色",
-      "assignedDescription": "{nickname} 现在会显示在公开成员列表中。"
+      "assignedDescription": "{nickname} 现在会显示在公开成员列表中。",
+      "grantedTitle": "已授予管理员权限",
+      "grantedDescription": "{nickname} 现在是管理员。",
+      "revokedTitle": "已撤销管理员权限",
+      "revokedDescription": "{nickname} 不再是管理员。",
+      "accessFailedTitle": "管理员权限变更失败"
     },
     "actions": {
       "assign": "分配",
@@ -127,9 +132,35 @@
       "assignDescription": "将 <b>{nickname}</b> 设为公开成员，并使用所选角色和排序。",
       "roleGroupLabel": "成员角色",
       "displayOrder": "显示顺序",
-      "displayOrderInvalid": "请输入大于等于 1 的整数，或留空。"
+      "displayOrderInvalid": "请输入大于等于 1 的整数，或留空。",
+      "grant": "授予管理员权限",
+      "revoke": "撤销管理员权限",
+      "grantEyebrow": "管理员权限",
+      "grantTitle": "授予 {nickname} 管理员权限?",
+      "grantDescription": "<b>{nickname}</b> 将获得管理控制台的全部权限，包括支付审批。请仅授予你信任的人。",
+      "grantCallout": "立即生效，并记录在审计日志中。",
+      "grantConfirm": "授予权限",
+      "revokeEyebrow": "管理员权限",
+      "revokeTitle": "撤销 {nickname} 的管理员权限?",
+      "revokeDescription": "<b>{nickname}</b> 将立即失去管理控制台的访问权限。其账户和个人资料将保留。",
+      "revokeCallout": "访问权限立即终止，对方可能需要刷新页面才能看到。",
+      "revokeConfirm": "撤销权限"
     },
-    "loadMore": "加载更多"
+    "loadMore": "加载更多",
+    "adminBadge": "管理员",
+    "selfNote": "本人",
+    "accessErrors": {
+      "generic": "管理员权限未更改，请重试。",
+      "ADMIN_SELF_CHANGE": "不能更改自己的管理员权限，请联系其他管理员。",
+      "USER_NOT_FOUND": "该用户已不存在或已注销。请刷新页面以更新列表。",
+      "USER_NOT_ACTIVE": "该账户已被停用或已注销，无法授予管理员权限。",
+      "PROFILE_REQUIRED": "该用户尚未完成注册，无法授予管理员权限。请在其完成注册后重试。",
+      "LAST_ADMIN": "这是最后一位活跃管理员。请先授予其他人管理员权限，再撤销此人。",
+      "DATABASE_UNAVAILABLE": "服务暂时不可用，请稍后重试。",
+      "ADMIN_ONLY": "你的账户已不再拥有管理员权限。",
+      "UNAUTHORIZED": "会话已过期，请重新登录。",
+      "TOO_MANY_REQUESTS": "请求过多，请稍后重试。"
+    }
   },
   "bounties": {
     "metaTitle": "管理后台 · 赏金 | Ninja Labs",

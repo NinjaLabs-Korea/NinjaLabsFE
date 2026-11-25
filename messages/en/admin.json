@@ -112,7 +112,12 @@
       "undo": "Undo",
       "assignFailedDescription": "The member role was not changed.",
       "assignedTitle": "Member role assigned",
-      "assignedDescription": "{nickname} is now visible in the public member directory."
+      "assignedDescription": "{nickname} is now visible in the public member directory.",
+      "grantedTitle": "Admin access granted",
+      "grantedDescription": "{nickname} is now an admin.",
+      "revokedTitle": "Admin access revoked",
+      "revokedDescription": "{nickname} is no longer an admin.",
+      "accessFailedTitle": "Admin change failed"
     },
     "actions": {
       "assign": "Assign",
@@ -127,9 +132,35 @@
       "assignDescription": "Marks <b>{nickname}</b> as a public member with the selected role and order.",
       "roleGroupLabel": "Member role",
       "displayOrder": "Display order",
-      "displayOrderInvalid": "Enter a whole number of 1 or more, or leave it empty."
+      "displayOrderInvalid": "Enter a whole number of 1 or more, or leave it empty.",
+      "grant": "Grant admin",
+      "revoke": "Revoke admin",
+      "grantEyebrow": "Admin access",
+      "grantTitle": "Grant admin access to {nickname}?",
+      "grantDescription": "Gives <b>{nickname}</b> full access to the admin console, including payout approval. Only grant this to people you trust.",
+      "grantCallout": "Takes effect immediately and is recorded in the audit log.",
+      "grantConfirm": "Grant admin",
+      "revokeEyebrow": "Admin access",
+      "revokeTitle": "Revoke admin access from {nickname}?",
+      "revokeDescription": "<b>{nickname}</b> loses access to the admin console immediately. Their account and profile are preserved.",
+      "revokeCallout": "Access ends right away; they may need to reload to see it.",
+      "revokeConfirm": "Revoke admin"
     },
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "adminBadge": "Admin",
+    "selfNote": "You",
+    "accessErrors": {
+      "generic": "The admin access was not changed. Try again.",
+      "ADMIN_SELF_CHANGE": "You cannot change your own admin access. Ask another admin.",
+      "USER_NOT_FOUND": "This user no longer exists or has withdrawn. Reload the page to refresh the list.",
+      "USER_NOT_ACTIVE": "This account is suspended or withdrawn, so admin access cannot be granted.",
+      "PROFILE_REQUIRED": "This user has not finished signing up yet, so admin access cannot be granted. Try again after they complete onboarding.",
+      "LAST_ADMIN": "This is the last active admin. Grant admin access to someone else before revoking this one.",
+      "DATABASE_UNAVAILABLE": "The service is temporarily unavailable. Please try again in a moment.",
+      "ADMIN_ONLY": "Your account no longer has admin permission.",
+      "UNAUTHORIZED": "Your session expired. Sign in again.",
+      "TOO_MANY_REQUESTS": "Too many requests. Wait a moment and try again."
+    }
   },
   "bounties": {
     "metaTitle": "Admin · Bounties | Ninja Labs",

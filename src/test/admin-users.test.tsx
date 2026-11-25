@@ -11,10 +11,13 @@ import { createMockApiClient } from "@/lib/mocks/api-client";
 import { renderWithIntl } from "@/test/intl";
 
 let api: AdminApi;
+// The signed-in admin: "jaemin" is the fixture's admin row, so it is the row that shows no grant/revoke button.
+let selfId = "jaemin";
 
 vi.mock("@/components/auth/FoundationProvider", async () =>
   (await import("./support/foundation")).foundationMock({
     useAdminApi: () => api,
+    useAuthSnapshot: () => ({ status: "signed-in", user: { id: selfId, handle: "me.inj", initials: "ME", profileSlug: "me", isAdmin: true } }),
   }));
 
 beforeAll(() => {
@@ -23,6 +26,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  selfId = "jaemin";
   api = createMockApiClient();
 });
 
@@ -280,5 +284,93 @@ describe("UserActions display order validation", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
     expect(dialog.hasAttribute("open")).toBe(false);
     expect(onAssign).not.toHaveBeenCalled();
+  });
+});
+
+describe("UserDirectory admin access", () => {
+  it("badges admin rows, offers grant on others and no button on the signed-in admin's own row (a note instead)", async () => {
+    renderDirectory();
+    await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(fixtureUsers().length + 1));
+    expect(within(row("jaemin")).getByText("Admin")).toBeTruthy();
+    expect(within(row("sora")).queryByText("Admin")).toBeNull();
+    expect(within(row("jaemin")).queryByRole("button", { name: /admin/i })).toBeNull();
+    expect(within(row("jaemin")).getByText("You")).toBeTruthy();
+    expect(within(row("sora")).getByRole("button", { name: "Grant admin" })).toBeTruthy();
+  });
+
+  it("offers no admin action when the BE sends no is_admin (older BE)", async () => {
+    api = { ...createMockApiClient(), getAdminUsers: async () => fixtureUsers().map((user) => { const copy = { ...user }; delete copy.isAdmin; return copy; }) } as AdminApi;
+    renderDirectory();
+    await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(fixtureUsers().length + 1));
+    expect(screen.queryByRole("button", { name: /admin/i })).toBeNull();
+    expect(screen.queryByText("You")).toBeNull();
+  });
+
+  it("grants only after the confirm dialog, then shows the badge, a toast and re-reads the list", async () => {
+    const setAccess = vi.spyOn(api, "setAdminAccess");
+    const list = vi.spyOn(api, "getAdminUsers");
+    renderDirectory();
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
+    fireEvent.click(within(row("sora")).getByRole("button", { name: "Grant admin" }));
+    const dialog = screen.getByRole("dialog", { name: "Grant admin access to sora?" });
+    expect(within(dialog).getByText(/payout approval/)).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(setAccess).not.toHaveBeenCalled();
+
+    fireEvent.click(within(row("sora")).getByRole("button", { name: "Grant admin" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: /Grant admin access/ })).getByRole("button", { name: "Grant admin" }));
+    expect(await screen.findByText("sora is now an admin.")).toBeTruthy();
+    expect(setAccess).toHaveBeenCalledExactlyOnceWith("sora", true);
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
+    expect(within(row("sora")).getByText("Admin")).toBeTruthy();
+    expect(within(row("sora")).getByRole("button", { name: "Revoke admin" })).toBeTruthy();
+  });
+
+  it("revokes through the destructive dialog and drops the badge", async () => {
+    await api.setAdminAccess("sora", true);
+    const setAccess = vi.spyOn(api, "setAdminAccess");
+    renderDirectory();
+    await waitFor(() => expect(within(row("sora")).getByText("Admin")).toBeTruthy());
+    fireEvent.click(within(row("sora")).getByRole("button", { name: "Revoke admin" }));
+    const dialog = screen.getByRole("alertdialog", { name: "Revoke admin access from sora?" });
+    expect(within(dialog).getByText(/loses access to the admin console immediately/)).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Revoke admin" }));
+    expect(await screen.findByText("sora is no longer an admin.")).toBeTruthy();
+    expect(setAccess).toHaveBeenCalledExactlyOnceWith("sora", false);
+    await waitFor(() => expect(within(row("sora")).queryByText("Admin")).toBeNull());
+  });
+
+  it.each([
+    [new ApiHttpError(403, "ADMIN_SELF_CHANGE"), "You cannot change your own admin access. Ask another admin."],
+    [new ApiHttpError(404, "USER_NOT_FOUND"), "This user no longer exists or has withdrawn. Reload the page to refresh the list."],
+    [new ApiHttpError(409, "USER_NOT_ACTIVE"), "This account is suspended or withdrawn, so admin access cannot be granted."],
+    [new ApiHttpError(409, "PROFILE_REQUIRED"), "This user has not finished signing up yet, so admin access cannot be granted. Try again after they complete onboarding."],
+    [new ApiHttpError(409, "LAST_ADMIN"), "This is the last active admin. Grant admin access to someone else before revoking this one."],
+    [new ApiHttpError(500, "INTERNAL"), "The admin access was not changed. Try again."],
+    [new TypeError("fetch failed"), "The admin access was not changed. Try again."],
+  ])("maps a failed grant (%s) to its copy and keeps the row", async (error, copy) => {
+    vi.spyOn(api, "setAdminAccess").mockRejectedValue(error);
+    renderDirectory();
+    fireEvent.click(within(row("sora")).getByRole("button", { name: "Grant admin" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: /Grant admin access/ })).getByRole("button", { name: "Grant admin" }));
+    expect(await screen.findByText(copy)).toBeTruthy();
+    expect(screen.getByText("Admin change failed")).toBeTruthy();
+    expect(within(row("sora")).queryByText("Admin")).toBeNull();
+  });
+
+  it("blocks a second request for the same row while one is in flight", async () => {
+    let finish: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => { finish = resolve; });
+    const original = api.setAdminAccess.bind(api);
+    const setAccess = vi.spyOn(api, "setAdminAccess").mockImplementation(async (userId, isAdmin) => { await gate; return original(userId, isAdmin); });
+    renderDirectory();
+    fireEvent.click(within(row("sora")).getByRole("button", { name: "Grant admin" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: /Grant admin access/ })).getByRole("button", { name: "Grant admin" }));
+    await waitFor(() => expect((within(row("sora")).getByRole("button", { name: "Grant admin" }) as HTMLButtonElement).disabled).toBe(true));
+    expect(setAccess).toHaveBeenCalledTimes(1);
+    // Another row stays usable.
+    expect((within(row("mina")).getByRole("button", { name: "Grant admin" }) as HTMLButtonElement).disabled).toBe(false);
+    await act(async () => { finish(); });
+    await waitFor(() => expect(within(row("sora")).getByRole("button", { name: "Revoke admin" })).toBeTruthy());
   });
 });
