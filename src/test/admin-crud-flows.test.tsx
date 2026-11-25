@@ -66,13 +66,12 @@ describe("BountyManager flows", () => {
     expect(within(row("Build an iAsset price widget")).queryByText("Active")).toBeNull();
   });
 
-  it("renders one row per bounty with localized status, intake, mode and reward", async () => {
+  it("renders one row per bounty with localized status, intake and reward", async () => {
     const bounties = renderBounties();
     await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(bounties.length + 1));
     const widget = within(row("Build an iAsset price widget"));
     expect(widget.getByText("Active")).toBeTruthy();
     expect(widget.getByText("OFF")).toBeTruthy();
-    expect(widget.getByText("Direct")).toBeTruthy();
     expect(widget.getByText(/500/)).toBeTruthy();
     // Only draft/funding/active rows offer a transition button; active closes, reviewing/closed have none.
     expect(widget.getByRole("button", { name: "Close" })).toBeTruthy();
@@ -128,7 +127,6 @@ describe("BountyManager flows", () => {
     type("Deadline", "2099-03-01T12:30");
     type("Reward amount", "42");
     pick("Reward token", "USDC");
-    pick("Submission mode", "Agent");
     type("Description (markdown)", "Body");
     type("Deliverables and submission guide", "  - Repo\n- Demo  ");
     type("Review process", "Triage");
@@ -138,12 +136,11 @@ describe("BountyManager flows", () => {
     const [record, create] = save.mock.calls[0];
     expect(create).toBe(true);
     expect(record).toMatchObject({
-      slug: "", title: "Fresh bounty", reward: { amount: 42, currency: "USDC" }, submissionMode: "agent", status: "funding",
+      slug: "", title: "Fresh bounty", reward: { amount: 42, currency: "USDC" }, status: "funding",
       deadline: new Date("2099-03-01T12:30").toISOString(), requirements: "- Repo\n- Demo", maxWinners: 1, coverImage: null, tags: ["Dev"],
     });
     const created = within(row("Fresh bounty"));
     expect(created.getByText("Funding")).toBeTruthy();
-    expect(created.getByText("Agent")).toBeTruthy();
     expect(created.getByRole("button", { name: "Open" })).toBeTruthy();
     expect(document.querySelector("[aria-live=polite]")?.textContent).toMatch(/^Bounty created\. "\s*Fresh bounty\s*" was saved\.$/);
     expect(screen.getByText("Bounty created")).toBeTruthy();

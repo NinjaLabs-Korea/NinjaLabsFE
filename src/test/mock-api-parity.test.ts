@@ -24,22 +24,21 @@ describe("mock and api clients implement the same contract", () => {
     const mock = createMockApiClient();
     const api = apiClient({});
     const signedOut: AuthSnapshot = { status: "signed-out", user: null };
-    for (const method of ["getAccount", "getApplications", "getSubmissions", "getAgents"] as const) {
+    for (const method of ["getAccount", "getApplications", "getSubmissions"] as const) {
       expect(await mock[method](signedOut), method).toEqual(await api[method](signedOut));
     }
   });
 
   it("produce account rows with the same fields as the api mapping", async () => {
     const api = apiClient({
-      "/applications/me": [{ id: "a", status: "PENDING", message: "m", applied_at: "t", reviewed_at: null, bounty_id: "b", bounty_title: "T", category: "DEV", agent: null }],
-      "/submissions/me": [{ status: "SUBMITTED", bounty_id: "b", agent: null }],
-      "/agents/me": [{ id: "g", name: "n", description: null, status: "ACTIVE", wallet_address: "w", verified_at: null, created_at: "t", completed_bounties: 0, key_prefix: "p", key_status: "ACTIVE", key_expires_at: "t" }],
+      "/applications/me": [{ id: "a", status: "PENDING", message: "m", applied_at: "t", reviewed_at: null, bounty_id: "b", bounty_title: "T", category: "DEV" }],
+      "/submissions/me": [{ status: "SUBMITTED", bounty_id: "b" }],
     });
     const mock = createMockApiClient();
     // The default fixtures have no submission yet: make one so every list has a row to compare.
     await mock.submitBounty("wallet-onboarding-states", { submissionUrl: "https://x.y", description: "d" });
     const auth = owner();
-    for (const method of ["getApplications", "getSubmissions", "getAgents"] as const) {
+    for (const method of ["getApplications", "getSubmissions"] as const) {
       const [apiResult, mockResult] = await Promise.all([api[method](auth), mock[method](auth)]);
       if (apiResult.status !== "available" || mockResult.status !== "available") throw new Error(`${method} unavailable`);
       expect(mockResult.data.length, method).toBeGreaterThan(0);
@@ -52,7 +51,7 @@ describe("mock and api clients implement the same contract", () => {
   });
 
   it("mock and api keep the same content fields on a submission, and a resubmission replaces them wholesale", async () => {
-    const api = apiClient({ "/submissions/me": [{ status: "SUBMITTED", bounty_id: "b", agent: null, submission_url: "https://x.y", repository_url: "https://g.y/r", commit_sha: "abc1234", description: "d" }] });
+    const api = apiClient({ "/submissions/me": [{ status: "SUBMITTED", bounty_id: "b", submission_url: "https://x.y", repository_url: "https://g.y/r", commit_sha: "abc1234", description: "d" }] });
     const mock = createMockApiClient();
     await mock.submitBounty("wallet-onboarding-states", { submissionUrl: "https://x.y", repositoryUrl: "https://g.y/r", commitSha: "abc1234", description: "d" });
     const [a, m] = [await api.getSubmissions(owner()), await mock.getSubmissions(owner())];
@@ -70,8 +69,8 @@ describe("mock and api clients implement the same contract", () => {
 
   it("maps review_comment to reviewComment, and the mock fixtures carry a forfeited submission", async () => {
     const api = apiClient({ "/submissions/me": [
-      { status: "REJECTED", bounty_id: "b", agent: null, review_comment: " forfeited: x " },
-      { status: "SUBMITTED", bounty_id: "c", agent: null },
+      { status: "REJECTED", bounty_id: "b", review_comment: " forfeited: x " },
+      { status: "SUBMITTED", bounty_id: "c" },
     ] });
     const result = await api.getSubmissions(owner());
     if (result.status !== "available") throw new Error("unavailable");
@@ -85,14 +84,13 @@ describe("mock and api clients implement the same contract", () => {
     const mock = createMockApiClient();
     expect(await mock.getAccount(stranger)).toEqual({ status: "available", data: null });
     expect(await mock.getApplications(stranger)).toEqual({ status: "available", data: [] });
-    expect(await mock.getAgents(stranger)).toEqual({ status: "available", data: [] });
+    expect(await mock.getSubmissions(stranger)).toEqual({ status: "available", data: [] });
   });
 });
 
 describe("mock errors mirror BE status and code", () => {
   it.each([
-    ["rotateAgentKey on an unknown agent", (client: ReturnType<typeof createMockApiClient>) => client.rotateAgentKey("nope"), 404, "AGENT_NOT_FOUND"],
-    ["revokeAgent on an unknown agent", (client: ReturnType<typeof createMockApiClient>) => client.revokeAgent("nope"), 404, "AGENT_NOT_FOUND"],
+    ["setPayoutAddress on an unknown submission", (client: ReturnType<typeof createMockApiClient>) => client.setPayoutAddress("nope", `0x${"ab".repeat(20)}`), 404, "SUBMISSION_NOT_FOUND"],
     ["transitionAdminBounty on an unknown bounty", (client: ReturnType<typeof createMockApiClient>) => client.transitionAdminBounty("nope", "OPEN"), 404, "BOUNTY_NOT_FOUND"],
     ["deleteAdminPost on an unknown notice", (client: ReturnType<typeof createMockApiClient>) => client.deleteAdminPost("nope"), 404, "NOTICE_NOT_FOUND"],
     ["deleteAdminHighlight on an unknown highlight", (client: ReturnType<typeof createMockApiClient>) => client.deleteAdminHighlight("nope"), 404, "HIGHLIGHT_NOT_FOUND"],
@@ -101,91 +99,5 @@ describe("mock errors mirror BE status and code", () => {
     const error = await action(createMockApiClient()).catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(ApiHttpError);
     expect(error).toMatchObject({ status, code });
-  });
-
-  it("refuses to rotate a revoked agent's key with 409 AGENT_NOT_ACTIVE and keeps it revoked", async () => {
-    const mock = createMockApiClient();
-    await mock.revokeAgent("agent-1");
-    await expect(mock.rotateAgentKey("agent-1")).rejects.toMatchObject({ status: 409, code: "AGENT_NOT_ACTIVE" });
-    const agents = await mock.getAgents(owner());
-    expect(agents.status === "available" && agents.data.find((agent) => agent.id === "agent-1")).toMatchObject({ status: "REVOKED", verified: false, keyStatus: "REVOKED" });
-  });
-
-  it("refuses a second registration of an active wallet regardless of case, but re-issues a pending one", async () => {
-    const mock = createMockApiClient();
-    const pending = await mock.registerAgent({ name: "a", walletAddress: "0xAbC" });
-    const reissued = await mock.registerAgent({ name: "b", walletAddress: "0xabc" });
-    expect(reissued.agentId).not.toBe(pending.agentId);
-    const agents = await mock.getAgents(owner());
-    expect(agents.status === "available" && agents.data.filter((agent) => agent.walletAddress.toLowerCase() === "0xabc")).toHaveLength(1);
-    await mock.verifyAgent(reissued.agentId, "0xsig");
-    await expect(mock.registerAgent({ name: "c", walletAddress: "0XABC" })).rejects.toMatchObject({ status: 409, code: "AGENT_KEY_OR_WALLET_ALREADY_REGISTERED" });
-  });
-});
-
-describe("admin bounty status parity", () => {
-  it.each(["DRAFT", "FUNDING_PENDING", "OPEN", "SUBMISSION_CLOSED", "IN_REVIEW", "COMPLETED", "CANCELLED"])(
-    "a transition to %s shows the same console status in mock mode as the api row mapping",
-    async (status) => {
-      const api = apiClient({
-        "/admin/bounties": [{
-          id: "b", title: "t", sponsor_name: "s", summary: "s", description: "d", requirements: "", evaluation_criteria: "", category: "DEV", status,
-          application_required: false, submission_mode: "DIRECT", cover_image_url: null, submission_deadline: "2026-07-01T00:00:00.000Z",
-          application_deadline: null, max_winners: 1, rewards: [],
-        }],
-      });
-      const [apiRow] = await api.getAdminBounties();
-
-      const mock = createMockApiClient();
-      const [first] = await mock.getAdminBounties();
-      await mock.transitionAdminBounty(first.slug, status);
-      const mockRow = (await mock.getAdminBounties()).find((bounty) => bounty.slug === first.slug)!;
-      expect(mockRow.status).toBe(apiRow.status);
-    },
-  );
-});
-
-describe("mock submission revisions", () => {
-  it("numbers revisions per bounty and reports RESUBMITTED after the first", async () => {
-    const mock = createMockApiClient();
-    const input = { submissionUrl: "https://x.y", description: "d" };
-    expect(await mock.submitBounty("b1", input)).toMatchObject({ revisionNo: 1, status: "SUBMITTED" });
-    expect(await mock.submitBounty("b1", input)).toMatchObject({ revisionNo: 2, status: "RESUBMITTED" });
-    expect(await mock.submitBounty("b2", input)).toMatchObject({ revisionNo: 1, status: "SUBMITTED" });
-    const submissions = await mock.getSubmissions(owner());
-    expect(submissions.status === "available" && submissions.data.filter((row) => row.bountySlug === "b1")).toEqual([{ bountySlug: "b1", status: "submitted", agent: null, paymentStatus: "NONE", reviewComment: null, submissionUrl: "https://x.y", description: "d" }]);
-  });
-
-  it("resubmitting work sent back for revision clears the revision state like the BE (RESUBMITTED → submitted)", async () => {
-    const mock = createMockApiClient();
-    const before = await mock.getApplications(owner());
-    const revising = before.status === "available" ? before.data.find((row) => row.status === "revisionRequested") : undefined;
-    expect(revising).toBeDefined();
-    await mock.submitBounty(revising!.bountySlug, { submissionUrl: "https://x.y", description: "d" });
-    const after = await mock.getApplications(owner());
-    expect(after.status === "available" && after.data.find((row) => row.id === revising!.id)?.status).toBe("submitted");
-  });
-
-  it("starts every new client from the fixtures (nothing leaks between clients)", async () => {
-    const first = createMockApiClient();
-    await first.applyToBounty("helix-volume-analytics", { message: "m" });
-    const fresh = await createMockApiClient().getApplications(owner());
-    expect(fresh.status === "available" && fresh.data.some((row) => row.bountySlug === "helix-volume-analytics")).toBe(false);
-  });
-
-  it("withdraws a pending application like the BE: removes the row, rejects a second or non-pending withdraw", async () => {
-    const mock = createMockApiClient();
-    const { id } = await mock.applyToBounty("helix-volume-analytics", { message: "m" });
-    expect(await mock.withdrawApplication(id)).toEqual({ id, status: "WITHDRAWN" });
-    const after = await mock.getApplications(owner());
-    expect(after.status === "available" && after.data.some((row) => row.id === id)).toBe(false);
-    await expect(mock.withdrawApplication(id)).rejects.toMatchObject({ status: 404, code: "APPLICATION_NOT_FOUND_OR_NOT_PENDING" });
-  });
-
-  it("api client posts the withdraw to the application's withdraw route", async () => {
-    const fetchJson = vi.fn(async () => ({ id: "a/1", status: "WITHDRAWN" }));
-    const api = createApiApiClient({ fetchJson, fetchForm: vi.fn(), hasSession: () => true } as unknown as ApiHttp);
-    await api.withdrawApplication("a/1");
-    expect(fetchJson).toHaveBeenCalledWith("/applications/a%2F1/withdraw", { method: "POST" });
   });
 });

@@ -15,7 +15,6 @@ const pages = [
   ['/en/does-not-exist', 404], ['/en/bounties/00000000-0000-0000-0000-000000000000', 404], ['/en/notices/00000000-0000-0000-0000-000000000000', 404],
   ['/en/members/nobody_here', 404], ['/en/bounties/not-a-uuid', 404], ['/xx/foo', 404],
 ];
-check('builderone has no parent NFT in DB (NFT copy precondition)', sql(`select count(*) from nft n join "user" u on u.id=n.owner_user_id where u.nickname='builderone'`) === '0');
 for (const [path, status, texts = []] of pages) {
   const http = (await fetch(ORIGIN + path, { redirect: 'follow' })).status;
   await p.goto(path); await sleep(600);
@@ -25,5 +24,4 @@ for (const [path, status, texts = []] of pages) {
   clean(r, { allowFailed: status === 404 ? [/^404 /] : [], signedOut: true });
   for (const t of texts) check(`${path}: shows "${t}"`, text.includes(t));
 }
-check('/en/members/builderone: does not claim the NFT is already minted', !(await (async () => { await p.goto('/en/members/builderone'); return (await p.text()).includes('already minted'); })()));
 b.close(); done('1 public SSR');

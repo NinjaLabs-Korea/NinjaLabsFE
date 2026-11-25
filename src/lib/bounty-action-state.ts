@@ -5,13 +5,9 @@
  * 규칙은 위에서 아래로 **첫 번째로 맞는 것**이 이긴다 (순서 자체가 규칙이다):
  *  1. 진행 중이 아닌 바운티(`reviewing`/`closed`) + 비로그인 → `closed`
  *     (로그인 사용자는 아래로 내려간다: 수정 요청받은 제출은 마감 후에도 재제출할 수 있다)
- *  2. 에이전트 전용 바운티: 로그인 전 → `agentMode`(진행 중) / `closed`; 로그인 후 내 에이전트의 행이 있으면 `agentRow`
- *     (지원 상태·제출 상태·수정 요청·지급 배지), 없으면 `agentMode`(Agent API 엔드포인트 안내) / `closed`.
- *     행 조회 중이면 `checkingStatus`, 조회 실패면 행 없음으로 본다(안내는 계정 상태 없이도 유효하다).
  *  2b. 지원 필요 바운티의 지원 마감이 지났고 비로그인 → `closed`+`applications` (지원 CTA 없음)
  *  3. 세션 확인 중 → `checkingSession`, 세션 확인 실패(`authReason: unavailable`) → `sessionUnavailable`, 비로그인 → `signedOut`
  *  4. 내 제출(+지원 필요 바운티면 내 지원) 조회 중 → `checkingStatus`, 조회 실패 → `statusUnavailable`
- *  5. 내 직접 행은 없고 에이전트가 만든 행만 있음 → `agentRow` (직접 지원/제출 폼을 띄우지 않는다)
  *  6. 지원 필요 바운티: 지원 전 → `applyForm`(진행 중이고 지원 마감 전일 때만, 지원 마감만 지났으면 `closed`+`applications`, 그 밖엔 `closed`) / 거절 → `applicationRejected` /
  *     방금 지원했거나 심사 중(`open`) → `applicationUnderReview`(진행 중이 아니면 `closed`, 제출 마감이 지났어도 `closed`: 승인은 진행 중이고 마감 전일 때만 되고, 제출도 더는 못 한다) / 승인 등 → 7로 내려간다
  *  7. 제출 승인 → `submissionApproved`, 취소로 심사 없이 닫힌 거절 → `closed`(cancelled), 제출 거절 → `submissionRejected`
@@ -26,23 +22,17 @@
  */
 import { ERROR_COPY, knownCode } from "@/lib/api/error-copy";
 import { ApiHttpError } from "@/lib/api/http";
-import type { AccountAgentRef, AccountApplication, AccountSubmission, SubmissionStatus } from "@/lib/contracts/account";
+import type { AccountApplication, AccountSubmission, SubmissionStatus } from "@/lib/contracts/account";
 import type { AuthStatus } from "@/lib/contracts/auth";
 import { parseReviewComment, type ReviewNote } from "@/lib/review-comment";
 import type { ClosedReason } from "@/lib/bounty-status";
 import type { Bounty, PayoutStatus } from "@/lib/types";
 
-/**
- * What the owner's agent has reached on this bounty (`agentRow.state`). Submissions win over applications:
- * `submitted` = waiting for review, `revisionRequested` = the agent must resubmit through the Agent API.
- */
-export type AgentRowState = "applied" | "applicationRejected" | "applicationApproved" | "submitted" | "revisionRequested" | "approved" | "rejected";
-
 /** 심사 대기 중인 제출 상태 - 이 상태의 제출이 있으면 "심사 중" 화면/문구를 쓴다. */
 const PENDING_SUBMISSION_STATUSES: readonly SubmissionStatus[] = ["submitted", "resubmitted", "in_review"];
 
-type ApplicationRow = Pick<AccountApplication, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountApplication, "reviewNote">>;
-type SubmissionRow = Pick<AccountSubmission, "bountySlug" | "status" | "agent"> & Partial<Pick<AccountSubmission, "reviewComment" | "paymentStatus" | "closedByCancellation">>;
+type ApplicationRow = Pick<AccountApplication, "bountySlug" | "status"> & Partial<Pick<AccountApplication, "reviewNote">>;
+type SubmissionRow = Pick<AccountSubmission, "bountySlug" | "status"> & Partial<Pick<AccountSubmission, "reviewComment" | "paymentStatus" | "closedByCancellation">>;
 
 /** `useAccountQuery` 결과 중 이 규칙이 읽는 부분. `data`는 내 전체 행(모든 바운티)이다. */
 export type AccountRowsQuery<T> = { loading: boolean; unavailable: boolean; data: readonly T[] | null };
@@ -51,7 +41,6 @@ export type BountyActionInput = {
   bountyId: string;
   applicationRequired: boolean;
   status: Bounty["status"];
-  submissionMode: "direct" | "agent";
   /** `Bounty.applicationClosed`: the application deadline passed, so a first application is refused. */
   applicationClosed?: boolean;
   /** `Bounty.closedReason`: why a `closed` bounty is closed. `deadline` means closed only by the deadline, so a requested revision is still resubmittable. */
@@ -73,8 +62,6 @@ export type BountyActionView =
    * `cancelled`: 바운티가 취소돼(BE가 대기 중인 지원을 자동 거절) 거절된 지원자에게 "스폰서가 선택하지 않았다"고 말하면 거짓이다.
    */
   | { kind: "closed"; reason: "reviewing" | "closed" | "applications" | "cancelled" }
-  /** 에이전트 전용 바운티 - `POST /agent-api/v1/bounties/{id}/{endpoint}` 안내 */
-  | { kind: "agentMode"; endpoint: "applications" | "submissions" }
   | { kind: "checkingSession" }
   /** The session check failed (BE 5xx/429/unreachable) while the cookie is kept: the visitor may well be signed in, so do not say "sign in". */
   | { kind: "sessionUnavailable" }
@@ -82,11 +69,6 @@ export type BountyActionView =
   | { kind: "signedOut" }
   | { kind: "checkingStatus" }
   | { kind: "statusUnavailable" }
-  /**
-   * 에이전트만 이 바운티에 참여함. `row`는 에이전트가 제출까지 했는지(우선) 지원만 했는지, `state`는 그 행의 진행 상태.
-   * `review`: 심사자 코멘트(수정 요청·거절·보상 미지급), `payout`: 승인된 제출의 지급 상태. 없으면 생략.
-   */
-  | { kind: "agentRow"; agentName: string; row: "submission" | "application"; state: AgentRowState; review?: ReviewNote; payout?: PayoutStatus }
   | { kind: "applyForm" }
   /** `note`: what the operator wrote when rejecting (the admin form says the applicant sees it); omitted when none. */
   | { kind: "applicationRejected"; note?: string }
@@ -103,68 +85,22 @@ export type BountyActionView =
    */
   | { kind: "submitForm"; revising: boolean; inReview: boolean; revisionComment?: string };
 
-/** 내 직접 행(`agent: null`)과 에이전트가 만든 행을 따로 고른다. 둘은 서로를 대신하지 않는다. */
-export function splitRows<T extends { agent: AccountAgentRef | null }>(rows: readonly T[] | undefined): { own: T | undefined; agent: T | undefined } {
-  return { own: rows?.find((row) => row.agent === null), agent: rows?.find((row) => row.agent !== null) };
+/** The caller's row for one bounty out of the account-wide row list (one participant row per bounty). */
+export function rowForBounty<T extends { bountySlug: string }>(rows: readonly T[] | null | undefined, bountyId: string): T | undefined {
+  return rows?.find((row) => row.bountySlug === bountyId);
 }
 
-const AGENT_SUBMISSION_STATE: Record<SubmissionStatus, AgentRowState> = {
-  submitted: "submitted",
-  resubmitted: "submitted",
-  in_review: "submitted",
-  revision_requested: "revisionRequested",
-  approved: "approved",
-  rejected: "rejected",
-};
-
-/** The `agentRow` view for the owner's agent rows on one bounty (submission first), or undefined when the agent has none. */
-function agentRowView(application: ApplicationRow | undefined, submission: SubmissionRow | undefined): BountyActionView | undefined {
-  const agent = (submission ?? application)?.agent;
-  if (!agent) return undefined;
-  if (!submission) {
-    const state: AgentRowState = application?.status === "rejected" ? "applicationRejected" : application?.status === "open" ? "applied" : "applicationApproved";
-    return { kind: "agentRow", agentName: agent.name, row: "application", state };
-  }
-  const state = AGENT_SUBMISSION_STATE[submission.status];
-  const review = state === "revisionRequested" || state === "rejected" ? parseReviewComment(submission.reviewComment) : null;
-  return {
-    kind: "agentRow", agentName: agent.name, row: "submission", state,
-    ...(review ? { review } : {}),
-    ...(state === "approved" && submission.paymentStatus ? { payout: submission.paymentStatus } : {}),
-  };
-}
-
-/** Rows of one bounty out of the account-wide row list. */
-function rowsForBounty<T extends { bountySlug: string }>(rows: readonly T[] | null, bountyId: string): T[] | undefined {
-  return rows?.filter((row) => row.bountySlug === bountyId);
-}
-
-/** Rule 2 for agent-only bounties: guide until the owner's agent has a row, then that row's progress. */
-function deriveAgentBountyView(input: BountyActionInput, closed: BountyActionView): BountyActionView {
-  const { applicationRequired, auth, applications, submissions, status } = input;
-  const guide: BountyActionView = status === "active" ? { kind: "agentMode", endpoint: applicationRequired ? "applications" : "submissions" } : closed;
-  if (auth !== "signed-in") return guide;
-  if (submissions.loading || (applicationRequired && applications.loading)) return { kind: "checkingStatus" };
-  // The guide does not depend on account state: a failed read just means no progress to show.
-  if (submissions.unavailable || (applicationRequired && applications.unavailable)) return guide;
-  const view = agentRowView(splitRows(rowsForBounty(applications.data, input.bountyId)).agent, splitRows(rowsForBounty(submissions.data, input.bountyId)).agent);
-  if (!view) return guide;
-  // An approved application with no submission yet: the next step is the submission endpoint, not another application.
-  if (view.kind === "agentRow" && view.state === "applicationApproved" && status === "active") return { kind: "agentMode", endpoint: "submissions" };
-  return view;
-}
-
+// submission_mode is ignored on purpose (agents are removed): a legacy AGENT-mode bounty shows the human form and the BE rejects it
+// with AGENT_SUBMISSION_REQUIRED, which has its own error copy (error-copy.ts bountyAction).
 export function deriveActionView(input: BountyActionInput): BountyActionView {
-  const { applicationRequired, applicationClosed = false, status, submissionMode, auth, applications, submissions, applied, submitted } = input;
+  const { applicationRequired, applicationClosed = false, status, auth, applications, submissions, applied, submitted } = input;
   const acceptingNew = status === "active";
   const { closedReason } = input;
   const deadlineOnly = closedReason === "deadline";
   const closed: BountyActionView = { kind: "closed", reason: status === "reviewing" ? "reviewing" : "closed" };
 
-  // 1. 마감된 바운티는 비로그인에게 계정 상태가 필요 없다. 로그인 사용자는 재제출·에이전트 행 때문에 계속 진행.
+  // 1. 마감된 바운티는 비로그인에게 계정 상태가 필요 없다. 로그인 사용자는 재제출 때문에 계속 진행.
   if (!acceptingNew && auth === "signed-out") return closed;
-  // 2. 에이전트 전용 바운티의 직접 폼은 없다 (Agent API 안내 패널은 컴포넌트 몫). 로그인했으면 내 에이전트의 진행 상태를 먼저 보여 준다.
-  if (submissionMode === "agent") return deriveAgentBountyView(input, closed);
   // 2b. 지원 마감이 지난 지원 필요 바운티는 비로그인에게도 지원 경로가 없다 ("지원하려고 가입했더니 마감"을 막는다).
   if (auth === "signed-out" && applicationRequired && applicationClosed) return { kind: "closed", reason: "applications" };
   // 3. 세션
@@ -174,14 +110,8 @@ export function deriveActionView(input: BountyActionInput): BountyActionView {
   if (submissions.loading || (applicationRequired && applications.loading)) return { kind: "checkingStatus" };
   if (submissions.unavailable || (applicationRequired && applications.unavailable)) return { kind: "statusUnavailable" };
 
-  const { own: application, agent: agentApplication } = splitRows(rowsForBounty(applications.data, input.bountyId));
-  const { own: submission, agent: agentSubmission } = splitRows(rowsForBounty(submissions.data, input.bountyId));
-
-  // 5. 에이전트만 참여했으면 직접 지원/제출은 별개의 두 번째 참여가 되므로 폼을 숨긴다 (에이전트 행은 Agent API로 관리).
-  if (!application && !submission && !applied && !submitted) {
-    const agentView = agentRowView(agentApplication, agentSubmission);
-    if (agentView) return agentView;
-  }
+  const application = rowForBounty(applications.data, input.bountyId);
+  const submission = rowForBounty(submissions.data, input.bountyId);
 
   // 6. 지원 단계 (승인된 지원 등은 제출 단계로 내려간다)
   if (applicationRequired) {

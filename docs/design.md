@@ -35,7 +35,7 @@ Rules of engagement (binding, same as `AGENTS.md`):
 | `warning` / `warning-soft` | `text-warning` on `bg-warning-soft` | Pending, caution states |
 | `inverse-surface` `#0B1322` | `bg-inverse-surface` | Footer, dark hero panels |
 | `on-inverse` (+`-secondary`, `-muted`) | `text-on-inverse*` | Text on dark surfaces and solid-primary buttons |
-| `hero-from/via/to`, `glow`, `accent-soft`, `nft-deep` | gradient stops | Hero + NFT gradient surfaces only |
+| `hero-from/via/to`, `glow`, `accent-soft` | gradient stops | Hero gradient surfaces only |
 
 Status colors always pair `*-soft` fill with the saturated `*` text - same contract as `ui/Badge`.
 
@@ -71,7 +71,7 @@ Never mix: a button is always `rounded-control`, a card always `rounded-card`.
 
 ## Shadows & container
 
-- `shadow-card` - resting cards. `hover:shadow-frame` - card hover lift (see BountyCard). `shadow-frame` - floating frames/modals. `shadow-nft` - NFT tiles only. `shadow-tile-text` - text legibility on gradient tiles.
+- `shadow-card` - resting cards. `hover:shadow-frame` - card hover lift (see BountyCard). `shadow-frame` - floating frames/modals. `shadow-tile-text` - text legibility on gradient tiles.
 - Page shell (every route's top-level wrapper): `mx-auto max-w-content px-6 py-16 pb-20` (error/404 pages use `py-24 text-center`). Do not introduce other max-widths or paddings for page shells.
 
 ## Recipes (copy verbatim)
@@ -140,13 +140,12 @@ with a `next/image` `object-contain` logo in an `h-12` box; linked tiles add `tr
 
 **Soft danger action (account pages):** `rounded-control border border-danger-soft bg-danger-soft px-4 py-2 text-sm font-semibold text-danger disabled:opacity-60` + focus ring - the non-admin counterpart of the warning-soft "Switch network" button; it only opens a destructive `ui/ConfirmDialog` (AgentsView "Revoke agent"), never performs the action itself.
 
-**One-time secret reveal:** always `agents/ApiKeyReveal` - `rounded-tile border border-success-soft bg-success-soft p-4`, a `text-sm font-semibold text-success` title, `text-xs text-ink-secondary` copy telling the user it will not be shown again, the secret in a read-only `<input>` (`rounded-control border border-border bg-surface p-3 font-mono text-xs text-ink`, selects on focus, `sr-only` label) beside a secondary-outline "Copy" button (`px-4 py-2`), then a `text-xs` `role="status"` line that only announces "API key ready - copy it now" / "copied" / the `text-warning` clipboard-unavailable fallback, and the expiry in `text-xs text-ink-muted`. The secret is never inside a live region. Used by `agents/AgentRegisterForm` (first issuance) and `account/AgentsView` (rotation, one tile per agent); the raw value lives only in component state.
 
 **Danger zone (account pages):** a section `rounded-card border border-danger-soft bg-surface p-6` with a `text-xs font-bold uppercase tracking-[0.96px] text-danger` eyebrow, `font-display text-xl font-bold text-ink` heading, `text-sm text-ink-muted` body + consequence list, and one soft danger action. Irreversible actions (account deletion) use **typed confirmation**: the destructive `ui/ConfirmDialog` receives a labelled text input as `children` ("Type your nickname “…” to confirm", form-field recipe with `autoComplete="off"`/`spellCheck={false}`) and `confirmDisabled` until it matches; while the request runs the confirm label switches to "Deleting…" and stays disabled; failures render inside the dialog as `text-sm font-semibold text-danger` `role="alert"`.
 
 **Flash toast (after navigation):** when an action ends by leaving the page (account deletion → home), call `pushFlash(key)` (`lib/flash.ts`) before navigating; the shell's `layout/FlashToast` shows a success `ui/Toast` bottom-right (`z-[70]`, same spot as the admin host) with its own polite live region. Never use it for feedback the current page can show inline.
 
-**Inline action feedback (account pages, no toast host):** warnings as `text-sm text-warning` with `role="status"` (key expiring/expired), failures as `text-sm text-danger` with `role="alert"`, secondary context as `text-sm text-ink-secondary` (e.g. the "Handled by your agent" status panel body on bounty detail). Session/list loading on account pages is `ui/PageLoading` labelled with `account.common.loading`, never a blank panel.
+**Inline action feedback (account pages, no toast host):** warnings as `text-sm text-warning` with `role="status"` (e.g. a deadline close to expiring), failures as `text-sm text-danger` with `role="alert"`, secondary context as `text-sm text-ink-secondary`. Session/list loading on account pages is `ui/PageLoading` labelled with `account.common.loading`, never a blank panel.
 
 **Focus after a destructive confirm:** when the confirmed action removes or disables the button that opened the `ui/ConfirmDialog`, pass `returnFocusTo` so focus lands on the affected card's heading (`tabIndex={-1}` + focus ring) instead of `<body>`; cancelling still returns focus to the opener.
 
@@ -172,7 +171,7 @@ with a `next/image` `object-contain` logo in an `h-12` box; linked tiles add `tr
 
 ## Admin operations console (FE-designed, no Figma node)
 
-`/admin/operations` and `/admin/nft-jobs` reuse the admin shell exactly: page header (eyebrow + `font-display` h1 + muted lead), `AdminTabs`, then stacked `rounded-card border border-border bg-surface p-[21px] shadow-card` panels, each with the panel eyebrow (`text-xs font-bold uppercase tracking-[0.96px] text-primary`) and a `font-display text-2xl` h3. Tables are `AdminTable`; status chips are `Badge` (success = funded/approved/paid/open, warning = pending/needs action, danger = rejected/failed/cancelled, neutral = finished/draft, primary-soft = in review/approved payout). Actions use the outline button (`border-primary-outline text-primary-strong`), the primary button for the forward step (confirm deposit, approve submission, request payout, mark paid) and the danger outline for reject/cancel. Every form action opens `admin/OpsFormModal` (on `ui/Modal`); destructive cancel uses `ConfirmDialog destructive`. Lifecycle blockers render as a `text-warning` list under the disabled transition button; the two-person rule renders as `text-xs font-semibold text-warning` text in place of the Approve button. Hashes and addresses are `font-mono text-xs`, shortened `0x1234…abcd` with the full value in `title`. Shared class strings: `src/components/admin/ops-ui.ts`.
+`/admin/operations` reuses the admin shell exactly: page header (eyebrow + `font-display` h1 + muted lead), `AdminTabs`, then stacked `rounded-card border border-border bg-surface p-[21px] shadow-card` panels, each with the panel eyebrow (`text-xs font-bold uppercase tracking-[0.96px] text-primary`) and a `font-display text-2xl` h3. Tables are `AdminTable`; status chips are `Badge` (success = funded/approved/paid/open, warning = pending/needs action, danger = rejected/failed/cancelled, neutral = finished/draft, primary-soft = in review/approved payout). Actions use the outline button (`border-primary-outline text-primary-strong`), the primary button for the forward step (confirm deposit, approve submission, request payout, mark paid) and the danger outline for reject/cancel. Every form action opens `admin/OpsFormModal` (on `ui/Modal`); destructive cancel uses `ConfirmDialog destructive`. Lifecycle blockers render as a `text-warning` list under the disabled transition button; the two-person rule renders as `text-xs font-semibold text-warning` text in place of the Approve button. Hashes and addresses are `font-mono text-xs`, shortened `0x1234…abcd` with the full value in `title`. Shared class strings: `src/components/admin/ops-ui.ts`.
 
 ## Motion
 

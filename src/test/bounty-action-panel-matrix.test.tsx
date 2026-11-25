@@ -53,13 +53,11 @@ vi.mock("@/components/auth/FoundationProvider", async () =>
   }));
 
 type Status = Bounty["status"];
-type Mode = "direct" | "agent";
 type AuthStatus = AuthSnapshot["status"];
 
 /** What a visitor with no rows on the bounty should see. */
-function expected(status: Status, auth: AuthStatus, mode: Mode, applicationRequired: boolean): string {
-  if (status !== "active" && (mode === "agent" || auth === "signed-out")) return status === "reviewing" ? "closed:reviewing" : "closed:closed";
-  if (mode === "agent") return applicationRequired ? "agent:applications" : "agent:submissions";
+function expected(status: Status, auth: AuthStatus, applicationRequired: boolean): string {
+  if (status !== "active" && auth === "signed-out") return status === "reviewing" ? "closed:reviewing" : "closed:closed";
   if (auth === "loading") return "checking-session";
   if (auth === "signed-out") return applicationRequired ? "signed-out:apply" : "signed-out:submit";
   if (status !== "active") return status === "reviewing" ? "closed:reviewing" : "closed:closed";
@@ -73,10 +71,6 @@ async function observed(): Promise<string> {
     if (screen.queryByText("This bounty is no longer accepting applications or submissions.")) return "closed:closed";
     return "closed:?";
   }
-  if (screen.queryByRole("heading", { name: "Agent submission" })) {
-    const code = document.querySelector("code")?.textContent ?? "";
-    return code.endsWith("/applications") ? "agent:applications" : code.endsWith("/submissions") ? "agent:submissions" : `agent:${code}`;
-  }
   if (screen.queryByText("Checking your session…")) return "checking-session";
   if (screen.queryByText("Login required")) {
     return screen.queryByRole("heading", { name: "Apply" }) ? "signed-out:apply" : "signed-out:submit";
@@ -88,9 +82,8 @@ async function observed(): Promise<string> {
 
 const statuses: Status[] = ["active", "reviewing", "closed"];
 const authStatuses: AuthStatus[] = ["signed-in", "signed-out", "loading"];
-const modes: Mode[] = ["direct", "agent"];
 const matrix = statuses.flatMap((status) =>
-  authStatuses.flatMap((auth) => modes.flatMap((mode) => [true, false].map((applicationRequired) => [status, auth, mode, applicationRequired] as const))),
+  authStatuses.flatMap((auth) => [true, false].map((applicationRequired) => [status, auth, applicationRequired] as const)),
 );
 
 // The module-level reads are shared by every test: forget the answers remembered for the previous one.
@@ -104,10 +97,10 @@ describe("BountyActionPanel state matrix (no existing rows)", () => {
     submitBounty.mockClear();
   });
 
-  it.each(matrix)("status=%s auth=%s mode=%s applicationRequired=%s", async (status, auth, mode, applicationRequired) => {
+  it.each(matrix)("status=%s auth=%s applicationRequired=%s", async (status, auth, applicationRequired) => {
     state.auth = auths[auth];
-    renderWithIntl(<BountyActionPanel applicationRequired={applicationRequired} bountyId="bounty-1" status={status} submissionMode={mode} />);
-    expect(await observed()).toBe(expected(status, auth, mode, applicationRequired));
+    renderWithIntl(<BountyActionPanel applicationRequired={applicationRequired} bountyId="bounty-1" status={status} />);
+    expect(await observed()).toBe(expected(status, auth, applicationRequired));
   });
 });
 
@@ -120,16 +113,10 @@ describe("BountyActionPanel transitional states", () => {
     submitBounty.mockClear();
   });
 
-  it("names the agent endpoint for the bounty id", async () => {
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-42" status="active" submissionMode="agent" />);
-    expect((await screen.findByText(/^POST /)).textContent).toBe("POST /agent-api/v1/bounties/bounty-42/applications");
-    expect(screen.getByRole("link", { name: "Manage my agents" }).getAttribute("href")).toBe("/agents");
-  });
-
   it("shows a checking status until the account reads resolve", async () => {
     let resolve: (value: ApiResult<AccountSubmission[]>) => void = () => undefined;
     state.submissions = new Promise((r) => { resolve = r; });
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     expect(screen.getByText("Checking your bounty status…")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Submit" })).toBeNull();
     resolve({ status: "available", data: [] });
@@ -139,14 +126,14 @@ describe("BountyActionPanel transitional states", () => {
   it.each(["unauthorized", "server-error", "network-error"] as const)("shows the unavailable copy instead of a form when a read fails (%s)", async (reason) => {
     state.applications = Promise.resolve({ status: "unavailable", reason });
     state.submissions = Promise.resolve({ status: "available", data: [] });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     expect(await screen.findByText("Your bounty status is temporarily unavailable. Please refresh and try again.")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
   });
 
   it("sends a signed-out visitor of a direct bounty to sign-in with the bounty as the return path", async () => {
     state.auth = auths["signed-out"];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     for (const name of ["Sign in first", "Submit"]) {
       expect((await screen.findByRole("link", { name })).getAttribute("href"), name).toBe("/signup?returnTo=%2Fbounties%2Fbounty-1");
     }
@@ -154,7 +141,7 @@ describe("BountyActionPanel transitional states", () => {
 
   it("does not offer a signed-out visitor an Apply path once the application deadline has passed", async () => {
     state.auth = auths["signed-out"];
-    renderWithIntl(<BountyActionPanel applicationClosed applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationClosed applicationRequired bountyId="bounty-1" status="active" />);
     expect(await screen.findByText("Applications closed")).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Apply" })).toBeNull();
   });
@@ -162,13 +149,13 @@ describe("BountyActionPanel transitional states", () => {
   it("ignores an unavailable applications read on a direct (non-apply) bounty", async () => {
     state.applications = Promise.resolve({ status: "unavailable", reason: "server-error" });
     state.submissions = Promise.resolve({ status: "available", data: [] });
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     expect(await screen.findByRole("button", { name: "Submit" })).toBeTruthy();
   });
 
   it("previews a disabled apply form for signed-out visitors with links to the how-it-works guide and sign-up", async () => {
     state.auth = auths["signed-out"];
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     const note = await screen.findByRole("textbox", { name: "Application note" });
     expect((note.closest("fieldset") as HTMLFieldSetElement).disabled).toBe(true);
     expect(screen.getByRole("link", { name: "See how it works" }).getAttribute("href")).toBe("/bounties/apply");
@@ -178,7 +165,7 @@ describe("BountyActionPanel transitional states", () => {
   });
 
   it("sends the optional submission fields only when filled", async () => {
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Completed work link"), { target: { value: "https://example.test/w" } });
     fireEvent.change(screen.getByLabelText("Code repository (optional)"), { target: { value: "https://github.com/x/y" } });
     fireEvent.change(screen.getByLabelText("Commit hash (optional, code work only)"), { target: { value: "abc1234" } });
@@ -194,7 +181,7 @@ describe("BountyActionPanel transitional states", () => {
   });
 
   it("sends the portfolio link with the application when given", async () => {
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hire me" } });
     fireEvent.change(screen.getByLabelText("Relevant work link (optional)"), { target: { value: "https://me.example" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);

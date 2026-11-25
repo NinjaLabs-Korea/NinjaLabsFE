@@ -36,7 +36,7 @@ const loaded = <T,>(data: T[]) => ({ loading: false, unavailable: false, data })
 
 function input(overrides: Partial<BountyActionInput> = {}): BountyActionInput {
   return {
-    bountyId: BOUNTY, applicationRequired: false, status: "active", submissionMode: "direct", auth: "signed-in",
+    bountyId: BOUNTY, applicationRequired: false, status: "active", auth: "signed-in",
     applications: loaded([]), submissions: loaded([]), applied: false, submitted: false, ...overrides,
   };
 }
@@ -73,7 +73,7 @@ describe("cancelled-bounty submissions (#31)", () => {
   });
 
   it("detail shows the cancelled panel instead of 'submission rejected'", () => {
-    const row = { bountySlug: BOUNTY, status: "rejected" as const, agent: null, closedByCancellation: true };
+    const row = { bountySlug: BOUNTY, status: "rejected" as const, closedByCancellation: true };
     expect(deriveActionView(input({ status: "closed", submissions: loaded([row]) }))).toEqual({ kind: "closed", reason: "cancelled" });
     expect(deriveActionView(input({ status: "closed", submissions: loaded([{ ...row, closedByCancellation: undefined }]) })).kind).toBe("submissionRejected");
   });
@@ -82,7 +82,7 @@ describe("cancelled-bounty submissions (#31)", () => {
 describe("applicationStatusLabel for closed bounties (#32, #33)", () => {
   const t = (key: string) => key;
   const NOW = Date.parse("2026-10-30T00:00:00Z");
-  const base = { agent: null, reviewComment: null };
+  const base = { reviewComment: null };
 
   it("approved on a bounty that no longer takes submissions is not 'submit unlocked'", () => {
     expect(applicationStatusLabel(t, { ...base, status: "approved", bountyStatus: "CANCELLED" }, NOW)).toBe("approvedClosedStatus");
@@ -101,7 +101,7 @@ describe("applicationStatusLabel for closed bounties (#32, #33)", () => {
 });
 
 describe("pending application that can no longer be approved (#33)", () => {
-  const app = [{ bountySlug: BOUNTY, status: "open" as const, agent: null }];
+  const app = [{ bountySlug: BOUNTY, status: "open" as const }];
   const base = { applicationRequired: true, applications: loaded(app) };
   it("past the submission deadline reads as plain closed (nobody can submit any more)", () => {
     expect(deriveActionView(input({ ...base, status: "closed", closedReason: "deadline" }))).toEqual({ kind: "closed", reason: "closed" });
@@ -130,7 +130,7 @@ describe("session unavailable rendering (#4)", () => {
 
   it("the panel says the sign-in cannot be checked and offers a retry, not a sign-in prompt", () => {
     auth.current = unavailableSession;
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="b-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="b-1" status="active" />);
     expect(screen.getByText("We can't check your sign-in right now.")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
     expect(screen.queryByText("Sign in first")).toBeNull();
@@ -165,7 +165,7 @@ describe("withdraw result is visible (#8)", () => {
     auth.current = signedInSnapshot;
     const open: AccountApplication = {
       id: "app-1", bountySlug: "b-1", bountyTitle: "Open one", category: "Dev", appliedAt: "2026-10-01T00:00:00Z", note: "hi",
-      status: "open", agent: null, reviewComment: null, reviewNote: null, paymentStatus: "NONE",
+      status: "open", reviewComment: null, reviewNote: null, paymentStatus: "NONE",
     };
     let rows = [open];
     apiClient.getApplications = async () => ({ status: "available" as const, data: rows });

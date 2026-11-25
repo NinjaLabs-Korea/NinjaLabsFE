@@ -13,7 +13,7 @@ import { REVIEW_TEXT_CLASS } from "@/lib/review-comment";
 import { signInHref } from "@/lib/return-path";
 import { payoutBadge } from "@/lib/payout";
 import { APPLY_FIELDS, SUBMIT_FIELDS, ruleFor } from "@/lib/form-field-rules";
-import { deriveActionView, isSessionEndedError, isStaleRowsError, splitRows } from "@/lib/bounty-action-state";
+import { deriveActionView, isSessionEndedError, isStaleRowsError, rowForBounty } from "@/lib/bounty-action-state";
 import type { AccountApplication } from "@/lib/contracts/account";
 import type { ApiResult } from "@/lib/contracts/api";
 import type { ClosedReason } from "@/lib/bounty-status";
@@ -30,7 +30,6 @@ type BountyActionPanelProps = {
   applicationRequired: boolean;
   /** `reviewing` and `closed` stop new applications/submissions; a requested revision can still be resubmitted (BE allows it). */
   status: Bounty["status"];
-  submissionMode: "direct" | "agent";
   /** Application deadline passed (`Bounty.applicationClosed`): no apply form for a first application. */
   applicationClosed?: boolean;
   /** `Bounty.closedReason`: why a `closed` bounty is closed; `deadline` means closed only by the deadline, so a requested revision can still be resubmitted. */
@@ -58,7 +57,7 @@ export function BountyActionPanel(props: BountyActionPanelProps) {
   );
 }
 
-function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, closedReason, status, submissionMode, announce, sessionEnded }: BountyActionPanelProps & {
+function BountyActionPanelBody({ bountyId, applicationRequired, applicationClosed, closedReason, status, announce, sessionEnded }: BountyActionPanelProps & {
   announce: (text: string) => void;
   /** The session ended after this page saw a signed-in user: keep an open form (and its text) and say so. */
   sessionEnded: boolean;
@@ -142,7 +141,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
         });
         setApplied(true);
         setFeedback({ kind: "success", text: t("applySuccess") });
-        // Re-read /applications/me so the panel reflects the server row (status, agent) rather than only the local flag.
+        // Re-read /applications/me so the panel reflects the server row (status) rather than only the local flag.
         applicationsQuery.refresh();
       } catch (error) {
         if (isSessionEndedError(error)) setSessionLost(true);
@@ -154,7 +153,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
 
   // The rule for which section to show lives in lib/bounty-action-state.ts (documented by src/test/bounty-action-state.test.ts).
   const derivedView = deriveActionView({
-    bountyId, applicationRequired, applicationClosed, closedReason, status, submissionMode,
+    bountyId, applicationRequired, applicationClosed, closedReason, status,
     auth: auth.status,
     ...(auth.status === "signed-out" && auth.reason ? { authReason: auth.reason } : {}),
     applications: applicationsQuery,
@@ -188,17 +187,6 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
           title={view.reason === "applications" ? t("applicationsClosedHeading") : t("closedHeading")}
         />
       );
-    case "agentMode":
-      return (
-        <section className={panelClass}>
-          <h2 className="font-display text-2xl -tracking-[0.24px] text-ink">{t("agentHeading")}</h2>
-          <p className="mt-2 text-sm text-ink-muted">{t("agentBody")}</p>
-          <div className="mt-4 rounded-tile bg-surface-subtle p-4 text-sm text-ink-secondary">
-            <code className="break-all">POST /agent-api/v1/bounties/{bountyId}/{view.endpoint}</code>
-          </div>
-          <Link className={outlineLinkClass} href="/agents">{t("manageAgents")}</Link>
-        </section>
-      );
     case "checkingSession":
       return <CheckingPanel applicationRequired={applicationRequired} label={t("checkingSession")} />;
     case "sessionUnavailable":
@@ -215,31 +203,6 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       return <CheckingPanel applicationRequired={applicationRequired} label={t("checkingStatus")} />;
     case "statusUnavailable":
       return <section className={panelClass}><p className="text-sm text-danger">{t("statusUnavailable")}</p></section>;
-    case "agentRow": {
-      const { agentName, state } = view;
-      const payout = view.payout ? payoutBadge(view.payout, { showPaid: true }) : null;
-      const review = view.review;
-      const link = { href: "/agents", label: t("manageAgents") };
-      const submissionsEndpoint = `POST /agent-api/v1/bounties/${bountyId}/submissions`;
-      switch (state) {
-        case "applied":
-          return <StatusPanel body={t("agentAppliedBody", { name: agentName })} link={link} title={t("agentRowHeading")} />;
-        case "applicationRejected":
-          return <StatusPanel body={t("agentApplicationRejectedBody", { name: agentName })} link={link} title={t("agentRowHeading")} tone="danger" />;
-        case "applicationApproved":
-          return <StatusPanel body={t("agentApplicationApprovedBody", { name: agentName })} code={submissionsEndpoint} link={link} title={t("agentRowHeading")} />;
-        case "revisionRequested":
-          return <StatusPanel body={t("agentRevisionBody", { name: agentName })} code={submissionsEndpoint} link={link} note={review ? t("reviewerComment", { comment: review.text }) : undefined} title={t("agentRevisionHeading")} tone="danger" />;
-        case "approved":
-          return <StatusPanel badge={payout ? { variant: payout.variant, label: t(payout.key) } : null} body={t("agentApprovedBody", { name: agentName })} link={link} title={t("agentApprovedHeading")} tone="success" />;
-        case "rejected":
-          return review?.forfeited
-            ? <StatusPanel body={t("agentForfeitedBody", { name: agentName, reason: review.text })} link={link} title={t("submissionForfeitedHeading")} tone="danger" />
-            : <StatusPanel body={t("agentRejectedBody", { name: agentName })} link={link} note={review ? t("reviewerComment", { comment: review.text }) : undefined} title={t("submissionRejectedHeading")} tone="danger" />;
-        default:
-          return <StatusPanel body={t("agentSubmittedBody", { name: agentName })} link={link} title={t("agentRowHeading")} />;
-      }
-    }
     case "applyForm":
       return (
         <section className={panelClass}>
@@ -290,7 +253,7 @@ function BountyActionPanelBody({ bountyId, applicationRequired, applicationClose
       const actionLabel = revising ? t("resubmit") : inReview ? t("updateSubmission") : t("submit");
       // Update/Resubmit replaces the whole submission on the BE, so the form starts from what is on file (uncontrolled
       // `defaultValue`: it applies when the form opens and never overwrites what the person typed afterwards).
-      const current = splitRows(submissionsQuery.data?.filter((row) => row.bountySlug === bountyId)).own;
+      const current = rowForBounty(submissionsQuery.data, bountyId);
       const hasCurrent = Boolean(current && (current.submissionUrl || current.repositoryUrl || current.commitSha || current.description));
       return (
         <section className={panelClass}>

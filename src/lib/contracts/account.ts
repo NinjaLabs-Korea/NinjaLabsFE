@@ -17,9 +17,6 @@ export type SubmissionStatus =
   | "approved"
   | "rejected";
 
-/** Agent that made an application/submission on the owner's behalf; null when the owner acted directly. */
-export type AccountAgentRef = { id: string; name: string };
-
 /**
  * Payout address fields of `GET /submissions/me` (BE #69). All absent on an older BE (then the payout form is not offered).
  * `payoutAddress` is the lowercase `inj1` form, `payoutAddressEvm` the same 20 bytes as EIP-55 `0x`; both null until entered.
@@ -37,7 +34,6 @@ export type PayoutAddressFields = {
 export type AccountSubmission = PayoutAddressFields & {
   bountySlug: string;
   status: SubmissionStatus;
-  agent: AccountAgentRef | null;
   /** BE `payment_status` (same rule as the public profile's `payoutStatus`); NONE when an older BE omits it. */
   paymentStatus: PayoutStatus;
   /** BE `review_comment`: the latest reviewer comment (revision request, rejection, or `forfeited: <reason>`); null when none. */
@@ -61,7 +57,7 @@ export type AccountApplication = PayoutAddressFields & {
   id: string;
   /**
    * Where the row comes from. `application` = an apply-type bounty application (possibly joined with its submission).
-   * `submission` = a direct or agent-mode submission with no application behind it; it has no Applied/Approved steps and
+   * `submission` = a direct submission with no application behind it; it has no Applied/Approved steps and
    * `appliedAt` is the submission time. Omitted = `application`. Both are listed together on /applications.
    */
   source?: "application" | "submission";
@@ -72,7 +68,6 @@ export type AccountApplication = PayoutAddressFields & {
   appliedAt: string;
   note: string;
   status: ApplicationStatus;
-  agent: AccountAgentRef | null;
   /** Reviewer comment of the joined submission (set for `notAccepted`/`revisionRequested`, e.g. `forfeited: <reason>`); null otherwise. */
   reviewComment: string | null;
   /** BE `review_note`: what the operator wrote when approving/rejecting the application itself ("The note is shown to the applicant"); null when none. */
@@ -90,24 +85,6 @@ export type AccountApplication = PayoutAddressFields & {
 };
 
 export type BountyStatusCode = "OPEN" | "SUBMISSION_CLOSED" | "IN_REVIEW" | "COMPLETED" | "CANCELLED";
-
-export type AgentStatus = "PENDING_VERIFICATION" | "ACTIVE" | "SUSPENDED" | "REVOKED";
-export type AgentKeyStatus = "ACTIVE" | "REVOKED" | "EXPIRED";
-
-export type AccountAgent = {
-  id: string;
-  name: string;
-  walletAddress: string;
-  status: AgentStatus;
-  verified: boolean;
-  completedBounties: number;
-  apiKeyMasked: string;
-  /** ISO timestamp; null when no key has been issued. */
-  keyExpiresAt: string | null;
-  keyStatus: AgentKeyStatus | null;
-  /** ISO timestamp; views format it at render (`useFormatter().dateTime`). */
-  registeredAt: string;
-};
 
 export type Account = {
   user: ClientUser;

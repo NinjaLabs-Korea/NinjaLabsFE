@@ -18,7 +18,6 @@ const privatePages = {
   account: () => import("@/app/[locale]/account/page"),
   home: () => import("@/app/[locale]/home/page"),
   applications: () => import("@/app/[locale]/applications/page"),
-  agents: () => import("@/app/[locale]/agents/page"),
   "signup/profile": () => import("@/app/[locale]/signup/profile/page"),
   "signup/get-started": () => import("@/app/[locale]/signup/get-started/page"),
 };
@@ -30,7 +29,6 @@ describe("owner-private pages", () => {
     vi.stubEnv("NINJA_RUNTIME_MODE", "mock");
     vi.stubEnv("NINJA_MOCK_SEED", "default");
     vi.stubEnv("NINJA_APP_ORIGIN", "http://localhost:3000");
-    vi.stubEnv("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID", "1439");
   });
 
   it.each(Object.entries(privatePages))("%s is noindex", async (_name, load) => {

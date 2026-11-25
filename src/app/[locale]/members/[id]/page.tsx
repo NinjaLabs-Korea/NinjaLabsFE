@@ -9,12 +9,10 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Link } from "@/i18n/navigation";
 import { decodeDetailId, validateDetailId } from "@/lib/detail-id";
 import { getRuntimeProfile, payoutBadge } from "@/lib/members";
-import { publicNftStatusKey } from "@/lib/nft-status";
 import { localeMetadata } from "@/i18n/alternates";
 
 type MemberProfilePageProps = PageProps<"/[locale]/members/[id]">;
 
-const nftTileClass = "rounded-tile bg-[linear-gradient(135deg,var(--color-nft-deep)_0%,var(--color-hero-to)_55%,var(--color-accent-soft)_100%)] shadow-nft";
 const mascotTileClass = "flex size-14 items-center justify-center rounded-tile";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +43,6 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
   const profile = await getRuntimeProfile(id, locale);
   if (!profile) notFound();
   const completed = profile.completions.length > 0;
-  const completionNfts = profile.nfts.filter((nft) => nft.type === "completion");
 
   return (
     <div className="mx-auto max-w-content px-gutter py-16 pb-20">
@@ -82,24 +79,9 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
                 <p className="text-sm text-on-inverse/75">{t("portfolio.memberSince", { date: profile.joinedAt })}</p>
               </div>
             </div>
-            {completionNfts.length ? (
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {completionNfts.map((nft) => {
-                  const statusKey = publicNftStatusKey(nft.status);
-                  return (
-                  <div key={nft.id} className={`relative flex aspect-square flex-col overflow-hidden p-3 ${nftTileClass}`} title={[nft.tokenId ? t("portfolio.token", { id: nft.tokenId }) : null, nft.mintTxHash ? t("portfolio.tx", { hash: nft.mintTxHash }) : null].filter(Boolean).join(" · ") || undefined}>
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,var(--color-on-inverse)_0%,transparent_60%)] opacity-35" />
-                    {statusKey ? <span className="relative text-xs text-on-inverse/70">{t(`nftStatus.${statusKey}`)}</span> : null}
-                    <span className="relative mt-auto break-words text-xs font-semibold [text-shadow:var(--shadow-tile-text)]">{nft.title || t("portfolio.untitledNft")}</span>
-                  </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="mt-5 flex min-h-72 flex-col items-center justify-center rounded-card border border-dashed border-on-inverse/25 bg-on-inverse/5 p-6 text-center">
-                <span className={`${mascotTileClass} bg-on-inverse`}><Image alt="" height={36} src="/figma/ninja-labs-mascot.png" width={36} /></span>
-              </div>
-            )}
+            <div className="mt-5 flex min-h-72 flex-col items-center justify-center rounded-card border border-dashed border-on-inverse/25 bg-on-inverse/5 p-6 text-center">
+              <span className={`${mascotTileClass} bg-on-inverse`}><Image alt="" height={36} src="/figma/ninja-labs-mascot.png" width={36} /></span>
+            </div>
           </div>
         </div>
       </section>
@@ -133,31 +115,6 @@ export default async function MemberProfilePage({ params }: MemberProfilePagePro
             <span className={`${mascotTileClass} bg-primary-soft`}><Image alt="" height={36} src="/figma/ninja-labs-mascot.png" width={36} /></span>
             <h3 className="mt-4 font-display text-xl font-bold text-ink">{t("history.emptyTitle")}</h3>
             <p className="mt-2 max-w-xl text-sm text-ink-muted">{t("history.emptyBody")}</p>
-          </div>
-        )}
-      </section>
-
-      <section id="agents">
-        <SectionHeader eyebrow={t("agents.eyebrow")} heading={t("agents.heading")} />
-        {profile.agents.length ? (
-          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-            {profile.agents.map((agent) => (
-              <article key={agent.wallet} className="rounded-card border border-dashed border-border-dashed bg-surface p-6">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="min-w-0 break-words font-display text-xl font-bold text-ink">{agent.name}</h3>
-                  {agent.verified ? <Badge variant="success">{t("agents.verified")}</Badge> : null}
-                </div>
-                <p className="mt-3 break-all text-sm text-ink-muted">{t("agents.wallet", { wallet: agent.wallet })}</p>
-                <p className="mt-3 text-base font-semibold text-ink">{t("agents.completed", { count: agent.completedBounties })}</p>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-card border border-dashed border-border-dashed bg-surface p-6">
-            <div>
-              <h3 className="font-display text-xl font-bold text-ink">{t("agents.emptyTitle")}</h3>
-              <p className="mt-1 text-sm text-ink-muted">{t("agents.emptyBody")}</p>
-            </div>
           </div>
         )}
       </section>

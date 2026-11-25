@@ -20,7 +20,7 @@ function deferred(id: string): Deferred {
 }
 
 const bounty: AdminBounty = {
-  slug: "b1", title: "Widget", sponsor: "Injective", reward: { amount: 5, currency: "INJ" }, intakeEnabled: false, submissionMode: "direct",
+  slug: "b1", title: "Widget", sponsor: "Injective", reward: { amount: 5, currency: "INJ" }, intakeEnabled: false,
   coverImage: "/media/11111111-1111-4111-8111-111111111111", status: "active", deadline: "2026-07-14T23:59:00.000Z", applicationDeadline: null, maxWinners: 1,
   tags: ["Dev"], description: "Desc", submissionGuide: "", requirements: "- Repo\n\n  note", deliverables: ["- Repo", "note"], reviewProcess: "Review",
 };

@@ -10,7 +10,6 @@ vi.mock("@/lib/api/public", async (importOriginal) => ({
 vi.mock("@/lib/runtime/config", () => ({ loadRuntimeConfig: () => ({ runtimeMode: "api" }) }));
 
 const { PublicApiError } = await import("@/lib/api/public");
-const { publicNftStatusKey } = await import("@/lib/nft-status");
 const { getRuntimeProfile, payoutBadge, profiles, PROFILE_FILLED_EXAMPLE_ID, toCompletionReward } = await import("@/lib/members");
 const { emptyHallOfFame, getRuntimeHallOfFame } = await import("@/lib/hall-of-fame");
 const { settle } = await import("@/lib/api/public");
@@ -139,23 +138,22 @@ describe("public profile payout status", () => {
   });
 });
 
-describe("public profile without agents / nfts (BE dropping them)", () => {
-  it.each([["both keys missing", {}], ["empty arrays", { agents: [], nfts: [] }]])("reads %s as no agents and no NFTs", async (_label, extra) => {
+describe("public profile from a BE that still sends nfts and agents (Google-only plan)", () => {
+  it.each([["key missing", {}], ["empty array", { nfts: [] }]])("reads %s", async (_label, extra) => {
     fetchPublicJson.mockResolvedValueOnce({ nickname: "ninja.inj", bio: "", created_at: "2026-05-31T23:30:00Z", tags: [], completedBounties: [], ...extra });
     const profile = await getRuntimeProfile("ninja.inj", "en");
-    expect(profile?.nfts).toEqual([]);
-    expect(profile?.agents).toEqual([]);
+    expect(profile?.handle).toBe("ninja.inj");
   });
 
-  it("still reads agents/nfts from an older BE that sends them", async () => {
+  it("tolerates nfts and agents from an older BE and drops them from the profile", async () => {
     fetchPublicJson.mockResolvedValueOnce({
       nickname: "ninja.inj", bio: "", created_at: "2026-05-31T23:30:00Z", tags: [], completedBounties: [],
       agents: [{ name: "bot", status: "ACTIVE", wallet_address: "inj1x", completed_bounties: [] }],
       nfts: [{ id: "n1", nft_type: "NINJA_PARENT", status: "MINTED", contract_address: "inj1c", token_id: "1", mint_tx_hash: null, bounty_title: null }],
     });
     const profile = await getRuntimeProfile("ninja.inj", "en");
-    expect(profile?.agents).toHaveLength(1);
-    expect(profile?.nfts).toHaveLength(1);
+    expect(profile).not.toHaveProperty("agents");
+    expect(profile).not.toHaveProperty("nfts");
   });
 });
 
@@ -174,28 +172,6 @@ describe("hall of fame milestone dates", () => {
   });
 });
 
-describe("public NFT status label", () => {
-  it("maps the API profile's NINJA_PARENT row into a status the label can read", async () => {
-    fetchPublicJson.mockResolvedValueOnce({
-      nickname: "kim", bio: "", tags: [], created_at: "2026-05-01T00:00:00Z", completedBounties: [], agents: [],
-      nfts: [{ id: "n1", nft_type: "NINJA_PARENT", status: "FAILED", contract_address: "inj1x", token_id: null, mint_tx_hash: null, bounty_title: null }],
-    });
-    const profile = await getRuntimeProfile("kim", "en");
-    expect(profile && publicNftStatusKey(profile.nfts[0].status)).toBe("minting");
-  });
-});
-
-describe("public profile NFT titles", () => {
-  it("leaves the title empty for an NFT whose bounty is gone so the page can localize the fallback", async () => {
-    fetchPublicJson.mockResolvedValueOnce({
-      nickname: "kim", bio: "", tags: [], created_at: "2026-05-01T00:00:00Z", completedBounties: [], agents: [],
-      nfts: [{ id: "n2", nft_type: "BOUNTY_COMPLETION_CHILD", status: "ATTACHED", contract_address: "inj1x", token_id: "2", mint_tx_hash: null, bounty_title: null }],
-    });
-    const profile = await getRuntimeProfile("kim", "en");
-    expect(profile?.nfts[0]?.title).toBe("");
-  });
-});
-
 describe("public profile loader failure modes", () => {
   it("returns undefined (→ notFound) only when the BE answers 404", async () => {
     fetchPublicJson.mockRejectedValueOnce(new PublicApiError(404, "/users/ghost"));
@@ -209,17 +185,5 @@ describe("public profile loader failure modes", () => {
   ])("rethrows %s", async (_label, failure) => {
     fetchPublicJson.mockRejectedValueOnce(failure);
     await expect(getRuntimeProfile("kim", "en")).rejects.toBe(failure);
-  });
-});
-
-describe("public profile agents", () => {
-  it("lists only ACTIVE agents: pending and revoked ones (and their wallets) stay off the public page", async () => {
-    const agent = (name: string, status: string, wallet: string) => ({ name, status, wallet_address: wallet, completed_bounties: [{}, {}] });
-    fetchPublicJson.mockResolvedValueOnce({
-      nickname: "kim", bio: "", tags: [], created_at: "2026-05-01T00:00:00Z", completedBounties: [], nfts: [],
-      agents: [agent("live", "ACTIVE", "0xaaa"), agent("draft", "PENDING_VERIFICATION", "0xbbb"), agent("gone", "REVOKED", "0xccc")],
-    });
-    const profile = await getRuntimeProfile("kim", "en");
-    expect(profile?.agents).toEqual([{ name: "live", wallet: "0xaaa", verified: true, completedBounties: 2 }]);
   });
 });

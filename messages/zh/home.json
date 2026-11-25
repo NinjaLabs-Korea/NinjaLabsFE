@@ -12,11 +12,6 @@
     "title": "欢迎回来，{name}"
   },
   "profile": {
-    "nft": {
-      "minted": "已发放 Ninja NFT",
-      "pending": "Ninja NFT 发放中",
-      "none": "暂无 Ninja NFT"
-    },
     "viewProfile": "查看我的资料",
     "editProfile": "编辑资料"
   },
@@ -55,10 +50,6 @@
       "applications": {
         "title": "申请记录",
         "description": "跟踪所有申请与提交。"
-      },
-      "agents": {
-        "title": "我的代理",
-        "description": "注册并管理你的 AI 代理。"
       }
     }
   }

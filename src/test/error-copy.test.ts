@@ -50,6 +50,11 @@ describe("BE error code snapshot (lib/api/be-error-codes.ts)", () => {
     expect(ERROR_COPY.adminOperations.codes as readonly string[]).toContain("DEPOSIT_BELOW_REWARD_AMOUNT");
   });
 
+  it("maps AGENT_SUBMISSION_REQUIRED (legacy AGENT-mode bounty rejects the human form) to bounty action copy", () => {
+    expect(BE_ERROR_CODES as readonly string[]).toContain("AGENT_SUBMISSION_REQUIRED");
+    expect(errorCopyKey(new ApiHttpError(400, "AGENT_SUBMISSION_REQUIRED"), ERROR_COPY.bountyAction)).toBe("AGENT_SUBMISSION_REQUIRED");
+  });
+
   it("keeps FE-made codes separate from BE codes", () => {
     for (const code of FE_ERROR_CODES) expect(BE_ERROR_CODES as readonly string[], code).not.toContain(code);
   });
@@ -97,15 +102,14 @@ describe("knownCode / errorCopyKey", () => {
     const throttled = new ApiHttpError(429, "ThrottlerException: Too Many Requests");
     expect(knownCode(throttled, ["TOO_MANY_REQUESTS", "DATABASE_UNAVAILABLE"] as const)).toBe("TOO_MANY_REQUESTS");
     expect(knownCode(throttled, codes)).toBeNull();
-    for (const name of ["bountyAction", "accountDelete", "applicationWithdraw", "agentRotate", "agentRegister", "profileSave", "walletVerify"] as const) {
+    for (const name of ["bountyAction", "accountDelete", "applicationWithdraw", "profileSave"] as const) {
       expect(errorCopyKey(throttled, ERROR_COPY[name]), name).toBe("TOO_MANY_REQUESTS");
     }
   });
 
   it("falls back to the surface's fallback key", () => {
-    expect(errorCopyKey(new ApiHttpError(409, "AGENT_NOT_ACTIVE"), ERROR_COPY.agentRotate)).toBe("AGENT_NOT_ACTIVE");
-    expect(errorCopyKey(new ApiHttpError(404, "AGENT_NOT_FOUND"), ERROR_COPY.agentRotate)).toBe("AGENT_NOT_FOUND");
-    expect(errorCopyKey(new ApiHttpError(500, "SOMETHING_ELSE"), ERROR_COPY.agentRotate)).toBe("generic");
+    expect(errorCopyKey(new ApiHttpError(409, "APPLICATION_NOT_FOUND_OR_NOT_PENDING"), ERROR_COPY.applicationWithdraw)).toBe("APPLICATION_NOT_FOUND_OR_NOT_PENDING");
+    expect(errorCopyKey(new ApiHttpError(500, "SOMETHING_ELSE"), ERROR_COPY.applicationWithdraw)).toBe("generic");
     expect(errorCopyKey(new TypeError("Failed to fetch"), ERROR_COPY.applicationWithdraw)).toBe("generic");
   });
 });
@@ -136,24 +140,5 @@ describe("normalizedCode (the one status -> code rule)", () => {
     ["an unknown code", new ApiHttpError(409, "SOMETHING_NEW"), "SOMETHING_NEW"],
   ])("%s", (_label, error, expected) => {
     expect(normalizedCode(error)).toBe(expected);
-  });
-});
-
-describe("agent register / rotate copy", () => {
-  const register = messagesAt(ERROR_COPY.agentRegister.messages) as Record<string, string>;
-  const rotate = messagesAt(ERROR_COPY.agentRotate.messages) as Record<string, string>;
-
-  it("has specific copy for outage, bad address, profile and verify-step codes", () => {
-    for (const code of ["DATABASE_UNAVAILABLE", "INVALID_AGENT_WALLET_ADDRESS", "PROFILE_REQUIRED", "AGENT_ALREADY_VERIFIED", "AGENT_NOT_FOUND"] as const) {
-      expect(ERROR_COPY.agentRegister.codes).toContain(code);
-      expect(typeof register[code]).toBe("string");
-    }
-    expect(ERROR_COPY.agentRotate.codes).toContain("DATABASE_UNAVAILABLE");
-    expect(typeof rotate.DATABASE_UNAVAILABLE).toBe("string");
-  });
-
-  it("keeps the wallet-signature hint out of the generic fallback", () => {
-    expect(register.generic).not.toMatch(/signature/i);
-    expect(register.signature).toMatch(/signature/i);
   });
 });

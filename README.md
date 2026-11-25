@@ -7,7 +7,6 @@ Production: https://ninjalabs-korea-platform.vercel.app
 | | |
 |---|---|
 | Stack | Next.js 16 (App Router, Turbopack) · React 19 · TypeScript 5.9 · Tailwind CSS 4 (`@theme` tokens, no `tailwind.config.js`) |
-| Wallet | wagmi 3 + viem, injected wallets only (no WalletConnect for now) |
 | i18n | `en` / `ko` / `zh` with next-intl, every URL is locale-prefixed |
 | Runtime | Node 24 (`.nvmrc`) · **npm only**, all dependencies exact-pinned |
 | Branches | `develop` = integration (Vercel preview) · `main` = production (Vercel) |
@@ -43,7 +42,6 @@ All of these are documented inline in [`.env.example`](.env.example). None of th
 | `NINJA_MOCK_SEED` | Fixture scenario for mock mode |
 | `NINJA_APP_ORIGIN` | Exact browser origin of this app |
 | `NINJA_API_BASE_URL` | Backend base URL (api mode). `/api/auth/*` and `/media/*` are proxied here |
-| `NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID`, `NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL` | Wallet network. Chain ID and RPC host must be the same network (`1776` mainnet, `1439` testnet) |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Optional Cloudflare Turnstile on sign-in. Deploy this **before** the backend secret |
 | `NEXT_PUBLIC_ONBOARDING_DEBUG` | Optional auth/onboarding console logs |
 
@@ -66,8 +64,7 @@ CI runs lint, type check, unit tests, build and a blocking `npm audit` on every 
 |---|---|
 | Community (public) | `/` hub · `/about` · `/members`, `/members/[id]` · `/hall-of-fame` · `/notices`, `/notices/[id]` · `/recruit` (cohort application) |
 | Bounties | `/bounties`, `/bounties/[id]`, `/bounties/apply` · `/applications` (my applications) |
-| Agents | `/agents` · `/agents/register` · `/skill.md` (agent-readable guide) |
-| Account | `/signup` → `/signup/wallet` → `/signup/profile` → `/signup/get-started` · `/auth/callback` · `/home` (my activity) · `/account` |
+| Account | `/signup` → `/signup/profile` → `/signup/get-started` · `/auth/callback` · `/home` (my activity) · `/account` |
 | Admin (`is_admin` only) | `/admin` · `users` · `bounties` · `operations` (deposits, reviews, payouts) · `nft-jobs` · `hall-of-fame` · `notices` · `recruitment` · `audit` |
 | Legal | `/privacy` · `/terms` |
 
@@ -78,7 +75,7 @@ Every route lives under `src/app/[locale]/`. Admin access is enforced by the bac
 ```
 src/app/[locale]/   routes (one folder per page above) + error, loading and 404 states
 src/components/     ui/ primitives · layout/ header, footer, shell · cards/ · hooks/ shared client hooks
-                    feature folders: auth, wallet, signup, account, bounties, agents, members, notices,
+                    feature folders: auth, signup, account, bounties, members, notices,
                     community, home, recruit, admin, legal
 src/lib/            pure logic, no React: api/ (http client, codecs, error copy), contracts/ (typed API shapes),
                     single-source rules (bounty-status.ts, bounty-categories.ts, input-limits.ts, ...), mocks/

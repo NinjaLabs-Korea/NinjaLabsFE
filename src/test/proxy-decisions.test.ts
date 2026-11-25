@@ -78,7 +78,7 @@ describe("proxy: in-locale routes (mock mode)", () => {
 });
 
 describe("proxy: 404 rewrite keeps a CSP on nonce routes", () => {
-  it.each(["/en/agents/xyz", "/en/account/foo", "/en/admin/zzz", "/en/auth/callback/x", "/ko/agents/00000000-0000-0000-0000-000000000000"])(
+  it.each(["/en/account/foo", "/en/admin/zzz", "/en/auth/callback/x"])(
     "%s carries the public (non-nonce) policy",
     async (pathname) => {
       const { status, response } = await run(pathname);

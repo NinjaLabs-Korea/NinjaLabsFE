@@ -53,7 +53,7 @@ describe("deployment tier x runtime mode matrix", () => {
       apiUrl: "https://api.ninjalabs.example/",
     });
     // A whitespace-only optional value counts as unset.
-    expect(readRuntimeConfig({ ...mockEnv, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "   " }).wallet).toBeNull();
+    expect(readRuntimeConfig({ ...mockEnv, NEXT_PUBLIC_TURNSTILE_SITE_KEY: "   " })).not.toHaveProperty("turnstileSiteKey");
   });
 });
 
@@ -98,68 +98,12 @@ describe("origin and API URL rules", () => {
     const user = mockFixtureSeed.account.user;
     expect(composeFoundationRuntime(user, readRuntimeConfig({ ...apiEnv, NINJA_API_BASE_URL: "https://api.ninjalabs.example/v1" }))).toEqual({
       foundationConfig: { mode: "api", apiUrl: "https://api.ninjalabs.example/v1" },
-      wallet: null,
     });
     expect(composeFoundationRuntime(user, readRuntimeConfig({ ...mockEnv, NINJA_MOCK_SEED: "empty" })).foundationConfig).toEqual({
       mode: "mock",
       previewUser: user,
       mockSeed: "empty",
     });
-  });
-});
-
-describe("wallet chain / RPC pairing", () => {
-  const wallet = (chainId: string, rpcUrl?: string) =>
-    readRuntimeConfig({ ...apiEnv, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: chainId, NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: rpcUrl }).wallet;
-
-  it.each([
-    ["1439", "https://k8s.testnet.json-rpc.injective.network/"],
-    ["1439", "https://testnet.sentry.evm-rpc.injective.network/"],
-    ["1776", "https://sentry.evm-rpc.injective.network/"],
-    ["1776", "https://mainnet.json-rpc.injective.network/"],
-    // Hosts outside injective.network carry no network name: the guard cannot judge them and lets them through.
-    ["1439", "https://rpc.ninjalabs.example/"],
-    ["1776", "https://rpc.ninjalabs.example/"],
-  ])("accepts chain %s with %s", (chainId, rpcUrl) => {
-    expect(wallet(chainId, rpcUrl)).toEqual({ chainId: Number(chainId), rpcUrl });
-  });
-
-  it.each([
-    ["1776", "https://k8s.testnet.json-rpc.injective.network/", "NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1776 (mainnet) cannot use a testnet RPC URL."],
-    ["1776", "https://TESTNET.rpc.ninjalabs.example/", "NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1776 (mainnet) cannot use a testnet RPC URL."],
-    ["1439", "https://mainnet.json-rpc.injective.network/", "NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1439 (testnet) cannot use a mainnet RPC URL."],
-    ["1439", "https://mainnet.rpc.ninjalabs.example/", "NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1439 (testnet) cannot use a mainnet RPC URL."],
-    // The public mainnet RPC named in .env.example has neither word in its host; it is still not a testnet endpoint.
-    ["1439", "https://sentry.evm-rpc.injective.network/", "NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1439 (testnet) cannot use a mainnet RPC URL."],
-  ])("refuses chain %s with %s", (chainId, rpcUrl, message) => {
-    expect(() => wallet(chainId, rpcUrl)).toThrow(error(message));
-  });
-
-  it.each(["production", "staging"] as const)("rejects an http RPC URL in api mode on the %s tier", (tier) => {
-    expect(() =>
-      readRuntimeConfig({ ...apiEnv, NINJA_DEPLOYMENT_TIER: tier, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1776", NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "http://rpc.ninjalabs.example/" }),
-    ).toThrow(error("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL must use HTTPS."));
-  });
-
-  it("keeps an http RPC URL valid in api mode on the test tier", () => {
-    const config = readRuntimeConfig({ ...apiEnv, NINJA_DEPLOYMENT_TIER: "test", NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: "1776", NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "http://127.0.0.1:8545/" });
-    expect(config.wallet).toEqual({ chainId: 1776, rpcUrl: "http://127.0.0.1:8545/" });
-  });
-
-  it("only judges the host, never the path", () => {
-    expect(wallet("1776", "https://rpc.ninjalabs.example/testnet")).toEqual({ chainId: 1776, rpcUrl: "https://rpc.ninjalabs.example/testnet" });
-  });
-
-  it("refuses an RPC URL without a chain id", () => {
-    expect(() => readRuntimeConfig({ ...mockEnv, NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: "https://k8s.testnet.json-rpc.injective.network/" })).toThrow(
-      error("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID is required when NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL is supplied."),
-    );
-  });
-
-  it.each(["1439.0", "-1439", "0x59f", "1 439"])("refuses the non-decimal chain id %p", (chainId) => {
-    expect(() => readRuntimeConfig({ ...mockEnv, NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: chainId })).toThrow(
-      error("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID must be a supported numeric chain ID."),
-    );
   });
 });
 
@@ -174,13 +118,15 @@ describe("committed env files", () => {
         .map((line) => [line.slice(0, line.indexOf("=")), line.slice(line.indexOf("=") + 1)]),
     );
 
-  it(".env.production is a valid production api tuple on the testnet chain with a testnet RPC", () => {
-    const config = readRuntimeConfig(parseEnvFile(".env.production"));
-    expect(config).toMatchObject({ deploymentTier: "production", runtimeMode: "api", wallet: { chainId: 1439 } });
-    expect(config.wallet?.rpcUrl).toMatch(/testnet/);
+  it(".env.production is a valid production api tuple and names no wallet chain or RPC", () => {
+    const env = parseEnvFile(".env.production");
+    expect(readRuntimeConfig(env)).toMatchObject({ deploymentTier: "production", runtimeMode: "api" });
+    expect(Object.keys(env).filter((key) => /INJECTIVE|WALLETCONNECT/.test(key))).toEqual([]);
   });
 
-  it(".env.example is a valid local mock tuple", () => {
-    expect(readRuntimeConfig(parseEnvFile(".env.example"))).toMatchObject({ deploymentTier: "local", runtimeMode: "mock", mockSeed: "default" });
+  it(".env.example is a valid local mock tuple and names no wallet chain or RPC", () => {
+    const env = parseEnvFile(".env.example");
+    expect(readRuntimeConfig(env)).toMatchObject({ deploymentTier: "local", runtimeMode: "mock", mockSeed: "default" });
+    expect(Object.keys(env).filter((key) => /INJECTIVE|WALLETCONNECT/.test(key))).toEqual([]);
   });
 });

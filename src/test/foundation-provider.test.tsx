@@ -13,12 +13,12 @@ const previewUser = { id: "demo-user", handle: "demo", initials: "DU", profileSl
 function Probe() {
   const snapshot = useAuthSnapshot();
   const api = useAccountApi();
-  const [agents, setAgents] = useState("pending");
+  const [submissions, setSubmissions] = useState("pending");
   useEffect(() => {
     // Called while the mock client is still loading: it must wait for the real client instead of failing.
-    void api.getAgents({ status: "signed-in", user: previewUser }).then((result) => setAgents(result.status));
+    void api.getSubmissions({ status: "signed-in", user: previewUser }).then((result) => setSubmissions(result.status));
   }, [api]);
-  return <output>{snapshot.status}/{agents}</output>;
+  return <output>{snapshot.status}/{submissions}</output>;
 }
 
 describe("FoundationProvider (mock mode)", () => {

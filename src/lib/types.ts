@@ -33,7 +33,6 @@ export type Bounty = {
   submissionGuideMarkdown?: string;
   deliverables?: string[];
   reviewProcess?: string;
-  submissionMode?: 'direct' | 'agent';
   // Figma 15v apply-variant driver
   applicationRequired?: boolean;
   /** Figma 15v renders variant-specific masthead/description copy without changing list copy. */
@@ -72,7 +71,7 @@ export type Member = {
   /** Profile photo (`/media/<uuid>`); absent = initials. */
   avatarUrl?: string;
   isMember: boolean;
-  links: Partial<Record<'profile' | 'posts' | 'agents' | 'bounties' | 'notices', string>>;
+  links: Partial<Record<'profile' | 'posts' | 'bounties' | 'notices', string>>;
 };
 
 /**
@@ -97,24 +96,6 @@ export type Completion = {
   /** How many further reward tokens the bounty pays beyond `reward` (multi-token bounties); the profile shows `+N`. */
   moreRewards?: number;
   payoutStatus: PayoutStatus;
-  childNft?: { tokenId: string };
-};
-
-export type ProfileNft = {
-  id: string;
-  type: 'parent' | 'completion';
-  title: string;
-  status: 'PENDING' | 'MINTING' | 'MINTED' | 'ATTACHING' | 'ATTACHED' | 'FAILED';
-  contractAddress: string;
-  tokenId: string | null;
-  mintTxHash: string | null;
-};
-
-export type Agent = {
-  name: string;
-  wallet: string;
-  verified: boolean;
-  completedBounties: number;
 };
 
 export type Profile = {
@@ -129,6 +110,4 @@ export type Profile = {
   teamRole?: Member["role"];
   joinedAt: string;
   completions: Completion[];
-  nfts: ProfileNft[];
-  agents: Agent[];
 };

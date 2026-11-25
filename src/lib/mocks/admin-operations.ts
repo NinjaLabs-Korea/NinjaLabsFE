@@ -16,7 +16,6 @@ import {
   isTxHash,
   submissionCommentRequired,
   submissionDecisionsFor,
-  type AdminNftJob,
   type AdminOperations,
   type LifecycleBlocker,
   type OpsPayout,
@@ -24,7 +23,7 @@ import {
 
 type OperationsApi = Pick<AdminApi,
   "getAdminOperations" | "reviewAdminApplication" | "reviewAdminSubmission" | "confirmAdminDeposit" | "requestAdminPayout"
-  | "approveAdminPayout" | "markAdminPayoutPaid" | "getAdminNftJobs" | "retryAdminNftJob" | "getAdminAuditLogs">;
+  | "approveAdminPayout" | "markAdminPayoutPaid" | "getAdminAuditLogs">;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const iso = (offsetDays: number) => new Date(Date.now() + offsetDays * DAY_MS).toISOString();
@@ -37,7 +36,7 @@ const fail = (status: number, code: string): never => {
   throw new MockApiError(status, code);
 };
 
-/** Deterministic per-bounty operations seed: one pending + one approved application, a resubmitted entry, an approved agent entry with a payout requested by another admin. */
+/** Deterministic per-bounty operations seed: one pending + one approved application, a resubmitted entry, an approved entry with a payout requested by another admin. */
 function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string): AdminOperations {
   const status = fromAdminStatus(bounty.status);
   const symbol = bounty.reward.currency;
@@ -50,12 +49,12 @@ function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string)
   }] : [];
   const live = funded && status !== "COMPLETED";
   const applications: AdminOperations["applications"] = live && bounty.intakeEnabled ? [
-    { id: nextId("preview-app"), status: "PENDING", kind: "USER", userId: "mina", nickname: "mina", agentId: null, agentName: null, message: "I shipped two Helix dashboards last quarter.", portfolioUrl: "https://example.test/mina", reviewNote: null, appliedAt: iso(-3), reviewedAt: null },
-    { id: nextId("preview-app"), status: "APPROVED", kind: "USER", userId: "juho", nickname: "juho", agentId: null, agentName: null, message: "Happy to take this on.", portfolioUrl: null, reviewNote: "Welcome aboard", appliedAt: iso(-6), reviewedAt: iso(-5) },
+    { id: nextId("preview-app"), status: "PENDING", userId: "mina", nickname: "mina",  message: "I shipped two Helix dashboards last quarter.", portfolioUrl: "https://example.test/mina", reviewNote: null, appliedAt: iso(-3), reviewedAt: null },
+    { id: nextId("preview-app"), status: "APPROVED", userId: "juho", nickname: "juho",  message: "Happy to take this on.", portfolioUrl: null, reviewNote: "Welcome aboard", appliedAt: iso(-6), reviewedAt: iso(-5) },
   ] : [];
   const submissions: AdminOperations["submissions"] = live ? [
     {
-      id: nextId("preview-sub"), status: "RESUBMITTED", kind: "USER", userId: "juho", nickname: "juho", agentId: null, agentName: null,
+      id: nextId("preview-sub"), status: "RESUBMITTED", userId: "juho", nickname: "juho", 
       currentRevisionNo: 2, submittedAt: iso(-4), reviewedAt: null, payoutAddress: "inj1...7n3q", payoutAddressEvm: "0x0000...7n3q", email: null, reviewComment: null,
       revisions: [
         { revisionNo: 2, submissionUrl: "https://example.test/juho/v2", description: "Addressed the copy feedback.", repositoryUrl: "https://github.com/example/juho", commitSha: "c0ffee2", createdAt: iso(-1) },
@@ -64,9 +63,9 @@ function seedOperations(bounty: AdminBounty, nextId: (prefix: string) => string)
       reviews: [],
     },
     {
-      id: nextId("preview-sub"), status: "APPROVED", kind: "AGENT", userId: "ara", nickname: "ara", agentId: "preview-agent-alpha", agentName: "alpha-bot",
+      id: nextId("preview-sub"), status: "APPROVED", userId: "ara", nickname: "ara",
       currentRevisionNo: 1, submittedAt: iso(-5), reviewedAt: iso(-2), payoutAddress: "inj1...8c1v", payoutAddressEvm: "0x0000...8c1v", email: "ara@example.test", reviewComment: "Great work",
-      revisions: [{ revisionNo: 1, submissionUrl: "https://example.test/alpha", description: "Automated benchmark run.", repositoryUrl: null, commitSha: null, createdAt: iso(-5) }],
+      revisions: [{ revisionNo: 1, submissionUrl: "https://example.test/alpha", description: "Benchmark run.", repositoryUrl: null, commitSha: null, createdAt: iso(-5) }],
       reviews: [{ revisionNo: 1, decision: "APPROVE", comment: "Great work", createdAt: iso(-2) }],
     },
   ] : [];
@@ -115,7 +114,7 @@ export function lifecycleFor(ops: AdminOperations): AdminOperations["lifecycle"]
   const deadline = ops.bounty.submissionDeadline ? new Date(ops.bounty.submissionDeadline).getTime() : Number.NaN;
   const expired = !(deadline > Date.now());
   const pending = ops.applications.filter((a) => a.status === "PENDING").length;
-  const unsubmitted = ops.applications.filter((a) => a.status === "APPROVED" && !ops.submissions.some((s) => s.userId === a.userId && s.agentId === a.agentId)).length;
+  const unsubmitted = ops.applications.filter((a) => a.status === "APPROVED" && !ops.submissions.some((s) => s.userId === a.userId)).length;
   const unresolved = ops.submissions.filter((s) => ["SUBMITTED", "RESUBMITTED", "IN_REVIEW", "REVISION_REQUESTED"].includes(s.status)).length;
   const unfunded = ops.rewards.filter((r) => !isRewardFunded(r)).length;
   // BE OPEN_PAYOUT_STATUSES: waiting for approval or for the transfer. FAILED/CANCELLED/PAID do not count.
@@ -155,18 +154,6 @@ export function bountyHasOpenFunds(ops: Pick<AdminOperations, "rewards" | "payou
   return heldRewards || ops.payouts.some((p) => OPEN_PAYOUT_STATUSES.includes(p.status));
 }
 
-function seedNftJobs(): AdminNftJob[] {
-  const job = (id: string, overrides: Partial<AdminNftJob>): AdminNftJob => ({
-    id, nftId: `${id}-nft`, jobType: "MINT_PARENT", status: "FAILED", retryCount: 5, lastError: "node unreachable: request timed out", scheduledAt: iso(-1),
-    updatedAt: iso(-1), nftType: "NINJA_PARENT", nftStatus: "FAILED", bountyTitle: null, ownerNickname: "mina", ownerWalletAddress: "inj1...5w6r", ...overrides,
-  });
-  return [
-    job("preview-job-1", {}),
-    job("preview-job-2", { jobType: "MINT_CHILD", nftType: "BOUNTY_COMPLETION_CHILD", bountyTitle: "Design system build", ownerNickname: "juho", ownerWalletAddress: "inj1...7n3q", lastError: "mint rejected: insufficient funds for gas" }),
-    job("preview-job-3", { status: "PENDING", retryCount: 2, lastError: "account sequence mismatch", nftStatus: "PENDING", ownerNickname: "ara", ownerWalletAddress: "inj1...8c1v" }),
-  ];
-}
-
 function seedAuditLogs(): AdminAuditLog[] {
   const log = (n: number, overrides: Partial<AdminAuditLog>): AdminAuditLog => ({
     id: `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`, actorUserId: MOCK_ADMIN_ID, actorAgentId: null, action: "PAYOUT_REQUESTED",
@@ -184,7 +171,7 @@ function seedAuditLogs(): AdminAuditLog[] {
 }
 
 /**
- * In-memory twin of the operations/NFT endpoints, with the BE's status checks and error codes, so the console behaves the
+ * In-memory twin of the operations endpoints, with the BE's status checks and error codes, so the console behaves the
  * same in mock mode. `bounties` reads the manager's current list; `onStatus` writes a transition back to it.
  */
 export function createMockOperationsApi(options: {
@@ -192,7 +179,6 @@ export function createMockOperationsApi(options: {
   nextId: (prefix: string) => string;
 }): OperationsApi & { transitionOperations: (bountyId: string, to: string) => void; hasOpenFunds: (bountyId: string) => boolean } {
   const state = new Map<string, AdminOperations>();
-  let nftJobs = seedNftJobs();
   const auditLogs = seedAuditLogs();
   const opsFor = (bountyId: string): AdminOperations => {
     const cached = state.get(bountyId);
@@ -299,21 +285,11 @@ export function createMockOperationsApi(options: {
         reward.status = !open && (paid.length >= ops.bounty.maxWinners || paidAmount >= BigInt(reward.cap ?? "0")) ? "PAID" : "PARTIALLY_PAID";
       }
     },
-    getAdminNftJobs: async (status, page) => {
-      const pageSize = 30;
-      const matching = nftJobs.filter((job) => job.status === status);
-      return { items: matching.slice((page - 1) * pageSize, page * pageSize).map((job) => ({ ...job })), page, pageSize, total: matching.length };
-    },
     getAdminAuditLogs: async (filter, page) => {
       const pageSize = 30;
       if (filter.entityId && !isAuditUuid(filter.entityId)) return fail(400, "VALIDATION_FAILED");
       const matching = auditLogs.filter((log) => (!filter.entityType || log.entityType === filter.entityType) && (!filter.entityId || log.entityId === filter.entityId));
       return { items: matching.slice((page - 1) * pageSize, page * pageSize).map((log) => ({ ...log })), page, pageSize, total: matching.length };
-    },
-    retryAdminNftJob: async (jobId) => {
-      const job = nftJobs.find((item) => item.id === jobId && item.status === "FAILED");
-      if (!job) return fail(404, "NFT_JOB_NOT_FOUND_OR_NOT_FAILED");
-      nftJobs = nftJobs.map((item) => (item === job ? { ...item, status: "PENDING", retryCount: 0, nftStatus: item.jobType === "ATTACH_CHILD" ? "MINTED" : "PENDING", scheduledAt: new Date().toISOString(), updatedAt: new Date().toISOString() } : item));
     },
   };
 }

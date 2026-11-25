@@ -2,24 +2,15 @@ import type { ClientUser } from "@/lib/contracts/auth";
 
 const deploymentTiers = ["local", "test", "staging", "production"] as const;
 const runtimeModes = ["mock", "api"] as const;
-const injectiveEvmChainIds = [1439, 1776] as const;
 
 export type DeploymentTier = (typeof deploymentTiers)[number];
 export type RuntimeMode = (typeof runtimeModes)[number];
-export type WalletChainId = (typeof injectiveEvmChainIds)[number];
-
-export type WalletConfig = {
-  chainId: WalletChainId;
-  rpcUrl?: string;
-};
-
 export type PublicRuntimeConfig = {
   deploymentTier: DeploymentTier;
   runtimeMode: RuntimeMode;
   origin: string;
   mockAvailable: boolean;
   apiAvailable: boolean;
-  wallet: WalletConfig | null;
   /** Cloudflare Turnstile site key (public). Set → the sign-in button requires a widget token (BE `TURNSTILE_SECRET_KEY`). */
   turnstileSiteKey?: string;
 };
@@ -35,8 +26,6 @@ export type RuntimeEnvironment = {
   NINJA_APP_ORIGIN?: string;
   NINJA_API_BASE_URL?: string;
   NINJA_MOCK_SEED?: string;
-  NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID?: string;
-  NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL?: string;
   NEXT_PUBLIC_TURNSTILE_SITE_KEY?: string;
 };
 
@@ -53,7 +42,6 @@ export type FoundationConfig =
 
 export type FoundationRuntimeComposition = {
   foundationConfig: FoundationConfig;
-  wallet: WalletConfig | null;
 };
 
 export class RuntimeConfigError extends Error {
@@ -117,71 +105,9 @@ function requireHttps(value: string, name: string): string {
   return value;
 }
 
-function isPlaintextTier(environment: RuntimeEnvironment): boolean {
-  const tier = environment.NINJA_DEPLOYMENT_TIER?.trim();
-  return tier === "local" || tier === "test";
-}
-
 function optionalValue(environment: RuntimeEnvironment, name: keyof RuntimeEnvironment): string | undefined {
   return environment[name]?.trim() || undefined;
 }
-
-
-function parseWalletConfig(environment: RuntimeEnvironment): WalletConfig | null {
-  const chainIdValue = optionalValue(environment, "NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID");
-  const rpcUrl = optionalValue(environment, "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL");
-
-  if (!chainIdValue) {
-    if (rpcUrl) {
-      throw new RuntimeConfigError(
-        "NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID is required when NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL is supplied.",
-      );
-    }
-    return null;
-  }
-
-  if (!/^\d+$/.test(chainIdValue)) {
-    throw new RuntimeConfigError(
-      "NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID must be a supported numeric chain ID.",
-    );
-  }
-
-  const chainId = Number(chainIdValue);
-  if (!Number.isSafeInteger(chainId) || !injectiveEvmChainIds.includes(chainId as WalletChainId)) {
-    throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID must be one of: 1439, 1776.");
-  }
-
-  const parsedRpcUrl = rpcUrl ? parseHttpUrl(rpcUrl, "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", false) : undefined;
-  if (parsedRpcUrl) assertChainRpcPairing(chainId as WalletChainId, parsedRpcUrl);
-  // A plaintext RPC is fine for local/test (e.g. a local anvil); staging/production api builds fail fast, mirroring
-  // the NINJA_API_BASE_URL rule. `next.config.ts rpcOrigin()` admits whatever this function accepts.
-  if (parsedRpcUrl && environment.NINJA_RUNTIME_MODE?.trim() === "api" && !isPlaintextTier(environment)) {
-    requireHttps(parsedRpcUrl, "NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL");
-  }
-
-  return {
-    chainId: chainId as WalletChainId,
-    ...(parsedRpcUrl ? { rpcUrl: parsedRpcUrl } : {}),
-  };
-}
-
-/**
- * Cheap mismatch guard: 1776 is Injective EVM mainnet and 1439 is testnet, and the public Injective RPC hosts carry the
- * network name (`k8s.testnet.json-rpc.injective.network`, `sentry.evm-rpc.injective.network` / `*mainnet*`). A chain
- * id pointed at the other network's RPC would let wallets sign against the wrong chain, so the build fails instead.
- */
-function assertChainRpcPairing(chainId: WalletChainId, rpcUrl: string): void {
-  const host = new URL(rpcUrl).hostname.toLowerCase();
-  // Injective's own RPC hosts name only the testnet (`sentry.evm-rpc.injective.network` is mainnet with neither word).
-  const injectiveMainnetHost = (host === "injective.network" || host.endsWith(".injective.network")) && !host.includes("testnet");
-  if (chainId === 1776 && host.includes("testnet")) {
-    throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1776 (mainnet) cannot use a testnet RPC URL.");
-  }
-  if (chainId === 1439 && (host.includes("mainnet") || injectiveMainnetHost)) {
-    throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID 1439 (testnet) cannot use a mainnet RPC URL.");
-  }
-}
-
 
 /** Site keys are short public identifiers (`0x4AAAAAAA…`, Cloudflare test keys `1x00000000000000000000AA`); reject anything else at build time. */
 function parseTurnstileSiteKey(environment: RuntimeEnvironment): string | undefined {
@@ -245,12 +171,6 @@ export function readRuntimeConfig(environment: RuntimeEnvironment): RuntimeConfi
     }
   }
 
-  const wallet = parseWalletConfig(environment);
-  // Without an RPC URL the wagmi chain has no transport, so reads such as balances fail silently; mock mode keeps the fallback.
-  if (runtimeMode === "api" && wallet && !wallet.rpcUrl) {
-    throw new RuntimeConfigError("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL is required in api mode when NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID is set.");
-  }
-
   const turnstileSiteKey = parseTurnstileSiteKey(environment);
 
   return {
@@ -259,7 +179,6 @@ export function readRuntimeConfig(environment: RuntimeEnvironment): RuntimeConfi
     origin,
     mockAvailable,
     apiAvailable,
-    wallet,
     ...(turnstileSiteKey ? { turnstileSiteKey } : {}),
     ...(apiUrl
       ? {
@@ -280,8 +199,6 @@ export function loadRuntimeConfig(): RuntimeConfig {
     NINJA_APP_ORIGIN: process.env.NINJA_APP_ORIGIN,
     NINJA_API_BASE_URL: process.env.NINJA_API_BASE_URL,
     NINJA_MOCK_SEED: process.env.NINJA_MOCK_SEED,
-    NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID: process.env.NEXT_PUBLIC_INJECTIVE_EVM_CHAIN_ID,
-    NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL: process.env.NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL,
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
   });
 }
@@ -295,7 +212,6 @@ export function composeFoundationRuntime(
       config.runtimeMode === "mock"
         ? { mode: "mock", previewUser, mockSeed: config.mockSeed! }
         : { mode: "api", apiUrl: config.apiUrl! },
-    wallet: config.wallet ? { ...config.wallet } : null,
   };
 }
 
@@ -306,7 +222,6 @@ export function toPublicRuntimeConfig(config: RuntimeConfig): PublicRuntimeConfi
     origin: config.origin,
     mockAvailable: config.mockAvailable,
     apiAvailable: config.apiAvailable,
-    wallet: config.wallet ? { ...config.wallet } : null,
     ...(config.turnstileSiteKey ? { turnstileSiteKey: config.turnstileSiteKey } : {}),
   };
 }

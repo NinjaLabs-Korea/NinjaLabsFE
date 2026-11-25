@@ -53,8 +53,11 @@ describe("operations API mapping (lib/api/admin.ts)", () => {
     const ops = toAdminOperations(operationsBody as never);
     expect(ops.bounty).toEqual({ id: "b1", title: "Widget", status: "IN_REVIEW", submissionDeadline: "2026-11-01T00:00:00.000Z", maxWinners: 2, applicationRequired: true });
     expect(ops.lifecycle).toEqual({ blockers: operationsBody.lifecycle.blockerDetails, allowedTransitions: ["COMPLETED", "OPEN"] });
-    expect(ops.applications[0]).toMatchObject({ id: "a1", kind: "USER", userId: "u1", nickname: "juho", reviewNote: "welcome" });
-    expect(ops.submissions[0]).toMatchObject({ id: "s1", kind: "AGENT", agentName: "bot", nickname: "ara", currentRevisionNo: 2, payoutAddress: "inj1abc", payoutAddressEvm: "0xabc", email: "ara@example.test", revisions: [{ revisionNo: 2, commitSha: "c2" }], reviews: [{ revisionNo: 2, decision: "APPROVE" }] });
+    expect(ops.applications[0]).toMatchObject({ id: "a1", userId: "u1", nickname: "juho", reviewNote: "welcome" });
+    expect(ops.submissions[0]).toMatchObject({ id: "s1", userId: "u2", nickname: "ara", currentRevisionNo: 2, payoutAddress: "inj1abc", payoutAddressEvm: "0xabc", email: "ara@example.test", revisions: [{ revisionNo: 2, commitSha: "c2" }], reviews: [{ revisionNo: 2, decision: "APPROVE" }] });
+    // Old rows still carry actor_kind / agent_* columns (agents are gone): they are ignored, the owner is the actor.
+    expect(ops.submissions[0]).not.toHaveProperty("agentName");
+    expect(ops.submissions[0]).not.toHaveProperty("kind");
     expect(ops.rewards[0]).toMatchObject({ id: "r1", symbol: "INJ", amount: "5000000000000000000", cap: "5000000000000000000", allocated: "2000000000000000000", depositTxHash: `0x${HASH}` });
     expect(ops.payouts[0]).toMatchObject({ id: "p1", rewardId: "r1", submissionId: "s1", requestedByMe: true, requestedByNickname: "ops" });
     expect(ops.policy).toEqual({ payoutSelfApprovalAllowed: false });
@@ -67,17 +70,21 @@ describe("operations API mapping (lib/api/admin.ts)", () => {
     expect(ops.payouts[0]).toMatchObject({ recipientAddress: "inj1abc", recipientAddressEvm: "0xabc" });
   });
 
-  it("an older BE falls back to recipient_wallet_address for the address and sends no email / evm form", () => {
-    const { payout_address, payout_address_evm, email, ...legacy } = operationsBody.submissions[0];
-    void payout_address; void payout_address_evm; void email;
-    const ops = toAdminOperations({ ...operationsBody, submissions: [{ ...legacy, recipient_wallet_address: "inj1legacy" }] } as never);
-    expect(ops.submissions[0]).toMatchObject({ payoutAddress: "inj1legacy", payoutAddressEvm: null, email: null });
-    expect(ops.payouts[0].recipientAddressEvm).toBeNull();
+  it("a winner without an address maps to null (payout request answers PAYOUT_ADDRESS_NOT_SET)", () => {
+    const ops = toAdminOperations({ ...operationsBody, submissions: [{ ...operationsBody.submissions[0], payout_address: null, payout_address_evm: null, email: null }] } as never);
+    expect(ops.submissions[0]).toMatchObject({ payoutAddress: null, payoutAddressEvm: null, email: null });
   });
 
-  it("a winner without an address maps to null (payout request answers PAYOUT_ADDRESS_NOT_SET)", () => {
-    const ops = toAdminOperations({ ...operationsBody, submissions: [{ ...operationsBody.submissions[0], payout_address: null, payout_address_evm: null, email: null, recipient_wallet_address: null }] } as never);
-    expect(ops.submissions[0]).toMatchObject({ payoutAddress: null, payoutAddressEvm: null, email: null });
+  it("an older BE that omits the optional payout fields maps them to null, not undefined", () => {
+    const submission: Record<string, unknown> = { ...operationsBody.submissions[0] };
+    for (const key of ["payout_address", "payout_address_evm", "email"]) delete submission[key];
+    const payout: Record<string, unknown> = { ...operationsBody.payouts[0] };
+    delete payout.recipient_address_evm;
+    const ops = toAdminOperations({ ...operationsBody, submissions: [submission], payouts: [payout] } as never);
+    expect(ops.submissions[0].payoutAddress).toBeNull();
+    expect(ops.submissions[0].payoutAddressEvm).toBeNull();
+    expect(ops.submissions[0].email).toBeNull();
+    expect(ops.payouts[0].recipientAddressEvm).toBeNull();
   });
 
   it("an older BE without blockerDetails/allowedTransitions/policy degrades to no buttons and the two-person rule", () => {
@@ -96,7 +103,6 @@ describe("operations API mapping (lib/api/admin.ts)", () => {
     await api.requestAdminPayout({ rewardId: "r1", submissionId: "s1", amount: "1" });
     await api.approveAdminPayout("p1");
     await api.markAdminPayoutPaid("p1", `${HASH}\n`);
-    await api.retryAdminNftJob("j1");
     expect(calls(fetchJson)).toEqual([
       ["/admin/applications/a%201/review", { method: "POST", body: { decision: "APPROVED" } }],
       ["/admin/applications/a1/review", { method: "POST", body: { decision: "REJECTED", note: "not a fit" } }],
@@ -105,18 +111,13 @@ describe("operations API mapping (lib/api/admin.ts)", () => {
       ["/admin/payouts", { method: "POST", body: { rewardId: "r1", submissionId: "s1", amount: "1" } }],
       ["/admin/payouts/p1/approve", { method: "POST" }],
       ["/admin/payouts/p1/paid", { method: "POST", body: { txHash: HASH } }],
-      ["/admin/nft-jobs/j1/retry", { method: "POST" }],
     ]);
   });
 
-  it("reads the operations and NFT job pages from their routes", async () => {
+  it("reads the operations page from its route", async () => {
     const ops = createHttp(operationsBody);
     await createAdminApi(ops.http).getAdminOperations("b1");
     expect(calls(ops.fetchJson)[0][0]).toBe("/admin/bounties/b1/operations");
-    const jobs = createHttp({ items: [{ id: "j1", nft_id: "n1", job_type: "MINT_PARENT", status: "FAILED", retry_count: 5, last_error: "boom", scheduled_at: null, updated_at: "2026-10-01T00:00:00Z", nft_type: "NINJA_PARENT", nft_status: "FAILED", bounty_title: null, owner_nickname: "mina", owner_wallet_address: "inj1m" }], page: 2, pageSize: 30, total: 31 });
-    const page = await createAdminApi(jobs.http).getAdminNftJobs("FAILED", 2);
-    expect(calls(jobs.fetchJson)[0][0]).toBe("/admin/nft-jobs?status=FAILED&page=2");
-    expect(page).toEqual({ page: 2, pageSize: 30, total: 31, items: [{ id: "j1", nftId: "n1", jobType: "MINT_PARENT", status: "FAILED", retryCount: 5, lastError: "boom", scheduledAt: null, updatedAt: "2026-10-01T00:00:00Z", nftType: "NINJA_PARENT", nftStatus: "FAILED", bountyTitle: null, ownerNickname: "mina", ownerWalletAddress: "inj1m" }] });
   });
 });
 

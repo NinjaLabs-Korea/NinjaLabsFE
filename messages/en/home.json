@@ -12,11 +12,6 @@
     "title": "Welcome back, {name}"
   },
   "profile": {
-    "nft": {
-      "minted": "Ninja NFT issued",
-      "pending": "Ninja NFT minting",
-      "none": "No Ninja NFT yet"
-    },
     "viewProfile": "View my profile",
     "editProfile": "Edit profile"
   },
@@ -55,10 +50,6 @@
       "applications": {
         "title": "Applications",
         "description": "Track every application and submission."
-      },
-      "agents": {
-        "title": "My agents",
-        "description": "Register and manage your AI agents."
       }
     }
   }

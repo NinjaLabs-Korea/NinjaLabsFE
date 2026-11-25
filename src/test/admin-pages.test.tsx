@@ -138,13 +138,12 @@ describe("AdminTabs", () => {
       ["User Mgmt", "/admin/users"],
       ["Bounty Mgmt", "/admin/bounties"],
       ["Operations", "/admin/operations"],
-      ["NFT Jobs", "/admin/nft-jobs"],
       ["Recruitment", "/admin/recruitment"],
       ["Hall of Fame", "/admin/hall-of-fame"],
       ["Notices", "/admin/notices"],
       ["Audit log", "/admin/audit"],
     ]);
-    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual([null, null, null, null, null, "page", null, null]);
+    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual([null, null, null, null, "page", null, null]);
   });
 });
 

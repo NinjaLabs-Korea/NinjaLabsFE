@@ -42,7 +42,7 @@ vi.mock("@/components/auth/FoundationProvider", () => ({
   useBountyApi: () => apiClient,
 }));
 
-const application = (status: AccountApplication["status"], agent: AccountApplication["agent"] = null): AccountApplication => ({
+const application = (status: AccountApplication["status"]): AccountApplication => ({
   id: `application-${status}`,
   bountySlug: "bounty-1",
   bountyTitle: "Bounty",
@@ -50,13 +50,12 @@ const application = (status: AccountApplication["status"], agent: AccountApplica
   appliedAt: "2026-10-01",
   note: "",
   status,
-  agent,
   reviewComment: null,
   reviewNote: null,
   paymentStatus: "NONE",
 });
 
-const submission = (status: AccountSubmission["status"], agent: AccountSubmission["agent"] = null, reviewComment: string | null = null): AccountSubmission => ({ bountySlug: "bounty-1", status, agent, paymentStatus: "NONE", reviewComment });
+const submission = (status: AccountSubmission["status"], reviewComment: string | null = null): AccountSubmission => ({ bountySlug: "bounty-1", status, paymentStatus: "NONE", reviewComment });
 
 describe("BountyActionPanel", () => {
   beforeEach(() => {
@@ -68,7 +67,7 @@ describe("BountyActionPanel", () => {
 
   it("reserves the settled panel height with an aria-hidden placeholder while the session loads, keeping the status text", () => {
     state.auth = loading;
-    const { container } = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const { container } = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     const placeholder = container.querySelector("[role=status] [aria-hidden=true]")!;
     expect(placeholder.getAttribute("aria-hidden")).toBe("true");
     expect(placeholder.className).toMatch(/min-h-\[/);
@@ -79,7 +78,7 @@ describe("BountyActionPanel", () => {
 
   it("marks the pending apply button aria-busy with an aria-hidden spinner", async () => {
     Object.assign(apiClient, { applyToBounty: vi.fn(() => new Promise<never>(() => undefined)) });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     const button = await screen.findByRole("button", { name: /Applying/ });
@@ -91,7 +90,7 @@ describe("BountyActionPanel", () => {
   it("sends one apply request when several submit events land in the same tick", async () => {
     const applyToBounty = vi.fn(() => new Promise<never>(() => undefined));
     Object.assign(apiClient, { applyToBounty });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     const form = screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement;
     fireEvent.submit(form);
@@ -101,13 +100,13 @@ describe("BountyActionPanel", () => {
   });
 
   it("keeps a half-filled submit form and says so when the session ends under it", async () => {
-    const view = renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const view = renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     const url = (await screen.findByLabelText("Completed work link")) as HTMLInputElement;
     fireEvent.change(url, { target: { value: "https://example.com/work" } });
     fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "A long description" } });
 
     state.auth = signedOut;
-    view.rerender(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    view.rerender(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     // Same input element (not remounted), same text, an explanation, and no submit while there is no session.
     expect(screen.getByLabelText("Completed work link")).toBe(url);
     expect(url.value).toBe("https://example.com/work");
@@ -118,116 +117,41 @@ describe("BountyActionPanel", () => {
 
   it("shows the closed panel to signed-out visitors instead of the sign-in prompt", async () => {
     state.auth = signedOut;
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="closed" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="closed" />);
     expect(await screen.findByText("Bounty closed")).toBeTruthy();
     expect(screen.queryByText("Login required")).toBeNull();
     expect(screen.queryByRole("link", { name: "Sign in first" })).toBeNull();
 
     cleanup();
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     expect(await screen.findByText("Login required")).toBeTruthy();
   });
 
-  it("shows the closed panel instead of the endpoint instructions on a closed agent-mode bounty", async () => {
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="reviewing" submissionMode="agent" />);
-    expect(await screen.findByText("Bounty closed")).toBeTruthy();
-    expect(screen.queryByText("Agent submission")).toBeNull();
-    expect(screen.queryByText(/\/agent-api\/v1\//)).toBeNull();
-
-    cleanup();
-    state.auth = signedOut;
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" submissionMode="agent" />);
-    expect(await screen.findByText("Bounty closed")).toBeTruthy();
-
-    cleanup();
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="agent" />);
-    expect(await screen.findByText("Agent submission")).toBeTruthy();
-  });
-
   it("shows the apply form when no application exists", async () => {
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     expect(await screen.findByRole("button", { name: "Apply" })).toBeTruthy();
   });
 
-  const agent = { id: "agent-1", name: "market-scout-agent" };
-
-  it.each(["open", "approved"] as const)("shows an informational panel without any form when the owner has only an agent application (%s)", async (status) => {
-    state.applications = [application(status, agent)];
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
-    expect(await screen.findByRole("heading", { name: "Handled by your agent" })).toBeTruthy();
-    expect(screen.getByText(status === "open"
-      ? "Your agent market-scout-agent applied to this bounty. The agent manages this application; this page does not submit for it."
-      : /The agent can now submit its work/)).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Manage my agents" }).getAttribute("href")).toBe("/agents");
-    // The agent row never unlocks the owner's direct actions: no apply form, no submit form (even for an approved agent application).
-    expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Submit" })).toBeNull();
-    expect(screen.queryByText("Application under review")).toBeNull();
-  });
-
-  it("shows the reviewer comment and the Agent API endpoint when a revision was requested from the agent (agent-only bounty)", async () => {
-    state.submissions = [submission("revision_requested", agent, "Add the repo link")];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="agent" />);
-    expect(await screen.findByRole("heading", { name: "Your agent needs to revise its submission" })).toBeTruthy();
-    expect(screen.getByText("Reviewer comment: Add the repo link")).toBeTruthy();
-    expect(screen.getByText("POST /agent-api/v1/bounties/bounty-1/submissions")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Resubmit" })).toBeNull();
-  });
-
-  it("shows the informational panel when only the agent has submitted (apply-type and direct bounties)", async () => {
-    state.applications = [application("submitted", agent)];
-    state.submissions = [submission("in_review", agent)];
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
-    expect(await screen.findByRole("heading", { name: "Handled by your agent" })).toBeTruthy();
-    expect(screen.getByText(/Your agent market-scout-agent submitted work/)).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Update submission" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Resubmit" })).toBeNull();
-
-    cleanup();
-    state.applications = [];
-    state.submissions = [submission("revision_requested", agent)];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
-    expect(await screen.findByRole("heading", { name: "Your agent needs to revise its submission" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Resubmit" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Submit" })).toBeNull();
-  });
-
-  it("prefers the owner's own rows over agent rows on the same bounty", async () => {
-    // Agent row first in the list: list order must not decide.
-    state.applications = [application("open", { id: "agent-1", name: "market-scout-agent" }), { ...application("approved"), id: "own" }];
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
-    expect(await screen.findByRole("button", { name: "Submit" })).toBeTruthy();
-    expect(screen.queryByText("Application under review")).toBeNull();
-    expect(screen.queryByText(/Applied via your agent/)).toBeNull();
-
-    cleanup();
-    state.applications = [];
-    state.submissions = [submission("in_review", { id: "agent-1", name: "market-scout-agent" }), submission("approved")];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
-    expect(await screen.findByText("Submission approved")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Update submission" })).toBeNull();
-  });
-
   it("closes new applications and submissions while the bounty is reviewing or closed", async () => {
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="reviewing" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="reviewing" />);
     expect(await screen.findByText("Bounty closed")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
 
     cleanup();
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" />);
     expect(await screen.findByText("Bounty closed")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Submit" })).toBeNull();
   });
 
   it("locks an in-review submission but still allows resubmission on a reviewing bounty when a revision is requested", async () => {
     state.submissions = [submission("in_review")];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="reviewing" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="reviewing" />);
     expect(await screen.findByText("Submission under review")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Update submission" })).toBeNull();
 
     cleanup();
     state.submissions = [submission("revision_requested")];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="reviewing" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="reviewing" />);
     expect(await screen.findByRole("button", { name: "Resubmit" })).toBeTruthy();
   });
 
@@ -238,7 +162,7 @@ describe("BountyActionPanel", () => {
     });
     const getApplications = vi.fn(async () => ({ status: "available" as const, data: state.applications }));
     Object.assign(apiClient, { applyToBounty, getApplications });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     expect(await screen.findByText("Application under review")).toBeTruthy();
@@ -248,14 +172,14 @@ describe("BountyActionPanel", () => {
 
   it("does not carry the 'just applied' state over to a different account on the same page", async () => {
     Object.assign(apiClient, { applyToBounty: vi.fn(async () => ({ id: "a-new", status: "PENDING" })) });
-    const view = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const view = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     expect(await screen.findByText("Application under review")).toBeTruthy();
 
     // Another tab signs in as someone else; this page's snapshot follows. That account has no application on this bounty.
     state.auth = signedInWith({ id: "user-2" });
-    view.rerender(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    view.rerender(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     expect(await screen.findByRole("button", { name: "Apply" })).toBeTruthy();
     expect(screen.queryByText("Application under review")).toBeNull();
   });
@@ -264,7 +188,7 @@ describe("BountyActionPanel", () => {
     const getApplications = vi.fn(async () => ({ status: "available" as const, data: [] }));
     const getSubmissions = vi.fn(async () => ({ status: "available" as const, data: [] }));
     Object.assign(apiClient, { getApplications, getSubmissions });
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     expect(await screen.findByRole("button", { name: "Submit" })).toBeTruthy();
     expect(getSubmissions).toHaveBeenCalledTimes(1);
     expect(getApplications).not.toHaveBeenCalled();
@@ -275,7 +199,7 @@ describe("BountyActionPanel", () => {
     const getApplications = vi.fn(async () =>
       ++reads === 1 ? { status: "available" as const, data: [] } : { status: "unavailable" as const, reason: "server-error" as const });
     Object.assign(apiClient, { getApplications });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     expect(await screen.findByText("Application under review")).toBeTruthy();
@@ -291,7 +215,7 @@ describe("BountyActionPanel", () => {
       throw new ApiHttpError(409, "ALREADY_APPLIED");
     });
     Object.assign(apiClient, { applyToBounty, getApplications });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     expect(await screen.findByText("Application under review")).toBeTruthy();
@@ -302,7 +226,7 @@ describe("BountyActionPanel", () => {
     const getApplications = vi.fn(async () => ({ status: "available" as const, data: [] }));
     const applyToBounty = vi.fn(async () => { throw new ApiHttpError(400, "VALIDATION_FAILED"); });
     Object.assign(apiClient, { applyToBounty, getApplications });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     await screen.findByRole("alert");
@@ -314,7 +238,7 @@ describe("BountyActionPanel", () => {
     const getApplications = vi.fn(async () =>
       ++reads === 1 ? { status: "available" as const, data: [] } : { status: "unavailable" as const, reason: "unauthorized" as const });
     Object.assign(apiClient, { getApplications });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     await waitFor(() => expect(getApplications).toHaveBeenCalledTimes(2));
@@ -322,10 +246,10 @@ describe("BountyActionPanel", () => {
   });
 
   it("caps the free-text inputs at the BE limits so a long paste cannot only fail on submit", async () => {
-    const { unmount } = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const { unmount } = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     expect((await screen.findByLabelText("Application note") as HTMLTextAreaElement).maxLength).toBe(4000);
     unmount();
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     expect((await screen.findByLabelText("Describe what you completed") as HTMLTextAreaElement).maxLength).toBe(8000);
     expect((screen.getByLabelText("Commit hash (optional, code work only)") as HTMLInputElement).maxLength).toBe(64);
   });
@@ -333,7 +257,7 @@ describe("BountyActionPanel", () => {
   it("treats a description made only of zero-width characters as empty, like the BE", async () => {
     const submitBounty = vi.fn();
     Object.assign(apiClient, { submitBounty });
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Completed work link"), { target: { value: "https://example.test/work" } });
     fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "\u200B\u200B" } });
     fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
@@ -348,7 +272,7 @@ describe("BountyActionPanel", () => {
     });
     const getSubmissions = vi.fn(async () => ({ status: "available" as const, data: state.submissions }));
     Object.assign(apiClient, { submitBounty, getSubmissions });
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Completed work link"), { target: { value: "https://example.test/work" } });
     fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "Done" } });
     fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
@@ -358,14 +282,14 @@ describe("BountyActionPanel", () => {
   });
 
   it("turns off native validation, shows https:// examples and marks the commit hash as optional", async () => {
-    const { container, unmount } = renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const { container, unmount } = renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     await screen.findByLabelText("Completed work link");
     expect(container.querySelector("form")?.noValidate).toBe(true);
     expect((screen.getByLabelText("Completed work link") as HTMLInputElement).placeholder).toBe("https://");
     expect((screen.getByLabelText("Code repository (optional)") as HTMLInputElement).placeholder).toBe("https://");
     expect(screen.getByLabelText("Commit hash (optional, code work only)")).toBeTruthy();
     unmount();
-    const apply = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    const apply = renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     await screen.findByLabelText("Application note");
     expect(apply.container.querySelector("form")?.noValidate).toBe(true);
     expect((screen.getByLabelText("Relevant work link (optional)") as HTMLInputElement).placeholder).toBe("https://");
@@ -374,7 +298,7 @@ describe("BountyActionPanel", () => {
   it("shows the locale link error on blur, wires it to the field and blocks the submit request", async () => {
     const submitBounty = vi.fn(async () => ({ id: "s", revisionNo: 1, status: "SUBMITTED" }));
     Object.assign(apiClient, { submitBounty });
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     const url = (await screen.findByLabelText("Completed work link")) as HTMLInputElement;
     fireEvent.change(url, { target: { value: "not a link" } });
     fireEvent.blur(url);
@@ -395,7 +319,7 @@ describe("BountyActionPanel", () => {
   it("blocks an apply with an empty note or a bad optional link without calling the API", async () => {
     const applyToBounty = vi.fn(async () => ({ id: "a", status: "PENDING" }));
     Object.assign(apiClient, { applyToBounty });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     const portfolio = (await screen.findByLabelText("Relevant work link (optional)")) as HTMLInputElement;
     fireEvent.change(portfolio, { target: { value: "ftp://x" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
@@ -419,7 +343,7 @@ describe("BountyActionPanel", () => {
   it("shows review status instead of the apply form after submitting on an apply-type bounty", async () => {
     state.applications = [application("submitted")];
     state.submissions = [submission("in_review")];
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     expect(await screen.findByText("Submission under review")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Update submission" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
@@ -427,20 +351,20 @@ describe("BountyActionPanel", () => {
 
   it("shows a rejected application without offering to apply again", async () => {
     state.applications = [application("rejected")];
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     expect(await screen.findByText("Application not selected")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Apply" })).toBeNull();
   });
 
   it("shows the operator's note on a rejected application", async () => {
     state.applications = [{ ...application("rejected"), reviewNote: "Portfolio too thin" }];
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     expect(await screen.findByText("Reviewer comment: Portfolio too thin")).toBeTruthy();
   });
 
   it("shows a plain rejection with the reviewer comment, without the forfeit copy", async () => {
-    state.submissions = [submission("rejected", null, "Does not meet the brief")];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    state.submissions = [submission("rejected", "Does not meet the brief")];
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     expect(await screen.findByText("Submission not accepted")).toBeTruthy();
     expect(screen.getByText(/did not accept it/)).toBeTruthy();
     expect(screen.getByText("Reviewer comment: Does not meet the brief")).toBeTruthy();
@@ -448,8 +372,8 @@ describe("BountyActionPanel", () => {
   });
 
   it("shows the forfeited copy with the reason (prefix stripped) instead of 'did not accept it'", async () => {
-    state.submissions = [submission("rejected", null, "forfeited: winner wallet never connected")];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" submissionMode="direct" />);
+    state.submissions = [submission("rejected", "forfeited: winner wallet never connected")];
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" />);
     expect(await screen.findByText("Reward not paid")).toBeTruthy();
     expect(screen.getByText("Your work was selected, but the reward was not paid. Reason: winner wallet never connected. Contact the admins if this is a mistake.")).toBeTruthy();
     expect(screen.queryByText(/did not accept it/)).toBeNull();
@@ -457,14 +381,14 @@ describe("BountyActionPanel", () => {
 
   it("shows the plain rejection copy alone when there is no reviewer comment", async () => {
     state.submissions = [submission("rejected")];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     expect(await screen.findByText(/did not accept it/)).toBeTruthy();
     expect(screen.queryByText(/Reviewer comment/)).toBeNull();
   });
 
   it("shows the reviewer's comment on a requested revision", async () => {
-    state.submissions = [submission("revision_requested", null, "Add a README")];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    state.submissions = [submission("revision_requested", "Add a README")];
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     expect(await screen.findByText("Reviewer comment: Add a README")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Resubmit" })).toBeTruthy();
   });
@@ -472,7 +396,7 @@ describe("BountyActionPanel", () => {
   describe("payout status on the approved panel", () => {
     const approved = (paymentStatus: AccountSubmission["paymentStatus"]) => {
       state.submissions = [{ ...submission("approved"), paymentStatus }];
-      renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+      renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     };
 
     it.each([["PAID", "Paid"], ["PARTIALLY_PAID", "Partially paid"], ["PENDING", "Payout pending"]] as const)("%s -> %s", async (paymentStatus, label) => {
@@ -509,22 +433,22 @@ describe("BountyActionPanel", () => {
 
     it("keeps line breaks and wraps a 300-char URL in the rejection comment", async () => {
       const comment = `Line one\nLine two ${url}`;
-      state.submissions = [submission("rejected", null, comment)];
-      renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+      state.submissions = [submission("rejected", comment)];
+      renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
       const line = await screen.findByText(`Reviewer comment: ${comment}`, { normalizer: (text) => text });
       expect(line.textContent).toContain("Line one\nLine two");
       wraps(line);
     });
 
     it("applies the wrapping classes to the revision comment line", async () => {
-      state.submissions = [submission("revision_requested", null, `Fix\n${url}`)];
-      renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+      state.submissions = [submission("revision_requested", `Fix\n${url}`)];
+      renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
       wraps(await screen.findByText(`Reviewer comment: Fix\n${url}`, { normalizer: (text) => text }));
     });
 
     it("applies the wrapping classes to the forfeited body", async () => {
-      state.submissions = [submission("rejected", null, `forfeited: ${url}`)];
-      renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" submissionMode="direct" />);
+      state.submissions = [submission("rejected", `forfeited: ${url}`)];
+      renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" />);
       const body = await screen.findByText(/the reward was not paid\. Reason:/);
       expect(body.textContent).toContain(url);
       wraps(body);
@@ -538,25 +462,25 @@ describe("BountyActionPanel", () => {
 
   it("unlocks submission after approval", async () => {
     state.applications = [application("approved")];
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     expect(await screen.findByRole("button", { name: "Submit" })).toBeTruthy();
   });
 
   it("offers resubmission on direct bounties when a revision is requested", async () => {
     state.submissions = [submission("revision_requested")];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     expect(await screen.findByRole("button", { name: "Resubmit" })).toBeTruthy();
   });
 
   it("does not offer resubmission on a closed bounty even when a revision was requested (BE isInProgress)", async () => {
     state.submissions = [submission("revision_requested")];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="closed" />);
     expect(await screen.findByText("Bounty closed")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Resubmit" })).toBeNull();
 
     cleanup();
     state.applications = [application("submitted")];
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="closed" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="closed" />);
     expect(await screen.findByText("Bounty closed")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Resubmit" })).toBeNull();
   });
@@ -564,7 +488,7 @@ describe("BountyActionPanel", () => {
   it("labels the signed-in apply form and wires the API error to its inputs", async () => {
     const applyToBounty = vi.fn(async () => { throw new ApiHttpError(409, "MAX_WINNERS_REACHED"); });
     Object.assign(apiClient, { applyToBounty });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     const note = await screen.findByLabelText("Application note");
     const portfolio = screen.getByLabelText("Relevant work link (optional)");
     expect(note.getAttribute("aria-invalid")).toBeNull();
@@ -587,7 +511,7 @@ describe("BountyActionPanel", () => {
   ])("maps the BE %s code to localized copy", async (code, status, copy) => {
     const applyToBounty = vi.fn(async () => { throw new ApiHttpError(status, code); });
     Object.assign(apiClient, { applyToBounty });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
     expect((await screen.findByRole("alert")).textContent).toBe(copy);
@@ -597,7 +521,7 @@ describe("BountyActionPanel", () => {
     state.applications = [application("approved")];
     const submitBounty = vi.fn(async () => { throw new ApiHttpError(418, "TEAPOT_BUSY"); });
     Object.assign(apiClient, { submitBounty });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     const url = await screen.findByLabelText("Completed work link");
     expect(screen.getByLabelText("Code repository (optional)")).toBeTruthy();
     expect(screen.getByLabelText("Commit hash (optional, code work only)")).toBeTruthy();
@@ -613,7 +537,7 @@ describe("BountyActionPanel", () => {
     state.applications = [application("approved")];
     const submitBounty = vi.fn(async () => { throw new ApiHttpError(401, "INVALID_ACCESS_TOKEN"); });
     Object.assign(apiClient, { submitBounty });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Completed work link"), { target: { value: "https://example.test/work" } });
     fireEvent.change(screen.getByLabelText("Describe what you completed"), { target: { value: "Done" } });
     fireEvent.submit(screen.getByRole("button", { name: "Submit" }).closest("form") as HTMLFormElement);
@@ -628,7 +552,7 @@ describe("BountyActionPanel", () => {
 
   it("pre-fills the update form from the current submission and keeps what is typed", async () => {
     state.submissions = [{ ...submission("submitted"), submissionUrl: "https://example.test/work", repositoryUrl: "https://github.com/o/r", commitSha: "3f2a9c1", description: "First pass" }];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     const url = (await screen.findByLabelText("Completed work link")) as HTMLInputElement;
     expect(url.value).toBe("https://example.test/work");
     expect((screen.getByLabelText("Code repository (optional)") as HTMLInputElement).value).toBe("https://github.com/o/r");
@@ -645,7 +569,7 @@ describe("BountyActionPanel", () => {
     state.submissions = [submission("submitted")];
     // A new read function: the account query remembers the previous test's answer per function for 60 s.
     Object.assign(apiClient, { getSubmissions: async () => ({ status: "available" as const, data: state.submissions }) });
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     expect(((await screen.findByLabelText("Completed work link")) as HTMLInputElement).value).toBe("");
     expect(screen.queryByText(/is filled in below/)).toBeNull();
   });
@@ -653,7 +577,7 @@ describe("BountyActionPanel", () => {
   it("moves focus to the status heading and announces the success copy after applying", async () => {
     const applyToBounty = vi.fn(async () => ({ id: "a-new", status: "PENDING" }));
     Object.assign(apiClient, { applyToBounty });
-    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired bountyId="bounty-1" status="active" />);
     fireEvent.change(await screen.findByLabelText("Application note"), { target: { value: "Hi" } });
     fireEvent.submit(screen.getByRole("button", { name: "Apply" }).closest("form") as HTMLFormElement);
 
@@ -668,7 +592,7 @@ describe("BountyActionPanel", () => {
 
   it("shows approved direct submissions as final", async () => {
     state.submissions = [submission("approved")];
-    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" submissionMode="direct" />);
+    renderWithIntl(<BountyActionPanel applicationRequired={false} bountyId="bounty-1" status="active" />);
     expect(await screen.findByText("Submission approved")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Submit" })).toBeNull();
   });
@@ -680,15 +604,14 @@ describe("api client application mapping", () => {
       { id: "a1", status: "PENDING", message: "", applied_at: "", reviewed_at: null, bounty_id: "b1", bounty_title: "B1", category: "DEV" },
       { id: "a2", status: "REJECTED", message: "", applied_at: "", reviewed_at: null, review_note: "  Portfolio too thin  ", bounty_id: "b2", bounty_title: "B2", category: "DEV" },
       { id: "a3", status: "WITHDRAWN", message: "", applied_at: "", reviewed_at: null, bounty_id: "b3", bounty_title: "B3", category: "DEV" },
-      { id: "a4", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b4", bounty_title: "B4", category: "DEV", agent: null },
+      { id: "a4", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b4", bounty_title: "B4", category: "DEV" },
+      // An old agent-made row (non-null `agent`, agents are gone) is excluded from the participant rows, with its submission below.
       { id: "a5", status: "PENDING", message: "", applied_at: "", reviewed_at: null, bounty_id: "b5", bounty_title: "B5", category: "DEV", agent: { id: "agent-1", name: "scout" } },
-      // Owner and agent rows on the same bounty: only the agent has submitted.
-      { id: "a6", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b6", bounty_title: "B6", category: "DEV", agent: null },
-      { id: "a7", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b6", bounty_title: "B6", category: "DEV", agent: { id: "agent-1", name: "scout" } },
+      { id: "a6", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b6", bounty_title: "B6", category: "DEV" },
       // Approved applications whose submission was finally rejected (b8 forfeited, b9 plain, b10 plain without comment).
-      { id: "a8", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b8", bounty_title: "B8", category: "DEV", agent: null },
-      { id: "a9", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b9", bounty_title: "B9", category: "DEV", agent: null },
-      { id: "a10", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b10", bounty_title: "B10", category: "DEV", agent: null },
+      { id: "a8", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b8", bounty_title: "B8", category: "DEV" },
+      { id: "a9", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b9", bounty_title: "B9", category: "DEV" },
+      { id: "a10", status: "APPROVED", message: "", applied_at: "", reviewed_at: null, bounty_id: "b10", bounty_title: "B10", category: "DEV" },
     ],
     "/submissions/me": [
       { status: "REJECTED", bounty_id: "b8", review_comment: "forfeited: winner wallet never connected" },
@@ -696,68 +619,41 @@ describe("api client application mapping", () => {
       { status: "REJECTED", bounty_id: "b10" },
       { status: "REVISION_REQUESTED", bounty_id: "b4" },
       { status: "SUBMITTED", bounty_id: "b5", agent: { id: "agent-1", name: "scout" } },
-      { status: "APPROVED", bounty_id: "b6", agent: { id: "agent-1", name: "scout" }, payment_status: "PARTIALLY_PAID" },
-    ],
-    "/agents/me": [
-      { id: "agent-1", name: "scout", description: null, status: "ACTIVE", wallet_address: "0xabc", verified_at: "2026-01-01T00:00:00Z", created_at: "2026-01-01T00:00:00Z", completed_bounties: 2, key_prefix: "nl_live_1234", key_status: "ACTIVE", key_expires_at: "2027-01-01T00:00:00Z" },
-      { id: "agent-2", name: "old", description: null, status: "REVOKED", wallet_address: "0xdef", verified_at: null, created_at: "2026-01-01T00:00:00Z", completed_bounties: 0, key_prefix: null, key_status: null, key_expires_at: null },
+      { status: "APPROVED", bounty_id: "b6", payment_status: "PARTIALLY_PAID" },
     ],
   };
   const http = { fetchJson: async (path: string) => rows[path] } as unknown as ApiHttp;
   const client = createApiApiClient(http);
 
-  it("keeps rejected applications, drops withdrawn ones, carries the agent, and maps submissions", async () => {
+  it("keeps rejected applications, drops withdrawn ones, drops legacy agent-made rows, and maps submissions", async () => {
     const applications = await client.getApplications(signedIn);
-    expect(applications.status === "available" && applications.data.map((item) => [item.bountySlug, item.status, item.agent?.name ?? null])).toEqual([
-      ["b1", "open", null],
-      ["b2", "rejected", null],
-      ["b4", "revisionRequested", null],
-      ["b5", "open", "scout"],
-      // The agent's submission does not complete the owner's own application.
-      ["b6", "approved", null],
-      ["b6", "completed", "scout"],
-      ["b8", "notAccepted", null],
-      ["b9", "notAccepted", null],
-      ["b10", "notAccepted", null],
+    expect(applications.status === "available" && applications.data.map((item) => [item.bountySlug, item.status])).toEqual([
+      ["b1", "open"],
+      ["b2", "rejected"],
+      ["b4", "revisionRequested"],
+      ["b6", "completed"],
+      ["b8", "notAccepted"],
+      ["b9", "notAccepted"],
+      ["b10", "notAccepted"],
     ]);
     // The operator's application note ("shown to the applicant") is trimmed and travels with the row; no note → null.
     expect(applications.status === "available" && applications.data.map((item) => item.reviewNote)).toEqual([
-      null, "Portfolio too thin", null, null, null, null, null, null, null,
+      null, "Portfolio too thin", null, null, null, null, null,
     ]);
     // The reviewer comment travels with the final state; other states carry none.
     expect(applications.status === "available" && applications.data.map((item) => item.reviewComment)).toEqual([
-      null, null, null, null, null, null, "forfeited: winner wallet never connected", "Not production ready", null,
+      null, null, null, null, "forfeited: winner wallet never connected", "Not production ready", null,
     ]);
     await expect(client.getSubmissions(signedIn)).resolves.toEqual({
       status: "available",
       data: [
-        { bountySlug: "b8", status: "rejected", agent: null, paymentStatus: "NONE", reviewComment: "forfeited: winner wallet never connected" },
-        { bountySlug: "b9", status: "rejected", agent: null, paymentStatus: "NONE", reviewComment: "Not production ready" },
-        { bountySlug: "b10", status: "rejected", agent: null, paymentStatus: "NONE", reviewComment: null },
-        { bountySlug: "b4", status: "revision_requested", agent: null, paymentStatus: "NONE", reviewComment: null },
-        { bountySlug: "b5", status: "submitted", agent: { id: "agent-1", name: "scout" }, paymentStatus: "NONE", reviewComment: null },
-        { bountySlug: "b6", status: "approved", agent: { id: "agent-1", name: "scout" }, paymentStatus: "PARTIALLY_PAID", reviewComment: null },
+        { bountySlug: "b8", status: "rejected", paymentStatus: "NONE", reviewComment: "forfeited: winner wallet never connected" },
+        { bountySlug: "b9", status: "rejected", paymentStatus: "NONE", reviewComment: "Not production ready" },
+        { bountySlug: "b10", status: "rejected", paymentStatus: "NONE", reviewComment: null },
+        { bountySlug: "b4", status: "revision_requested", paymentStatus: "NONE", reviewComment: null },
+        { bountySlug: "b6", status: "approved", paymentStatus: "PARTIALLY_PAID", reviewComment: null },
       ],
     });
-  });
-
-  it("maps agent key status and expiry, and masks the key", async () => {
-    const agents = await client.getAgents(signedIn);
-    expect(agents.status === "available" && agents.data.map(({ id, status, verified, keyStatus, keyExpiresAt, apiKeyMasked }) => ({ id, status, verified, keyStatus, keyExpiresAt, apiKeyMasked }))).toEqual([
-      { id: "agent-1", status: "ACTIVE", verified: true, keyStatus: "ACTIVE", keyExpiresAt: "2027-01-01T00:00:00Z", apiKeyMasked: "nl_live_1234••••••••" },
-      { id: "agent-2", status: "REVOKED", verified: false, keyStatus: null, keyExpiresAt: null, apiKeyMasked: "-" },
-    ]);
-  });
-
-  it("posts key rotation and revocation to the agent endpoints", async () => {
-    const calls: Array<[string, unknown]> = [];
-    const rotating = createApiApiClient({ fetchJson: async (path: string, init?: unknown) => { calls.push([path, init]); return { agentId: "agent-1" }; } } as unknown as ApiHttp);
-    await rotating.rotateAgentKey("agent-1");
-    await rotating.revokeAgent("agent 2");
-    expect(calls).toEqual([
-      ["/agents/agent-1/keys/rotate", { method: "POST" }],
-      ["/agents/agent%202/revoke", { method: "POST" }],
-    ]);
   });
 });
 
@@ -773,7 +669,7 @@ describe("account read unavailability", () => {
     expect(unavailableReason(new TypeError("fetch failed"))).toBe("network-error");
 
     await expect(failing(new ApiHttpError(401, "UNAUTHORIZED")).getApplications(signedIn)).resolves.toEqual({ status: "unavailable", reason: "unauthorized" });
-    await expect(failing(new ApiHttpError(502, "UNKNOWN_ERROR")).getAgents(signedIn)).resolves.toEqual({ status: "unavailable", reason: "server-error" });
+    await expect(failing(new ApiHttpError(502, "UNKNOWN_ERROR")).getSubmissions(signedIn)).resolves.toEqual({ status: "unavailable", reason: "server-error" });
     await expect(failing(new TypeError("fetch failed")).getSubmissions(signedIn)).resolves.toEqual({ status: "unavailable", reason: "network-error" });
   });
 });

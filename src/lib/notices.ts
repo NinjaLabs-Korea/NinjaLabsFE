@@ -36,21 +36,11 @@ export const notices: Notice[] = [
     title: "Community review call for July bounty sponsors",
     excerpt: "Ninja Labs will walk through application intake, review status, and reward release timing.",
     bodyMarkdown:
-      "Ninja Labs will walk through **application intake**, review status, and reward release timing with the sponsors lined up for July.\n\n- How apply-type bounties move from application to approval\n- What reviewers check before a reward is released\n- When child Bounty NFTs are minted after final approval",
+      "Ninja Labs will walk through **application intake**, review status, and reward release timing with the sponsors lined up for July.\n\n- How apply-type bounties move from application to approval\n- What reviewers check before a reward is released\n- When a reward is released after final approval",
     category: "Events",
     publishedAt: "2026.06.12",
     thumbnail: "",
     eventDate: "2026-06-18",
-  },
-  {
-    slug: "public-profiles-show-child-bounty-nfts",
-    title: "Public profiles now show child Bounty NFTs",
-    excerpt: "Completed work now appears under each builder's parent Ninja NFT portfolio grid.",
-    bodyMarkdown:
-      "Completed work now appears under each builder's parent Ninja NFT portfolio grid. Every approved bounty mints a child NFT that attaches to the builder's Ninja NFT and shows up on their public profile.\n\nProfiles are shareable without login, so sponsors can review a builder's track record before approving an application.",
-    category: "Ninja Labs",
-    publishedAt: "2026.06.08",
-    thumbnail: "",
   },
 ];
 

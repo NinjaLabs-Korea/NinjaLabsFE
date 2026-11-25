@@ -196,13 +196,13 @@ describe("refresh edge cases", () => {
     expect(ended).not.toHaveBeenCalled();
   });
 
-  it("does not refresh or replay a 401 that is not a session failure (INVALID_SIGNATURE from a wallet verify)", async () => {
+  it("does not refresh or replay a 401 that is not a session failure (INVALID_SIGNATURE-style non-session code)", async () => {
     const request = stub(() => json({ accessToken: "fresh" }));
     request.mockImplementation(async (url: string) =>
       url === REFRESH ? json({ accessToken: "fresh" }) : json({ statusCode: 401, message: "INVALID_SIGNATURE" }, 401));
     installSession("access-1");
     const http = createApiHttp(API);
-    await expect(http.fetchJson("/wallets/verify", { method: "POST", body: {} })).rejects.toMatchObject({ status: 401, code: "INVALID_SIGNATURE" });
+    await expect(http.fetchJson("/bounties/b1/submissions", { method: "POST", body: {} })).rejects.toMatchObject({ status: 401, code: "INVALID_SIGNATURE" });
     expect(refreshCount(request)).toBe(0);
     expect(request).toHaveBeenCalledTimes(1);
   });

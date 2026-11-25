@@ -13,7 +13,6 @@ export function getAccountNavigationItems(user: Pick<ClientUser, "profileSlug">)
     { key: "myActivity", href: "/home" },
     { key: "myProfile", href: `/members/${user.profileSlug}` },
     { key: "myApplications", href: "/applications" },
-    { key: "myAgents", href: "/agents" },
     { key: "accountSettings", href: "/account" },
   ] as const;
 }

@@ -30,7 +30,7 @@ const outlineDangerClass = `rounded-control border border-danger-soft bg-danger-
 
 // Step labels live under account.applications.steps, keyed by status.
 const applicationSteps: readonly ApplicationStatus[] = ["open", "approved", "submitted", "completed"];
-// A submission with no application behind it (direct or agent-mode bounty) skips Applied/Approved.
+// A submission with no application behind it (direct bounty) skips Applied/Approved.
 const submissionSteps: readonly ApplicationStatus[] = ["submitted", "completed"];
 
 /** Final state of an approved application whose submission was rejected; a reward-not-paid case names the reason. */
@@ -66,7 +66,7 @@ function RevisionNote({ application }: { application: AccountApplication }) {
   const review = parseReviewComment(application.reviewComment);
   return (
     <>
-      <p className="mt-4 text-sm text-warning">{application.agent ? t("agentRevisionNote", { name: application.agent.name }) : t("revisionNote")}</p>
+      <p className="mt-4 text-sm text-warning">{t("revisionNote")}</p>
       {review ? <p className={`mt-1 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{t("reviewerComment", { comment: review.text })}</p> : null}
     </>
   );
@@ -182,9 +182,6 @@ export function ApplicationsView() {
                 <span className="flex min-w-0 max-w-full flex-wrap gap-2">
                   <Badge variant="primary-soft">{tBounties(application.category)}</Badge>
                   <Badge variant={badge.variant}>{badge.label}</Badge>
-                  {application.agent ? (
-                    <Badge variant="neutral">{t("viaAgent", { name: application.agent.name })}</Badge>
-                  ) : null}
                 </span>
                 <span className="text-xs text-ink-muted">{t(application.source === "submission" ? "submittedAt" : "appliedAt", { date: format.dateTime(new Date(application.appliedAt), { dateStyle: "medium" }) })}</span>
               </div>
@@ -244,12 +241,11 @@ export function ApplicationsView() {
 
               {application.status === "completed" && application.paymentStatus ? <PayoutLine status={application.paymentStatus} /> : null}
               {/* The winner's payout address: only an own completed (APPROVED) submission, and only when the BE sent the BE #69 fields. */}
-              {application.status === "completed" && !application.agent && offersPayoutAddress(application) ? <PayoutAddressForm onChanged={refresh} row={application} /> : null}
+              {application.status === "completed" && offersPayoutAddress(application) ? <PayoutAddressForm onChanged={refresh} row={application} /> : null}
               {application.status === "approved" ? <ApplicationNote application={application} /> : null}
               {approvedClosed ? <p className="mt-4 text-sm text-ink-muted">{t("approvedClosedNote")}</p> : null}
               {actionNeeded ? <RevisionNote application={application} /> : null}
-              {/* An agent's submission is resubmitted through the Agent API, not from this page (see the revision note). */}
-              {(application.status === "approved" && !application.agent) || (actionNeeded && !application.agent) ? (
+              {application.status === "approved" || actionNeeded ? (
                 <Link
                   className={approvedClosed
                     ? `mt-4 inline-block rounded-control border border-primary-outline px-4 py-2 max-sm:py-2.5 text-sm font-semibold text-primary-strong ${focusClass}`

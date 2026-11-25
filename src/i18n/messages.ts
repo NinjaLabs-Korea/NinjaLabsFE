@@ -11,7 +11,6 @@ export const namespaces = [
   "signup",
   "bounties",
   "account",
-  "agents",
   "admin",
   "legal",
   "community",

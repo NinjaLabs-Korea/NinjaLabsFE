@@ -2,23 +2,23 @@ import type { ApiHttp } from "@/lib/api/http";
 import type { AdminApi } from "@/lib/contracts/api";
 import { deliverablesFromRequirements, type AdminBounty, type AdminHighlight, type AdminPost, type AdminUser } from "@/lib/admin-helpers";
 import type { AdminAuditLogPage } from "@/lib/admin-audit";
-import type { AdminNftJobPage, AdminOperations, OpsActor } from "@/lib/admin-operations";
+import type { AdminOperations, OpsActor } from "@/lib/admin-operations";
 import { toAdminStatus } from "@/lib/bounty-status";
 import { markdownToPlainSummary } from "@/lib/markdown-summary";
 import { formatIsoDate, rewardFromBaseUnits, rewardToBaseUnits, toCategoryCode, toCategoryLabel, toMemberRoleCode, toMemberRoleLabel, toNoticeCategoryCode, toNoticeCategoryLabel, type CategoryCode, type MemberRoleCode } from "@/lib/api/codecs";
 
-type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: MemberRoleCode | null; member_display_order: number | null; created_at: string; wallet_address: string | null };
-type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: CategoryCode; status: string; application_required: boolean; submission_mode: "DIRECT" | "AGENT"; cover_image_url: string | null; submission_deadline: string; application_deadline: string | null; max_winners: number; rewards: Array<{ symbol: string; amount: string; tokenContractAddress?: string | null; evmChainId?: number | null }> };
+type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: MemberRoleCode | null; member_display_order: number | null; created_at: string; is_admin?: boolean };
+type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: CategoryCode; status: string; application_required: boolean; cover_image_url: string | null; submission_deadline: string; application_deadline: string | null; max_winners: number; rewards: Array<{ symbol: string; amount: string; tokenContractAddress?: string | null; evmChainId?: number | null }> };
 type NoticeRow = { id: string; title: string; summary?: string; body: string; category: string; status: string; published_at: string | null; thumbnail_url: string | null; external_url: string | null; event_date?: string | null };
-type ActorColumns = { actor_kind: "USER" | "AGENT"; user_id: string | null; nickname: string | null; agent_id: string | null; agent_name: string | null };
+/** The BE still sends `actor_kind`/`agent_*` for old rows; they are ignored (the owner is `user_id`/`nickname`). */
+type ActorColumns = { user_id: string | null; nickname: string | null };
 type OperationsResponse = {
   bounty: { id: string; title: string; status: string; submission_deadline: string | null; max_winners: number; application_required: boolean };
   lifecycle: { blockerDetails?: Record<string, Array<{ code: string; count?: number }>>; allowedTransitions?: string[] };
   applications: Array<ActorColumns & { id: string; status: string; message: string; portfolio_url: string | null; review_note: string | null; applied_at: string; reviewed_at: string | null }>;
   submissions: Array<ActorColumns & {
     id: string; status: string; current_revision_no: number; submitted_at: string; reviewed_at: string | null; payout_address?: string | null; payout_address_evm?: string | null; email?: string | null;
-    /** Deprecated alias of `payout_address` (BE #69 keeps it for the old FE; read only when the new field is missing). */
-    recipient_wallet_address?: string | null; review_comment: string | null;
+    review_comment: string | null;
     revisions: Array<{ revision_no: number; submission_url: string; description: string; repository_url: string | null; commit_sha: string | null; created_at: string }>;
     reviews: Array<{ revision_no: number | null; decision: string; comment: string | null; created_at: string }>;
   }>;
@@ -27,9 +27,8 @@ type OperationsResponse = {
   policy?: { payoutSelfApprovalAllowed?: boolean };
 };
 type AuditRow = { id: string; actor_user_id: string | null; actor_agent_id: string | null; actor_nickname?: string | null; actor_agent_name?: string | null; action: string; entity_type: string; entity_id: string | null; created_at: string; before_data?: unknown; after_data?: unknown };
-type NftJobRow = { id: string; nft_id: string; job_type: string; status: string; retry_count: number; last_error: string | null; scheduled_at: string | null; updated_at: string | null; nft_type: string; nft_status: string; bounty_title: string | null; owner_nickname: string | null; owner_wallet_address: string | null };
 
-const actorFrom = (row: ActorColumns): OpsActor => ({ kind: row.actor_kind === "AGENT" ? "AGENT" : "USER", userId: row.user_id, nickname: row.nickname, agentId: row.agent_id, agentName: row.agent_name });
+const actorFrom = (row: ActorColumns): OpsActor => ({ userId: row.user_id, nickname: row.nickname });
 
 /** BE operations payload → console model. Amounts stay base-unit strings; statuses stay BE codes. */
 export function toAdminOperations(body: OperationsResponse): AdminOperations {
@@ -45,7 +44,7 @@ export function toAdminOperations(body: OperationsResponse): AdminOperations {
     })),
     submissions: body.submissions.map((row) => ({
       ...actorFrom(row), id: row.id, status: row.status, currentRevisionNo: Number(row.current_revision_no) || 1,
-      submittedAt: row.submitted_at, reviewedAt: row.reviewed_at, payoutAddress: row.payout_address ?? row.recipient_wallet_address ?? null, payoutAddressEvm: row.payout_address_evm ?? null, email: row.email ?? null, reviewComment: row.review_comment,
+      submittedAt: row.submitted_at, reviewedAt: row.reviewed_at, payoutAddress: row.payout_address ?? null, payoutAddressEvm: row.payout_address_evm ?? null, email: row.email ?? null, reviewComment: row.review_comment,
       revisions: row.revisions.map((rev) => ({ revisionNo: rev.revision_no, submissionUrl: rev.submission_url, description: rev.description, repositoryUrl: rev.repository_url, commitSha: rev.commit_sha, createdAt: rev.created_at })),
       reviews: row.reviews.map((review) => ({ revisionNo: review.revision_no, decision: review.decision, comment: review.comment, createdAt: review.created_at })),
     })),
@@ -78,10 +77,11 @@ export function createAdminApi(http: ApiHttp): AdminApi {
       return rows.map((row) => ({
         slug: row.id, nickname: row.nickname, email: row.email,
         joinedAt: formatIsoDate(row.created_at),
-        walletAddress: row.wallet_address, walletStatus: row.wallet_address ? "linked" : null,
         isMember: row.is_member,
         memberRole: row.member_role ? toMemberRoleLabel(row.member_role) ?? null : null,
         memberDisplayOrder: row.member_display_order,
+        // Absent on a BE without admin-access management: stays undefined so the UI never offers the action there.
+        ...(typeof row.is_admin === "boolean" ? { isAdmin: row.is_admin } : {}),
       }));
     },
     setAdminMember: async (userId: string, input: { isMember: boolean; role?: string; displayOrder?: number }) => {
@@ -89,6 +89,13 @@ export function createAdminApi(http: ApiHttp): AdminApi {
         method: "POST",
         body: { ...input, ...(input.role ? { role: toMemberRoleCode(input.role) } : {}) },
       });
+    },
+    setAdminAccess: async (userId: string, isAdmin: boolean) => {
+      const row = await http.fetchJson<{ is_admin: boolean }>(`/admin/users/${encodeURIComponent(userId)}/admin`, {
+        method: "POST",
+        body: { isAdmin },
+      });
+      return { isAdmin: row.is_admin };
     },
     getAdminBounties: async (): Promise<AdminBounty[]> => {
       const rows = await http.fetchJson<BountyRow[]>("/admin/bounties");
@@ -98,7 +105,6 @@ export function createAdminApi(http: ApiHttp): AdminApi {
         ...(row.rewards[0]?.tokenContractAddress ? { rewardContractAddress: row.rewards[0].tokenContractAddress } : {}),
         ...(row.rewards[0]?.evmChainId ? { rewardChainId: row.rewards[0].evmChainId } : {}),
         intakeEnabled: row.application_required, status: toAdminStatus(row.status),
-        submissionMode: row.submission_mode === "AGENT" ? "agent" : "direct",
         coverImage: row.cover_image_url,
         deadline: row.submission_deadline, applicationDeadline: row.application_deadline ?? null,
         maxWinners: Number(row.max_winners) || 1,
@@ -119,7 +125,8 @@ export function createAdminApi(http: ApiHttp): AdminApi {
         evaluationCriteria: bounty.reviewProcess,
         category: toCategoryCode(bounty.tags[0] ?? "Other"),
         applicationRequired: bounty.intakeEnabled, maxWinners: bounty.maxWinners,
-        submissionMode: bounty.submissionMode === "agent" ? "AGENT" : "DIRECT",
+        // Agents are gone (Google-only): new bounties are direct-submission. PATCH omits it so a stored value (legacy AGENT) is never rewritten.
+        ...(create ? { submissionMode: "DIRECT" } : {}),
         coverImageUrl: bounty.coverImage,
         submissionDeadline: bounty.deadline,
         // Create sends it only when set; PATCH always sends it so clearing the field (null) clears the column. An unchanged value is the stored ISO, which the BE treats as "not changed".
@@ -181,18 +188,6 @@ export function createAdminApi(http: ApiHttp): AdminApi {
     requestAdminPayout: async (input) => { await http.fetchJson("/admin/payouts", { method: "POST", body: input }); },
     approveAdminPayout: async (payoutId) => { await http.fetchJson(`/admin/payouts/${encodeURIComponent(payoutId)}/approve`, { method: "POST" }); },
     markAdminPayoutPaid: async (payoutId, txHash) => { await http.fetchJson(`/admin/payouts/${encodeURIComponent(payoutId)}/paid`, { method: "POST", body: { txHash: txHash.trim() } }); },
-    getAdminNftJobs: async (status, page): Promise<AdminNftJobPage> => {
-      const body = await http.fetchJson<{ items: NftJobRow[]; page: number; pageSize: number; total: number }>(`/admin/nft-jobs?status=${encodeURIComponent(status)}&page=${page}`);
-      return {
-        page: body.page, pageSize: body.pageSize, total: body.total,
-        items: body.items.map((row) => ({
-          id: row.id, nftId: row.nft_id, jobType: row.job_type, status: row.status, retryCount: Number(row.retry_count) || 0, lastError: row.last_error,
-          scheduledAt: row.scheduled_at, updatedAt: row.updated_at, nftType: row.nft_type, nftStatus: row.nft_status,
-          bountyTitle: row.bounty_title, ownerNickname: row.owner_nickname, ownerWalletAddress: row.owner_wallet_address,
-        })),
-      };
-    },
-    retryAdminNftJob: async (jobId) => { await http.fetchJson(`/admin/nft-jobs/${encodeURIComponent(jobId)}/retry`, { method: "POST" }); },
     getAdminAuditLogs: async (filter, page): Promise<AdminAuditLogPage> => {
       const params = new URLSearchParams();
       if (filter.entityType) params.set("entityType", filter.entityType);
@@ -202,6 +197,7 @@ export function createAdminApi(http: ApiHttp): AdminApi {
       return {
         page: body.page, pageSize: body.pageSize, total: body.total,
         items: body.items.map((row) => ({
+          // actor_agent_*: legacy audit rows only (agents removed); kept so old rows still show their actor.
           id: row.id, actorUserId: row.actor_user_id, actorAgentId: row.actor_agent_id, actorNickname: row.actor_nickname ?? null, actorAgentName: row.actor_agent_name ?? null, action: row.action,
           entityType: row.entity_type, entityId: row.entity_id, createdAt: row.created_at, beforeData: row.before_data ?? null, afterData: row.after_data ?? null,
         })),

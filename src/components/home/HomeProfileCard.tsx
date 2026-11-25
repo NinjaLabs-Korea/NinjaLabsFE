@@ -3,20 +3,14 @@
 import { useTranslations } from "next-intl";
 import { useAuthSnapshot } from "@/components/auth/FoundationProvider";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
 import { Link } from "@/i18n/navigation";
-import { ownerNftBadgeKey } from "@/lib/nft-status";
 
-// `ownerNftBadgeKey` (lib/nft-status.ts) -> `home.profile.nft.<key>`; minted is the success badge, everything else warning.
-const nftBadgeVariant = { minted: "success", pending: "warning" } as const;
-
-/** Greeting plus the profile summary: nickname and Ninja NFT status, and the way to the public profile and the settings. */
+/** Greeting plus the profile summary: nickname, and the way to the public profile and the settings. */
 export function HomeProfileCard() {
   const t = useTranslations("home");
   const snapshot = useAuthSnapshot();
   if (snapshot.status !== "signed-in") return null;
   const { user } = snapshot;
-  const nftKey = user.nftStatus ? ownerNftBadgeKey(user.nftStatus) : null;
   return (
     <section className="mx-auto max-w-content px-gutter pt-16">
       <div className="flex flex-col gap-6 rounded-card border border-border bg-surface p-5 shadow-card sm:p-[21px] md:flex-row md:items-center md:justify-between">
@@ -25,9 +19,6 @@ export function HomeProfileCard() {
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.96px] text-primary">{t("greeting.eyebrow")}</p>
             <h1 className="break-words font-display text-2xl text-ink sm:text-4xl">{t("greeting.title", { name: user.handle })}</h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {nftKey ? <Badge variant={nftBadgeVariant[nftKey]}>{t(`profile.nft.${nftKey}`)}</Badge> : <Badge variant="neutral">{t("profile.nft.none")}</Badge>}
-            </div>
           </div>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row md:shrink-0">

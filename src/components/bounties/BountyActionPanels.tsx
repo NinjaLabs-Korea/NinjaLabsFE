@@ -15,8 +15,7 @@ import { signInHref } from "@/lib/return-path";
 // Panels fade in when they replace the loading placeholder (or another panel), instead of popping in.
 export const panelClass = "rounded-card border border-border bg-surface p-5 shadow-card animate-fade-in motion-reduce:animate-none";
 export const submitButtonClass = "motion-control motion-press rounded-control bg-primary px-5 py-3 text-sm font-semibold text-on-inverse disabled:opacity-60";
-// The `docs/design.md` "Secondary (outline) action" size (px-5 py-3), matching `submitButtonClass` beside it. `account/AgentsView`
-// keeps its own smaller row-action outline (px-4 py-2); the two are different sizes on purpose, not copies.
+// The `docs/design.md` "Secondary (outline) action" size (px-5 py-3), matching `submitButtonClass` beside it.
 const outlineButtonClass = "inline-flex rounded-control border border-primary-outline px-5 py-3 text-sm font-semibold text-primary-strong";
 export const outlineLinkClass = `mt-4 ${outlineButtonClass}`;
 // Bounty apply/submit fields: one-line 46px inputs, the height of the admin fields. Not the cohort form's `questionInputClass`
@@ -25,7 +24,7 @@ export const bountyInputClass = compactField;
 // Headings that receive focus after a successful apply/submit (tabIndex={-1}); the ring matches the focus recipe.
 export const headingClass = "font-display text-2xl -tracking-[0.24px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
-export function StatusPanel({ title, body, note, tone = "muted", feedback, link, headingRef, badge, code }: {
+export function StatusPanel({ title, body, note, tone = "muted", feedback, link, headingRef, badge }: {
   title: string;
   body: string;
   /** Reviewer comment shown under the body. */
@@ -37,8 +36,6 @@ export function StatusPanel({ title, body, note, tone = "muted", feedback, link,
   headingRef?: Ref<HTMLHeadingElement>;
   /** Small status badge under the body (payout status). */
   badge?: { variant: "warning" | "success"; label: string } | null;
-  /** Agent API endpoint the next step goes through (agent revision requests). */
-  code?: string;
 }) {
   const bodyClass = tone === "danger" ? "text-danger" : tone === "success" ? "text-success" : "text-ink-muted";
   return (
@@ -47,7 +44,6 @@ export function StatusPanel({ title, body, note, tone = "muted", feedback, link,
       <p className={`mt-2 text-sm ${bodyClass} ${REVIEW_TEXT_CLASS}`}>{body}</p>
       {note ? <p className={`mt-2 text-sm text-ink-muted ${REVIEW_TEXT_CLASS}`}>{note}</p> : null}
       {badge ? <div className="mt-3"><Badge variant={badge.variant}>{badge.label}</Badge></div> : null}
-      {code ? <div className="mt-4 rounded-tile bg-surface-subtle p-4 text-sm text-ink-secondary"><code className="break-all">{code}</code></div> : null}
       {link ? <Link className={outlineLinkClass} href={link.href}>{link.label}</Link> : null}
       {feedback ? <p className="mt-3 text-sm text-success">{feedback}</p> : null}
     </section>

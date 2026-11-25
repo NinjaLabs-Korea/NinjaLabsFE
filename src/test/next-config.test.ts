@@ -82,12 +82,13 @@ describe("next.config security headers", () => {
     }
   });
 
-  it.each(ALL_ENVS)("allows the Injective JSON-RPC that viem's http transport calls (%s)", async (nodeEnv) => {
+  it.each(ALL_ENVS)("keeps every wallet RPC and WalletConnect/RainbowKit origin out of connect-src (Google-only: no wallet stack) (%s)", async (nodeEnv) => {
     const connect = (await cspFor(nodeEnv)).directive("connect-src");
-    expect(connect).toEqual(expect.arrayContaining(["'self'", "https://*.injective.network", "wss://*.injective.network"]));
+    expect(connect).toContain("'self'");
+    expect(connect.join(" ")).not.toMatch(/injective|json-rpc/);
   });
 
-  it.each(ALL_ENVS)("keeps the WalletConnect/RainbowKit origins out and only frames Turnstile (wagmi 3 is injected-only) (%s)", async (nodeEnv) => {
+  it.each(ALL_ENVS)("only frames Turnstile (%s)", async (nodeEnv) => {
     const csp = await cspFor(nodeEnv);
     expect(csp.value).not.toMatch(/walletconnect|web3modal|rainbow\.me/);
     expect(csp.directives).toContain("frame-src https://challenges.cloudflare.com");
@@ -110,20 +111,10 @@ describe("next.config security headers", () => {
     });
   });
 
-  describe("configured JSON-RPC origin", () => {
-    it.each(ALL_ENVS)("adds the NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL origin to connect-src (%s)", async (nodeEnv) => {
+  describe("the old wallet RPC env var", () => {
+    it.each(ALL_ENVS)("is ignored: no origin is added to connect-src (%s)", async (nodeEnv) => {
       vi.stubEnv("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", "https://rpc.example.com/path?k=1");
-      expect((await cspFor(nodeEnv)).directive("connect-src")).toContain("https://rpc.example.com");
-    });
-
-    it("includes an http origin, since runtime config accepts it for local/test tiers", async () => {
-      vi.stubEnv("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", "http://127.0.0.1:8545/rpc");
-      expect((await cspFor("production")).directive("connect-src")).toContain("http://127.0.0.1:8545");
-    });
-
-    it("adds nothing for an unset or non-http(s) value", async () => {
-      vi.stubEnv("NEXT_PUBLIC_INJECTIVE_EVM_RPC_URL", "ftp://rpc.example.com");
-      expect((await cspFor("production")).value).not.toContain("rpc.example.com");
+      expect((await cspFor(nodeEnv)).value).not.toContain("rpc.example.com");
     });
   });
 });
