@@ -219,13 +219,13 @@ export function createMockApiClient(seed = "default"): ApiClient {
     },
     removeAvatar: async () => undefined,
     ...cohorts.applicantApi,
-    ...createMockAdminApi(nextId),
+    ...createMockAdminApi(nextId, fixtureSnapshot.account.user.id),
     ...cohorts.adminApi,
   };
 }
 
 /** 운영자 콘솔 mock - fixture로 시작해 이 탭 안의 생성·수정·전이·삭제를 메모리에 반영한다 (새로고침하면 초기화). */
-function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
+function createMockAdminApi(nextId: (prefix: string) => string, selfId: string): AdminApi {
   let users: AdminUser[] = getAdminUsers();
   let bounties: AdminBounty[] = getAdminBounties();
   let posts: AdminPost[] = getAdminPosts();
@@ -265,6 +265,15 @@ function createMockAdminApi(nextId: (prefix: string) => string): AdminApi {
           }
         : { ...current, isMember: false, memberRole: null, memberDisplayOrder: null };
       users = users.map((user) => (user.slug === userId ? next : user));
+    },
+    setAdminAccess: async (userId, isAdmin) => {
+      // BE order: the caller's own row first, then the target lookup, then the last-admin guard (revoking the only admin).
+      if (userId === selfId) throw new MockApiError(403, "ADMIN_SELF_CHANGE");
+      const current = requireOne(users, (user) => user.slug === userId, "USER_NOT_FOUND");
+      if (current.isAdmin === isAdmin) return { isAdmin };
+      if (!isAdmin && users.filter((user) => user.isAdmin).length <= 1) throw new MockApiError(409, "LAST_ADMIN");
+      users = users.map((user) => (user.slug === userId ? { ...user, isAdmin } : user));
+      return { isAdmin };
     },
     getAdminBounties: async () => bounties.map((bounty) => ({ ...bounty })),
     saveAdminBounty: async (bounty, create) => {

@@ -78,6 +78,13 @@ export const PENDING_MULTISIG_SETUP = "PENDING_MULTISIG_SETUP";
 /** Postgres INTEGER ceiling: BE `MaxPgInt` on `displayOrder` (member and highlight ordering). Above it the BE answers 400. */
 export const DISPLAY_ORDER_MAX = 2_147_483_647;
 
+/**
+ * Copy key (`admin.users.accessErrors.<key>`) for a failed grant/revoke of admin access: the mapped BE code (401/429 normalized), else `generic`.
+ */
+export function adminAccessErrorKey(error: unknown): (typeof ERROR_COPY.adminAccess.codes)[number] | "generic" {
+  return listedCode(normalizedCode(error), ERROR_COPY.adminAccess.codes) ?? ERROR_COPY.adminAccess.fallback;
+}
+
 export type AdminUser = {
   slug: string;
   nickname: string;
@@ -86,6 +93,8 @@ export type AdminUser = {
   isMember: boolean;
   memberRole: MemberRole | null;
   memberDisplayOrder: number | null;
+  /** BE `is_admin`. `undefined` = the BE predates admin-access management (no field): the UI offers no grant/revoke then. */
+  isAdmin?: boolean;
 };
 
 export type AdminBounty = {

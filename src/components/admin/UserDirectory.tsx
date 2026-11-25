@@ -6,8 +6,9 @@ import { AdminTable, adminLongTextCell } from "@/components/admin/AdminTable";
 import { pushAdminToast } from "@/components/admin/AdminToastHost";
 import { UserActions } from "@/components/admin/UserActions";
 import { Badge } from "@/components/ui/Badge";
-import { type AdminUser, adminErrorDescription, expirePublicLists } from "@/lib/admin-helpers";
-import { useAdminApi } from "@/components/auth/FoundationProvider";
+import { type AdminUser, adminAccessErrorKey, adminErrorDescription, expirePublicLists } from "@/lib/admin-helpers";
+import { useAdminApi, useAuthSnapshot } from "@/components/auth/FoundationProvider";
+import { useKeyedSingleFlight } from "@/components/ui/useSingleFlight";
 
 const columns = [
   { id: "nickname", widthClass: "w-[157px]" },
@@ -32,6 +33,10 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
   const api = useAdminApi();
   const t = useTranslations("admin.users");
   const tCommon = useTranslations("admin.common");
+  const tAccessErrors = useTranslations("admin.users.accessErrors");
+  const auth = useAuthSnapshot();
+  const selfId = auth.status === "signed-in" ? auth.user.id : null;
+  const accessFlight = useKeyedSingleFlight();
   const [query, setQuery] = useState("");
   const [directoryUsers, setDirectoryUsers] = useState(users);
   // The BE returns 30 users per page; a shorter first page means there is nothing more to load.
@@ -156,6 +161,25 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
     });
   }
 
+  /** Grant/revoke admin access: one request per row at a time, the row follows the BE answer, then the list is read again. */
+  function handleSetAdmin(user: AdminUser, isAdmin: boolean) {
+    return accessFlight.run(user.slug, async () => {
+      try {
+        const saved = await api.setAdminAccess(user.slug, isAdmin);
+        setDirectoryUsers((currentUsers) => currentUsers.map((currentUser) => (currentUser.slug === user.slug ? { ...currentUser, isAdmin: saved.isAdmin } : currentUser)));
+        pushAdminToast({
+          variant: "success",
+          title: t(isAdmin ? "toast.grantedTitle" : "toast.revokedTitle"),
+          description: t(isAdmin ? "toast.grantedDescription" : "toast.revokedDescription", { nickname: user.nickname }),
+        });
+      } catch (error) {
+        pushAdminToast({ variant: "danger", title: t("toast.accessFailedTitle"), description: tAccessErrors(adminAccessErrorKey(error)) });
+      }
+      // Also after a failure: a 404/409 means the row changed under us. The read has its own failure toast.
+      await loadDirectory();
+    });
+  }
+
   async function handleAssign(
     user: AdminUser,
     role: NonNullable<AdminUser["memberRole"]>,
@@ -200,7 +224,10 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
           <AdminTable columns={columns.map((column) => ({ ...column, label: t(`columns.${column.id}`) }))} minWidthClass="min-w-[1120px]">
             {visibleUsers.map((user) => (
               <tr className="border-t border-border" key={user.slug}>
-                <td className={`px-5 py-4 text-sm font-semibold text-ink ${adminLongTextCell}`}>{user.nickname}</td>
+                <td className={`px-5 py-4 text-sm font-semibold text-ink ${adminLongTextCell}`}>
+                  {user.nickname}
+                  {user.isAdmin ? <span className="ml-2 align-middle"><Badge variant="primary-soft">{t("adminBadge")}</Badge></span> : null}
+                </td>
                 <td className={`px-5 py-4 text-sm text-ink-muted ${adminLongTextCell}`}>{user.email}</td>
                 <td className="whitespace-nowrap px-5 py-4 text-sm text-ink-secondary">{user.joinedAt || "–"}</td>
                 <td className="px-5 py-4 text-sm text-ink-secondary">
@@ -209,6 +236,9 @@ export function UserDirectory({ users }: { users: AdminUser[] }) {
                 <td className="px-5 py-4 text-sm text-ink-secondary">{user.memberRole ? t(`roles.${user.memberRole}`) : "-"}</td>
                 <td className="px-5 py-4">
                   <UserActions
+                    adminPending={accessFlight.isBusy(user.slug)}
+                    isSelf={selfId !== null && user.slug === selfId}
+                    onSetAdmin={(isAdmin) => void handleSetAdmin(user, isAdmin)}
                     onAssign={(role, displayOrder) => handleAssign(user, role, displayOrder)}
                     onRemove={() => handleRemove(user)}
                     user={user}

@@ -113,6 +113,8 @@ export type AdminApi = {
   /** GET /admin/users?q=&page= - the BE returns 30 rows per page (a short page is the last one). */
   getAdminUsers: (query?: string, page?: number) => Promise<AdminUser[]>;
   setAdminMember: (userId: string, input: { isMember: boolean; role?: string; displayOrder?: number }) => Promise<void>;
+  /** `POST /admin/users/:id/admin { isAdmin }`: 403 `ADMIN_SELF_CHANGE`, 404 `USER_NOT_FOUND`, 409 `USER_NOT_ACTIVE` / `PROFILE_REQUIRED` (grant) / `LAST_ADMIN` (revoke). A no-op is a 201 with the unchanged row. */
+  setAdminAccess: (userId: string, isAdmin: boolean) => Promise<{ isAdmin: boolean }>;
   getAdminBounties: () => Promise<AdminBounty[]>;
   saveAdminBounty: (bounty: AdminBounty, create: boolean) => Promise<{ id: string }>;
   transitionAdminBounty: (bountyId: string, to: string) => Promise<void>;

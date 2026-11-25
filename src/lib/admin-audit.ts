@@ -29,6 +29,8 @@ export const isAuditUuid = (value: string): boolean => AUDIT_UUID.test(value.tri
 /**
  * Actions written by ops scripts / manual SQL (BE `docs/api-contract.md`): these rows have no actor on purpose.
  * A missing actor alone is not enough (an agent's `APPLICATION_REAPPLIED` row has none either).
+ * `ADMIN_GRANTED` / `ADMIN_REVOKED` are written by both the API (actor = the acting admin) and `scripts/grant-admin.js` (actor NULL):
+ * `auditActorKind` checks the actor first, so only the actor-less rows read as "script".
  */
 const OPS_SCRIPT_ACTIONS: readonly string[] = [
   "ADMIN_GRANTED", "ADMIN_REVOKED", "NFT_JOB_REQUEUED", "REWARD_REFUNDED", "PAYOUT_CORRECTED_MANUAL", "PAYOUT_CANCELLED_MANUAL",

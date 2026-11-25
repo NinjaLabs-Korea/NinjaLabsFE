@@ -30,6 +30,11 @@ export const FE_ERROR_CODES = [
   "UNAUTHORIZED",
   "TOO_MANY_REQUESTS",
   "TRANSITION_BLOCKED",
+  // Admin access grant/revoke (`POST /admin/users/:id/admin`). The BE PR (feat/admin-access-grant) adds these codes; move them to
+  // `be-error-codes.ts` once its catalog snapshot carries them.
+  "ADMIN_SELF_CHANGE",
+  "USER_NOT_ACTIVE",
+  "LAST_ADMIN",
 ] as const;
 export type FeErrorCode = (typeof FE_ERROR_CODES)[number];
 
@@ -178,6 +183,18 @@ export const ERROR_COPY = {
       // 403 (운영자 권한 회수) / 401 · 429는 `adminApiErrorCode`가 상태로 정규화한다 - 429 본문에는 코드가 없다
       "ADMIN_ONLY", "UNAUTHORIZED", "TOO_MANY_REQUESTS",
     ],
+  },
+  /**
+   * 운영자 권한 부여/회수 토스트 - `components/admin/UserDirectory.tsx` (`lib/admin-helpers.ts adminAccessErrorKey`).
+   * 401/429는 `normalizedCode`로 정규화한다. 목록 밖 코드와 네트워크 오류는 `generic`.
+   */
+  adminAccess: {
+    messages: "admin.users.accessErrors",
+    codes: [
+      "ADMIN_SELF_CHANGE", "USER_NOT_FOUND", "USER_NOT_ACTIVE", "PROFILE_REQUIRED", "LAST_ADMIN",
+      "DATABASE_UNAVAILABLE", "ADMIN_ONLY", "UNAUTHORIZED", "TOO_MANY_REQUESTS",
+    ],
+    fallback: "generic",
   },
   /**
    * 운영자 바운티 운영(지원/제출/보상/지급) - `lib/admin-operations.ts opsErrorCode`. 해당 엔드포인트가 던지는 BE 코드 전부와

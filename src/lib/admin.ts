@@ -54,6 +54,7 @@ export function getAdminUsers(): AdminUser[] {
       slug,
       nickname: profile.handle.replace(".inj", ""),
       ...overlay,
+      isAdmin: slug === "jaemin",
       isMember: member?.isMember ?? false,
       memberRole: member?.role ?? null,
       memberDisplayOrder: member ? getMembers().findIndex(({ slug: memberSlug }) => memberSlug === slug) + 1 : null,

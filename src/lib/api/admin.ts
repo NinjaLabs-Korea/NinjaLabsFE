@@ -7,7 +7,7 @@ import { toAdminStatus } from "@/lib/bounty-status";
 import { markdownToPlainSummary } from "@/lib/markdown-summary";
 import { formatIsoDate, rewardFromBaseUnits, rewardToBaseUnits, toCategoryCode, toCategoryLabel, toMemberRoleCode, toMemberRoleLabel, toNoticeCategoryCode, toNoticeCategoryLabel, type CategoryCode, type MemberRoleCode } from "@/lib/api/codecs";
 
-type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: MemberRoleCode | null; member_display_order: number | null; created_at: string };
+type UserRow = { id: string; email: string; nickname: string; is_member: boolean; member_role: MemberRoleCode | null; member_display_order: number | null; created_at: string; is_admin?: boolean };
 type BountyRow = { id: string; title: string; sponsor_name: string; summary: string; description: string; requirements: string; evaluation_criteria: string; category: CategoryCode; status: string; application_required: boolean; cover_image_url: string | null; submission_deadline: string; application_deadline: string | null; max_winners: number; rewards: Array<{ symbol: string; amount: string; tokenContractAddress?: string | null; evmChainId?: number | null }> };
 type NoticeRow = { id: string; title: string; summary?: string; body: string; category: string; status: string; published_at: string | null; thumbnail_url: string | null; external_url: string | null; event_date?: string | null };
 /** The BE still sends `actor_kind`/`agent_*` for old rows; they are ignored (the owner is `user_id`/`nickname`). */
@@ -80,6 +80,8 @@ export function createAdminApi(http: ApiHttp): AdminApi {
         isMember: row.is_member,
         memberRole: row.member_role ? toMemberRoleLabel(row.member_role) ?? null : null,
         memberDisplayOrder: row.member_display_order,
+        // Absent on a BE without admin-access management: stays undefined so the UI never offers the action there.
+        ...(typeof row.is_admin === "boolean" ? { isAdmin: row.is_admin } : {}),
       }));
     },
     setAdminMember: async (userId: string, input: { isMember: boolean; role?: string; displayOrder?: number }) => {
@@ -87,6 +89,13 @@ export function createAdminApi(http: ApiHttp): AdminApi {
         method: "POST",
         body: { ...input, ...(input.role ? { role: toMemberRoleCode(input.role) } : {}) },
       });
+    },
+    setAdminAccess: async (userId: string, isAdmin: boolean) => {
+      const row = await http.fetchJson<{ is_admin: boolean }>(`/admin/users/${encodeURIComponent(userId)}/admin`, {
+        method: "POST",
+        body: { isAdmin },
+      });
+      return { isAdmin: row.is_admin };
     },
     getAdminBounties: async (): Promise<AdminBounty[]> => {
       const rows = await http.fetchJson<BountyRow[]>("/admin/bounties");
