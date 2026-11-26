@@ -2,7 +2,7 @@
   "meta": {
     "list": {
       "title": "Bounty Marketplace | Ninja Labs",
-      "description": "Find paid work from Injective ecosystem sponsors, ship useful pieces, and collect on-chain proof for your Ninja portfolio."
+      "description": "Find paid work from Injective ecosystem sponsors, ship useful pieces, and grow your Ninja portfolio."
     },
     "apply": {
       "title": "How it works | Ninja Labs",
@@ -26,7 +26,7 @@
   "list": {
     "eyebrow": "Marketplace",
     "heading": "Bounties",
-    "description": "Pick up tasks posted by sponsors and submit your work. Every completed bounty adds an on-chain record.",
+    "description": "Pick up tasks posted by sponsors and submit your work. Every completed bounty is added to your profile portfolio.",
     "howApplying": "How it works →",
     "resultsLabel": "Bounty filters and results",
     "unavailable": "Bounties are temporarily unavailable."

@@ -34,7 +34,7 @@ export const profiles: Record<string, Profile> = {
   },
   sora: { slug: "sora", handle: "sora.inj", initials: "SK", bio: "New Injective builder exploring market data tasks, documentation bounties, and small UI components. This public profile is ready to become a portfolio as work is completed.", skills: ["Dev", "Content"], joinedAt: "July 2026", completions: [], },
   jinyoung: { slug: "jinyoung", handle: "jinyoung.inj", initials: "JP", teamRole: "Core", bio: "Product lead building the bounty marketplace for the Injective ecosystem.", skills: ["Dev", "Design"], joinedAt: "May 2026", completions: [], },
-  juho: { slug: "juho", handle: "juho.inj", initials: "JK", teamRole: "Dev", bio: "Protocol engineer making on-chain proof useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], },
+  juho: { slug: "juho", handle: "juho.inj", initials: "JK", teamRole: "Dev", bio: "Protocol engineer making Injective tooling useful for every builder.", skills: ["Dev"], joinedAt: "May 2026", completions: [], },
   mina: { slug: "mina", handle: "mina.inj", initials: "MS", teamRole: "Design", bio: "Experience designer creating clear paths from first task to lasting proof.", skills: ["Design"], joinedAt: "June 2026", completions: [], },
   ara: { slug: "ara", handle: "ara.inj", initials: "AR", teamRole: "Ops", bio: "Community operator supporting builders and the work around them.", skills: ["Content"], joinedAt: "June 2026", completions: [], },
 };

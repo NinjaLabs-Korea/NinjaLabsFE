@@ -89,7 +89,7 @@
     "actions": {
       "browseBounties": {
         "title": "浏览进行中的赏金",
-        "description": "找到一个赏金，开始积累你的链上履历。"
+        "description": "找到一个赏金，开始积累你的履历。"
       },
       "injectiveDocs": {
         "title": "浏览 Injective 文档",
