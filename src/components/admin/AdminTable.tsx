@@ -41,7 +41,9 @@ export function AdminLongText({ labelledBy, children }: { labelledBy: string; ch
 }
 
 /**
- * Admin list table in a horizontal scroll container (phones scroll the table, they never reflow the page). Buttons and
+ * Admin list table in a horizontal scroll container (phones scroll the table, they never reflow the page). The container
+ * is `relative` so it is the containing block of `sr-only` (absolutely positioned) labels in cells: without it they
+ * escape the scroll clip and widen the whole page on a phone. Buttons and
  * button-styled links in a cell, and column headers, never wrap (a Korean "수정" is 2 characters: wrapping it gives one
  * syllable per line); the action column keeps a min width that fits two buttons side by side.
  */
@@ -49,7 +51,7 @@ export function AdminTable({ columns, minWidthClass, idPrefix, scrollFocusable, 
   return (
     <div
       aria-label={scrollFocusable ? scrollLabel : undefined}
-      className={`overflow-x-auto rounded-card border border-border bg-surface shadow-card${scrollFocusable ? " focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" : ""}`}
+      className={`relative overflow-x-auto rounded-card border border-border bg-surface shadow-card${scrollFocusable ? " focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary" : ""}`}
       role={scrollFocusable ? "region" : undefined}
       tabIndex={scrollFocusable ? 0 : undefined}
     >
