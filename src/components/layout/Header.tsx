@@ -30,6 +30,7 @@ export function Header() {
             alt=""
             width={33}
             height={28}
+            loading="eager"
           />
           <span className="hidden whitespace-nowrap font-display text-xl font-bold text-ink sm:inline">Ninja Labs</span>
         </BrandLink>

@@ -89,7 +89,7 @@
     "actions": {
       "browseBounties": {
         "title": "Browse active bounties",
-        "description": "Find a bounty and start building your on-chain track record."
+        "description": "Find a bounty and start building your track record."
       },
       "injectiveDocs": {
         "title": "Explore the Injective docs",

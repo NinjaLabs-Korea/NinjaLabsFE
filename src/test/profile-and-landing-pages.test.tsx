@@ -81,7 +81,7 @@ describe("bounty masthead (top of /bounties)", () => {
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Bounties");
     expect(screen.getByText("Marketplace")).toBeTruthy();
-    expect(screen.getByText("Pick up tasks posted by sponsors and submit your work. Every completed bounty adds an on-chain record.")).toBeTruthy();
+    expect(screen.getByText("Pick up tasks posted by sponsors and submit your work. Every completed bounty is added to your profile portfolio.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "How it works →" }).getAttribute("href")).toBe("/bounties/apply");
     expect(screen.queryByRole("link", { name: "Get Started" })).toBeNull();
     expect(screen.queryByText("ninja.inj")).toBeNull();

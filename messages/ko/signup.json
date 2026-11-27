@@ -89,7 +89,7 @@
     "actions": {
       "browseBounties": {
         "title": "진행 중인 바운티 둘러보기",
-        "description": "바운티를 찾아 온체인 이력을 쌓기 시작하세요."
+        "description": "바운티를 찾아 활동 이력을 쌓기 시작하세요."
       },
       "injectiveDocs": {
         "title": "Injective 문서 살펴보기",
