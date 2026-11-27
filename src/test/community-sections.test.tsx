@@ -101,7 +101,7 @@ describe("AchievementsSection, MembersPreviewSection, BountiesEntrySection", () 
   it("explains the bounties and previews the open ones with a link to /bounties", () => {
     renderWithIntl(<BountiesEntrySection bounties={[openBounty]} />);
     expect(screen.getByRole("heading", { level: 2, name: "Bounties" })).toBeTruthy();
-    expect(screen.getByText(/build an on-chain track record/)).toBeTruthy();
+    expect(screen.getByText(/build your track record/)).toBeTruthy();
     expect(screen.getByText("Open one")).toBeTruthy();
     expect(screen.getByRole("link", { name: "View all →" }).getAttribute("href")).toBe("/bounties");
   });

@@ -2,7 +2,7 @@
   "meta": {
     "list": {
       "title": "赏金市场 | Ninja Labs",
-      "description": "寻找 Injective 生态赞助方发布的有偿任务，交付有价值的成果，并为你的 Ninja 作品集积累链上证明。"
+      "description": "寻找 Injective 生态赞助方发布的有偿任务，交付有价值的成果，充实你的 Ninja 作品集。"
     },
     "apply": {
       "title": "参与方式 | Ninja Labs",
@@ -26,7 +26,7 @@
   "list": {
     "eyebrow": "市场",
     "heading": "赏金",
-    "description": "承接赞助方发布的任务并提交成果，每完成一个赏金都会留下链上记录。",
+    "description": "承接赞助方发布的任务并提交成果，完成的赏金会记录在你的个人主页作品集中。",
     "howApplying": "参与方式 →",
     "resultsLabel": "赏金筛选与结果",
     "unavailable": "暂时无法加载赏金。"
